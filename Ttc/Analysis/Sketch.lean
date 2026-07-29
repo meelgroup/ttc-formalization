@@ -3,7 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Mathlib.Analysis.SpecificLimits.Basic
-import Ttc.Internal.Arith
+import Ttc.Analysis.Arith
 
 /-!
 # `lem:numlattice`: the epoch analysis of the streaming sketch

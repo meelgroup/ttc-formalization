@@ -5,8 +5,8 @@ Released under Apache 2.0 license.
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 import Mathlib.Analysis.InnerProductSpace.PiL2
-import Ttc.Internal.Arith
-import Ttc.Problem
+import Ttc.Analysis.Arith
+import Ttc.Model.Prelude
 
 /-!
 # The geometry of `lem:nonconv`: inflating, deflating, and the scaling containment

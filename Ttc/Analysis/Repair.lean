@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Internal.Nonconv
+import Ttc.Analysis.Nonconv
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 /-!

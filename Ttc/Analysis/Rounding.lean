@@ -3,7 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Mathlib.Probability.Moments.SubGaussian
-import Ttc.Internal.Arith
+import Ttc.Analysis.Arith
 
 /-!
 # `claim:cl`: the concentration core of the randomized rounding

@@ -2,104 +2,35 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Internal.Repair
-import Ttc.Internal.Recentred
-import Ttc.Internal.Lattice
-import Ttc.Internal.Sketch
+import Ttc.Analysis.Arith
+import Ttc.Model.Prelude
 
 /-!
-# The parameters the algorithm computes, and what they are chosen to satisfy
+# What the algorithm's constants are chosen to satisfy
 
-`TTC` (`alg:ttc`) and `GetPrecision` (`alg:prec`) compute five quantities before
-the main loop runs. Each is a *choice*, and each is chosen to make one specific
-inequality of the analysis true. This module defines them as functions and proves
-exactly those inequalities.
+`Ttc.Params` (`Model/Prelude`) defines the five quantities `TTC` (`alg:ttc`) and
+`GetPrecision` (`alg:prec`) compute before the main loop. Each is a *choice*, and
+each is chosen to make one specific inequality of the analysis true. This module
+proves exactly those inequalities:
 
-| Paper | Here | Chosen so that |
-| --- | --- | --- |
-| `ε' ← ε/12` (`alg:ttc`, line 18) | `Ttc.Params.epsPrime` | the two-sided `(1±ε')` losses fit inside `(1±ε/3)` |
-| `Thresh ← max(…)` (`alg:ttc`, line 20) | `Ttc.Params.thresh` | each failure branch of `lem:numlattice` is `δ/6` |
-| `κ` (`lem:nonconv`) | `Ttc.Params.kappa` | the rounding tail bound is `η/(4r)` per facet |
-| `γ` (`alg:prec`, line 86) | `Ttc.Params.gamma` | `κ/γ ≤ η/(32mn)`, the shell bound's input |
-| `ρ ← ⌈log₁₀(γ/γ̂)⌉` (`alg:prec`) | `Ttc.Params.precision` | the fine lattice `𝕃ⁿ` is fine enough |
+| Paper | Definition | Chosen so that | Proved here |
+| --- | --- | --- | --- |
+| `ε' ← ε/12` | `Params.epsPrime` | the two-sided `(1±ε')` losses fit inside `(1±ε/3)` | `epsPrime_window` |
+| `κ` (`lem:nonconv`) | `Params.kappa` | `κ ≤ 2√(log(8r/η))` | `kappa_le` |
+| `γ` (`alg:prec`, line 86) | `Params.gamma` | `κ/γ ≤ η/(32mn)` | `kappa_div_gamma_le` |
+| ↳ what that buys | | `(1 + κ/γ)ⁿ ≤ 1 + η/(16m)` | `shell_factor_bound` |
 
-This module covers **only the scalars computed before the main loop**. The
-loop itself is in `Ttc.Algorithm`. This module is the audit surface for the
-constants: If a constant in the
-paper changes, exactly one definition here changes and the corresponding theorem
-either still compiles or does not.
-
-## Note on `γ`
-
-`γ` must be stated with the **same** logarithm argument as `κ`. With
-`κ = √(2 log(8/η)) + √(2 log r)` one has `κ ≤ 2√(log(8r/η))`, so
-`γ = (64mn/η)·√(log(8r/η))` gives `κ/γ ≤ η/(32mn)` exactly
-(`Ttc.Params.kappa_div_gamma_le`). Using `√(log(4r/η))` in `γ` while `κ` is
-computed at `8/η` leaves a residual factor `√(log(8r/η)/log(4r/η))`, which is up
-to `√1.5 ≈ 1.23` — the bound then fails. See the README, finding 2.
+If a constant in the paper changes, exactly one definition in `Model/Prelude`
+changes and the corresponding theorem here either still compiles or does not.
 -/
 
 namespace Ttc
 
 open Real
 
-/-- The parameters the algorithm computes from its inputs. `n` is the dimension,
-`m` the number of cubes in the DNF, `r` the total facet count. -/
-structure Params where
-  /-- The requested multiplicative accuracy. -/
-  ε : ℝ
-  /-- The requested failure probability. -/
-  δ : ℝ
-  /-- The ambient dimension. -/
-  n : ℕ
-  /-- The number of polytopes in the decomposition. -/
-  m : ℕ
-  /-- The total number of facets, `r = ∑ᵢ facet(Pᵢ)`. -/
-  r : ℝ
-  /-- Accuracy is in `(0,1]`. -/
-  hε0 : 0 < ε
-  /-- Accuracy is in `(0,1]`. -/
-  hε1 : ε ≤ 1
-  /-- The dimension is positive. -/
-  hn : 1 ≤ n
-  /-- There is at least one cube. -/
-  hm : 1 ≤ m
-  /-- There is at least one facet. -/
-  hr : 1 ≤ r
-
 namespace Params
 
 variable (P : Params)
-
-/-- `η ← ε/8`: the accuracy at which `GetPrecision` is called (`alg:ttc`, line 17). -/
-noncomputable def eta : ℝ := P.ε / 8
-
-/-- `ε' ← ε/12` (`alg:ttc`, line 18). -/
-noncomputable def epsPrime : ℝ := P.ε / 12
-
-/-- `Thresh ← max(24 ln(24/δ) / ((1−ε')ε'²), 6(ln(6/δ) + ln m))` (`alg:ttc`, line 20). -/
-noncomputable def thresh : ℝ :=
-  max (24 * Real.log (24 / P.δ) / ((1 - P.epsPrime) * P.epsPrime ^ 2))
-      (6 * (Real.log (6 / P.δ) + Real.log P.m))
-
-/-- `κ = √(2 log(8/η)) + √(2 log r)`, the facet displacement of `lem:nonconv`.
-
-The `8/η` (rather than `4/η`) is the `θ = η/2` internal parameter that makes the
-final combination close; see the README, finding 1. -/
-noncomputable def kappa : ℝ :=
-  Real.sqrt (2 * Real.log (8 / P.eta)) + Real.sqrt (2 * Real.log P.r)
-
-/-- `γ = (64 m n / η)·√(log(8r/η))`, the inscribed radius `GetPrecision` targets
-(`alg:prec`, line 86).
-
-The factor `m` is what allows the `Pᵢ` to have *different* inscribed-ball centres
-— see `Ttc.Internal.Recentred`. The `8r/η` matches `κ`. -/
-noncomputable def gamma : ℝ :=
-  (64 * P.m * P.n / P.eta) * Real.sqrt (Real.log (8 * P.r / P.eta))
-
-/-- `ρ ← ⌈log₁₀(γ/γ̂)⌉` (`alg:prec`), where `γ̂` is the largest inscribed radius
-found by the LP. -/
-noncomputable def precision (gammaHat : ℝ) : ℤ := ⌈Real.logb 10 (P.gamma / gammaHat)⌉
 
 /-! ## `η` is in range -/
 

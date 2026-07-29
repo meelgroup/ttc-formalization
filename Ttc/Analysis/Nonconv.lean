@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Internal.Geometry
+import Ttc.Analysis.Geometry
 
 /-!
 # `lem:nonconv`: lattice points versus volume for a union of polytopes
