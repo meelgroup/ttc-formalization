@@ -75,16 +75,16 @@ returns nothing.
 
 ## Module map
 
-The tree is split into a small **audit surface** and the supporting lemmas. To
-check what is claimed, you only need the four surface modules; `Ttc/Internal/`
-holds the proofs they rest on.
+A small **audit surface** plus supporting lemmas. To check what is claimed you
+only need the five surface modules; `Ttc/Internal/` holds the proofs they rest on.
 
 ```
-Ttc.lean                      -- imports the four surface modules
+Ttc.lean                      -- imports the five surface modules
 Ttc/
   Prelude.lean                -- the ambient space ℝⁿ (ℓ₂ norm, Lebesgue measure)
   Problem.lean                -- SMT(LRA) syntax/semantics, Sol(F), thm:decomposition
-  Algorithm.lean              -- the computed parameters ε', Thresh, κ, γ, ρ + what each is chosen to satisfy
+  Parameters.lean             -- the scalars ε', Thresh, κ, γ, ρ + what each is chosen to satisfy
+  Algorithm.lean              -- alg:ttc's main loop, line by line, over an oracle bundle
   Theorem.lean                -- the TtcAnalysis interface and thm:volumettc
   Internal/
     Arith.lean                -- claim:helper and every ε/η inequality
@@ -98,17 +98,43 @@ Ttc/
     Sketch.lean               -- lem:numlattice's epoch skeleton
 ```
 
-**Reading order for an auditor.** `Theorem.lean` states what is proved and lists
-its hypotheses as structure fields; `Algorithm.lean` says where every constant
-comes from and what it buys; `Problem.lean` fixes what `Vol(F)` means. Anything
-you still doubt is then a named lemma in `Internal/`.
+**Reading order for an auditor.** `Algorithm.lean` is the code — read it against
+`sections/algo.tex` and check the control flow matches. `Parameters.lean` says
+where every constant comes from and what it buys. `Problem.lean` fixes what
+`Vol(F)` means. `Theorem.lean` states what is proved and lists its hypotheses as
+structure fields. Anything you still doubt is a named lemma in `Internal/`.
 
 | Surface module | Contains | Status |
 | --- | --- | --- |
 | `Ttc/Prelude.lean` | `Ttc.Space n = EuclideanSpace ℝ (Fin n)` | definitions only |
 | `Ttc/Problem.lean` | `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, convexity, **`thm:decomposition`** | proved |
-| `Ttc/Algorithm.lean` | `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, and `kappa_div_gamma_le`, `epsPrime_window` | proved |
+| `Ttc/Parameters.lean` | `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, with `kappa_div_gamma_le`, `shell_factor_bound`, `epsPrime_window` | proved |
+| `Ttc/Algorithm.lean` | `SketchState`, `Oracles`, `dropCovered`, `halveDown`, `absorb`, `step`, `run` + structural invariants | modelled; see caveats |
 | `Ttc/Theorem.lean` | `Ttc.TtcAnalysis`, **`thm:volumettc`**, non-vacuity | proved from the interface |
+
+### What `Ttc/Algorithm.lean` does and does not do
+
+It is a line-by-line model of `alg:ttc` lines 22–46: the state `(X, p)`, the
+order of operations, both `while` guards, the coverage filter, and the output
+`|X|/p`. Read it beside the pseudocode.
+
+Four external calls are **fields of `Ttc.Oracles`** rather than definitions —
+`Vol_ED`, the Poisson draw, `GenerateSamples`, and the fair-coin thinning. So the
+state evolution is deterministic *given the oracle's answers*, and all the
+randomness sits at that boundary. That is deliberate: the distribution of the
+output is `lem:numlattice`, which this development assumes.
+
+Both `while` loops run on **explicit fuel**. Termination is *not* claimed and
+would be false to claim: the second loop terminates because repeated thinning
+brings `Nᵢ + |X|` under `Thresh` with high probability, and there is no
+deterministic bound. What is proved is structural — `p` never increases and stays
+nonnegative (`halveDown_p`, `absorb_p`), the filter only removes points
+(`card_dropCovered_le`), a settled state is a fixpoint (`absorb_of_settled`).
+
+**There is no theorem linking `Ttc.run` to `Ttc.TtcAnalysis.est`.** The capstone
+takes `est` as a field satisfying `lem:numlattice`'s conclusion; proving that
+`run` satisfies it is exactly `lem:numlattice`, which is assumed. Closing that
+link is the main remaining work.
 
 ## Paper ↔ Lean map
 
@@ -137,9 +163,10 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | `lem:numlattice` | sketch output within `(1±ε/3)` w.p. `1−δ` | [`epoch_series_le`](Ttc/Internal/Sketch.lean#L86), [`err_sum_le_delta`](Ttc/Internal/Sketch.lean#L105), [`noise_bound_le_delta`](Ttc/Internal/Sketch.lean#L125), [`numlattice_failure_bound`](Ttc/Internal/Sketch.lean#L141), [`sketch_interval`](Ttc/Internal/Sketch.lean#L154), [`sketch_window`](Ttc/Internal/Sketch.lean#L169) | epoch skeleton **proved**; `lem:chernoff` assumed |
 | `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Internal/Sketch.lean#L154) | constant **verified** |
 | `alg:ttc` line 20 (`Thresh`) | | [`err_sum_le_delta`](Ttc/Internal/Sketch.lean#L105), [`noise_bound_le_delta`](Ttc/Internal/Sketch.lean#L125) | both branches **verified** |
-| `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Algorithm.lean#L73) | definition |
-| `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Algorithm.lean#L87), [`kappa_le`](Ttc/Algorithm.lean#L128) | **proved** `κ ≤ 2√(log(8r/η))` |
-| `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Algorithm.lean#L95), [`kappa_div_gamma_le`](Ttc/Algorithm.lean#L147), [`shell_factor_bound`](Ttc/Algorithm.lean#L163) | **proved** — see finding 2 |
+| `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Parameters.lean#L73) | definition |
+| `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Parameters.lean#L87), [`kappa_le`](Ttc/Parameters.lean#L128) | **proved** `κ ≤ 2√(log(8r/η))` |
+| `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Parameters.lean#L95), [`kappa_div_gamma_le`](Ttc/Parameters.lean#L147), [`shell_factor_bound`](Ttc/Parameters.lean#L169) | **proved** — see finding 2 |
+| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Algorithm.lean#L127), [`step`](Ttc/Algorithm.lean#L118), [`absorb`](Ttc/Algorithm.lean#L110), [`halveDown`](Ttc/Algorithm.lean#L104) | modelled over an oracle bundle; structural invariants proved, termination and distribution not |
 | `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` | [`ball_radius_scales`](Ttc/Internal/Lattice.lean#L84), [`claim_helper`](Ttc/Internal/Arith.lean#L162), [`gamma_half_le`](Ttc/Internal/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Internal/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Internal/Recentred.lean#L199) | mathematical content **proved**; LP implementation not modelled |
 
 Results with no counterpart in the paper, produced by the formalisation:

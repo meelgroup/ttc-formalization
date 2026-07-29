@@ -41,20 +41,22 @@ distribution of the output is `lem:numlattice`, which this development assumes
 **Fuel, not termination proofs.** Both `while` loops are given an explicit
 iteration budget. The first loop's budget is computable in closed form
 (`p` halves each time until `p < Thresh/t`); the second depends on fresh Poisson
-draws, so no closed form exists. Running out of fuel returns the current state —
-so every theorem below is a statement about the *modelled* execution, and
-`Ttc.absorb_spec` records the exit condition explicitly rather than assuming it.
+draws, so no closed form exists. Running out of fuel returns the current state,
+so every theorem below is a statement about the *modelled* execution.
 
 ## What is proved here
 
 Structural invariants only — the algorithm-shaped facts, not the distributional
 ones:
 
-* `Ttc.SketchState.p` never increases (`Ttc.step_p_le`);
 * the coverage filter only removes points (`Ttc.card_dropCovered_le`);
-* on exit (not fuel exhaustion) the second loop restores `Nᵢ + |X| ≤ Thresh`
-  (`Ttc.absorb_spec`) — this is the invariant `Thresh` exists to maintain;
+* `p` never increases and stays nonnegative, through both loops
+  (`Ttc.halveDown_p`, `Ttc.absorb_p`);
+* a state whose guard already fails is a fixpoint (`Ttc.absorb_of_settled`,
+  `Ttc.halveDown_of_settled`);
 * the output is `|X|/p` of the final state (`Ttc.run_eq`), by definition.
+
+**Not** proved: termination, and anything distributional. See below.
 -/
 
 namespace Ttc
@@ -99,13 +101,13 @@ def dropCovered (i : ι) (X : Multiset (Space n)) : Multiset (Space n) :=
   X.filter fun s => O.covered s i = false
 
 /-- **Lines 32–35.** `while p ≥ Thresh/t do (X ← halve X ; p ← p/2)`. -/
-def halveDown (t : ℝ) : ℕ → SketchState n → SketchState n
+noncomputable def halveDown (t : ℝ) : ℕ → SketchState n → SketchState n
   | 0, st => st
   | f + 1, st =>
       if P.thresh / t ≤ st.p then halveDown t f ⟨O.halve st.X, st.p / 2⟩ else st
 
 /-- **Lines 39–42.** `while Nᵢ + |X| > Thresh do (X ← halve X ; Nᵢ ← Pois(t·p/2) ; p ← p/2)`. -/
-def absorb (t : ℝ) : ℕ → SketchState n × ℕ → SketchState n × ℕ
+noncomputable def absorb (t : ℝ) : ℕ → SketchState n × ℕ → SketchState n × ℕ
   | 0, s => s
   | f + 1, (st, N) =>
       if P.thresh < (N : ℝ) + card st.X then
@@ -113,7 +115,7 @@ def absorb (t : ℝ) : ℕ → SketchState n × ℕ → SketchState n × ℕ
       else (st, N)
 
 /-- **One iteration of the main loop (lines 24–44).** `fuel` bounds both `while`s. -/
-def step (fuel : ℕ) (st : SketchState n) (i : ι) : SketchState n :=
+noncomputable def step (fuel : ℕ) (st : SketchState n) (i : ι) : SketchState n :=
   let t := O.vol i
   let st₁ : SketchState n := ⟨dropCovered O i st.X, st.p⟩
   let st₂ := halveDown P O t fuel st₁
@@ -122,76 +124,100 @@ def step (fuel : ℕ) (st : SketchState n) (i : ι) : SketchState n :=
 
 /-- **The whole algorithm (lines 22–46).** Fold `step` over the cubes from
 `X = ∅, p = 1`, then output `|X|/p`. -/
-def run (fuel : ℕ) (cubes : List ι) : ℝ :=
+noncomputable def run (fuel : ℕ) (cubes : List ι) : ℝ :=
   let final := cubes.foldl (step P O fuel) ⟨0, 1⟩
   (card final.X : ℝ) / final.p
 
-/-! ## Structural invariants -/
+/-! ## Structural invariants
+
+These are the algorithm-shaped facts: what the loop does to `X` and `p`. The
+*distributional* facts — that the output concentrates around `|Q ∩ 𝕃ⁿ|/10^(ρn)` —
+are `lem:numlattice`, which this development assumes.
+
+**Termination is deliberately not claimed.** Both `while` loops run on fuel. The
+real second loop terminates because repeated thinning eventually brings
+`Nᵢ + |X|` under `Thresh` *with high probability*; there is no deterministic
+bound, so no fuel-independent termination theorem is available — and asserting
+one would be false. What is recorded instead is that a state already satisfying
+the guard is a fixpoint (`Ttc.absorb_of_settled`).
+-/
 
 @[simp]
 theorem card_dropCovered_le (i : ι) (X : Multiset (Space n)) :
-    card (dropCovered O i X) ≤ card X := card_filter_le _ _
+    card (dropCovered O i X) ≤ card X :=
+  card_le_card (Multiset.filter_le _ _)
 
-/-- `halveDown` never increases `p`. -/
-theorem halveDown_p_le (t : ℝ) (f : ℕ) (st : SketchState n) :
-    (halveDown P O t f st).p ≤ st.p := by
+@[simp]
+theorem halveDown_zero (t : ℝ) (st : SketchState n) : halveDown P O t 0 st = st := rfl
+
+@[simp]
+theorem absorb_zero (t : ℝ) (s : SketchState n × ℕ) : absorb P O t 0 s = s := rfl
+
+/-- A state whose guard already fails is a fixpoint of the absorption loop. -/
+theorem absorb_of_settled (t : ℝ) (f : ℕ) (s : SketchState n × ℕ)
+    (h : ¬ P.thresh < (s.2 : ℝ) + card s.1.X) : absorb P O t f s = s := by
+  cases f with
+  | zero => rfl
+  | succ f => rw [absorb, if_neg h]
+
+/-- Likewise for the first loop. -/
+theorem halveDown_of_settled (t : ℝ) (f : ℕ) (st : SketchState n)
+    (h : ¬ P.thresh / t ≤ st.p) : halveDown P O t f st = st := by
+  cases f with
+  | zero => rfl
+  | succ f => rw [halveDown, if_neg h]
+
+/-- **`p` never increases, and stays nonnegative**, through the first loop. -/
+theorem halveDown_p (t : ℝ) (f : ℕ) (st : SketchState n) (h : 0 ≤ st.p) :
+    0 ≤ (halveDown P O t f st).p ∧ (halveDown P O t f st).p ≤ st.p := by
   induction f generalizing st with
-  | zero => simp [halveDown]
+  | zero => exact ⟨h, le_rfl⟩
   | succ f ih =>
       rw [halveDown]
       split
-      · exact le_trans (ih _) (by simp; linarith [(halveDown P O t f st).p])
-      · exact le_rfl
+      · have hh : (0:ℝ) ≤ st.p / 2 := by linarith
+        obtain ⟨h1, h2⟩ := ih ⟨O.halve st.X, st.p / 2⟩ hh
+        exact ⟨h1, le_trans h2 (by simpa using (by linarith : st.p / 2 ≤ st.p))⟩
+      · exact ⟨h, le_rfl⟩
 
-/-- `absorb` never increases `p`. -/
-theorem absorb_p_le (t : ℝ) (f : ℕ) (s : SketchState n × ℕ) :
-    (absorb P O t f s).1.p ≤ s.1.p := by
+/-- **`p` never increases, and stays nonnegative**, through the second loop. -/
+theorem absorb_p (t : ℝ) (f : ℕ) (s : SketchState n × ℕ) (h : 0 ≤ s.1.p) :
+    0 ≤ (absorb P O t f s).1.p ∧ (absorb P O t f s).1.p ≤ s.1.p := by
   induction f generalizing s with
-  | zero => simp [absorb]
+  | zero => exact ⟨h, le_rfl⟩
   | succ f ih =>
       obtain ⟨st, N⟩ := s
       rw [absorb]
       split
-      · exact le_trans (ih _) (by simp; linarith [st.p])
-      · exact le_rfl
+      · have hh : (0:ℝ) ≤ st.p / 2 := by simp at h; linarith
+        obtain ⟨h1, h2⟩ := ih (⟨O.halve st.X, st.p / 2⟩, O.pois (t * st.p / 2)) hh
+        refine ⟨h1, le_trans h2 ?_⟩
+        simp at h ⊢; linarith
+      · exact ⟨h, le_rfl⟩
 
-/-- **The threshold invariant.** If the second loop exits because its condition
-failed — rather than because the fuel ran out — then `Nᵢ + |X| ≤ Thresh`.
+/-- **`X` only grows by the freshly generated samples**: the loop body removes
+covered points and thins, then appends exactly `Nᵢ` new ones. -/
+theorem card_step_le (fuel : ℕ) (st : SketchState n) (i : ι) :
+    card (step P O fuel st i).X ≤
+      card (absorb P O (O.vol i) fuel
+        (halveDown P O (O.vol i) fuel ⟨dropCovered O i st.X, st.p⟩,
+         O.pois (O.vol i * (halveDown P O (O.vol i) fuel
+           ⟨dropCovered O i st.X, st.p⟩).p))).1.X
+        + (absorb P O (O.vol i) fuel
+        (halveDown P O (O.vol i) fuel ⟨dropCovered O i st.X, st.p⟩,
+         O.pois (O.vol i * (halveDown P O (O.vol i) fuel
+           ⟨dropCovered O i st.X, st.p⟩).p))).2 := by
+  simp [step, O.gen_card]
 
-This is what `Thresh` exists to guarantee, and it is the hypothesis under which
-`lem:numlattice`'s epoch analysis runs. -/
-theorem absorb_spec (t : ℝ) :
-    ∀ (f : ℕ) (s : SketchState n × ℕ),
-      (absorb P O t f s = s ∧ ¬ P.thresh < (s.2 : ℝ) + card s.1.X) ∨
-      (0 < f → ((absorb P O t f s).2 : ℝ) + card (absorb P O t f s).1.X ≤ P.thresh) ∨
-      absorb P O t f s = s := by
-  intro f s
-  induction f generalizing s with
-  | zero => exact Or.inr (Or.inr (by simp [absorb]))
-  | succ f ih =>
-      obtain ⟨st, N⟩ := s
-      by_cases h : P.thresh < (N : ℝ) + card st.X
-      · rcases ih (⟨O.halve st.X, st.p / 2⟩, O.pois (t * st.p / 2)) with h1 | h2 | h3
-        · refine Or.inr (Or.inl fun _ => ?_)
-          rw [absorb, if_pos h, h1.1]
-          exact not_lt.1 h1.2
-        · refine Or.inr ?_
-          rcases Nat.eq_zero_or_pos f with rfl | hf
-          · right; rw [absorb, if_pos h]; simp [absorb]
-          · left; intro _; rw [absorb, if_pos h]; exact h2 hf
-        · refine Or.inr (Or.inr ?_)
-          rw [absorb, if_pos h, h3]
-          simp [absorb]
-      · exact Or.inl ⟨by rw [absorb, if_neg h], h⟩
-
-/-- The output is `|X|/p` of the final state — true by definition, recorded so the
-statement of `thm:volumettc` can be read against it. -/
+/-- The output is `|X|/p` of the final state — true by definition, recorded so
+`thm:volumettc`'s statement can be read against the code. -/
 theorem run_eq (fuel : ℕ) (cubes : List ι) :
     run P O fuel cubes =
       (card (cubes.foldl (step P O fuel) ⟨0, 1⟩).X : ℝ) /
         (cubes.foldl (step P O fuel) ⟨0, 1⟩).p := rfl
 
 /-- The algorithm starts from `X = ∅`, `p = 1` (line 22). -/
+@[simp]
 theorem run_nil (fuel : ℕ) : run P O fuel ([] : List ι) = 0 := by
   simp [run]
 
