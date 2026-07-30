@@ -62,7 +62,7 @@ quantifies over the structure and adds nothing — no side hypothesis, no
 | `M`, `φ`, `D` | [41](Ttc/Model/ProblemSetting.lean#L41), [45](Ttc/Model/ProblemSetting.lean#L45) | the formula, its interpretation, its DNF | inputs |
 | `isDNF` | [47](Ttc/Model/ProblemSetting.lean#L47) | `D` and `φ` agree on every Boolean assignment | **assumed** of the external `ToDNF`/AllSAT tool. `thm:decomposition` is *proved* from it |
 | `L`, `hL` | [49](Ttc/Model/ProblemSetting.lean#L49), [51](Ttc/Model/ProblemSetting.lean#L51) | a nonnegative real, *intended* as `\|Q ∩ 𝕃ⁿ\|/10^(ρn)` | see §4 — nothing ties `L` to a lattice count |
-| `lattice_lo`, `lattice_hi` | [53](Ttc/Model/ProblemSetting.lean#L53), [55](Ttc/Model/ProblemSetting.lean#L55) | **`lem:lattice`** at `η = ε/8`: `L` approximates `Vol(F)` two-sidedly | **assumed**. Its derivation from `lem:nonconv` is proved (`Analysis/Lattice`, `Analysis/Nonconv`, `Analysis/Recentred`, `Analysis/Repair`); the residual gap is the measure-theoretic reduction inside `claim:cl` |
+| `lattice_lo`, `lattice_hi` | [53](Ttc/Model/ProblemSetting.lean#L53), [55](Ttc/Model/ProblemSetting.lean#L55) | **`lem:lattice`** at `η = ε/8`: `L` approximates `Vol(F)` two-sidedly | **assumed**. Its derivation from `lem:nonconv` is proved (`Analysis/Lattice`, `Analysis/Nonconv`, `Analysis/Recentred`, `Analysis/Repair`); the residual gap inside `claim:cl` is now the single escape bound of [`claim_cl_a`](Ttc/Analysis/Cl.lean#L126) |
 | `Ω`, `mΩ`, `μ`, `isProb` | [57](Ttc/Model/ProblemSetting.lean#L57)–[63](Ttc/Model/ProblemSetting.lean#L63) | a probability space for the algorithm's randomness | structure, not an assumption |
 | `P`, `O`, `fuel` | [65](Ttc/Model/ProblemSetting.lean#L65)–[69](Ttc/Model/ProblemSetting.lean#L69) | the parameter block, the `ω`-indexed oracle bundle, the loop budget | inputs; see §4 on `O` and on `fuel` |
 | `gammaHat` | [72](Ttc/Model/ProblemSetting.lean#L72) | `γ̂`, the smallest inscribed-ball radius over the polytopes | input — the LP of `alg:prec` that computes it is **not modelled** |
@@ -146,7 +146,7 @@ the mathematics around it: that dilation scales inscribed radii
 ([`ball_radius_scales`](Ttc/Analysis/Lattice.lean#L84)), and that the two repairs
 cost at most one decimal digit
 ([`precision_increase_le_one`](Ttc/Analysis/Repair.lean#L154)) and `O(log m)`
-digits ([`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L306)) respectively.
+digits ([`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L576)) respectively.
 
 **The parameter block is a transcription, checkable only by eye.** The constants
 in [`Ttc.Params`](Ttc/Model/Prelude.lean#L138) — `η`, `ε'`, `Thresh`, `κ`, `γ`,

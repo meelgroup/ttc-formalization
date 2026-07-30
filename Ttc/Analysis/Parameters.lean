@@ -119,6 +119,60 @@ theorem shell_factor_bound :
     _ ≤ 1 + 2 * (P.eta / (32 * P.m)) := one_add_div_pow_le P.hn hα0 hα1
     _ = 1 + P.eta / (16 * P.m) := by ring
 
+/-- `κ ≤ γ/2`, indeed `κ ≤ γ/32`: immediate from `kappa_div_gamma_le`, since
+`η ≤ 1` and `m, n ≥ 1`. Needed to make the *deflated* shell factor finite. -/
+theorem kappa_le_gamma_half : P.kappa ≤ P.gamma / 2 := by
+  have hγ := P.gamma_pos
+  have hn : (1:ℝ) ≤ (P.n : ℝ) := by exact_mod_cast P.hn
+  have hm : (1:ℝ) ≤ (P.m : ℝ) := by exact_mod_cast P.hm
+  have he := P.eta_le_one
+  have he0 := P.eta_pos
+  have h1 : P.eta / (32 * P.m * P.n) ≤ 1 / 2 := by
+    rw [div_le_iff₀ (by positivity)]
+    nlinarith
+  have h2 : P.kappa / P.gamma ≤ 1 / 2 := le_trans P.kappa_div_gamma_le h1
+  rw [div_le_iff₀ hγ] at h2
+  linarith
+
+/-- **`(1 + κ/(γ−κ))ⁿ ≤ 1 + η/(8m)`** — the deflated companion of
+`Ttc.Params.shell_factor_bound`.
+
+The deflated shell factor is the inflated one at `γ − κ` in place of `γ`. Since
+`κ ≤ γ/2` the two differ by at most a factor `2`, which costs a factor `2` in the
+conclusion: `η/(16m)` becomes `η/(8m)`. Feeding it to
+`Ttc.FacetSystem.volume_body_deflated_le` gives `vol Q ≤ (1 + η/8)·vol Q''`. -/
+theorem shell_factor_bound_deflated :
+    (1 + P.kappa / (P.gamma - P.kappa)) ^ P.n ≤ 1 + P.eta / (8 * P.m) := by
+  have hγ := P.gamma_pos
+  have hκ := P.kappa_nonneg
+  have hhalf := P.kappa_le_gamma_half
+  have hd : 0 < P.gamma - P.kappa := by linarith
+  have hn : (1:ℝ) ≤ (P.n : ℝ) := by exact_mod_cast P.hn
+  have hm : (1:ℝ) ≤ (P.m : ℝ) := by exact_mod_cast P.hm
+  have he := P.eta_le_one
+  have he0 := P.eta_pos
+  have hα0 : (0:ℝ) ≤ P.eta / (16 * P.m) := by positivity
+  have hα1 : P.eta / (16 * P.m) ≤ 1 := by
+    rw [div_le_one (by positivity)]; nlinarith
+  -- `κ/(γ−κ) ≤ 2κ/γ ≤ η/(16mn) = (η/(16m))/n`
+  have hstep : P.kappa / (P.gamma - P.kappa) ≤ (P.eta / (16 * P.m)) / (P.n : ℝ) := by
+    have h1 : P.kappa / (P.gamma - P.kappa) ≤ P.kappa / (P.gamma / 2) := by
+      apply div_le_div_of_nonneg_left hκ (by linarith) (by linarith)
+    have h2 : P.kappa / (P.gamma / 2) = 2 * (P.kappa / P.gamma) := by
+      field_simp
+    have h3 := P.kappa_div_gamma_le
+    have h4 : (P.eta / (16 * P.m)) / (P.n : ℝ) = 2 * (P.eta / (32 * P.m * P.n)) := by
+      field_simp; ring
+    rw [h4]
+    rw [h2] at h1
+    linarith
+  have hbase : (0:ℝ) ≤ 1 + P.kappa / (P.gamma - P.kappa) := by positivity
+  calc (1 + P.kappa / (P.gamma - P.kappa)) ^ P.n
+      ≤ (1 + (P.eta / (16 * P.m)) / (P.n : ℝ)) ^ P.n :=
+        pow_le_pow_left₀ hbase (by linarith) P.n
+    _ ≤ 1 + 2 * (P.eta / (16 * P.m)) := one_add_div_pow_le P.hn hα0 hα1
+    _ = 1 + P.eta / (8 * P.m) := by ring
+
 /-! ## `ε'`: the sketch's interval -/
 
 theorem epsPrime_pos : 0 < P.epsPrime := by unfold epsPrime; linarith [P.hε0]

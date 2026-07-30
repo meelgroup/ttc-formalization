@@ -72,8 +72,12 @@ import Ttc.Analysis.Recentred
 import Ttc.Analysis.Nonconv
 import Ttc.Analysis.Repair
 import Ttc.Analysis.Rounding
+import Ttc.Analysis.Tent
+import Ttc.Analysis.FacetOfDNF
 import Ttc.Analysis.Lattice
 import Ttc.Analysis.Poisson
 import Ttc.Analysis.Sketch
 import Ttc.Analysis.Invariants
+import Ttc.Analysis.Cl
+import Ttc.Analysis.ProdKernel
 import Ttc.Analysis.Capstone

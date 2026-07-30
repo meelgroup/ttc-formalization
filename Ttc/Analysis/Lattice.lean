@@ -117,4 +117,80 @@ theorem lattice_of_scaled {η N c volQ volS : ℝ} (hc : 0 < c)
       _ = volS := hscale.symm
       _ ≤ (1 + η) * N := hupp
 
+/-! ## `lem:lattice`, instantiated
+
+Everything above is about free reals. This section fixes that: `L` becomes an
+actual normalised lattice count of the actual solution set, and `lem:lattice`
+becomes a statement about `Ttc.volSol` — conditional only on `lem:nonconv` for the
+dilate, which is itself about actual sets.
+-/
+
+/-- The dilation `10^ρ` carrying `𝕃ⁿ = 10^(−ρ)·ℤⁿ` onto `ℤⁿ`. -/
+noncomputable def latticeScale (ρ : ℤ) : ℝ := (10 : ℝ) ^ ρ
+
+theorem latticeScale_pos (ρ : ℤ) : 0 < latticeScale ρ := zpow_pos (by norm_num) ρ
+
+theorem latticeScale_ne_zero (ρ : ℤ) : latticeScale ρ ≠ 0 := (latticeScale_pos ρ).ne'
+
+/-- **`|Sol(F) ∩ 𝕃ⁿ|`** — the lattice-point count the algorithm's estimate targets,
+of the *actual* solution set. -/
+noncomputable def latticeCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
+    (ρ : ℤ) : ℕ :=
+  ((sol M φ) ∩ fineLattice n (latticeScale ρ)).ncard
+
+/-- **`|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`** — the paper's `L`, as an actual normalised
+count rather than a free real. -/
+noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
+    (ρ : ℤ) : ℝ :=
+  (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
+
+/-- Dilating the solution set multiplies its volume by `10^(ρ·n)`. Holds with no
+finiteness hypothesis: if the volume is infinite both sides are `0` after
+`toReal`. -/
+theorem volSol_smul {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
+    (volume (latticeScale ρ • sol M φ)).toReal
+      = (latticeScale ρ) ^ n * volSol M φ := by
+  rw [volume_smul_body (latticeScale_pos ρ).le, ENNReal.toReal_mul,
+    ENNReal.toReal_ofReal (pow_nonneg (latticeScale_pos ρ).le n)]
+  rfl
+
+/-- The count of `𝕃ⁿ`-points of `Sol(F)` is the count of `ℤⁿ`-points of its
+dilate — `Ttc.ncard_inter_lattice_smul` at the algorithm's scale. -/
+theorem latticeCount_eq {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
+    (latticeCount M φ ρ : ℝ)
+      = (((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ) := by
+  rw [latticeCount, ncard_inter_lattice_smul (latticeScale_ne_zero ρ)]
+
+/-- **`lem:lattice`, about the real objects.**
+
+Given `lem:nonconv`'s two-sided bound for the dilate `10^ρ · Sol(F)` against its
+integer-point count, the same bound holds for `Sol(F)` against
+`Ttc.normalisedCount` — i.e. `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`.
+
+This is the instantiation `lattice_of_scaled` was stated for: no free reals, no
+`hscale` hypothesis (it is `Ttc.volSol_smul`), and `N` is a genuine lattice count
+(`Ttc.latticeCount_eq`). -/
+theorem lattice_bounds {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
+    (ρ : ℤ) {η : ℝ}
+    (hlow : (1 - η) * (((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ)
+              ≤ (volume (latticeScale ρ • sol M φ)).toReal)
+    (hupp : (volume (latticeScale ρ • sol M φ)).toReal
+              ≤ (1 + η) * (((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ)) :
+    (1 - η) * normalisedCount M φ ρ ≤ volSol M φ ∧
+      volSol M φ ≤ (1 + η) * normalisedCount M φ ρ := by
+  obtain ⟨h1, h2⟩ :=
+    lattice_of_scaled (n := n) (latticeScale_pos ρ) (volSol_smul M φ ρ) hlow hupp
+  rw [normalisedCount, latticeCount_eq]
+  constructor
+  · calc (1 - η) * ((((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ)
+            / (latticeScale ρ) ^ n)
+        = (1 - η) / (latticeScale ρ) ^ n
+            * (((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ) := by ring
+      _ ≤ volSol M φ := h1
+  · calc volSol M φ
+        ≤ (1 + η) / (latticeScale ρ) ^ n
+            * (((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ) := h2
+      _ = (1 + η) * ((((latticeScale ρ • sol M φ) ∩ intLattice n).ncard : ℝ)
+            / (latticeScale ρ) ^ n) := by ring
+
 end Ttc
