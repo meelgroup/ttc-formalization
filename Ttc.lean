@@ -79,5 +79,7 @@ import Ttc.Analysis.Poisson
 import Ttc.Analysis.Sketch
 import Ttc.Analysis.Invariants
 import Ttc.Analysis.Cl
+import Ttc.Analysis.PiLintegral
 import Ttc.Analysis.ProdKernel
+import Ttc.Analysis.ProdLaw
 import Ttc.Analysis.Capstone
