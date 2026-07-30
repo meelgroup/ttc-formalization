@@ -37,10 +37,6 @@ theorem region_eq_iInter (c : Cube A) :
   refine forall_congr' fun l => forall_congr' fun _ => ?_
   cases hb : l.pos <;> simp [Lit.holds, litSet, hb, induced]
 
-/-- Regions are monotone in the cube: adding literals shrinks the region. -/
-theorem region_subset_of_sublist {c d : Cube A} (h : ∀ l ∈ c, l ∈ d) :
-    region M d ⊆ region M c := fun _ hx l hl => hx l (h l hl)
-
 /-! ## Convexity of a cube's region
 
 The paper asserts that each cube denotes a *convex polytope*. With linear atoms
@@ -109,5 +105,14 @@ theorem sol_subset_iUnion_region (h : IsDNFOf D φ) :
   intro x hx
   obtain ⟨c, hc, hxc⟩ := (h (induced M x)).2 hx
   exact mem_biUnion hc hxc
+
+/-- **`thm:decomposition`.** The union of the regions of a DNF abstraction's cubes
+is exactly `Sol(F)`. This is what makes the set the algorithm enumerates and the
+set `thm:volumettc` bounds the same set. -/
+theorem sol_eq_iUnion_region (h : IsDNFOf D φ) :
+    ⋃ c ∈ D, region M c = sol M φ :=
+  Subset.antisymm
+    (iUnion₂_subset fun _ hc => region_subset_sol h hc)
+    (sol_subset_iUnion_region h)
 
 end Ttc

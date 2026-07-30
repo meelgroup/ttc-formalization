@@ -2,43 +2,80 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.Pseudocode
+import Ttc.Model.ProblemSetting
+import Ttc.Analysis.Decomposition
 
 /-!
 # The capstone: combining `lem:lattice` and `lem:numlattice`
 
-The proof content behind `Model/Theorem`. Everything here is proved from the
-fields of `Ttc.TtcAnalysis` (`Model/Prelude`) and nothing else.
+The proof content behind `Model/Theorem`, in two layers.
 
-The two halves are the paper's two chains:
+**The deterministic core.** `Ttc.TtcAnalysis` is an internal bundle of the four
+real numbers and four inequalities the arithmetic actually consumes — it is *not*
+part of the audit surface, and `Ttc.TtcProb` (`Model/ProblemSetting`) does not extend
+it. Over it we prove the paper's two chains:
 
 * `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/3)·L ≤ est`  (`Ttc.TtcAnalysis.le_est`)
 * `est ≤ (1+ε/3)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`  (`Ttc.TtcAnalysis.est_le`)
 
 so the `ε/8` of `lem:lattice` and the `ε/3` of `lem:numlattice` compose to the
-`ε` of `thm:volumettc` with slack. `Model/Theorem` pairs them.
+`ε` of `thm:volumettc`, with slack.
 
-Also here: `Ttc.TtcAnalysis.ideal`, the non-vacuity witness — the *exact*
-instance, with every error term zero. A capstone quantified over a structure is
-worthless if the structure is uninhabited, so this is load-bearing; see the
-README, and `Ttc.nonempty_ttcAnalysis` in `Model/Theorem`.
+**The bridge to the probabilistic statement.** `Ttc.TtcProb.toAnalysis` reads a
+`Ttc.TtcAnalysis` off a `Ttc.TtcProb` at any sample point where `lem:numlattice`'s
+conclusion holds, so the arithmetic is written once. `Model/Theorem` then applies
+it pointwise and lets `measure_mono` carry the `1 − δ`.
+
+**Non-vacuity.** `Ttc.trivialProb` inhabits `Ttc.TtcProb`, without which the
+headline would be vacuously true. It is a *satisfiability* witness only — see
+`AUDIT.md` §4.
 -/
 
 namespace Ttc
 
 open MeasureTheory Set
 
+/-! ## The deterministic core -/
+
+/-- **The arithmetic interface.** The four quantities and four inequalities the
+two-sided chain consumes, and nothing else. Internal: the audit surface is
+`Ttc.TtcProb` (`Model/ProblemSetting`), whose fields subsume these. -/
+structure TtcAnalysis (A : Type*) (n : ℕ) where
+  /-- The multiplicative accuracy parameter. -/
+  ε : ℝ
+  /-- `ε` is positive. -/
+  hε0 : 0 < ε
+  /-- `ε` is at most one, as required by `thm:volumettc`. -/
+  hε1 : ε ≤ 1
+  /-- The interpretation of atoms as sets of points. -/
+  M : A → Set (Space n)
+  /-- The Boolean abstraction of the input formula. -/
+  φ : BForm A
+  /-- The normalised lattice count `|Q ∩ 𝕃ⁿ| / 10^(ρ·n)`. -/
+  L : ℝ
+  /-- A count is nonnegative. -/
+  hL : 0 ≤ L
+  /-- The estimate the algorithm outputs. -/
+  est : ℝ
+  /-- `lem:lattice`, lower half, at `η = ε/8`. -/
+  lattice_lo : (1 - ε / 8) * L ≤ volSol M φ
+  /-- `lem:lattice`, upper half, at `η = ε/8`. -/
+  lattice_hi : volSol M φ ≤ (1 + ε / 8) * L
+  /-- `lem:numlattice`, lower half. -/
+  sketch_lo : (1 - ε / 3) * L ≤ est
+  /-- `lem:numlattice`, upper half. -/
+  sketch_hi : est ≤ (1 + ε / 3) * L
+
 namespace TtcAnalysis
 
 variable {A : Type*} {n : ℕ} (T : TtcAnalysis A n)
 
-/-- **`thm:volumettc`, lower bound.** -/
+/-- **Lower bound.** `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/3)·L ≤ est`. -/
 theorem le_est : (1 - T.ε) * volSol T.M T.φ ≤ T.est := by
   have hv := T.lattice_hi
   have hL := T.hL
   have h0 := T.hε0
   have h1 := T.hε1
-  -- `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/3)·L ≤ est`
   have step1 : (1 - T.ε) * volSol T.M T.φ ≤ (1 - T.ε) * ((1 + T.ε / 8) * T.L) :=
     mul_le_mul_of_nonneg_left hv (by linarith)
   have harith : (1 - T.ε) * (1 + T.ε / 8) ≤ 1 - T.ε / 3 := by nlinarith
@@ -46,13 +83,12 @@ theorem le_est : (1 - T.ε) * volSol T.M T.φ ≤ T.est := by
     nlinarith [mul_le_mul_of_nonneg_right harith hL]
   linarith [T.sketch_lo]
 
-/-- **`thm:volumettc`, upper bound.** -/
+/-- **Upper bound.** `est ≤ (1+ε/3)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`. -/
 theorem est_le : T.est ≤ (1 + T.ε) * volSol T.M T.φ := by
   have hv := T.lattice_lo
   have hL := T.hL
   have h0 := T.hε0
   have h1 := T.hε1
-  -- `est ≤ (1+ε/3)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`
   have harith : (1 + T.ε / 3) ≤ (1 + T.ε) * (1 - T.ε / 8) := by nlinarith
   have step1 : (1 + T.ε / 3) * T.L ≤ ((1 + T.ε) * (1 - T.ε / 8)) * T.L :=
     mul_le_mul_of_nonneg_right harith hL
@@ -61,48 +97,50 @@ theorem est_le : T.est ≤ (1 + T.ε) * volSol T.M T.φ := by
     linarith [h]
   linarith [T.sketch_hi]
 
+/-- **The two-sided bound**, the deterministic content of `thm:volumettc`: the
+`(1±ε/8)` of `lem:lattice` and the `(1±ε/3)` of `lem:numlattice` compose to
+`(1±ε)`. -/
+theorem volume_estimate : T.est ∈ relErr T.ε (volSol T.M T.φ) :=
+  ⟨T.le_est, T.est_le⟩
+
 end TtcAnalysis
+
+/-- **`thm:decomposition` for a `Ttc.TtcProb`.** The set whose volume the headline
+bounds is exactly the union of the polytopes the algorithm enumerates — the two
+are the same set, not two things sharing a name. Proved from the `isDNF` field. -/
+theorem TtcProb.sol_eq_union {A : Type*} {n : ℕ} (T : TtcProb A n) :
+    ⋃ c ∈ T.D, region T.M c = sol T.M T.φ :=
+  sol_eq_iUnion_region T.isDNF
+
+/-! ## From the probabilistic bundle to the deterministic core -/
+
+/-- **At a sample point where `lem:numlattice` holds, `T` gives a
+`Ttc.TtcAnalysis`.** This is what lets `Model/Theorem` apply the arithmetic
+pointwise without restating it. -/
+noncomputable def TtcProb.toAnalysis {A : Type*} {n : ℕ} (T : TtcProb A n) {ω : T.Ω}
+    (h : (1 - T.ε / 3) * T.L ≤ ttcOutput T.P T.O T.fuel T.ρ T.D ω ∧
+         ttcOutput T.P T.O T.fuel T.ρ T.D ω ≤ (1 + T.ε / 3) * T.L) :
+    TtcAnalysis A n where
+  ε := T.ε
+  hε0 := T.hε0
+  hε1 := T.hε1
+  M := T.M
+  φ := T.φ
+  L := T.L
+  hL := T.hL
+  est := ttcOutput T.P T.O T.fuel T.ρ T.D ω
+  lattice_lo := T.lattice_lo
+  lattice_hi := T.lattice_hi
+  sketch_lo := h.1
+  sketch_hi := h.2
 
 /-! ## Non-vacuity
 
-A capstone quantified over a structure is worthless if the structure is
-uninhabited. The *ideal* instance — exact lattice count and exact estimate —
-inhabits `TtcAnalysis` for **every** formula with a DNF representation and every
-admissible `ε`, so the theorem is not vacuous.
+`Ttc.TtcProb.volume_estimate` (`Model/Theorem`) quantifies over `Ttc.TtcProb`; if
+that structure were uninhabited the theorem would be vacuously true. The witness
+below is *satisfiability* only — it says the fields are mutually consistent, not
+that they hold of the real algorithm. That is `lem:numlattice`, which is assumed.
 -/
-
-/-- **Non-vacuity of `Ttc.TtcAnalysis`.** For any formula, any DNF representation
-of it, and any `ε ∈ (0,1]`, the ideal instance (`L = est = Vol(F)`, i.e. all error
-terms zero) satisfies every field. -/
-noncomputable def TtcAnalysis.ideal {A : Type*} {n : ℕ} {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε ≤ 1)
-    (M : A → Set (Space n)) (φ : BForm A) (D : DNF A) (hD : IsDNFOf D φ) :
-    TtcAnalysis A n where
-  ε := ε
-  hε0 := hε0
-  hε1 := hε1
-  M := M
-  φ := φ
-  D := D
-  isDNF := hD
-  L := volSol M φ
-  hL := volSol_nonneg M φ
-  est := volSol M φ
-  lattice_lo := by nlinarith [volSol_nonneg M φ]
-  lattice_hi := by nlinarith [volSol_nonneg M φ]
-  sketch_lo := by nlinarith [volSol_nonneg M φ]
-  sketch_hi := by nlinarith [volSol_nonneg M φ]
-
-/-! ## The faithfulness bridge is satisfiable
-
-`Ttc.TtcAnalysis.run_volume_estimate` (`Model/Theorem`) is a guarantee about
-`Ttc.run` under the hypothesis `Ttc.TtcAnalysis.IsOutputOf`. If that hypothesis
-were unsatisfiable the theorem would be vacuous, so we exhibit a witness: the
-everywhere-false interpretation, whose solution set is empty and whose volume is
-`0`, together with a degenerate run that outputs `0`.
-
-This is a *satisfiability* witness only. It says the bridge is not self-
-contradictory; it does not say the bridge holds of the real algorithm — that is
-`lem:numlattice`, which is assumed. -/
 
 /-- A degenerate oracle bundle: `Vol_ED` returns `1`, nothing is ever covered,
 thinning is the identity, every Poisson draw is `0`, and `GenerateSamples`
@@ -114,8 +152,8 @@ def trivialOracles (n : ℕ) (ι : Type*) : Oracles n ι where
   halve := id
   halve_card_le := fun _ => le_rfl
   pois := fun _ => 0
-  gen := fun _ N => Multiset.replicate N 0
-  gen_card := fun _ N => by simp
+  gen := fun _ N _ => Multiset.replicate N 0
+  gen_card := fun _ N _ => by simp
 
 /-- A degenerate parameter block, to have some `Ttc.Params` to run at. -/
 noncomputable def trivialParams : Params where
@@ -130,18 +168,56 @@ noncomputable def trivialParams : Params where
   hm := le_rfl
   hr := le_rfl
 
-/-- **The bridge is satisfiable.** With no fuel and the degenerate oracle bundle
-`Ttc.run` outputs `0`, which is `Vol(F)` for the everywhere-false interpretation
-— so the ideal instance at that formula really is the output of a run. -/
-theorem exists_isOutputOf {A : Type*} {n : ℕ} (a : A) :
-    ∃ (T : TtcAnalysis A n) (P : Params) (O : Oracles n (Cube A)) (fuel : ℕ),
-      T.IsOutputOf P O fuel := by
-  refine ⟨TtcAnalysis.ideal (ε := 1) one_pos le_rfl (fun _ => ∅) (.atom a) [[⟨a, true⟩]]
-      (by intro v; simp [DNF.holds, Cube.holds, Lit.holds, BForm.holds]),
-    trivialParams, trivialOracles n (Cube A), 0, ?_⟩
-  show volSol (fun _ => (∅ : Set (Space n))) (.atom a)
-      = run trivialParams (trivialOracles n (Cube A)) 0 [[⟨a, true⟩]]
-  have hsol : sol (fun _ => (∅ : Set (Space n))) (.atom a) = ∅ := rfl
-  simp [volSol, hsol, run, step, dropCovered, trivialOracles]
+/-- **A `Ttc.TtcProb` really exists.** The one-point sample space with the Dirac
+measure, the degenerate oracle bundle, and the everywhere-false interpretation:
+`Vol(F) = 0`, `L = 0`, and the algorithm outputs `0` — so `lem:numlattice`'s event
+has probability `1`, and the witness holds even at `δ = 0`. -/
+noncomputable def trivialProb {A : Type*} {n : ℕ} (a : A) : TtcProb A n where
+  ε := 1
+  δ := 0
+  hε0 := one_pos
+  hε1 := le_rfl
+  M := fun _ => ∅
+  φ := .atom a
+  D := [[⟨a, true⟩]]
+  isDNF := by intro v; simp [DNF.holds, Cube.holds, Lit.holds, BForm.holds]
+  L := 0
+  hL := le_rfl
+  lattice_lo := by
+    show (1 - (1:ℝ) / 8) * 0 ≤ volSol (fun _ => (∅ : Set (Space n))) (.atom a)
+    simpa using volSol_nonneg (fun _ => (∅ : Set (Space n))) (.atom a)
+  lattice_hi := by
+    show volSol (fun _ => (∅ : Set (Space n))) (.atom a) ≤ (1 + (1:ℝ) / 8) * 0
+    have hsol : sol (fun _ => (∅ : Set (Space n))) (.atom a) = ∅ := rfl
+    simp [volSol, hsol]
+  Ω := Unit
+  mΩ := inferInstance
+  μ := MeasureTheory.Measure.dirac ()
+  isProb := inferInstance
+  P := trivialParams
+  O := fun _ => trivialOracles n (Cube A)
+  fuel := 0
+  gammaHat := 1
+  ρ := trivialParams.precision 1
+  rho_eq := rfl
+  numlattice := by
+    have hrun : ∀ u : Unit,
+        ttcOutput trivialParams (fun _ => trivialOracles n (Cube A)) 0
+            (trivialParams.precision 1) [[(⟨a, true⟩ : Lit A)]] u = 0 := by
+      intro _
+      simp [ttcOutput, run, step, dropCovered, trivialOracles]
+    have hmem : () ∈ {ω : Unit | (1 - (1:ℝ) / 3) * 0 ≤
+        ttcOutput trivialParams (fun _ => trivialOracles n (Cube A)) 0
+            (trivialParams.precision 1) [[(⟨a, true⟩ : Lit A)]] ω ∧
+        ttcOutput trivialParams (fun _ => trivialOracles n (Cube A)) 0
+            (trivialParams.precision 1) [[(⟨a, true⟩ : Lit A)]] ω
+          ≤ (1 + (1:ℝ) / 3) * 0} := by
+      simp [hrun]
+    rw [MeasureTheory.Measure.dirac_apply_of_mem hmem]
+    norm_num
+
+/-- `Ttc.TtcProb` is inhabited, so `Ttc.TtcProb.volume_estimate` is not vacuous. -/
+theorem nonempty_ttcProb {A : Type*} {n : ℕ} (a : A) : Nonempty (TtcProb A n) :=
+  ⟨trivialProb a⟩
 
 end Ttc

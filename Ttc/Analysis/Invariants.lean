@@ -89,8 +89,8 @@ theorem absorb_p (t : ℝ) (f : ℕ) (s : SketchState n × ℕ) (h : 0 ≤ s.1.p
 
 /-- **`X` only grows by the freshly generated samples**: the loop body removes
 covered points and thins, then appends exactly `Nᵢ` new ones. -/
-theorem card_step_le (fuel : ℕ) (st : SketchState n) (i : ι) :
-    card (step P O fuel st i).X ≤
+theorem card_step_le (fuel : ℕ) (ρ : ℤ) (st : SketchState n) (i : ι) :
+    card (step P O fuel ρ st i).X ≤
       card (absorb P O (O.vol i) fuel
         (halveDown P O (O.vol i) fuel ⟨dropCovered O i st.X, st.p⟩,
          O.pois (O.vol i * (halveDown P O (O.vol i) fuel
@@ -103,14 +103,14 @@ theorem card_step_le (fuel : ℕ) (st : SketchState n) (i : ι) :
 
 /-- The output is `|X|/p` of the final state — true by definition, recorded so
 `thm:volumettc`'s statement can be read against the code. -/
-theorem run_eq (fuel : ℕ) (cubes : List ι) :
-    run P O fuel cubes =
-      (card (cubes.foldl (step P O fuel) ⟨0, 1⟩).X : ℝ) /
-        (cubes.foldl (step P O fuel) ⟨0, 1⟩).p := rfl
+theorem run_eq (fuel : ℕ) (ρ : ℤ) (cubes : List ι) :
+    run P O fuel ρ cubes =
+      (card (cubes.foldl (step P O fuel ρ) ⟨0, 1⟩).X : ℝ) /
+        (cubes.foldl (step P O fuel ρ) ⟨0, 1⟩).p := rfl
 
 /-- The algorithm starts from `X = ∅`, `p = 1` (line 22). -/
 @[simp]
-theorem run_nil (fuel : ℕ) : run P O fuel ([] : List ι) = 0 := by
+theorem run_nil (fuel : ℕ) (ρ : ℤ) : run P O fuel ρ ([] : List ι) = 0 := by
   simp [run]
 
 end Ttc

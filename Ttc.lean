@@ -31,36 +31,36 @@ declarations.
 definition outside `Model/` except Mathlib. A referee who wants to trust the
 *statement* reads exactly these four files and stops:
 
-* `Model/Prelude`        — the vocabulary (the ambient space `ℝⁿ`, formula syntax
-                           and semantics, the parameter block `Params`), what
-                           `Vol(F)` is (`volSol`), and **every assumption of the
-                           result** as a field of `Ttc.TtcAnalysis`.
+* `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
+                           and semantics, the parameter block `Params`, `volSol`
+                           (= `Vol(F)`) and `relErr` (= the `(1±ε)` interval).
 * `Model/ProblemSetting` — `thm:decomposition`: the set the algorithm enumerates
                            is the set the theorem bounds.
 * `Model/Pseudocode`     — `alg:ttc`, transcribed line by line from `algo.tex`
-                           over an oracle bundle, plus the faithfulness bridge
-                           `Ttc.TtcAnalysis.IsOutputOf`; **no proofs**.
-* `Model/Theorem`        — the headline `Ttc.TtcAnalysis.volume_estimate`: one
+                           over an oracle bundle; its output `Ttc.ttcOutput`; and
+                           `Ttc.TtcProb`, **every assumption** of the result as
+                           fields; **no proofs**.
+* `Model/Theorem`        — the headline `Ttc.TtcProb.volume_estimate`: one
                            theorem, no proof to work through.
 
 The headline is `sorry`-free and axiom-clean
 (`[propext, Classical.choice, Quot.sound]`).
 
 **One scope caveat, stated here because it is the thing an auditor is most
-likely to assume wrongly.** The link between `Ttc.run` (`Model/Pseudocode`) and
-the `est` field of `Ttc.TtcAnalysis` (`Model/Prelude`) is a *hypothesis*,
-`Ttc.TtcAnalysis.IsOutputOf` — proving it **is** `lem:numlattice`, which this
-development assumes. `Ttc.TtcAnalysis.run_volume_estimate` states the guarantee
-for `run` under that hypothesis, and `Ttc.exists_isOutputOf` shows it is
-satisfiable; but nothing here shows it holds of the real algorithm. So
-`Model/Pseudocode` documents the algorithm; it is not yet part of the trusted
-base of the unconditional headline. See the README, "What is assumed".
+likely to assume wrongly.** `Ttc.TtcProb.volume_estimate` really does conclude
+`Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` about `Ttc.run`, with no side hypothesis —
+but its `numlattice` field **assumes** `lem:numlattice`, and `lattice_lo`/
+`lattice_hi` assume `lem:lattice`. Neither is proved here. `Ttc.nonempty_ttcProb`
+shows the fields are jointly satisfiable (by a degenerate run), so the headline
+is not vacuous; nothing here shows they hold of the real algorithm. See the
+README, "What is assumed", and `AUDIT.md` §4. Running time (`thm:runtime`) is out
+of scope throughout.
 -/
 
 -- The audit surface (statement layer)
 import Ttc.Model.Prelude
-import Ttc.Model.ProblemSetting
 import Ttc.Model.Pseudocode
+import Ttc.Model.ProblemSetting
 import Ttc.Model.Theorem
 
 -- The proof content
