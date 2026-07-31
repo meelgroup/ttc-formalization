@@ -82,4 +82,6 @@ import Ttc.Analysis.Cl
 import Ttc.Analysis.PiLintegral
 import Ttc.Analysis.ProdKernel
 import Ttc.Analysis.ProdLaw
+import Ttc.Analysis.TentSum
+import Ttc.Analysis.RoundLaw
 import Ttc.Analysis.Capstone

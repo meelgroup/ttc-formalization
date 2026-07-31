@@ -109,4 +109,33 @@ theorem body_eq_sol (atoms : A → LinAtom n) {D : DNF A} {φ : BForm A}
           (fun c => region (fun a => (atoms a).halfspace) c.val)]
     _ = sol (fun a => (atoms a).halfspace) φ := sol_eq_iUnion_region hDNF
 
+/-! ## The geometric covering of `claim:cl`
+
+A point that escapes the inflated body while `x` sits in the body must cross some
+facet — the paper's step "for `x ∈ Q` and `p ∈ C(x) ∖ Q'` we have
+`A_ij·(p − x) ≥ κ‖A_ij‖`". This is the `hcover` hypothesis of
+`Ttc.prodKernel_escape_bound`, and it is elementary.
+-/
+
+/-- **The facet-crossing.** If `x` lies in the body and `p` outside its inflation,
+some facet `j` has `κ·w j ≤ f j p − f j x`. -/
+theorem cover_of_notMem_body {n : ℕ} {ι F : Type*} (S : FacetSystem n ι F) {κ : ℝ}
+    {x p : Space n} (hx : x ∈ S.body 0) (hp : p ∉ S.body κ) :
+    ∃ j, κ * S.w j ≤ S.f j p - S.f j x := by
+  obtain ⟨i, hi⟩ := S.mem_body.1 hx
+  have hpi : p ∉ S.piece κ i := fun h => hp (S.mem_body.2 ⟨i, h⟩)
+  simp only [FacetSystem.mem_piece, not_forall] at hpi
+  obtain ⟨j, hpart, hlt⟩ := hpi
+  have hxj : S.f j x ≤ S.b j := by have := hi j hpart; simpa using this
+  push Not at hlt
+  exact ⟨j, by linarith⟩
+
+/-- **The covering, as a union over facets.** -/
+theorem diff_body_subset_cover {n : ℕ} {ι F : Type*} [Fintype F] (S : FacetSystem n ι F)
+    {κ : ℝ} {x : Space n} (hx : x ∈ S.body 0) (C : Set (Space n)) :
+    C \ S.body κ ⊆ ⋃ j ∈ (Finset.univ : Finset F), {p | κ * S.w j ≤ S.f j p - S.f j x} := by
+  intro p hp
+  obtain ⟨j, hj⟩ := cover_of_notMem_body S hx hp.2
+  exact Set.mem_biUnion (Finset.mem_univ j) hj
+
 end Ttc
