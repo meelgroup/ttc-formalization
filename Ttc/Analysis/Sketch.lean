@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Mathlib.Analysis.SpecificLimits.Basic
 import Ttc.Analysis.Arith
+import Ttc.Model.Prelude
 
 /-!
 # `lem:numlattice`: the epoch analysis of the streaming sketch
@@ -141,6 +142,32 @@ theorem noise_bound_le_delta {δ m Thresh : ℝ} (hδ0 : 0 < δ) (hm : 1 ≤ m)
 theorem numlattice_failure_bound {δ errSum noiseSum : ℝ} (hδ0 : 0 < δ)
     (herr : errSum ≤ δ / 6) (hnoise : noiseSum ≤ δ / 6) :
     errSum + noiseSum ≤ δ := by linarith
+
+/-! ## The `Vol_ED` calls, which the paper's union bound omits
+
+`alg:ttc` line 18 sets `δ' ← δ/(2m)` and line 24 calls `Vol_ED(P(cᵢ), ε', δ')`
+once per polytope, so the `m` calls fail with total probability at most `δ/2`.
+The proof of `lem:numlattice` never puts that into its union bound — it writes
+"by the accuracy guarantee of `Vol_ED`, the call returns `t` such that …"
+(`analysis.tex:269`) as though the guarantee were deterministic, and then bounds
+only `δ/6 + δ/6`. The omission is harmless *because* of the slack: `δ/2 + δ/3`
+is still at most `δ`. That is what the two lemmas here record.
+-/
+
+/-- **The `m` `Vol_ED` calls cost exactly `δ/2`** — this is what `δ' = δ/(2m)`
+(`alg:ttc` line 18) is for. -/
+theorem Params.vol_failure_eq (P : Params) : (P.m : ℝ) * P.deltaPrime = P.δ / 2 := by
+  have hm : (1:ℝ) ≤ (P.m : ℝ) := by exact_mod_cast P.hm
+  unfold Params.deltaPrime
+  field_simp
+
+/-- **The failure budget with the `Vol_ED` calls included.** The paper's two
+branches give `δ/6` each and the `m` volume oracles a further `δ/2`; the total is
+`5δ/6 ≤ δ`, so `lem:numlattice`'s conclusion survives the omission — with `δ/6`
+to spare. -/
+theorem numlattice_failure_bound_with_vol {δ errSum noiseSum volSum : ℝ} (hδ0 : 0 < δ)
+    (herr : errSum ≤ δ / 6) (hnoise : noiseSum ≤ δ / 6) (hvol : volSum ≤ δ / 2) :
+    errSum + noiseSum + volSum ≤ δ := by linarith
 
 /-! ## The interval computation behind `ε' = ε/12` -/
 

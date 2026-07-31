@@ -29,8 +29,8 @@ theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
 `(1 ± ε)·Vol(F)`. Four things make that a claim rather than a shape:
 
 * **The measured thing is the algorithm.**
-  [`ttcOutput`](Ttc/Model/Pseudocode.lean#L107) is
-  [`Ttc.run`](Ttc/Model/Pseudocode.lean#L101) — the line-by-line transcription of
+  [`ttcOutput`](Ttc/Model/Pseudocode.lean#L138) is
+  [`Ttc.run`](Ttc/Model/Pseudocode.lean#L132) — the line-by-line transcription of
   `alg:ttc` — with the oracles drawn at `ω`. Read `Model/Pseudocode` against
   `sections/algo.tex`; it is the whole algorithm, and there is no second model it
   is quietly swapped for.
@@ -78,7 +78,7 @@ fields below, which are hypotheses about the **input**, not about the analysis.
 | `volume_ne_top` | [98](Ttc/Model/ProblemSetting.lean#L98) | each `P(cᵢ)` has finite volume | **assumed of the input** — the paper leaves it implicit |
 | `ρ`, `rho_eq` | [101](Ttc/Model/ProblemSetting.lean#L101), [103](Ttc/Model/ProblemSetting.lean#L103) | the precision is `GetPrecision`'s output, `ρ = ⌈log₁₀(γ/γ̂)⌉` | `alg:prec` line 91, transcribed — and now **load-bearing**, see §4 |
 | `L`, `L_eq` | [105](Ttc/Model/ProblemSetting.lean#L105), [107](Ttc/Model/ProblemSetting.lean#L107) | `L` **is** `\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` ([`normalisedCount`](Ttc/Model/Prelude.lean#L166)) | definition, not an assumption |
-| `numlattice` | [110](Ttc/Model/ProblemSetting.lean#L110) | **`lem:numlattice`**: `Pr[ output ∈ (1±ε/3)·L ] ≥ 1 − δ` | **assumed**. The epoch union-bound skeleton is proved (`Analysis/Sketch`, `Analysis/Poisson`); the residual gap is the Poisson–Chernoff estimate `lem:chernoff` |
+| `numlattice` | [110](Ttc/Model/ProblemSetting.lean#L110) | **`lem:numlattice`**: `Pr[ output ∈ (1±ε/3)·L ] ≥ 1 − δ` | **assumed** — the one remaining field of its kind. Every *estimate* it rests on is now proved, `lem:chernoff` included (`Analysis/Chernoff`, `Analysis/Sketch`, `Analysis/Poisson`); what is still assumed is the probabilistic model of the loop — see §4 |
 
 The README's [What is assumed](README.md#what-is-assumed) says the same at
 length, with the exact list of what *is* proved about each.
@@ -121,12 +121,37 @@ are exactly what a green build does not certify.
 
 **`lem:numlattice` is assumed, and it is now the only assumed lemma.** The
 `numlattice` field asserts precisely the conclusion the paper spends its
-streaming analysis deriving. The development proves the surrounding arithmetic
-and a good deal of the machinery (`Analysis/Sketch`, `Analysis/Poisson`), but not
-the Poisson–Chernoff estimate that closes it. So the theorem is *conditional*:
-what it proves is that a `(1±ε/3)` guarantee about `L` upgrades to a `(1±ε)`
-guarantee about `Vol(F)`, with the `δ` carried across intact. That upgrade is now
-proved end to end — `lem:lattice`, `lem:nonconv` and `claim:cl` included.
+streaming analysis deriving. So the theorem is *conditional*: what it proves is
+that a `(1±ε/3)` guarantee about `L` upgrades to a `(1±ε)` guarantee about
+`Vol(F)`, with the `δ` carried across intact. That upgrade is now proved end to
+end — `lem:lattice`, `lem:nonconv` and `claim:cl` included.
+
+**What is still missing is bookkeeping, not mathematics.** Every *estimate*
+`lem:numlattice`'s proof invokes is now a theorem here, including the one the
+paper imports from Soos et al.: `lem:chernoff` is proved from the Poisson moment
+generating function upwards
+([`Analysis/Chernoff`](Ttc/Analysis/Chernoff.lean)), as are both of its
+applications, `lem:process`, the epoch series, and the `Vol_ED` failure budget
+the paper omits. What is *not* done is composing them into a statement about
+`Ttc.run`, and an auditor should know exactly why:
+
+* ~~`Ttc.Oracles` cannot express independence.~~ **Fixed** — calls are now
+  clock-indexed (see the note above), so independence is statable.
+* ~~`lem:process` is only a pmf identity.~~ **Fixed** —
+  [`Ttc.countLaw_eq_pi`](Ttc/Analysis/PoissonLaws.lean#L91) gives it as an
+  identity of measures, with independence, thinning and superposition as
+  corollaries.
+* **The invariant is still not carried along the fold, and the halvings between
+  two cubes form a *stopping time*.** The paper's `𝒳^(i)_j` is "the state when
+  `p` is `2^(−j)`" — conditioning on a random event. Preserving a Poisson
+  invariant across that conditioning is the deep remaining step.
+* **Fuel adequacy is required and not assumed.** Both loops return the current
+  state when the budget runs out; at small `fuel` the output is not close to `L`
+  and `numlattice` would be false. Any discharge of the field needs this
+  hypothesis.
+
+So `numlattice` remains a genuine assumption; it is just no longer an assumption
+about any unproved *estimate*.
 
 **The geometric fields are hypotheses about the input, and they are real.**
 `ball_subset`, `volume_ne_top`, `normal_ne_zero`, `isPositive`, `cubes_le`,
@@ -153,16 +178,23 @@ non-trivial formula on which the algorithm provably works. Do not read it as
 evidence that the assumptions are satisfiable in an interesting case.
 
 **The oracle bundle constrains almost nothing.**
-[`Ttc.Oracles`](Ttc/Model/Pseudocode.lean#L51) has four external calls as fields.
-Only two carry any hypothesis — `halve_card_le`
-([59](Ttc/Model/Pseudocode.lean#L59), thinning does not grow `X`) and `gen_card`
-([66](Ttc/Model/Pseudocode.lean#L66), `GenerateSamples` returns exactly `N`
-points — for every precision `ρ`). Nothing states that `vol` is an
-`(1±ε')`-accurate volume estimate, that `pois λ` is Poisson-distributed, or that
-`halve` keeps each element independently with probability ½. That is deliberate —
-those *are* the distributional content of `lem:numlattice`, which is assumed —
-but it means the invariants in `Analysis/Invariants` are structural facts about
-the modelled execution, not statements about the real algorithm's behaviour.
+[`Ttc.Oracles`](Ttc/Model/Pseudocode.lean#L72) has four external calls as fields.
+Only two carry any hypothesis — `halve_card_le` (thinning does not grow `X`) and
+`gen_card` (`GenerateSamples` returns exactly `N` points, for every precision
+`ρ`). Nothing states that `vol` is an `(1±ε')`-accurate volume estimate, that
+`pois c λ` is Poisson-distributed, or that `halve c` keeps each element
+independently with probability ½. That is deliberate — those *are* the
+distributional content of `lem:numlattice`, which is assumed — but it means the
+invariants in `Analysis/Invariants` are structural facts about the modelled
+execution, not statements about the real algorithm's behaviour.
+
+**The `clock` is not in the pseudocode.** `Ttc.SketchState` carries a counter of
+oracle draws, and `halve`/`pois`/`gen` take it as their first argument. An
+auditor comparing against `algo.tex` will not find it there. It is present
+because an *unindexed* oracle cannot model fresh randomness: `halve` applied
+twice to the same multiset would return the same answer, so a thinning that
+happened to be a no-op would freeze `𝒳` forever. Read it as naming the draw, not
+as algorithm state — `X` and `p` are the paper's state, `clock` is bookkeeping.
 
 **`GetPrecision` is a formula, not an algorithm — but it is no longer inert.**
 `γ̂` is still an input: the LP of `alg:prec` that computes the largest inscribed

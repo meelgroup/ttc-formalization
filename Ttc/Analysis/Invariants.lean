@@ -68,7 +68,7 @@ theorem halveDown_p (t : ℝ) (f : ℕ) (st : SketchState n) (h : 0 ≤ st.p) :
       rw [halveDown]
       split
       · have hh : (0:ℝ) ≤ st.p / 2 := by linarith
-        obtain ⟨h1, h2⟩ := ih ⟨O.halve st.X, st.p / 2⟩ hh
+        obtain ⟨h1, h2⟩ := ih ⟨O.halve st.clock st.X, st.p / 2, st.clock + 1⟩ hh
         exact ⟨h1, le_trans h2 (by simpa using (by linarith : st.p / 2 ≤ st.p))⟩
       · exact ⟨h, le_rfl⟩
 
@@ -82,31 +82,78 @@ theorem absorb_p (t : ℝ) (f : ℕ) (s : SketchState n × ℕ) (h : 0 ≤ s.1.p
       rw [absorb]
       split
       · have hh : (0:ℝ) ≤ st.p / 2 := by simp at h; linarith
-        obtain ⟨h1, h2⟩ := ih (⟨O.halve st.X, st.p / 2⟩, O.pois (t * st.p / 2)) hh
+        obtain ⟨h1, h2⟩ := ih (⟨O.halve st.clock st.X, st.p / 2, st.clock + 2⟩,
+          O.pois (st.clock + 1) (t * st.p / 2)) hh
         refine ⟨h1, le_trans h2 ?_⟩
         simp at h ⊢; linarith
       · exact ⟨h, le_rfl⟩
 
 /-- **`X` only grows by the freshly generated samples**: the loop body removes
 covered points and thins, then appends exactly `Nᵢ` new ones. -/
-theorem card_step_le (fuel : ℕ) (ρ : ℤ) (st : SketchState n) (i : ι) :
-    card (step P O fuel ρ st i).X ≤
-      card (absorb P O (O.vol i) fuel
-        (halveDown P O (O.vol i) fuel ⟨dropCovered O i st.X, st.p⟩,
-         O.pois (O.vol i * (halveDown P O (O.vol i) fuel
-           ⟨dropCovered O i st.X, st.p⟩).p))).1.X
-        + (absorb P O (O.vol i) fuel
-        (halveDown P O (O.vol i) fuel ⟨dropCovered O i st.X, st.p⟩,
-         O.pois (O.vol i * (halveDown P O (O.vol i) fuel
-           ⟨dropCovered O i st.X, st.p⟩).p))).2 := by
+theorem card_step (fuel : ℕ) (ρ : ℤ) (st : SketchState n) (i : ι) :
+    card (step P O fuel ρ st i).X
+      = card (stepPre P O fuel st i).1.X + (stepPre P O fuel st i).2 := by
   simp [step, O.gen_card]
+
+/-! ## The clock
+
+Every randomised call uses the current clock and advances it, so distinct calls
+carry distinct indices. That is the whole point of the counter: it is what lets a
+distributional hypothesis on `Ttc.Oracles` speak of *independent* draws. -/
+
+/-- The first loop never rewinds the clock. -/
+theorem halveDown_clock (t : ℝ) (f : ℕ) (st : SketchState n) :
+    st.clock ≤ (halveDown P O t f st).clock := by
+  induction f generalizing st with
+  | zero => exact le_rfl
+  | succ f ih =>
+      rw [halveDown]
+      split
+      · exact le_trans (Nat.le_succ _) (ih ⟨O.halve st.clock st.X, st.p / 2, st.clock + 1⟩)
+      · exact le_rfl
+
+/-- The second loop never rewinds the clock. -/
+theorem absorb_clock (t : ℝ) (f : ℕ) (s : SketchState n × ℕ) :
+    s.1.clock ≤ (absorb P O t f s).1.clock := by
+  induction f generalizing s with
+  | zero => exact le_rfl
+  | succ f ih =>
+      obtain ⟨st, N⟩ := s
+      rw [absorb]
+      split
+      · refine le_trans ?_ (ih (⟨O.halve st.clock st.X, st.p / 2, st.clock + 2⟩,
+          O.pois (st.clock + 1) (t * st.p / 2)))
+        show st.clock ≤ st.clock + 2
+        omega
+      · exact le_rfl
+
+/-- **Each cube strictly advances the clock** — `GenerateSamples` always draws. So
+no two iterations of the main loop share a draw. -/
+theorem step_clock (fuel : ℕ) (ρ : ℤ) (st : SketchState n) (i : ι) :
+    st.clock < (step P O fuel ρ st i).clock := by
+  have h₁ := halveDown_clock P O (O.vol i) fuel
+    (⟨dropCovered O i st.X, st.p, st.clock⟩ : SketchState n)
+  have h₂ := absorb_clock P O (O.vol i) fuel
+    ((⟨(halveDown P O (O.vol i) fuel
+        (⟨dropCovered O i st.X, st.p, st.clock⟩ : SketchState n)).X,
+       (halveDown P O (O.vol i) fuel
+        (⟨dropCovered O i st.X, st.p, st.clock⟩ : SketchState n)).p,
+       (halveDown P O (O.vol i) fuel
+        (⟨dropCovered O i st.X, st.p, st.clock⟩ : SketchState n)).clock + 1⟩ :
+        SketchState n),
+      O.pois (halveDown P O (O.vol i) fuel
+        (⟨dropCovered O i st.X, st.p, st.clock⟩ : SketchState n)).clock
+        (O.vol i * (halveDown P O (O.vol i) fuel
+          (⟨dropCovered O i st.X, st.p, st.clock⟩ : SketchState n)).p))
+  simp only [step, stepPre] at *
+  omega
 
 /-- The output is `|X|/p` of the final state — true by definition, recorded so
 `thm:volumettc`'s statement can be read against the code. -/
 theorem run_eq (fuel : ℕ) (ρ : ℤ) (cubes : List ι) :
     run P O fuel ρ cubes =
-      (card (cubes.foldl (step P O fuel ρ) ⟨0, 1⟩).X : ℝ) /
-        (cubes.foldl (step P O fuel ρ) ⟨0, 1⟩).p := rfl
+      (card (cubes.foldl (step P O fuel ρ) ⟨0, 1, 0⟩).X : ℝ) /
+        (cubes.foldl (step P O fuel ρ) ⟨0, 1, 0⟩).p := rfl
 
 /-- The algorithm starts from `X = ∅`, `p = 1` (line 22). -/
 @[simp]

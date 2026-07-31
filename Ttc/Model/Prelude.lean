@@ -220,6 +220,10 @@ noncomputable def eta : ℝ := P.ε / 8
 /-- `ε' ← ε/12` (`alg:ttc` line 18). -/
 noncomputable def epsPrime : ℝ := P.ε / 12
 
+/-- `δ' ← δ/(2m)` (`alg:ttc` line 18): the per-call failure probability handed to
+`Vol_ED`, one call per polytope. -/
+noncomputable def deltaPrime : ℝ := P.δ / (2 * P.m)
+
 /-- `Thresh ← max(24 ln(24/δ) / ((1−ε')ε'²), 6(ln(6/δ) + ln m))` (`alg:ttc` line 20). -/
 noncomputable def thresh : ℝ :=
   max (24 * Real.log (24 / P.δ) / ((1 - P.epsPrime) * P.epsPrime ^ 2))

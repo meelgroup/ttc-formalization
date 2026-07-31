@@ -150,11 +150,11 @@ imposes. -/
 def trivialOracles (n : ℕ) (ι : Type*) : Oracles n ι where
   vol := fun _ => 1
   covered := fun _ _ => false
-  halve := id
-  halve_card_le := fun _ => le_rfl
-  pois := fun _ => 0
-  gen := fun _ N _ => Multiset.replicate N 0
-  gen_card := fun _ N _ => by simp
+  halve := fun _ => id
+  halve_card_le := fun _ _ => le_rfl
+  pois := fun _ _ => 0
+  gen := fun _ _ N _ => Multiset.replicate N 0
+  gen_card := fun _ _ N _ => by simp
 
 /-- A degenerate parameter block, to have some `Ttc.Params` to run at. The
 dimension has to be the ambient one (`Ttc.TtcProb.dim_eq`), and `Ttc.Params`

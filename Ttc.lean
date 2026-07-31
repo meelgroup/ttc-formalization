@@ -77,6 +77,8 @@ import Ttc.Analysis.Tent
 import Ttc.Analysis.FacetOfDNF
 import Ttc.Analysis.Lattice
 import Ttc.Analysis.Poisson
+import Ttc.Analysis.Chernoff
+import Ttc.Analysis.PoissonLaws
 import Ttc.Analysis.Sketch
 import Ttc.Analysis.Invariants
 import Ttc.Analysis.Cl
