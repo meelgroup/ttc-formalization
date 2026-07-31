@@ -5,14 +5,17 @@ Machine-checked, `sorry`-free, axiom-clean formalisation of the analysis of the
 [`CLAUDE.md`](CLAUDE.md).
 
 **Every declaration in this development is proved.** There is no `sorry`, no
-custom `axiom`, and no `native_decide` — verified across all 139 declarations
-(see [Verifying the claim](#verifying-the-claim)). Two ingredients of the paper
-are *not* formalised and instead enter as explicit hypotheses of a bundling
-structure; they are named precisely in [What is assumed](#what-is-assumed).
+custom `axiom`, and no `native_decide` (see
+[Verifying the claim](#verifying-the-claim)). **One** ingredient of the paper is
+*not* formalised and enters as an explicit hypothesis — `lem:numlattice`, the
+Poisson/Chernoff analysis of the streaming sketch. `lem:lattice` used to be a
+second one; it is now **proved**, from hypotheses about the *input* rather than
+about the algorithm (§[What is assumed](#what-is-assumed)).
 
-Formalising also acted as a referee: it turned up **two genuine errors** and one
-genuine gap in the published proofs, with machine-checked repairs for all three.
-See [Findings](#findings-the-formalisation-as-a-referee).
+Formalising also acted as a referee: it turned up **two genuine errors** and **two
+genuine gaps** in the published proofs, with machine-checked repairs for three of
+the four and an explicit added hypothesis for the fourth. See
+[Findings](#findings-the-formalisation-as-a-referee).
 
 **Auditing this in a few minutes:** read [`AUDIT.md`](AUDIT.md), then the four
 files of [`Ttc/Model/`](Ttc/Model/). That is the whole trusted surface — what is
@@ -46,15 +49,14 @@ import Ttc
 ```
 
 Those three are Mathlib's standard foundational axioms. A sweep over **every**
-declaration in the development (139 of them: theorems, definitions and
+declaration in the development (315 of them: theorems, definitions and
 structures) gives:
 
-| Axiom profile | Count |
-| --- | --- |
-| `[propext, Classical.choice, Quot.sound]` | 120 |
-| `[propext, Quot.sound]` (weaker) | 2 — `region_eq_iInter`, `sol_subset_iUnion_region` |
-| *does not depend on any axioms* | 17 |
-| **anything involving `sorryAx` or a custom `axiom`** | **0** |
+Those three are Mathlib's standard foundational axioms, and **no declaration in
+the development depends on anything else** — no `sorryAx`, no custom `axiom`.
+(The per-profile counts previously tabulated here are omitted: the declaration set
+has changed substantially and the numbers were stale. Re-derive them with the
+sweep below rather than trusting a table.)
 
 To reproduce the sweep:
 
@@ -104,8 +106,21 @@ Ttc/
     Repair.lean               -- lem:nonconv at internal parameter θ = η/2
     Rounding.lean             -- claim:cl's concentration core (Hoeffding at the paper's κ)
     FacetOfDNF.lean           -- the facet system of a positive-literal DNF; Q = Sol(F)
-    Cl.lean                   -- claim:cl (a),(b),(c) over the rounding kernel
-    Lattice.lean              -- lem:lattice: transport ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ, and its instantiation
+    Cl.lean                   -- claim:cl (a),(b),(c) over an abstract rounding kernel
+    -- the rounding, constructed: independent coordinatewise randomized rounding
+    Tent.lean                 -- the displacement density 1−|u|: mass 1, mean 0, support [−1,1]
+    TentSum.lean              -- ∑_{m∈ℤ} tent(u−m) = 1, and the n-fold partition of unity
+    PiLintegral.lean          -- a product of withDensity measures is a withDensity product
+    ProdKernel.lean           -- prodKernel: the kernel ∏ᵢ tent(pᵢ−xᵢ); double stochasticity
+    ProdLaw.lean              -- its displacement law is a product ⇒ claim:cl (a) discharged
+    RoundLaw.lean             -- the law of rnd p on ℤⁿ (the fixed-p side, for (b))
+    RoundMoments.lean         -- that law is two-point ⇒ bounded, mean zero, independent
+    ClB.lean                  -- claim:cl (b) discharged: the Q''-direction covering + averaging
+    -- lem:lattice, assembled
+    BallFacet.lean            -- inscribed ball ↔ facet form; finiteness of Q ∩ ℤⁿ; ℤⁿ ↪ ℝⁿ
+    NonconvAssembled.lean     -- lem:nonconv over an actual facet system, nothing assumed
+    Lattice.lean              -- lem:lattice: transport ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ
+    LatticeAssembled.lean     -- lem:lattice for Sol(F); where GetPrecision becomes load-bearing
     Poisson.lean              -- lem:process: Poisson splitting
     Sketch.lean               -- lem:numlattice's epoch skeleton
     Invariants.lean           -- structural invariants of the modelled main loop
@@ -124,8 +139,8 @@ Anything you still doubt is a named lemma in `Analysis/`.
 
 | Surface module | Contains | Status |
 | --- | --- | --- |
-| [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, [`volSol`](Ttc/Model/Prelude.lean#L120) (= `Vol(F)`), [`relErr`](Ttc/Model/Prelude.lean#L128) | definitions only |
-| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `halveDown`, `absorb`, `step`, [`run`](Ttc/Model/Pseudocode.lean#L101), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L107), and [`TtcProb`](Ttc/Model/ProblemSetting.lean#L31) — the complete list of assumptions | modelled; see caveats |
+| [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, [`volSol`](Ttc/Model/Prelude.lean#L173) (= `Vol(F)`), [`relErr`](Ttc/Model/Prelude.lean#L181) | definitions only |
+| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `halveDown`, `absorb`, `step`, [`run`](Ttc/Model/Pseudocode.lean#L101), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L107), and [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) — the complete list of assumptions | modelled; see caveats |
 | [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean#L40) (`Pr ≥ 1−δ`) — one theorem, nothing else | proved from the `TtcProb` fields |
 
 ### What `Ttc/Model/Pseudocode.lean` does and does not do
@@ -168,24 +183,30 @@ drawn at a sample point, so the headline measures the algorithm directly:
 
 ```lean
 noncomputable def Ttc.ttcOutput (P : Params) (O : Ω → Oracles n ι) (fuel : ℕ)
-    (cubes : List ι) (ω : Ω) : ℝ :=
-  run P (O ω) fuel cubes
+    (ρ : ℤ) (cubes : List ι) (ω : Ω) : ℝ :=
+  run P (O ω) fuel ρ cubes
 ```
 
 What *is* assumed is `lem:numlattice` — but stated about that same output, as a
-field of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L31):
+field of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L38):
 
 ```lean
-numlattice : 1 - δ ≤ (μ {ω | (1-ε/3)*L ≤ ttcOutput P O fuel D ω ∧
-                             ttcOutput P O fuel D ω ≤ (1+ε/3)*L}).toReal
+numlattice : 1 - δ ≤ (μ {ω | (1-ε/3)*L ≤ ttcOutput P O fuel ρ D ω ∧
+                             ttcOutput P O fuel ρ D ω ≤ (1+ε/3)*L}).toReal
 ```
 
-so the headline needs **no side hypothesis**. The structure is inhabited
-([`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L220), witness
-[`Ttc.trivialProb`](Ttc/Analysis/Capstone.lean#L175)), so this is not vacuous —
-but that witness is degenerate (`Vol(F) = 0`, output `0`), and **nothing here
-shows `numlattice` holds of the real algorithm**. Proving it is the main
-remaining work.
+so the headline needs **no side hypothesis**. And `L` is no longer a bare real:
+the field [`L_eq`](Ttc/Model/ProblemSetting.lean#L107) pins it to
+[`normalisedCount M φ ρ`](Ttc/Model/Prelude.lean#L166) `= |Sol(F) ∩ 𝕃ⁿ|/10^(ρn)`,
+the actual lattice count of the actual solution set — which is what makes
+`lem:lattice` a theorem about it rather than an assumption.
+
+The structure is inhabited
+([`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L242), witness
+[`Ttc.trivialProb`](Ttc/Analysis/Capstone.lean#L181)), so this is not vacuous —
+but that witness is degenerate (the empty DNF: `Vol(F) = 0`, output `0`), and
+**nothing here shows `numlattice` holds of the real algorithm**. Proving it is the
+main remaining work.
 
 ## Paper ↔ Lean map
 
@@ -207,23 +228,30 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | `lem:nonconv` | `vol Q ∈ [(1−η)\|Q∩ℤⁿ\|, (1+η)\|Q∩ℤⁿ\|]` | skeleton [`nonconv_lower`](Ttc/Analysis/Nonconv.lean#L101), [`nonconv_upper_deflated`](Ttc/Analysis/Nonconv.lean#L124), [`nonconv_upper_repaired`](Ttc/Analysis/Nonconv.lean#L140); geometry [`FacetSystem.inflated_subset_smul_deflated`](Ttc/Analysis/Geometry.lean#L102), [`volume_inflated_le`](Ttc/Analysis/Geometry.lean#L124) | proved from `claim:cl` — **see findings 1 & 2** |
 | ↳ repaired | same statement, internal `θ = η/2` | [`nonconv_repaired`](Ttc/Analysis/Repair.lean#L75), [`repair_upper_arith`](Ttc/Analysis/Repair.lean#L52), [`repair_lower_arith`](Ttc/Analysis/Repair.lean#L58) | **proved** |
 | ↳ shell bound, instantiated | `vol Q' ≤ (1+m(K−1))·vol Q` and `vol Q ≤ (1+m(K−1))·vol Q''`, from the actual sets | [`piece_inflated_subset_homothety_zero`](Ttc/Analysis/Recentred.lean#L211), [`volume_shell_le`](Ttc/Analysis/Recentred.lean#L284), [`volume_body_inflated_le`](Ttc/Analysis/Recentred.lean#L476), [`volume_body_deflated_le`](Ttc/Analysis/Recentred.lean#L531) | **proved** — both sides; `shell_bound`'s three hypotheses discharged from geometry |
-| ↳ `Q = Sol(F)` | the facet system of a positive DNF | [`facetSystem`](Ttc/Analysis/FacetOfDNF.lean#L66), [`region_eq_piece`](Ttc/Analysis/FacetOfDNF.lean#L76), [`body_eq_sol`](Ttc/Analysis/FacetOfDNF.lean#L97) | **proved** for `DNF.IsPositive` — see finding 5 |
+| ↳ `Q = Sol(F)` | the facet system of a positive DNF | [`facetSystem`](Ttc/Analysis/FacetOfDNF.lean#L57), [`region_eq_piece`](Ttc/Analysis/FacetOfDNF.lean#L67), [`body_eq_sol`](Ttc/Analysis/FacetOfDNF.lean#L88) | **proved** for `DNF.IsPositive` — see finding 5 |
 | ↳ without common ball | per-polytope homothety + shell bound | [`piece_inflated_subset_homothety`](Ttc/Analysis/Recentred.lean#L69), [`volume_piece_inflated_le`](Ttc/Analysis/Recentred.lean#L100), [`body_subset_union_shells`](Ttc/Analysis/Recentred.lean#L183), [`shell_bound`](Ttc/Analysis/Recentred.lean#L457) | **proved** |
-| `claim:cl` | rounding hits/misses `Q` w.p. `1 ± η/2` | (a) [`claim_cl_a`](Ttc/Analysis/Cl.lean#L126), (b) [`claim_cl_b`](Ttc/Analysis/Cl.lean#L147), (c) [`claim_cl_c`](Ttc/Analysis/Cl.lean#L114) over [`RoundingKernel`](Ttc/Analysis/Cl.lean#L65); core [`rounding_tail_bound`](Ttc/Analysis/Rounding.lean#L107), [`rounding_tail_bound_kappa`](Ttc/Analysis/Rounding.lean#L132), [`rounding_union_bound`](Ttc/Analysis/Rounding.lean#L165); consumed via [`sum_lower_of_claim_a`](Ttc/Analysis/Nonconv.lean#L58), [`sum_upper_of_claim_bc`](Ttc/Analysis/Nonconv.lean#L77) | (a),(b),(c) **proved** from the kernel; concentration **proved** — see finding 3; residual gap is the escape bound |
+| ↳ **assembled, nothing assumed** | `lem:nonconv` for an actual facet system against its own `\|Q∩ℤⁿ\|` | [`FacetSystem.nonconv_of_ball`](Ttc/Analysis/NonconvAssembled.lean#L193), summed forms [`card_le_of_claim_a`](Ttc/Analysis/NonconvAssembled.lean#L126), [`deflated_le_card`](Ttc/Analysis/NonconvAssembled.lean#L160), arithmetic [`nonconv_recentred_general`](Ttc/Analysis/NonconvAssembled.lean#L49) | **proved** from the ball hypothesis alone |
+| ↳ `Q ∩ ℤⁿ` is finite | not assumed — it follows from `claim:cl`(a) | [`finite_of_forall_finset_card_le`](Ttc/Analysis/BallFacet.lean#L135), [`ncard_inter_intLattice`](Ttc/Analysis/BallFacet.lean#L170) | **proved** |
+| ↳ inscribed ball ↔ facet form | `B(cᵢ,γ) ⊆ Pᵢ  ⟺  γ‖A_ij‖ ≤ b_ij − A_ij·cᵢ` | [`FacetSystem.ball_subset_piece`](Ttc/Analysis/BallFacet.lean#L70), [`FacetSystem.facet_of_ball_subset`](Ttc/Analysis/BallFacet.lean#L90) | **proved** both ways |
+| `claim:cl` | rounding hits/misses `Q` w.p. `1 ± η/2` | **all three discharged for the actual rounding** — (a) [`prodKernel_claim_cl_a`](Ttc/Analysis/ProdLaw.lean#L232), (b) [`prodKernel_claim_cl_b`](Ttc/Analysis/ClB.lean#L180), (c) [`claim_cl_c`](Ttc/Analysis/Cl.lean#L114), over [`prodKernel`](Ttc/Analysis/ProdKernel.lean#L110); core [`rounding_tail_bound`](Ttc/Analysis/Rounding.lean#L107) | **proved**, no residual hypothesis — see finding 3 |
+| ↳ the rounding itself | `rnd p = ⌊p⌋ + Bernoulli(p−⌊p⌋)`, coordinatewise | density [`tent`](Ttc/Analysis/Tent.lean#L34), kernel [`prodKernel`](Ttc/Analysis/ProdKernel.lean#L110), normalisation [`integral_prod_tent`](Ttc/Analysis/ProdKernel.lean#L42) | **constructed** — the paper only cites KV97 |
+| ↳ (a)/(c), the `p`-side | independence of the displacement's coordinates | [`iIndepFun_disp`](Ttc/Analysis/ProdLaw.lean#L117), [`ae_disp_mem_Icc`](Ttc/Analysis/ProdLaw.lean#L106), [`integral_disp_eq_zero`](Ttc/Analysis/ProdLaw.lean#L146), [`prodKernel_escape_bound`](Ttc/Analysis/ProdLaw.lean#L213) | **proved** |
+| ↳ (b), the `z`-side | the law of `rnd p` on `ℤⁿ` is a two-point product | [`roundLaw`](Ttc/Analysis/RoundLaw.lean#L50), [`tentInt_eq_two_point`](Ttc/Analysis/RoundMoments.lean#L34), [`integral_tentInt_disp`](Ttc/Analysis/RoundMoments.lean#L72), [`iIndepFun_latDisp`](Ttc/Analysis/RoundMoments.lean#L153), [`roundLaw_escape_bound`](Ttc/Analysis/ClB.lean#L69) | **proved**; the crossing uses `−A_j` ([`cover_of_notMem_body_deflated`](Ttc/Analysis/ClB.lean#L42)) |
 | `claim:helper` | `kⁿ ≤ (1+η/4)/(1−η/4)` | [`claim_helper`](Ttc/Analysis/Arith.lean#L162), [`claim_helper_of`](Ttc/Analysis/Arith.lean#L133), [`exp_two_mul_le_div`](Ttc/Analysis/Arith.lean#L78) | **proved** — see finding 4 |
-| `lem:lattice` | transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | [`lattice_of_scaled`](Ttc/Analysis/Lattice.lean#L105), [`ncard_inter_lattice_smul`](Ttc/Analysis/Lattice.lean#L71), [`volume_smul_body`](Ttc/Analysis/Lattice.lean#L77) | **proved** |
+| `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Analysis/LatticeAssembled.lean#L90), and for the problem instance [`TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L173)/[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L178) | **proved** — formerly two fields of `TtcProb` |
+| ↳ transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | | [`lattice_of_scaled`](Ttc/Analysis/Lattice.lean#L91), [`ncard_inter_lattice_smul`](Ttc/Analysis/Lattice.lean#L57), [`volume_smul_body`](Ttc/Analysis/Lattice.lean#L63), [`lattice_bounds`](Ttc/Analysis/Lattice.lean#L144) | **proved** |
 | `lem:numlattice` | sketch output within `(1±ε/3)` w.p. `1−δ` | [`epoch_series_le`](Ttc/Analysis/Sketch.lean#L86), [`err_sum_le_delta`](Ttc/Analysis/Sketch.lean#L105), [`noise_bound_le_delta`](Ttc/Analysis/Sketch.lean#L125), [`numlattice_failure_bound`](Ttc/Analysis/Sketch.lean#L141), [`sketch_interval`](Ttc/Analysis/Sketch.lean#L154), [`sketch_window`](Ttc/Analysis/Sketch.lean#L169) | epoch skeleton **proved**; `lem:chernoff` assumed |
 | `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Analysis/Sketch.lean#L154) | constant **verified** |
 | `alg:ttc` line 20 (`Thresh`) | | [`err_sum_le_delta`](Ttc/Analysis/Sketch.lean#L105), [`noise_bound_le_delta`](Ttc/Analysis/Sketch.lean#L125) | both branches **verified** |
-| `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Model/Prelude.lean#L165) | definition |
-| `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Model/Prelude.lean#L177), [`kappa_le`](Ttc/Analysis/Parameters.lean#L62) | **proved** `κ ≤ 2√(log(8r/η))` |
+| `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Model/Prelude.lean#L218) | definition |
+| `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Model/Prelude.lean#L230), [`kappa_le`](Ttc/Analysis/Parameters.lean#L62) | **proved** `κ ≤ 2√(log(8r/η))` |
 | ↳ deflated shell factor | `(1 + κ/(γ−κ))ⁿ ≤ 1 + η/(8m)` | [`kappa_le_gamma_half`](Ttc/Analysis/Parameters.lean#L124), [`shell_factor_bound_deflated`](Ttc/Analysis/Parameters.lean#L144) | **proved** — the deflated companion of `shell_factor_bound` |
 | ↳ dilation of a facet system | `c·{x \| f x ≤ b} = {y \| f y ≤ c·b}` | [`FacetSystem.scale`](Ttc/Analysis/Recentred.lean#L345), [`scale_body_zero`](Ttc/Analysis/Recentred.lean#L380) | **proved** — connects `body_eq_sol` to `lem:lattice`'s dilate |
-| `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean#L183), [`kappa_div_gamma_le`](Ttc/Analysis/Parameters.lean#L81), [`shell_factor_bound`](Ttc/Analysis/Parameters.lean#L102) | **proved** — see finding 2 |
+| `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean#L236), [`kappa_div_gamma_le`](Ttc/Analysis/Parameters.lean#L81), [`shell_factor_bound`](Ttc/Analysis/Parameters.lean#L102) | **proved** — see finding 2 |
 | `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Model/Pseudocode.lean#L101), [`step`](Ttc/Model/Pseudocode.lean#L91), [`absorb`](Ttc/Model/Pseudocode.lean#L82), [`halveDown`](Ttc/Model/Pseudocode.lean#L75) | modelled over an oracle bundle; structural invariants proved, termination and distribution not |
 | ↳ the output as a random variable | `run` with oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean#L107) | definition |
-| `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L40) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean#L31) fields |
-| `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean#L190), used via `TtcProb.rho_eq`) | [`ball_radius_scales`](Ttc/Analysis/Lattice.lean#L84), [`claim_helper`](Ttc/Analysis/Arith.lean#L162), [`gamma_half_le`](Ttc/Analysis/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Analysis/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L576) | mathematical content **proved**; LP implementation not modelled |
+| `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L40) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) fields |
+| `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean#L243), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L68) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Analysis/Lattice.lean#L70), [`gamma_half_le`](Ttc/Analysis/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Analysis/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L576) | mathematical content **proved**; LP implementation not modelled |
 
 Results with no counterpart in the paper, produced by the formalisation:
 
@@ -232,7 +260,7 @@ Results with no counterpart in the paper, produced by the formalisation:
 | [`convex_region`](Ttc/Analysis/Decomposition.lean#L76), [`convex_litSet`](Ttc/Analysis/Decomposition.lean#L53) | each cube's region is convex — and *not* closed (finding 5) |
 | [`ratio_antitone`](Ttc/Analysis/Geometry.lean#L156), [`facet_ratio_fails`](Ttc/Analysis/Geometry.lean#L170) | `k` is attained at the facet **nearest** the origin, so the ball hypothesis is needed at every facet (finding 2) |
 | [`claim12_factor_le`](Ttc/Analysis/Nonconv.lean#L155) | the `claim:helper` factor is `≤ 5/3` on `0 < η ≤ 1` |
-| [`trivialProb`](Ttc/Analysis/Capstone.lean#L175), [`nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L220) | the hypothesis bundle is inhabited, so `thm:volumettc` is not vacuous |
+| [`trivialProb`](Ttc/Analysis/Capstone.lean#L181), [`nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L242) | the hypothesis bundle is inhabited, so `thm:volumettc` is not vacuous |
 
 `Ttc.lean` re-exports everything, so `import Ttc` and a bare `lake build` expose
 the headline theorem.
@@ -242,7 +270,7 @@ the headline theorem.
 ```lean
 theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
     1 - T.δ ≤
-      (T.μ {ω | ttcOutput T.P T.O T.fuel T.D ω ∈ relErr T.ε (volSol T.M T.φ)}).toReal
+      (T.μ {ω | ttcOutput T.P T.O T.fuel T.ρ T.D ω ∈ relErr T.ε (volSol T.M T.φ)}).toReal
 ```
 
 `ttcOutput` is `Ttc.run` — the transcription of `alg:ttc` — with the oracles
@@ -259,36 +287,70 @@ witness is degenerate; see [`AUDIT.md`](AUDIT.md) §4.
 
 ## What is assumed
 
-Everything in the tree is proved. Two ingredients of the paper enter as
-*hypotheses* — fields of `Ttc.TtcProb` — rather than being derived. Both have
-been reduced to a single residual item each; everything else about them is proved.
+Everything in the tree is proved. **One** ingredient of the paper — and one only —
+enters as a hypothesis about the *algorithm*: `lem:numlattice`. Alongside it,
+`Ttc.TtcProb` carries hypotheses about the *input*, which is a different kind of
+assumption: they are properties of the formula handed to `TTC`, checkable before
+it runs, not claims about what `TTC` does.
 
-1. **`claim:cl`** — the three statements about the randomized rounding `rnd`.
-   * *Proved*: its entire probabilistic content — the tail bound
-     `Pr[κ‖A‖ ≤ A·Y] ≤ exp(−κ²/2)` for any independent mean-zero displacement in
-     `[−1,1]ⁿ` (`Ttc.rounding_tail_bound`), its value `η/(4r)` at the paper's `κ`
-     (`Ttc.rounding_tail_bound_kappa`), the union bound over the `r` facets
-     (`Ttc.rounding_union_bound`), and the two summation steps by which
-     `lem:nonconv` consumes it (`Ttc.sum_lower_of_claim_a`,
-     `Ttc.sum_upper_of_claim_bc`).
-     Also proved: **(a), (b) and (c) themselves**
-     ([`Ttc.claim_cl_a`](Ttc/Analysis/Cl.lean#L126),
-     [`_b`](Ttc/Analysis/Cl.lean#L147), [`_c`](Ttc/Analysis/Cl.lean#L114)),
-     over [`Ttc.RoundingKernel`](Ttc/Analysis/Cl.lean#L65) — the density
-     `k p x = Pr[rnd p = x]` carrying the properties the paper's proof uses, the
-     substantive one being double stochasticity `∫ k p x dp = 1`. The paper
-     defines `rnd` only by citation to KV97, so there is no construction to
-     transcribe; the structure is inhabited
-     ([`Ttc.nonempty_roundingKernel`](Ttc/Analysis/Cl.lean#L197)), so (a)–(c) are
-     not vacuous.
-   * *Residual assumption*: the **escape bound** — hypothesis `hesc` of
-     `Ttc.claim_cl_a`, that `∫_{C(x)∖Q'} k p x dp ≤ η/4`. Its value is exactly
-     what `Ttc.rounding_union_bound` gives; closing it means identifying the
-     displacement law under `k(·,x)` with the independent mean-zero `[−1,1]`-valued
-     `Y` of `Ttc.rounding_tail_bound`. That is one measure-theoretic step, not the
-     whole reduction as before.
+### Proved, and previously assumed
 
-2. **`lem:numlattice`** — the Poisson/Chernoff analysis of the streaming sketch.
+**`lem:lattice` is now a theorem** ([`Ttc.TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L173),
+[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L178)), where it used to be two
+fields of `Ttc.TtcProb`. With it, `claim:cl` and `lem:nonconv` are discharged end
+to end:
+
+* **`claim:cl`, all three parts, for a concrete rounding.** The paper cites `rnd`
+  to KV97 without a construction; we supply the standard one — independent
+  coordinatewise rounding `xₖ = ⌊pₖ⌋ + Bernoulli(pₖ − ⌊pₖ⌋)`, whose displacement
+  density is the tent `1−|u|` ([`Analysis/Tent`](Ttc/Analysis/Tent.lean)) — and
+  prove every property the analysis uses. Reading it in the `p` variable gives
+  double stochasticity ([`integral_prod_tent`](Ttc/Analysis/ProdKernel.lean#L42))
+  and parts **(a)** ([`prodKernel_claim_cl_a`](Ttc/Analysis/ProdLaw.lean#L232))
+  and **(c)** ([`claim_cl_c`](Ttc/Analysis/Cl.lean#L114)); reading the *same*
+  kernel in the lattice variable gives the law of `rnd p` on `ℤⁿ`
+  ([`roundLaw`](Ttc/Analysis/RoundLaw.lean#L50)), which is a two-point product
+  ([`tentInt_eq_two_point`](Ttc/Analysis/RoundMoments.lean#L34)) — hence bounded,
+  mean-zero ([`integral_tentInt_disp`](Ttc/Analysis/RoundMoments.lean#L72)) and
+  independent ([`iIndepFun_latDisp`](Ttc/Analysis/RoundMoments.lean#L153)), so
+  Hoeffding applies on that side too and yields **(b)**
+  ([`prodKernel_claim_cl_b`](Ttc/Analysis/ClB.lean#L180)). The geometry differs
+  between the two directions: in (a) the escaping point crosses a facet outward,
+  in (b) inward, so (b) applies the tail bound to `−A_j`
+  ([`cover_of_notMem_body_deflated`](Ttc/Analysis/ClB.lean#L42)).
+* **`lem:nonconv` over an actual facet system**
+  ([`FacetSystem.nonconv_of_ball`](Ttc/Analysis/NonconvAssembled.lean#L193)) — no
+  free reals, no abstract kernel. Its one hypothesis is the paper's: each `Pᵢ`
+  contains an `ℓ₂`-ball of radius `γ` about its own centre.
+* **Finiteness of `Q ∩ ℤⁿ` is not assumed.** It follows from `claim:cl`(a), which
+  bounds `|T|` for *every* finite `T ⊆ Q ∩ ℤⁿ`
+  ([`finite_of_forall_finset_card_le`](Ttc/Analysis/BallFacet.lean#L135)).
+* **`GetPrecision` became load-bearing.** `ρ = ⌈log₁₀(γ/γ̂)⌉` is exactly what makes
+  the dilated polytopes contain a ball of radius `γ`
+  ([`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L68)), which is
+  what the shell bound stands on. In the previous version `rho_eq` was inert.
+
+### Assumed about the input
+
+Fields of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L38), all of them
+hypotheses `lem:nonconv` needs and the paper states (or silently uses):
+
+| Field | Assumption |
+| --- | --- |
+| [`M_eq`](Ttc/Model/ProblemSetting.lean#L53) | the atoms really are linear constraints `A x ≤ b` — the formula is in the LRA fragment |
+| [`isPositive`](Ttc/Model/ProblemSetting.lean#L62) | no literal of the DNF is negated, so each `P(cᵢ)` is *closed* (finding 5) |
+| [`ball_subset`](Ttc/Model/ProblemSetting.lean#L96) | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂` about `cen i` — the paper's own hypothesis, with the common-centre gap of finding 2 removed |
+| [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L98) | each `P(cᵢ)` has finite volume |
+| [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L82) | every facet has a nonzero normal vector — implicit in the paper, and false only for a degenerate "constraint" `0 ≤ b` |
+| [`cubes_le`](Ttc/Model/ProblemSetting.lean#L78), [`facets_le`](Ttc/Model/ProblemSetting.lean#L80) | `m` and `r` really do bound the number of cubes and of facets |
+| [`eps_eq`](Ttc/Model/ProblemSetting.lean#L74), [`dim_eq`](Ttc/Model/ProblemSetting.lean#L76) | the parameter block is the one for *this* `ε` and *this* dimension |
+| [`isDNF`](Ttc/Model/ProblemSetting.lean#L59) | `ToDNF`/AllSAT is correct (unchanged) |
+
+None of these says anything about the algorithm's behaviour.
+
+### Assumed about the algorithm
+
+**`lem:numlattice`** — the Poisson/Chernoff analysis of the streaming sketch.
    * *Proved*: its engine `lem:process` (Poisson splitting,
      `Ttc.poisson_splitting`); the whole epoch union-bound skeleton — the
      doubly-exponential series `∑ 2e^{−a·2ᵗ} ≤ 4e^{−a}` (`Ttc.epoch_series_le`),
@@ -304,15 +366,18 @@ been reduced to a single residual item each; everything else about them is prove
      `hasSum_integral_poissonMeasure`, applying
      `ProbabilityTheory.measure_ge_le_exp_mul_mgf`, and then the
      Bennett→Bernstein step to reach `exp(−ζ²/(2λ+ζ))`. That is a self-contained
-     but substantial development; it is the single largest remaining gap.
+     but substantial development; it is now the **only** remaining gap, and the
+     only assumption about what the algorithm does.
 
 **These proofs confirm the algorithm's constants.** `ε' ← ε/12` (`alg:ttc` line
 18) is exactly what makes the two-sided `(1±ε')` loss fit inside `(1±ε/3)`; each
 branch of `Thresh` (line 20) is exactly what makes its failure branch `δ/6`
-(total `δ/3`, so there is slack); and `γ` is exactly what makes
+(total `δ/3`, so there is slack); `γ` is exactly what makes
 `κ/γ ≤ η/(32mn)` — with no slack at all, which is why `γ` and `κ` must use the
 same logarithm argument (`Ttc.Params.kappa_div_gamma_le`,
-`Ttc.Params.shell_factor_bound`).
+`Ttc.Params.shell_factor_bound`); and `ρ ← ⌈log₁₀(γ/γ̂)⌉` is exactly what lifts the
+input's inscribed radius `γ̂` to the `γ` the shell bound needs, after dilating to
+`ℤⁿ` (`Ttc.gamma_le_latticeScale_mul`).
 
 ## Scope, stated precisely
 
@@ -466,9 +531,9 @@ the lattice point `0`, and on the fine lattice `𝕃ⁿ = 10^(−ρ)·ℤⁿ` a 
 hyperplane can carry many such points. Since `L` is *defined* as
 `|Q ∩ 𝕃ⁿ|/10^(ρn)`, "volumes agree so nothing breaks" covers only half the claim.
 
-This is why [`Ttc.facetSystem`](Ttc/Analysis/FacetOfDNF.lean#L66) is built only
+This is why [`Ttc.facetSystem`](Ttc/Analysis/FacetOfDNF.lean#L57) is built only
 for DNFs whose literals are all positive
-([`Ttc.DNF.IsPositive`](Ttc/Analysis/FacetOfDNF.lean#L44)): a
+([`Ttc.DNF.IsPositive`](Ttc/Model/Prelude.lean#L129)): a
 `Ttc.FacetSystem.piece` is an intersection of closed half-spaces, so no facet
 system can denote a region with a negated atom.
 
@@ -504,6 +569,53 @@ rate in the required interval (`Ttc.rate_mem_interval`).
 bound `vol Q'` … we have `vol Q ≥ (1−η)|Q ∩ ℤⁿ|`." **twice**, verbatim, before the
 final clause. Introduced by a recent edit.
 
+### 10. Genuine gap — `lem:nonconv` needs each `Pᵢ` to have finite volume
+
+Nowhere does the paper require the polytopes to be bounded, and `lem:nonconv` is
+**false** without something in that direction: a half-space contains an inscribed
+ball of every radius, has infinite volume, and contains infinitely many lattice
+points, so `vol Q ∈ [(1−η)|Q∩ℤⁿ|, (1+η)|Q∩ℤⁿ|]` degenerates to `∞ ∈ [∞, ∞]` at
+best and, with Lean's `Set.ncard`-of-an-infinite-set convention, to `∞ ≤ 0` at
+worst. Both summation steps also divide by `vol Q'` and `vol Q''`, which must
+therefore be finite and nonzero.
+
+Carried explicitly as [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L98). It is
+the one hypothesis here with no counterpart at all in the paper. (Positivity is
+*not* assumed: it follows from the inscribed ball, via
+[`FacetSystem.volume_piece_pos`](Ttc/Analysis/NonconvAssembled.lean#L104).)
+
+### 11. Fine, implicit — a facet needs a nonzero normal, and finiteness of `Q ∩ ℤⁿ` needs an argument
+
+Two more things the proof uses without saying so.
+
+* **`A_ij ≠ 0`.** The Azuma/Hoeffding step divides by `‖A_ij‖`, and the crossing
+  event `A_ij·Y ≥ κ‖A_ij‖` is *certain* when `A_ij = 0`, so the tail bound is
+  false for a degenerate "constraint" `0 ≤ b`. Carried as
+  [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L82).
+* **`|Q ∩ ℤⁿ|` is a finite number.** The paper writes it throughout without
+  remark. It is *not* assumed here: `claim:cl`(a) bounds `|T|` for every finite
+  `T ⊆ Q ∩ ℤⁿ` by `vol Q'/(1−θ/2)`, and a set all of whose finite subsets have
+  bounded cardinality is finite
+  ([`finite_of_forall_finset_card_le`](Ttc/Analysis/BallFacet.lean#L135)). So the
+  gap is real but self-closing.
+
+### 12. Fine, implicit — the deflated shell loses twice what the inflated one does
+
+The shell argument is run once and applied in both directions, as if the inflated
+and deflated bodies cost the same factor. They do not: the deflated side compares
+against a ball of radius `γ − κ`, not `γ`, so its factor is `(1 + κ/(γ−κ))ⁿ`
+rather than `(1 + κ/γ)ⁿ` — a factor `2` worse once `κ ≤ γ/2`
+([`Ttc.Params.shell_factor_bound`](Ttc/Analysis/Parameters.lean#L102) gives
+`1 + η/(16m)`, [`shell_factor_bound_deflated`](Ttc/Analysis/Parameters.lean#L144)
+only `1 + η/(8m)`).
+
+Harmless — the two-sided bound still closes with the two losses kept apart
+([`nonconv_recentred_general`](Ttc/Analysis/NonconvAssembled.lean#L49): the lower
+bound consumes only the inflated loss and the upper bound only the deflated one) —
+but a proof that equalises them silently is off by a factor of two.
+
 **The main result stands.** Finding 1 changes constants, not the shape of the
 theorem, and finding 2 is now closed by a different proof; finding 3 is a typo in
-an exponent whose corrected form is stronger than needed; 4–9 are presentational.
+an exponent whose corrected form is stronger than needed; finding 10 adds a
+hypothesis the paper genuinely needs; 4–9, 11 and 12 are presentational or
+self-closing.

@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Model.ProblemSetting
 import Ttc.Analysis.Decomposition
+import Ttc.Analysis.LatticeAssembled
 
 /-!
 # The capstone: combining `lem:lattice` and `lem:numlattice`
@@ -155,69 +156,90 @@ def trivialOracles (n : ℕ) (ι : Type*) : Oracles n ι where
   gen := fun _ N _ => Multiset.replicate N 0
   gen_card := fun _ N _ => by simp
 
-/-- A degenerate parameter block, to have some `Ttc.Params` to run at. -/
-noncomputable def trivialParams : Params where
+/-- A degenerate parameter block, to have some `Ttc.Params` to run at. The
+dimension has to be the ambient one (`Ttc.TtcProb.dim_eq`), and `Ttc.Params`
+requires it to be positive — which is why the witness needs `1 ≤ n`. -/
+noncomputable def trivialParams (n : ℕ) (hn : 1 ≤ n) : Params where
   ε := 1
   δ := 1
-  n := 1
+  n := n
   m := 1
   r := 1
   hε0 := one_pos
   hε1 := le_rfl
-  hn := le_rfl
+  hn := hn
   hm := le_rfl
   hr := le_rfl
 
-/-- **A `Ttc.TtcProb` really exists.** The one-point sample space with the Dirac
-measure, the degenerate oracle bundle, and the everywhere-false interpretation:
-`Vol(F) = 0`, `L = 0`, and the algorithm outputs `0` — so `lem:numlattice`'s event
-has probability `1`, and the witness holds even at `δ = 0`. -/
-noncomputable def trivialProb {A : Type*} {n : ℕ} (a : A) : TtcProb A n where
+/-- **A `Ttc.TtcProb` really exists.** The empty DNF over an unsatisfiable
+formula: `Sol(F) = ∅`, so `Vol(F) = 0`, the lattice count is `0`, and the
+algorithm — which loops over no cubes — outputs `0`. Every geometric field is
+vacuous (there are no polytopes and no facets), so `lem:lattice` holds with
+nothing to check, and `lem:numlattice`'s event has probability `1`.
+
+It is a *satisfiability* witness only; see `AUDIT.md` §4. -/
+noncomputable def trivialProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) : TtcProb A n where
   ε := 1
   δ := 0
   hε0 := one_pos
   hε1 := le_rfl
-  M := fun _ => ∅
-  φ := .atom a
-  D := [[⟨a, true⟩]]
-  isDNF := by intro v; simp [DNF.holds, Cube.holds, Lit.holds, BForm.holds]
-  L := 0
-  hL := le_rfl
-  lattice_lo := by
-    show (1 - (1:ℝ) / 8) * 0 ≤ volSol (fun _ => (∅ : Set (Space n))) (.atom a)
-    simpa using volSol_nonneg (fun _ => (∅ : Set (Space n))) (.atom a)
-  lattice_hi := by
-    show volSol (fun _ => (∅ : Set (Space n))) (.atom a) ≤ (1 + (1:ℝ) / 8) * 0
-    have hsol : sol (fun _ => (∅ : Set (Space n))) (.atom a) = ∅ := rfl
-    simp [volSol, hsol]
+  atoms := fun _ => ⟨fun _ => 0, 0⟩
+  M := fun _ => (⟨fun _ => 0, 0⟩ : LinAtom n).halfspace
+  M_eq := rfl
+  φ := .and (.atom a) (.neg (.atom a))
+  D := []
+  isDNF := by intro v; simp [DNF.holds, BForm.holds]
+  isPositive := by intro c hc; exact absurd hc (by simp)
   Ω := Unit
   mΩ := inferInstance
   μ := MeasureTheory.Measure.dirac ()
   isProb := inferInstance
-  P := trivialParams
+  P := trivialParams n hn
+  eps_eq := rfl
+  dim_eq := rfl
+  cubes_le := by
+    haveI : IsEmpty {c : Cube A // c ∈ ([] : DNF A)} := ⟨fun i => absurd i.2 (by simp)⟩
+    simp [Nat.card_of_isEmpty, trivialParams]
+  facets_le := by
+    haveI : IsEmpty {c : Cube A // c ∈ ([] : DNF A)} := ⟨fun i => absurd i.2 (by simp)⟩
+    haveI : IsEmpty (FacetIndex ([] : DNF A)) := ⟨fun j => absurd j.1.2 (by simp)⟩
+    simp [Nat.card_of_isEmpty, trivialParams]
+  normal_ne_zero := fun j => absurd j.1.2 (by simp)
   O := fun _ => trivialOracles n (Cube A)
   fuel := 0
+  cen := fun i => absurd i.2 (by simp)
   gammaHat := 1
-  ρ := trivialParams.precision 1
+  hgammaHat := one_pos
+  ball_subset := fun i => absurd i.2 (by simp)
+  volume_ne_top := fun i => absurd i.2 (by simp)
+  ρ := (trivialParams n hn).precision 1
   rho_eq := rfl
+  L := 0
+  L_eq := by
+    have hsol : sol (fun _ => (⟨fun _ => 0, 0⟩ : LinAtom n).halfspace)
+        (BForm.and (.atom a) (.neg (.atom a))) = ∅ := by
+      ext x; simp [sol, BForm.holds]
+    simp [normalisedCount, latticeCount, hsol]
   numlattice := by
     have hrun : ∀ u : Unit,
-        ttcOutput trivialParams (fun _ => trivialOracles n (Cube A)) 0
-            (trivialParams.precision 1) [[(⟨a, true⟩ : Lit A)]] u = 0 := by
+        ttcOutput (trivialParams n hn) (fun _ => trivialOracles n (Cube A)) 0
+            ((trivialParams n hn).precision 1) ([] : DNF A) u = 0 := by
       intro _
-      simp [ttcOutput, run, step, dropCovered, trivialOracles]
+      simp [ttcOutput, run]
     have hmem : () ∈ {ω : Unit | (1 - (1:ℝ) / 3) * 0 ≤
-        ttcOutput trivialParams (fun _ => trivialOracles n (Cube A)) 0
-            (trivialParams.precision 1) [[(⟨a, true⟩ : Lit A)]] ω ∧
-        ttcOutput trivialParams (fun _ => trivialOracles n (Cube A)) 0
-            (trivialParams.precision 1) [[(⟨a, true⟩ : Lit A)]] ω
+        ttcOutput (trivialParams n hn) (fun _ => trivialOracles n (Cube A)) 0
+            ((trivialParams n hn).precision 1) ([] : DNF A) ω ∧
+        ttcOutput (trivialParams n hn) (fun _ => trivialOracles n (Cube A)) 0
+            ((trivialParams n hn).precision 1) ([] : DNF A) ω
           ≤ (1 + (1:ℝ) / 3) * 0} := by
       simp [hrun]
     rw [MeasureTheory.Measure.dirac_apply_of_mem hmem]
     norm_num
 
-/-- `Ttc.TtcProb` is inhabited, so `Ttc.TtcProb.volume_estimate` is not vacuous. -/
-theorem nonempty_ttcProb {A : Type*} {n : ℕ} (a : A) : Nonempty (TtcProb A n) :=
-  ⟨trivialProb a⟩
+/-- `Ttc.TtcProb` is inhabited, so `Ttc.TtcProb.volume_estimate` is not vacuous.
+The dimension must be positive: `Ttc.Params` requires it, and
+`Ttc.TtcProb.dim_eq` ties the two together. -/
+theorem nonempty_ttcProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) : Nonempty (TtcProb A n) :=
+  ⟨trivialProb hn a⟩
 
 end Ttc

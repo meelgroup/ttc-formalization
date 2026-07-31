@@ -49,12 +49,13 @@ The headline is `sorry`-free and axiom-clean
 **One scope caveat, stated here because it is the thing an auditor is most
 likely to assume wrongly.** `Ttc.TtcProb.volume_estimate` really does conclude
 `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` about `Ttc.run`, with no side hypothesis —
-but its `numlattice` field **assumes** `lem:numlattice`, and `lattice_lo`/
-`lattice_hi` assume `lem:lattice`. Neither is proved here. `Ttc.nonempty_ttcProb`
-shows the fields are jointly satisfiable (by a degenerate run), so the headline
-is not vacuous; nothing here shows they hold of the real algorithm. See the
-README, "What is assumed", and `AUDIT.md` §4. Running time (`thm:runtime`) is out
-of scope throughout.
+but its `numlattice` field **assumes** `lem:numlattice`, which is not proved here.
+`lem:lattice` *is* proved (`Ttc.TtcProb.lattice_lo`/`lattice_hi`), from the
+geometric fields of `Ttc.TtcProb`. `Ttc.nonempty_ttcProb` shows the fields are
+jointly satisfiable (by a degenerate run), so the headline is not vacuous; nothing
+here shows `lem:numlattice` holds of the real algorithm. See the README, "What is
+assumed", and `AUDIT.md` §4. Running time (`thm:runtime`) is out of scope
+throughout.
 -/
 
 -- The audit surface (statement layer)
@@ -84,4 +85,9 @@ import Ttc.Analysis.ProdKernel
 import Ttc.Analysis.ProdLaw
 import Ttc.Analysis.TentSum
 import Ttc.Analysis.RoundLaw
+import Ttc.Analysis.RoundMoments
+import Ttc.Analysis.ClB
+import Ttc.Analysis.BallFacet
+import Ttc.Analysis.NonconvAssembled
+import Ttc.Analysis.LatticeAssembled
 import Ttc.Analysis.Capstone

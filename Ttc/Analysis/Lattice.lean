@@ -32,20 +32,6 @@ open MeasureTheory Set Pointwise
 
 variable {n : ℕ}
 
-/-- The integer lattice inside `ℝⁿ`. -/
-def intLattice (n : ℕ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = (k : ℝ)}
-
-/-- The refined lattice `𝕃ⁿ = c⁻¹ · ℤⁿ`; the algorithm uses `c = 10^ρ`. -/
-def fineLattice (n : ℕ) (c : ℝ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ)}
-
-@[simp]
-theorem mem_intLattice {x : Space n} : x ∈ intLattice n ↔ ∀ i, ∃ k : ℤ, x i = (k : ℝ) :=
-  Iff.rfl
-
-@[simp]
-theorem mem_fineLattice {c : ℝ} {x : Space n} :
-    x ∈ fineLattice n c ↔ ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ) := Iff.rfl
-
 /-- Dilating by `c` carries the fine lattice onto the integer lattice. -/
 theorem smul_fineLattice {c : ℝ} (hc : c ≠ 0) :
     c • fineLattice n c = intLattice n := by
@@ -119,30 +105,15 @@ theorem lattice_of_scaled {η N c volQ volS : ℝ} (hc : 0 < c)
 
 /-! ## `lem:lattice`, instantiated
 
-Everything above is about free reals. This section fixes that: `L` becomes an
-actual normalised lattice count of the actual solution set, and `lem:lattice`
-becomes a statement about `Ttc.volSol` — conditional only on `lem:nonconv` for the
-dilate, which is itself about actual sets.
+Everything above is about free reals. This section fixes that: `Ttc.normalisedCount`
+(`Model/Prelude`) is an actual normalised lattice count of the actual solution set,
+and `lem:lattice` becomes a statement about `Ttc.volSol` — conditional only on
+`lem:nonconv` for the dilate, which is itself about actual sets.
 -/
-
-/-- The dilation `10^ρ` carrying `𝕃ⁿ = 10^(−ρ)·ℤⁿ` onto `ℤⁿ`. -/
-noncomputable def latticeScale (ρ : ℤ) : ℝ := (10 : ℝ) ^ ρ
 
 theorem latticeScale_pos (ρ : ℤ) : 0 < latticeScale ρ := zpow_pos (by norm_num) ρ
 
 theorem latticeScale_ne_zero (ρ : ℤ) : latticeScale ρ ≠ 0 := (latticeScale_pos ρ).ne'
-
-/-- **`|Sol(F) ∩ 𝕃ⁿ|`** — the lattice-point count the algorithm's estimate targets,
-of the *actual* solution set. -/
-noncomputable def latticeCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
-    (ρ : ℤ) : ℕ :=
-  ((sol M φ) ∩ fineLattice n (latticeScale ρ)).ncard
-
-/-- **`|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`** — the paper's `L`, as an actual normalised
-count rather than a free real. -/
-noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
-    (ρ : ℤ) : ℝ :=
-  (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
 
 /-- Dilating the solution set multiplies its volume by `10^(ρ·n)`. Holds with no
 finiteness hypothesis: if the volume is infinite both sides are `0` after

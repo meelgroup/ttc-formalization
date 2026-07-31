@@ -114,6 +114,59 @@ theorem mem_sol_iff {φ : BForm A} {x : X} :
 theorem mem_region_iff {c : Cube A} {x : X} :
     x ∈ region M c ↔ ∀ l ∈ c, l.holds (induced M x) := Iff.rfl
 
+/-! ## Positive DNFs, and the facets they present
+
+A negated atom denotes an **open** half-space, which is not an intersection of
+closed ones, so `lem:nonconv`'s geometry is available only for DNFs all of whose
+literals are positive (README, finding 5). `Ttc.FacetIndex D` names the facets of
+such a DNF: one per literal of each cube.
+-/
+
+/-- A cube is **positive** when none of its literals is negated. -/
+def Cube.IsPositive (c : Cube A) : Prop := ∀ l ∈ c, l.pos = true
+
+/-- A DNF is **positive** when all of its cubes are. -/
+def DNF.IsPositive (D : DNF A) : Prop := ∀ c ∈ D, Cube.IsPositive c
+
+/-- Facets of a DNF: one per literal of each of its cubes. -/
+abbrev FacetIndex (D : DNF A) := Σ c : {c : Cube A // c ∈ D}, {l : Lit A // l ∈ c.val}
+
+/-! ## The lattices
+
+The algorithm counts points of `𝕃ⁿ = 10^(−ρ)·ℤⁿ`; `lem:lattice` transports that
+count to `ℤⁿ` by dilating. Both lattices, the dilation `10^ρ`, and the normalised
+count `L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` are defined here, so that the problem
+statement can *be* about a lattice count rather than about a bare real.
+-/
+
+/-- The integer lattice inside `ℝⁿ`. -/
+def intLattice (n : ℕ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = (k : ℝ)}
+
+/-- The refined lattice `𝕃ⁿ = c⁻¹ · ℤⁿ`; the algorithm uses `c = 10^ρ`. -/
+def fineLattice (n : ℕ) (c : ℝ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ)}
+
+@[simp]
+theorem mem_intLattice {x : Space n} : x ∈ intLattice n ↔ ∀ i, ∃ k : ℤ, x i = (k : ℝ) :=
+  Iff.rfl
+
+@[simp]
+theorem mem_fineLattice {c : ℝ} {x : Space n} :
+    x ∈ fineLattice n c ↔ ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ) := Iff.rfl
+
+/-- The dilation `10^ρ` carrying `𝕃ⁿ = 10^(−ρ)·ℤⁿ` onto `ℤⁿ`. -/
+noncomputable def latticeScale (ρ : ℤ) : ℝ := (10 : ℝ) ^ ρ
+
+/-- **`|Sol(F) ∩ 𝕃ⁿ|`** — the lattice-point count the algorithm's estimate
+targets, of the *actual* solution set. -/
+noncomputable def latticeCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
+    (ρ : ℤ) : ℕ :=
+  ((sol M φ) ∩ fineLattice n (latticeScale ρ)).ncard
+
+/-- **`L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`** — the paper's normalised lattice count. -/
+noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
+    (ρ : ℤ) : ℝ :=
+  (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
+
 /-! ## What is estimated, and how accurately -/
 
 /-- The paper's `Vol(F)`: the Lebesgue volume of the solution set. -/

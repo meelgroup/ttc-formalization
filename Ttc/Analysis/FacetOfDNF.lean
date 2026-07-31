@@ -37,12 +37,6 @@ open Set
 
 variable {A : Type*} {n : ℕ}
 
-/-- A cube is **positive** when none of its literals is negated. -/
-def Cube.IsPositive (c : Cube A) : Prop := ∀ l ∈ c, l.pos = true
-
-/-- A DNF is **positive** when all of its cubes are. -/
-def DNF.IsPositive (D : DNF A) : Prop := ∀ c ∈ D, Cube.IsPositive c
-
 /-- The linear form `x ↦ ∑ₖ Aₖ xₖ` of a linear atom, bundled. -/
 noncomputable def LinAtom.form (a : LinAtom n) : Space n →ₗ[ℝ] ℝ :=
   IsLinearMap.mk' (fun x => ∑ k, a.coeff k * x k) <| by
@@ -56,9 +50,6 @@ noncomputable def LinAtom.form (a : LinAtom n) : Space n →ₗ[ℝ] ℝ :=
 
 @[simp] theorem LinAtom.form_apply (a : LinAtom n) (x : Space n) :
     a.form x = ∑ k, a.coeff k * x k := rfl
-
-/-- Facets of a DNF: one per literal of each of its cubes. -/
-abbrev FacetIndex (D : DNF A) := Σ c : {c : Cube A // c ∈ D}, {l : Lit A // l ∈ c.val}
 
 /-- **The facet system of a DNF over linear atoms.** Polytopes are indexed by the
 cubes of `D`; the facets of cube `c` are its literals, each contributing
