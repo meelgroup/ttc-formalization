@@ -6,6 +6,7 @@ import Ttc.Analysis.NonconvAssembled
 import Ttc.Analysis.Lattice
 import Ttc.Analysis.FacetOfDNF
 import Ttc.Model.ProblemSetting
+import Ttc.Analysis.Invariants
 
 /-!
 # `lem:lattice` for the solution set of a positive DNF
@@ -99,10 +100,11 @@ theorem lattice_of_dnf (atoms : A → LinAtom n) {D : DNF A} {φ : BForm A}
     (hfin : ∀ i : {c : Cube A // c ∈ D},
       volume (region (fun a => (atoms a).halfspace) i.val) ≠ ⊤)
     {ρ : ℤ} (hρ : ρ = P.precision gammaHat) :
-    (1 - P.eta) * normalisedCount (fun a => (atoms a).halfspace) φ ρ
+    ((1 - P.eta) * normalisedCount (fun a => (atoms a).halfspace) φ ρ
         ≤ volSol (fun a => (atoms a).halfspace) φ ∧
       volSol (fun a => (atoms a).halfspace) φ
-        ≤ (1 + P.eta) * normalisedCount (fun a => (atoms a).halfspace) φ ρ := by
+        ≤ (1 + P.eta) * normalisedCount (fun a => (atoms a).halfspace) φ ρ) ∧
+      (sol (fun a => (atoms a).halfspace) φ ∩ fineLattice n (latticeScale ρ)).Finite := by
   classical
   haveI hfc : Finite {c : Cube A // c ∈ D} := D.finite_toSet.to_subtype
   haveI hfl : ∀ c : {c : Cube A // c ∈ D}, Finite {l : Lit A // l ∈ c.val} :=
@@ -135,8 +137,18 @@ theorem lattice_of_dnf (atoms : A → LinAtom n) {D : DNF A} {φ : BForm A}
   have hbody : ((facetSystem atoms D).scale (latticeScale ρ)).body 0
       = latticeScale ρ • sol (fun a => (atoms a).halfspace) φ := by
     rw [FacetSystem.scale_body_zero _ hc0, body_eq_sol atoms hpos hDNF]
-  rw [hbody] at hmain
-  exact lattice_bounds _ φ ρ hmain.1 hmain.2
+  obtain ⟨hlow, hupp, hEfin⟩ := hmain
+  rw [hbody] at hlow hupp hEfin
+  refine ⟨lattice_bounds _ φ ρ hlow hupp, ?_⟩
+  -- transport finiteness back through the dilation
+  have himg : ((latticeScale ρ • sol (fun a => (atoms a).halfspace) φ)
+      ∩ intLattice n).Finite := by
+    rw [← image_latPt_eq]
+    exact hEfin.image _
+  refine Set.Finite.of_finite_image (f := fun x => latticeScale ρ • x) ?_ ?_
+  · rw [Set.image_smul, smul_inter_fineLattice (latticeScale_ne_zero ρ)]
+    exact himg
+  · exact (smul_right_injective (Space n) (latticeScale_ne_zero ρ)).injOn
 
 /-! ## `lem:lattice` for a `Ttc.TtcProb`
 
@@ -167,7 +179,44 @@ theorem lattice_two_sided :
   have h := lattice_of_dnf T.atoms T.isDNF T.isPositive T.P T.dim_eq T.cubes_le T.facets_le
     T.normal_ne_zero T.cen T.hgammaHat hball hfin T.rho_eq
   rw [T.L_eq, T.M_eq]
-  exact h
+  exact h.1
+
+/-- **`Sol(F) ∩ 𝕃ⁿ` is finite** — not assumed, but a consequence of `claim:cl`(a)
+(see `Ttc.FacetSystem.finite_lattice_points`). This is what lets the run's sample
+multiset be read as a count vector over a *finite* index, which the invariant of
+`lem:numlattice` needs. -/
+theorem sol_lattice_finite :
+    (sol T.M T.φ ∩ fineLattice n (latticeScale T.ρ)).Finite := by
+  have hball : ∀ i, Metric.ball (T.cen i) T.gammaHat
+      ⊆ region (fun a => (T.atoms a).halfspace) i.val := by
+    intro i; rw [← T.M_eq]; exact T.ball_subset i
+  have hfin : ∀ i : {c : Cube A // c ∈ T.D},
+      volume (region (fun a => (T.atoms a).halfspace) i.val) ≠ ⊤ := by
+    intro i; rw [← T.M_eq]; exact T.volume_ne_top i
+  have h := lattice_of_dnf T.atoms T.isDNF T.isPositive T.P T.dim_eq T.cubes_le T.facets_le
+    T.normal_ne_zero T.cen T.hgammaHat hball hfin T.rho_eq
+  rw [T.M_eq]
+  exact h.2
+
+/-- **The run only ever holds genuine solution lattice points.**
+
+`𝒳` starts empty, the coverage filter and the thinning only remove
+(`Oracles.halve_le`), and the only insertion is `GenerateSamples`, whose output
+lies in `P(cᵢ) ∩ 𝕃ⁿ` by the `gen_mem` field. Since each `P(cᵢ) ⊆ Sol(F)`
+(`thm:decomposition`), the whole run stays inside `Sol(F) ∩ 𝕃ⁿ`.
+
+This is what makes the run's state a count vector over the **fixed finite** set
+`Sol(F) ∩ 𝕃ⁿ` — the first structural step of the coupling that `lem:numlattice`
+needs. -/
+theorem run_state_mem (ω : T.Ω) :
+    ∀ s ∈ (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0⟩).X,
+      s ∈ sol T.M T.φ ∩ fineLattice n (latticeScale T.ρ) := by
+  refine mem_run_state T.P (T.O ω) T.fuel T.ρ T.D ?_
+  intro c i N hi s hs
+  obtain ⟨hreg, hlat⟩ := T.gen_mem ω c i N hi s hs
+  refine ⟨?_, hlat⟩
+  have hsub : region T.M i ⊆ sol T.M T.φ := region_subset_sol T.isDNF hi
+  exact hsub hreg
 
 /-- **`lem:lattice`, lower half**, at `η = ε/8` — formerly a field. -/
 theorem lattice_lo : (1 - T.ε / 8) * T.L ≤ volSol T.M T.φ := by

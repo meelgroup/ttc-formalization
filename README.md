@@ -49,7 +49,7 @@ import Ttc
 ```
 
 Those three are Mathlib's standard foundational axioms. A sweep over **every**
-declaration in the development (344 of them: theorems, definitions and
+declaration in the development (400 of them: theorems, definitions and
 structures) gives:
 
 Those three are Mathlib's standard foundational axioms, and **no declaration in
@@ -124,6 +124,9 @@ Ttc/
     Poisson.lean              -- lem:process: Poisson splitting
     Chernoff.lean             -- lem:chernoff: the Poisson tail bound, from the MGF up
     PoissonLaws.lean          -- lem:process as an identity of measures: splitting, thinning
+    Thinning.lean             -- Poisson thinning as a kernel, and on a whole count vector
+    CountVector.lean          -- 𝒳 read as a count vector over the finite set Sol(F) ∩ 𝕃ⁿ
+    SketchProcess.lean        -- the level-j process; Err and Noise branches; the δ budget
     Sketch.lean               -- lem:numlattice's epoch skeleton
     Invariants.lean           -- structural invariants of the modelled main loop
     Capstone.lean             -- the two chains combining lem:lattice with lem:numlattice
@@ -142,7 +145,7 @@ Anything you still doubt is a named lemma in `Analysis/`.
 | Surface module | Contains | Status |
 | --- | --- | --- |
 | [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, [`volSol`](Ttc/Model/Prelude.lean#L173) (= `Vol(F)`), [`relErr`](Ttc/Model/Prelude.lean#L181) | definitions only |
-| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `halveDown`, `absorb`, `step`, [`run`](Ttc/Model/Pseudocode.lean#L132), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L138), and [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) — the complete list of assumptions | modelled; see caveats |
+| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `halveDown`, `absorb`, `step`, [`run`](Ttc/Model/Pseudocode.lean#L134), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L140), and [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) — the complete list of assumptions | modelled; see caveats |
 | [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean#L40) (`Pr ≥ 1−δ`) — one theorem, nothing else | proved from the `TtcProb` fields |
 
 ### What `Ttc/Model/Pseudocode.lean` does and does not do
@@ -157,6 +160,14 @@ state evolution is deterministic *given the oracle's answers*, and all the
 randomness sits at that boundary. That is deliberate: the distribution of the
 output is `lem:numlattice`, which this development assumes.
 
+**Two contracts were missing and are now stated.** `halve` returns a
+*sub-multiset* (`halve_le`), not merely one of no greater cardinality — the loop
+deletes elements, it never invents them; and `GenerateSamples` returns points of
+`P(cᵢ) ∩ 𝕃ⁿ` ([`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L108)), where
+before only the *count* was fixed. Both are needed before `𝒳` can be treated as a
+count vector over a fixed finite set, which
+[`TtcProb.run_state_mem`](Ttc/Analysis/LatticeAssembled.lean#L211) now proves.
+
 **Every randomised call is indexed by a `clock`.** `Ttc.SketchState` carries a
 counter of draws consumed, and `halve`, `pois` and `gen` take it as their first
 argument. The pseudocode has no such counter; it is here because without it the
@@ -167,12 +178,12 @@ probability `2^(−|X|) > 0`), every later thinning of that multiset is forced t
 the same no-op and `𝒳` can never shrink again, which is not the algorithm's
 behaviour. Indexing fixes that, and it is also what lets a distributional
 hypothesis say the draws are *independent*: distinct call sites provably get
-distinct indices ([`halveDown_clock`](Ttc/Analysis/Invariants.lean#L105),
-[`absorb_clock`](Ttc/Analysis/Invariants.lean#L116),
-[`step_clock`](Ttc/Analysis/Invariants.lean#L132)).
+distinct indices ([`halveDown_clock`](Ttc/Analysis/Invariants.lean#L111),
+[`absorb_clock`](Ttc/Analysis/Invariants.lean#L122),
+[`step_clock`](Ttc/Analysis/Invariants.lean#L138)).
 
 The precision `ρ` is threaded properly: `GenerateSamples` is
-[`gen : ι → ℕ → ℤ → Multiset (Space n)`](Ttc/Model/Pseudocode.lean#L86), `ρ` is
+[`gen : ι → ℕ → ℤ → Multiset (Space n)`](Ttc/Model/Pseudocode.lean#L88), `ρ` is
 fixed before the loop (`alg:ttc` line 17) and passed at every call, and the
 `rho_eq` field of `Ttc.TtcProb` pins it to `⌈log₁₀(γ/γ̂)⌉` (`alg:prec` line 91).
 The LP computing `γ̂` is still not modelled — `gammaHat` is an input.
@@ -194,7 +205,7 @@ reasons about — joined by a *proved* bridge saying they compute the same thing
 That bridge is what puts the operational model outside the trusted base.
 
 This development needs no such bridge, because it has only the transcription.
-[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean#L138) *is* `Ttc.run` with the oracles
+[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean#L140) *is* `Ttc.run` with the oracles
 drawn at a sample point, so the headline measures the algorithm directly:
 
 ```lean
@@ -212,13 +223,13 @@ numlattice : 1 - δ ≤ (μ {ω | (1-ε/3)*L ≤ ttcOutput P O fuel ρ D ω ∧
 ```
 
 so the headline needs **no side hypothesis**. And `L` is no longer a bare real:
-the field [`L_eq`](Ttc/Model/ProblemSetting.lean#L107) pins it to
+the field [`L_eq`](Ttc/Model/ProblemSetting.lean#L113) pins it to
 [`normalisedCount M φ ρ`](Ttc/Model/Prelude.lean#L166) `= |Sol(F) ∩ 𝕃ⁿ|/10^(ρn)`,
 the actual lattice count of the actual solution set — which is what makes
 `lem:lattice` a theorem about it rather than an assumption.
 
 The structure is inhabited
-([`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L242), witness
+([`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L245), witness
 [`Ttc.trivialProb`](Ttc/Analysis/Capstone.lean#L181)), so this is not vacuous —
 but that witness is degenerate (the empty DNF: `Vol(F) = 0`, output `0`), and
 **nothing here shows `numlattice` holds of the real algorithm**. Proving it is the
@@ -247,7 +258,7 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | ↳ shell bound, instantiated | `vol Q' ≤ (1+m(K−1))·vol Q` and `vol Q ≤ (1+m(K−1))·vol Q''`, from the actual sets | [`piece_inflated_subset_homothety_zero`](Ttc/Analysis/Recentred.lean#L211), [`volume_shell_le`](Ttc/Analysis/Recentred.lean#L284), [`volume_body_inflated_le`](Ttc/Analysis/Recentred.lean#L476), [`volume_body_deflated_le`](Ttc/Analysis/Recentred.lean#L531) | **proved** — both sides; `shell_bound`'s three hypotheses discharged from geometry |
 | ↳ `Q = Sol(F)` | the facet system of a positive DNF | [`facetSystem`](Ttc/Analysis/FacetOfDNF.lean#L57), [`region_eq_piece`](Ttc/Analysis/FacetOfDNF.lean#L67), [`body_eq_sol`](Ttc/Analysis/FacetOfDNF.lean#L88) | **proved** for `DNF.IsPositive` — see finding 5 |
 | ↳ without common ball | per-polytope homothety + shell bound | [`piece_inflated_subset_homothety`](Ttc/Analysis/Recentred.lean#L69), [`volume_piece_inflated_le`](Ttc/Analysis/Recentred.lean#L100), [`body_subset_union_shells`](Ttc/Analysis/Recentred.lean#L183), [`shell_bound`](Ttc/Analysis/Recentred.lean#L457) | **proved** |
-| ↳ **assembled, nothing assumed** | `lem:nonconv` for an actual facet system against its own `\|Q∩ℤⁿ\|` | [`FacetSystem.nonconv_of_ball`](Ttc/Analysis/NonconvAssembled.lean#L193), summed forms [`card_le_of_claim_a`](Ttc/Analysis/NonconvAssembled.lean#L126), [`deflated_le_card`](Ttc/Analysis/NonconvAssembled.lean#L160), arithmetic [`nonconv_recentred_general`](Ttc/Analysis/NonconvAssembled.lean#L49) | **proved** from the ball hypothesis alone |
+| ↳ **assembled, nothing assumed** | `lem:nonconv` for an actual facet system against its own `\|Q∩ℤⁿ\|` | [`FacetSystem.nonconv_of_ball`](Ttc/Analysis/NonconvAssembled.lean#L216), summed forms [`card_le_of_claim_a`](Ttc/Analysis/NonconvAssembled.lean#L126), [`deflated_le_card`](Ttc/Analysis/NonconvAssembled.lean#L160), arithmetic [`nonconv_recentred_general`](Ttc/Analysis/NonconvAssembled.lean#L49) | **proved** from the ball hypothesis alone |
 | ↳ `Q ∩ ℤⁿ` is finite | not assumed — it follows from `claim:cl`(a) | [`finite_of_forall_finset_card_le`](Ttc/Analysis/BallFacet.lean#L135), [`ncard_inter_intLattice`](Ttc/Analysis/BallFacet.lean#L170) | **proved** |
 | ↳ inscribed ball ↔ facet form | `B(cᵢ,γ) ⊆ Pᵢ  ⟺  γ‖A_ij‖ ≤ b_ij − A_ij·cᵢ` | [`FacetSystem.ball_subset_piece`](Ttc/Analysis/BallFacet.lean#L70), [`FacetSystem.facet_of_ball_subset`](Ttc/Analysis/BallFacet.lean#L90) | **proved** both ways |
 | `claim:cl` | rounding hits/misses `Q` w.p. `1 ± η/2` | **all three discharged for the actual rounding** — (a) [`prodKernel_claim_cl_a`](Ttc/Analysis/ProdLaw.lean#L232), (b) [`prodKernel_claim_cl_b`](Ttc/Analysis/ClB.lean#L180), (c) [`claim_cl_c`](Ttc/Analysis/Cl.lean#L114), over [`prodKernel`](Ttc/Analysis/ProdKernel.lean#L110); core [`rounding_tail_bound`](Ttc/Analysis/Rounding.lean#L107) | **proved**, no residual hypothesis — see finding 3 |
@@ -255,7 +266,7 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | ↳ (a)/(c), the `p`-side | independence of the displacement's coordinates | [`iIndepFun_disp`](Ttc/Analysis/ProdLaw.lean#L117), [`ae_disp_mem_Icc`](Ttc/Analysis/ProdLaw.lean#L106), [`integral_disp_eq_zero`](Ttc/Analysis/ProdLaw.lean#L146), [`prodKernel_escape_bound`](Ttc/Analysis/ProdLaw.lean#L213) | **proved** |
 | ↳ (b), the `z`-side | the law of `rnd p` on `ℤⁿ` is a two-point product | [`roundLaw`](Ttc/Analysis/RoundLaw.lean#L50), [`tentInt_eq_two_point`](Ttc/Analysis/RoundMoments.lean#L34), [`integral_tentInt_disp`](Ttc/Analysis/RoundMoments.lean#L72), [`iIndepFun_latDisp`](Ttc/Analysis/RoundMoments.lean#L153), [`roundLaw_escape_bound`](Ttc/Analysis/ClB.lean#L69) | **proved**; the crossing uses `−A_j` ([`cover_of_notMem_body_deflated`](Ttc/Analysis/ClB.lean#L42)) |
 | `claim:helper` | `kⁿ ≤ (1+η/4)/(1−η/4)` | [`claim_helper`](Ttc/Analysis/Arith.lean#L162), [`claim_helper_of`](Ttc/Analysis/Arith.lean#L133), [`exp_two_mul_le_div`](Ttc/Analysis/Arith.lean#L78) | **proved** — see finding 4 |
-| `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Analysis/LatticeAssembled.lean#L90), and for the problem instance [`TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L173)/[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L178) | **proved** — formerly two fields of `TtcProb` |
+| `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Analysis/LatticeAssembled.lean#L91), and for the problem instance [`TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L222)/[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L227) | **proved** — formerly two fields of `TtcProb` |
 | ↳ transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | | [`lattice_of_scaled`](Ttc/Analysis/Lattice.lean#L91), [`ncard_inter_lattice_smul`](Ttc/Analysis/Lattice.lean#L57), [`volume_smul_body`](Ttc/Analysis/Lattice.lean#L63), [`lattice_bounds`](Ttc/Analysis/Lattice.lean#L144) | **proved** |
 | `lem:numlattice` | sketch output within `(1±ε/3)` w.p. `1−δ` | [`epoch_series_le`](Ttc/Analysis/Sketch.lean#L87), [`err_sum_le_delta`](Ttc/Analysis/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Analysis/Sketch.lean#L126), [`numlattice_failure_bound`](Ttc/Analysis/Sketch.lean#L142), [`sketch_interval`](Ttc/Analysis/Sketch.lean#L181), [`sketch_window`](Ttc/Analysis/Sketch.lean#L196) | epoch skeleton **proved**; `lem:chernoff` now **proved** too — what remains is the probabilistic model of the loop (see [What is assumed](#assumed-about-the-algorithm)) |
 | `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Analysis/Sketch.lean#L181) | constant **verified** |
@@ -266,10 +277,10 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | ↳ deflated shell factor | `(1 + κ/(γ−κ))ⁿ ≤ 1 + η/(8m)` | [`kappa_le_gamma_half`](Ttc/Analysis/Parameters.lean#L124), [`shell_factor_bound_deflated`](Ttc/Analysis/Parameters.lean#L144) | **proved** — the deflated companion of `shell_factor_bound` |
 | ↳ dilation of a facet system | `c·{x \| f x ≤ b} = {y \| f y ≤ c·b}` | [`FacetSystem.scale`](Ttc/Analysis/Recentred.lean#L345), [`scale_body_zero`](Ttc/Analysis/Recentred.lean#L380) | **proved** — connects `body_eq_sol` to `lem:lattice`'s dilate |
 | `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean#L240), [`kappa_div_gamma_le`](Ttc/Analysis/Parameters.lean#L81), [`shell_factor_bound`](Ttc/Analysis/Parameters.lean#L102) | **proved** — see finding 2 |
-| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Model/Pseudocode.lean#L132), [`step`](Ttc/Model/Pseudocode.lean#L125), [`absorb`](Ttc/Model/Pseudocode.lean#L107), [`halveDown`](Ttc/Model/Pseudocode.lean#L98) | modelled over an oracle bundle; structural invariants proved, termination and distribution not |
-| ↳ the output as a random variable | `run` with oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean#L138) | definition |
+| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Model/Pseudocode.lean#L134), [`step`](Ttc/Model/Pseudocode.lean#L127), [`absorb`](Ttc/Model/Pseudocode.lean#L109), [`halveDown`](Ttc/Model/Pseudocode.lean#L100) | modelled over an oracle bundle; structural invariants proved, termination and distribution not |
+| ↳ the output as a random variable | `run` with oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean#L140) | definition |
 | `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L40) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) fields |
-| `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean#L247), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L68) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Analysis/Lattice.lean#L70), [`gamma_half_le`](Ttc/Analysis/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Analysis/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L576) | mathematical content **proved**; LP implementation not modelled |
+| `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean#L247), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L69) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Analysis/Lattice.lean#L70), [`gamma_half_le`](Ttc/Analysis/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Analysis/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L576) | mathematical content **proved**; LP implementation not modelled |
 
 Results with no counterpart in the paper, produced by the formalisation:
 
@@ -278,7 +289,7 @@ Results with no counterpart in the paper, produced by the formalisation:
 | [`convex_region`](Ttc/Analysis/Decomposition.lean#L76), [`convex_litSet`](Ttc/Analysis/Decomposition.lean#L53) | each cube's region is convex — and *not* closed (finding 5) |
 | [`ratio_antitone`](Ttc/Analysis/Geometry.lean#L156), [`facet_ratio_fails`](Ttc/Analysis/Geometry.lean#L170) | `k` is attained at the facet **nearest** the origin, so the ball hypothesis is needed at every facet (finding 2) |
 | [`claim12_factor_le`](Ttc/Analysis/Nonconv.lean#L155) | the `claim:helper` factor is `≤ 5/3` on `0 < η ≤ 1` |
-| [`trivialProb`](Ttc/Analysis/Capstone.lean#L181), [`nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L242) | the hypothesis bundle is inhabited, so `thm:volumettc` is not vacuous |
+| [`trivialProb`](Ttc/Analysis/Capstone.lean#L181), [`nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L245) | the hypothesis bundle is inhabited, so `thm:volumettc` is not vacuous |
 
 `Ttc.lean` re-exports everything, so `import Ttc` and a bare `lake build` expose
 the headline theorem.
@@ -313,8 +324,8 @@ it runs, not claims about what `TTC` does.
 
 ### Proved, and previously assumed
 
-**`lem:lattice` is now a theorem** ([`Ttc.TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L173),
-[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L178)), where it used to be two
+**`lem:lattice` is now a theorem** ([`Ttc.TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L222),
+[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L227)), where it used to be two
 fields of `Ttc.TtcProb`. With it, `claim:cl` and `lem:nonconv` are discharged end
 to end:
 
@@ -337,7 +348,7 @@ to end:
   in (b) inward, so (b) applies the tail bound to `−A_j`
   ([`cover_of_notMem_body_deflated`](Ttc/Analysis/ClB.lean#L42)).
 * **`lem:nonconv` over an actual facet system**
-  ([`FacetSystem.nonconv_of_ball`](Ttc/Analysis/NonconvAssembled.lean#L193)) — no
+  ([`FacetSystem.nonconv_of_ball`](Ttc/Analysis/NonconvAssembled.lean#L216)) — no
   free reals, no abstract kernel. Its one hypothesis is the paper's: each `Pᵢ`
   contains an `ℓ₂`-ball of radius `γ` about its own centre.
 * **Finiteness of `Q ∩ ℤⁿ` is not assumed.** It follows from `claim:cl`(a), which
@@ -345,7 +356,7 @@ to end:
   ([`finite_of_forall_finset_card_le`](Ttc/Analysis/BallFacet.lean#L135)).
 * **`GetPrecision` became load-bearing.** `ρ = ⌈log₁₀(γ/γ̂)⌉` is exactly what makes
   the dilated polytopes contain a ball of radius `γ`
-  ([`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L68)), which is
+  ([`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L69)), which is
   what the shell bound stands on. In the previous version `rho_eq` was inert.
 
 ### Assumed about the input
@@ -407,18 +418,64 @@ about `Ttc.run`. Two of the three obstacles are now cleared:
    [`Ttc.countLaw_eq_pi`](Ttc/Analysis/PoissonLaws.lean#L91) proves it as an
    identity of *measures*, which yields independence of the cell counts
    ([`iIndepFun_countLaw`](Ttc/Analysis/PoissonLaws.lean#L106)), Poisson thinning
-   ([`poisson_thinning`](Ttc/Analysis/PoissonLaws.lean#L130)) and superposition
-   ([`poisson_add`](Ttc/Analysis/PoissonLaws.lean#L143)) — exactly the three
+   ([`poisson_thinning`](Ttc/Analysis/PoissonLaws.lean#L204)) and superposition
+   ([`poisson_add`](Ttc/Analysis/PoissonLaws.lean#L217)) — exactly the three
    operations the loop performs on the invariant.
-3. **The invariant still has to be carried along the fold — and the number of
-   halvings between two cubes is a *stopping time*.** This is the remaining
-   difficulty, and it is the deepest one: the paper defines `𝒳^(i)_j` as "the
-   state when `p` is `2^(−j)`", which is conditioning on a random event
-   determined by `|𝒳|` and the Poisson draws. Preserving a Poisson invariant
-   across such conditioning needs the strong Markov property, or the pathwise
-   per-point representation (procedure (3) of `lem:process`) in which the
-   stopping rule depends only on the totals. Formalising that is the bulk of the
-   work that remains.
+3. ~~The number of halvings is a stopping time.~~ **Resolved, and it turned up a
+   genuine error** — see finding 14. Conditioning on the rate is not merely hard,
+   it is *wrong*; the invariant has to be read non-adaptively. The level-`j`
+   process ([`Ttc.levelLaw`](Ttc/Analysis/SketchProcess.lean#L55)) is that
+   reading, and **both branch estimates and the whole `δ` budget are now proved
+   over it**: [`levelLaw_err_le`](Ttc/Analysis/SketchProcess.lean#L130),
+   [`err_branch_sum`](Ttc/Analysis/SketchProcess.lean#L179),
+   [`levelLaw_noise_le`](Ttc/Analysis/SketchProcess.lean#L194), assembled in
+   [`numlattice_failure_le`](Ttc/Analysis/SketchProcess.lean#L246) — the paper's
+   `δ/6 + δ/6 + δ/2 ≤ δ`, with the algorithm's own `Thresh` and `δ'`.
+4. **What remains is the coupling**: on the event that the run stops at level `j`,
+   the run's final `𝒳` must *be* the level-`j` process. Its structural half is
+   now done — the model was missing two contracts, both added:
+   `Oracles.halve_le` (thinning returns a *sub*-multiset, not merely a smaller
+   one) and [`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L108)
+   (`GenerateSamples` returns points of `P(cᵢ) ∩ 𝕃ⁿ` — previously only their
+   *number* was constrained). Together they give
+   [`TtcProb.run_state_mem`](Ttc/Analysis/LatticeAssembled.lean#L211): the run's
+   `𝒳` never leaves `Sol(F) ∩ 𝕃ⁿ`, so it *is* a count vector over a fixed finite
+   set.
+
+   The **two operations on the invariant** are now proved, in the exact form the
+   induction consumes:
+   * *thinning* (line 33/40's `halve`) —
+     [`pi_poisson_bind_binomial_half`](Ttc/Analysis/Thinning.lean#L207): a product
+     of `Pois(θᵢ)` binomially thinned coordinatewise is a product of `Pois(θᵢ/2)`.
+     In **kernel** form (`Measure.bind`), not as a marginal, since that is what a
+     loop step actually does. Needs Tonelli for a finite product of series in
+     `ℝ≥0∞`, which Mathlib lacks — [`tsum_pi_prod`](Ttc/Analysis/Thinning.lean#L177);
+   * *block replacement* (`dropCovered` then `GenerateSamples`) —
+     [`pi_poisson_replace`](Ttc/Analysis/Thinning.lean#L252).
+
+   And a simplification worth recording: because `dropCovered` deletes **every**
+   point of `P(cᵢ)` before `gen` re-adds them, each point's count comes from
+   exactly one insertion — *the last cube containing it*. The invariant therefore
+   never needs Poisson **superposition**, only these two operations.
+
+   The **past-measurability layer** is also done, and purely structurally — no
+   probability in it. Each loop reads only its own window of clocks
+   ([`halveDown_congr`](Ttc/Analysis/Invariants.lean#L178),
+   [`absorb_congr`](Ttc/Analysis/Invariants.lean#L198)), one iteration reads only
+   `[st.clock, st.clock + 3·fuel + 2)`
+   ([`step_congr`](Ttc/Analysis/Invariants.lean#L298)), and hence the whole run
+   reads only clocks below `|D|·(3·fuel + 2)`
+   ([`run_congr`](Ttc/Analysis/Invariants.lean#L412)). That is exactly what says the
+   state is a function of the draws *strictly before* its clock, which is what
+   makes their independence usable.
+
+   It also has a useful corollary: the run depends on only **finitely many**
+   draws, so the randomness can be modelled by a *finite* product measure — no
+   infinite-product machinery is needed.
+
+   What is left is the oracle laws (`halve c` a fair independent thinning,
+   `pois c λ` Poisson, `gen c i N ρ` uniform) and the `List.foldl` induction that
+   strings the two operations together.
 
 Also still required, and independent of the above: a **fuel-adequacy hypothesis**.
 Both `while` loops return the current state when the budget runs out, so at small
@@ -673,6 +730,78 @@ Harmless — the two-sided bound still closes with the two losses kept apart
 bound consumes only the inflated loss and the upper bound only the deflated one) —
 but a proof that equalises them silently is off by a factor of two.
 
+### 14. Genuine error — the sketch invariant is false if read as conditioning
+
+`sections/analysis.tex:262` states the invariant as
+
+> "For any `i ∈ [m]` and `j ≥ 0` the multiset `𝒳⁽ⁱ⁾ⱼ` contains `k` copies of each
+> lattice point inside `S⁽ⁱ⁾`, where `k` is drawn from `Pois(p̃ⱼ)`"
+
+with `𝒳⁽ⁱ⁾ⱼ` defined at `analysis.tex:259` as "the state of `𝒳` after consuming
+`Pⁱ` **when the value of `p` is `1/2ʲ`**". Read literally — conditioning on the
+rate being `2^(−j)` — this is **false**. Halting is a stopping time, and
+conditioning on it distorts the law.
+
+**Counterexample.** Two lattice points, rule "while `|𝒳| > 1`, halve", starting
+from both present. Conditioned on stopping at `p = ½` (i.e. one halving
+sufficed), the state is `Bernoulli(½)²` conditioned on `|𝒳| ≤ 1`: it puts mass
+`0` on both points surviving, where the claimed product law puts `¼`. The same
+happens for Poisson counts.
+
+**The proof still works, but only under the other reading.** What the union bound
+actually uses is `Pr[Nois(j) ∧ Err(j)] ≤ Pr[Err(j)]` — the conditioning is
+*discarded*, so `Err(j)` only ever needs to be an unconditional event about the
+**non-adaptive** level-`j` process, in which every lattice point independently
+carries `Pois(θ/2ʲ)` copies whether or not the run stops there. That is how it is
+formalised here ([`Ttc.levelLaw`](Ttc/Analysis/SketchProcess.lean#L55)), and both
+branch estimates are proved over it
+([`levelLaw_err_le`](Ttc/Analysis/SketchProcess.lean#L130),
+[`levelLaw_noise_le`](Ttc/Analysis/SketchProcess.lean#L194)).
+
+So the defect is in the *statement* of the invariant, not in the result — but a
+reader who takes the invariant at face value is proving something false.
+
+### 15. Genuine gap — `Err(j)` is not a well-defined event
+
+This is the sharper form of finding 14, and it is what actually blocks the proof.
+
+`analysis.tex:277` defines the two events
+
+> `Nois(j)`: after consuming the last polytope `Pᵐ`, the value of `p` is `1/2ʲ`;
+> `Err(j)`: at the end of the algorithm `𝒳⁽ᵐ⁾ⱼ ∉ [(1−ε')p̃ⱼ|Q∩𝕃ⁿ|, (1+ε')p̃ⱼ|Q∩𝕃ⁿ|]`
+
+and then bounds `∑_{j<j*} Pr[Err(j)] + Pr[⋃_{j≥j*} Nois(j)]`. For that sum to
+mean anything, **`Err(j)` must be an event for every `j`** — but `𝒳⁽ᵐ⁾ⱼ` is
+defined as the state "when `p` is `1/2ʲ`", and the run has exactly *one* final
+rate. On any given execution `𝒳⁽ᵐ⁾ⱼ` exists for one `j` only; for the others the
+event has no referent. Reading it instead as *conditioned* on `Nois(j)` is
+finding 14, and false.
+
+**What is needed, and what the paper never constructs**, is a family `𝒳ⱼ` defined
+*simultaneously for all `j`* on one probability space, such that
+
+* each `𝒳ⱼ` has the level-`j` law (`Ttc.levelLaw`), and
+* the run's final state equals `𝒳_J` where `J` is its actual stopping level.
+
+Such a family exists, and **the two facts that make it work are now proved**:
+
+* [`Ttc.chainLaw_eq_levelLaw`](Ttc/Analysis/SketchProcess.lean#L105) — nested
+  thinning from level `0` reproduces `Ttc.levelLaw θ j` at *every* `j`, so the
+  coupled family has exactly the marginals the branch estimates were proved for;
+* [`Ttc.replace_thin_comm`](Ttc/Analysis/Thinning.lean#L306) — insertion and
+  thinning **commute in law**, so it does not matter that the run inserts a
+  cube's points at whatever level it has reached while the level-`j` process
+  inserts them already at level `j`. This is what makes the counterfactual
+  process well defined.
+
+The paper cites `lem:process` for the *equivalence* of its three procedures but
+never builds the coupled family, and without it the union bound has nothing to
+range over.
+
+So `lem:numlattice`'s proof is not merely imprecise: as written, the object its
+main estimate is about does not exist. The repair is a construction, not a
+rewording — and it is the one piece still missing here.
+
 ### 13. Genuine gap — the `Vol_ED` failures are never union-bounded
 
 `alg:ttc` line 18 sets `δ' ← δ/(2m)` and line 24 calls `Vol_ED(P(cᵢ), ε', δ')`
@@ -692,6 +821,9 @@ parameter block entirely; it is now
 
 **The main result stands.** Finding 1 changes constants, not the shape of the
 theorem, and finding 2 is now closed by a different proof; finding 3 is a typo in
-an exponent whose corrected form is stronger than needed; findings 10 and 13 are
-gaps the paper genuinely needs closing (one by an added hypothesis, one absorbed
-by existing slack); 4–9, 11 and 12 are presentational or self-closing.
+an exponent whose corrected form is stronger than needed; finding 14 is a false
+*statement* of a true step; findings 10 and 13 are gaps the paper genuinely needs
+closing (one by an added hypothesis, one absorbed by existing slack); 4–9, 11 and
+12 are presentational or self-closing. **Finding 15 is the one that is still
+open**: `lem:numlattice`'s central estimate is stated about an object the paper
+does not construct, and supplying it is the remaining work.

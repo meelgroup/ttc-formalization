@@ -175,6 +175,29 @@ theorem deflated_le_card [Fintype F] (Aof : F → Fin n → ℝ)
 
 end FacetSystem
 
+/-- **`Q ∩ ℤⁿ` is finite**, and not by assumption: `claim:cl`(a) bounds `|T|` for
+*every* finite `T ⊆ Q ∩ ℤⁿ` by `vol Q'/(1−θ/2)`, and a set all of whose finite
+subsets have bounded cardinality is finite. Split out of
+`Ttc.FacetSystem.nonconv_of_ball` so the lattice-point set can be enumerated
+elsewhere. -/
+theorem FacetSystem.finite_lattice_points [Fintype F] (S : FacetSystem n ι F)
+    (Aof : F → Fin n → ℝ)
+    (hf : ∀ (j : F) (x : Space n), S.f j x = ∑ k, Aof j k * x k)
+    (hw : ∀ j, S.w j = coeffNorm (Aof j))
+    (hAnz : ∀ j, 0 < ∑ k, Aof j k ^ 2)
+    {θ r κ : ℝ} (hθ : 0 < θ) (hθ1 : θ ≤ 1) (hr : 1 ≤ r) (hcard : (Fintype.card F : ℝ) ≤ r)
+    (hκ : κ = Real.sqrt (2 * Real.log (4 / θ)) + Real.sqrt (2 * Real.log r))
+    (hmeas : MeasurableSet (S.body κ)) (hpos : 0 < (volume (S.body κ)).toReal)
+    (hfin : volume (S.body κ) ≠ ⊤) :
+    {z : Fin n → ℤ | latPt z ∈ S.body 0}.Finite := by
+  refine finite_of_forall_finset_card_le
+    (C := (volume (S.body κ)).toReal / (1 - θ / 2)) ?_
+  intro T hT
+  have h := S.card_le_of_claim_a Aof hf hw hAnz hθ hθ1 hr hcard hκ hmeas hpos hfin T
+    (fun z hz => hT hz)
+  rw [le_div_iff₀ (by linarith : (0:ℝ) < 1 - θ / 2)]
+  linarith
+
 /-- The upper-bound arithmetic at the deflated shell loss `η/8`. -/
 theorem recentred_upper_arith_deflated {η : ℝ} (h0 : 0 < η) (h1 : η ≤ 1) :
     1 + η / 8 ≤ (1 + η) * (1 - η / 4) := by nlinarith
@@ -201,12 +224,14 @@ theorem FacetSystem.nonconv_of_ball [Fintype ι] [Fintype F] (S : FacetSystem n 
     (hball : ∀ i, Metric.ball (cen i) P.gamma ⊆ S.piece 0 i)
     (hfin : ∀ i, volume (S.piece 0 i) ≠ ⊤) :
     (1 - P.eta) * ((S.body 0 ∩ intLattice n).ncard : ℝ) ≤ (volume (S.body 0)).toReal ∧
-      (volume (S.body 0)).toReal ≤ (1 + P.eta) * ((S.body 0 ∩ intLattice n).ncard : ℝ) := by
+      (volume (S.body 0)).toReal ≤ (1 + P.eta) * ((S.body 0 ∩ intLattice n).ncard : ℝ) ∧
+      {z : Fin n → ℤ | latPt z ∈ S.body 0}.Finite := by
   classical
   rcases isEmpty_or_nonempty ι with hι | hι
   · have hbody : S.body 0 = (∅ : Set (Space n)) := by
       rw [FacetSystem.body]; exact Set.iUnion_of_empty _
     rw [hbody]
+    refine ⟨by simp, by simp, ?_⟩
     simp
   obtain ⟨i₀⟩ := hι
   -- the parameters
@@ -249,15 +274,9 @@ theorem FacetSystem.nonconv_of_ball [Fintype ι] [Fintype F] (S : FacetSystem n 
   have hposnκr : 0 < (volume (S.body (-P.kappa))).toReal :=
     ENNReal.toReal_pos hposnκ.ne' htopnκ
   -- the lattice points, as a `Finset`
-  have hcardle : ∀ T : Finset (Fin n → ℤ), (↑T : Set (Fin n → ℤ)) ⊆ {z | latPt z ∈ S.body 0} →
-      (T.card : ℝ) ≤ (volume (S.body P.kappa)).toReal / (1 - P.eta / 2 / 2) := by
-    intro T hT
-    have h := S.card_le_of_claim_a Aof hf hw hAnz hθ0 hθ1 P.hr hr hκeq
-      (S.measurableSet_body P.kappa) hposκr htopκ T (fun z hz => hT hz)
-    rw [le_div_iff₀ (by linarith : (0:ℝ) < 1 - P.eta / 2 / 2)]
-    linarith
   have hEfin : {z : Fin n → ℤ | latPt z ∈ S.body 0}.Finite :=
-    finite_of_forall_finset_card_le hcardle
+    S.finite_lattice_points Aof hf hw hAnz hθ0 hθ1 P.hr hr hκeq
+      (S.measurableSet_body P.kappa) hposκr htopκ
   have hTmem : ∀ z, z ∈ hEfin.toFinset ↔ latPt z ∈ S.body 0 := by
     intro z; rw [Set.Finite.mem_toFinset]; rfl
   have hEcard : {z : Fin n → ℤ | latPt z ∈ S.body 0}.ncard = hEfin.toFinset.card :=
@@ -312,12 +331,14 @@ theorem FacetSystem.nonconv_of_ball [Fintype ι] [Fintype F] (S : FacetSystem n 
       _ ≤ (1 + P.eta / 8) * (volume (S.body (-P.kappa))).toReal :=
           mul_le_mul_of_nonneg_right h4 ENNReal.toReal_nonneg
   -- assemble
-  rw [hNcard]
-  refine nonconv_recentred_general (Nat.cast_nonneg _) ENNReal.toReal_nonneg hθ0 hθ1
-    (by linarith) (by linarith) ?_ ?_ hA hBC hup hdn
-  · have := recentred_lower_arith hη0 hη1
-    linarith
-  · have := recentred_upper_arith_deflated hη0 hη1
-    linarith
+  refine ⟨?_, ?_, hEfin⟩ <;> rw [hNcard]
+  · exact (nonconv_recentred_general (Nat.cast_nonneg _) ENNReal.toReal_nonneg hθ0 hθ1
+      (by linarith) (by linarith)
+      (by have := recentred_lower_arith hη0 hη1; linarith)
+      (by have := recentred_upper_arith_deflated hη0 hη1; linarith) hA hBC hup hdn).1
+  · exact (nonconv_recentred_general (Nat.cast_nonneg _) ENNReal.toReal_nonneg hθ0 hθ1
+      (by linarith) (by linarith)
+      (by have := recentred_lower_arith hη0 hη1; linarith)
+      (by have := recentred_upper_arith_deflated hη0 hη1; linarith) hA hBC hup hdn).2
 
 end Ttc

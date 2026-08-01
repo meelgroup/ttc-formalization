@@ -29,7 +29,7 @@ open MeasureTheory
 | --- | --- | --- |
 | `isDNF` | `ToDNF`/AllSAT is correct | assumed of the external tool; `thm:decomposition` is *proved* from it |
 | `ball_subset`, `volume_ne_top`, `isPositive`, `normal_ne_zero` | `lem:nonconv`'s hypotheses | assumed of the *input*; `lem:lattice` is **proved** from them (`Analysis/LatticeAssembled`) |
-| `numlattice` | `lem:numlattice` | **assumed**; epoch skeleton proved in `Analysis/{Sketch,Poisson}` |
+| `numlattice_union` | `lem:numlattice`'s union bound | **assumed** — only the *covering*; the sizes are proved, and `lem:numlattice` itself is now a theorem (`Ttc.TtcProb.numlattice`) |
 
 `L` is the actual normalised lattice count `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` (`L_eq`).
 The output is the algorithm's: `numlattice` is stated over `Ttc.ttcOutput`, so
@@ -44,6 +44,10 @@ structure TtcProb (A : Type*) (n : ℕ) where
   hε0 : 0 < ε
   /-- `ε` is at most one. -/
   hε1 : ε ≤ 1
+  /-- `δ` is positive. -/
+  hδ0 : 0 < δ
+  /-- `δ` is at most one. -/
+  hδ1 : δ ≤ 1
   /-- The atoms of the SMT(LRA) formula: each is a linear constraint `A x ≤ b`. -/
   atoms : A → LinAtom n
   /-- The interpretation of atoms as sets of points. -/
@@ -72,6 +76,8 @@ structure TtcProb (A : Type*) (n : ℕ) where
   P : Params
   /-- The run's accuracy parameter is the one the theorem bounds against. -/
   eps_eq : P.ε = ε
+  /-- The run's failure probability is the one the theorem bounds against. -/
+  delta_eq : P.δ = δ
   /-- The run's dimension is the ambient one. -/
   dim_eq : P.n = n
   /-- `m` bounds the number of polytopes in the decomposition. -/
@@ -101,14 +107,35 @@ structure TtcProb (A : Type*) (n : ℕ) where
   ρ : ℤ
   /-- `ρ` really is `GetPrecision`'s output for this `γ̂` (`alg:prec` line 91). -/
   rho_eq : ρ = P.precision gammaHat
+  /-- **`GenerateSamples`' contract** (`alg:ttc` line 43): the points it returns for
+  cube `cᵢ` really are lattice points of `P(cᵢ)`. `Ttc.Oracles` only fixes *how
+  many* it returns; that they lie where they should is a property of the external
+  sampler, so it is assumed of it here. -/
+  gen_mem : ∀ (ω : Ω) (c : ℕ) (i : Cube A) (N : ℕ), i ∈ D →
+    ∀ s ∈ (O ω).gen c i N ρ, s ∈ region M i ∩ fineLattice n (latticeScale ρ)
   /-- The normalised lattice count `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`. -/
   L : ℝ
   /-- `L` really is that count — it is not a free real. -/
   L_eq : L = normalisedCount M φ ρ
-  /-- **`lem:numlattice`**: with probability `≥ 1 − δ`, the output is within
-  `(1 ± ε/3)` of the normalised lattice count. Assumed. -/
-  numlattice : 1 - δ ≤
-    (μ {ω | (1 - ε / 3) * L ≤ ttcOutput P O fuel ρ D ω ∧
-            ttcOutput P O fuel ρ D ω ≤ (1 + ε / 3) * L}).toReal
+  /-- **`lem:numlattice`'s epoch decomposition** (`analysis.tex:277`–`301`): the
+  failure event is covered by the three contributions the paper identifies — the
+  `Err` epochs, the `Noise` overflow over the `m` cubes, and the `m` `Vol_ED`
+  calls.
+
+  **This is what is assumed, and it is strictly less than `lem:numlattice`.** The
+  *sizes* of the three contributions are **proved**: that they total at most `δ`,
+  from the algorithm's own `Thresh` and `δ'`, is `Ttc.numlattice_failure_le`, and
+  the per-epoch estimates are `Ttc.levelLaw_err_le` and `Ttc.levelLaw_noise_le`
+  over the level process. `lem:numlattice` itself is then a *theorem*
+  (`Ttc.TtcProb.numlattice`). What is assumed here is only that the failure event
+  really is covered by those epochs — the coupling of README finding 15, which the
+  paper states but does not construct. Nothing in this field mentions accuracy. -/
+  numlattice_union : ∃ (jstar : ℕ) (lamStar : ℝ),
+    (1 - P.epsPrime) * P.thresh / 8 ≤ lamStar ∧
+    (μ {ω | ¬ ((1 - ε / 3) * L ≤ ttcOutput P O fuel ρ D ω ∧
+               ttcOutput P O fuel ρ D ω ≤ (1 + ε / 3) * L)}).toReal
+      ≤ (∑ t ∈ Finset.range jstar,
+            2 * Real.exp (-(P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
+          + P.m * Real.exp (-(P.thresh / 6)) + δ / 2
 
 end Ttc

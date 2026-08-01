@@ -79,6 +79,8 @@ import Ttc.Analysis.Lattice
 import Ttc.Analysis.Poisson
 import Ttc.Analysis.Chernoff
 import Ttc.Analysis.PoissonLaws
+import Ttc.Analysis.Thinning
+import Ttc.Analysis.SketchProcess
 import Ttc.Analysis.Sketch
 import Ttc.Analysis.Invariants
 import Ttc.Analysis.Cl
@@ -92,4 +94,6 @@ import Ttc.Analysis.ClB
 import Ttc.Analysis.BallFacet
 import Ttc.Analysis.NonconvAssembled
 import Ttc.Analysis.LatticeAssembled
+import Ttc.Analysis.CountVector
 import Ttc.Analysis.Capstone
+import Ttc.Analysis.OracleLaws

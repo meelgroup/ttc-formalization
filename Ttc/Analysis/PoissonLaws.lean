@@ -116,6 +116,80 @@ theorem map_countLaw_eval {lam : ℝ} (hlam : 0 ≤ lam) {q : Fin l → ℝ}
   rw [countLaw_eq_pi hlam hq0 hq]
   exact (measurePreserving_eval (fun i => poissonMeasure (lam * q i).toNNReal) i).map_eq
 
+/-! ## The total count
+
+Summing the cells recovers a single `Pois(lam)` — the other half of `lem:process`,
+and what turns the invariant into a statement about `|𝒳|`. The proof is the
+multinomial theorem: the multinomial weights over the simplex `∑ᵢ rᵢ = k` sum to
+`(∑ᵢ qᵢ)^k = 1`, leaving the Poisson mass at `k`.
+-/
+
+theorem poissonPMF_nonneg {lam : ℝ} (hlam : 0 ≤ lam) (k : ℕ) : 0 ≤ poissonPMF lam k := by
+  rw [poissonPMF_def]
+  refine div_nonneg (mul_nonneg (Real.exp_pos _).le (pow_nonneg hlam k)) ?_
+  exact_mod_cast (Nat.factorial_pos k).le
+
+/-- The simplex `∑ᵢ rᵢ = k`, as a `Finset`. -/
+theorem setOf_sum_eq (k : ℕ) :
+    {r : Fin l → ℕ | ∑ i, r i = k} = ↑(Finset.piAntidiag (Finset.univ : Finset (Fin l)) k) := by
+  ext r
+  simp [Finset.mem_piAntidiag]
+
+/-- **The total count is `Pois(lam)`.** -/
+theorem countLaw_apply_sum {lam : ℝ} (hlam : 0 ≤ lam) {q : Fin l → ℝ}
+    (hq0 : ∀ i, 0 ≤ q i) (hq : ∑ i, q i = 1) (k : ℕ) :
+    countLaw lam q {r : Fin l → ℕ | ∑ i, r i = k} = ENNReal.ofReal (poissonPMF lam k) := by
+  classical
+  rw [setOf_sum_eq, ← sum_measure_singleton]
+  have hterm : ∀ r ∈ Finset.piAntidiag (Finset.univ : Finset (Fin l)) k,
+      countLaw lam q {r} = ENNReal.ofReal
+        ((Nat.multinomial Finset.univ r : ℝ) * (∏ i, q i ^ r i) * poissonPMF lam k) := by
+    intro r hr
+    have hk : ∑ i, r i = k := by simpa using (Finset.mem_piAntidiag.1 hr).1
+    rw [countLaw_singleton, hk]
+  rw [Finset.sum_congr rfl hterm,
+    ← ENNReal.ofReal_sum_of_nonneg fun r _ =>
+      mul_nonneg (mul_nonneg (Nat.cast_nonneg _)
+        (Finset.prod_nonneg fun i _ => pow_nonneg (hq0 i) _)) (poissonPMF_nonneg hlam k)]
+  congr 1
+  rw [← Finset.sum_mul, ← Finset.sum_pow_eq_sum_piAntidiag, hq, one_pow, one_mul]
+
+/-- **`lem:process`, the other direction**: pushing `Ttc.countLaw` forward along
+`r ↦ ∑ᵢ rᵢ` returns the `Pois(lam)` it was built from. -/
+theorem map_sum_countLaw {lam : ℝ} (hlam : 0 ≤ lam) {q : Fin l → ℝ}
+    (hq0 : ∀ i, 0 ≤ q i) (hq : ∑ i, q i = 1) :
+    (countLaw lam q).map (fun r => ∑ i, r i) = poissonMeasure lam.toNNReal := by
+  refine Measure.ext_of_singleton fun k => ?_
+  rw [Measure.map_apply (Measurable.of_discrete) (MeasurableSet.of_discrete)]
+  have hpre : (fun r : Fin l → ℕ => ∑ i, r i) ⁻¹' {k} = {r : Fin l → ℕ | ∑ i, r i = k} := rfl
+  rw [hpre, countLaw_apply_sum hlam hq0 hq k, poissonMeasure_singleton,
+    poissonPMF_def, Real.coe_toNNReal lam hlam]
+
+/-- **Superposition, `L`-fold.** Independent `Pois(fᵢ)` counts sum to
+`Pois(∑ᵢ fᵢ)` — obtained by reading `Ttc.countLaw_eq_pi` and
+`Ttc.map_sum_countLaw` at `lam = ∑ᵢ fᵢ`, `qᵢ = fᵢ/lam`. This is what makes `|𝒳|`
+itself Poisson, which is what the `Err` and `Noise` branches estimate. -/
+theorem map_sum_pi_poisson {f : Fin l → ℝ} (hf : ∀ i, 0 ≤ f i) (hpos : 0 < ∑ i, f i) :
+    (Measure.pi fun i => poissonMeasure (f i).toNNReal).map (fun r => ∑ i, r i)
+      = poissonMeasure (∑ i, f i).toNNReal := by
+  set lam : ℝ := ∑ i, f i with hlamdef
+  have hlam : 0 ≤ lam := hpos.le
+  have hq0 : ∀ i, 0 ≤ f i / lam := fun i => div_nonneg (hf i) hlam
+  have hq : ∑ i, f i / lam = 1 := by
+    rw [← Finset.sum_div, ← hlamdef]
+    exact div_self hpos.ne'
+  have hrate : ∀ i, (lam * (f i / lam)).toNNReal = (f i).toNNReal := by
+    intro i
+    congr 1
+    field_simp
+  have hpi : Measure.pi (fun i => poissonMeasure (f i).toNNReal)
+      = countLaw lam (fun i => f i / lam) := by
+    rw [countLaw_eq_pi hlam hq0 hq]
+    congr 1
+    funext i
+    rw [hrate i]
+  rw [hpi, map_sum_countLaw hlam hq0 hq]
+
 /-! ## Thinning and superposition
 
 The two operations the main loop performs on the invariant.

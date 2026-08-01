@@ -77,8 +77,10 @@ structure Oracles (n : ℕ) (ι : Type*) where
   /-- "Remove every element of `X` with probability ½" (lines 33, 40), at draw
   number `c`. -/
   halve : ℕ → Multiset (Space n) → Multiset (Space n)
-  /-- Thinning cannot grow `X`. -/
-  halve_card_le : ∀ c X, card (halve c X) ≤ card X
+  /-- Thinning **removes** elements: the result is a sub-multiset. Stronger than
+  "the cardinality does not grow", and it is what the pseudocode says — the loop
+  deletes elements of `X`, it never invents them. -/
+  halve_le : ∀ c X, halve c X ≤ X
   /-- A draw from `Pois(λ)` (lines 38, 41), at draw number `c`. -/
   pois : ℕ → ℝ → ℕ
   /-- `GenerateSamples(P(cᵢ), N, ρ)` (line 43), at draw number `c`: `N` points of

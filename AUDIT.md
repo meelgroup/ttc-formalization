@@ -29,8 +29,8 @@ theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
 `(1 ± ε)·Vol(F)`. Four things make that a claim rather than a shape:
 
 * **The measured thing is the algorithm.**
-  [`ttcOutput`](Ttc/Model/Pseudocode.lean#L138) is
-  [`Ttc.run`](Ttc/Model/Pseudocode.lean#L132) — the line-by-line transcription of
+  [`ttcOutput`](Ttc/Model/Pseudocode.lean#L140) is
+  [`Ttc.run`](Ttc/Model/Pseudocode.lean#L134) — the line-by-line transcription of
   `alg:ttc` — with the oracles drawn at `ω`. Read `Model/Pseudocode` against
   `sections/algo.tex`; it is the whole algorithm, and there is no second model it
   is quietly swapped for.
@@ -58,8 +58,8 @@ theorem quantifies over the structure and adds nothing — no side hypothesis, n
 
 **Only one lemma of the paper is assumed** (`lem:numlattice`). `lem:lattice` used
 to be two more fields; it is now *proved*
-([`Ttc.TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L173),
-[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L178)) from the geometric
+([`Ttc.TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L222),
+[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L227)) from the geometric
 fields below, which are hypotheses about the **input**, not about the analysis.
 
 | Field | Line | What it asserts | Status |
@@ -96,7 +96,7 @@ Nothing anywhere here is about running time (`thm:runtime` is out of scope).
 
 A `∀ (T : TtcProb A n), …` proves nothing if `TtcProb` is uninhabited.
 
-[`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L242), witnessed by
+[`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L245), witnessed by
 [`Ttc.trivialProb`](Ttc/Analysis/Capstone.lean#L181): the empty DNF over an
 unsatisfiable formula, on the one-point sample space with the Dirac measure —
 `Vol(F) = 0`, `L = 0`, output `0`, so `lem:numlattice`'s event has probability
@@ -141,10 +141,15 @@ the paper omits. What is *not* done is composing them into a statement about
   [`Ttc.countLaw_eq_pi`](Ttc/Analysis/PoissonLaws.lean#L91) gives it as an
   identity of measures, with independence, thinning and superposition as
   corollaries.
-* **The invariant is still not carried along the fold, and the halvings between
-  two cubes form a *stopping time*.** The paper's `𝒳^(i)_j` is "the state when
-  `p` is `2^(−j)`" — conditioning on a random event. Preserving a Poisson
-  invariant across that conditioning is the deep remaining step.
+* ~~The halvings form a stopping time.~~ **Resolved** — and reading the paper's
+  invariant as conditioning turns out to be *false* (README finding 14). The
+  correct non-adaptive reading is
+  [`Ttc.levelLaw`](Ttc/Analysis/SketchProcess.lean#L55), and both branch
+  estimates plus the whole `δ` budget are proved over it
+  ([`numlattice_failure_le`](Ttc/Analysis/SketchProcess.lean#L246)).
+* **One bridge remains: the coupling.** On the event that the run stops at level
+  `j`, its final `𝒳` must *be* the level-`j` process. That needs the oracle laws
+  and an induction over the fold. Until it exists, `numlattice` stays a field.
 * **Fuel adequacy is required and not assumed.** Both loops return the current
   state when the budget runs out; at small `fuel` the output is not close to `L`
   and `numlattice` would be false. Any discharge of the field needs this
@@ -200,7 +205,7 @@ as algorithm state — `X` and `p` are the paper's state, `clock` is bookkeeping
 `γ̂` is still an input: the LP of `alg:prec` that computes the largest inscribed
 ball, and the loop taking the max over polytopes, are **not modelled**. What *is*
 now proved is that the precision it returns is exactly what the accuracy proof
-needs: [`Ttc.gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L68)
+needs: [`Ttc.gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L69)
 shows `ρ = ⌈log₁₀(γ/γ̂)⌉` makes `10^ρ·γ̂ ≥ γ`, which is what gives the *dilated*
 polytopes the inscribed radius `lem:nonconv` requires. So `rho_eq` is
 load-bearing: delete it and `lem:lattice` no longer goes through.

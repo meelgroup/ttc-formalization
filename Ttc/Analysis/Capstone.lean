@@ -151,7 +151,7 @@ def trivialOracles (n : ℕ) (ι : Type*) : Oracles n ι where
   vol := fun _ => 1
   covered := fun _ _ => false
   halve := fun _ => id
-  halve_card_le := fun _ _ => le_rfl
+  halve_le := fun _ _ => le_rfl
   pois := fun _ _ => 0
   gen := fun _ _ N _ => Multiset.replicate N 0
   gen_card := fun _ _ N _ => by simp
@@ -180,9 +180,11 @@ nothing to check, and `lem:numlattice`'s event has probability `1`.
 It is a *satisfiability* witness only; see `AUDIT.md` §4. -/
 noncomputable def trivialProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) : TtcProb A n where
   ε := 1
-  δ := 0
+  δ := 1
   hε0 := one_pos
   hε1 := le_rfl
+  hδ0 := one_pos
+  hδ1 := le_rfl
   atoms := fun _ => ⟨fun _ => 0, 0⟩
   M := fun _ => (⟨fun _ => 0, 0⟩ : LinAtom n).halfspace
   M_eq := rfl
@@ -196,6 +198,7 @@ noncomputable def trivialProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) : Ttc
   isProb := inferInstance
   P := trivialParams n hn
   eps_eq := rfl
+  delta_eq := rfl
   dim_eq := rfl
   cubes_le := by
     haveI : IsEmpty {c : Cube A // c ∈ ([] : DNF A)} := ⟨fun i => absurd i.2 (by simp)⟩
@@ -214,27 +217,34 @@ noncomputable def trivialProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) : Ttc
   volume_ne_top := fun i => absurd i.2 (by simp)
   ρ := (trivialParams n hn).precision 1
   rho_eq := rfl
+  gen_mem := by
+    intro _ _ i _ hi
+    exact absurd hi (by simp)
   L := 0
   L_eq := by
     have hsol : sol (fun _ => (⟨fun _ => 0, 0⟩ : LinAtom n).halfspace)
         (BForm.and (.atom a) (.neg (.atom a))) = ∅ := by
       ext x; simp [sol, BForm.holds]
     simp [normalisedCount, latticeCount, hsol]
-  numlattice := by
+  numlattice_union := by
+    refine ⟨0, (1 - (trivialParams n hn).epsPrime) * (trivialParams n hn).thresh / 8,
+      le_rfl, ?_⟩
     have hrun : ∀ u : Unit,
         ttcOutput (trivialParams n hn) (fun _ => trivialOracles n (Cube A)) 0
             ((trivialParams n hn).precision 1) ([] : DNF A) u = 0 := by
       intro _
       simp [ttcOutput, run]
-    have hmem : () ∈ {ω : Unit | (1 - (1:ℝ) / 3) * 0 ≤
+    have hempty : {ω : Unit | ¬ ((1 - (1:ℝ) / 3) * 0 ≤
         ttcOutput (trivialParams n hn) (fun _ => trivialOracles n (Cube A)) 0
             ((trivialParams n hn).precision 1) ([] : DNF A) ω ∧
         ttcOutput (trivialParams n hn) (fun _ => trivialOracles n (Cube A)) 0
             ((trivialParams n hn).precision 1) ([] : DNF A) ω
-          ≤ (1 + (1:ℝ) / 3) * 0} := by
+          ≤ (1 + (1:ℝ) / 3) * 0)} = ∅ := by
+      ext u
       simp [hrun]
-    rw [MeasureTheory.Measure.dirac_apply_of_mem hmem]
-    norm_num
+    rw [hempty]
+    simp
+    positivity
 
 /-- `Ttc.TtcProb` is inhabited, so `Ttc.TtcProb.volume_estimate` is not vacuous.
 The dimension must be positive: `Ttc.Params` requires it, and
