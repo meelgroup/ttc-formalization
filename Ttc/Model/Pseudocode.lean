@@ -66,6 +66,10 @@ structure SketchState (n : ℕ) where
   /-- How many randomised oracle calls the run has made so far. Not part of the
   algorithm: it names the draw, so that distinct calls are distinct draws. -/
   clock : ℕ
+  /-- The **level**: `p = 2^(-level)`. Incremented by every halving, and passed to
+  the randomised oracles so that a draw can be identified with its epoch — see the
+  `gen` field and README finding 15. -/
+  level : ℕ
 
 /-- The four external calls, as fields. Their *distributions* are what
 `lem:numlattice` is about, and that is assumed. -/
@@ -76,18 +80,25 @@ structure Oracles (n : ℕ) (ι : Type*) where
   covered : Space n → ι → Bool
   /-- "Remove every element of `X` with probability ½" (lines 33, 40), at draw
   number `c`. -/
-  halve : ℕ → Multiset (Space n) → Multiset (Space n)
+  halve : ℕ → ℕ → Multiset (Space n) → Multiset (Space n)
   /-- Thinning **removes** elements: the result is a sub-multiset. Stronger than
   "the cardinality does not grow", and it is what the pseudocode says — the loop
   deletes elements of `X`, it never invents them. -/
-  halve_le : ∀ c X, halve c X ≤ X
-  /-- A draw from `Pois(λ)` (lines 38, 41), at draw number `c`. -/
-  pois : ℕ → ℝ → ℕ
+  halve_le : ∀ c j X, halve c j X ≤ X
+  /-- A draw from `Pois(λ)` (lines 38, 41), at draw number `c`, for cube `i` at
+  level `j`. **Deviation from `algo.tex:38,41`**: the draw is told which cube and
+  which level it belongs to; see the `gen` field. -/
+  pois : ℕ → ι → ℕ → ℝ → ℕ
   /-- `GenerateSamples(P(cᵢ), N, ρ)` (line 43), at draw number `c`: `N` points of
-  `P(cᵢ) ∩ 𝕃ⁿ`, where the lattice `𝕃ⁿ = 10^(-ρ)·ℤⁿ` is fixed by `ρ`. -/
-  gen : ℕ → ι → ℕ → ℤ → Multiset (Space n)
+  `P(cᵢ) ∩ 𝕃ⁿ`, where the lattice `𝕃ⁿ = 10^(-ρ)·ℤⁿ` is fixed by `ρ`.
+
+  **Deviation from `algo.tex:43`**: the sampler is also told the current level `j`;
+  the pseudocode's is not. It is needed because `lem:numlattice`'s `Err(j)` must be
+  an event about a level-`j` process coupled to the run, and a rate-blind sampler
+  cannot realise that coupling — see README finding 15 and `AUDIT.md`. -/
+  gen : ℕ → ι → ℕ → ℕ → ℤ → Multiset (Space n)
   /-- `GenerateSamples` returns exactly `N` points. -/
-  gen_card : ∀ c i N ρ, card (gen c i N ρ) = N
+  gen_card : ∀ c i j N ρ, card (gen c i j N ρ) = N
 
 variable (P : Params) (O : Oracles n ι)
 
@@ -101,17 +112,17 @@ noncomputable def halveDown (t : ℝ) : ℕ → SketchState n → SketchState n
   | 0, st => st
   | f + 1, st =>
       if P.thresh / t ≤ st.p then
-        halveDown t f ⟨O.halve st.clock st.X, st.p / 2, st.clock + 1⟩
+        halveDown t f ⟨O.halve st.clock st.level st.X, st.p / 2, st.clock + 1, st.level + 1⟩
       else st
 
 /-- **Lines 39–42.** `while Nᵢ + |X| > Thresh do (X ← halve X ; Nᵢ ← Pois(t·p/2) ; p ← p/2)`,
 on fuel. Each iteration consumes two draws: the thinning, then the Poisson. -/
-noncomputable def absorb (t : ℝ) : ℕ → SketchState n × ℕ → SketchState n × ℕ
+noncomputable def absorb (i : ι) (t : ℝ) : ℕ → SketchState n × ℕ → SketchState n × ℕ
   | 0, s => s
   | f + 1, (st, N) =>
       if P.thresh < (N : ℝ) + card st.X then
-        absorb t f (⟨O.halve st.clock st.X, st.p / 2, st.clock + 2⟩,
-                    O.pois (st.clock + 1) (t * st.p / 2))
+        absorb i t f (⟨O.halve st.clock st.level st.X, st.p / 2, st.clock + 2, st.level + 1⟩,
+                    O.pois (st.clock + 1) i (st.level + 1) (t * st.p / 2))
       else (st, N)
 
 /-- **Lines 24–42.** The state after both `while` loops of iteration `i`, paired
@@ -119,20 +130,21 @@ with the surviving Poisson draw `Nᵢ`. Split out of `Ttc.step` so that the
 `GenerateSamples` append can be stated on its own (`Ttc.card_step`). -/
 noncomputable def stepPre (fuel : ℕ) (st : SketchState n) (i : ι) : SketchState n × ℕ :=
   let t := O.vol i
-  let st₂ := halveDown P O t fuel ⟨dropCovered O i st.X, st.p, st.clock⟩
-  absorb P O t fuel (⟨st₂.X, st₂.p, st₂.clock + 1⟩, O.pois st₂.clock (t * st₂.p))
+  let st₂ := halveDown P O t fuel ⟨dropCovered O i st.X, st.p, st.clock, st.level⟩
+  absorb P O i t fuel (⟨st₂.X, st₂.p, st₂.clock + 1, st₂.level⟩,
+    O.pois st₂.clock i st₂.level (t * st₂.p))
 
 /-- **Lines 24–44.** One iteration of the main loop; `fuel` bounds both `while`s
 and `ρ` is the precision fixed at line 17. -/
 noncomputable def step (fuel : ℕ) (ρ : ℤ) (st : SketchState n) (i : ι) : SketchState n :=
   let res := stepPre P O fuel st i
-  ⟨res.1.X + O.gen res.1.clock i res.2 ρ, res.1.p, res.1.clock + 1⟩
+  ⟨res.1.X + O.gen res.1.clock i res.1.level res.2 ρ, res.1.p, res.1.clock + 1, res.1.level⟩
 
 /-- **Lines 22–46.** Fold `step` over the cubes from `X = ∅, p = 1`, output `|X|/p`.
 `ρ` is `GetPrecision`'s output (line 17), fixed before the loop and passed to every
 `GenerateSamples` call. The clock starts at `0`. -/
 noncomputable def run (fuel : ℕ) (ρ : ℤ) (cubes : List ι) : ℝ :=
-  let final := cubes.foldl (step P O fuel ρ) ⟨0, 1, 0⟩
+  let final := cubes.foldl (step P O fuel ρ) ⟨0, 1, 0, 0⟩
   (card final.X : ℝ) / final.p
 
 /-- **The output as a random variable**: `run` with the oracles drawn at `ω`.

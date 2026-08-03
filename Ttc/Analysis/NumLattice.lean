@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Analysis.Capstone
+import Ttc.Analysis.NumLatticeModel
 import Ttc.Analysis.SketchProcess
 
 /-!

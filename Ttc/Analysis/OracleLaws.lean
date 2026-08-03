@@ -62,46 +62,32 @@ Together they are what `lem:numlattice` needs of the randomness — and, unlike
 `numlattice` itself, they say nothing about accuracy. -/
 structure OracleLaws {A : Type*} {n : ℕ} (T : TtcProb A n) : Prop where
   /-- **The Poisson draws are Poisson** (`alg:ttc` lines 38, 41). -/
-  pois_law : ∀ c < T.clockBound, ∀ lam : ℝ, 0 ≤ lam →
-    @Measure.map T.Ω ℕ T.mΩ _ (fun ω => (T.O ω).pois c lam) T.μ
+  pois_law : ∀ c < T.clockBound, ∀ (i : Cube A) (j : ℕ) (lam : ℝ), 0 ≤ lam →
+    @Measure.map T.Ω ℕ T.mΩ _ (fun ω => (T.O ω).pois c i j lam) T.μ
       = poissonMeasure lam.toNNReal
   /-- **The thinning is a fair independent coin per copy** (`alg:ttc` lines 33,
   40): the multiplicity of each lattice point is thinned `Binomial(·, ½)`, and the
   points are thinned independently of one another. -/
-  halve_law : ∀ c < T.clockBound, ∀ X : Multiset (Space n),
+  halve_law : ∀ c < T.clockBound, ∀ (j : ℕ) (X : Multiset (Space n)),
     @Measure.map T.Ω (Fin T.latCard → ℕ) T.mΩ _
-        (fun ω => T.cnt ((T.O ω).halve c X)) T.μ
+        (fun ω => T.cnt ((T.O ω).halve c j X)) T.μ
       = Measure.pi fun i => binomial (T.cnt X i) half
 
-/-! ## Non-vacuity
+/-! ## ⚠️ NO WITNESS
 
-An unsatisfiable contract would make every theorem proved from it vacuous, so a
-witness is mandatory (`AUDIT.md` §3). The degenerate instance supplies one: with
-no cubes the run consumes no draws at all, `clockBound = 0`, and both fields are
-vacuously true.
+**`Ttc.OracleLaws` currently has no witness, and nothing consumes it.**
 
-That is a *satisfiability* witness only — exactly as for `Ttc.trivialProb`, it
-does **not** exhibit an interesting instance, and must not be read as evidence
-that the contract is satisfiable in a non-degenerate case.
+Its only witness was the degenerate `trivialProb`, which has been removed —
+`Ttc.TtcProb` now carries the sampler fields, and no instance with `D = []`
+satisfies them. The non-degenerate witness `Ttc.Box.boxProb` does **not** satisfy
+this contract either: `pois_law` demands the draw match its `lam` argument for
+*every* `lam`, whereas `Ttc.trajOracles` reads the coupled family and ignores
+`lam`.
+
+These are two different ways to model the same sampling, and the development uses
+the trajectory one (`Analysis/Coupling`, `Analysis/RunCoupling`), from which
+`lem:numlattice` is proved. This structure is kept only as a record of the
+alternative; **any theorem proved from it would be vacuous**, and none is.
 -/
-
-/-- The degenerate instance consumes no draws. -/
-@[simp] theorem clockBound_trivialProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) :
-    (trivialProb hn a : TtcProb A n).clockBound = 0 := by
-  show (trivialProb hn a : TtcProb A n).D.length * (3 * (trivialProb hn a : TtcProb A n).fuel + 2)
-    = 0
-  simp [trivialProb]
-
-/-- **`Ttc.OracleLaws` is satisfiable.** -/
-theorem oracleLaws_trivialProb {A : Type*} {n : ℕ} (hn : 1 ≤ n) (a : A) :
-    OracleLaws (trivialProb hn a : TtcProb A n) where
-  pois_law := by
-    intro c hc
-    rw [clockBound_trivialProb] at hc
-    exact absurd hc (Nat.not_lt_zero c)
-  halve_law := by
-    intro c hc
-    rw [clockBound_trivialProb] at hc
-    exact absurd hc (Nat.not_lt_zero c)
 
 end Ttc

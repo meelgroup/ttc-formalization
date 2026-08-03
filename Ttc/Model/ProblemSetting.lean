@@ -2,7 +2,8 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.Pseudocode
+import Ttc.Analysis.Coupling
+import Ttc.Analysis.SketchProcess
 
 /-!
 # `Model/ProblemSetting`: the problem, and everything assumed about it
@@ -29,12 +30,12 @@ open MeasureTheory
 | --- | --- | --- |
 | `isDNF` | `ToDNF`/AllSAT is correct | assumed of the external tool; `thm:decomposition` is *proved* from it |
 | `ball_subset`, `volume_ne_top`, `isPositive`, `normal_ne_zero` | `lem:nonconv`'s hypotheses | assumed of the *input*; `lem:lattice` is **proved** from them (`Analysis/LatticeAssembled`) |
-| `numlattice_union` | `lem:numlattice`'s union bound | **assumed** — only the *covering*; the sizes are proved, and `lem:numlattice` itself is now a theorem (`Ttc.TtcProb.numlattice`) |
+| `law_eq`, `oracle_eq`, `rate_eq_L`, … | the sampler is the Poisson/thinning family | assumed of the *sampler*; `lem:numlattice` is **proved** from them (`Ttc.TtcProb.numlattice`) |
 
 `L` is the actual normalised lattice count `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` (`L_eq`).
 The output is the algorithm's: `numlattice` is stated over `Ttc.ttcOutput`, so
-there is no faithfulness bridge to assume. Inhabited by `Ttc.trivialProb`
-(`Analysis/Capstone`). Running time is out of scope. -/
+there is no faithfulness bridge to assume. Inhabited **non-degenerately** by
+`Ttc.Box.boxProb` (`Analysis/BoxProb`). Running time is out of scope. -/
 structure TtcProb (A : Type*) (n : ℕ) where
   /-- The multiplicative accuracy parameter. -/
   ε : ℝ
@@ -111,31 +112,61 @@ structure TtcProb (A : Type*) (n : ℕ) where
   cube `cᵢ` really are lattice points of `P(cᵢ)`. `Ttc.Oracles` only fixes *how
   many* it returns; that they lie where they should is a property of the external
   sampler, so it is assumed of it here. -/
-  gen_mem : ∀ (ω : Ω) (c : ℕ) (i : Cube A) (N : ℕ), i ∈ D →
-    ∀ s ∈ (O ω).gen c i N ρ, s ∈ region M i ∩ fineLattice n (latticeScale ρ)
+  gen_mem : ∀ (ω : Ω) (c : ℕ) (i : Cube A) (j N : ℕ), i ∈ D →
+    ∀ s ∈ (O ω).gen c i j N ρ, s ∈ region M i ∩ fineLattice n (latticeScale ρ)
   /-- The normalised lattice count `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`. -/
   L : ℝ
   /-- `L` really is that count — it is not a free real. -/
   L_eq : L = normalisedCount M φ ρ
-  /-- **`lem:numlattice`'s epoch decomposition** (`analysis.tex:277`–`301`): the
-  failure event is covered by the three contributions the paper identifies — the
-  `Err` epochs, the `Noise` overflow over the `m` cubes, and the `m` `Vol_ED`
-  calls.
+  /-- The number of lattice points the coupled family is indexed by.
 
-  **This is what is assumed, and it is strictly less than `lem:numlattice`.** The
-  *sizes* of the three contributions are **proved**: that they total at most `δ`,
-  from the algorithm's own `Thresh` and `δ'`, is `Ttc.numlattice_failure_le`, and
-  the per-epoch estimates are `Ttc.levelLaw_err_le` and `Ttc.levelLaw_noise_le`
-  over the level process. `lem:numlattice` itself is then a *theorem*
-  (`Ttc.TtcProb.numlattice`). What is assumed here is only that the failure event
-  really is covered by those epochs — the coupling of README finding 15, which the
-  paper states but does not construct. Nothing in this field mentions accuracy. -/
-  numlattice_union : ∃ (jstar : ℕ) (lamStar : ℝ),
-    (1 - P.epsPrime) * P.thresh / 8 ≤ lamStar ∧
-    (μ {ω | ¬ ((1 - ε / 3) * L ≤ ttcOutput P O fuel ρ D ω ∧
-               ttcOutput P O fuel ρ D ω ≤ (1 + ε / 3) * L)}).toReal
-      ≤ (∑ t ∈ Finset.range jstar,
-            2 * Real.exp (-(P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
-          + P.m * Real.exp (-(P.thresh / 6)) + δ / 2
+  **From here on the fields describe the sampler.** `lem:numlattice` is no longer
+  assumed: these say *what the randomness is* — the Poisson/thinning family of
+  `Analysis/Coupling` — and the bound is **proved** from them
+  (`Ttc.TtcProb.numlattice_union`, hence `Ttc.TtcProb.numlattice`). An assumed
+  conclusion about probabilities has been replaced by an assumed description of
+  the algorithm's own randomness. -/
+  Lidx : ℕ
+  /-- An injective enumeration of them. -/
+  ptE : Fin Lidx → Space n
+  /-- The enumeration really is injective. -/
+  ptE_inj : Function.Injective ptE
+  /-- Each point's rate at level `0`. -/
+  θ : Fin Lidx → ℝ
+  /-- Rates are nonnegative. -/
+  θ_nonneg : ∀ s, 0 ≤ θ s
+  /-- The total rate is positive — the instance is not empty. -/
+  θ_pos : 0 < ∑ s, θ s
+  /-- The volume estimate the run uses for each cube. -/
+  vol : Cube A → ℝ
+  /-- The coverage test the run uses. -/
+  cover : Space n → Cube A → Bool
+  /-- Cube membership, on the enumerated points. -/
+  memPt : Cube A → Fin Lidx → Bool
+  /-- Reading a sample point `ω` as a trajectory of the family. -/
+  toTraj : Ω → (ℕ → Fin Lidx → ℕ)
+  /-- That reading is measurable. -/
+  toTraj_meas : @AEMeasurable Ω (ℕ → Fin Lidx → ℕ) _ mΩ toTraj μ
+  /-- **The randomness IS the coupled family** — its law is `Ttc.trajLaw`. -/
+  law_eq : @MeasureTheory.Measure.map Ω (ℕ → Fin Lidx → ℕ) mΩ _ toTraj μ = trajLaw θ
+  /-- **The oracles read that family** (`Ttc.trajOracles`). -/
+  oracle_eq : ∀ ω, O ω = trajOracles ptE_inj vol cover memPt (toTraj ω)
+  /-- The coverage test agrees with cube membership on the lattice. -/
+  cover_eq : ∀ s i, cover (ptE s) i = memPt i s
+  /-- The cubes cover every enumerated point. -/
+  cover_all : ∀ s, (D.any fun i => memPt i s) = true
+  /-- The epoch index the union bound runs to. -/
+  jstar : ℕ
+  /-- There is at least one epoch. -/
+  hjstar : 1 ≤ jstar
+  /-- By epoch `j*−1` no cube's rate can still trigger a `halveDown`. -/
+  rate_small : ∀ i ∈ D, ¬ (P.thresh / vol i ≤ (1 / 2 : ℝ) ^ (jstar - 1))
+  /-- The level-`j*−1` rate is at most `Thresh/2`. -/
+  rate_le : 2 * totalRate θ (jstar - 1) ≤ P.thresh
+  /-- …and at least `(1−ε')·Thresh/8`, so the epoch series converges. -/
+  lamStar_ge : (1 - P.epsPrime) * P.thresh / 8 ≤ totalRate θ (jstar - 1)
+  /-- **The rates reproduce the lattice count.** This is what `lem:lattice`
+  supplies; it is the only place the geometry meets the probability. -/
+  rate_eq_L : ∑ s, θ s = L
 
 end Ttc

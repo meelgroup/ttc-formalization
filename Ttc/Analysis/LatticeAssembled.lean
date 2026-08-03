@@ -209,11 +209,11 @@ This is what makes the run's state a count vector over the **fixed finite** set
 `Sol(F) ∩ 𝕃ⁿ` — the first structural step of the coupling that `lem:numlattice`
 needs. -/
 theorem run_state_mem (ω : T.Ω) :
-    ∀ s ∈ (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0⟩).X,
+    ∀ s ∈ (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0, 0⟩).X,
       s ∈ sol T.M T.φ ∩ fineLattice n (latticeScale T.ρ) := by
   refine mem_run_state T.P (T.O ω) T.fuel T.ρ T.D ?_
-  intro c i N hi s hs
-  obtain ⟨hreg, hlat⟩ := T.gen_mem ω c i N hi s hs
+  intro c i j N hi s hs
+  obtain ⟨hreg, hlat⟩ := T.gen_mem ω c i j N hi s hs
   refine ⟨?_, hlat⟩
   have hsub : region T.M i ⊆ sol T.M T.φ := region_subset_sol T.isDNF hi
   exact hsub hreg

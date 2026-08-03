@@ -94,8 +94,8 @@ theorem card_eq_sum_cnt (X : Multiset (Space n)) (hX : ∀ s ∈ X, s ∈ T.latP
 /-- The run's state is supported on the lattice points, so its cardinality is the
 total of its count vector. -/
 theorem card_run_eq_sum_cnt (ω : T.Ω) :
-    (card (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0⟩).X : ℕ)
-      = ∑ i, T.cnt (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0⟩).X i :=
+    (card (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0, 0⟩).X : ℕ)
+      = ∑ i, T.cnt (T.D.foldl (step T.P (T.O ω) T.fuel T.ρ) ⟨0, 1, 0, 0⟩).X i :=
   T.card_eq_sum_cnt _ fun s hs => T.mem_latPts.2 (T.run_state_mem ω s hs)
 
 end TtcProb

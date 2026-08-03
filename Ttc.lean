@@ -49,13 +49,18 @@ The headline is `sorry`-free and axiom-clean
 **One scope caveat, stated here because it is the thing an auditor is most
 likely to assume wrongly.** `Ttc.TtcProb.volume_estimate` really does conclude
 `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` about `Ttc.run`, with no side hypothesis —
-but its `numlattice` field **assumes** `lem:numlattice`, which is not proved here.
-`lem:lattice` *is* proved (`Ttc.TtcProb.lattice_lo`/`lattice_hi`), from the
-geometric fields of `Ttc.TtcProb`. `Ttc.nonempty_ttcProb` shows the fields are
-jointly satisfiable (by a degenerate run), so the headline is not vacuous; nothing
-here shows `lem:numlattice` holds of the real algorithm. See the README, "What is
-assumed", and `AUDIT.md` §4. Running time (`thm:runtime`) is out of scope
-throughout.
+`lem:lattice` *is* proved (`Ttc.TtcProb.lattice_lo`/`lattice_hi`) from the
+geometric fields of `Ttc.TtcProb`, and `lem:numlattice` is **now proved too**
+(`Ttc.TtcProb.numlattice`, via `Ttc.TtcProb.numlattice_union`) — it is no longer a
+field. What it is proved *from* is the sampler description the structure now
+carries: `law_eq`, `oracle_eq`, `rate_eq_L` and the epoch conditions, which say
+the algorithm's randomness is the Poisson/thinning family of `Analysis/Coupling`.
+So what remains assumed is a description of the sampler, not a bound on its
+failure probability. `Ttc.Box.nonempty_ttcProb` shows the fields are jointly
+satisfiable, and **non-degenerately**: the witness has a nonempty solution set and
+`L ≥ Thresh`, so the headline is not vacuous in the weak sense the old degenerate
+witness allowed. See the README, "What is assumed", and `AUDIT.md` §4. Running
+time (`thm:runtime`) is out of scope throughout.
 -/
 
 -- The audit surface (statement layer)
@@ -80,6 +85,11 @@ import Ttc.Analysis.Poisson
 import Ttc.Analysis.Chernoff
 import Ttc.Analysis.PoissonLaws
 import Ttc.Analysis.Thinning
+import Ttc.Analysis.Coupling
+import Ttc.Analysis.RunCoupling
+import Ttc.Analysis.NumLatticeModel
+import Ttc.Analysis.Witness
+import Ttc.Analysis.BoxProb
 import Ttc.Analysis.SketchProcess
 import Ttc.Analysis.Sketch
 import Ttc.Analysis.Invariants
@@ -97,3 +107,4 @@ import Ttc.Analysis.LatticeAssembled
 import Ttc.Analysis.CountVector
 import Ttc.Analysis.Capstone
 import Ttc.Analysis.OracleLaws
+import Ttc.Analysis.NumLattice

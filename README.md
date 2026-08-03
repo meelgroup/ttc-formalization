@@ -6,16 +6,54 @@ Machine-checked, `sorry`-free, axiom-clean formalisation of the analysis of the
 
 **Every declaration in this development is proved.** There is no `sorry`, no
 custom `axiom`, and no `native_decide` (see
-[Verifying the claim](#verifying-the-claim)). **One** ingredient of the paper is
-*not* formalised and enters as an explicit hypothesis — `lem:numlattice`, the
-Poisson/Chernoff analysis of the streaming sketch. `lem:lattice` used to be a
-second one; it is now **proved**, from hypotheses about the *input* rather than
-about the algorithm (§[What is assumed](#what-is-assumed)).
+[Verifying the claim](#verifying-the-claim)). **No lemma of the paper is assumed
+outright any more.** `lem:lattice` used to be two fields of `Ttc.TtcProb` and is
+now proved from hypotheses about the *input*
+([`lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L222),
+[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L227)); `lem:numlattice` used
+to be one field, then a weaker `numlattice_union` field, and **both are now
+theorems** ([`Ttc.TtcProb.numlattice`](Ttc/Analysis/NumLattice.lean#L51),
+[`Ttc.TtcProb.numlattice_union`](Ttc/Analysis/NumLatticeModel.lean#L240) — the
+latter with the deleted field's statement verbatim).
+
+**What is assumed in their place is a description of the sampler, not a bound on
+its failure probability.** `Ttc.TtcProb` carries 21 fields
+([`Model/ProblemSetting.lean:129`](Ttc/Model/ProblemSetting.lean#L129) onwards)
+saying *what the algorithm's randomness is*: the lattice points are enumerated
+(`Lidx`, `ptE`, `ptE_inj`) with rates `θ`, each `ω` reads as a trajectory
+(`toTraj`) whose law **is** the coupled Poisson/thinning family
+(`law_eq : μ.map toTraj = trajLaw θ`), the oracles read that trajectory
+(`oracle_eq : O ω = trajOracles …`), the cubes cover the enumerated points
+(`cover_eq`, `cover_all`), an epoch index exists in the right window (`jstar`,
+`rate_small`, `rate_le`, `lamStar_ge`), and the rates reproduce the count
+(`rate_eq_L : ∑θ = L`). That is a real reduction — an assumed *conclusion* about
+probabilities has been replaced by an assumed *description* of the algorithm's
+randomness, and everything quantitative is now derived from it — but it is **not
+zero**: a reader who doubts that the modelled sampler is the implemented one
+doubts the headline. See §[What is assumed](#what-is-assumed).
+
+The construction those fields point at is README
+[finding 15](#15-genuine-gap--errj-is-not-a-well-defined-event)'s missing
+coupling, which the paper never builds: for the epoch union bound to *mean*
+anything, the run and the level process must agree **pathwise**, and
+`lem:process` gives only equality in law.
+[`Ttc.trajOracles`](Ttc/Analysis/Coupling.lean#L393) drives the real `Ttc.run` off
+a trajectory of the level family, [`Ttc.card_run_eq_sum_traj`](Ttc/Analysis/RunCoupling.lean#L263)
+proves `|𝒳| = ∑ₛ ω(J)ₛ` pathwise at the run's own stopping level `J` (with
+[`trajLaw_ae_nested`](Ttc/Analysis/RunCoupling.lean#L592) discharging its one
+hypothesis almost surely), and
+[`Ttc.traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685) proves
+`lem:numlattice`'s bound outright for that run. **That coupling is now
+load-bearing for the headline**, not a side development:
+[`Ttc.numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35)
+transports it off the trajectory space onto an arbitrary `Ω`/`μ`/`O` given the
+sampler fields, and that is what proves `numlattice_union`.
 
 Formalising also acted as a referee: it turned up **two genuine errors** and
 **three genuine gaps** in the published proofs, all of them machine-checked —
 three repaired, one closed by an added hypothesis, one shown to be absorbed by
-existing slack. See [Findings](#findings-the-formalisation-as-a-referee).
+existing slack, and the last (finding 15) closed by the construction above.
+See [Findings](#findings-the-formalisation-as-a-referee).
 
 **Auditing this in a few minutes:** read [`AUDIT.md`](AUDIT.md), then the four
 files of [`Ttc/Model/`](Ttc/Model/). That is the whole trusted surface — what is
@@ -48,15 +86,24 @@ import Ttc
 --   [propext, Classical.choice, Quot.sound]
 ```
 
-Those three are Mathlib's standard foundational axioms. A sweep over **every**
-declaration in the development (400 of them: theorems, definitions and
-structures) gives:
+The four declarations worth checking individually — the headline, the two lemmas
+that used to be assumed, and the non-degenerate witness — all return exactly
+those three:
 
-Those three are Mathlib's standard foundational axioms, and **no declaration in
-the development depends on anything else** — no `sorryAx`, no custom `axiom`.
-(The per-profile counts previously tabulated here are omitted: the declaration set
-has changed substantially and the numbers were stale. Re-derive them with the
-sweep below rather than trusting a table.)
+```lean
+#print axioms Ttc.TtcProb.volume_estimate
+#print axioms Ttc.TtcProb.numlattice
+#print axioms Ttc.TtcProb.numlattice_union
+#print axioms Ttc.Box.boxProb
+#print axioms Ttc.Box.nonempty_ttcProb
+```
+
+Those three are Mathlib's standard foundational axioms. A sweep over **every**
+declaration in the development (upwards of 600 of them: theorems, definitions and
+structures) shows that **no declaration depends on anything else** — no `sorryAx`,
+no custom `axiom`. (The per-profile counts previously tabulated here are omitted:
+the declaration set changes with every landed lemma and the numbers went stale.
+Re-derive them with the sweep below rather than trusting a table.)
 
 To reproduce the sweep:
 
@@ -129,24 +176,37 @@ Ttc/
     SketchProcess.lean        -- the level-j process; Err and Noise branches; the δ budget
     Sketch.lean               -- lem:numlattice's epoch skeleton
     Invariants.lean           -- structural invariants of the modelled main loop
+    Coupling.lean             -- the coupled level family 𝒳ⱼ, its law, and the oracle
+                              --   bundle that reads a trajectory (trajOracles)
+    RunCoupling.lean          -- the run IS the family: |𝒳| = ∑ₛ ω(J)ₛ pathwise, the
+                              --   halving triggers, and lem:numlattice's bound proved
+    NumLatticeModel.lean      -- that bound transported to an arbitrary Ω/μ/O, and
+                              --   TtcProb.numlattice_union — the ex-field, as a theorem
+    Witness.lean              -- the box [0,c]ⁿ: its atoms, cube, DNF, formula, inscribed
+                              --   ball, finite volume, and lattice count ≥ cⁿ
+    BoxProb.lean              -- Box.boxProb: the non-degenerate TtcProb built on it,
+                              --   and Box.nonempty_ttcProb
+    OracleLaws.lean           -- an alternative distributional contract on the bundle;
+                              --   nothing consumes it and it has NO witness (⚠️ §3)
     Capstone.lean             -- the two chains combining lem:lattice with lem:numlattice
+    NumLattice.lean           -- lem:numlattice as a theorem, from the epoch covering
 ```
 
 **Reading order for an auditor: `Model/`, in this order, then stop.**
 [`Model/Prelude`](Ttc/Model/Prelude.lean) fixes what every name means, including
-`Vol(F)` and the `(1±ε)` interval. [`Model/ProblemSetting`](Ttc/Model/ProblemSetting.lean)
-records that the set the algorithm enumerates is the set the theorem bounds.
+`Vol(F)` and the `(1±ε)` interval.
 [`Model/Pseudocode`](Ttc/Model/Pseudocode.lean) is the code — read it against
-`sections/algo.tex` — and ends with `Ttc.TtcProb`, **every hypothesis the result
-rests on**, as fields. [`Model/Theorem`](Ttc/Model/Theorem.lean) states what is
-proved.
+`sections/algo.tex`. [`Model/ProblemSetting`](Ttc/Model/ProblemSetting.lean) is
+`Ttc.TtcProb`: **every hypothesis the result rests on**, as fields.
+[`Model/Theorem`](Ttc/Model/Theorem.lean) states what is proved.
 Anything you still doubt is a named lemma in `Analysis/`.
 
 | Surface module | Contains | Status |
 | --- | --- | --- |
 | [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, [`volSol`](Ttc/Model/Prelude.lean#L173) (= `Vol(F)`), [`relErr`](Ttc/Model/Prelude.lean#L181) | definitions only |
-| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `halveDown`, `absorb`, `step`, [`run`](Ttc/Model/Pseudocode.lean#L134), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L140), and [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) — the complete list of assumptions | modelled; see caveats |
-| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean#L40) (`Pr ≥ 1−δ`) — one theorem, nothing else | proved from the `TtcProb` fields |
+| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, [`Oracles`](Ttc/Model/Pseudocode.lean#L76), `dropCovered`, `halveDown`, `absorb`, `step`, [`run`](Ttc/Model/Pseudocode.lean#L146), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L152) | modelled; see caveats |
+| [`Model/ProblemSetting.lean`](Ttc/Model/ProblemSetting.lean) | [`TtcProb`](Ttc/Model/ProblemSetting.lean#L39) — the complete list of assumptions, as fields | the whole hypothesis surface |
+| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean#L41) (`Pr ≥ 1−δ`) — one theorem, nothing else | proved from the `TtcProb` fields |
 
 ### What `Ttc/Model/Pseudocode.lean` does and does not do
 
@@ -157,13 +217,22 @@ order of operations, both `while` guards, the coverage filter, and the output
 Four external calls are **fields of `Ttc.Oracles`** rather than definitions —
 `Vol_ED`, the Poisson draw, `GenerateSamples`, and the fair-coin thinning. So the
 state evolution is deterministic *given the oracle's answers*, and all the
-randomness sits at that boundary. That is deliberate: the distribution of the
-output is `lem:numlattice`, which this development assumes.
+randomness sits at that boundary. That is deliberate, and it is what makes the
+coupling constructible: [`Ttc.trajOracles`](Ttc/Analysis/Coupling.lean#L393)
+inhabits the bundle with oracles that read a trajectory of the level family, and
+the run driven by *those* is provably the family
+([`Ttc.card_run_eq_sum_traj`](Ttc/Analysis/RunCoupling.lean#L263)). What the
+bundle itself constrains is only the *shape* of the calls plus two contracts
+below; what the draws are *distributed* like is said by the `law_eq`/`oracle_eq`
+fields of `Ttc.TtcProb`, which name the coupled family directly. (An alternative,
+primitive-by-primitive contract [`Ttc.OracleLaws`](Ttc/Analysis/OracleLaws.lean#L63)
+is also stated, but nothing consumes it and it has **no witness** — see
+[`AUDIT.md`](AUDIT.md) §3.)
 
 **Two contracts were missing and are now stated.** `halve` returns a
 *sub-multiset* (`halve_le`), not merely one of no greater cardinality — the loop
 deletes elements, it never invents them; and `GenerateSamples` returns points of
-`P(cᵢ) ∩ 𝕃ⁿ` ([`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L108)), where
+`P(cᵢ) ∩ 𝕃ⁿ` ([`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L115)), where
 before only the *count* was fixed. Both are needed before `𝒳` can be treated as a
 count vector over a fixed finite set, which
 [`TtcProb.run_state_mem`](Ttc/Analysis/LatticeAssembled.lean#L211) now proves.
@@ -180,10 +249,10 @@ behaviour. Indexing fixes that, and it is also what lets a distributional
 hypothesis say the draws are *independent*: distinct call sites provably get
 distinct indices ([`halveDown_clock`](Ttc/Analysis/Invariants.lean#L111),
 [`absorb_clock`](Ttc/Analysis/Invariants.lean#L122),
-[`step_clock`](Ttc/Analysis/Invariants.lean#L138)).
+[`step_clock`](Ttc/Analysis/Invariants.lean#L139)).
 
 The precision `ρ` is threaded properly: `GenerateSamples` is
-[`gen : ι → ℕ → ℤ → Multiset (Space n)`](Ttc/Model/Pseudocode.lean#L88), `ρ` is
+[`gen : ℕ → ι → ℕ → ℕ → ℤ → Multiset (Space n)`](Ttc/Model/Pseudocode.lean#L99), `ρ` is
 fixed before the loop (`alg:ttc` line 17) and passed at every call, and the
 `rho_eq` field of `Ttc.TtcProb` pins it to `⌈log₁₀(γ/γ̂)⌉` (`alg:prec` line 91).
 The LP computing `γ̂` is still not modelled — `gammaHat` is an input.
@@ -205,7 +274,7 @@ reasons about — joined by a *proved* bridge saying they compute the same thing
 That bridge is what puts the operational model outside the trusted base.
 
 This development needs no such bridge, because it has only the transcription.
-[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean#L140) *is* `Ttc.run` with the oracles
+[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean#L152) *is* `Ttc.run` with the oracles
 drawn at a sample point, so the headline measures the algorithm directly:
 
 ```lean
@@ -214,26 +283,52 @@ noncomputable def Ttc.ttcOutput (P : Params) (O : Ω → Oracles n ι) (fuel : �
   run P (O ω) fuel ρ cubes
 ```
 
-What *is* assumed is `lem:numlattice` — but stated about that same output, as a
-field of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L38):
+`lem:numlattice` itself is **not** assumed any more: it is
+[`Ttc.TtcProb.numlattice`](Ttc/Analysis/NumLattice.lean#L51), a theorem about that
+same output. Nor is the epoch covering it is derived from: that used to be a
+`numlattice_union` field, and is now
+[`Ttc.TtcProb.numlattice_union`](Ttc/Analysis/NumLatticeModel.lean#L240), a
+theorem with the deleted field's statement verbatim:
 
 ```lean
-numlattice : 1 - δ ≤ (μ {ω | (1-ε/3)*L ≤ ttcOutput P O fuel ρ D ω ∧
-                             ttcOutput P O fuel ρ D ω ≤ (1+ε/3)*L}).toReal
+theorem Ttc.TtcProb.numlattice_union (T : TtcProb A n) :
+    ∃ (jstar : ℕ) (lamStar : ℝ),
+      (1 - T.P.epsPrime) * T.P.thresh / 8 ≤ lamStar ∧
+      (T.μ {ω | ¬ ((1 - T.ε/3) * T.L ≤ ttcOutput T.P T.O T.fuel T.ρ T.D ω ∧
+                 ttcOutput T.P T.O T.fuel T.ρ T.D ω ≤ (1 + T.ε/3) * T.L)}).toReal
+        ≤ (∑ t ∈ Finset.range jstar,
+              2 * Real.exp (-(T.P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
+            + T.P.m * Real.exp (-(T.P.thresh / 6)) + T.δ / 2
 ```
 
-so the headline needs **no side hypothesis**. And `L` is no longer a bare real:
-the field [`L_eq`](Ttc/Model/ProblemSetting.lean#L113) pins it to
+That the three terms total at most `δ`, at the algorithm's own `Thresh` and `δ'`,
+is [`Ttc.numlattice_failure_le`](Ttc/Analysis/SketchProcess.lean#L246); the
+per-epoch sizes are [`levelLaw_err_le`](Ttc/Analysis/SketchProcess.lean#L130) and
+[`levelLaw_noise_le`](Ttc/Analysis/SketchProcess.lean#L194). So the headline needs
+**no side hypothesis**. And `L` is no longer a bare real: the field
+[`L_eq`](Ttc/Model/ProblemSetting.lean#L120) pins it to
 [`normalisedCount M φ ρ`](Ttc/Model/Prelude.lean#L166) `= |Sol(F) ∩ 𝕃ⁿ|/10^(ρn)`,
 the actual lattice count of the actual solution set — which is what makes
 `lem:lattice` a theorem about it rather than an assumption.
 
-The structure is inhabited
-([`Ttc.nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L245), witness
-[`Ttc.trivialProb`](Ttc/Analysis/Capstone.lean#L181)), so this is not vacuous —
-but that witness is degenerate (the empty DNF: `Vol(F) = 0`, output `0`), and
-**nothing here shows `numlattice` holds of the real algorithm**. Proving it is the
-main remaining work.
+What the proof of `numlattice_union` consumes are the **sampler fields**
+([`Model/ProblemSetting.lean:129`](Ttc/Model/ProblemSetting.lean#L129) onwards).
+It is [`Ttc.numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35)
+applied to them: the run's failure event is the `toTraj`-preimage of the
+trajectory-space one (`oracle_eq`), `Measure.le_map_apply` pushes its measure
+forward along `law_eq`, and
+[`Ttc.traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685) bounds it there.
+The accuracy window comes from `rate_eq_L` through
+[`Ttc.window_of_exact`](Ttc/Analysis/NumLatticeModel.lean#L121).
+
+The structure is inhabited **non-degenerately**
+([`Ttc.Box.nonempty_ttcProb`](Ttc/Analysis/BoxProb.lean#L362), witness
+[`Ttc.Box.boxProb`](Ttc/Analysis/BoxProb.lean#L287)): the box `[0,c]ⁿ` with
+`c ≥ Thresh`, sampled by the coupled family. Its solution set is nonempty, its
+`L` is at least `cⁿ ≥ Thresh`, and its `numlattice_union` obligation is
+discharged **by proof**, not by an empty failure event. The old degenerate
+witness `Ttc.trivialProb` has been deleted: with `D = []` it forces `Lidx = 0`,
+which contradicts `θ_pos`.
 
 ## Paper ↔ Lean map
 
@@ -268,7 +363,14 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | `claim:helper` | `kⁿ ≤ (1+η/4)/(1−η/4)` | [`claim_helper`](Ttc/Analysis/Arith.lean#L162), [`claim_helper_of`](Ttc/Analysis/Arith.lean#L133), [`exp_two_mul_le_div`](Ttc/Analysis/Arith.lean#L78) | **proved** — see finding 4 |
 | `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Analysis/LatticeAssembled.lean#L91), and for the problem instance [`TtcProb.lattice_lo`](Ttc/Analysis/LatticeAssembled.lean#L222)/[`lattice_hi`](Ttc/Analysis/LatticeAssembled.lean#L227) | **proved** — formerly two fields of `TtcProb` |
 | ↳ transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | | [`lattice_of_scaled`](Ttc/Analysis/Lattice.lean#L91), [`ncard_inter_lattice_smul`](Ttc/Analysis/Lattice.lean#L57), [`volume_smul_body`](Ttc/Analysis/Lattice.lean#L63), [`lattice_bounds`](Ttc/Analysis/Lattice.lean#L144) | **proved** |
-| `lem:numlattice` | sketch output within `(1±ε/3)` w.p. `1−δ` | [`epoch_series_le`](Ttc/Analysis/Sketch.lean#L87), [`err_sum_le_delta`](Ttc/Analysis/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Analysis/Sketch.lean#L126), [`numlattice_failure_bound`](Ttc/Analysis/Sketch.lean#L142), [`sketch_interval`](Ttc/Analysis/Sketch.lean#L181), [`sketch_window`](Ttc/Analysis/Sketch.lean#L196) | epoch skeleton **proved**; `lem:chernoff` now **proved** too — what remains is the probabilistic model of the loop (see [What is assumed](#assumed-about-the-algorithm)) |
+| `lem:numlattice` | sketch output within `(1±ε/3)` w.p. `1−δ` | [`TtcProb.numlattice`](Ttc/Analysis/NumLattice.lean#L51), from `TtcProb.numlattice_union` plus [`numlattice_failure_le`](Ttc/Analysis/SketchProcess.lean#L246); skeleton [`epoch_series_le`](Ttc/Analysis/Sketch.lean#L87), [`err_sum_le_delta`](Ttc/Analysis/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Analysis/Sketch.lean#L126), [`numlattice_failure_bound`](Ttc/Analysis/Sketch.lean#L142), [`sketch_interval`](Ttc/Analysis/Sketch.lean#L181), [`sketch_window`](Ttc/Analysis/Sketch.lean#L196) | **theorem** — and so is the epoch covering it consumes, [`TtcProb.numlattice_union`](Ttc/Analysis/NumLatticeModel.lean#L240) (see [What is assumed](#assumed-about-the-algorithm)) |
+| ↳ **the covering, from the sampler description** | the ex-field, proved: transport the coupled-run bound to an arbitrary `Ω`/`μ`/`O` | [`numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35), self-coupled form [`numlattice_union_of_traj`](Ttc/Analysis/NumLatticeModel.lean#L190), window [`window_of_two_sided`](Ttc/Analysis/NumLatticeModel.lean#L104)/[`window_of_exact`](Ttc/Analysis/NumLatticeModel.lean#L121), epoch index [`exists_epoch`](Ttc/Analysis/NumLatticeModel.lean#L140), [`rate_small_of_epoch`](Ttc/Analysis/NumLatticeModel.lean#L180) | **proved** — this is what deleted the last assumed field |
+| ↳ the coupled level family | `𝒳ⱼ` for **all** `j` on one space, nested thinning from level `0` | [`famCount`](Ttc/Analysis/Coupling.lean#L80), [`famLaw`](Ttc/Analysis/Coupling.lean#L125), [`trajLaw`](Ttc/Analysis/Coupling.lean#L209), marginals [`map_trajLaw_eval`](Ttc/Analysis/Coupling.lean#L274), nesting [`trajLaw_ae_nested`](Ttc/Analysis/RunCoupling.lean#L592) | **constructed** — the object finding 15 says the paper never builds |
+| ↳ the coupling to the run | the oracles read the family; `\|𝒳\| = ∑ₛ ω(J)ₛ` **pathwise** | [`trajOracles`](Ttc/Analysis/Coupling.lean#L393), [`CoupledAt`](Ttc/Analysis/RunCoupling.lean#L31), [`coupledAt_step`](Ttc/Analysis/RunCoupling.lean#L183), [`coupledAt_foldl`](Ttc/Analysis/RunCoupling.lean#L241), [`card_run_eq_sum_traj`](Ttc/Analysis/RunCoupling.lean#L263), [`run_eq_traj`](Ttc/Analysis/RunCoupling.lean#L281) | **proved** — equality of random variables, not of laws |
+| ↳ the halving trigger | every level the run crosses had a large rate or an overflow | [`card_add_pois_le`](Ttc/Analysis/RunCoupling.lean#L345), [`absorb_trigger`](Ttc/Analysis/RunCoupling.lean#L356), [`halveDown_trigger`](Ttc/Analysis/RunCoupling.lean#L391), [`step_trigger`](Ttc/Analysis/RunCoupling.lean#L411), [`foldl_trigger`](Ttc/Analysis/RunCoupling.lean#L441), [`level_cap_subset`](Ttc/Analysis/RunCoupling.lean#L471) | **proved** — what bounds `Pr[⋃_{j≥j*} Nois(j)]` |
+| ↳ **`lem:numlattice` for the coupled run** | the paper's three-term bound, for `Ttc.run` driven by the family | [`traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685), via [`traj_failure_le`](Ttc/Analysis/RunCoupling.lean#L614), [`trajLaw_err_le`](Ttc/Analysis/RunCoupling.lean#L511), [`trajLaw_noise_le`](Ttc/Analysis/RunCoupling.lean#L527), [`epoch_reindex`](Ttc/Analysis/RunCoupling.lean#L665), [`totalRate_reindex`](Ttc/Analysis/RunCoupling.lean#L672) | **proved**, nothing probabilistic assumed — and with a *smaller* right-hand side than the paper's (no `+ δ/2`) |
+| ↳ the alternative oracle contract | `pois` is Poisson, `halve` is a fair independent thinning | [`OracleLaws`](Ttc/Analysis/OracleLaws.lean#L63), reachable draws [`clockBound`](Ttc/Analysis/OracleLaws.lean#L44), [`run_eq_of_agree_below`](Ttc/Analysis/OracleLaws.lean#L48) | **stated only** — nothing consumes it and it has **no witness** ([`AUDIT.md`](AUDIT.md) §3) |
+| ↳ the non-degenerate witness | the box `[0,c]ⁿ`, `c ≥ Thresh`, sampled by the coupled family | [`Box.boxProb`](Ttc/Analysis/BoxProb.lean#L287), [`Box.nonempty_ttcProb`](Ttc/Analysis/BoxProb.lean#L362); geometry [`boxAtoms`](Ttc/Analysis/Witness.lean#L46), [`boxCube`](Ttc/Analysis/Witness.lean#L269), [`boxDNF`](Ttc/Analysis/Witness.lean#L306), [`boxForm`](Ttc/Analysis/Witness.lean#L386), [`sol_boxForm`](Ttc/Analysis/Witness.lean#L428), [`normalisedCount_box_ge`](Ttc/Analysis/Witness.lean#L450) | **constructed** — replaces the deleted `trivialProb` |
 | `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Analysis/Sketch.lean#L181) | constant **verified** |
 | `alg:ttc` line 18 (`δ' ← δ/(2m)`) | the `Vol_ED` failure budget | [`Params.deltaPrime`](Ttc/Model/Prelude.lean#L225), [`Params.vol_failure_eq`](Ttc/Analysis/Sketch.lean#L159), [`numlattice_failure_bound_with_vol`](Ttc/Analysis/Sketch.lean#L168) | **verified** — and the paper omits it from its union bound; see finding 13 |
 | `alg:ttc` line 20 (`Thresh`) | | [`err_sum_le_delta`](Ttc/Analysis/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Analysis/Sketch.lean#L126) | both branches **verified** |
@@ -277,9 +379,9 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | ↳ deflated shell factor | `(1 + κ/(γ−κ))ⁿ ≤ 1 + η/(8m)` | [`kappa_le_gamma_half`](Ttc/Analysis/Parameters.lean#L124), [`shell_factor_bound_deflated`](Ttc/Analysis/Parameters.lean#L144) | **proved** — the deflated companion of `shell_factor_bound` |
 | ↳ dilation of a facet system | `c·{x \| f x ≤ b} = {y \| f y ≤ c·b}` | [`FacetSystem.scale`](Ttc/Analysis/Recentred.lean#L345), [`scale_body_zero`](Ttc/Analysis/Recentred.lean#L380) | **proved** — connects `body_eq_sol` to `lem:lattice`'s dilate |
 | `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean#L240), [`kappa_div_gamma_le`](Ttc/Analysis/Parameters.lean#L81), [`shell_factor_bound`](Ttc/Analysis/Parameters.lean#L102) | **proved** — see finding 2 |
-| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Model/Pseudocode.lean#L134), [`step`](Ttc/Model/Pseudocode.lean#L127), [`absorb`](Ttc/Model/Pseudocode.lean#L109), [`halveDown`](Ttc/Model/Pseudocode.lean#L100) | modelled over an oracle bundle; structural invariants proved, termination and distribution not |
-| ↳ the output as a random variable | `run` with oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean#L140) | definition |
-| `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L40) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean#L38) fields |
+| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Model/Pseudocode.lean#L146), [`step`](Ttc/Model/Pseudocode.lean#L139), [`absorb`](Ttc/Model/Pseudocode.lean#L120), [`halveDown`](Ttc/Model/Pseudocode.lean#L111) | modelled over an oracle bundle; structural invariants proved, termination not |
+| ↳ the output as a random variable | `run` with oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean#L152) | definition |
+| `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L41) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean#L39) fields |
 | `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean#L247), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Analysis/LatticeAssembled.lean#L69) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Analysis/Lattice.lean#L70), [`gamma_half_le`](Ttc/Analysis/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Analysis/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Analysis/Recentred.lean#L576) | mathematical content **proved**; LP implementation not modelled |
 
 Results with no counterpart in the paper, produced by the formalisation:
@@ -289,7 +391,11 @@ Results with no counterpart in the paper, produced by the formalisation:
 | [`convex_region`](Ttc/Analysis/Decomposition.lean#L76), [`convex_litSet`](Ttc/Analysis/Decomposition.lean#L53) | each cube's region is convex — and *not* closed (finding 5) |
 | [`ratio_antitone`](Ttc/Analysis/Geometry.lean#L156), [`facet_ratio_fails`](Ttc/Analysis/Geometry.lean#L170) | `k` is attained at the facet **nearest** the origin, so the ball hypothesis is needed at every facet (finding 2) |
 | [`claim12_factor_le`](Ttc/Analysis/Nonconv.lean#L155) | the `claim:helper` factor is `≤ 5/3` on `0 < η ≤ 1` |
-| [`trivialProb`](Ttc/Analysis/Capstone.lean#L181), [`nonempty_ttcProb`](Ttc/Analysis/Capstone.lean#L245) | the hypothesis bundle is inhabited, so `thm:volumettc` is not vacuous |
+| [`Box.boxProb`](Ttc/Analysis/BoxProb.lean#L287), [`Box.nonempty_ttcProb`](Ttc/Analysis/BoxProb.lean#L362) | the hypothesis bundle is inhabited **non-degenerately**, so `thm:volumettc` is not vacuous; see [`AUDIT.md`](AUDIT.md) §3 |
+| [`box_lattice_card_ge`](Ttc/Analysis/Witness.lean#L214), [`normalisedCount_box_ge`](Ttc/Analysis/Witness.lean#L450) | the witness's normalised lattice count is at least `cⁿ`, at *every* precision — what lets `c` be chosen from `Thresh` |
+| [`trajOracles`](Ttc/Analysis/Coupling.lean#L393) + [`card_run_eq_sum_traj`](Ttc/Analysis/RunCoupling.lean#L263) | the coupling finding 15 says `lem:numlattice`'s proof needs and the paper never constructs |
+| [`traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685) | `lem:numlattice`'s bound for the coupled run, with no probabilistic hypothesis |
+| [`numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35) | that bound transported to an arbitrary probability space that *is* the family — what turned the last assumed field into a theorem |
 
 `Ttc.lean` re-exports everything, so `import Ttc` and a bare `lake build` expose
 the headline theorem.
@@ -310,17 +416,24 @@ is exactly the union of the polytopes the algorithm enumerates is
 `Ttc.TtcProb.sol_eq_union` (`thm:decomposition`), so the object the algorithm
 targets and the object the theorem bounds coincide.
 
-**Non-vacuity.** `Ttc.TtcProb` is inhabited (`Ttc.nonempty_ttcProb`, witness
-`Ttc.trivialProb`), so the theorem is not vacuously quantified — though that
-witness is degenerate; see [`AUDIT.md`](AUDIT.md) §4.
+**Non-vacuity.** `Ttc.TtcProb` is inhabited by
+[`Ttc.Box.boxProb`](Ttc/Analysis/BoxProb.lean#L287)
+([`Ttc.Box.nonempty_ttcProb`](Ttc/Analysis/BoxProb.lean#L362)), the box `[0,c]ⁿ`
+with `c ≥ Thresh` sampled by the coupled family — so the theorem is not
+vacuously quantified, and not by a degenerate instance either; see
+[`AUDIT.md`](AUDIT.md) §3.
 
 ## What is assumed
 
-Everything in the tree is proved. **One** ingredient of the paper — and one only —
-enters as a hypothesis about the *algorithm*: `lem:numlattice`. Alongside it,
-`Ttc.TtcProb` carries hypotheses about the *input*, which is a different kind of
-assumption: they are properties of the formula handed to `TTC`, checkable before
-it runs, not claims about what `TTC` does.
+Everything in the tree is proved, and **no lemma of the paper is a hypothesis any
+more**. What remains assumed about the algorithm is a *description of its
+sampler* — 21 fields saying the randomness is the Poisson/thinning family, not a
+bound on how often it fails. Two contracts on the external samplers sit beside
+them (`Oracles.gen_card` and `Oracles.halve_le` in the bundle itself, and
+[`gen_mem`](Ttc/Model/ProblemSetting.lean#L115), that `GenerateSamples` returns
+points of `P(cᵢ) ∩ 𝕃ⁿ`). And `Ttc.TtcProb` carries hypotheses about the *input*,
+which is a different kind of assumption again: properties of the formula handed
+to `TTC`, checkable before it runs, not claims about what `TTC` does.
 
 ### Proved, and previously assumed
 
@@ -361,25 +474,73 @@ to end:
 
 ### Assumed about the input
 
-Fields of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L38), all of them
+Fields of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L39), all of them
 hypotheses `lem:nonconv` needs and the paper states (or silently uses):
 
 | Field | Assumption |
 | --- | --- |
-| [`M_eq`](Ttc/Model/ProblemSetting.lean#L53) | the atoms really are linear constraints `A x ≤ b` — the formula is in the LRA fragment |
-| [`isPositive`](Ttc/Model/ProblemSetting.lean#L62) | no literal of the DNF is negated, so each `P(cᵢ)` is *closed* (finding 5) |
-| [`ball_subset`](Ttc/Model/ProblemSetting.lean#L96) | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂` about `cen i` — the paper's own hypothesis, with the common-centre gap of finding 2 removed |
-| [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L98) | each `P(cᵢ)` has finite volume |
-| [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L82) | every facet has a nonzero normal vector — implicit in the paper, and false only for a degenerate "constraint" `0 ≤ b` |
-| [`cubes_le`](Ttc/Model/ProblemSetting.lean#L78), [`facets_le`](Ttc/Model/ProblemSetting.lean#L80) | `m` and `r` really do bound the number of cubes and of facets |
-| [`eps_eq`](Ttc/Model/ProblemSetting.lean#L74), [`dim_eq`](Ttc/Model/ProblemSetting.lean#L76) | the parameter block is the one for *this* `ε` and *this* dimension |
-| [`isDNF`](Ttc/Model/ProblemSetting.lean#L59) | `ToDNF`/AllSAT is correct (unchanged) |
+| [`M_eq`](Ttc/Model/ProblemSetting.lean#L58) | the atoms really are linear constraints `A x ≤ b` — the formula is in the LRA fragment |
+| [`isPositive`](Ttc/Model/ProblemSetting.lean#L67) | no literal of the DNF is negated, so each `P(cᵢ)` is *closed* (finding 5) |
+| [`ball_subset`](Ttc/Model/ProblemSetting.lean#L103) | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂` about `cen i` — the paper's own hypothesis, with the common-centre gap of finding 2 removed |
+| [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L105) | each `P(cᵢ)` has finite volume |
+| [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L89) | every facet has a nonzero normal vector — implicit in the paper, and false only for a degenerate "constraint" `0 ≤ b` |
+| [`cubes_le`](Ttc/Model/ProblemSetting.lean#L85), [`facets_le`](Ttc/Model/ProblemSetting.lean#L87) | `m` and `r` really do bound the number of cubes and of facets |
+| [`eps_eq`](Ttc/Model/ProblemSetting.lean#L79), [`delta_eq`](Ttc/Model/ProblemSetting.lean#L81), [`dim_eq`](Ttc/Model/ProblemSetting.lean#L83) | the parameter block is the one for *this* `ε`, *this* `δ` and *this* dimension |
+| [`isDNF`](Ttc/Model/ProblemSetting.lean#L64) | `ToDNF`/AllSAT is correct (unchanged) |
 
 None of these says anything about the algorithm's behaviour.
 
 ### Assumed about the algorithm
 
-**`lem:numlattice`** — the Poisson/Chernoff analysis of the streaming sketch.
+**Not a probability bound any more — a description of the sampler.** The last
+field asserting a *conclusion* about probabilities (`numlattice_union`, the epoch
+covering) has been **deleted**. In its place `Ttc.TtcProb` carries 21 fields,
+starting at [`Model/ProblemSetting.lean:129`](Ttc/Model/ProblemSetting.lean#L129),
+that say what the algorithm's randomness *is*. Read them as one paragraph: *the
+solution set's lattice points are enumerated injectively, each carries a
+nonnegative Poisson rate, every sample point reads as a trajectory of the coupled
+thinning family, the oracles answer by reading that trajectory, the cubes cover
+the enumerated points, an epoch index exists in the window the estimate needs,
+and the rates sum to the lattice count.*
+
+| Field(s) | Line | What it says |
+| --- | --- | --- |
+| `Lidx`, `ptE`, `ptE_inj` | [129](Ttc/Model/ProblemSetting.lean#L129), [131](Ttc/Model/ProblemSetting.lean#L131), [133](Ttc/Model/ProblemSetting.lean#L133) | the lattice points the family is indexed by, and an injective enumeration of them |
+| `θ`, `θ_nonneg`, `θ_pos` | [135](Ttc/Model/ProblemSetting.lean#L135), [137](Ttc/Model/ProblemSetting.lean#L137), [139](Ttc/Model/ProblemSetting.lean#L139) | each point's level-`0` rate, nonnegative, with positive total — the instance is not empty |
+| `vol`, `cover`, `memPt` | [141](Ttc/Model/ProblemSetting.lean#L141), [143](Ttc/Model/ProblemSetting.lean#L143), [145](Ttc/Model/ProblemSetting.lean#L145) | the volume estimate the run uses, its coverage test, and cube membership on the enumerated points |
+| `toTraj`, `toTraj_meas` | [147](Ttc/Model/ProblemSetting.lean#L147), [149](Ttc/Model/ProblemSetting.lean#L149) | how a sample point is read as a trajectory `ℕ → Fin Lidx → ℕ`, measurably |
+| **`law_eq`** | [151](Ttc/Model/ProblemSetting.lean#L151) | **`μ.map toTraj = trajLaw θ`** — the randomness *is* the coupled family |
+| **`oracle_eq`** | [153](Ttc/Model/ProblemSetting.lean#L153) | **`O ω = trajOracles …`** — the oracles answer by reading it |
+| `cover_eq`, `cover_all` | [155](Ttc/Model/ProblemSetting.lean#L155), [157](Ttc/Model/ProblemSetting.lean#L157) | the coverage test agrees with cube membership on the lattice, and the cubes cover every enumerated point |
+| `jstar`, `hjstar`, `rate_small`, `rate_le`, `lamStar_ge` | [159](Ttc/Model/ProblemSetting.lean#L159)–[167](Ttc/Model/ProblemSetting.lean#L167) | an epoch index `j* ≥ 1` at which no cube's rate can still trigger a halving, the level-`j*−1` rate is `≤ Thresh/2`, and it is `≥ (1−ε')·Thresh/8` so the epoch series converges |
+| **`rate_eq_L`** | [170](Ttc/Model/ProblemSetting.lean#L170) | **`∑θ = L`** — the rates reproduce the lattice count; the only place the geometry meets the probability |
+
+**How honest is this trade?** It is a real reduction, and it is not zero.
+
+* *Real*: nothing in the list mentions `ε`, `δ`, accuracy, or a failure
+  probability. Everything quantitative — the per-epoch `Err` estimate, the
+  `Noise` overflow, the epoch series, the `Vol_ED` budget, the `1 − δ` — is now
+  **derived** from them
+  ([`TtcProb.numlattice_union`](Ttc/Analysis/NumLatticeModel.lean#L240) →
+  [`TtcProb.numlattice`](Ttc/Analysis/NumLattice.lean#L51) →
+  [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L41)). Previously the
+  conclusion of the paper's hardest lemma was an input.
+* *Not zero*: `law_eq` and `oracle_eq` are strong. They do not merely say the
+  primitives are Poisson and fair-coin — they name one specific construction
+  ([`Ttc.trajLaw`](Ttc/Analysis/Coupling.lean#L209),
+  [`Ttc.trajOracles`](Ttc/Analysis/Coupling.lean#L393)) and assert the
+  implementation is it. Whether a real `TTC` implementation matches is a
+  modelling judgement no machine check can settle. `rate_eq_L` likewise assumes
+  the family's rates are *exactly* the lattice count rather than an estimate of
+  it — the general two-sided case is available
+  ([`Ttc.window_of_two_sided`](Ttc/Analysis/NumLatticeModel.lean#L104)) but the
+  field commits to the exact one. And `jstar`'s four conditions are existence
+  assumptions about the instance, not proved of an arbitrary input (they *are*
+  proved for the witness, [`Ttc.Box.exists_jstar`](Ttc/Analysis/BoxProb.lean#L218),
+  from [`Ttc.exists_epoch`](Ttc/Analysis/NumLatticeModel.lean#L140)).
+* Also note the sampling interface is **level-aware** where the paper's is not
+  (`pois` and `gen` receive the cube and level). That deviation is what makes the
+  coupling constructible at all; see [`AUDIT.md`](AUDIT.md) §1 and finding 15.
 
 *Proved*, and no longer merely cited:
 
@@ -405,9 +566,11 @@ None of these says anything about the algorithm's behaviour.
   `Ttc.Params.epsPrime_window`); and the `Vol_ED` failure budget the paper omits
   (`Ttc.Params.vol_failure_eq`, `Ttc.numlattice_failure_bound_with_vol`; finding 13).
 
-*Residual assumption*: the **probabilistic model of the loop**. Every estimate the
-proof invokes is a theorem; what is missing is composing them into a statement
-about `Ttc.run`. Two of the three obstacles are now cleared:
+*How the probabilistic model got built.* Every estimate the proof invokes is a
+theorem, and they are now composed into a statement about `Ttc.run` — first for
+the run driven by the *coupled family*, and then, via the sampler fields above,
+for the arbitrary `Ω`/`μ`/`O` a `Ttc.TtcProb` carries. All four of the original
+obstacles are cleared:
 
 1. ~~`Ttc.Oracles` cannot express independence.~~ **Fixed.** Oracle calls are now
    indexed by a clock, and distinct call sites provably get distinct indices, so
@@ -431,11 +594,18 @@ about `Ttc.run`. Two of the three obstacles are now cleared:
    [`levelLaw_noise_le`](Ttc/Analysis/SketchProcess.lean#L194), assembled in
    [`numlattice_failure_le`](Ttc/Analysis/SketchProcess.lean#L246) — the paper's
    `δ/6 + δ/6 + δ/2 ≤ δ`, with the algorithm's own `Thresh` and `δ'`.
-4. **What remains is the coupling**: on the event that the run stops at level `j`,
-   the run's final `𝒳` must *be* the level-`j` process. Its structural half is
-   now done — the model was missing two contracts, both added:
-   `Oracles.halve_le` (thinning returns a *sub*-multiset, not merely a smaller
-   one) and [`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L108)
+4. ~~The coupling is missing.~~ **Built.** On the event that the run stops at
+   level `J`, the run's final `𝒳` must *be* the level-`J` process. It now is,
+   pathwise: [`Ttc.trajOracles`](Ttc/Analysis/Coupling.lean#L393) is an
+   `Ttc.Oracles` bundle that answers every call by reading a trajectory `ω` of
+   the family, and
+   [`Ttc.card_run_eq_sum_traj`](Ttc/Analysis/RunCoupling.lean#L263) proves
+   `|𝒳| = ∑ₛ ω(J)ₛ` on every nested trajectory —
+   [`run_eq_traj`](Ttc/Analysis/RunCoupling.lean#L281) turns that into
+   `|𝒳|/p = 2^J·∑ₛ ω(J)ₛ`, the output itself. See finding 15 for the details;
+   the structural half that made it possible was the two missing contracts,
+   both added: `Oracles.halve_le` (thinning returns a *sub*-multiset, not merely
+   a smaller one) and [`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L115)
    (`GenerateSamples` returns points of `P(cᵢ) ∩ 𝕃ⁿ` — previously only their
    *number* was constrained). Together they give
    [`TtcProb.run_state_mem`](Ttc/Analysis/LatticeAssembled.lean#L211): the run's
@@ -460,30 +630,66 @@ about `Ttc.run`. Two of the three obstacles are now cleared:
 
    The **past-measurability layer** is also done, and purely structurally — no
    probability in it. Each loop reads only its own window of clocks
-   ([`halveDown_congr`](Ttc/Analysis/Invariants.lean#L178),
-   [`absorb_congr`](Ttc/Analysis/Invariants.lean#L198)), one iteration reads only
+   ([`halveDown_congr`](Ttc/Analysis/Invariants.lean#L174),
+   [`absorb_congr`](Ttc/Analysis/Invariants.lean#L194)), one iteration reads only
    `[st.clock, st.clock + 3·fuel + 2)`
-   ([`step_congr`](Ttc/Analysis/Invariants.lean#L298)), and hence the whole run
+   ([`step_congr`](Ttc/Analysis/Invariants.lean#L289)), and hence the whole run
    reads only clocks below `|D|·(3·fuel + 2)`
-   ([`run_congr`](Ttc/Analysis/Invariants.lean#L412)). That is exactly what says the
+   ([`run_congr`](Ttc/Analysis/Invariants.lean#L395)). That is exactly what says the
    state is a function of the draws *strictly before* its clock, which is what
    makes their independence usable.
 
    It also has a useful corollary: the run depends on only **finitely many**
    draws, so the randomness can be modelled by a *finite* product measure — no
-   infinite-product machinery is needed.
+   infinite-product machinery is needed. It is what lets the oracle contract
+   ([`Ttc.OracleLaws`](Ttc/Analysis/OracleLaws.lean#L63)) be asserted only for
+   the draws below [`clockBound`](Ttc/Analysis/OracleLaws.lean#L44), via
+   [`run_eq_of_agree_below`](Ttc/Analysis/OracleLaws.lean#L48).
 
-   What is left is the oracle laws (`halve c` a fair independent thinning,
-   `pois c λ` Poisson, `gen c i N ρ` uniform) and the `List.foldl` induction that
-   strings the two operations together.
+5. **And the bound itself is proved for the coupled run.**
+   [`Ttc.traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685) bounds
+   ```
+   Pr[ ¬( (1−ε/3)·L ≤ run P (trajOracles …) fuel ρ l ≤ (1+ε/3)·L ) ]
+   ```
+   by `∑_{t<j*} 2exp(−ε'²·λ*·2ᵗ/3) + exp(−Thresh/6)` — the paper's expression,
+   and in fact **smaller than the paper's**: the covering statement carries an
+   extra `+ δ/2` and a factor `m` on the overflow term that the proof does not
+   need.
+   Its hypotheses are `hlo`/`hhi` (the window relating `∑θ` to `L`, supplied by
+   the already-proved `lem:lattice`), `hsmall` and `hrate` (conditions on
+   `Thresh` and `vol`), and `hall`/`hcov` (the cubes cover every lattice point,
+   and the oracle's coverage test agrees with cube membership). **No probability
+   claim is assumed.** The pieces are
+   [`traj_failure_le`](Ttc/Analysis/RunCoupling.lean#L614) (the epoch union
+   bound), [`trajLaw_err_le`](Ttc/Analysis/RunCoupling.lean#L511) and
+   [`trajLaw_noise_le`](Ttc/Analysis/RunCoupling.lean#L527) (the level estimates
+   transported to the trajectory space along
+   [`map_trajLaw_eval`](Ttc/Analysis/Coupling.lean#L274)),
+   [`level_cap_subset`](Ttc/Analysis/RunCoupling.lean#L471) (reaching `j*` forces
+   an overflow), and [`trajLaw_ae_nested`](Ttc/Analysis/RunCoupling.lean#L592)
+   (nestedness, the one hypothesis every pathwise result carries, holds almost
+   surely).
 
-Also still required, and independent of the above: a **fuel-adequacy hypothesis**.
-Both `while` loops return the current state when the budget runs out, so at small
-`fuel` the output is not within `(1±ε/3)·L` at all and `numlattice` is simply
-false. The paper does not address this either.
+6. **And the field is gone.** `traj_numlattice_le` is about the trajectory model
+   — `trajLaw θ` on `ℕ → (Fin L → ℕ)`, with the oracles `trajOracles` — whereas
+   `Ttc.TtcProb` carries an arbitrary `Ω`, `μ` and `O`. The sampler fields close
+   that last gap, and
+   [`Ttc.numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35) is
+   the transport: the failure event is the `toTraj`-preimage of the
+   trajectory-space one (by `oracle_eq`), `Measure.le_map_apply` bounds its
+   measure by the pushforward, and `law_eq` identifies that pushforward as
+   `trajLaw θ`. (No measurability of the failure event is needed — the
+   inequality only runs one way.) Feeding it the fields gives
+   [`Ttc.TtcProb.numlattice_union`](Ttc/Analysis/NumLatticeModel.lean#L240),
+   which is the deleted field's statement, verbatim, as a theorem.
 
-So `numlattice` is still a field — but what it now assumes is the *bookkeeping*
-that connects proved estimates to the modelled loop, not any unproved estimate.
+**No fuel-adequacy hypothesis is needed.** Both `while` loops return the current
+state when the budget runs out, so one might expect the result to need a lower
+bound on `fuel`; it does not. `traj_numlattice_le` holds for *every* `fuel`,
+because the coupling makes the output a function of whatever level the run
+actually reached, and the `rate_small` field — no cube's rate still triggers a
+halving at level `j*−1` — does the work the paper leaves to termination. The
+witness runs at `fuel = 0`. The paper addresses none of this.
 
 **These proofs confirm the algorithm's constants.** `ε' ← ε/12` (`alg:ttc` line
 18) is exactly what makes the two-sided `(1±ε')` loss fit inside `(1±ε/3)`; each
@@ -500,14 +706,17 @@ input's inscribed radius `γ̂` to the `γ` the shell bound needs, after dilatin
 * **This is an accuracy guarantee, not an FPRAS claim.** `thm:runtime` (the `O(mn⁴)`
   runtime) and `thm:decompose` (the exponential decomposition cost) are **not**
   formalised. Nothing here says anything about running time.
-* **The `δ` is derived from `lem:numlattice`, which is assumed.**
-  `Ttc.TtcProb.volume_estimate` really does conclude
-  `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ`: its `numlattice` field gives
-  `Pr[ output ∈ (1±ε/3)·L ] ≥ 1 − δ`, and the deterministic chain shows the
-  first event *contains* the second, so measure monotonicity carries the bound.
-  The `δ` is not invented — but it enters through an assumed field, so the
-  guarantee is only as good as `lem:numlattice`, which this development does not
-  prove.
+* **The `δ` is derived, end to end.** `Ttc.TtcProb.volume_estimate` really does
+  conclude `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ`: `Ttc.TtcProb.numlattice` gives
+  `Pr[ output ∈ (1±ε/3)·L ] ≥ 1 − δ` — *proved*, from
+  `Ttc.TtcProb.numlattice_union` plus the algorithm's own `Thresh` and `δ'` — and
+  the deterministic chain shows the first event *contains* the second, so measure
+  monotonicity carries the bound. The covering is itself proved
+  ([`Ttc.numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35), from
+  [`Ttc.traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685)). **What the
+  chain rests on is the sampler description**, not a probability bound: if the
+  implemented sampler is not `Ttc.trajOracles` reading `Ttc.trajLaw`, the theorem
+  says nothing about it.
 * **`GetPrecision` is not verified as an algorithm.** Its *mathematical
   content* — that dilation scales inscribed-ball radii (`Ttc.ball_radius_scales`)
   and volumes (`Ttc.volume_smul_body`), and that the resulting `γ` satisfies
@@ -649,7 +858,7 @@ hyperplane can carry many such points. Since `L` is *defined* as
 
 This is why [`Ttc.facetSystem`](Ttc/Analysis/FacetOfDNF.lean#L57) is built only
 for DNFs whose literals are all positive
-([`Ttc.DNF.IsPositive`](Ttc/Model/Prelude.lean#L126)): a
+([`Ttc.DNF.IsPositive`](Ttc/Model/Prelude.lean#L129)): a
 `Ttc.FacetSystem.piece` is an intersection of closed half-spaces, so no facet
 system can denote a region with a negated atom.
 
@@ -695,7 +904,7 @@ best and, with Lean's `Set.ncard`-of-an-infinite-set convention, to `∞ ≤ 0` 
 worst. Both summation steps also divide by `vol Q'` and `vol Q''`, which must
 therefore be finite and nonzero.
 
-Carried explicitly as [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L98). It is
+Carried explicitly as [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L105). It is
 the one hypothesis here with no counterpart at all in the paper. (Positivity is
 *not* assumed: it follows from the inscribed ball, via
 [`FacetSystem.volume_piece_pos`](Ttc/Analysis/NonconvAssembled.lean#L104).)
@@ -707,7 +916,7 @@ Two more things the proof uses without saying so.
 * **`A_ij ≠ 0`.** The Azuma/Hoeffding step divides by `‖A_ij‖`, and the crossing
   event `A_ij·Y ≥ κ‖A_ij‖` is *certain* when `A_ij = 0`, so the tail bound is
   false for a degenerate "constraint" `0 ≤ b`. Carried as
-  [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L82).
+  [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L89).
 * **`|Q ∩ ℤⁿ|` is a finite number.** The paper writes it throughout without
   remark. It is *not* assumed here: `claim:cl`(a) bounds `|T|` for every finite
   `T ⊆ Q ∩ ℤⁿ` by `vol Q'/(1−θ/2)`, and a set all of whose finite subsets have
@@ -761,9 +970,11 @@ branch estimates are proved over it
 So the defect is in the *statement* of the invariant, not in the result — but a
 reader who takes the invariant at face value is proving something false.
 
-### 15. Genuine gap — `Err(j)` is not a well-defined event
+### 15. Genuine gap — `Err(j)` is not a well-defined event. *Repaired here: the coupling is now constructed.*
 
-This is the sharper form of finding 14, and it is what actually blocks the proof.
+This is the sharper form of finding 14. It is a defect in the paper, and the
+repair is a construction rather than a rewording — that construction now exists
+in this development.
 
 `analysis.tex:277` defines the two events
 
@@ -783,24 +994,81 @@ finding 14, and false.
 * each `𝒳ⱼ` has the level-`j` law (`Ttc.levelLaw`), and
 * the run's final state equals `𝒳_J` where `J` is its actual stopping level.
 
-Such a family exists, and **the two facts that make it work are now proved**:
+**Both halves are now proved.** The family is
+[`Ttc.famCount`](Ttc/Analysis/Coupling.lean#L80): a level-`0` count `A s` per
+lattice point, plus a fair coin per (point, *rank*, level), thinned recursively.
+Indexing the coins by rank among the current survivors rather than by original
+copy is what makes the recursion implementable from a count alone — which is all
+the `halve` oracle gets to see. Its law is
+[`Ttc.trajLaw`](Ttc/Analysis/Coupling.lean#L209), a measure on whole trajectories
+`ℕ → (Fin L → ℕ)` built by iterating
+[`thinKernel`](Ttc/Analysis/Coupling.lean#L164), and its marginals are right:
 
-* [`Ttc.chainLaw_eq_levelLaw`](Ttc/Analysis/SketchProcess.lean#L105) — nested
-  thinning from level `0` reproduces `Ttc.levelLaw θ j` at *every* `j`, so the
-  coupled family has exactly the marginals the branch estimates were proved for;
-* [`Ttc.replace_thin_comm`](Ttc/Analysis/Thinning.lean#L306) — insertion and
-  thinning **commute in law**, so it does not matter that the run inserts a
-  cube's points at whatever level it has reached while the level-`j` process
-  inserts them already at level `j`. This is what makes the counterfactual
-  process well defined.
+* [`Ttc.map_trajLaw_eval`](Ttc/Analysis/Coupling.lean#L274) — coordinate `j` of a
+  trajectory carries exactly `Ttc.levelLaw θ j`, so *every* branch estimate
+  already proved for a single level transports to an event of one measure
+  ([`trajLaw_err_le`](Ttc/Analysis/RunCoupling.lean#L511),
+  [`trajLaw_noise_le`](Ttc/Analysis/RunCoupling.lean#L527)). Underneath is
+  [`chainLaw_eq_levelLaw`](Ttc/Analysis/SketchProcess.lean#L105): nested thinning
+  from level `0` reproduces `levelLaw θ j` at every `j`.
+* [`Ttc.trajLaw_ae_nested`](Ttc/Analysis/RunCoupling.lean#L592) — thinning only
+  removes copies, so `ω(j+1)ₛ ≤ ω(j)ₛ` almost surely. Every pathwise result below
+  is stated for nested trajectories; this is where that hypothesis is discharged.
+
+The second half — the *coupling to the run* — is
+[`Ttc.trajOracles`](Ttc/Analysis/Coupling.lean#L393): an honest `Ttc.Oracles`
+bundle, satisfying both of the interface's contracts, whose `halve` returns the
+family's next level, whose `pois` returns the family's total over the cube, and
+whose `gen` returns the family restricted to the cube. (`gen` must return exactly
+`N` points for *every* `N`, so it has a never-taken filler branch — the run only
+ever passes it the `N` that `pois` produced — which is what discharges `gen_card`
+unconditionally; see [`Ttc.padPoint`](Ttc/Analysis/Coupling.lean#L387).) Driving
+the real `Ttc.run` off that bundle,
+
+* [`Ttc.CoupledAt`](Ttc/Analysis/RunCoupling.lean#L31) — the state holds the
+  family's counts at the current level, at the points seen so far and nowhere
+  else — is preserved by every operation of the loop
+  ([`coupledAt_halve`](Ttc/Analysis/RunCoupling.lean#L52),
+  [`coupledAt_dropCovered`](Ttc/Analysis/RunCoupling.lean#L104),
+  [`coupledAt_halveDown`](Ttc/Analysis/RunCoupling.lean#L132),
+  [`coupledAt_absorb`](Ttc/Analysis/RunCoupling.lean#L156),
+  [`coupledAt_step`](Ttc/Analysis/RunCoupling.lean#L183),
+  [`coupledAt_foldl`](Ttc/Analysis/RunCoupling.lean#L241));
+* so [`Ttc.card_run_eq_sum_traj`](Ttc/Analysis/RunCoupling.lean#L263) gives
+  `|𝒳| = ∑ₛ ω(J)ₛ` **pathwise**, at the run's own stopping level `J`, on every
+  nested trajectory, and [`run_eq_traj`](Ttc/Analysis/RunCoupling.lean#L281)
+  gives the output itself as `2^J · ∑ₛ ω(J)ₛ`.
+
+That is equality of *random variables*, not of laws — which is the point:
+`lem:process` supplies only equality in law, and the union bound needs the run
+and the level process to agree on each path. The halving triggers close the other
+branch: every level the run crosses had either a cube whose rate was still large
+or a family total above `Thresh`
+([`foldl_trigger`](Ttc/Analysis/RunCoupling.lean#L441)), so reaching the cap `j*`
+forces an overflow ([`level_cap_subset`](Ttc/Analysis/RunCoupling.lean#L471)) —
+which is what `Pr[⋃_{j≥j*} Nois(j)]` was supposed to mean. Assembling,
+[`Ttc.traj_numlattice_le`](Ttc/Analysis/RunCoupling.lean#L685) proves
+`lem:numlattice`'s bound outright for the coupled run, with a *smaller*
+right-hand side than the paper's.
 
 The paper cites `lem:process` for the *equivalence* of its three procedures but
 never builds the coupled family, and without it the union bound has nothing to
-range over.
+range over. So `lem:numlattice`'s proof as written is not merely imprecise: the
+object its main estimate is about does not exist.
 
-So `lem:numlattice`'s proof is not merely imprecise: as written, the object its
-main estimate is about does not exist. The repair is a construction, not a
-rewording — and it is the one piece still missing here.
+**And the repair is now wired into the headline.** `traj_numlattice_le` is about
+the trajectory model specifically, while `Ttc.TtcProb` carries an arbitrary `Ω`,
+`μ` and `O`; the sampler fields
+([`Model/ProblemSetting.lean:129`](Ttc/Model/ProblemSetting.lean#L129) onwards)
+identify the two, and
+[`Ttc.numlattice_union_of_model`](Ttc/Analysis/NumLatticeModel.lean#L35)
+transports the bound across. The `numlattice_union` field is **deleted**; the
+same statement is now [a theorem](Ttc/Analysis/NumLatticeModel.lean#L240). So
+the coupling is not a side construction the capstone ignores — a transitive
+dependency walk from `Ttc.TtcProb.volume_estimate` reaches
+`Ttc.traj_numlattice_le` and `Ttc.trajLaw` (see [`AUDIT.md`](AUDIT.md) §5).
+What remains is the modelling judgement the fields encode, not a missing
+estimate.
 
 ### 13. Genuine gap — the `Vol_ED` failures are never union-bounded
 
@@ -824,6 +1092,14 @@ theorem, and finding 2 is now closed by a different proof; finding 3 is a typo i
 an exponent whose corrected form is stronger than needed; finding 14 is a false
 *statement* of a true step; findings 10 and 13 are gaps the paper genuinely needs
 closing (one by an added hypothesis, one absorbed by existing slack); 4–9, 11 and
-12 are presentational or self-closing. **Finding 15 is the one that is still
-open**: `lem:numlattice`'s central estimate is stated about an object the paper
-does not construct, and supplying it is the remaining work.
+12 are presentational or self-closing. **Finding 15 is the one that needed a
+construction, and it now has one**: the coupled family and its pathwise
+identification with the run are built here
+([`Analysis/Coupling`](Ttc/Analysis/Coupling.lean),
+[`Analysis/RunCoupling`](Ttc/Analysis/RunCoupling.lean)), `lem:numlattice`'s
+bound is proved for the run they drive, and
+[`Analysis/NumLatticeModel`](Ttc/Analysis/NumLatticeModel.lean) transports it to
+any problem instance whose randomness *is* that construction — which is what
+deleted the last assumed field. What is left is not mathematics but the
+modelling judgement: whether a real `TTC` implementation's sampler is the one
+`law_eq` and `oracle_eq` describe.
