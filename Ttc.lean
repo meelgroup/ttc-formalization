@@ -31,9 +31,12 @@ declarations.
 
 ## The audit surface (`Model/`)
 
-`Model/` is kept deliberately small and self-contained: nothing in it refers to a
-definition outside `Model/` except Mathlib. A referee who wants to trust the
-*statement* reads exactly these four files and stops:
+`Model/` is kept deliberately small. A referee who wants to trust the *statement*
+reads exactly these four files and stops. One caveat, since it used to be untrue
+and no longer is: `Model/ProblemSetting` now imports `Analysis/Coupling` and
+`Analysis/SketchProcess`, because the sampler fields name the coupled Poisson
+family (`Ttc.trajLaw`, `Ttc.trajOracles`, `Ttc.totalRate`) directly. Those three
+definitions are therefore part of the audit surface too.
 
 * `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
                            and semantics, the parameter block `Params`, `volSol`
@@ -111,6 +114,7 @@ import Ttc.Analysis.ClB
 import Ttc.Analysis.BallFacet
 import Ttc.Analysis.NonconvAssembled
 import Ttc.Analysis.LatticeAssembled
+import Ttc.Analysis.CubeLattice
 import Ttc.Analysis.CountVector
 import Ttc.Analysis.Capstone
 import Ttc.Analysis.OracleLaws

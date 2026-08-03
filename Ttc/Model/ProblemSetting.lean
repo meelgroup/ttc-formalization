@@ -34,7 +34,7 @@ open MeasureTheory
 | --- | --- | --- |
 | `isDNF` | `ToDNF`/AllSAT is correct | assumed of the external tool; `thm:decomposition` is *proved* from it |
 | `ball_subset`, `volume_ne_top`, `isPositive`, `normal_ne_zero` | `lem:nonconv`'s hypotheses | assumed of the *input*; `lem:lattice` is **proved** from them (`Analysis/LatticeAssembled`) |
-| `law_eq`, `oracle_eq`, `rate_eq_L`, … | the sampler is the Poisson/thinning family | assumed of the *sampler*; `lem:numlattice` is **proved** from them (`Ttc.TtcProb.numlattice`) |
+| `law_eq`, `oracle_eq`, `theta_lo`/`theta_hi`, … | the sampler is the Poisson/thinning family | assumed of the *sampler*; `lem:numlattice` is **proved** from them (`Ttc.TtcProb.numlattice`) |
 
 `L` is the actual normalised lattice count `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` (`L_eq`).
 The output is the algorithm's: `numlattice` is stated over `Ttc.ttcOutput`, so
@@ -135,16 +135,29 @@ structure TtcProb (A : Type*) (n : ℕ) where
   ptE : Fin Lidx → Space n
   /-- The enumeration really is injective. -/
   ptE_inj : Function.Injective ptE
+  /-- **The enumeration lands in `Sol(F) ∩ 𝕃ⁿ`** … -/
+  ptE_mem : ∀ s, ptE s ∈ sol M φ ∩ fineLattice n (latticeScale ρ)
+  /-- … **and hits all of it.** With `ptE_inj` this makes `ptE` a bijection onto
+  `Sol(F) ∩ 𝕃ⁿ`, so `Lidx` is the paper's `|Sol(F) ∩ 𝕃ⁿ|` rather than a free
+  choice, and the family is indexed by the points the algorithm actually counts. -/
+  ptE_onto : ∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, ptE s = x
   /-- Each point's rate at level `0`. -/
   θ : Fin Lidx → ℝ
-  /-- Rates are nonnegative. -/
-  θ_nonneg : ∀ s, 0 ≤ θ s
+  /-- **The paper's Invariant** (`analysis.tex:265`), lower half: each lattice
+  point's level-`0` rate is at least `(1−ε')(1−ε/8)/10^(ρ·n)`. The two error
+  sources are `Vol_ED`'s `ε'` and `lem:lattice`'s `η = ε/8`. -/
+  theta_lo : ∀ s, (1 - P.epsPrime) * (1 - P.eta) / (latticeScale ρ) ^ n ≤ θ s
+  /-- **The paper's Invariant**, upper half. -/
+  theta_hi : ∀ s, θ s ≤ (1 + P.epsPrime) * (1 + P.eta) / (latticeScale ρ) ^ n
   /-- The volume estimate the run uses for each cube. -/
   vol : Cube A → ℝ
   /-- The coverage test the run uses. -/
   cover : Space n → Cube A → Bool
   /-- Cube membership, on the enumerated points. -/
   memPt : Cube A → Fin Lidx → Bool
+  /-- **Cube membership is the geometric one** — `memPt` is not a free predicate.
+  Only cubes of `D` are constrained, which is all the run ever reads. -/
+  memPt_eq : ∀ i ∈ D, ∀ s, memPt i s = true ↔ ptE s ∈ region M i
   /-- Reading a sample point `ω` as a trajectory of the family. -/
   toTraj : Ω → (ℕ → Fin Lidx → ℕ)
   /-- That reading is measurable. -/
@@ -155,12 +168,12 @@ structure TtcProb (A : Type*) (n : ℕ) where
   oracle_eq : ∀ ω, O ω = trajOracles ptE_inj vol cover memPt (toTraj ω)
   /-- The coverage test agrees with cube membership on the lattice. -/
   cover_eq : ∀ s i, cover (ptE s) i = memPt i s
-  /-- The cubes cover every enumerated point. -/
-  cover_all : ∀ s, (D.any fun i => memPt i s) = true
-  /-- **The rate the algorithm draws cube `i` with is the total level-`0` rate of
-  the points that cube covers.** This is what makes `vol` a description of the
-  instance rather than a free function. -/
-  vol_eq : ∀ i ∈ D, ∑ s ∈ Finset.univ.filter (fun s => memPt i s = true), θ s = vol i
+  /-- **`Vol_ED`'s accuracy contract** (`analysis.tex:269`): the volume oracle
+  overestimates by at most `(1+ε')`. `Vol_ED` is an external algorithm neither the
+  paper nor this development implements, so its guarantee is assumed of it — the
+  same status as `isDNF`. Only the upper half is needed here; the lower half feeds
+  the Invariant, which is assumed directly as `theta_lo`/`theta_hi`. -/
+  volED_hi : ∀ i ∈ D, vol i ≤ (1 + P.epsPrime) * (volume (region M i)).toReal
   /-- Every cube of the decomposition carries a positive rate. -/
   vol_pos : ∀ i ∈ D, 0 < vol i
   /-- **The instance is big enough for the sketch to be worth running** — the
@@ -168,8 +181,5 @@ structure TtcProb (A : Type*) (n : ℕ) where
   follow from this by `Ttc.exists_epoch`, and the `halveDown` cut-off follows by
   `Ttc.rate_small_of_epoch`. -/
   big : (1 - P.epsPrime) * P.thresh / 8 ≤ ∑ s, θ s
-  /-- **The rates reproduce the lattice count.** This is what `lem:lattice`
-  supplies; it is the only place the geometry meets the probability. -/
-  rate_eq_L : ∑ s, θ s = L
 
 end Ttc

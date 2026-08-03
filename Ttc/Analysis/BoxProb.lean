@@ -49,6 +49,12 @@ theorem ptAt_injective {S : Set (Space n)} (hS : S.Finite) :
     Function.Injective (ptAt hS) := fun _ _ h =>
   hS.toFinset.equivFin.symm.injective (Subtype.ext h)
 
+/-- The enumeration is onto. -/
+theorem exists_ptAt {S : Set (Space n)} (hS : S.Finite) {x : Space n} (hx : x ∈ S) :
+    ∃ i, ptAt hS i = x := by
+  refine ⟨hS.toFinset.equivFin ⟨x, hS.mem_toFinset.2 hx⟩, ?_⟩
+  rw [ptAt, Equiv.symm_apply_apply]
+
 /-- A nonempty finite set has a positive size. -/
 theorem size_pos {S : Set (Space n)} (hS : S.Finite) (hne : S.Nonempty) : 0 < size hS := by
   obtain ⟨x, hx⟩ := hne
@@ -187,15 +193,28 @@ the ideal instance of CLAUDE.md §13.
 
 /-- Each point's level-`0` rate. -/
 noncomputable def th (n : ℕ) (hn : 1 ≤ n) : Fin (Lidx n hn) → ℝ :=
-  fun _ => Lval n hn / (Lidx n hn : ℝ)
+  fun _ => 1 / (latticeScale (rho n hn)) ^ n
 
-theorem th_nonneg (hn : 1 ≤ n) (s : Fin (Lidx n hn)) : 0 ≤ th n hn s :=
-  div_nonneg (Lval_pos hn).le (Nat.cast_nonneg _)
+theorem th_nonneg (hn : 1 ≤ n) (s : Fin (Lidx n hn)) : 0 ≤ th n hn s := by
+  have := latticeScale_pos (rho n hn)
+  rw [th]; positivity
+
+/-- **`Lidx` is the box's lattice-point count**, so `∑θ = L` exactly for this
+instance — the ideal case of the paper's Invariant, with both error sources `0`. -/
+theorem Lidx_eq_count (hn : 1 ≤ n) :
+    (Lidx n hn : ℝ)
+      = (latticeCount (fun a => (atm n hn a).halfspace) (boxForm n hn) (rho n hn) : ℝ) := by
+  have h : latticeCount (fun a => (atm n hn a).halfspace) (boxForm n hn) (rho n hn)
+      = (latFinite hn).toFinset.card := by
+    rw [latticeCount, sol_eq_bx hn, Set.ncard_eq_toFinset_card _ (latFinite hn)]
+  rw [h, Lidx, size]
 
 /-- **The rates reproduce the count exactly.** -/
 theorem sum_th (hn : 1 ≤ n) : ∑ s, th n hn s = Lval n hn := by
-  have hne : ((Lidx n hn : ℝ)) ≠ 0 := Nat.cast_ne_zero.2 (Lidx_pos hn).ne'
+  have hls := latticeScale_pos (rho n hn)
+  have hpow : (0:ℝ) < (latticeScale (rho n hn)) ^ n := by positivity
   simp only [th, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  rw [Lval, normalisedCount, ← Lidx_eq_count hn]
   field_simp
 
 theorem sum_th_pos (hn : 1 ≤ n) : 0 < ∑ s, th n hn s := by
@@ -239,8 +258,18 @@ is the coupled family read directly.
 theorem eq_boxCube {c : Cube (Fin n ⊕ Fin n)} (h : c ∈ boxDNF n) : c = boxCube n := by
   simpa [boxDNF] using h
 
-/-- The volume estimate: exact. -/
-noncomputable def vl (n : ℕ) (hn : 1 ≤ n) : Cube (Fin n ⊕ Fin n) → ℝ := fun _ => Lval n hn
+/-- The volume estimate: the exact volume — the ideal `Vol_ED`, with error `0`. -/
+noncomputable def vl (n : ℕ) (hn : 1 ≤ n) : Cube (Fin n ⊕ Fin n) → ℝ :=
+  fun _ => (volume (bx n hn)).toReal
+
+/-- The box has positive, finite volume: it contains a ball of radius `c/2`. -/
+theorem volume_bx_pos (hn : 1 ≤ n) : 0 < (volume (bx n hn)).toReal := by
+  have hbpos : 0 < volume (Metric.ball (boxCentre n (side n hn)) (side n hn / 2)) :=
+    Metric.measure_ball_pos _ _ (by have := side_pos hn; positivity)
+  have hle : volume (Metric.ball (boxCentre n (side n hn)) (side n hn / 2))
+      ≤ volume (bx n hn) := measure_mono (ball_subset_box n (side n hn))
+  exact ENNReal.toReal_pos (by exact ne_of_gt (lt_of_lt_of_le hbpos hle))
+    (volume_box_ne_top n (side n hn))
 
 /-- The coverage test: the single cube covers everything. -/
 def cov (n : ℕ) : Space n → Cube (Fin n ⊕ Fin n) → Bool := fun _ _ => true
@@ -322,26 +351,58 @@ noncomputable def boxProb (n : ℕ) (hn : 1 ≤ n) : TtcProb (Fin n ⊕ Fin n) n
   Lidx := Lidx n hn
   ptE := pt n hn
   ptE_inj := pt_injective hn
+  ptE_mem := by
+    intro s
+    rw [sol_eq_bx hn]
+    exact pt_mem hn s
+  ptE_onto := by
+    intro x hx
+    rw [sol_eq_bx hn] at hx
+    exact exists_ptAt _ hx
   θ := th n hn
-  θ_nonneg := th_nonneg hn
+  theta_lo := by
+    intro s
+    have hls := latticeScale_pos (rho n hn)
+    have hpow : (0:ℝ) < (latticeScale (rho n hn)) ^ n := by positivity
+    have he : (par n hn).epsPrime = 1 / 12 := par_epsPrime hn
+    have hη : (par n hn).eta = 1 / 8 := by rw [Params.eta, par_eps]
+    rw [th, he, hη]
+    rw [div_le_div_iff_of_pos_right hpow]
+    norm_num
+  theta_hi := by
+    intro s
+    have hls := latticeScale_pos (rho n hn)
+    have hpow : (0:ℝ) < (latticeScale (rho n hn)) ^ n := by positivity
+    have he : (par n hn).epsPrime = 1 / 12 := par_epsPrime hn
+    have hη : (par n hn).eta = 1 / 8 := by rw [Params.eta, par_eps]
+    rw [th, he, hη]
+    rw [div_le_div_iff_of_pos_right hpow]
+    norm_num
   vol := vl n hn
   cover := cov n
   memPt := mm n hn
+  memPt_eq := by
+    intro i hi s
+    rw [eq_boxCube hi]
+    simp only [atm]
+    rw [region_boxCube n (side n hn)]
+    exact ⟨fun _ => (pt_mem hn s).1, fun _ => rfl⟩
   toTraj := fun t => t
   toTraj_meas := aemeasurable_id
   law_eq := Measure.map_id
   oracle_eq := fun _ => rfl
   cover_eq := cov_eq hn
-  cover_all := cover_all hn
-  vol_eq := by
-    intro i _
-    have hfull : (Finset.univ.filter fun s => mm n hn i s = true) = Finset.univ :=
-      Finset.filter_true_of_mem fun s _ => rfl
-    rw [hfull]
-    exact sum_th hn
-  vol_pos := fun _ _ => Lval_pos hn
+  volED_hi := by
+    intro i hi
+    have hreg : region (fun a => (atm n hn a).halfspace) i = bx n hn := by
+      rw [eq_boxCube hi]; exact region_boxCube n (side n hn)
+    rw [hreg]
+    have h0 : (0:ℝ) ≤ (volume (bx n hn)).toReal := ENNReal.toReal_nonneg
+    have he := par_epsPrime_pos hn
+    show (volume (bx n hn)).toReal ≤ _
+    nlinarith
+  vol_pos := fun _ _ => volume_bx_pos hn
   big := by rw [sum_th hn]; exact epsPrime_thresh_le_Lval hn
-  rate_eq_L := sum_th hn
 
 /-- **`Ttc.TtcProb` is inhabited, non-degenerately**, so
 `Ttc.TtcProb.volume_estimate` is not vacuous — and, unlike the old degenerate
