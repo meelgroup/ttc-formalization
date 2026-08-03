@@ -13,9 +13,9 @@ family. This file transports it to a run on an *arbitrary* probability space,
 given only that the space **is** the family: a map `e` reading each `ω` as a
 trajectory, whose law is `Ttc.trajLaw θ`, along which the oracles factor.
 
-That is the exact shape the `numlattice_union` field of `Ttc.TtcProb` asserts —
-so once `Ttc.TtcProb` carries the model data, the field becomes this theorem and
-can be deleted.
+`Ttc.TtcProb` used to assert this shape as a `numlattice_union` **field**. It no
+longer does: the structure carries the model data instead, and the field has been
+deleted in favour of `Ttc.TtcProb.numlattice_union` at the end of this file.
 
 No measurability of the failure event is needed: `Measure.le_map_apply` bounds the
 measure of a preimage by the pushforward of the set, which is all the direction of

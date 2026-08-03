@@ -9,10 +9,10 @@ import Ttc.Analysis.SketchProcess
 /-!
 # `lem:numlattice`, derived
 
-`Ttc.TtcProb` no longer *assumes* `lem:numlattice`. What it assumes is the
-**epoch decomposition** — that the failure event is covered by the `Err` epochs,
-the `Noise` overflow and the `Vol_ED` calls (`numlattice_union`). Everything
-quantitative is proved:
+`Ttc.TtcProb` does not assume `lem:numlattice`, and no longer assumes the epoch
+covering either: the covering is itself a theorem
+(`Ttc.TtcProb.numlattice_union`, `Analysis/NumLatticeModel`), proved from the
+structure's description of the sampler. Everything quantitative is proved here:
 
 * each `Err(j)` costs `2exp(−ε'²·λⱼ/3)` (`Ttc.levelLaw_err_le`, from the Poisson
   tail bound `Ttc.poisson_relative`);
@@ -21,12 +21,14 @@ quantitative is proved:
 * and the three contributions total at most `δ` at the algorithm's own `Thresh`
   and `δ'` (`Ttc.numlattice_failure_le`).
 
-So this file is where the assumed *covering* is turned into the paper's
-conclusion, using the algorithm's constants and nothing else.
+So this file is where the *covering* is turned into the paper's conclusion, using
+the algorithm's constants and nothing else.
 
-**What remains assumed** is exactly README finding 15: the paper's `Err(j)` is
-about a level-`j` process that has to be coupled to the run, and the paper never
-constructs that coupling. See `AUDIT.md` §4.
+README finding 15 — that the paper's `Err(j)` is about a level-`j` process it
+never couples to the run — is **repaired**: the coupling is constructed in
+`Analysis/Coupling` and identified with the run in `Analysis/RunCoupling`. What
+remains assumed is that the implementation's sampler *is* that family
+(`Ttc.TtcProb.law_eq`, `oracle_eq`). See `AUDIT.md` §4.
 -/
 
 namespace Ttc

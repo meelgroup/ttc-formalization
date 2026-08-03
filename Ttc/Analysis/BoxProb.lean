@@ -8,10 +8,13 @@ import Ttc.Analysis.NumLatticeModel
 /-!
 # A non-degenerate witness
 
-`Ttc.trivialProb` inhabits `Ttc.TtcProb`, but degenerately: empty DNF, `Sol(F) = ∅`,
-`L = 0`, so the failure event is empty and every estimate holds vacuously. CLAUDE.md
-§11 asks for better, and `Ttc.numlattice_union_of_traj` now makes better possible —
-a witness whose failure bound is *proved*, not sidestepped.
+The development's original witness (`trivialProb`) inhabited `Ttc.TtcProb`
+degenerately: empty DNF, `Sol(F) = ∅`, `L = 0`, so the failure event was empty and
+every estimate held vacuously. CLAUDE.md §11 asks for better, and
+`Ttc.numlattice_union_of_traj` makes better possible — a witness whose failure
+bound is *proved*, not sidestepped. `trivialProb` has since been removed outright:
+once `Ttc.TtcProb` carries the sampler fields, `D = []` forces `Lidx = 0` and
+contradicts `θ_pos`, so no degenerate instance exists at all.
 
 The instance is the box `[0,c]ⁿ` of `Analysis/Witness`, sampled by the coupled
 family of `Analysis/Coupling`. The one real constraint is that the estimate is
@@ -281,8 +284,8 @@ theorem js_rate_small (hn : 1 ≤ n) (i : Cube (Fin n ⊕ Fin n)) :
 /-! ## The instance -/
 
 /-- **A non-degenerate `Ttc.TtcProb`.** The box `[0,c]ⁿ` with `c ≥ Thresh`, sampled
-by the coupled family. Unlike `Ttc.trivialProb`, the solution set is nonempty, `L`
-is positive and large, and `numlattice_union` is discharged by
+by the coupled family. The solution set is nonempty, `L` is positive and at least
+`Thresh`, and the `lem:numlattice` obligation is discharged by
 `Ttc.numlattice_union_of_traj` — a proof, not a vacuity. -/
 noncomputable def boxProb (n : ℕ) (hn : 1 ≤ n) : TtcProb (Fin n ⊕ Fin n) n where
   ε := 1

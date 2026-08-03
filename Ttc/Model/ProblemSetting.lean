@@ -9,15 +9,19 @@ import Ttc.Analysis.SketchProcess
 # `Model/ProblemSetting`: the problem, and everything assumed about it
 
 `Ttc.TtcProb` is the whole hypothesis surface of the development: the input
-formula, the run, the probability space its randomness lives in, and the one
-lemma the paper proves but this development assumes. `Model/Theorem` quantifies
-over it and adds nothing.
+formula, the run, the probability space its randomness lives in, and a
+description of the sampler. `Model/Theorem` quantifies over it and adds nothing.
 
-`lem:lattice` is **not** among the assumptions: it is *proved* from the geometric
-fields below (`Ttc.TtcProb.lattice_lo`, `Ttc.TtcProb.lattice_hi`, in
-`Analysis/LatticeAssembled`). What those fields assume is what the paper assumes —
-that the atoms are linear, that each polytope contains an inscribed ball of radius
-`γ̂` and has finite volume, and that the DNF has no negated literal.
+**No lemma of the paper is assumed here.** `lem:lattice` is *proved* from the
+geometric fields (`Ttc.TtcProb.lattice_lo`, `Ttc.TtcProb.lattice_hi`, in
+`Analysis/LatticeAssembled`); `lem:numlattice` is *proved* from the sampler
+fields (`Ttc.TtcProb.numlattice_union`, hence `Ttc.TtcProb.numlattice`, in
+`Analysis/NumLatticeModel` and `Analysis/NumLattice`).
+
+What the fields assume is what the paper assumes of its *input* — that the atoms
+are linear, that each polytope contains an inscribed ball of radius `γ̂` and has
+finite volume, that the DNF has no negated literal — plus, of its *sampler*, that
+the randomness is the Poisson/thinning family of `Analysis/Coupling`.
 -/
 
 namespace Ttc

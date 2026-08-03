@@ -10,10 +10,11 @@ import Ttc.Analysis.BallFacet
 Geometric facts about the concrete polytope `[0,c]ⁿ ⊆ ℝⁿ`, collected so that a
 *non-degenerate* non-vacuity witness for `Ttc.TtcProb` can be built from them.
 
-`Ttc.trivialProb` (`Analysis/Capstone`) inhabits `Ttc.TtcProb` with the empty DNF:
-every geometric field is vacuous because there are no polytopes at all. That is
-enough to refute vacuity of the headline theorem, but it exercises none of the
-geometry — `Sol(F) = ∅`, `Vol(F) = 0`, and the count is `0`. The box is the
+The development's original witness (`trivialProb`, since **removed**) inhabited
+`Ttc.TtcProb` with the empty DNF: every geometric field was vacuous because there
+were no polytopes at all. That refuted vacuity of the headline theorem, but it
+exercised none of the geometry — `Sol(F) = ∅`, `Vol(F) = 0`, and the count `0`.
+The box is the
 smallest instance that does exercise it: it is a genuine polytope, cut out by
 `2n` linear atoms (`Ttc.boxAtoms`), it contains an `ℓ₂`-ball of radius `c/2`
 (`Ttc.ball_subset_box`, the paper's `lem:nonconv` hypothesis), it has finite
@@ -355,7 +356,7 @@ uninhabited, every term of `Ttc.BForm` bottoming out in an `atom`. So
 `Ttc.boxForm` takes `1 ≤ n`, and the fold is seeded with the tautology
 `a ∨ ¬a` at the atom `Sum.inl 0`. This costs nothing: `Ttc.Params` requires
 `1 ≤ n` already (`Ttc.Params.hn`, tied to the ambient dimension by
-`Ttc.TtcProb.dim_eq`), which is the same hypothesis `Ttc.trivialProb` takes.
+`Ttc.TtcProb.dim_eq`), so any `Ttc.TtcProb` in dimension `n` already carries it.
 -/
 
 /-- The list of all `2n` atoms, in the order `Ttc.boxCube` lists them. -/

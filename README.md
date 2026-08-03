@@ -86,9 +86,9 @@ import Ttc
 --   [propext, Classical.choice, Quot.sound]
 ```
 
-The four declarations worth checking individually — the headline, the two lemmas
-that used to be assumed, and the non-degenerate witness — all return exactly
-those three:
+The declarations worth checking individually — the headline, the two statements
+that used to be assumed fields, and the non-degenerate witness — all return
+exactly those three:
 
 ```lean
 #print axioms Ttc.TtcProb.volume_estimate

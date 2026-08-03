@@ -20,10 +20,14 @@ declarations.
                 (`Decomposition`), what the constants buy (`Parameters`), the
                 `lem:nonconv` chain (`Geometry`, `Recentred`, `Nonconv`,
                 `Repair`), `claim:cl`'s concentration core (`Rounding`),
-                `lem:lattice` (`Lattice`), `lem:process` (`Poisson`),
-                `lem:numlattice`'s epoch skeleton (`Sketch`), the structural
-                invariants of the modelled loop (`Invariants`), and the
-                assembly (`Capstone`).
+                `lem:lattice` (`Lattice`, `LatticeAssembled`), `lem:process`
+                (`Poisson`, `PoissonLaws`, `Thinning`), `lem:numlattice`'s epoch
+                skeleton (`Sketch`, `SketchProcess`, `Chernoff`), the coupled
+                Poisson family and its identification with the run (`Coupling`,
+                `RunCoupling`), `lem:numlattice` itself (`NumLatticeModel`,
+                `NumLattice`), the structural invariants of the modelled loop
+                (`Invariants`), the non-degenerate witness (`Witness`,
+                `BoxProb`), and the assembly (`Capstone`).
 
 ## The audit surface (`Model/`)
 
@@ -34,12 +38,15 @@ definition outside `Model/` except Mathlib. A referee who wants to trust the
 * `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
                            and semantics, the parameter block `Params`, `volSol`
                            (= `Vol(F)`) and `relErr` (= the `(1±ε)` interval).
-* `Model/ProblemSetting` — `thm:decomposition`: the set the algorithm enumerates
-                           is the set the theorem bounds.
 * `Model/Pseudocode`     — `alg:ttc`, transcribed line by line from `algo.tex`
-                           over an oracle bundle; its output `Ttc.ttcOutput`; and
-                           `Ttc.TtcProb`, **every assumption** of the result as
-                           fields; **no proofs**.
+                           over an oracle bundle, and its output
+                           `Ttc.ttcOutput`; **no proofs**.
+* `Model/ProblemSetting` — `Ttc.TtcProb`, **every assumption** of the result as
+                           fields: the input, the run, the probability space, and
+                           the description of the sampler. That the set the
+                           algorithm enumerates is the set the theorem bounds is
+                           `thm:decomposition`, *proved* in
+                           `Analysis/Capstone` (`Ttc.TtcProb.sol_eq_union`).
 * `Model/Theorem`        — the headline `Ttc.TtcProb.volume_estimate`: one
                            theorem, no proof to work through.
 

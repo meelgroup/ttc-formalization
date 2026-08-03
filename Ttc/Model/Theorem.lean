@@ -31,7 +31,7 @@ within a relative `ε` of `Vol(F)`.
 `ttcOutput` is `Ttc.run` — the transcription of `alg:ttc` — with the oracles drawn
 at `ω`; `volSol` is the Lebesgue volume of the real solution set; `relErr` is the
 paper's `(1 ± ε)` interval. No side hypothesis: everything rests on the fields of
-`Ttc.TtcProb`, inhabited by `Ttc.nonempty_ttcProb`. That `volSol` measures the set
+`Ttc.TtcProb`, inhabited non-degenerately by `Ttc.Box.nonempty_ttcProb`. That `volSol` measures the set
 the algorithm actually enumerates is `Ttc.TtcProb.sol_eq_union`
 (`Analysis/Capstone`, `thm:decomposition`).
 

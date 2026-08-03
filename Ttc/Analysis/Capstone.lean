@@ -27,9 +27,10 @@ so the `ε/8` of `lem:lattice` and the `ε/3` of `lem:numlattice` compose to the
 conclusion holds, so the arithmetic is written once. `Model/Theorem` then applies
 it pointwise and lets `measure_mono` carry the `1 − δ`.
 
-**Non-vacuity.** `Ttc.trivialProb` inhabits `Ttc.TtcProb`, without which the
-headline would be vacuously true. It is a *satisfiability* witness only — see
-`AUDIT.md` §4.
+**Non-vacuity.** `Ttc.Box.boxProb` (`Analysis/BoxProb`) inhabits `Ttc.TtcProb`,
+without which the headline would be vacuously true. It is **non-degenerate**: the
+solution set is nonempty and `L ≥ Thresh`, so the fields are exercised rather than
+satisfied by emptiness — see `AUDIT.md` §3.
 -/
 
 namespace Ttc
@@ -138,9 +139,18 @@ noncomputable def TtcProb.toAnalysis {A : Type*} {n : ℕ} (T : TtcProb A n) {ω
 /-! ## Non-vacuity
 
 `Ttc.TtcProb.volume_estimate` (`Model/Theorem`) quantifies over `Ttc.TtcProb`; if
-that structure were uninhabited the theorem would be vacuously true. The witness
-below is *satisfiability* only — it says the fields are mutually consistent, not
-that they hold of the real algorithm. That is `lem:numlattice`, which is assumed.
+that structure were uninhabited the theorem would be vacuously true.
+
+The witness is `Ttc.Box.boxProb` (`Analysis/BoxProb`), and it is **non-degenerate**:
+the box `[0,c]ⁿ` with `c ≥ Thresh`, sampled by the coupled family, so its solution
+set is nonempty, `L ≥ cⁿ ≥ Thresh`, and its `lem:numlattice` obligation is
+discharged by *proof* (`Ttc.numlattice_union_of_traj`) rather than by an empty
+failure event.
+
+The earlier degenerate witness `trivialProb` has been **removed**: with `D = []`
+it forces `Lidx = 0`, contradicting the `θ_pos` field, which is precisely what
+carrying the sampler description is for. The `Ttc.trivialOracles` and
+`Ttc.trivialParams` below are what remains of it, and are now unused.
 -/
 
 /-- A degenerate oracle bundle: `Vol_ED` returns `1`, nothing is ever covered,
