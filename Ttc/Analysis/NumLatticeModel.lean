@@ -255,6 +255,15 @@ theorem thresh_pos : 0 < T.P.thresh := by
     positivity
   positivity
 
+/-- **The total rate is positive** — derived, not assumed: `big` bounds it below
+by `(1−ε')·Thresh/8`, and `Thresh > 0` with `ε' ≤ 1/12` makes that positive. -/
+theorem theta_pos : 0 < ∑ s, T.θ s := by
+  have hT := T.thresh_pos
+  have hep1 : T.P.epsPrime ≤ 1 / 12 := by
+    rw [Params.epsPrime, T.eps_eq]; linarith [T.hε1]
+  have hb := T.big
+  nlinarith
+
 /-- Each cube's rate is at most the total: `vol_eq` sums a subset of nonnegative
 rates. -/
 theorem vol_le_total {i : Cube A} (hi : i ∈ T.D) : T.vol i ≤ ∑ s, T.θ s := by
@@ -273,7 +282,7 @@ theorem numlattice_union :
               2 * Real.exp (-(T.P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
             + T.P.m * Real.exp (-(T.P.thresh / 6)) + T.δ / 2 := by
   obtain ⟨hlo, hhi⟩ := window_of_exact (ε := T.ε)
-    (le_of_lt (T.rate_eq_L ▸ T.θ_pos)) (T.epsPrime_pos).le (T.epsPrime_le_one')
+    (le_of_lt (T.rate_eq_L ▸ T.theta_pos)) (T.epsPrime_pos).le (T.epsPrime_le_one')
     T.rate_eq_L (T.epsPrime_le_third)
   -- the epoch index is *derived*, not a field
   obtain ⟨jstar, hj1, hrate, hlam⟩ := exists_epoch (S := ∑ s, T.θ s)
@@ -282,7 +291,7 @@ theorem numlattice_union :
   haveI := T.isProb
   exact numlattice_union_of_model (mΩ := T.mΩ)
     T.μ T.P T.ε T.δ T.L T.fuel T.ρ T.D T.O
-    T.ptE_inj T.θ_nonneg T.θ_pos T.cover_eq T.cover_all
+    T.ptE_inj T.θ_nonneg T.theta_pos T.cover_eq T.cover_all
     T.toTraj T.toTraj_meas T.law_eq T.oracle_eq
     jstar hj1
     (fun i hi => rate_small_of_epoch (T.vol_pos i hi) (T.vol_le_total hi) hrate)

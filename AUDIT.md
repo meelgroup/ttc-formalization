@@ -77,7 +77,7 @@ theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
 ## 2. What is assumed? Read the fields of `TtcProb`
 
 Every global hypothesis is a field of
-[`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L39). There are no others: the
+[`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L43). There are no others: the
 theorem quantifies over the structure and adds nothing — no side hypothesis, no
 `variable`, no instance argument carrying content.
 
@@ -120,36 +120,46 @@ added in exchange is three fields — `vol_eq`, `vol_pos`, `big` — and `vol_eq
 volume estimates to the instance at all, and `rate_small` was the only field
 standing between `vol` and nonsense.
 
-Each field's line number is a link; the whole structure is ~130 lines of
-declarations and docstrings, so reading it end to end is also an option.
+Each field's line number is a link; the whole structure runs
+[43](Ttc/Model/ProblemSetting.lean#L43)–[175](Ttc/Model/ProblemSetting.lean#L175),
+about 135 lines of declarations and docstrings, so reading it end to end is also
+an option.
 
 | Field | Line | What it asserts | Status |
 | --- | --- | --- | --- |
-| `ε`, `δ`, `hε0`, `hε1`, `hδ0`, `hδ1` | [41](Ttc/Model/ProblemSetting.lean#L41)–[51](Ttc/Model/ProblemSetting.lean#L51) | `ε, δ ∈ (0,1]` | the theorem's own parameters |
-| `atoms`, `M`, `M_eq` | [53](Ttc/Model/ProblemSetting.lean#L53)–[58](Ttc/Model/ProblemSetting.lean#L58) | each atom is a linear constraint `A x ≤ b`, and `M` interprets it as that half-space | **assumed of the input** — this is what "SMT(LRA)" means |
-| `φ`, `D` | [60](Ttc/Model/ProblemSetting.lean#L60), [62](Ttc/Model/ProblemSetting.lean#L62) | the formula and its DNF | inputs |
-| `isDNF` | [64](Ttc/Model/ProblemSetting.lean#L64) | `D` and `φ` agree on every Boolean assignment | **assumed** of the external `ToDNF`/AllSAT tool. `thm:decomposition` is *proved* from it |
-| `isPositive` | [67](Ttc/Model/ProblemSetting.lean#L67) | no literal of `D` is negated | **assumed of the input** — see §4 and README finding 5 |
-| `Ω`, `mΩ`, `μ`, `isProb` | [69](Ttc/Model/ProblemSetting.lean#L69)–[75](Ttc/Model/ProblemSetting.lean#L75) | a probability space for the algorithm's randomness | structure, not an assumption |
-| `P`, `eps_eq`, `delta_eq`, `dim_eq` | [77](Ttc/Model/ProblemSetting.lean#L77)–[83](Ttc/Model/ProblemSetting.lean#L83) | the parameter block, run at the theorem's own `ε` and `δ` and in the ambient dimension | inputs + three ties that used to be missing |
-| `cubes_le`, `facets_le` | [85](Ttc/Model/ProblemSetting.lean#L85), [87](Ttc/Model/ProblemSetting.lean#L87) | `m` bounds the number of cubes, `r` the number of facets | **assumed of the input**; the paper's `m`, `r` |
-| `normal_ne_zero` | [89](Ttc/Model/ProblemSetting.lean#L89) | every facet's normal vector is nonzero | **assumed of the input**; a zero normal is not a facet |
-| `O`, `fuel` | [91](Ttc/Model/ProblemSetting.lean#L91), [93](Ttc/Model/ProblemSetting.lean#L93) | the `ω`-indexed oracle bundle, the loop budget | inputs; `O` is pinned by `oracle_eq` below. See §4 on `fuel` |
-| `cen`, `gammaHat`, `hgammaHat`, `ball_subset` | [95](Ttc/Model/ProblemSetting.lean#L95)–[103](Ttc/Model/ProblemSetting.lean#L103) | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂ > 0` about its own centre | **assumed of the input** — `lem:nonconv`'s own hypothesis, in the paper's words. The LP of `alg:prec` that computes `γ̂` is **not modelled** |
-| `volume_ne_top` | [105](Ttc/Model/ProblemSetting.lean#L105) | each `P(cᵢ)` has finite volume | **assumed of the input** — the paper leaves it implicit |
-| `ρ`, `rho_eq` | [108](Ttc/Model/ProblemSetting.lean#L108), [110](Ttc/Model/ProblemSetting.lean#L110) | the precision is `GetPrecision`'s output, `ρ = ⌈log₁₀(γ/γ̂)⌉` | `alg:prec` line 91, transcribed — and now **load-bearing**, see §4 |
-| `gen_mem` | [115](Ttc/Model/ProblemSetting.lean#L115) | `GenerateSamples` returns points of `P(cᵢ) ∩ 𝕃ⁿ` | **assumed of the external sampler** — `Ttc.Oracles` fixes only *how many* it returns. Not distributional |
-| `L`, `L_eq` | [118](Ttc/Model/ProblemSetting.lean#L118), [120](Ttc/Model/ProblemSetting.lean#L120) | `L` **is** `\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` ([`normalisedCount`](Ttc/Model/Prelude.lean#L166)) | definition, not an assumption |
-| **— from here the fields describe the sampler —** | | | |
-| `Lidx`, `ptE`, `ptE_inj` | [129](Ttc/Model/ProblemSetting.lean#L129), [131](Ttc/Model/ProblemSetting.lean#L131), [133](Ttc/Model/ProblemSetting.lean#L133) | the lattice points the coupled family is indexed by, and an injective enumeration of them | **assumed of the sampler** — structure of the model |
-| `θ`, `θ_nonneg`, `θ_pos` | [135](Ttc/Model/ProblemSetting.lean#L135), [137](Ttc/Model/ProblemSetting.lean#L137), [139](Ttc/Model/ProblemSetting.lean#L139) | each point's level-`0` Poisson rate, nonnegative, with **positive total** | **assumed** — `θ_pos` also rules out the empty instance, which is why the old degenerate witness died |
-| `vol`, `cover`, `memPt` | [141](Ttc/Model/ProblemSetting.lean#L141), [143](Ttc/Model/ProblemSetting.lean#L143), [145](Ttc/Model/ProblemSetting.lean#L145) | the volume estimate the run uses per cube, its coverage test, and cube membership on the enumerated points | inputs to the oracle bundle |
-| `toTraj`, `toTraj_meas` | [147](Ttc/Model/ProblemSetting.lean#L147), [149](Ttc/Model/ProblemSetting.lean#L149) | each `ω` reads as a trajectory `ℕ → Fin Lidx → ℕ`, measurably | structure |
-| **`law_eq`** | [151](Ttc/Model/ProblemSetting.lean#L151) | **`μ.map toTraj = trajLaw θ`** — the randomness **is** the coupled level family ([`Ttc.trajLaw`](Ttc/Analysis/Coupling.lean#L209)) | **assumed of the sampler — the strongest field on this page.** Not "the draws are Poisson"; "the draws are *this construction*" |
-| **`oracle_eq`** | [153](Ttc/Model/ProblemSetting.lean#L153) | **`O ω = trajOracles ptE_inj vol cover memPt (toTraj ω)`** — the oracles answer by reading that trajectory | **assumed of the sampler**; pins `O` completely |
-| `cover_eq`, `cover_all` | [155](Ttc/Model/ProblemSetting.lean#L155), [157](Ttc/Model/ProblemSetting.lean#L157) | the coverage test agrees with cube membership on the lattice; the cubes cover every enumerated point | **assumed** — combinatorial, checkable of an instance |
-| `jstar`, `hjstar`, `rate_small`, `rate_le`, `lamStar_ge` | [159](Ttc/Model/ProblemSetting.lean#L159)–[167](Ttc/Model/ProblemSetting.lean#L167) | an epoch index `j* ≥ 1` at which no cube's rate can still trigger a `halveDown`, the level-`j*−1` rate is `≤ Thresh/2`, and it is `≥ (1−ε')·Thresh/8` | **assumed of the instance** — existence, not a probability. Proved for the witness ([`Ttc.Box.exists_jstar`](Ttc/Analysis/BoxProb.lean#L221)) from [`Ttc.exists_epoch`](Ttc/Analysis/NumLatticeModel.lean#L140) |
-| **`rate_eq_L`** | [170](Ttc/Model/ProblemSetting.lean#L170) | **`∑θ = L`** — the rates reproduce the lattice count | **assumed** — the only place the geometry meets the probability. Note it demands *exactness*; the two-sided version is available ([`Ttc.window_of_two_sided`](Ttc/Analysis/NumLatticeModel.lean#L104)) but unused |
+| `ε`, `δ`, `hε0`, `hε1`, `hδ0`, `hδ1` | [45](Ttc/Model/ProblemSetting.lean#L45)–[55](Ttc/Model/ProblemSetting.lean#L55) | `ε, δ ∈ (0,1]` | the theorem's own parameters |
+| `atoms`, `M`, `M_eq` | [57](Ttc/Model/ProblemSetting.lean#L57)–[62](Ttc/Model/ProblemSetting.lean#L62) | each atom is a linear constraint `A x ≤ b`, and `M` interprets it as that half-space | **assumed of the input** — this is what "SMT(LRA)" means |
+| `φ`, `D` | [64](Ttc/Model/ProblemSetting.lean#L64), [66](Ttc/Model/ProblemSetting.lean#L66) | the formula and its DNF | inputs |
+| `isDNF` | [68](Ttc/Model/ProblemSetting.lean#L68) | `D` and `φ` agree on every Boolean assignment | **assumed** of the external `ToDNF`/AllSAT tool. `thm:decomposition` is *proved* from it |
+| `isPositive` | [71](Ttc/Model/ProblemSetting.lean#L71) | no literal of `D` is negated | **assumed of the input** — see §4 and README finding 5 |
+| `Ω`, `mΩ`, `μ`, `isProb` | [73](Ttc/Model/ProblemSetting.lean#L73)–[79](Ttc/Model/ProblemSetting.lean#L79) | a probability space for the algorithm's randomness | structure, not an assumption |
+| `P`, `eps_eq`, `delta_eq`, `dim_eq` | [81](Ttc/Model/ProblemSetting.lean#L81)–[87](Ttc/Model/ProblemSetting.lean#L87) | the parameter block, run at the theorem's own `ε` and `δ` and in the ambient dimension | inputs + three ties that used to be missing |
+| `cubes_le`, `facets_le` | [89](Ttc/Model/ProblemSetting.lean#L89), [91](Ttc/Model/ProblemSetting.lean#L91) | `m` bounds the number of cubes, `r` the number of facets | **assumed of the input**; the paper's `m`, `r` |
+| `normal_ne_zero` | [93](Ttc/Model/ProblemSetting.lean#L93) | every facet's normal vector is nonzero | **assumed of the input**; a zero normal is not a facet |
+| `O`, `fuel` | [95](Ttc/Model/ProblemSetting.lean#L95), [97](Ttc/Model/ProblemSetting.lean#L97) | the `ω`-indexed oracle bundle, the loop budget | inputs; `O` is pinned by `oracle_eq` below. See §4 on `fuel` |
+| `cen`, `gammaHat`, `hgammaHat`, `ball_subset` | [99](Ttc/Model/ProblemSetting.lean#L99)–[107](Ttc/Model/ProblemSetting.lean#L107) | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂ > 0` about its own centre | **assumed of the input** — `lem:nonconv`'s own hypothesis, in the paper's words. The LP of `alg:prec` that computes `γ̂` is **not modelled** |
+| `volume_ne_top` | [109](Ttc/Model/ProblemSetting.lean#L109) | each `P(cᵢ)` has finite volume | **assumed of the input** — the paper leaves it implicit |
+| `ρ`, `rho_eq` | [112](Ttc/Model/ProblemSetting.lean#L112), [114](Ttc/Model/ProblemSetting.lean#L114) | the precision is `GetPrecision`'s output, `ρ = ⌈log₁₀(γ/γ̂)⌉` | `alg:prec` line 91, transcribed — and now **load-bearing**, see §4 |
+| `gen_mem` | [119](Ttc/Model/ProblemSetting.lean#L119) | `GenerateSamples` returns points of `P(cᵢ) ∩ 𝕃ⁿ` | **assumed of the external sampler** — `Ttc.Oracles` fixes only *how many* it returns. Not distributional |
+| `L`, `L_eq` | [122](Ttc/Model/ProblemSetting.lean#L122), [124](Ttc/Model/ProblemSetting.lean#L124) | `L` **is** `\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` ([`normalisedCount`](Ttc/Model/Prelude.lean#L166)) | definition, not an assumption |
+| **— from here the 19 fields describe the sampler —** | | | |
+| `Lidx`, `ptE`, `ptE_inj` | [133](Ttc/Model/ProblemSetting.lean#L133), [135](Ttc/Model/ProblemSetting.lean#L135), [137](Ttc/Model/ProblemSetting.lean#L137) | the lattice points the coupled family is indexed by, and an injective enumeration of them | **assumed of the sampler** — structure of the model |
+| `θ`, `θ_nonneg`, `θ_pos` | [139](Ttc/Model/ProblemSetting.lean#L139), [141](Ttc/Model/ProblemSetting.lean#L141), [143](Ttc/Model/ProblemSetting.lean#L143) | each point's level-`0` Poisson rate, nonnegative, with **positive total** | **assumed** — `θ_pos` also rules out the empty instance, which is why the old degenerate witness died |
+| `vol`, `cover`, `memPt` | [145](Ttc/Model/ProblemSetting.lean#L145), [147](Ttc/Model/ProblemSetting.lean#L147), [149](Ttc/Model/ProblemSetting.lean#L149) | the rate the run draws each cube with, its coverage test, and cube membership on the enumerated points | inputs to the oracle bundle — but `vol` is no longer free: `vol_eq` below pins it |
+| `toTraj`, `toTraj_meas` | [151](Ttc/Model/ProblemSetting.lean#L151), [153](Ttc/Model/ProblemSetting.lean#L153) | each `ω` reads as a trajectory `ℕ → Fin Lidx → ℕ`, measurably | structure |
+| **`law_eq`** | [155](Ttc/Model/ProblemSetting.lean#L155) | **`μ.map toTraj = trajLaw θ`** — the randomness **is** the coupled level family ([`Ttc.trajLaw`](Ttc/Analysis/Coupling.lean#L209)) | **assumed of the sampler — the strongest field on this page.** Not "the draws are Poisson"; "the draws are *this construction*" |
+| **`oracle_eq`** | [157](Ttc/Model/ProblemSetting.lean#L157) | **`O ω = trajOracles ptE_inj vol cover memPt (toTraj ω)`** — the oracles answer by reading that trajectory | **assumed of the sampler**; pins `O` completely |
+| `cover_eq`, `cover_all` | [159](Ttc/Model/ProblemSetting.lean#L159), [161](Ttc/Model/ProblemSetting.lean#L161) | the coverage test agrees with cube membership on the lattice; the cubes cover every enumerated point | **assumed** — combinatorial, checkable of an instance |
+| **`vol_eq`**, `vol_pos` | [165](Ttc/Model/ProblemSetting.lean#L165), [167](Ttc/Model/ProblemSetting.lean#L167) | **`∑_{s : memPt i s} θ s = vol i`** for every cube `i ∈ D`, and `0 < vol i` — each cube's rate *is* the total level-`0` rate of the points it covers | **assumed of the sampler**, and it **closes a gap**: before it, nothing at all related the run's volume estimates to the instance. `Ttc.TtcProb.vol_le_total` reads `vol i ≤ ∑θ` off it |
+| **`big`** | [172](Ttc/Model/ProblemSetting.lean#L172) | **`(1−ε')·Thresh/8 ≤ ∑θ`** — the instance is large enough for the sketch to be worth running | **assumed of the instance**, and a genuine assumption — but it is the paper's own regime, not an artifact. It is what `Ttc.exists_epoch` needs to build `j*`, and [`Ttc.Box.boxProb`](Ttc/Analysis/BoxProb.lean#L271) arranges it by choosing the box side from `Thresh` |
+| **`rate_eq_L`** | [175](Ttc/Model/ProblemSetting.lean#L175) | **`∑θ = L`** — the rates reproduce the lattice count | **assumed** — the only place the geometry meets the probability. Note it demands *exactness*; the two-sided version is available ([`Ttc.window_of_two_sided`](Ttc/Analysis/NumLatticeModel.lean#L104)) but unused |
+
+There is **no `jstar` row any more**, and that is the point: an epoch index in
+the right window used to be five fields of this table, and is now produced by
+[`Ttc.exists_epoch`](Ttc/Analysis/NumLatticeModel.lean#L140) from `big` and
+[`Ttc.TtcProb.thresh_pos`](Ttc/Analysis/NumLatticeModel.lean#L242).
+[`Ttc.Box.exists_jstar`](Ttc/Analysis/BoxProb.lean#L221) still exists in the
+witness file but is now **unused**.
 
 The README's [What is assumed](README.md#what-is-assumed) says the same at
 length, with the exact list of what *is* proved about each.
@@ -204,13 +214,20 @@ family. It needs `1 ≤ n`, because `Ttc.Params` requires a positive dimension a
   `Thresh ≤ c ≤ cⁿ ≤ L`, from
   [`Ttc.normalisedCount_box_ge`](Ttc/Analysis/Witness.lean#L451) — which holds at
   *every* precision `ρ`, so `c` may be picked before `ρ` is fixed. The instance
-  therefore clears the regime the epoch estimate needs
-  ([`Ttc.Box.epsPrime_thresh_le_Lval`](Ttc/Analysis/BoxProb.lean#L210)).
-* **`numlattice_union` is discharged by proof, not by an empty failure event.**
+  therefore clears the regime the epoch estimate needs — that is exactly the
+  `big` field, discharged at
+  [BoxProb:343](Ttc/Analysis/BoxProb.lean#L343) from
+  [`Ttc.Box.epsPrime_thresh_le_Lval`](Ttc/Analysis/BoxProb.lean#L210).
+* **The sampler fields are discharged by proof, not by an empty failure event.**
   `Ω` *is* the trajectory space, `μ` is `trajLaw θ`, `toTraj` is the identity, so
-  `law_eq` is `Measure.map_id` and `oracle_eq` is `rfl`. The obligation is then
-  [`Ttc.numlattice_union_of_traj`](Ttc/Analysis/NumLatticeModel.lean#L190) — the
-  real bound, over a genuinely random run.
+  `law_eq` is `Measure.map_id` and `oracle_eq` is `rfl`; the run is therefore a
+  genuinely random one, and `Ttc.TtcProb.numlattice_union` instantiated here is
+  the real bound (its self-coupled form is
+  [`Ttc.numlattice_union_of_traj`](Ttc/Analysis/NumLatticeModel.lean#L190)). The
+  two newest fields are discharged too, not dodged: `vol_eq`
+  ([BoxProb:336](Ttc/Analysis/BoxProb.lean#L336)) holds because the single cube
+  covers every enumerated point, so the filtered sum is `∑θ = L = vol`, and
+  `vol_pos` ([BoxProb:342](Ttc/Analysis/BoxProb.lean#L342)) is `Lval_pos`.
 * **The rates spread `L` evenly, so `∑θ = L` exactly.**
   [`Ttc.Box.th`](Ttc/Analysis/BoxProb.lean#L188) is the constant `L/Lidx` and
   [`Ttc.Box.sum_th`](Ttc/Analysis/BoxProb.lean#L195) proves the total is `L`. This
@@ -265,8 +282,8 @@ of `Ttc.TtcProb` asserts a probability bound any more.
 
 **What stands in its place is a description, and that is where the residual
 assumption now lives.** The `law_eq` and `oracle_eq` fields
-([ProblemSetting:151](Ttc/Model/ProblemSetting.lean#L151),
-[153](Ttc/Model/ProblemSetting.lean#L153)) are the sharpest case on this page of
+([ProblemSetting:155](Ttc/Model/ProblemSetting.lean#L155),
+[157](Ttc/Model/ProblemSetting.lean#L157)) are the sharpest case on this page of
 "a name doing work no lemma checks" — not because a `def`'s name overreaches, but
 because two `def`s ([`Ttc.trajLaw`](Ttc/Analysis/Coupling.lean#L209),
 [`Ttc.trajOracles`](Ttc/Analysis/Coupling.lean#L393)) are *asserted to be the
@@ -284,9 +301,33 @@ can establish is that a real `TTC` implementation's sampler equals them. So:
 Two smaller commitments inside the same block are worth naming: `rate_eq_L`
 assumes `∑θ = L` **exactly** (the general two-sided version
 [`Ttc.window_of_two_sided`](Ttc/Analysis/NumLatticeModel.lean#L104) exists and is
-unused), and the `jstar` block assumes an epoch index in the right window
-*exists* for the instance — proved for the witness
-([`Ttc.Box.exists_jstar`](Ttc/Analysis/BoxProb.lean#L221)) but assumed in general.
+unused), and `big` assumes `(1−ε')·Thresh/8 ≤ ∑θ` — the instance is in the regime
+the sketch is for. Both are real assumptions. `big` is *not* an artifact of the
+formalisation: it is the paper's own regime, and it is what
+[`Ttc.Box.boxProb`](Ttc/Analysis/BoxProb.lean#L271) arranges by choosing the box
+side from `Thresh`.
+
+**The `jstar` block is gone, and that is the sharper improvement.** It used to
+assume an epoch index in the right window *exists* for the instance — five
+fields, one of them a chosen `j*` and the rest its window. `Ttc.exists_epoch`
+now proves such an index exists for *every* instance satisfying `big`, so the
+proof no longer takes the epoch it evaluates at from the hypothesis bundle.
+Its hypotheses are exactly `0 < Thresh`, `0 ≤ ε'` and `big` — it does **not**
+need `0 < ∑θ`, so nothing in the construction of `j*` leans on `θ_pos`.
+[`Ttc.Box.exists_jstar`](Ttc/Analysis/BoxProb.lean#L221) remains in the witness
+file but nothing consumes it.
+
+**Two facts the deletion needed, both now theorems.**
+[`Ttc.TtcProb.thresh_pos`](Ttc/Analysis/NumLatticeModel.lean#L242) proves
+`Thresh > 0` from `alg:ttc` line 20's own formula rather than leaving it implicit
+— `δ ≤ 1` forces `log(24/δ) ≥ log 24 > 0`, and `ε' = ε/12 ∈ (0, 1/12]` keeps
+`(1−ε')ε'²` positive — and
+[`Ttc.TtcProb.vol_le_total`](Ttc/Analysis/NumLatticeModel.lean#L260) proves each
+cube's rate is at most the total, since `vol_eq` sums a subset of nonnegative
+rates. Together with `vol_pos` they feed
+[`Ttc.rate_small_of_epoch`](Ttc/Analysis/NumLatticeModel.lean#L180), which was
+generalised to take a cube rate merely *bounded by* the total, and that is what
+replaces the old `rate_small` field.
 
 **No mathematics is missing.** Every
 *estimate* the proof invokes is a theorem here, including the one the paper
@@ -357,8 +398,11 @@ Two further things an auditor should not skip:
   None is: `traj_numlattice_le` holds for every `fuel`, because the coupling
   makes the output a function of whatever level the run reached and the `Err`
   estimate covers every level below the cap; the work is done instead by
-  `rate_small`, that no cube's rate still triggers a halving at level `j*−1`.
-  (The witness runs at `fuel = 0`.) The paper addresses neither.
+  `traj_numlattice_le`'s `hsmall` hypothesis, that no cube's rate still triggers
+  a halving at level `j*−1`. That used to be the `rate_small` field; it is now
+  *derived*, from `vol_pos` and `Ttc.TtcProb.vol_le_total` via
+  `Ttc.rate_small_of_epoch`. (The witness runs at `fuel = 0`.) The paper
+  addresses neither.
 
 **The geometric fields are hypotheses about the input, and they are real.**
 `ball_subset`, `volume_ne_top`, `normal_ne_zero`, `isPositive`, `cubes_le`,
@@ -487,6 +531,10 @@ import Ttc
 -- [propext, Classical.choice, Quot.sound]
 #print axioms Ttc.TtcProb.numlattice_union      -- the ex-field
 -- [propext, Classical.choice, Quot.sound]
+#print axioms Ttc.TtcProb.thresh_pos            -- Thresh > 0, no longer implicit
+-- [propext, Classical.choice, Quot.sound]
+#print axioms Ttc.TtcProb.vol_le_total          -- a cube's rate ≤ the total
+-- [propext, Classical.choice, Quot.sound]
 #print axioms Ttc.traj_numlattice_le
 -- [propext, Classical.choice, Quot.sound]
 #print axioms Ttc.Box.boxProb                    -- the non-vacuity witness
@@ -525,7 +573,8 @@ run_cmd do
             `Ttc.prodKernel_claim_cl_b, `Ttc.Params.epsPrime_window,
             `Ttc.numlattice_failure_le, `Ttc.TtcProb.numlattice,
             `Ttc.TtcProb.numlattice_union, `Ttc.traj_numlattice_le,
-            `Ttc.trajLaw] do
+            `Ttc.exists_epoch, `Ttc.TtcProb.thresh_pos,
+            `Ttc.TtcProb.vol_le_total, `Ttc.trajLaw] do
     Lean.logInfo m!"{t} reached: {seen.contains t}"
 ```
 

@@ -14,7 +14,8 @@ every estimate held vacuously. CLAUDE.md §11 asks for better, and
 `Ttc.numlattice_union_of_traj` makes better possible — a witness whose failure
 bound is *proved*, not sidestepped. `trivialProb` has since been removed outright:
 once `Ttc.TtcProb` carries the sampler fields, `D = []` forces `Lidx = 0` and
-contradicts `θ_pos`, so no degenerate instance exists at all.
+contradicts `big` (which forces `∑θ > 0`), so no degenerate instance exists
+at all.
 
 The instance is the box `[0,c]ⁿ` of `Analysis/Witness`, sampled by the coupled
 family of `Analysis/Coupling`. The one real constraint is that the estimate is
@@ -323,7 +324,6 @@ noncomputable def boxProb (n : ℕ) (hn : 1 ≤ n) : TtcProb (Fin n ⊕ Fin n) n
   ptE_inj := pt_injective hn
   θ := th n hn
   θ_nonneg := th_nonneg hn
-  θ_pos := sum_th_pos hn
   vol := vl n hn
   cover := cov n
   memPt := mm n hn

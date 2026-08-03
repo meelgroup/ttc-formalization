@@ -598,9 +598,10 @@ the algorithm's own formula, not assumed.
   sketch is for. It is not an artifact of the formalisation: it is the paper's
   own regime, and the witness satisfies it by construction
   ([`Ttc.Box.epsPrime_thresh_le_Lval`](Ttc/Analysis/BoxProb.lean#L210)). What is
-  *no longer* assumed is the epoch index: `jstar` and its window used to be four
-  more existence assumptions about the instance, and `Ttc.exists_epoch` now
-  proves them for every input that satisfies `big`. (`Ttc.Box.exists_jstar`
+  *no longer* assumed is the epoch index: `jstar` and its window used to be five
+  more fields — a *chosen* `j*` plus the four conditions on it — and
+  `Ttc.exists_epoch` now proves them for every input that satisfies `big`, from
+  `0 < Thresh`, `0 ≤ ε'` and `big` alone. (`Ttc.Box.exists_jstar`
   survives at [BoxProb:221](Ttc/Analysis/BoxProb.lean#L221) but is **unused** —
   nothing needs it now.)
 * Also note the sampling interface is **level-aware** where the paper's is not

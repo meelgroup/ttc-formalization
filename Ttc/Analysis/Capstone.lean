@@ -148,7 +148,7 @@ discharged by *proof* (`Ttc.numlattice_union_of_traj`) rather than by an empty
 failure event.
 
 The earlier degenerate witness `trivialProb` has been **removed**: with `D = []`
-it forces `Lidx = 0`, contradicting the `θ_pos` field, which is precisely what
+it forces `Lidx = 0`, contradicting the `big` field, which is precisely what
 carrying the sampler description is for. The `Ttc.trivialOracles` and
 `Ttc.trivialParams` below are what remains of it, and are now unused.
 -/
@@ -186,7 +186,7 @@ noncomputable def trivialParams (n : ℕ) (hn : 1 ≤ n) : Params where
 The witness lives in `Analysis/BoxProb`: `Ttc.Box.boxProb`, the box `[0,c]ⁿ`
 sampled by the coupled family. The old degenerate witness (`trivialProb`, empty
 DNF, `L = 0`) has been **removed**: it cannot satisfy the sampler fields
-`Ttc.TtcProb` now carries — `D = []` forces `Lidx = 0`, contradicting `θ_pos` —
+`Ttc.TtcProb` now carries — `D = []` forces `Lidx = 0`, contradicting `big` —
 which is exactly the point of carrying them. See `Ttc.Box.nonempty_ttcProb`.
 -/
 

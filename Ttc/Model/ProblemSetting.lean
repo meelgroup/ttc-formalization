@@ -139,8 +139,6 @@ structure TtcProb (A : Type*) (n : ℕ) where
   θ : Fin Lidx → ℝ
   /-- Rates are nonnegative. -/
   θ_nonneg : ∀ s, 0 ≤ θ s
-  /-- The total rate is positive — the instance is not empty. -/
-  θ_pos : 0 < ∑ s, θ s
   /-- The volume estimate the run uses for each cube. -/
   vol : Cube A → ℝ
   /-- The coverage test the run uses. -/
