@@ -223,7 +223,7 @@ theorem exists_jstar (hn : 1 ≤ n) :
       2 * totalRate (th n hn) (jstar - 1) ≤ (par n hn).thresh ∧
       (1 - (par n hn).epsPrime) * (par n hn).thresh / 8 ≤ totalRate (th n hn) (jstar - 1) := by
   obtain ⟨jstar, hj1, h2, h3⟩ := exists_epoch (S := Lval n hn) (Thresh := (par n hn).thresh)
-    (epsP := (par n hn).epsPrime) (Lval_pos hn) (par_thresh_pos hn)
+    (epsP := (par n hn).epsPrime) (par_thresh_pos hn)
     (par_epsPrime_pos hn).le (epsPrime_thresh_le_Lval hn)
   exact ⟨jstar, hj1, by rwa [totalRate_th], by rwa [totalRate_th]⟩
 
@@ -261,25 +261,6 @@ theorem cover_all (hn : 1 ≤ n) (s : Fin (Lidx n hn)) :
 
 theorem exists_mm (hn : 1 ≤ n) (i : Cube (Fin n ⊕ Fin n)) : ∃ s, mm n hn i s = true :=
   ⟨⟨0, Lidx_pos hn⟩, rfl⟩
-
-/-- The epoch index this instance runs to. -/
-noncomputable def js (n : ℕ) (hn : 1 ≤ n) : ℕ := (exists_jstar hn).choose
-
-theorem js_ge (hn : 1 ≤ n) : 1 ≤ js n hn := (exists_jstar hn).choose_spec.1
-
-theorem js_rate_le (hn : 1 ≤ n) :
-    2 * totalRate (th n hn) (js n hn - 1) ≤ (par n hn).thresh :=
-  (exists_jstar hn).choose_spec.2.1
-
-theorem js_lamStar_ge (hn : 1 ≤ n) :
-    (1 - (par n hn).epsPrime) * (par n hn).thresh / 8 ≤ totalRate (th n hn) (js n hn - 1) :=
-  (exists_jstar hn).choose_spec.2.2
-
-theorem js_rate_small (hn : 1 ≤ n) (i : Cube (Fin n ⊕ Fin n)) :
-    ¬ ((par n hn).thresh / vl n hn i ≤ (1 / 2 : ℝ) ^ (js n hn - 1)) :=
-  rate_small_of_epoch (Lval_pos hn) (by
-    have := js_rate_le hn
-    rwa [totalRate_th] at this)
 
 /-! ## The instance -/
 
@@ -352,11 +333,14 @@ noncomputable def boxProb (n : ℕ) (hn : 1 ≤ n) : TtcProb (Fin n ⊕ Fin n) n
   oracle_eq := fun _ => rfl
   cover_eq := cov_eq hn
   cover_all := cover_all hn
-  jstar := js n hn
-  hjstar := js_ge hn
-  rate_small := fun i _ => js_rate_small hn i
-  rate_le := js_rate_le hn
-  lamStar_ge := js_lamStar_ge hn
+  vol_eq := by
+    intro i _
+    have hfull : (Finset.univ.filter fun s => mm n hn i s = true) = Finset.univ :=
+      Finset.filter_true_of_mem fun s _ => rfl
+    rw [hfull]
+    exact sum_th hn
+  vol_pos := fun _ _ => Lval_pos hn
+  big := by rw [sum_th hn]; exact epsPrime_thresh_le_Lval hn
   rate_eq_L := sum_th hn
 
 /-- **`Ttc.TtcProb` is inhabited, non-degenerately**, so

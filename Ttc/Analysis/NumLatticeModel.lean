@@ -34,7 +34,7 @@ say the cubes cover the lattice points and the oracle's coverage test agrees wit
 cube membership. Nothing probabilistic is assumed. -/
 theorem numlattice_union_of_model
     {A : Type*} {n : ℕ}
-    {Ω : Type} [mΩ : MeasurableSpace Ω] (μ : Measure Ω) [hprob : IsProbabilityMeasure μ]
+    {Ω : Type} [mΩ : MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P : Params) (ε δ Lval : ℝ) (fuel : ℕ) (ρ : ℤ) (D : DNF A)
     (O : Ω → Oracles n (Cube A))
     {Lidx : ℕ} {pt : Fin Lidx → Space n} (hpt : Function.Injective pt)
@@ -137,7 +137,7 @@ sketch is worth running only when the count exceeds the threshold.
 /-- **A suitable epoch index exists.** Take the first level at which the rate has
 fallen to `Thresh/2`; minimality keeps it above `Thresh/4`, which clears
 `(1−ε')·Thresh/8`. -/
-theorem exists_epoch {S Thresh epsP : ℝ} (hS : 0 < S) (hT : 0 < Thresh)
+theorem exists_epoch {S Thresh epsP : ℝ} (hT : 0 < Thresh)
     (hep : 0 ≤ epsP) (hbig : (1 - epsP) * Thresh / 8 ≤ S) :
     ∃ jstar : ℕ, 1 ≤ jstar ∧ 2 * (S / 2 ^ (jstar - 1)) ≤ Thresh ∧
       (1 - epsP) * Thresh / 8 ≤ S / 2 ^ (jstar - 1) := by
@@ -177,11 +177,11 @@ identity and `law_eq` is `Measure.map_id`. This is the form
 
 /-- **`hsmall` from the epoch bound.** Once the level-`j*−1` rate is below
 `Thresh/2`, no cube's rate can still trigger a `halveDown` at that level. -/
-theorem rate_small_of_epoch {S Thresh : ℝ} (hS : 0 < S) {jstar : ℕ}
+theorem rate_small_of_epoch {S Thresh v : ℝ} (hv : 0 < v) (hvS : v ≤ S) {jstar : ℕ}
     (hep : 2 * (S / 2 ^ (jstar - 1)) ≤ Thresh) :
-    ¬ (Thresh / S ≤ (1 / 2 : ℝ) ^ (jstar - 1)) := by
+    ¬ (Thresh / v ≤ (1 / 2 : ℝ) ^ (jstar - 1)) := by
   have hpow : (0:ℝ) < 2 ^ (jstar - 1) := by positivity
-  rw [not_le, one_div, inv_pow, lt_div_iff₀ hS, inv_mul_eq_div, div_lt_iff₀ hpow]
+  rw [not_le, one_div, inv_pow, lt_div_iff₀ hv, inv_mul_eq_div, div_lt_iff₀ hpow]
   have h1 : S / 2 ^ (jstar - 1) ≤ Thresh / 2 := by linarith
   rw [div_le_iff₀ hpow] at h1
   nlinarith
@@ -236,6 +236,33 @@ theorem epsPrime_le_one' : T.P.epsPrime ≤ 1 := by
 theorem epsPrime_le_third : T.P.epsPrime ≤ T.ε / 3 := by
   rw [Params.epsPrime, T.eps_eq]; linarith [T.hε0]
 
+/-- **`Thresh` is positive**, from the algorithm's own formula: `δ ≤ 1` makes
+`log(24/δ) ≥ log 24 > 0` and `ε' = ε/12 ∈ (0, 1/12]` keeps the denominator
+positive. Not an assumption. -/
+theorem thresh_pos : 0 < T.P.thresh := by
+  refine lt_of_lt_of_le ?_ (le_max_left _ _)
+  have hd : T.P.δ = T.δ := T.delta_eq
+  have hlog : 0 < Real.log (24 / T.P.δ) := by
+    refine Real.log_pos ?_
+    rw [hd]
+    rw [lt_div_iff₀ T.hδ0]
+    linarith [T.hδ1]
+  have hep0 := T.epsPrime_pos
+  have hep1 : T.P.epsPrime ≤ 1 / 12 := by
+    rw [Params.epsPrime, T.eps_eq]; linarith [T.hε1]
+  have hden : 0 < (1 - T.P.epsPrime) * T.P.epsPrime ^ 2 := by
+    have : T.P.epsPrime < 1 := by linarith
+    positivity
+  positivity
+
+/-- Each cube's rate is at most the total: `vol_eq` sums a subset of nonnegative
+rates. -/
+theorem vol_le_total {i : Cube A} (hi : i ∈ T.D) : T.vol i ≤ ∑ s, T.θ s := by
+  classical
+  rw [← T.vol_eq i hi]
+  exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
+    (fun s _ _ => T.θ_nonneg s)
+
 /-- **`lem:numlattice`'s epoch bound — proved, not assumed.** -/
 theorem numlattice_union :
     ∃ (jstar : ℕ) (lamStar : ℝ),
@@ -248,11 +275,18 @@ theorem numlattice_union :
   obtain ⟨hlo, hhi⟩ := window_of_exact (ε := T.ε)
     (le_of_lt (T.rate_eq_L ▸ T.θ_pos)) (T.epsPrime_pos).le (T.epsPrime_le_one')
     T.rate_eq_L (T.epsPrime_le_third)
-  exact numlattice_union_of_model (mΩ := T.mΩ) (hprob := T.isProb)
+  -- the epoch index is *derived*, not a field
+  obtain ⟨jstar, hj1, hrate, hlam⟩ := exists_epoch (S := ∑ s, T.θ s)
+    (Thresh := T.P.thresh) (epsP := T.P.epsPrime) T.thresh_pos
+    (T.epsPrime_pos).le T.big
+  haveI := T.isProb
+  exact numlattice_union_of_model (mΩ := T.mΩ)
     T.μ T.P T.ε T.δ T.L T.fuel T.ρ T.D T.O
     T.ptE_inj T.θ_nonneg T.θ_pos T.cover_eq T.cover_all
     T.toTraj T.toTraj_meas T.law_eq T.oracle_eq
-    T.jstar T.hjstar T.rate_small T.rate_le T.lamStar_ge
+    jstar hj1
+    (fun i hi => rate_small_of_epoch (T.vol_pos i hi) (T.vol_le_total hi) hrate)
+    hrate hlam
     (T.epsPrime_pos) (T.epsPrime_le_one') hlo hhi T.P.hm T.hδ0.le
 
 end TtcProb

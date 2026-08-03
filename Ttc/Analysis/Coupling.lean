@@ -346,7 +346,7 @@ theorem toMultiset_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injecti
   · obtain ⟨s, rfl⟩ := hx
     rw [count_toMultiset hpt, count_toMultiset hpt]
     exact h s
-  · push_neg at hx
+  · simp only [not_exists] at hx
     rw [count_toMultiset_of_notMem pt k' hx, count_toMultiset_of_notMem pt k hx]
 
 /-- **A count-bounded multiset is a sub-multiset** — the form `Oracles.halve_le`
@@ -362,7 +362,7 @@ theorem toMultiset_le_of_count_le {n : ℕ} {pt : Fin L → Space n}
   · obtain ⟨s, rfl⟩ := hx
     rw [count_toMultiset hpt]
     exact h s
-  · push_neg at hx
+  · simp only [not_exists] at hx
     rw [count_toMultiset_of_notMem pt k hx]
     exact Nat.zero_le _
 

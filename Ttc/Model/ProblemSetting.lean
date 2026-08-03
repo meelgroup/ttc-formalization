@@ -159,16 +159,17 @@ structure TtcProb (A : Type*) (n : ℕ) where
   cover_eq : ∀ s i, cover (ptE s) i = memPt i s
   /-- The cubes cover every enumerated point. -/
   cover_all : ∀ s, (D.any fun i => memPt i s) = true
-  /-- The epoch index the union bound runs to. -/
-  jstar : ℕ
-  /-- There is at least one epoch. -/
-  hjstar : 1 ≤ jstar
-  /-- By epoch `j*−1` no cube's rate can still trigger a `halveDown`. -/
-  rate_small : ∀ i ∈ D, ¬ (P.thresh / vol i ≤ (1 / 2 : ℝ) ^ (jstar - 1))
-  /-- The level-`j*−1` rate is at most `Thresh/2`. -/
-  rate_le : 2 * totalRate θ (jstar - 1) ≤ P.thresh
-  /-- …and at least `(1−ε')·Thresh/8`, so the epoch series converges. -/
-  lamStar_ge : (1 - P.epsPrime) * P.thresh / 8 ≤ totalRate θ (jstar - 1)
+  /-- **The rate the algorithm draws cube `i` with is the total level-`0` rate of
+  the points that cube covers.** This is what makes `vol` a description of the
+  instance rather than a free function. -/
+  vol_eq : ∀ i ∈ D, ∑ s ∈ Finset.univ.filter (fun s => memPt i s = true), θ s = vol i
+  /-- Every cube of the decomposition carries a positive rate. -/
+  vol_pos : ∀ i ∈ D, 0 < vol i
+  /-- **The instance is big enough for the sketch to be worth running** — the
+  paper's own regime. The epoch index `j*` and its window are *not* assumed: they
+  follow from this by `Ttc.exists_epoch`, and the `halveDown` cut-off follows by
+  `Ttc.rate_small_of_epoch`. -/
+  big : (1 - P.epsPrime) * P.thresh / 8 ≤ ∑ s, θ s
   /-- **The rates reproduce the lattice count.** This is what `lem:lattice`
   supplies; it is the only place the geometry meets the probability. -/
   rate_eq_L : ∑ s, θ s = L
