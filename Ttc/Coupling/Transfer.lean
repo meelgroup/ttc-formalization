@@ -51,28 +51,28 @@ theorem numlattice_union_of_model
     (hrate : 2 * totalRate θ (jstar - 1) ≤ P.thresh)
     (hlamStar : (1 - P.epsPrime) * P.thresh / 8 ≤ totalRate θ (jstar - 1))
     (hep0 : 0 < P.epsPrime) (hep1 : P.epsPrime ≤ 1)
-    (hlo : (1 - ε / 3) * Lval ≤ (1 - P.epsPrime) * (∑ s, θ s))
-    (hhi : (1 + P.epsPrime) * (∑ s, θ s) ≤ (1 + ε / 3) * Lval)
+    (hlo : (1 - ε / 2) * Lval ≤ (1 - P.epsPrime) * (∑ s, θ s))
+    (hhi : (1 + P.epsPrime) * (∑ s, θ s) ≤ (1 + ε / 2) * Lval)
     (hm : 1 ≤ P.m) (hδ : 0 ≤ δ) :
     ∃ (jstar' : ℕ) (lamStar : ℝ),
       (1 - P.epsPrime) * P.thresh / 8 ≤ lamStar ∧
-      (μ {ω | ¬ ((1 - ε / 3) * Lval ≤ run P (O ω) ρ D ∧
-                 run P (O ω) ρ D ≤ (1 + ε / 3) * Lval)}).toReal
+      (μ {ω | ¬ ((1 - ε / 2) * Lval ≤ run P (O ω) ρ D ∧
+                 run P (O ω) ρ D ≤ (1 + ε / 2) * Lval)}).toReal
         ≤ (∑ t ∈ Finset.range jstar',
               2 * Real.exp (-(P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
             + P.m * Real.exp (-(P.thresh / 6)) + δ / 2 := by
   classical
   refine ⟨jstar, totalRate θ (jstar - 1), hlamStar, ?_⟩
   set S : Set (ℕ → (Fin Lidx → ℕ)) :=
-    {t | ¬ ((1 - ε / 3) * Lval ≤ run P (trajOracles hpt vol covered mem t) ρ D ∧
-            run P (trajOracles hpt vol covered mem t) ρ D ≤ (1 + ε / 3) * Lval)} with hS
+    {t | ¬ ((1 - ε / 2) * Lval ≤ run P (trajOracles hpt vol covered mem t) ρ D ∧
+            run P (trajOracles hpt vol covered mem t) ρ D ≤ (1 + ε / 2) * Lval)} with hS
   -- the failure event is the pullback of the trajectory-space one
-  have hset : {ω | ¬ ((1 - ε / 3) * Lval ≤ run P (O ω) ρ D ∧
-      run P (O ω) ρ D ≤ (1 + ε / 3) * Lval)} = e ⁻¹' S := by
+  have hset : {ω | ¬ ((1 - ε / 2) * Lval ≤ run P (O ω) ρ D ∧
+      run P (O ω) ρ D ≤ (1 + ε / 2) * Lval)} = e ⁻¹' S := by
     ext ω
     simp only [Set.mem_preimage, Set.mem_setOf_eq, hS, hO ω]
-  have h1 : μ {ω | ¬ ((1 - ε / 3) * Lval ≤ run P (O ω) ρ D ∧
-      run P (O ω) ρ D ≤ (1 + ε / 3) * Lval)} ≤ trajLaw θ S := by
+  have h1 : μ {ω | ¬ ((1 - ε / 2) * Lval ≤ run P (O ω) ρ D ∧
+      run P (O ω) ρ D ≤ (1 + ε / 2) * Lval)} ≤ trajLaw θ S := by
     rw [hset, ← hlaw]
     exact Measure.le_map_apply he S
   have hmain : (trajLaw θ).real S
@@ -81,8 +81,8 @@ theorem numlattice_union_of_model
           + Real.exp (-(P.thresh / 6)) :=
     traj_numlattice_le hθ0 hθ hep0 hep1 hlo hhi hpt hcov P ρ D hall jstar hj1 hsmall hrate
   have hexp : (0:ℝ) ≤ Real.exp (-(P.thresh / 6)) := (Real.exp_pos _).le
-  calc (μ {ω | ¬ ((1 - ε / 3) * Lval ≤ run P (O ω) ρ D ∧
-        run P (O ω) ρ D ≤ (1 + ε / 3) * Lval)}).toReal
+  calc (μ {ω | ¬ ((1 - ε / 2) * Lval ≤ run P (O ω) ρ D ∧
+        run P (O ω) ρ D ≤ (1 + ε / 2) * Lval)}).toReal
       ≤ (trajLaw θ S).toReal := ENNReal.toReal_mono (measure_ne_top _ _) h1
     _ ≤ (∑ t ∈ Finset.range jstar,
             2 * Real.exp (-(P.epsPrime ^ 2 * (totalRate θ (jstar - 1) * 2 ^ t) / 3)))
@@ -95,35 +95,39 @@ theorem numlattice_union_of_model
 /-! ## The window, from `lem:lattice`
 
 `Ttc.numlattice_union_of_model` wants the family's total rate `∑θ` pinned inside
-`(1±ε/3)·L` after the `(1±ε')` slack of the epoch estimate is spent.
-`lem:lattice` gives `∑θ` inside `(1±c)·L`; this is the arithmetic that combines
-the two. The budget condition is `(1−ε')(1−c) ≥ 1−ε/3` and `(1+ε')(1+c) ≤ 1+ε/3`,
-i.e. the two error sources together must still fit in `ε/3`.
+`(1±ε/2)·L` after the `(1±ε')` slack of the epoch estimate is spent. The Invariant
+gives `∑θ` inside `[clo·L, chi·L]`; this is the arithmetic that combines the two.
+The budget condition is `ε'·clo ≥ 1−ε/2` and `(1+ε')·chi ≤ 1+ε/2`, i.e. all the
+error sources together must still fit in `ε/2`.
+
+The window is stated with **two** constants rather than one `(1±c)`, because with
+an almost-uniform sampler it is genuinely asymmetric: `clo = (1−ε')²(1−η)` and
+`chi = (1+ε')²(1+η)` are not reflections of each other.
 -/
 
 /-- **The two-sided window composes.** -/
-theorem window_of_two_sided {epsP ε c Lval S : ℝ}
+theorem window_of_two_sided {epsP ε clo chi Lval S : ℝ}
     (hL : 0 ≤ Lval) (hep0 : 0 ≤ epsP) (hep1 : epsP ≤ 1)
-    (hlo' : (1 - c) * Lval ≤ S) (hhi' : S ≤ (1 + c) * Lval)
-    (hA : 1 - ε / 3 ≤ (1 - epsP) * (1 - c))
-    (hB : (1 + epsP) * (1 + c) ≤ 1 + ε / 3) :
-    (1 - ε / 3) * Lval ≤ (1 - epsP) * S ∧ (1 + epsP) * S ≤ (1 + ε / 3) * Lval := by
+    (hlo' : clo * Lval ≤ S) (hhi' : S ≤ chi * Lval)
+    (hA : 1 - ε / 2 ≤ (1 - epsP) * clo)
+    (hB : (1 + epsP) * chi ≤ 1 + ε / 2) :
+    (1 - ε / 2) * Lval ≤ (1 - epsP) * S ∧ (1 + epsP) * S ≤ (1 + ε / 2) * Lval := by
   constructor
-  · calc (1 - ε / 3) * Lval ≤ ((1 - epsP) * (1 - c)) * Lval := by nlinarith
-      _ = (1 - epsP) * ((1 - c) * Lval) := by ring
+  · calc (1 - ε / 2) * Lval ≤ ((1 - epsP) * clo) * Lval := by nlinarith
+      _ = (1 - epsP) * (clo * Lval) := by ring
       _ ≤ (1 - epsP) * S := by nlinarith
-  · calc (1 + epsP) * S ≤ (1 + epsP) * ((1 + c) * Lval) := by nlinarith
-      _ = ((1 + epsP) * (1 + c)) * Lval := by ring
-      _ ≤ (1 + ε / 3) * Lval := by nlinarith
+  · calc (1 + epsP) * S ≤ (1 + epsP) * (chi * Lval) := by nlinarith
+      _ = ((1 + epsP) * chi) * Lval := by ring
+      _ ≤ (1 + ε / 2) * Lval := by nlinarith
 
 /-- **The exact case.** When the rates reproduce the lattice count exactly — the
 ideal instance of CLAUDE.md §13, with every error coefficient `0` — the window
-holds as soon as `ε' ≤ ε/3`. -/
+holds as soon as `ε' ≤ ε/2`. -/
 theorem window_of_exact {epsP ε Lval S : ℝ} (hL : 0 ≤ Lval) (hep0 : 0 ≤ epsP)
-    (hep1 : epsP ≤ 1) (hS : S = Lval) (hbudget : epsP ≤ ε / 3) :
-    (1 - ε / 3) * Lval ≤ (1 - epsP) * S ∧ (1 + epsP) * S ≤ (1 + ε / 3) * Lval := by
-  refine window_of_two_sided (c := 0) hL hep0 hep1 (by rw [hS]; linarith) (by rw [hS]; linarith)
-    (by nlinarith) (by nlinarith)
+    (hep1 : epsP ≤ 1) (hS : S = Lval) (hbudget : epsP ≤ ε / 2) :
+    (1 - ε / 2) * Lval ≤ (1 - epsP) * S ∧ (1 + epsP) * S ≤ (1 + ε / 2) * Lval := by
+  refine window_of_two_sided (clo := 1) (chi := 1) hL hep0 hep1
+    (by rw [hS]; linarith) (by rw [hS]; linarith) (by nlinarith) (by nlinarith)
 
 /-! ## The epoch index exists
 
@@ -201,15 +205,15 @@ theorem numlattice_union_of_traj
     (hrate : 2 * totalRate θ (jstar - 1) ≤ P.thresh)
     (hlamStar : (1 - P.epsPrime) * P.thresh / 8 ≤ totalRate θ (jstar - 1))
     (hep0 : 0 < P.epsPrime) (hep1 : P.epsPrime ≤ 1)
-    (hlo : (1 - ε / 3) * Lval ≤ (1 - P.epsPrime) * (∑ s, θ s))
-    (hhi : (1 + P.epsPrime) * (∑ s, θ s) ≤ (1 + ε / 3) * Lval)
+    (hlo : (1 - ε / 2) * Lval ≤ (1 - P.epsPrime) * (∑ s, θ s))
+    (hhi : (1 + P.epsPrime) * (∑ s, θ s) ≤ (1 + ε / 2) * Lval)
     (hm : 1 ≤ P.m) (hδ : 0 ≤ δ) :
     ∃ (jstar' : ℕ) (lamStar : ℝ),
       (1 - P.epsPrime) * P.thresh / 8 ≤ lamStar ∧
-      ((trajLaw θ) {ω | ¬ ((1 - ε / 3) * Lval ≤
+      ((trajLaw θ) {ω | ¬ ((1 - ε / 2) * Lval ≤
             run P (trajOracles hpt vol covered mem ω) ρ D ∧
           run P (trajOracles hpt vol covered mem ω) ρ D
-            ≤ (1 + ε / 3) * Lval)}).toReal
+            ≤ (1 + ε / 2) * Lval)}).toReal
         ≤ (∑ t ∈ Finset.range jstar',
               2 * Real.exp (-(P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
             + P.m * Real.exp (-(P.thresh / 6)) + δ / 2 :=
@@ -297,40 +301,43 @@ theorem theta_nonneg (s : Fin T.Lidx) : 0 ≤ T.θ s := by
   have h2 := T.eta_le
   have hls : (0:ℝ) < latticeScale T.ρ := by rw [latticeScale]; positivity
   have hpow : (0:ℝ) < (latticeScale T.ρ) ^ n := by positivity
-  have : (0:ℝ) ≤ (1 - T.P.epsPrime) * (1 - T.P.eta) := by nlinarith [T.epsPrime_pos, T.eta_pos]
+  have : (0:ℝ) ≤ (1 - T.P.epsPrime) ^ 2 * (1 - T.P.eta) := by
+    nlinarith [T.epsPrime_pos, T.eta_pos, sq_nonneg (1 - T.P.epsPrime)]
   positivity
 
 /-- **The total rate, windowed** — the paper's Invariant summed over the lattice
-points. This is what replaces the exact `∑θ = L`. -/
-theorem sum_theta_lo : (1 - T.P.epsPrime) * (1 - T.P.eta) * T.L ≤ ∑ s, T.θ s := by
+points. This is what replaces the exact `∑θ = L`. The `(1−ε')` appears **squared**:
+once for `Vol_ED`, once for the almost-uniformity of `GenerateSamples`
+(`eq:sampler`). -/
+theorem sum_theta_lo : (1 - T.P.epsPrime) ^ 2 * (1 - T.P.eta) * T.L ≤ ∑ s, T.θ s := by
   have hls : (0:ℝ) < latticeScale T.ρ := by rw [latticeScale]; positivity
   have hpow : (0:ℝ) < (latticeScale T.ρ) ^ n := by positivity
-  calc (1 - T.P.epsPrime) * (1 - T.P.eta) * T.L
-      = (T.Lidx : ℝ) * ((1 - T.P.epsPrime) * (1 - T.P.eta) / (latticeScale T.ρ) ^ n) := by
+  calc (1 - T.P.epsPrime) ^ 2 * (1 - T.P.eta) * T.L
+      = (T.Lidx : ℝ) * ((1 - T.P.epsPrime) ^ 2 * (1 - T.P.eta) / (latticeScale T.ρ) ^ n) := by
         rw [T.L_eq_Lidx]; field_simp; try ring
-    _ = ∑ _s : Fin T.Lidx, (1 - T.P.epsPrime) * (1 - T.P.eta) / (latticeScale T.ρ) ^ n := by
+    _ = ∑ _s : Fin T.Lidx, (1 - T.P.epsPrime) ^ 2 * (1 - T.P.eta) / (latticeScale T.ρ) ^ n := by
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
     _ ≤ ∑ s, T.θ s := Finset.sum_le_sum fun s _ => T.theta_lo s
 
-theorem sum_theta_hi : ∑ s, T.θ s ≤ (1 + T.P.epsPrime) * (1 + T.P.eta) * T.L := by
+theorem sum_theta_hi : ∑ s, T.θ s ≤ (1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta) * T.L := by
   have hls : (0:ℝ) < latticeScale T.ρ := by rw [latticeScale]; positivity
   have hpow : (0:ℝ) < (latticeScale T.ρ) ^ n := by positivity
   calc ∑ s, T.θ s
-      ≤ ∑ _s : Fin T.Lidx, (1 + T.P.epsPrime) * (1 + T.P.eta) / (latticeScale T.ρ) ^ n :=
+      ≤ ∑ _s : Fin T.Lidx, (1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta) / (latticeScale T.ρ) ^ n :=
         Finset.sum_le_sum fun s _ => T.theta_hi s
-    _ = (T.Lidx : ℝ) * ((1 + T.P.epsPrime) * (1 + T.P.eta) / (latticeScale T.ρ) ^ n) := by
+    _ = (T.Lidx : ℝ) * ((1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta) / (latticeScale T.ρ) ^ n) := by
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-    _ = (1 + T.P.epsPrime) * (1 + T.P.eta) * T.L := by
+    _ = (1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta) * T.L := by
         rw [T.L_eq_Lidx]; field_simp; try ring
 
 /-- `L` is positive: the total rate is, and it is sandwiched by `L`. -/
 theorem L_pos : 0 < T.L := by
   have h := T.sum_theta_hi
   have hpos := T.theta_pos
-  have hk : 0 < (1 + T.P.epsPrime) * (1 + T.P.eta) := by
+  have hk : 0 < (1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta) := by
     have := T.epsPrime_pos; have := T.eta_pos; positivity
   rcases le_or_gt T.L 0 with hL | hL
-  · have hneg : 0 ≤ ((1 + T.P.epsPrime) * (1 + T.P.eta)) * (-T.L) :=
+  · have hneg : 0 ≤ ((1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta)) * (-T.L) :=
       mul_nonneg hk.le (neg_nonneg.2 hL)
     nlinarith
   · exact hL
@@ -361,7 +368,8 @@ theorem volSol_ne_top : volume (sol T.M T.φ) ≠ ⊤ := by
 /-- **A single cube's estimate cannot exceed twice the whole instance's rate.**
 `Vol_ED` overestimates by at most `(1+ε')`, the cube sits inside `Sol(F)`, and
 `lem:lattice` bounds `Vol(Sol(F))` by `(1+η)L` — while the Invariant bounds `∑θ`
-below by `(1−ε')(1−η)L`. The ratio is under `2` for every `ε ≤ 1`. -/
+below by `(1−ε')²(1−η)L`. The ratio is under `2` for every `ε ≤ 1`: at the worst
+case `ε = 1` it is `(13/12)(9/8) / (2·(11/12)²(7/8)) ≈ 0.83`. -/
 theorem vol_lt_two_total {i : Cube A} (hi : i ∈ T.D) : T.vol i < 2 * ∑ s, T.θ s := by
   have hmono : (volume (region T.M i)).toReal ≤ volSol T.M T.φ := by
     rw [volSol]
@@ -374,37 +382,53 @@ theorem vol_lt_two_total {i : Cube A} (hi : i ∈ T.D) : T.vol i < 2 * ∑ s, T.
   rw [hep] at hvol
   rw [hep, hη] at hsum
   have hL := T.L_pos
-  nlinarith [T.hε0, T.hε1, sq_nonneg T.ε]
+  -- the coefficient comparison, isolated from the `L`-scaling
+  have hcoeff : (1 + T.ε / 12) * (1 + T.ε / 8) < 2 * ((1 - T.ε / 12) ^ 2 * (1 - T.ε / 8)) := by
+    have h0 := T.hε0
+    have h1 := T.hε1
+    have h2 : T.ε ^ 2 ≤ T.ε := by nlinarith
+    have h3 : T.ε ^ 3 ≤ T.ε := by nlinarith
+    have h3nn : (0:ℝ) ≤ T.ε ^ 3 := by positivity
+    nlinarith
+  nlinarith [T.hε0, T.hε1]
 
 /-- **`lem:numlattice`'s epoch bound — proved, not assumed.** -/
 theorem numlattice_union :
     ∃ (jstar : ℕ) (lamStar : ℝ),
       (1 - T.P.epsPrime) * T.P.thresh / 8 ≤ lamStar ∧
-      (T.μ {ω | ¬ ((1 - T.ε / 3) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
-                 ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 3) * T.L)}).toReal
+      (T.μ {ω | ¬ ((1 - T.ε / 2) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
+                 ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 2) * T.L)}).toReal
         ≤ (∑ t ∈ Finset.range jstar,
               2 * Real.exp (-(T.P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
             + T.P.m * Real.exp (-(T.P.thresh / 6)) + T.δ / 2 := by
   -- the accuracy window, from the paper's Invariant rather than an exact equality
   have hep : T.P.epsPrime = T.ε / 12 := by rw [Params.epsPrime, T.eps_eq]
   have hη : T.P.eta = T.ε / 8 := by rw [Params.eta, T.eps_eq]
-  set c : ℝ := T.P.epsPrime + T.P.eta + T.P.epsPrime * T.P.eta with hc
   have hLpos := T.L_pos
-  have hlo' : (1 - c) * T.L ≤ ∑ s, T.θ s := by
-    refine le_trans ?_ T.sum_theta_lo
-    have hcc : (1 - c) ≤ (1 - T.P.epsPrime) * (1 - T.P.eta) := by
-      rw [hc]; nlinarith [T.epsPrime_pos, T.eta_pos]
-    nlinarith
-  have hhi' : ∑ s, T.θ s ≤ (1 + c) * T.L := by
-    refine le_trans T.sum_theta_hi ?_
-    have hcc : (1 + T.P.epsPrime) * (1 + T.P.eta) = 1 + c := by rw [hc]; ring
-    rw [hcc]
-  have hA : 1 - T.ε / 3 ≤ (1 - T.P.epsPrime) * (1 - c) := by
-    rw [hc, hep, hη]; nlinarith [T.hε0, T.hε1, sq_nonneg T.ε]
-  have hB : (1 + T.P.epsPrime) * (1 + c) ≤ 1 + T.ε / 3 := by
-    rw [hc, hep, hη]; nlinarith [T.hε0, T.hε1, sq_nonneg T.ε]
+  -- the budget: `(1±ε')` for the concentration, `(1±ε')` for `Vol_ED`, `(1±ε')` for
+  -- the sampler (`eq:sampler`) and `(1±η)` for `lem:lattice` — four factors, which
+  -- is why the window is `ε/2` and not the pre-`eq:sampler` `ε/3`.
+  have he0 := T.hε0
+  have he1 := T.hε1
+  have h2 : T.ε ^ 2 ≤ T.ε := by nlinarith
+  have h3 : T.ε ^ 3 ≤ T.ε := by nlinarith
+  have h4 : T.ε ^ 4 ≤ T.ε := by nlinarith
+  have h3nn : (0:ℝ) ≤ T.ε ^ 3 := by positivity
+  have h4nn : (0:ℝ) ≤ T.ε ^ 4 := by positivity
+  have hA : 1 - T.ε / 2 ≤ (1 - T.P.epsPrime) * ((1 - T.P.epsPrime) ^ 2 * (1 - T.P.eta)) := by
+    rw [hep, hη]
+    have hexp : (1 - T.ε / 12) * ((1 - T.ε / 12) ^ 2 * (1 - T.ε / 8))
+        = 1 - (3/8) * T.ε + (5/96) * T.ε ^ 2 - (11/3456) * T.ε ^ 3
+            + (1/13824) * T.ε ^ 4 := by ring
+    rw [hexp]; nlinarith
+  have hB : (1 + T.P.epsPrime) * ((1 + T.P.epsPrime) ^ 2 * (1 + T.P.eta)) ≤ 1 + T.ε / 2 := by
+    rw [hep, hη]
+    have hexp : (1 + T.ε / 12) * ((1 + T.ε / 12) ^ 2 * (1 + T.ε / 8))
+        = 1 + (3/8) * T.ε + (5/96) * T.ε ^ 2 + (11/3456) * T.ε ^ 3
+            + (1/13824) * T.ε ^ 4 := by ring
+    rw [hexp]; nlinarith
   obtain ⟨hlo, hhi⟩ := window_of_two_sided (ε := T.ε) hLpos.le (T.epsPrime_pos).le
-    (T.epsPrime_le_one') hlo' hhi' hA hB
+    (T.epsPrime_le_one') T.sum_theta_lo T.sum_theta_hi hA hB
   -- the epoch index is *derived*, not a field
   obtain ⟨jstar, hj1, hrate, hlam⟩ := exists_epoch (S := ∑ s, T.θ s)
     (Thresh := T.P.thresh) (epsP := T.P.epsPrime) T.thresh_pos

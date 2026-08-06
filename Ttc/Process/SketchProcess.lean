@@ -252,6 +252,9 @@ theorem numlattice_failure_le {ε Thresh δ m lamStar errSum noiseSum volSum : �
     (hpr : ∀ t, pr t ≤ 2 * Real.exp (-(ε ^ 2 * (lamStar * 2 ^ t) / 3)))
     (herr : errSum ≤ ∑ t ∈ Finset.range jstar, pr t)
     (hnoise : noiseSum ≤ m * Real.exp (-(Thresh / 6)))
+    -- `volSum` is the **combined** oracle budget `Pr[E_vol] + Pr[E_samp]`: since
+    -- `eq:sampler`, `δ' = δ/(4m)` and each family of `m` calls costs `δ/4`, so the
+    -- two together are the same `δ/2` this hypothesis has always allowed.
     (hvol : volSum ≤ δ / 2) :
     errSum + noiseSum + volSum ≤ δ := by
   have ha := log_two_le_exponent hδ0 hδ1 hε0 hε1 hT1 hlamStar
@@ -269,6 +272,7 @@ theorem numlattice_failure_le {ε Thresh δ m lamStar errSum noiseSum volSum : �
   -- the `Noise` branch
   have hnoise3 : m * Real.exp (-(Thresh / 6)) ≤ δ / 6 :=
     noise_bound_le_delta hδ0 hm hT2
-  exact numlattice_failure_bound_with_vol hδ0 (by linarith) (by linarith) hvol
+  -- `Ttc.numlattice_failure_bound_with_vol` with `volSum` split as `δ/4 + δ/4`
+  linarith
 
 end Ttc

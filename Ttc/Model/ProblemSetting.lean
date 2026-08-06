@@ -122,7 +122,12 @@ structure TtcProb (A : Type*) (n : ℕ) where
   /-- **`GenerateSamples`' contract** (`alg:ttc` line 43): the points it returns for
   cube `cᵢ` really are lattice points of `P(cᵢ)`. `Ttc.Oracles` only fixes *how
   many* it returns; that they lie where they should is a property of the external
-  sampler, so it is assumed of it here. -/
+  sampler, so it is assumed of it here.
+
+  Its **distributional** contract (`eq:sampler`: `D` is within a `(1±ε')` factor
+  of uniform on `P(cᵢ) ∩ 𝕃ⁿ`, pointwise) is not a separate field — its content is
+  exactly the extra `(1±ε')` factor in `theta_lo`/`theta_hi`, which is the only
+  place an almost-uniform sampler differs from an exactly uniform one. -/
   gen_mem : ∀ (ω : Ω) (i : Cube A) (j N : ℕ), i ∈ toDNF φ →
     ∀ s ∈ (O ω).gen i j N ρ, s ∈ region M i ∩ fineLattice n (latticeScale ρ)
   /-- The normalised lattice count `|Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`. -/
@@ -151,11 +156,20 @@ structure TtcProb (A : Type*) (n : ℕ) where
   /-- Each point's rate at level `0`. -/
   θ : Fin Lidx → ℝ
   /-- **The paper's Invariant** (`analysis.tex:265`), lower half: each lattice
-  point's level-`0` rate is at least `(1−ε')(1−ε/8)/10^(ρ·n)`. The two error
-  sources are `Vol_ED`'s `ε'` and `lem:lattice`'s `η = ε/8`. -/
-  theta_lo : ∀ s, (1 - P.epsPrime) * (1 - P.eta) / (latticeScale ρ) ^ n ≤ θ s
+  point's level-`0` rate is at least `(1−ε')²(1−ε/8)/10^(ρ·n)`. The **three** error
+  sources are `GenerateSamples`' `ε'`, `Vol_ED`'s `ε'` and `lem:lattice`'s
+  `η = ε/8`.
+
+  The first factor is what `eq:sampler` buys. `GenerateSamples` draws from a
+  distribution `D` over `P(cᵢ) ∩ 𝕃ⁿ` that is only **almost** uniform,
+  `(1−ε')/|P(cᵢ) ∩ 𝕃ⁿ| ≤ D(x) ≤ (1+ε')/|P(cᵢ) ∩ 𝕃ⁿ|`, so `lem:process`
+  (`Ttc.countLaw_eq_pi`, applied with `η = ε'`) delivers a rate that is
+  **point-dependent** — which is why the window is a per-`s` bound and not an
+  equality. A one-sided `D(x) ≤ (1+ε')/|·|` would not do: it leaves the lower
+  half of this field unprovable, and with it the lower half of the headline. -/
+  theta_lo : ∀ s, (1 - P.epsPrime) ^ 2 * (1 - P.eta) / (latticeScale ρ) ^ n ≤ θ s
   /-- **The paper's Invariant**, upper half. -/
-  theta_hi : ∀ s, θ s ≤ (1 + P.epsPrime) * (1 + P.eta) / (latticeScale ρ) ^ n
+  theta_hi : ∀ s, θ s ≤ (1 + P.epsPrime) ^ 2 * (1 + P.eta) / (latticeScale ρ) ^ n
   /-- The volume estimate the run uses for each cube. -/
   vol : Cube A → ℝ
   /-- The coverage test the run uses. -/

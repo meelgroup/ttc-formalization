@@ -15,7 +15,7 @@ proves exactly those inequalities:
 
 | Paper | Definition | Chosen so that | Proved here |
 | --- | --- | --- | --- |
-| `ε' ← ε/12` | `Params.epsPrime` | the two-sided `(1±ε')` losses fit inside `(1±ε/3)` | `epsPrime_window` |
+| `ε' ← ε/12` | `Params.epsPrime` | the two-sided `(1±ε')` losses fit inside `(1±ε/2)` | `epsPrime_window` |
 | `κ` (`lem:nonconv`) | `Params.kappa` | `κ ≤ 2√(log(8r/η))` | `kappa_le` |
 | `γ` (`alg:prec`, line 86) | `Params.gamma` | `κ/γ ≤ η/(32mn)` | `kappa_div_gamma_le` |
 | ↳ what that buys | | `(1 + κ/γ)ⁿ ≤ 1 + η/(16m)` | `shell_factor_bound` |
@@ -177,14 +177,33 @@ theorem shell_factor_bound_deflated :
 
 theorem epsPrime_pos : 0 < P.epsPrime := by unfold epsPrime; linarith [P.hε0]
 
-/-- **`ε' = ε/12` is exactly what makes the two-sided loss fit `ε/3`.** -/
+/-- **`ε' = ε/12` is exactly what makes the two-sided loss fit `ε/2`.**
+
+There are **three** `(1±ε')` factors, not two: the concentration of `|𝒳|`,
+`Vol_ED`'s estimate, and — since `eq:sampler` — the almost-uniformity of
+`GenerateSamples`. Together with `lem:lattice`'s `(1±η)` that is `(1±ε')³(1±η)`,
+and `ε/2` is the smallest of the paper's fractions that still contains it: the
+first-order term alone is `3/12 + 1/8 = 3/8`, which does not fit in `ε/3`. -/
 theorem epsPrime_window :
-    (1 - P.epsPrime) * (1 - P.ε / 8) ≥ 1 - P.ε / 3 ∧
-      (1 + P.epsPrime) * (1 + P.ε / 8) ≤ 1 + P.ε / 3 := by
+    (1 - P.epsPrime) ^ 3 * (1 - P.ε / 8) ≥ 1 - P.ε / 2 ∧
+      (1 + P.epsPrime) ^ 3 * (1 + P.ε / 8) ≤ 1 + P.ε / 2 := by
   have h0 := P.hε0
   have h1 := P.hε1
+  have h2 : P.ε ^ 2 ≤ P.ε := by nlinarith
+  have h3 : P.ε ^ 3 ≤ P.ε := by nlinarith
+  have h4 : P.ε ^ 4 ≤ P.ε := by nlinarith
+  have h3nn : (0:ℝ) ≤ P.ε ^ 3 := by positivity
+  have h4nn : (0:ℝ) ≤ P.ε ^ 4 := by positivity
   unfold epsPrime
-  refine ⟨by nlinarith [sq_nonneg P.ε], by nlinarith [sq_nonneg P.ε]⟩
+  constructor
+  · have hexp : (1 - P.ε / 12) ^ 3 * (1 - P.ε / 8)
+        = 1 - (3/8) * P.ε + (5/96) * P.ε ^ 2 - (11/3456) * P.ε ^ 3
+            + (1/13824) * P.ε ^ 4 := by ring
+    rw [ge_iff_le, hexp]; nlinarith
+  · have hexp : (1 + P.ε / 12) ^ 3 * (1 + P.ε / 8)
+        = 1 + (3/8) * P.ε + (5/96) * P.ε ^ 2 + (11/3456) * P.ε ^ 3
+            + (1/13824) * P.ε ^ 4 := by ring
+    rw [hexp]; nlinarith
 
 end Params
 

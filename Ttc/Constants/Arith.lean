@@ -200,19 +200,19 @@ theorem one_add_div_pow_le {α : ℝ} {n : ℕ} (hn : 1 ≤ n) (h0 : 0 ≤ α) (
 
 /-! ## The ε-combination inequalities of `thm:volumettc` -/
 
-/-- Lower half of the proof of `thm:volumettc`: `(1 − ε/3)/(1 + ε/8) ≥ 1 − ε`.
+/-- Lower half of the proof of `thm:volumettc`: `(1 − ε/2)/(1 + ε/8) ≥ 1 − ε`.
 
 The paper's side condition `ε ≤ 1` turns out to be unnecessary here (the
 inequality holds for every `ε > 0`); we keep the binder for correspondence with
 the paper but do not use it. -/
 theorem lower_combine {ε : ℝ} (h0 : 0 < ε) (_h1 : ε ≤ 1) :
-    1 - ε ≤ (1 - ε / 3) / (1 + ε / 8) := by
+    1 - ε ≤ (1 - ε / 2) / (1 + ε / 8) := by
   rw [le_div_iff₀ (by linarith)]
   nlinarith
 
-/-- Upper half of the proof of `thm:volumettc`: `(1 + ε/3)/(1 − ε/8) ≤ 1 + ε`. -/
+/-- Upper half of the proof of `thm:volumettc`: `(1 + ε/2)/(1 − ε/8) ≤ 1 + ε`. -/
 theorem upper_combine {ε : ℝ} (h0 : 0 < ε) (h1 : ε ≤ 1) :
-    (1 + ε / 3) / (1 - ε / 8) ≤ 1 + ε := by
+    (1 + ε / 2) / (1 - ε / 8) ≤ 1 + ε := by
   rw [div_le_iff₀ (by linarith)]
   nlinarith
 

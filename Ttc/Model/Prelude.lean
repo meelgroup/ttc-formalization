@@ -261,14 +261,22 @@ noncomputable def eta : ℝ := P.ε / 8
 /-- `ε' ← ε/12` (`alg:ttc` line 18). -/
 noncomputable def epsPrime : ℝ := P.ε / 12
 
-/-- `δ' ← δ/(2m)` (`alg:ttc` line 18): the per-call failure probability handed to
-`Vol_ED`, one call per polytope. -/
-noncomputable def deltaPrime : ℝ := P.δ / (2 * P.m)
+/-- `δ' ← δ/(4m)` (`alg:ttc` line 18): the per-call failure probability handed to
+`Vol_ED` **and** to `GenerateSamples`, one call of each per polytope. The `4`
+(rather than the `2` of the pre-`eq:sampler` version) is what leaves room for the
+sampler's own failure event alongside the volume oracle's. -/
+noncomputable def deltaPrime : ℝ := P.δ / (4 * P.m)
 
-/-- `Thresh ← max(24 ln(24/δ) / ((1−ε')ε'²), 6(ln(6/δ) + ln m))` (`alg:ttc` line 20). -/
+/-- `Thresh ← max(24 ln(24/δ) / ((1−ε')ε'²), 15(ln(6/δ) + ln m))` (`alg:ttc` line 20).
+
+The second branch's constant is `15`, not `6`: the noise estimate bounds the
+level-`j*−1` rate by `(1+ε')²(1+η)·Thresh/2 ≤ 2·Thresh/3`, so `lem:chernoff`
+gives `exp(−Thresh/15)` rather than `exp(−Thresh/6)`. Nothing here needs it —
+this development derives `j*` from the *true* total rate (`Ttc.exists_epoch`), so
+`exp(−Thresh/6)` is honest — but the constant transcribes `alg:ttc`. -/
 noncomputable def thresh : ℝ :=
   max (24 * Real.log (24 / P.δ) / ((1 - P.epsPrime) * P.epsPrime ^ 2))
-      (6 * (Real.log (6 / P.δ) + Real.log P.m))
+      (15 * (Real.log (6 / P.δ) + Real.log P.m))
 
 /-- `κ = √(2 log(8/η)) + √(2 log r)`, the facet displacement of `lem:nonconv`.
 The `8/η` (not `4/η`) is the `θ = η/2` repair; see the README, finding 1. -/

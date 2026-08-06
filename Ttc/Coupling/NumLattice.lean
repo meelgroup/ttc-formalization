@@ -47,18 +47,18 @@ theorem epsPrime_lt_one : T.P.epsPrime < 1 := by
 
 /-- **`lem:numlattice`, as a theorem.**
 
-With probability at least `1 − δ` the algorithm's output lies within `(1 ± ε/3)`
+With probability at least `1 − δ` the algorithm's output lies within `(1 ± ε/2)`
 of the normalised lattice count. Formerly a field of `Ttc.TtcProb`; now derived
 from the epoch decomposition plus the proved estimates. -/
 theorem numlattice :
     1 - T.δ ≤
-      (T.μ {ω | (1 - T.ε / 3) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
-                ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 3) * T.L}).toReal := by
+      (T.μ {ω | (1 - T.ε / 2) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
+                ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 2) * T.L}).toReal := by
   haveI := T.mΩ
   haveI := T.isProb
   obtain ⟨jstar, lamStar, hlam, hcover⟩ := T.numlattice_union
-  set good : Set T.Ω := {ω | (1 - T.ε / 3) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
-    ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 3) * T.L} with hgood
+  set good : Set T.Ω := {ω | (1 - T.ε / 2) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
+    ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 2) * T.L} with hgood
   -- the three contributions total at most `δ`
   have hm : (1:ℝ) ≤ (T.P.m : ℝ) := by exact_mod_cast T.P.hm
   have hδ0 : 0 < T.δ := T.hδ0
@@ -67,9 +67,19 @@ theorem numlattice :
       ≤ T.P.thresh := by
     rw [Params.thresh, hδP]
     exact le_max_left _ _
+  -- `alg:ttc` line 20's second branch carries the constant `15` (the noise estimate's
+  -- rate inflation); the estimate here only needs `6`, and the gap is nonnegative
+  -- because `δ ≤ 1` and `m ≥ 1` make the bracket nonnegative.
+  have hbr : 0 ≤ Real.log (6 / T.δ) + Real.log T.P.m := by
+    have h6 : 0 ≤ Real.log (6 / T.δ) :=
+      Real.log_nonneg (by rw [le_div_iff₀ hδ0]; linarith [T.hδ1])
+    have hlm : 0 ≤ Real.log T.P.m := Real.log_nonneg hm
+    linarith
   have hT2 : 6 * (Real.log (6 / T.δ) + Real.log T.P.m) ≤ T.P.thresh := by
-    rw [Params.thresh, hδP]
-    exact le_max_right _ _
+    have h15 : 15 * (Real.log (6 / T.δ) + Real.log T.P.m) ≤ T.P.thresh := by
+      rw [Params.thresh, hδP]
+      exact le_max_right _ _
+    linarith
   have hsum := numlattice_failure_le (ε := T.P.epsPrime) (Thresh := T.P.thresh)
     (δ := T.δ) (m := (T.P.m : ℝ)) (lamStar := lamStar)
     (errSum := ∑ t ∈ Finset.range jstar,

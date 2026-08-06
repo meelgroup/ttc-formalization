@@ -28,7 +28,9 @@ saying *what the algorithm's randomness is*: the lattice points are enumerated
 points that cube covers ([`vol_eq`](Ttc/Model/ProblemSetting.lean#L165),
 [`vol_pos`](Ttc/Model/ProblemSetting.lean#L167)), the instance is big enough for
 the sketch to be worth running ([`big`](Ttc/Model/ProblemSetting.lean#L172)), and
-the rates reproduce the count (`rate_eq_L : ∑θ = L`). That is a real reduction —
+each point's rate sits in the paper's Invariant window (`theta_lo`, `theta_hi`:
+`(1±ε')²(1±η)/10^(ρn)`, the squared factor being `Vol_ED`'s and the
+almost-uniform sampler's). That is a real reduction —
 an assumed *conclusion* about probabilities has been replaced by an assumed
 *description* of the algorithm's randomness, and everything quantitative is now
 derived from it — but it is **not zero**: a reader who doubts that the modelled
@@ -402,8 +404,8 @@ theorem with the deleted field's statement verbatim:
 theorem Ttc.TtcProb.numlattice_union (T : TtcProb A n) :
     ∃ (jstar : ℕ) (lamStar : ℝ),
       (1 - T.P.epsPrime) * T.P.thresh / 8 ≤ lamStar ∧
-      (T.μ {ω | ¬ ((1 - T.ε/3) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
-                 ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε/3) * T.L)}).toReal
+      (T.μ {ω | ¬ ((1 - T.ε/2) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
+                 ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε/2) * T.L)}).toReal
         ≤ (∑ t ∈ Finset.range jstar,
               2 * Real.exp (-(T.P.epsPrime ^ 2 * (lamStar * 2 ^ t) / 3)))
             + T.P.m * Real.exp (-(T.P.thresh / 6)) + T.δ / 2
@@ -477,7 +479,7 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | `claim:helper` | `kⁿ ≤ (1+η/4)/(1−η/4)` | [`claim_helper`](Ttc/Constants/Arith.lean#L162), [`claim_helper_of`](Ttc/Constants/Arith.lean#L133), [`exp_two_mul_le_div`](Ttc/Constants/Arith.lean#L78) | **proved** — see finding 4 |
 | `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Lattice/Assembled.lean#L91), and for the problem instance [`TtcProb.lattice_lo`](Ttc/Lattice/Assembled.lean#L222)/[`lattice_hi`](Ttc/Lattice/Assembled.lean#L227) | **proved** — formerly two fields of `TtcProb` |
 | ↳ transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | | [`lattice_of_scaled`](Ttc/Lattice/Transport.lean#L91), [`ncard_inter_lattice_smul`](Ttc/Lattice/Transport.lean#L57), [`volume_smul_body`](Ttc/Lattice/Transport.lean#L63), [`lattice_bounds`](Ttc/Lattice/Transport.lean#L144) | **proved** |
-| `lem:numlattice` | sketch output within `(1±ε/3)` w.p. `1−δ` | [`TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53), from `TtcProb.numlattice_union` plus [`numlattice_failure_le`](Ttc/Process/SketchProcess.lean#L246); skeleton [`epoch_series_le`](Ttc/Process/Sketch.lean#L87), [`err_sum_le_delta`](Ttc/Process/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Process/Sketch.lean#L126), [`numlattice_failure_bound`](Ttc/Process/Sketch.lean#L142), [`sketch_interval`](Ttc/Process/Sketch.lean#L181), [`sketch_window`](Ttc/Process/Sketch.lean#L196) | **theorem** — and so is the epoch covering it consumes, [`TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267) (see [What is assumed](#assumed-about-the-algorithm)) |
+| `lem:numlattice` | sketch output within `(1±ε/2)` w.p. `1−δ` | [`TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53), from `TtcProb.numlattice_union` plus [`numlattice_failure_le`](Ttc/Process/SketchProcess.lean#L246); skeleton [`epoch_series_le`](Ttc/Process/Sketch.lean#L87), [`err_sum_le_delta`](Ttc/Process/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Process/Sketch.lean#L126), [`numlattice_failure_bound`](Ttc/Process/Sketch.lean#L142), [`sketch_interval`](Ttc/Process/Sketch.lean#L181), [`sketch_window`](Ttc/Process/Sketch.lean#L196) | **theorem** — and so is the epoch covering it consumes, [`TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267) (see [What is assumed](#assumed-about-the-algorithm)) |
 | ↳ **the covering, from the sampler description** | the ex-field, proved: transport the coupled-run bound to an arbitrary `Ω`/`μ`/`O` | [`numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35), self-coupled form [`numlattice_union_of_traj`](Ttc/Coupling/Transfer.lean#L190), window [`window_of_two_sided`](Ttc/Coupling/Transfer.lean#L104)/[`window_of_exact`](Ttc/Coupling/Transfer.lean#L121), epoch index [`exists_epoch`](Ttc/Coupling/Transfer.lean#L140), [`rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180), and the two facts that let `j*` be *constructed* rather than assumed — [`TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean#L242), [`TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260) | **proved** — this is what deleted the last assumed field, and then the assumed epoch index too |
 | ↳ the coupled level family | `𝒳ⱼ` for **all** `j` on one space, nested thinning from level `0` | [`famCount`](Ttc/Coupling/Family.lean#L80), [`famLaw`](Ttc/Coupling/Family.lean#L125), [`trajLaw`](Ttc/Coupling/Family.lean#L209), marginals [`map_trajLaw_eval`](Ttc/Coupling/Family.lean#L274), nesting [`trajLaw_ae_nested`](Ttc/Coupling/Run.lean#L592) | **constructed** — the object finding 15 says the paper never builds |
 | ↳ the coupling to the run | the oracles read the family; `\|𝒳\| = ∑ₛ ω(J)ₛ` **pathwise** | [`trajOracles`](Ttc/Coupling/Family.lean#L393), [`CoupledAt`](Ttc/Coupling/Run.lean#L31), [`coupledAt_step`](Ttc/Coupling/Run.lean#L183), [`coupledAt_foldl`](Ttc/Coupling/Run.lean#L241), [`card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L263), [`run_eq_traj`](Ttc/Coupling/Run.lean#L281) | **proved** — equality of random variables, not of laws |
@@ -485,7 +487,7 @@ environment, so it renders as a *Lemma*, not a Claim.)
 | ↳ **`lem:numlattice` for the coupled run** | the paper's three-term bound, for `Ttc.run` driven by the family | [`traj_numlattice_le`](Ttc/Coupling/Run.lean#L685), via [`traj_failure_le`](Ttc/Coupling/Run.lean#L614), [`trajLaw_err_le`](Ttc/Coupling/Run.lean#L511), [`trajLaw_noise_le`](Ttc/Coupling/Run.lean#L527), [`epoch_reindex`](Ttc/Coupling/Run.lean#L665), [`totalRate_reindex`](Ttc/Coupling/Run.lean#L672) | **proved**, nothing probabilistic assumed — and with a *smaller* right-hand side than the paper's (no `+ δ/2`) |
 | ↳ the non-degenerate witness | the box `[0,c]ⁿ`, `c ≥ Thresh`, sampled by the coupled family | [`Box.boxProb`](Ttc/Witness/BoxProb.lean#L271), [`Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean#L349); geometry [`boxAtoms`](Ttc/Witness/Box.lean#L47), [`boxCube`](Ttc/Witness/Box.lean#L270), [`boxDNF`](Ttc/Witness/Box.lean#L307), [`boxForm`](Ttc/Witness/Box.lean#L387), [`sol_boxForm`](Ttc/Witness/Box.lean#L429), [`normalisedCount_box_ge`](Ttc/Witness/Box.lean#L451) | **constructed** — replaces the deleted `trivialProb` |
 | `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Process/Sketch.lean#L181) | constant **verified** |
-| `alg:ttc` line 18 (`δ' ← δ/(2m)`) | the `Vol_ED` failure budget | [`Params.deltaPrime`](Ttc/Model/Prelude.lean#L225), [`Params.vol_failure_eq`](Ttc/Process/Sketch.lean#L159), [`numlattice_failure_bound_with_vol`](Ttc/Process/Sketch.lean#L168) | **verified** — and the paper omits it from its union bound; see finding 13 |
+| `alg:ttc` line 18 (`δ' ← δ/(4m)`) | the `Vol_ED` failure budget | [`Params.deltaPrime`](Ttc/Model/Prelude.lean#L225), [`Params.vol_failure_eq`](Ttc/Process/Sketch.lean#L159), [`numlattice_failure_bound_with_vol`](Ttc/Process/Sketch.lean#L168) | **verified** — and the paper omits it from its union bound; see finding 13 |
 | `alg:ttc` line 20 (`Thresh`) | | [`err_sum_le_delta`](Ttc/Process/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Process/Sketch.lean#L126) | both branches **verified** |
 | `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Model/Prelude.lean#L218) | definition |
 | `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Model/Prelude.lean#L234), [`kappa_le`](Ttc/Constants/Parameters.lean#L62) | **proved** `κ ≤ 2√(log(8r/η))` |
@@ -632,7 +634,25 @@ the lattice count.*
 | `cover_eq`, `cover_all` | [159](Ttc/Model/ProblemSetting.lean#L159), [161](Ttc/Model/ProblemSetting.lean#L161) | the coverage test agrees with cube membership on the lattice, and the cubes cover every enumerated point |
 | **`vol_eq`**, `vol_pos` | [165](Ttc/Model/ProblemSetting.lean#L165), [167](Ttc/Model/ProblemSetting.lean#L167) | **`∑_{s : memPt i s} θ s = vol i`** — each cube's rate *is* the total level-`0` rate of the points it covers, and it is positive. This is what makes `vol` a description of the instance instead of a free function |
 | **`big`** | [172](Ttc/Model/ProblemSetting.lean#L172) | **`(1−ε')·Thresh/8 ≤ ∑θ`** — the instance is large enough for the sketch to be worth running. The paper's own regime, and what [`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean#L271) arranges by choosing the box side from `Thresh` |
-| **`rate_eq_L`** | [175](Ttc/Model/ProblemSetting.lean#L175) | **`∑θ = L`** — the rates reproduce the lattice count; the only place the geometry meets the probability |
+| **`theta_lo`, `theta_hi`** | [`ProblemSetting`](Ttc/Model/ProblemSetting.lean) | **`(1−ε')²(1−η)/10^(ρn) ≤ θ s ≤ (1+ε')²(1+η)/10^(ρn)`** — the paper's Invariant, *per lattice point*. This is where the geometry meets the probability, and it replaces the earlier exact `∑θ = L`. The `(1±ε')` appears **squared**: once for `Vol_ED`, once for the almost-uniformity of `GenerateSamples` (`eq:sampler`) |
+
+**Almost-uniform sampling (`eq:sampler`).** `GenerateSamples` no longer has to
+return exactly uniform lattice points: it draws from a distribution `D` over
+`P(cᵢ) ∩ 𝕃ⁿ` with `(1−ε')/|P(cᵢ) ∩ 𝕃ⁿ| ≤ D(x) ≤ (1+ε')/|P(cᵢ) ∩ 𝕃ⁿ|` pointwise.
+The whole of that change lands in one place — the extra `(1±ε')` factor in
+`theta_lo`/`theta_hi` — because the model already carried a **per-point** rate
+`θ s` rather than a single rate, which is exactly what a non-uniform sampler
+produces. Nothing else in the run can see the difference, and the headline is
+unchanged. Three knock-on constants moved with it: `lem:numlattice`'s window is
+now `(1±ε/2)` (three `(1±ε')` factors and one `(1±η)` no longer fit in `ε/3` —
+the first-order term alone is `3/8`), `δ' = δ/(4m)` leaves room for the sampler's
+own failure event beside `Vol_ED`'s, and `Thresh`'s second branch carries `15`.
+
+The two-sidedness is **not** decorative. A one-sided `D(x) ≤ (1+ε')/|·|` gives
+only `D(A) ≥ |A|/|P ∩ 𝕃ⁿ| − ε'` for a region `A` — an *additive* loss, vacuous
+when `A` is the sliver of `P(cᵢ)` no later cube covers, which is precisely the
+mass the estimate accumulates. It would leave `theta_lo` unprovable, and with it
+the lower half of the headline.
 
 Five fields that used to sit between `cover_all` and `rate_eq_L` — `jstar`,
 `hjstar`, `rate_small`, `rate_le`, `lamStar_ge` — are **gone**. They handed the
@@ -779,7 +799,7 @@ obstacles are cleared:
 5. **And the bound itself is proved for the coupled run.**
    [`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685) bounds
    ```
-   Pr[ ¬( (1−ε/3)·L ≤ run P (trajOracles …) ρ l ≤ (1+ε/3)·L ) ]
+   Pr[ ¬( (1−ε/2)·L ≤ run P (trajOracles …) ρ l ≤ (1+ε/2)·L ) ]
    ```
    by `∑_{t<j*} 2exp(−ε'²·λ*·2ᵗ/3) + exp(−Thresh/6)` — the paper's expression,
    and in fact **smaller than the paper's**: the covering statement carries an
@@ -824,7 +844,7 @@ via [`Ttc.rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180). The paper
 addresses none of this.
 
 **These proofs confirm the algorithm's constants.** `ε' ← ε/12` (`alg:ttc` line
-18) is exactly what makes the two-sided `(1±ε')` loss fit inside `(1±ε/3)`; each
+18) is exactly what makes the two-sided `(1±ε')` loss fit inside `(1±ε/2)`; each
 branch of `Thresh` (line 20) is exactly what makes its failure branch `δ/6`
 (total `δ/3`, so there is slack); `γ` is exactly what makes
 `κ/γ ≤ η/(32mn)` — with no slack at all, which is why `γ` and `κ` must use the
@@ -840,7 +860,7 @@ input's inscribed radius `γ̂` to the `γ` the shell bound needs, after dilatin
   formalised. Nothing here says anything about running time.
 * **The `δ` is derived, end to end.** `Ttc.TtcProb.volume_estimate` really does
   conclude `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ`: `Ttc.TtcProb.numlattice` gives
-  `Pr[ output ∈ (1±ε/3)·L ] ≥ 1 − δ` — *proved*, from
+  `Pr[ output ∈ (1±ε/2)·L ] ≥ 1 − δ` — *proved*, from
   `Ttc.TtcProb.numlattice_union` plus the algorithm's own `Thresh` and `δ'` — and
   the deterministic chain shows the first event *contains* the second, so measure
   monotonicity carries the bound. The covering is itself proved
@@ -1006,7 +1026,7 @@ correct AllSAT/`ToDNF` delivers. Under it both inclusions are one line
 
 ### 7. Fine, implicit — two side conditions are unnecessary
 
-`Ttc.lower_combine` (`(1−ε/3)/(1+ε/8) ≥ 1−ε`) and `Ttc.nonconv_lower_arith`
+`Ttc.lower_combine` (`(1−ε/2)/(1+ε/8) ≥ 1−ε`) and `Ttc.nonconv_lower_arith`
 (`((1−η/4)/(1+η/4))(1−η/2) ≥ 1−η`) hold for **all** positive `ε`, `η`; the
 paper's `≤ 1` side conditions are not needed.
 
@@ -1204,7 +1224,7 @@ estimate.
 
 ### 13. Genuine gap — the `Vol_ED` failures are never union-bounded
 
-`alg:ttc` line 18 sets `δ' ← δ/(2m)` and line 24 calls `Vol_ED(P(cᵢ), ε', δ')`
+`alg:ttc` line 18 sets `δ' ← δ/(4m)` and line 24 calls `Vol_ED(P(cᵢ), ε', δ')`
 once per polytope, so the `m` calls fail with total probability up to `δ/2`. The
 proof of `lem:numlattice` uses their output as if it were exact —
 `analysis.tex:269`: "by the accuracy guarantee of `Vol_ED`, the call returns `t`

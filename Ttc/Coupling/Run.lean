@@ -537,11 +537,11 @@ lattice count `L` — supplied by `lem:lattice`, not by any probability estimate
 output is pinned to `(1±ε')·∑θ`, hence to the target window. -/
 theorem traj_failure_le {L : ℕ} {θ : Fin L → ℝ} {epsP ε Lval : ℝ}
     (hθ0 : ∀ i, 0 ≤ θ i) (hθ : 0 < ∑ i, θ i) (hep0 : 0 < epsP) (hep1 : epsP ≤ 1)
-    (hlo : (1 - ε / 3) * Lval ≤ (1 - epsP) * (∑ s, θ s))
-    (hhi : (1 + epsP) * (∑ s, θ s) ≤ (1 + ε / 3) * Lval)
+    (hlo : (1 - ε / 2) * Lval ≤ (1 - epsP) * (∑ s, θ s))
+    (hhi : (1 + epsP) * (∑ s, θ s) ≤ (1 + ε / 2) * Lval)
     (J : (ℕ → (Fin L → ℕ)) → ℕ) (out : (ℕ → (Fin L → ℕ)) → ℝ)
     (hout : ∀ ω, out ω = 2 ^ (J ω) * (∑ s, ω (J ω) s : ℕ)) (jstar : ℕ) :
-    (trajLaw θ).real {ω | ¬ ((1 - ε / 3) * Lval ≤ out ω ∧ out ω ≤ (1 + ε / 3) * Lval)}
+    (trajLaw θ).real {ω | ¬ ((1 - ε / 2) * Lval ≤ out ω ∧ out ω ≤ (1 + ε / 2) * Lval)}
       ≤ (∑ j ∈ Finset.range jstar, 2 * Real.exp (-(epsP ^ 2 * totalRate θ j / 3)))
         + (trajLaw θ).real {ω | jstar ≤ J ω} := by
   classical
@@ -549,7 +549,7 @@ theorem traj_failure_le {L : ℕ} {θ : Fin L → ℝ} {epsP ε Lval : ℝ}
     {ω | ¬ ((1 - epsP) * totalRate θ j ≤ (∑ s, ω j s : ℕ) ∧
           ((∑ s, ω j s : ℕ) : ℝ) ≤ (1 + epsP) * totalRate θ j)} with hErr
   -- the covering
-  have hsub : {ω | ¬ ((1 - ε / 3) * Lval ≤ out ω ∧ out ω ≤ (1 + ε / 3) * Lval)}
+  have hsub : {ω | ¬ ((1 - ε / 2) * Lval ≤ out ω ∧ out ω ≤ (1 + ε / 2) * Lval)}
       ⊆ (⋃ j ∈ Finset.range jstar, Err j) ∪ {ω | jstar ≤ J ω} := by
     intro ω hω
     by_cases hJ : jstar ≤ J ω
@@ -608,8 +608,8 @@ Nothing here is assumed: `hlo`/`hhi` come from `lem:lattice`, `hsmall` and
 `hrate` are conditions on the parameters, and everything else is proved above. -/
 theorem traj_numlattice_le {L : ℕ} {θ : Fin L → ℝ} {epsP ε Lval : ℝ}
     (hθ0 : ∀ i, 0 ≤ θ i) (hθ : 0 < ∑ i, θ i) (hep0 : 0 < epsP) (hep1 : epsP ≤ 1)
-    (hlo : (1 - ε / 3) * Lval ≤ (1 - epsP) * (∑ s, θ s))
-    (hhi : (1 + epsP) * (∑ s, θ s) ≤ (1 + ε / 3) * Lval)
+    (hlo : (1 - ε / 2) * Lval ≤ (1 - epsP) * (∑ s, θ s))
+    (hhi : (1 + epsP) * (∑ s, θ s) ≤ (1 + ε / 2) * Lval)
     {pt : Fin L → Space n} (hpt : Function.Injective pt)
     {vol : ι → ℝ} {covered : Space n → ι → Bool} {mem : ι → Fin L → Bool}
     (hcov : ∀ s i, covered (pt s) i = mem i s) (P : Params) (ρ : ℤ)
@@ -617,9 +617,9 @@ theorem traj_numlattice_le {L : ℕ} {θ : Fin L → ℝ} {epsP ε Lval : ℝ}
     (jstar : ℕ) (hj1 : 1 ≤ jstar)
     (hsmall : ∀ i ∈ l, ¬ (P.thresh / vol i ≤ (1 / 2 : ℝ) ^ (jstar - 1)))
     (hrate : 2 * totalRate θ (jstar - 1) ≤ P.thresh) :
-    (trajLaw θ).real {ω | ¬ ((1 - ε / 3) * Lval ≤
+    (trajLaw θ).real {ω | ¬ ((1 - ε / 2) * Lval ≤
           run P (trajOracles hpt vol covered mem ω) ρ l ∧
-        run P (trajOracles hpt vol covered mem ω) ρ l ≤ (1 + ε / 3) * Lval)}
+        run P (trajOracles hpt vol covered mem ω) ρ l ≤ (1 + ε / 2) * Lval)}
       ≤ (∑ t ∈ Finset.range jstar,
             2 * Real.exp (-(epsP ^ 2 * (totalRate θ (jstar - 1) * 2 ^ t) / 3)))
         + Real.exp (-(P.thresh / 6)) := by
@@ -635,9 +635,9 @@ theorem traj_numlattice_le {L : ℕ} {θ : Fin L → ℝ} {epsP ε Lval : ℝ}
   have hnull : (trajLaw θ).real Bad = 0 := by
     rw [Measure.real, MeasureTheory.ae_iff.1 (trajLaw_ae_nested θ), ENNReal.toReal_zero]
   -- the covering
-  have hsub : {ω | ¬ ((1 - ε / 3) * Lval ≤
+  have hsub : {ω | ¬ ((1 - ε / 2) * Lval ≤
         run P (trajOracles hpt vol covered mem ω) ρ l ∧
-      run P (trajOracles hpt vol covered mem ω) ρ l ≤ (1 + ε / 3) * Lval)}
+      run P (trajOracles hpt vol covered mem ω) ρ l ≤ (1 + ε / 2) * Lval)}
       ⊆ Bad ∪ ((⋃ j ∈ Finset.range jstar, Err j) ∪ Ovf) := by
     intro ω hω
     by_cases hn : ∀ j s, ω (j + 1) s ≤ ω j s

@@ -16,10 +16,10 @@ real numbers and four inequalities the arithmetic actually consumes — it is *n
 part of the audit surface, and `Ttc.TtcProb` (`Model/ProblemSetting`) does not extend
 it. Over it we prove the paper's two chains:
 
-* `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/3)·L ≤ est`  (`Ttc.TtcAnalysis.le_est`)
-* `est ≤ (1+ε/3)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`  (`Ttc.TtcAnalysis.est_le`)
+* `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/2)·L ≤ est`  (`Ttc.TtcAnalysis.le_est`)
+* `est ≤ (1+ε/2)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`  (`Ttc.TtcAnalysis.est_le`)
 
-so the `ε/8` of `lem:lattice` and the `ε/3` of `lem:numlattice` compose to the
+so the `ε/8` of `lem:lattice` and the `ε/2` of `lem:numlattice` compose to the
 `ε` of `thm:volumettc`, with slack.
 
 **The bridge to the probabilistic statement.** `Ttc.TtcProb.toAnalysis` reads a
@@ -64,15 +64,15 @@ structure TtcAnalysis (A : Type*) (n : ℕ) where
   /-- `lem:lattice`, upper half, at `η = ε/8`. -/
   lattice_hi : volSol M φ ≤ (1 + ε / 8) * L
   /-- `lem:numlattice`, lower half. -/
-  sketch_lo : (1 - ε / 3) * L ≤ est
+  sketch_lo : (1 - ε / 2) * L ≤ est
   /-- `lem:numlattice`, upper half. -/
-  sketch_hi : est ≤ (1 + ε / 3) * L
+  sketch_hi : est ≤ (1 + ε / 2) * L
 
 namespace TtcAnalysis
 
 variable {A : Type*} {n : ℕ} (T : TtcAnalysis A n)
 
-/-- **Lower bound.** `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/3)·L ≤ est`. -/
+/-- **Lower bound.** `(1−ε)·vol ≤ (1−ε)(1+ε/8)·L ≤ (1−ε/2)·L ≤ est`. -/
 theorem le_est : (1 - T.ε) * volSol T.M T.φ ≤ T.est := by
   have hv := T.lattice_hi
   have hL := T.hL
@@ -80,19 +80,19 @@ theorem le_est : (1 - T.ε) * volSol T.M T.φ ≤ T.est := by
   have h1 := T.hε1
   have step1 : (1 - T.ε) * volSol T.M T.φ ≤ (1 - T.ε) * ((1 + T.ε / 8) * T.L) :=
     mul_le_mul_of_nonneg_left hv (by linarith)
-  have harith : (1 - T.ε) * (1 + T.ε / 8) ≤ 1 - T.ε / 3 := by nlinarith
-  have step2 : (1 - T.ε) * ((1 + T.ε / 8) * T.L) ≤ (1 - T.ε / 3) * T.L := by
+  have harith : (1 - T.ε) * (1 + T.ε / 8) ≤ 1 - T.ε / 2 := by nlinarith
+  have step2 : (1 - T.ε) * ((1 + T.ε / 8) * T.L) ≤ (1 - T.ε / 2) * T.L := by
     nlinarith [mul_le_mul_of_nonneg_right harith hL]
   linarith [T.sketch_lo]
 
-/-- **Upper bound.** `est ≤ (1+ε/3)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`. -/
+/-- **Upper bound.** `est ≤ (1+ε/2)·L ≤ (1+ε)(1−ε/8)·L ≤ (1+ε)·vol`. -/
 theorem est_le : T.est ≤ (1 + T.ε) * volSol T.M T.φ := by
   have hv := T.lattice_lo
   have hL := T.hL
   have h0 := T.hε0
   have h1 := T.hε1
-  have harith : (1 + T.ε / 3) ≤ (1 + T.ε) * (1 - T.ε / 8) := by nlinarith
-  have step1 : (1 + T.ε / 3) * T.L ≤ ((1 + T.ε) * (1 - T.ε / 8)) * T.L :=
+  have harith : (1 + T.ε / 2) ≤ (1 + T.ε) * (1 - T.ε / 8) := by nlinarith
+  have step1 : (1 + T.ε / 2) * T.L ≤ ((1 + T.ε) * (1 - T.ε / 8)) * T.L :=
     mul_le_mul_of_nonneg_right harith hL
   have step2 : ((1 + T.ε) * (1 - T.ε / 8)) * T.L ≤ (1 + T.ε) * volSol T.M T.φ := by
     have h := mul_le_mul_of_nonneg_left hv (by linarith : (0:ℝ) ≤ 1 + T.ε)
@@ -100,7 +100,7 @@ theorem est_le : T.est ≤ (1 + T.ε) * volSol T.M T.φ := by
   linarith [T.sketch_hi]
 
 /-- **The two-sided bound**, the deterministic content of `thm:volumettc`: the
-`(1±ε/8)` of `lem:lattice` and the `(1±ε/3)` of `lem:numlattice` compose to
+`(1±ε/8)` of `lem:lattice` and the `(1±ε/2)` of `lem:numlattice` compose to
 `(1±ε)`. -/
 theorem volume_estimate : T.est ∈ relErr T.ε (volSol T.M T.φ) :=
   ⟨T.le_est, T.est_le⟩
@@ -120,8 +120,8 @@ theorem TtcProb.sol_eq_union {A : Type*} {n : ℕ} (T : TtcProb A n) :
 `Ttc.TtcAnalysis`.** This is what lets `Model/Theorem` apply the arithmetic
 pointwise without restating it. -/
 noncomputable def TtcProb.toAnalysis {A : Type*} {n : ℕ} (T : TtcProb A n) {ω : T.Ω}
-    (h : (1 - T.ε / 3) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
-         ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 3) * T.L) :
+    (h : (1 - T.ε / 2) * T.L ≤ ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ∧
+         ttcOutput T.P T.O T.toDNF T.ρ T.φ ω ≤ (1 + T.ε / 2) * T.L) :
     TtcAnalysis A n where
   ε := T.ε
   hε0 := T.hε0

@@ -154,7 +154,32 @@ an option.
 | `cover_eq`, `cover_all` | [159](Ttc/Model/ProblemSetting.lean#L159), [161](Ttc/Model/ProblemSetting.lean#L161) | the coverage test agrees with cube membership on the lattice; the cubes cover every enumerated point | **assumed** — combinatorial, checkable of an instance |
 | **`vol_eq`**, `vol_pos` | [165](Ttc/Model/ProblemSetting.lean#L165), [167](Ttc/Model/ProblemSetting.lean#L167) | **`∑_{s : memPt i s} θ s = vol i`** for every cube `i ∈ D`, and `0 < vol i` — each cube's rate *is* the total level-`0` rate of the points it covers | **assumed of the sampler**, and it **closes a gap**: before it, nothing at all related the run's volume estimates to the instance. `Ttc.TtcProb.vol_le_total` reads `vol i ≤ ∑θ` off it |
 | **`big`** | [172](Ttc/Model/ProblemSetting.lean#L172) | **`(1−ε')·Thresh/8 ≤ ∑θ`** — the instance is large enough for the sketch to be worth running | **assumed of the instance**, and a genuine assumption — but it is the paper's own regime, not an artifact. It is what `Ttc.exists_epoch` needs to build `j*`, and [`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean#L271) arranges it by choosing the box side from `Thresh` |
-| **`rate_eq_L`** | [175](Ttc/Model/ProblemSetting.lean#L175) | **`∑θ = L`** — the rates reproduce the lattice count | **assumed** — the only place the geometry meets the probability. Note it demands *exactness*; the two-sided version is available ([`Ttc.window_of_two_sided`](Ttc/Coupling/Transfer.lean#L104)) but unused |
+| **`theta_lo`, `theta_hi`** | [`ProblemSetting`](Ttc/Model/ProblemSetting.lean) | **`(1−ε')²(1−η)/10^(ρn) ≤ θ s ≤ (1+ε')²(1+η)/10^(ρn)`** — the paper's Invariant, per lattice point | **assumed of the sampler** — the only place the geometry meets the probability. It replaced the exact `∑θ = L` this row used to carry, and it is now genuinely two-sided: [`Ttc.window_of_two_sided`](Ttc/Coupling/Transfer.lean#L104) is what consumes it |
+
+**Almost-uniform sampling, `eq:sampler`.** `GenerateSamples` is assumed only to
+draw from a distribution `D` over `P(cᵢ) ∩ 𝕃ⁿ` that is pointwise within a
+`(1±ε')` factor of uniform — not from the uniform distribution itself. An auditor
+should note where that assumption lives: **nowhere as a field of its own.** Its
+entire content is the extra `(1±ε')` factor in `theta_lo`/`theta_hi`, because the
+model already gave each lattice point its own rate `θ s`, and a per-point rate is
+exactly what an almost-uniform sampler produces. So the thing to check here is
+not a new hypothesis but a *widened* one: the window is weaker than it was, which
+makes the theorem stronger, and the headline statement is untouched.
+
+Two consequences an auditor should verify rather than assume: the accuracy
+budget is now `(1±ε')³(1±η) ⊆ (1±ε/2)`
+([`Ttc.Params.epsPrime_window`](Ttc/Constants/Parameters.lean#L187)) — `ε/3` no
+longer suffices — and `δ' = δ/(4m)`
+([`Ttc.Params.deltaPrime`](Ttc/Model/Prelude.lean)), which is what pays for the
+sampler's failure event `E_samp` beside `Vol_ED`'s `E_vol`. Neither is
+load-bearing for a *hole* in the proof; both are transcriptions of `alg:ttc`.
+
+A one-sided bound would **not** do, and this is the one place where the paper's
+choice of `≤` versus a two-sided window is doing real work: from
+`D(x) ≤ (1+ε')/|P ∩ 𝕃ⁿ|` alone one gets only `D(A) ≥ |A|/|P ∩ 𝕃ⁿ| − ε'`, an
+additive loss that is vacuous exactly when `A` is the small part of `P(cᵢ)` no
+later cube covers — which is the mass the estimate is made of. `theta_lo` would
+be unprovable and the lower half of the headline would fail.
 
 There is **no `jstar` row any more**, and that is the point: an epoch index in
 the right window used to be five fields of this table, and is now produced by
@@ -173,7 +198,7 @@ via [`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35) from
 [`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685)); the covering plus
 the *proved* sizes of the three contributions
 ([`Ttc.numlattice_failure_le`](Ttc/Process/SketchProcess.lean#L246), at the
-algorithm's own `Thresh` and `δ'`) gives `Pr[ output ∈ (1±ε/3)·L ] ≥ 1 − δ`
+algorithm's own `Thresh` and `δ'`) gives `Pr[ output ∈ (1±ε/2)·L ] ≥ 1 − δ`
 ([`Ttc.TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53)); the deterministic
 chain shows that event is *contained in* the `(1±ε)·Vol(F)` event; measure
 monotonicity does the rest. The `δ` is earned — given that the sampler is the one
