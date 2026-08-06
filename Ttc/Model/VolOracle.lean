@@ -54,7 +54,7 @@ by scaling, and is where that discrepancy is discharged rather than hidden.
 
 namespace Ttc
 
-open MeasureTheory Set
+open MeasureTheory Set Pointwise
 
 /-- **Cousins–Vempala, Theorem 1.1** (`vol3_journal.tex:144`), as the contract
 `Vol_ED` is called under.
@@ -123,5 +123,104 @@ theorem upper {ε b x : ℝ} (h : x ∈ relErr ε b) : x ≤ (1 + ε) * b := h.2
 theorem lower {ε b x : ℝ} (h : x ∈ relErr ε b) : (1 - ε) * b ≤ x := h.1
 
 end VolumeAlgorithm
+
+/-! ## The rounding bridge
+
+Theorem 1.1 requires `K ⊇ B(0,1)`. `Ttc.TtcProb` supplies
+`ball_subset : Metric.ball (cen i) gammaHat ⊆ region M i`
+(`Model/ProblemSetting.lean:112`) — an inscribed ball of radius `γ̂` about a
+centre that is *not* the origin. This section closes that gap rather than
+assuming it away: `Ttc.roundBody` is the affine change of variable
+`y ↦ γ⁻¹ · (y − c)` carrying the inscribed ball to the unit ball, and the four
+lemmas below discharge Theorem 1.1's hypotheses for its image and transport the
+conclusion back.
+
+The paper's own preprocessing (`vol3_journal.tex:145`, "contains the unit ball")
+is exactly this normalisation; here it is a theorem, not a hypothesis. -/
+
+/-- `K` moved so that its inscribed ball becomes the unit ball at the origin:
+the image of `K` under `y ↦ γ⁻¹ · (y − c)`. -/
+noncomputable def roundBody {n : ℕ} (c : Space n) (γ : ℝ) (K : Set (Space n)) :
+    Set (Space n) := γ⁻¹ • ((-c) +ᵥ K)
+
+variable {n : ℕ} {c : Space n} {γ : ℝ} {K : Set (Space n)}
+
+/-- **Theorem 1.1's containment hypothesis, discharged.** If `K` has an inscribed
+ball of radius `γ` about `c`, its normalisation contains the unit ball. -/
+theorem ball_subset_roundBody (hγ : 0 < γ) (h : Metric.ball c γ ⊆ K) :
+    Metric.ball (0 : Space n) 1 ⊆ roundBody c γ K := by
+  intro x hx
+  rw [Metric.mem_ball, dist_zero_right] at hx
+  have hγ0 : γ⁻¹ ≠ 0 := inv_ne_zero (ne_of_gt hγ)
+  rw [roundBody, Set.mem_smul_set_iff_inv_smul_mem₀ hγ0, inv_inv]
+  have hmem : γ • x + c ∈ K := by
+    apply h
+    rw [Metric.mem_ball, dist_eq_norm]
+    simpa [norm_smul, abs_of_pos hγ] using (mul_lt_of_lt_one_right hγ hx)
+  refine ⟨γ • x + c, hmem, ?_⟩
+  simp [vadd_eq_add]
+
+/-- **Theorem 1.1's convexity hypothesis, discharged.** Normalisation is affine,
+so it preserves convexity. -/
+theorem convex_roundBody (h : Convex ℝ K) : Convex ℝ (roundBody c γ K) :=
+  (h.vadd (-c)).smul γ⁻¹
+
+/-- **How normalisation scales volume**: by `γ⁻ⁿ`, the Jacobian of `y ↦ γ⁻¹·(y−c)`.
+Translation is Haar-invariant, so only the dilation contributes. -/
+theorem volume_roundBody (hγ : 0 < γ) :
+    volume (roundBody c γ K) = ENNReal.ofReal (γ⁻¹ ^ n) * volume K := by
+  rw [roundBody, Measure.addHaar_smul_of_nonneg volume (le_of_lt (inv_pos.mpr hγ)),
+    finrank_euclideanSpace_fin, measure_vadd]
+
+/-- **Theorem 1.1's finiteness hypothesis, discharged.** -/
+theorem volume_roundBody_ne_top (hγ : 0 < γ) (hfin : volume K ≠ ⊤) :
+    volume (roundBody c γ K) ≠ ⊤ := by
+  rw [volume_roundBody hγ]
+  exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hfin
+
+/-- The volume of `K` recovered from that of its normalisation. -/
+theorem toReal_volume_eq (hγ : 0 < γ) :
+    (volume K).toReal = γ ^ n * (volume (roundBody c γ K)).toReal := by
+  rw [volume_roundBody hγ, ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity),
+    ← mul_assoc, ← mul_pow, mul_inv_cancel₀ (ne_of_gt hγ), one_pow, one_mul]
+
+/-- **Relative error is scale-invariant** — the reason the bridge costs nothing in
+accuracy. -/
+theorem mem_relErr_smul {ε b y r : ℝ} (hr : 0 < r) :
+    r * y ∈ relErr ε (r * b) ↔ y ∈ relErr ε b := by
+  simp only [relErr, Set.mem_Icc]
+  constructor
+  · rintro ⟨h1, h2⟩; constructor <;> nlinarith
+  · rintro ⟨h1, h2⟩; constructor <;> nlinarith
+
+/-- **The rounding bridge.** A `Ttc.VolumeAlgorithm` — which by Theorem 1.1 only
+speaks about bodies containing the unit ball — yields a `(1 ± ε)` estimate of
+`Vol(K)` for *any* convex `K` of finite volume with an inscribed ball of radius
+`γ > 0` about any centre `c`, with the same confidence `1 − p`: run it on the
+normalisation and multiply the answer by `γⁿ`.
+
+This is precisely the shape `Ttc.TtcProb` needs, and every hypothesis is already
+available there — **no new assumption is introduced**:
+
+* `hγ` ← `hgammaHat` (`Model/ProblemSetting.lean:111`)
+* `hball` ← `ball_subset` (`:114`)
+* `hfin` ← `volume_ne_top` (`:116`)
+* `hconv` ← `Ttc.convex_region` (`Lattice/Decomposition.lean:76`), which is
+  **proved**, not assumed, from `M_eq` (`:64`) -/
+theorem VolumeAlgorithm.of_ball (V : VolumeAlgorithm n) {ε p : ℝ}
+    (hγ : 0 < γ) (hε : 0 < ε) (hp : 0 < p) (hp1 : p < 1)
+    (hball : Metric.ball c γ ⊆ K) (hconv : Convex ℝ K) (hfin : volume K ≠ ⊤) :
+    1 - p ≤ (V.μ {ω | γ ^ n * V.est (roundBody c γ K) ε p ω
+      ∈ relErr ε (volume K).toReal}).toReal := by
+  have hset : {ω | γ ^ n * V.est (roundBody c γ K) ε p ω ∈ relErr ε (volume K).toReal}
+      = {ω | V.est (roundBody c γ K) ε p ω
+          ∈ relErr ε (volume (roundBody c γ K)).toReal} := by
+    ext ω
+    simp only [Set.mem_setOf_eq]
+    rw [toReal_volume_eq hγ]
+    exact mem_relErr_smul (by positivity)
+  rw [hset]
+  exact V.correct _ ε p hε hp hp1 (convex_roundBody hconv)
+    (ball_subset_roundBody hγ hball) (volume_roundBody_ne_top hγ hfin)
 
 end Ttc

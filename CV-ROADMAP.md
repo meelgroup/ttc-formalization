@@ -130,15 +130,40 @@ Theorem 1.1 is the *only* thing left to supply:
 - **Done** — `Ttc.VolumeAlgorithm` (`Ttc/Model/VolOracle.lean`) states Theorem 1.1
   in Lean, with a non-vacuity witness (`VolumeAlgorithm.exact`) and the halves the
   Invariant consumes (`upper`, `lower`).
-- **To do** — replace `TtcProb.volED_hi` by a `VolumeAlgorithm` field. This
-  changes the field from a *deterministic* bound (which asserts `Vol_ED` never
-  fails, strictly stronger than the paper) to a `1 − δ'` bound, and requires
-  `Model/Theorem.lean`'s union bound to spend the `δ/2` that
-  `Params.vol_failure_eq` (`Ttc/Process/Sketch.lean:159`) already computes and
-  currently leaves unused.
-- **To do** — the **rounding bridge**. Theorem 1.1 needs `K ⊇ B(0,1)`; `TtcProb`
+- **Done** — the **rounding bridge**. Theorem 1.1 needs `K ⊇ B(0,1)`; `TtcProb`
   supplies `ball_subset : Metric.ball (cen i) gammaHat ⊆ region M i`
-  (`Ttc/Model/ProblemSetting.lean:112`). Scaling by `γ̂` and translating by
-  `cen i` bridges this, using `Measure.addHaar_smul` and translation invariance;
-  relative error is scale-invariant, so the `(1 ± ε)` conclusion transports.
-  This is ordinary Mathlib work and is the natural next increment.
+  (`Ttc/Model/ProblemSetting.lean:114`). `Ttc.roundBody` is the change of
+  variable `y ↦ γ̂⁻¹·(y − cen i)`; `ball_subset_roundBody`, `convex_roundBody`
+  and `volume_roundBody_ne_top` discharge Theorem 1.1's three hypotheses for its
+  image, and `VolumeAlgorithm.of_ball` transports the `(1 ± ε)` conclusion back
+  by `γ̂ⁿ`. Every hypothesis comes from a field `TtcProb` already has, so **no new
+  assumption is introduced**. Relative error is scale-invariant
+  (`mem_relErr_smul`), so the bridge costs nothing in accuracy.
+- **To do, and harder than it looks** — replace `TtcProb.volED_hi` by a
+  `VolumeAlgorithm` field, turning a *deterministic* bound (which asserts
+  `Vol_ED` never fails) into a `1 − δ'` one.
+
+  *The budget is available.* The `δ/2` slot is already threaded through the whole
+  union bound: `numlattice_failure_le` (`Process/SketchProcess.lean:246`) carries
+  a `volSum` argument with `hvol : volSum ≤ δ/2`, and
+  `Coupling/NumLattice.lean:78` instantiates it at `volSum := T.δ / 2` with the
+  hypothesis discharged by `le_rfl`. So the budget is **reserved and currently
+  filled with pure slack** — the arithmetic (`5δ/6 ≤ δ`) already accommodates a
+  real Vol_ED failure probability. (Only `Params.vol_failure_eq`,
+  `Process/Sketch.lean:159`, is genuinely dead code.)
+
+  *The obstacle is elsewhere.* `TtcProb.vol : Cube A → ℝ` is deterministic **by
+  construction**: `oracle_eq : ∀ ω, O ω = trajOracles ptE_inj vol cover memPt
+  (toTraj ω)` (`Model/ProblemSetting.lean:175`) binds `vol` *outside* the `ω`, so
+  the entire pathwise coupling of `Coupling/{Family,Run,Transfer}.lean` is built
+  on the volume estimates being fixed reals rather than random variables. Making
+  `Vol_ED` randomized means `vol : Ω → Cube A → ℝ`, which changes `trajOracles`
+  and every lemma downstream of it — a refactor of the load-bearing construction,
+  not a field swap.
+
+  The cheaper alternative is to leave `vol` deterministic and compose two
+  statements on a product space: "for every `vol` meeting the accuracy bound, the
+  estimate is good with probability `1 − δ`" (what exists today) together with
+  "the algorithm's `vol` meets the bound with probability `1 − δ/2`" (what
+  `VolumeAlgorithm.of_ball` now supplies). That keeps the coupling intact and is
+  the recommended route.
