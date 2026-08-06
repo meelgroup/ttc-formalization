@@ -159,6 +159,7 @@ import Ttc.Model.Prelude
 import Ttc.Model.Pseudocode
 import Ttc.Model.ProblemSetting
 import Ttc.Model.Theorem
+import Ttc.Model.VolOracle
 
 -- The modelled loop, and what a run costs
 import Ttc.Invariants
