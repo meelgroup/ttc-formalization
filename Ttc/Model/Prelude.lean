@@ -42,6 +42,8 @@ def LinAtom.halfspace (a : LinAtom n) : Set (Space n) :=
 
 /-- The paper's `F_bool`: a Boolean combination of atom indices. -/
 inductive BForm (A : Type*) where
+  /-- The empty conjunction. -/
+  | tt : BForm A
   /-- An atom. -/
   | atom : A → BForm A
   /-- Negation. -/
@@ -54,10 +56,23 @@ inductive BForm (A : Type*) where
 
 /-- Satisfaction under a `Prop`-valued assignment. -/
 def BForm.holds (v : A → Prop) : BForm A → Prop
+  | .tt => True
   | .atom a => v a
   | .neg φ => ¬ φ.holds v
   | .and φ ψ => φ.holds v ∧ ψ.holds v
   | .or φ ψ => φ.holds v ∨ ψ.holds v
+
+/-- **A formula is positive when no negation occurs in it.** The count side needs
+the polytopes to be intersections of *closed* half-spaces, and a negated atom
+denotes an open one — see the README, finding 5. This is a condition on the
+**input formula**, checkable by inspection, and it is what makes `Ttc.toDNF`'s
+output positive. -/
+def BForm.IsPositive : BForm A → Prop
+  | .tt => True
+  | .atom _ => True
+  | .neg _ => False
+  | .and φ ψ => φ.IsPositive ∧ ψ.IsPositive
+  | .or φ ψ => φ.IsPositive ∧ ψ.IsPositive
 
 /-- An atom index with a polarity. -/
 structure Lit (A : Type*) where
@@ -85,6 +100,35 @@ def DNF.holds (v : A → Prop) (D : DNF A) : Prop := ∃ c ∈ D, c.holds v
 /-- `D` and `φ` agree on every Boolean assignment — what `ToDNF` (circuit AllSAT)
 is assumed to deliver. -/
 def IsDNFOf (D : DNF A) (φ : BForm A) : Prop := ∀ v : A → Prop, D.holds v ↔ φ.holds v
+
+/-! ## `ToDNF` — `alg:ttc` line 16
+
+The circuit-AllSAT call, as an actual function rather than an assumed oracle. It
+carries a **polarity** so that negation never has to be pushed by rewriting the
+formula, which makes the recursion structural: `dnfAux φ true` is a DNF of `φ`,
+and `dnfAux φ false` a DNF of `¬φ`.
+-/
+
+/-- The pairwise conjunction of two DNFs: every cube of one glued to every cube of
+the other. -/
+def DNF.cross (D E : DNF A) : DNF A := D.flatMap fun c => E.map fun d => c ++ d
+
+/-- **`ToDNF`, with a polarity.** `dnfAux φ p` is a DNF of `φ` when `p` is `true`,
+and of `¬φ` when it is `false`. Structural in `φ`: the De Morgan cases flip the
+polarity rather than build a bigger formula. -/
+def dnfAux : BForm A → Bool → DNF A
+  | .tt, true => [[]]
+  | .tt, false => []
+  | .atom a, p => [[⟨a, p⟩]]
+  | .neg φ, p => dnfAux φ !p
+  | .and φ ψ, true => (dnfAux φ true).cross (dnfAux ψ true)
+  | .and φ ψ, false => dnfAux φ false ++ dnfAux ψ false
+  | .or φ ψ, true => dnfAux φ true ++ dnfAux ψ true
+  | .or φ ψ, false => (dnfAux φ false).cross (dnfAux ψ false)
+
+/-- **`alg:ttc` line 16**: `F_dnf ← ToDNF(F_bool)`. A definition, not an oracle —
+`Ttc.toDNF_isDNFOf` proves it correct, so nothing about the DNF is assumed. -/
+def toDNF (φ : BForm A) : DNF A := dnfAux φ true
 
 /-! ## Semantics over the reals -/
 
@@ -173,9 +217,6 @@ noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)
 noncomputable def volSol {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A) : ℝ :=
   (MeasureTheory.volume (sol M φ)).toReal
 
-theorem volSol_nonneg {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A) :
-    0 ≤ volSol M φ := ENNReal.toReal_nonneg
-
 /-- The paper's `(1 ± ε)·b` interval. `@[reducible]` so it is transparent to
 `Set.Icc`. -/
 @[reducible] def relErr (ε b : ℝ) : Set ℝ := Set.Icc ((1 - ε) * b) ((1 + ε) * b)
@@ -183,7 +224,7 @@ theorem volSol_nonneg {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BFor
 /-! ## The parameter block
 
 The five scalars `alg:ttc` (lines 17–20) and `alg:prec` (line 86) compute before
-the main loop. What each is chosen to satisfy is proved in `Analysis/Parameters`.
+the main loop. What each is chosen to satisfy is proved in `Constants/Parameters`.
 -/
 
 /-- Inputs to the algorithm: `n` the dimension, `m` the number of cubes, `r` the
