@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.Endgoal
+import Ttc.Exec.Endgoal
 
 /-!
 # `Witness/BoxSharp`: the capstone at accuracy `ε < 1` and confidence `δ < 1`

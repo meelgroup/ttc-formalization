@@ -13,10 +13,10 @@ the name. Every name on this page was checked to exist in the compiled
 environment; §5 has the probe that re-checks them all in one pass.
 
 The vocabulary, the pseudocode and the assumptions are in
-[`Ttc/Model/`](Ttc/Model/) — **five files**
+[`Ttc/Model/`](Ttc/Model/) — **four files**
 ([`Prelude`](Ttc/Model/Prelude.lean), [`Pseudocode`](Ttc/Model/Pseudocode.lean),
 [`ProblemSetting`](Ttc/Model/ProblemSetting.lean),
-[`Theorem`](Ttc/Model/Theorem.lean), [`Endgoal`](Ttc/Model/Endgoal.lean)) —
+[`Theorem`](Ttc/Model/Theorem.lean)) —
 carrying declarations and assumptions, and no proofs worth the name. Everything
 *proved* about `Vol_ED` was moved out to
 [`Ttc/Volume/Bridge.lean`](Ttc/Volume/Bridge.lean) to keep that true.
@@ -164,7 +164,7 @@ is an honest measurable set, not merely an outer-measure value.
 
 ## 1b. The second capstone: `Ttc.ttc_volume`
 
-[`Ttc.ttc_volume`](Ttc/Model/Endgoal.lean) is the same result stated **without a
+[`Ttc.ttc_volume`](Ttc/Exec/Endgoal.lean) is the same result stated **without a
 `TtcProb`**: every assumption is a visible `∀`-binder, and the probability space
 is *constructed from the inputs* rather than assumed. Its conclusion measures
 `Ttc.ttcOutput` under `Ttc.trajLaw θ`, and it carries a second conjunct about
@@ -761,7 +761,7 @@ with **no witness**; it has been **deleted**, consumed by nothing.)
 
 ### 3b. `Ttc.ttc_volume` — and why 3a does not cover it
 
-[`Ttc.Box.ttc_volume_box`](Ttc/Model/Endgoal.lean) is `Ttc.ttc_volume` applied to
+[`Ttc.Box.ttc_volume_box`](Ttc/Exec/Endgoal.lean) is `Ttc.ttc_volume` applied to
 the box's own data. It is currently the **only** witness that the residual
 hypotheses of `ttc_volume` are *jointly* satisfiable.
 
@@ -771,7 +771,7 @@ is worth knowing because it is the kind of gap that hides:
 pinning the parameter block to the canonical closed term, whereas
 [`Ttc.Box.par`](Ttc/Witness/BoxProb.lean) stores `m = max 1 (…)` and
 `r = max 1 (…)`. Those are *not* syntactically `ttcParams`.
-[`Ttc.Box.par_eq_ttcParams`](Ttc/Model/Endgoal.lean) is what closes it, given
+[`Ttc.Box.par_eq_ttcParams`](Ttc/Exec/Endgoal.lean) is what closes it, given
 `1 ≤ #cubes` and `1 ≤ #facets`.
 
 **Two limitations to state plainly.**
@@ -954,9 +954,26 @@ stronger at all.
   `Ttc.ttc_volume_endToEnd` repriced at `δ₀ = 4δ/5`, so its conclusion has the
   clean statement's shape while its proof runs through the unrepriced one. That is
   sound — the repricing is the same arithmetic `ttc_volume_clean` performs — but it
-  means this witness certifies the *shape*. The witnesses that apply a capstone
-  constant directly are §3e's (`Ttc.ttc_volume_endToEnd`, applied to the box) and
-  §3g's (`Ttc.ttc_volume_final`, applied to the two-cube DNF).
+  means this witness certifies the *shape* only, and the same goes for
+  `clean_box_at_nine_tenths` and `clean_box_at_one_quarter`.
+  **The witness that applies `Ttc.ttc_volume_clean` itself is
+  [`Ttc.Box.atParamsClean_of`](Ttc/Exec/Budget.lean)**, whose proof term supplies
+  all ten description arguments (`Fin n ⊕ Fin n`, `bxNormal`, `bxOffsetOf`,
+  `hdil_box`, `bfac`, `one_le_bfac`, `card_le_bfac`, `bxDm`, `hDbody_box`) and so
+  typechecks only if all ten hold. It discharges
+  [`Ttc.Box.AtParamsClean`](Ttc/Exec/Budget.lean), which carries those ten as
+  fields and ties the sampler law to `e2eSampD … rfac Am bv cen gammaHat Dm` — a
+  package that asserts nothing it does not discharge. The other capstones applied
+  directly are §3e's (`Ttc.ttc_volume_endToEnd`, to the box) and §3g's
+  (`Ttc.ttc_volume_final`, to the two-cube DNF).
+* **`Ttc.ttc_volume_final` does not dominate `Ttc.ttc_volume_clean`.** Worth
+  stating because it is the natural assumption and it is wrong. The running-time
+  conjuncts are character-for-character identical, but the accuracy conjuncts
+  integrate different measures: `clean`'s names `e2eSampD … rfac Am bv … Dm` in the
+  **bound** variables, `final`'s names `canonRfac`/`canonAm`/`canonBv`/`canonDm`.
+  `final` is `clean` instantiated at the one canonical description, and a point of
+  a `∀` does not give back the `∀`. The implication runs `clean ⟹ final` only, so
+  each needs its own witness — which is why both exist.
 * **It is the same body.** `Ttc.Box.sideS`/`rhoS`/`parS`/`volMC`/`bxSampD` differ
   between the two instances (the internal parameters are `18/25` and `1/5`), so the
   parameters are provably not forced — but the *geometry* is the single-cube box in
@@ -1314,15 +1331,20 @@ lake exe cache get && lake build     # zero "declaration uses 'sorry'" warnings
 > reports **none**: every module under `Ttc/` is imported by `Ttc.lean` and built.
 > (A revision of this page written minutes earlier reported `Ttc.Witness.TwoCube`,
 > which was mid-landing at the time and has since been wired in. Re-run the probe.)
-> `Ttc.Exec.CanonicalPolytope` was an orphan while it was being written, and both
-> this page and the README described it as one — and, in a still earlier revision,
-> said the same of `Ttc.Exec.CanonPolytope` when the roles were reversed. **The two
-> names differ by four letters**, they are independent derivations of the same
-> elimination, and neither supersedes the other: `CanonPolytope` is the critical
-> path (`Exec/Final` consumes it), `CanonicalPolytope` is the one with a
-> non-vacuity witness. Consolidating them is outstanding work. That this entry has
-> now been wrong in three successive revisions is the argument for re-running the
-> probe rather than reading it. Files named as orphans in still earlier
+> `Ttc.Exec.CanonicalPolytope` was an orphan while it was being written; both this
+> page and the README described it as one, and a still earlier revision said the
+> same of `Ttc.Exec.CanonPolytope` when the roles were reversed. **The two names
+> differ by four letters**, which is how that confusion survived three revisions.
+> It is now settled by deletion rather than by documentation:
+> `CanonicalPolytope` is **gone**. The two were compared before anything was
+> removed and did not disagree — identical binder lists and conclusions, the same
+> `rfac` and `Dm` — except that `CanonPolytope`'s crux
+> `canon_body_eq_smul_region` holds for *every* `s > 0` where the other held only
+> at `s = latticeScale ρ`, so the headline was already proved from the more general
+> route. The deleted file's non-vacuity chain was ported first and survives as
+> `Ttc.Box.exists_two_ttc_volume_endToEnd_canon_instances`. That this entry was
+> wrong in three successive revisions is the argument for re-running the probe
+> rather than reading it. Files named as orphans in still earlier
 > revisions (`Ttc.Exec.Coverage`, `Arlib.Convexity.NeedleLimit`,
 > `Arlib.MarkovChains.Continuous.TVWitness`) have since been wired in, and
 > `Ttc.Exec.EndToEnd`, `Ttc.Exec.Budget`, `Ttc.Exec.CanonPolytope` and
@@ -1394,7 +1416,7 @@ grep -rnE "\bsorry\b|\badmit\b|native_decide|sorryAx|^axiom " \
 
 **This does not return nothing, and that is expected.** It returns exactly two
 lines, both English prose and neither Lean: `Ttc/Exec/Coverage.lean` and
-`Ttc/Model/Endgoal.lean` each contain the sentence "`CLAUDE.md` §4 does not admit
+`Ttc/Exec/Endgoal.lean` each contain the sentence "`CLAUDE.md` §4 does not admit
 an unchecked proof", and `\badmit\b` matches the bare verb. Earlier revisions of
 this page said the command "must return nothing", which was true when they wrote
 it. **Read the hits rather than tightening the pattern until they disappear** — a

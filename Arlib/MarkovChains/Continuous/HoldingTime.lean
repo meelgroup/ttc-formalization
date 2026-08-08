@@ -102,9 +102,26 @@ This is the honest scope statement; nothing below claims more.
    `ell K δ (Yᵢ)`, so the ball walk at time `t` is `Y_{N t}` for a random index `N t` that is
    **not** independent of `Y`.  Turning `mul_lintegral_inv_ell_ellProb_le_one` (a statement
    about the mean holding time *in stationarity*) into a concentration bound for `N t`
-   along a trajectory is the missing step, and it needs a probability-space construction of
-   the chain (`ProbabilityTheory.Kernel.traj`-level machinery) that no file in this library
-   currently has.  See the report accompanying this file.
+   along a trajectory is the missing step.
+
+   **This note used to say the blocker was that `ProbabilityTheory.Kernel.traj`-level
+   machinery "no file in this library currently has". That was wrong on both counts.**
+   Mathlib v4.32 ships the full Ionescu–Tulcea development
+   (`Mathlib/Probability/Kernel/IonescuTulcea/{PartialTraj,Traj,Maps}.lean`), and this
+   repository was *already* using it — `Ttc/Coupling/Family.lean` calls
+   `Kernel.trajMeasure` for the Poisson family. `TrajTransfer.lean` now builds the
+   trajectory layer on it: `condDistrib_pathMeasure_ballWalk` lifts
+   `ballWalk_eq_ell_smul_speedyWalk_add` from one step to the law of the whole path,
+   and `pathMeasure_ballWalk_dirac_holdsUntil` /
+   `lintegral_exitTime_pathMeasure_ballWalk` prove each sojourn is exactly
+   `Geometric (ell K δ x)` with mean exactly `(ell K δ x)⁻¹` — which closes the
+   interpretive gap in item 3 below, since the density `(ell)⁻¹` is now *proved* to be
+   a mean holding time rather than a formal reciprocal.
+
+   **What is still missing is the time change itself**, and it is ordinary work rather
+   than a missing API: extracting the jump chain `Y₀, Y₁, …` and the counting process
+   `N t` from a path, and proving `ω_t = Y_{N t}`, needs measurability of the
+   successive jump times, which nothing here has yet.
 3. **`ellMeasure_withDensity_inv_ell` is a statement about measures, not about kernels.**  It
    says the reweighting is exact; it does *not* by itself say that the ball walk converges to
    the reweighted measure, which is `invariant_ballWalk` (already proved in `BallWalk.lean`)

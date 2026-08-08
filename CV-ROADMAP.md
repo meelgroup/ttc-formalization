@@ -38,7 +38,10 @@ reads `1 − δ − δ/4`. `Ttc.ttc_volume_endToEnd` (`Ttc/Exec/EndToEnd.lean`)
 composes that with the constructed rates and a constructed ball-walk sampler and
 carries **no oracle binder at all**;
 `Ttc.ttc_volume_endToEnd_canon` (`Ttc/Exec/CanonPolytope.lean`) then removes the
-nine polytope-description binders too, via the *equality*
+polytope-description binders too — **ten raw, i.e. nine explicit plus the
+`[Fintype Jt]` instance**; both counts appear in these documents, so read which
+convention is in force (the note in `Ttc/Exec/Endgoal.lean` fixes it) — via the
+*equality*
 `Ttc.canon_body_eq_smul_region`; and `Ttc.ttc_volume_final` instantiates that at the
 internal failure parameter `δ₀ = 4δ/5`, where `1 − δ₀ − δ₀/4 = 1 − δ`, so the
 guarantee is a clean `1 − δ` in the user's `δ` over 26 explicit binders, all of them
@@ -131,7 +134,7 @@ oracle**, and no amount of parallelism removes that edge.
 **What is still true and load-bearing, restated.** An earlier revision of this
 paragraph said "`Ttc.VolumeAlgorithm` is not constructible today". **That is now
 false** — `Ttc.VolumeAlgorithm.monteCarlo` constructs one, assuming nothing, and
-`Ttc.monteCarlo_est_ne_volume` proves it is *not* the exact oracle in disguise.
+`Ttc.MonteCarlo.monteCarlo_est_ne_volume` proves it is *not* the exact oracle in disguise.
 What remains true is the sentence with "Cousins–Vempala" put back in:
 `Ttc.VolumeAlgorithm.cousinsVempala` is not constructible today. Its witnesses,
 `cousinsVempalaWitness` and `cousinsVempalaBiasedWitness`, have an `est` field that
@@ -370,7 +373,7 @@ correctness at all, only for complexity.
   `TtcProb` entirely and onto the binder-form statement `Ttc.ttc_volume`, where
   "identical except in one field" is expressible for free because the fields are
   `∀`-binders: the coin is simply another binder to integrate over. That is the
-  practical argument for the `Model/Endgoal.lean` restatement, and it is worth
+  practical argument for the `Exec/Endgoal.lean` restatement, and it is worth
   recording because the obstacle as stated below is real and still unsolved *for
   `TtcProb`*.
 

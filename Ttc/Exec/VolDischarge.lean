@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.Endgoal
+import Ttc.Exec.Endgoal
 import Ttc.Volume.MonteCarlo
 import Ttc.Witness.BoxSharp
 

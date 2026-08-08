@@ -19,8 +19,8 @@ content, one directory per object of the paper it discharges:
 
 ```
 Ttc/
-  Model/         the statement — read this and stop            (5 files)
-  Exec/          the oracle-free capstone, and its plumbing    (9)
+  Model/         the statement — read this and stop            (4 files)
+  Exec/          the oracle-free capstone, and its plumbing   (10)
   Sampler/       GenerateSamples, constructed                  (4)
   Volume/        Vol_ED, constructed                           (4)
   Invariants     structural facts about the modelled loop      (1)
@@ -43,11 +43,14 @@ Ttc/
   output `Ttc.ttcOutput`. **No proofs.**
 * `Ttc.Model.ProblemSetting` — `Ttc.TtcProb`: every assumption, as fields.
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.TtcProb.volume_estimate`.
-* `Ttc.Model.Endgoal`        — the same result restated in the nfalean template:
-  `Ttc.ttc_volume` takes `(atoms, φ, ε, δ)` — the algorithm's own inputs — with
-  the probability space, the parameters, `ρ`, `L` and the oracle bundle all
-  *constructed*, and both halves of the guarantee in one conjunction. The
-  residual obligations are visible `∀`-binders rather than invisible fields.
+
+Four files, and the count is an invariant rather than a description: `Model/` is
+what a referee reads to trust the *statement*, so anything with proof content
+belongs elsewhere. `Ttc/Model/Endgoal.lean` sat here for a while and did not
+qualify — 33 declarations and 21 tactic proofs, including the lattice
+enumeration, the oracle bundle and a box-witness chain, against 0/0/0/1 for the
+four above. It now lives at `Ttc/Exec/Endgoal.lean`, where its consumers already
+were.
 
 ### `Constants/` — what the algorithm's constants buy
 
@@ -117,6 +120,12 @@ Ttc/
 
 ### `Exec/` — the oracle-free capstone
 
+* `Ttc.Exec.Endgoal` — `Ttc.ttc_volume`: `thm:volumettc` restated in the nfalean
+  template, taking `(atoms, φ, ε, δ)` — the algorithm's own inputs — with the
+  probability space, the parameters, `ρ`, `L` and the oracle bundle all
+  *constructed*, and both halves of the guarantee in one conjunction. The residual
+  obligations are visible `∀`-binders rather than invisible fields. This is the
+  first rung of the chain the rest of `Exec/` climbs.
 * `Ttc.Exec.Params`, `Ttc.Exec.Canonical`, `Ttc.Exec.Geometry`,
   `Ttc.Exec.Coverage` — the parameter block, the canonical probability space,
   and the geometric and covering data, all *constructed* rather than assumed.
@@ -132,17 +141,13 @@ Ttc/
   `hcard`, `Dm`, `hDbody` are all redundant. What is proved is stronger than
   `hdil` asks for — `Ttc.canon_body_eq_smul_region` is an **equality**, the
   described body *is* the dilated region — and `hcard` holds with equality, so no
-  slack enters `Ttc.Params.gamma` or `Ttc.Params.thresh`.
-* `Ttc.Exec.CanonicalPolytope` — **a second, independent derivation of the same
-  elimination**, landed in parallel with `Exec/CanonPolytope` and kept because it
-  is the one that carries a non-vacuity witness: `Ttc.ttc_volume_endToEnd_canonical`
-  plus `Ttc.Box.exists_two_ttc_volume_endToEnd_canonical_instances`. Its
-  `canonNormal`/`canonOffset`/`canonDiam` are renamed away from
-  `Exec/CanonPolytope`'s `canonAm`/`canonBv`/`canonDm` so the two co-import; the
-  key lemma `Ttc.body_canon_eq` is again an equality. **This duplication is debt**
-  — an auditor should read `Exec/CanonPolytope` for the critical path (it is what
-  `Exec/Final` consumes) and this file for the witness, and the two should be
-  consolidated.
+  slack enters `Ttc.Params.gamma` or `Ttc.Params.thresh`. It also carries the
+  non-vacuity chain for its own capstone, ending in
+  `Ttc.Box.exists_two_ttc_volume_endToEnd_canon_instances`. (A second, independent
+  derivation of the same elimination once lived in `Exec/CanonicalPolytope`; it was
+  checked against this one — equal everywhere except that this file's crux holds
+  for *every* `s > 0` rather than only at `s = latticeScale ρ` — and then deleted,
+  its witness chain ported here.)
 * `Ttc.Exec.Budget` — `Ttc.ttc_volume_endToEnd_delta`: the `δ`-repricing that
   turns `1 − δ − δ/4` into a clean `1 − δ`, by running at internal `δ₀ = 4δ/5`.
 * `Ttc.Exec.Final` — **`Ttc.ttc_volume_final`**, the strongest result in the
@@ -254,7 +259,7 @@ import Ttc.Model.Prelude
 import Ttc.Model.Pseudocode
 import Ttc.Model.ProblemSetting
 import Ttc.Model.Theorem
-import Ttc.Model.Endgoal
+import Ttc.Exec.Endgoal
 import Ttc.Exec.Params
 import Ttc.Exec.Canonical
 import Ttc.Exec.Geometry
@@ -263,7 +268,6 @@ import Ttc.Exec.VolDischarge
 import Ttc.Exec.EndToEnd
 import Ttc.Exec.Budget
 import Ttc.Exec.CanonPolytope
-import Ttc.Exec.CanonicalPolytope
 import Ttc.Exec.Final
 import Ttc.Coupling.Product
 import Ttc.Volume.Bridge

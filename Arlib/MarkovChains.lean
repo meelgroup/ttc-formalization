@@ -15,10 +15,12 @@ import Arlib.MarkovChains.Continuous.SpeedyWalk
 import Arlib.MarkovChains.Continuous.SpeedyToUniform
 import Arlib.MarkovChains.Continuous.TVWitness
 import Arlib.MarkovChains.Continuous.HoldingTime
+import Arlib.MarkovChains.Continuous.TrajTransfer
 import Arlib.MarkovChains.Continuous.UnitBallMixing
 import Arlib.MarkovChains.Continuous.ConvexBodyMixing
 import Arlib.MarkovChains.Continuous.WarmStart
 import Arlib.MarkovChains.Continuous.WarmStartGeneral
+import Arlib.MarkovChains.Continuous.NonStationary
 
 /-!
 # Arlib.MarkovChains

@@ -50,11 +50,25 @@ Four things the claim is **not**:
   step count is exponential in `n` as well. `thm:runtime` remains out of scope —
   the running-time conjunct of the capstone is `alg:ttc`'s charged cost, not a
   polynomial-time claim.
-* **It is not proved that the finite-time ball-walk iterate differs from
-  `uniformOn` on the inflated body.** That would need an `L²`/aperiodicity
-  argument, and no such argument is in the development. What *is* proved is that
-  no *accuracy assumption* about the sampler is made: `law_tv` is a theorem, via
-  `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`.
+* **At the step count actually used, it is still not proved that the ball-walk
+  iterate differs from `uniformOn` on the inflated body** — but this is no longer
+  all-or-nothing, and the range now in the library is explicit.
+  [`Arlib/MarkovChains/Continuous/NonStationary.lean`](Arlib/MarkovChains/Continuous/NonStationary.lean)
+  proves distinctness two ways, each with its `t`-range as a **hypothesis of the
+  statement**, so neither can be misread as general:
+  `ballWalkLaw_ne_uniformOn_of_lt` by support growth, valid while
+  `r + t·δ < R` (the support after `t` steps of size `δ` cannot have left
+  `closedBall c (r + t·δ)`, so it misses a positive-volume part of `K`); and
+  `ballWalkLaw_ne_uniformOn_of_lt_inv_pow_mul` by laziness, from `μ_t ≥ 2^(−t)·μ₀`
+  setwise, valid while `π S < 2^(−t)·μ₀ S`. The first reaches `t ≈ R/δ`, which is
+  `O(√n)` in the regime `δ ≍ γ/√n`; the second reaches `t ≈ log₂(μ₀S/πS)`, which is
+  `Θ(n)` on the unit ball and, being independent of `δ`, is the better of the two
+  when `δ` is large. **`Ttc.mixSteps` is `2^Θ(n)`, so neither route reaches it**
+  and the caveat stands where it matters. The residual obstruction is unchanged and
+  real: Mathlib has no spectral theory for a Markov operator on `L²(π)`, so there is
+  nothing to hang an eigenvalue-`−1` exclusion on. What *is* proved throughout is
+  that no *accuracy assumption* about the sampler is made: `law_tv` is a theorem,
+  via `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`.
 * **The guarantee is over the *joint* law of the run and the volume oracle's
   coins**, not conditioned on a good coin: the conclusion is an
   `∫⁻ … ∂(MonteCarlo.coins n)`, so the oracle's failure budget is paid explicitly
@@ -174,6 +188,25 @@ through `ttc_volume_endToEnd`. `Ttc.Box.ttc_volume_clean_box_at` covers every
 `Ttc.Box.exists_two_ttc_volume_clean_instances` exhibits **two structurally
 different** instances, at `(ε,δ) = (1/3, 9/10)` and `(1/2, 1/4)`, with achieved
 bounds `1/10` and `3/4`, both proved `> 0` inside the statement.
+
+The real witness for `ttc_volume_clean` is
+[`Ttc.Box.atParamsClean_of`](Ttc/Exec/Budget.lean), which is a direct application
+of `ttc_volume_clean` to the box — verified by reading the proof term, which
+supplies all ten description arguments and therefore typechecks only if all ten
+hold. `Ttc.Box.AtParamsClean` is the package it discharges; it carries the ten as
+fields and ties the sampler law to `e2eSampD … rfac Am bv cen gammaHat Dm`, so it
+asserts nothing that is not discharged.
+
+**`Ttc.ttc_volume_final` does not dominate `Ttc.ttc_volume_clean`, and an earlier
+version of this file implied otherwise.** The two running-time conjuncts are
+identical, but the accuracy conjuncts integrate *different measures*: `clean`'s
+mentions `e2eSampD … rfac Am bv … Dm` in the **bound** variables, while `final`'s
+mentions `canonRfac`/`canonAm`/`canonBv`/`canonDm`. So `final` is `clean`
+instantiated at the one canonical description, and a point of a `∀` does not give
+back the `∀` — for a user-supplied `Am`/`bv` the sampler is a different function
+and `final` says nothing about it. The implication runs `clean ⟹ final` only.
+`clean` is the stronger proposition; `final` is the one that asks less of a
+caller. Both are kept, and each has its own witness.
 `Ttc.Box.old_budget_vacuous_at_nine_tenths` puts the `1 − δ − δ/4 = −1/8`
 comparison in the library rather than only in prose, and
 `Ttc.Box.clean_box_prob_pos_ne_top_at_nine_tenths` reads off that the integral
@@ -265,7 +298,7 @@ statement files of [`Ttc/Model/`](Ttc/Model/) — `Prelude`, `Pseudocode`,
 surface for the single symbol `volSol`). That fixes what every name means and
 what the abstract theorem claims. For the **oracle-free capstone** add three more
 *types*, and only their types: `Ttc.ttc_volume` in
-[`Ttc/Model/Endgoal.lean`](Ttc/Model/Endgoal.lean) (the same result restated over
+[`Ttc/Exec/Endgoal.lean`](Ttc/Exec/Endgoal.lean) (the same result restated over
 `(atoms, φ, ε, δ)` with every residual obligation a visible binder),
 `Ttc.ttc_volume_endToEnd` in [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean)
 (the same statement with the oracle binders gone) and `Ttc.ttc_volume_final` in
@@ -316,7 +349,7 @@ description of the input polytopes (`Jt`, `Am`, `bv`, `hdil`, `rfac`, `hr1`,
 | --- | --- |
 | the probability space is constructed, not a field | **done.** [`Ttc/Exec/Canonical.lean`](Ttc/Exec/Canonical.lean): `Ttc.canonicalTtcProb` takes the 48 arguments that genuinely have to be supplied and fills in the other **eleven** fields by construction (`Ω`, `mΩ`, `μ`, `isProb`, `O`, `toTraj`, `toTraj_meas`, `law_eq`, `oracle_eq`, `M`, `M_eq`). `Ttc.Box.boxProb_eq_canonical` checks by `rfl` that the existing witness goes through it |
 | the parameter block is computed, not a field | **done.** [`Ttc/Exec/Params.lean`](Ttc/Exec/Params.lean): `Ttc.ttcParams` builds `Params` from the DNF, the dimension and `(ε, δ)`, and discharges all five tie-back fields (`eps_eq`, `delta_eq`, `dim_eq` by `rfl`, `cubes_le`/`facets_le` by `le_refl`) |
-| inputs are the algorithm's inputs; no bundle quantified over; both halves in one conjunction | **done, in four steps.** [`Ttc/Model/Endgoal.lean`](Ttc/Model/Endgoal.lean) states `Ttc.ttc_volume` over `(atoms, φ, ε, δ)` with the space, parameters, `ρ` and `L` **constructed** and every residual obligation a visible `∀`-binder; [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) removes all eleven oracle binders; [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean) removes the polytope description; [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) reprices the budget to a clean `1 − δ`. What is left in `Ttc.ttc_volume_final`'s type is inputs, input conditions, `hlen` and `big` — read the type, not this table |
+| inputs are the algorithm's inputs; no bundle quantified over; both halves in one conjunction | **done, in four steps.** [`Ttc/Exec/Endgoal.lean`](Ttc/Exec/Endgoal.lean) states `Ttc.ttc_volume` over `(atoms, φ, ε, δ)` with the space, parameters, `ρ` and `L` **constructed** and every residual obligation a visible `∀`-binder; [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) removes all eleven oracle binders; [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean) removes the polytope description; [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) reprices the budget to a clean `1 − δ`. What is left in `Ttc.ttc_volume_final`'s type is inputs, input conditions, `hlen` and `big` — read the type, not this table |
 | the polytope description is constructed, not assumed | **done.** [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean): `Ttc.canon_body_eq_smul_region` is an *equality*, so `hdil`, `hDbody`, `hcard` and the rest all follow from `M_eq`, `isPositive`, `hbdd` and `hr` with no slack |
 | the guarantee is a clean `1 − δ` | **done, by repricing, not by a better estimate.** [`Ttc/Exec/Budget.lean`](Ttc/Exec/Budget.lean) and [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) run the algorithm at `δ₀ = 4δ/5`; cost is `5/4` on the Monte-Carlo sample count and an additive `O(1/ε²)` on `Thresh` |
 | `Model/ProblemSetting` shrinks; the proof becomes a one-liner | **not done.** `Ttc.TtcProb` still has its 59 fields, `Ttc.TtcProb.volume_estimate` is still the abstract theorem the capstone is assembled from, and the assembly is not a one-liner |
@@ -476,14 +509,15 @@ everything `lake build` compiles — `Ttc.lean` imports `Ttc.Model.Endgoal`,
 `Arlib/Convexity.lean` imports `LocalizationLimit` and `DyerFrieze`, all of which
 earlier versions of this page said were unreachable.
 **The orphan probe currently reports nothing: every `.lean` file under `Ttc/` is
-imported and built.** `Ttc/Exec/CanonicalPolytope.lean` was an orphan while it was being
-written and is described as one in earlier revisions of this page; it was wired
-into `Ttc.lean` once it was green, and `lake build` compiles it. It is **not**
-superseded by `Ttc/Exec/CanonPolytope.lean`: the two are independent derivations
-of the same elimination, kept in parallel because `CanonPolytope` is what
-`Exec/Final` consumes while `CanonicalPolytope` is the one carrying a
-non-vacuity witness (`Ttc.Box.exists_two_ttc_volume_endToEnd_canonical_instances`).
-Consolidating them is outstanding work. The general hazard the old text pointed
+imported and built.** `Ttc/Exec/CanonicalPolytope.lean` — a second, independent
+derivation of the same elimination that earlier revisions of this page described
+as an orphan, then as permanent parallel debt — has been **deleted**. The two were
+compared first, and they did not disagree: identical binder lists, identical
+conclusions, the same `rfac` and `Dm`, except that `CanonPolytope`'s crux holds for
+*every* `s > 0` where the other held only at `s = latticeScale ρ`. So the headline
+was already proved from the more general of the two. Its one real asset, the
+non-vacuity chain, was ported first and survives as
+`Ttc.Box.exists_two_ttc_volume_endToEnd_canon_instances`. The general hazard the old text pointed
 at is real and still worth stating: the `Ttc` library has no glob (only `Arlib`
 does), so any file under `Ttc/` that nothing imports is **never compiled**, and a
 green `lake build` says nothing whatever about it. **Nothing an unbuilt file
@@ -574,7 +608,7 @@ grep -rn "^import Ttc" Arlib/
 
 The second and third return nothing. **The first returns exactly two lines, and
 both are English prose, not Lean:** `Ttc/Exec/Coverage.lean` and
-`Ttc/Model/Endgoal.lean` each contain the sentence "`CLAUDE.md` §4 does not admit
+`Ttc/Exec/Endgoal.lean` each contain the sentence "`CLAUDE.md` §4 does not admit
 an unchecked proof". `-w` was chosen to stop `admits` matching and does not stop
 the bare verb; the backtick filter does not fire because the word is unquoted
 prose. Earlier revisions of this page said "all three return nothing", which was
@@ -597,7 +631,7 @@ To check *what is claimed* you read only `Model/` — with two real exceptions:
 `Arlib.Lattice.Rounding.prodTent`. Those names carry the strongest assumptions in
 the development, so they have to be followed out. See [`AUDIT.md`](AUDIT.md) §4.
 For the oracle-free capstone add the *type* of `Ttc.ttc_volume` in
-`Model/Endgoal.lean`, of `Ttc.ttc_volume_endToEnd` in `Exec/EndToEnd.lean` and of
+`Exec/Endgoal.lean`, of `Ttc.ttc_volume_endToEnd` in `Exec/EndToEnd.lean` and of
 `Ttc.ttc_volume_final` in `Exec/Final.lean`.
 
 Every file below exists on disk. **The list is no longer exhaustive**: `Ttc/` is
@@ -808,12 +842,6 @@ Ttc/
                             --   1 − δ, 26 explicit binders (28 raw), all of them inputs.
                             --   Read this file's module docstring for which δ is the
                             --   user's and which the internal one
-    CanonicalPolytope.lean  -- a second, INDEPENDENT derivation of CanonPolytope's
-                            --   construction (ttc_volume_endToEnd_canonical, body_canon_eq).
-                            --   Imported and built. Kept because it is the one with a
-                            --   non-vacuity witness; CanonPolytope is the critical path.
-                            --   NEITHER supersedes the other. Consolidating the two is
-                            --   outstanding work
   Findings/                 -- OFF THE PATH: the formalisation refereeing the paper
     Repair.lean             -- lem:nonconv at internal parameter θ = η/2
     CubeLattice.lean        -- lem:lattice in the paper's per-polytope form
@@ -1313,8 +1341,6 @@ Ttc.Volume.CousinsVempala                            -- the CV route, still undi
 Ttc.Exec.Budget                                      -- ttc_volume_clean: the same repricing
                                                      --   one rung lower, so Final does not
                                                      --   route through it
-Ttc.Exec.CanonicalPolytope                           -- an independent second derivation;
-                                                     --   imported and built
 Ttc.Witness.TwoCube                                  -- the two-cube non-vacuity witness;
                                                      --   it CONSUMES Exec/Final, so it is
                                                      --   downstream of the seeds, not off
@@ -1322,13 +1348,13 @@ Ttc.Witness.TwoCube                                  -- the two-cube non-vacuity
 ```
 
 Anything else in that list is a file no one needs. The list shrank once already
-because `Ttc.Exec.EndToEnd` pulls in `Model/Endgoal`, `Exec/{Params, Canonical,
+because `Ttc.Exec.EndToEnd` pulls in `Exec/Endgoal`, `Exec/{Params, Canonical,
 Geometry, Coverage, VolDischarge}`, `Sampler/{Rates, Construct}`,
 `Volume/{MonteCarlo, VolSolCheck}`, `Witness/BoxSharp`, `Findings/CubeLattice` and
 `Coupling/Product` — files that used to be off the path are now on it; and
 `Ttc.Exec.Final` now pulls in `Exec/CanonPolytope`. **Note that
 an import-closure hit is not a dependency-walk hit**: `Volume/VolSolCheck` is
-*imported* by `Model/Endgoal` but its declarations are still not *used* by any
+*imported* by `Exec/Endgoal` but its declarations are still not *used* by any
 proof (see [the dependency walk](#the-dependency-walk)).
 
 All six are imported by `Ttc.lean` and so are compiled by `lake build`. The
@@ -1364,7 +1390,7 @@ Anything you still doubt is a named lemma in one of the proof directories.
 | [`Model/ProblemSetting.lean`](Ttc/Model/ProblemSetting.lean) | `VolumeAlgorithm` (Cousins–Vempala Thm 1.1), `KV97Sampler` (**15** fields — `GenerateSamples`' construction; 14 named plus the `[fintypeJ : Fintype J]` instance, which is what `Lean.getStructureFields` counts and what `AUDIT.md` §2 reports), `TtcProb` (59 fields) — the complete list of assumptions | the whole hypothesis surface |
 | [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean) (`Pr ≥ 1−δ`) and `TtcProb.runtime` | proved from the `TtcProb` fields |
 | [`Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean) | what `volSol` is a volume *of*: an independent `Bool` evaluator, the LRA form, measurability, and the `toReal ⊤` hazard | the audit surface for one symbol |
-| [`Model/Endgoal.lean`](Ttc/Model/Endgoal.lean) | `Ttc.ttc_volume`: the same two theorems restated over `(atoms, φ, ε, δ)`, space and parameters constructed, obligations as visible binders | a restatement, built by `lake build`. Read its *type* if you care about the capstone; it is not where the assumptions are enumerated |
+| [`Exec/Endgoal.lean`](Ttc/Exec/Endgoal.lean) | `Ttc.ttc_volume`: the same two theorems restated over `(atoms, φ, ε, δ)`, space and parameters constructed, obligations as visible binders | a restatement, built by `lake build`. Read its *type* if you care about the capstone; it is not where the assumptions are enumerated |
 | [`Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) | `Ttc.ttc_volume_endToEnd`: the same statement with every oracle binder removed, at `1 − δ − δ/4` | an intermediate step. Its *type* is the honest statement of what is assumed on that route — read it, not this table |
 | [`Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean) | `Ttc.ttc_volume_endToEnd_canon`: the same, with the nine polytope-description binders discharged; `Ttc.canon_body_eq_smul_region` is the crux, and it is an **equality** | an intermediate step |
 | [`Exec/Budget.lean`](Ttc/Exec/Budget.lean) | `Ttc.ttc_volume_clean` (alias `ttc_volume_endToEnd_delta`): `ttc_volume_endToEnd` at the internal `δ₀ = 4δ/5`, so the conclusion is `1 − δ`; plus the box witnesses at `(1/3, 9/10)` and `(1/2, 1/4)` | a repricing, and where the non-vacuity witnesses for the clean budget live |
@@ -1631,8 +1657,8 @@ Results with no counterpart in the paper, produced by the formalisation:
 `Ttc.lean` re-exports every module under `Ttc/`, so `import Ttc` and a bare
 `lake build` expose `Ttc.TtcProb.volume_estimate`, `Ttc.ttc_volume`,
 `Ttc.ttc_volume_endToEnd`, `Ttc.ttc_volume_endToEnd_canon`,
-`Ttc.ttc_volume_clean` (= `Ttc.ttc_volume_endToEnd_delta`),
-`Ttc.ttc_volume_endToEnd_canonical` and `Ttc.ttc_volume_final` alike. Because the
+`Ttc.ttc_volume_clean` (= `Ttc.ttc_volume_endToEnd_delta`)
+and `Ttc.ttc_volume_final` alike. Because the
 `Ttc` library has no glob, that re-export is load-bearing: a module dropped from
 this list would stop being compiled rather than merely stop being visible.
 `Arlib.lean` re-exports the four
