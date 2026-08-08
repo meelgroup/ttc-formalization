@@ -1,0 +1,32 @@
+/-
+Copyright (c) 2026. All rights reserved.
+Released under Apache 2.0 license.
+-/
+import Arlib.Convexity.Polytope
+import Arlib.Convexity.LogConcave
+import Arlib.Convexity.PrekopaLeindler
+import Arlib.Convexity.PrekopaLeindlerN
+import Arlib.Convexity.Isoperimetry
+import Arlib.Convexity.Localization
+import Arlib.Convexity.LocalizationLemma
+import Arlib.Convexity.BrunnSharp
+import Arlib.Convexity.LocalizationLimit
+import Arlib.Convexity.DyerFrieze
+import Arlib.Convexity.IsoBall
+import Arlib.Convexity.NeedleLimit
+import Arlib.Convexity.PositionalCut
+import Arlib.Convexity.TransverseCut
+import Arlib.Convexity.GaussianCooling.Schedule
+import Arlib.Convexity.GaussianCooling.Chain
+import Arlib.Convexity.GaussianCooling.Estimator
+import Arlib.Convexity.GaussianCooling.Variance
+import Arlib.Convexity.GaussianCooling.ZLogconcave
+import Arlib.Convexity.GaussianCooling.IndicatorVariance
+import Arlib.Convexity.GaussianCooling.Unblock
+
+/-!
+# Arlib.Convexity
+
+Area root. Modules are wired in here as they land; see `Arlib.lean` for the
+staging rules.
+-/

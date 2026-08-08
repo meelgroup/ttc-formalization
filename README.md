@@ -5,104 +5,350 @@ Machine-checked, `sorry`-free, axiom-clean formalisation of the analysis of the
 [`CLAUDE.md`](CLAUDE.md).
 
 **Every declaration in this development is proved.** There is no `sorry`, no
-custom `axiom`, and no `native_decide` (see
-[Verifying the claim](#verifying-the-claim)). **No lemma of the paper is assumed
-outright any more.** `lem:lattice` used to be two fields of `Ttc.TtcProb` and is
-now proved from hypotheses about the *input*
-([`lattice_lo`](Ttc/Lattice/Assembled.lean#L222),
-[`lattice_hi`](Ttc/Lattice/Assembled.lean#L227)); `lem:numlattice` used
-to be one field, then a weaker `numlattice_union` field, and **both are now
-theorems** ([`Ttc.TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53),
-[`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267) — the
-latter with the deleted field's statement verbatim).
+custom `axiom`, and no `native_decide`, in either library (see
+[Verifying the claim](#verifying-the-claim)).
 
-**What is assumed in their place is a description of the sampler, not a bound on
-its failure probability.** `Ttc.TtcProb` carries 19 fields
-([`Model/ProblemSetting.lean:133`](Ttc/Model/ProblemSetting.lean#L133) onwards)
-saying *what the algorithm's randomness is*: the lattice points are enumerated
-(`Lidx`, `ptE`, `ptE_inj`) with rates `θ`, each `ω` reads as a trajectory
-(`toTraj`) whose law **is** the coupled Poisson/thinning family
-(`law_eq : μ.map toTraj = trajLaw θ`), the oracles read that trajectory
-(`oracle_eq : O ω = trajOracles …`), the cubes cover the enumerated points
-(`cover_eq`, `cover_all`), each cube's rate is the total level-`0` rate of the
-points that cube covers ([`vol_eq`](Ttc/Model/ProblemSetting.lean#L165),
-[`vol_pos`](Ttc/Model/ProblemSetting.lean#L167)), the instance is big enough for
-the sketch to be worth running ([`big`](Ttc/Model/ProblemSetting.lean#L172)), and
-each point's rate sits in the paper's Invariant window (`theta_lo`, `theta_hi`:
-`(1±ε')²(1±η)/10^(ρn)`, the squared factor being `Vol_ED`'s and the
-almost-uniform sampler's). That is a real reduction —
-an assumed *conclusion* about probabilities has been replaced by an assumed
-*description* of the algorithm's randomness, and everything quantitative is now
-derived from it — but it is **not zero**: a reader who doubts that the modelled
-sampler is the implemented one doubts the headline. See §[What is
-assumed](#what-is-assumed).
+**[`Ttc.ttc_volume_final`](Ttc/Exec/Final.lean) is the strongest result in the
+development, and the one to read first.** It takes `(atoms, φ, ε, δ)` and input
+conditions *only* — **26 explicit binders** (28 raw, counting the implicit ambient
+`{A}` and `{n}`) — and binds **no oracle** and **no linear description of the input
+polytopes**. Its conclusion is
+`1 − δ ≤ (∫⁻ c, trajLaw … ∂(MonteCarlo.coins n)).toReal`, conjoined with `alg:ttc`'s
+charged cost bound. Its binders, in order, are all legitimate inputs:
+`atoms φ ε δ hε0 hε1 hδ0 hδ1 hn M M_eq toDNF isDNF isPositive hm hr P hP hlen hbdd
+hcoeff cen gammaHat hgammaHat ball_subset big`.
 
-**The epoch index `j*` is no longer assumed either.** It used to be a *field*:
-an instance had to hand over a chosen epoch together with both ends of its rate
-window (`jstar`, `hjstar`, `rate_small`, `rate_le`, `lamStar_ge` — five fields,
-all now deleted). `j*` is now **constructed** inside
-[`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267) by
-[`Ttc.exists_epoch`](Ttc/Coupling/Transfer.lean#L140), which proves such
-an index always exists: the window `[(1−ε')·Thresh/8, Thresh/2]` has ratio at
-least `4`, so halving from `∑θ` cannot step over it. Removing a *chosen
-existential* from a hypothesis bundle is a stronger move than removing an
-inequality — the instance no longer gets to pick the epoch the estimate is run
-at. Two theorems make that possible and are new:
-[`Ttc.TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean#L242), which derives
-`Thresh > 0` from the algorithm's own formula rather than leaving it implicit
-(`δ ≤ 1` forces `log(24/δ) ≥ log 24 > 0`, and `ε' = ε/12 ∈ (0, 1/12]` keeps
-`(1−ε')ε'²` positive), and
-[`Ttc.TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260), which says
-each cube's rate is at most the total because `vol_eq` sums a subset of
-nonnegative rates. The old `rate_small` field is then *derived* from `vol_pos`
-plus `vol_le_total` plus the epoch bound, via
-[`Ttc.rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180) (generalised
-to take a cube rate merely *bounded by* the total rather than equal to it).
+**Both oracles are discharged — at exponential cost, and with caveats that
+have to be read alongside the claim.** None of `volAlg`, `volCoins`, `volED_eq`,
+`volCoins_good`, `vol`, `vol_pos`, `θ`, `theta_eq`, `gen_mem`, `sampD` or `sampler`
+appears in the type of `ttc_volume_final`, nor in the type of
+[`Ttc.ttc_volume_endToEnd`](Ttc/Exec/EndToEnd.lean), the oracle-free statement it is
+assembled from. The volume estimator is constructed
+([`Ttc.VolumeAlgorithm.monteCarlo`](Ttc/Volume/MonteCarlo.lean)), the level-`0` rates
+are constructed ([`Ttc.rates`](Ttc/Sampler/Rates.lean)), and the sampler is
+constructed ([`Ttc.e2eSampler`](Ttc/Exec/EndToEnd.lean), a lazy ball walk) with its
+one quantitative field `law_tv` **proved** rather than assumed.
 
-**And `vol` is no longer a free function.** Before, nothing tied the volume
-estimates the run consumes to anything — `rate_small` was the only field standing
-between `vol` and nonsense.
-[`vol_eq`](Ttc/Model/ProblemSetting.lean#L165) now pins each cube's rate to the
-total level-`0` rate of the points that cube covers, which is what the algorithm
-actually means by it. That is a gap the simplification **closed**, not a rename.
+**The clean `1 − δ` is a repricing, not a strengthening.** This is the single
+easiest thing on this page to state misleadingly, so it is stated here rather than
+in a footnote. `hP` reads
+`P = ttcParams (toDNF φ) n ε (4 * δ / 5) …`: the algorithm is run at the **internal**
+failure parameter `δ₀ = 4δ/5`, and `1 − δ₀ − δ₀/4 = 1 − δ` exactly. No step of the
+analysis improves. The cost is quantified rather than waved at: the Monte-Carlo
+sample count per polytope rises by a factor **5/4, a 25 % increase**, and `P.thresh`
+grows **additively** — `log(30/δ)` in place of `log(24/δ)` — not multiplicatively.
+What the repricing buys is that the statement is informative on all of `δ ∈ (0,1)`
+instead of only `δ ∈ (0, 4/5)`. At `δ = 1` the bound is `0`: no longer negative,
+still uninformative.
 
-The construction those fields point at is README
-[finding 15](#15-genuine-gap--errj-is-not-a-well-defined-event)'s missing
-coupling, which the paper never builds: for the epoch union bound to *mean*
-anything, the run and the level process must agree **pathwise**, and
-`lem:process` gives only equality in law.
-[`Ttc.trajOracles`](Ttc/Coupling/Family.lean#L393) drives the real `Ttc.run` off
-a trajectory of the level family, [`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L263)
-proves `|𝒳| = ∑ₛ ω(J)ₛ` pathwise at the run's own stopping level `J` (with
-[`trajLaw_ae_nested`](Ttc/Coupling/Run.lean#L592) discharging its one
-hypothesis almost surely), and
-[`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685) proves
-`lem:numlattice`'s bound outright for that run. **That coupling is now
-load-bearing for the headline**, not a side development:
-[`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35)
-transports it off the trajectory space onto an arbitrary `Ω`/`μ`/`O` given the
-sampler fields, and that is what proves `numlattice_union`.
+Four things the claim is **not**:
 
-Formalising also acted as a referee: it turned up **two genuine errors** and
-**three genuine gaps** in the published proofs, all of them machine-checked —
-three repaired, one closed by an added hypothesis, one shown to be absorbed by
-existing slack, and the last (finding 15) closed by the construction above.
-See [Findings](#findings-the-formalisation-as-a-referee).
+* **It is not an efficiency claim. "Unconditional" and "efficient" are
+  independent, and the development establishes the first only.** Everything on
+  this route is exponential in the dimension: `VolumeAlgorithm.monteCarlo` is
+  hit-and-miss Monte Carlo at `Θ(Rⁿ/(ε²p))` samples, and the ball walk's certified
+  step count is exponential in `n` as well. `thm:runtime` remains out of scope —
+  the running-time conjunct of the capstone is `alg:ttc`'s charged cost, not a
+  polynomial-time claim.
+* **It is not proved that the finite-time ball-walk iterate differs from
+  `uniformOn` on the inflated body.** That would need an `L²`/aperiodicity
+  argument, and no such argument is in the development. What *is* proved is that
+  no *accuracy assumption* about the sampler is made: `law_tv` is a theorem, via
+  `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`.
+* **The guarantee is over the *joint* law of the run and the volume oracle's
+  coins**, not conditioned on a good coin: the conclusion is an
+  `∫⁻ … ∂(MonteCarlo.coins n)`, so the oracle's failure budget is paid explicitly
+  (finding 13a). The intermediate statements
+  [`Ttc.ttc_volume_endToEnd`](Ttc/Exec/EndToEnd.lean) and
+  [`Ttc.ttc_volume_endToEnd_canon`](Ttc/Exec/CanonPolytope.lean) therefore conclude
+  `1 − δ − δ/4`, which is **vacuous for `δ > 4/5`**; that is stated rather than
+  patched, and `ttc_volume_final` removes the corner by repricing (above), not by
+  improving the estimate.
+* **It is not the same theorem as `Ttc.TtcProb.volume_estimate`.** That one — the
+  abstract result over the 59-field `Ttc.TtcProb` bundle — is untouched, still
+  concludes `1 − δ`, and still carries the oracles as *fields*, including `law_eq`
+  and `oracle_eq`: that the algorithm's randomness **is** the coupled
+  Poisson/thinning family of [`Coupling/Family`](Ttc/Coupling/Family.lean). Those
+  two are a modelling judgement no machine check can settle; in the capstone they
+  are discharged by *being* that construction, which is a different thing from
+  their being true of a real implementation. See
+  §[What is assumed](#what-is-assumed).
+
+### The three steps to `Ttc.ttc_volume_final`
+
+`ttc_volume_final` is a composition and nothing else. Its two ingredients are
+statements in their own right, and the honest description of each is "an
+intermediate step", not "the strongest result" — earlier revisions of this page
+said the latter of `ttc_volume_endToEnd`, and that is now superseded.
+
+1. [`Ttc.ttc_volume_endToEnd`](Ttc/Exec/EndToEnd.lean) — `(atoms, φ, ε, δ)`, the
+   input conditions, **and a linear description of the input polytopes**; no oracle
+   binder; conclusion `1 − δ − δ/4`.
+2. [`Ttc.ttc_volume_endToEnd_canon`](Ttc/Exec/CanonPolytope.lean) — the same, with
+   the polytope description gone: it discharges the nine named binders
+   `Jt Am bv hdil rfac hr1 hcard Dm hDbody` (ten, counting the `[Fintype Jt]`
+   instance). `M_eq` already says each `region M c` *is* a polytope, presented by
+   the rows `atoms l` for `l ∈ c`, so the description was never independent input.
+   **An earlier version of this README said `hDbody` could not be eliminated**,
+   reasoning that `hdil` only makes `Polytope.body (Am i) (bv i)` a *superset* of
+   the dilated region — so a bounded region could sit inside an unbounded described
+   body. That was correct about `hdil` and wrong about what is provable: the
+   canonical system satisfies an **equality**,
+   `Ttc.canon_body_eq_smul_region : Arlib.Polytope.body (canonAm …) (canonBv …) = s • region …`,
+   so the described body *is* the dilated region and `hbdd` bounds it directly.
+   `hcard` holds with **equality** too (`rfac := Nat.card (FacetIndex (toDNF φ))`,
+   `Fintype.card (Fin N) = N`), so no slack enters `Params.gamma` or
+   `Params.thresh`.
+3. `ttc_volume_final` instantiates (2) at `δ₀ = 4δ/5` — the repricing described
+   above.
+
+[`Ttc.ttc_volume_clean`](Ttc/Exec/Budget.lean) is the same repricing applied one
+rung lower, to `ttc_volume_endToEnd` itself: it still carries the polytope
+description, and concludes `1 − δ`. `Ttc.ttc_volume_endToEnd_delta` is an `alias`
+for it — a legacy name kept because this page and `AUDIT.md` used it; both names
+resolve to the same declaration.
+
+**Non-vacuity, and it is checked rather than asserted — the strongest statement
+now has its own witness, and it is not the box.**
+[`Ttc.TwoCube.ttc_volume_final_two_cube`](Ttc/Witness/TwoCube.lean) instantiates
+**`Ttc.ttc_volume_final` itself** — not `ttc_volume_endToEnd_ofSampler`, not
+`ttc_volume_clean`, not `ttc_volume_endToEnd` — at every `(ε, δ) ∈ (0,1]²`, on a
+DNF with **two** cubes, with **every binder discharged, `big` included**. A
+transitive dependency walk from it returns `true` for `Ttc.ttc_volume_final` (and
+likewise from `Ttc.TwoCube.ttc_volume_final_two_cube_at`). Before it landed, the
+strongest result in the development had **no non-vacuity witness at all** — that
+was a real gap, and this is what closes it.
+
+The witness is two disjoint axis-aligned boxes of the same side: atoms indexed by
+`(Fin n ⊕ Fin n) ⊕ (Fin n ⊕ Fin n)`, the left copy cutting out `[0,c]ⁿ` and the
+right `[lo, lo+c]ⁿ`, with `c = max 1 Thresh(ε, 4δ/5)` and
+`lo = (⌈c·10^ρ⌉₊ + 1)/10^ρ`. `lo > c` is what makes the two regions disjoint, and
+`lo` being a multiple of the lattice spacing is what puts a lattice point in the
+second box. There is no circularity in that order of construction: `ρ` depends
+only on `(n, ε, δ)` and the DNF's *shape* (`m = 2`, `r = 4n`), never on `lo`.
+
+What the arity buys is stated as theorems rather than as prose.
+[`Ttc.TwoCube.card_toDNF_eq_two`](Ttc/Witness/TwoCube.lean) is an **equality**,
+`Nat.card {c // c ∈ toDNF (twoForm n)} = 2` — not a `2 ≤ …` — so the DNF genuinely
+has two cubes; `Ttc.TwoCube.sol_eq_union_two` makes `Sol(F)` the union of two
+**distinct, nonempty and disjoint** regions; and
+`Ttc.TwoCube.cenT_left_ne_right` proves the two inscribed-ball centres genuinely
+differ, so `cen` is not constant. The single-cube box exercises none of the three.
+
+**The regime condition `big` needed a genuinely new argument at arity two**, and
+this is the interesting part. The box's route
+(`Ttc.Box.sum_bxRates_ge`) relies on `N = L`, which is true only when there is one
+cube. With two cubes `cubeAt` varies with the point, `N₁ ≠ N₂` in general, and
+`L = N₁ + N₂`. The replacement bounds every rate below by `min(q₁, q₂)` with
+`qᵢ = (1−ε')·V̂ᵢ/Nᵢ` ([`Ttc.TwoCube.min_qT_le_ratesT`](Ttc/Witness/TwoCube.lean),
+which **case-splits on which cube `cubeAt s` returned** — the branch no
+single-cube witness has), and then uses `Nᵢ ≤ L`. It also required an exact volume
+computation that did not previously exist,
+`Ttc.TwoCube.volume_sbx : volume [lo, lo+c]ⁿ = ofReal c ^ n`, since the box files
+carried only positivity plus a global lattice bound.
+
+Two structurally different instances are exhibited, each with its achieved bound a
+numeral proved `> 0` **inside the statement**
+([`Ttc.TwoCube.ttc_volume_final_two_cube_at`](Ttc/Witness/TwoCube.lean)):
+`(ε, δ) = (1/3, 9/10)` at `1/10`, and `(1/2, 1/4)` at `3/4`. The first carries
+`4/5 < 9/10 < 1` in the statement alongside — it sits in exactly the regime the old
+`1 − δ − δ/4` budget could not reach — and
+`Ttc.TwoCube.twoProb_pos_ne_top_at_nine_tenths` rules out the
+`ENNReal.toReal ⊤ = 0` artefact.
+
+**Two things the two-cube witness does not prove, and a reader will assume both.**
+First, `volSol = Vol₁ + Vol₂` is **not** proved. Disjointness is; additivity of the
+volume is not, and the capstone does not need it. Second, none of this is an
+efficiency claim: everything here is exponential in the dimension, and at `m = 2`
+every exponential cost is paid twice.
+
+One rung lower the witnesses are the single-cube box `[0,c]ⁿ`, and they are
+witnesses for *different* theorems — read which theorem each instantiates, because
+they do not all instantiate what their names suggest.
+`Ttc.Box.ttc_volume_endToEnd_box_at` is an application of
+**`Ttc.ttc_volume_endToEnd`** to the box; `Ttc.Box.ttc_volume_clean_box_at` is not
+an application of `ttc_volume_clean` at all — it is that box instance repriced at
+`δ₀ = 4δ/5`, so its conclusion has `ttc_volume_clean`'s shape while its proof runs
+through `ttc_volume_endToEnd`. `Ttc.Box.ttc_volume_clean_box_at` covers every
+`(ε, δ) ∈ (0,1]²`, and
+`Ttc.Box.exists_two_ttc_volume_clean_instances` exhibits **two structurally
+different** instances, at `(ε,δ) = (1/3, 9/10)` and `(1/2, 1/4)`, with achieved
+bounds `1/10` and `3/4`, both proved `> 0` inside the statement.
+`Ttc.Box.old_budget_vacuous_at_nine_tenths` puts the `1 − δ − δ/4 = −1/8`
+comparison in the library rather than only in prose, and
+`Ttc.Box.clean_box_prob_pos_ne_top_at_nine_tenths` reads off that the integral
+inside the `toReal` is nonzero and finite. At the unrepriced budget,
+`Ttc.Box.exists_two_ttc_volume_endToEnd_instances` gives the pair `(1/2,1/2)` and
+`(1/4,1/4)`, bounds `3/8` and `11/16`.
+`Ttc.Box.length_toDNF_boxForm` proves `(toDNF (boxForm n hn)).length = 1`, so at
+those rungs the multi-cube machinery is still exercised only at `m = 1`: `hlen` is
+a `Nodup` condition in disguise — `P.m = Nat.card {c // c ∈ toDNF φ}` counts
+*distinct* cubes and a list is never shorter than its distinct-element count, so
+`hlen` holds exactly when `toDNF φ` repeats no cube, and at length 1 that content
+is never touched — and the same goes for the `m`-way union bound over cubes,
+`thm:decomposition`'s union and the per-cube composition of the volume and
+sampling errors. All of that *is* exercised at `m = 2` on the statement where it
+matters most, the strongest one.
+
+**What has moved from assumption to theorem** is, by now, most of the paper:
+
+* **`lem:lattice`** used to be two fields; it is now
+  [`Ttc.TtcProb.lattice_lo`/`lattice_hi`](Ttc/Lattice/Assembled.lean).
+* **`lem:numlattice`** used to be one field, then a weaker `numlattice_union`
+  field; **both are now theorems**
+  ([`Ttc.TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean),
+  [`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean) — the latter with
+  the deleted field's statement verbatim).
+* **`eq:almostuniform` (`eq:sampler`)** used to be the field `samp_unif`, and
+  before the sampler work it was the pair of fields `theta_lo`/`theta_hi` (the
+  paper's Invariant). All three are now theorems with byte-identical statements
+  ([`Ttc.TtcProb.samp_unif`](Ttc/Sampler/Bridge.lean),
+  [`theta_lo`](Ttc/Sampler/Bridge.lean),
+  [`theta_hi`](Ttc/Sampler/Bridge.lean)), proved by
+  `Ttc.almostUniform_of_kv97_density` — i.e. by Kannan–Vempala's Theorem 2 and
+  the `ℤⁿ → 𝕃ⁿ` transport.
+* **The epoch index `j*`** used to be five fields (`jstar`, `hjstar`,
+  `rate_small`, `rate_le`, `lamStar_ge`); it is now *constructed* by
+  [`Ttc.exists_epoch`](Ttc/Coupling/Transfer.lean).
+* **`Vol_ED`'s deterministic accuracy** used to be the field `volED_hi`; it is now
+  [a theorem](Ttc/Volume/Bridge.lean) derived from `volCoins_good`, which is an
+  *event* whose probability is itself proved
+  ([`volGood_prob_budget`](Ttc/Volume/Bridge.lean), `≥ 1 − δ/4`).
+* **The `1 − δ` is no longer only "at one good coin of `Vol_ED`".**
+  [`Ttc.volume_estimate_joint`](Ttc/Coupling/Product.lean) proves `1 − δ − δ/4`
+  over the **joint** randomness of the run and the volume oracle — see
+  [finding 13a](#13a-what-is-still-assumed-about-vol_ed) for the three caveats
+  (it is a *composition*-product, not a product; the bound is vacuous for
+  `δ > 4/5`; and the single-sample-point form carries a visible measurability
+  hypothesis).
+
+**The Kannan–Vempala development is load-bearing, not a parallel justification.**
+A transitive dependency walk over the compiled environment, starting from
+`Ttc.TtcProb.volume_estimate`, returns `true` for `Arlib.KV97.theorem2`,
+`Arlib.KV97.ratio_bounds_tuned_sharp`, `Ttc.almostUniform_of_kv97_density`,
+`Ttc.escape_of_mem_body` and `Ttc.TtcProb.samp_unif`. The walk script is in
+[`AUDIT.md`](AUDIT.md) §5 and in [Verifying the claim](#verifying-the-claim);
+re-run it rather than trusting this sentence.
+
+**And so is the convexity / Markov-chain stack, which used to be off the path.**
+The same walk started from `Ttc.ttc_volume_endToEnd` returns `true` for
+`Ttc.ttc_volume_monteCarlo`, `Ttc.kv97SamplerOfBody`,
+`Ttc.VolumeAlgorithm.monteCarlo`,
+`Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope` and
+`Arlib.uniformOn_iso_of_convex` (note the namespace is `Arlib.`, not
+`Arlib.Convexity.`). So the chain isoperimetry → conductance → Cheeger → `L²` →
+mixing → `law_tv` → sampler → capstone is genuinely load-bearing, not merely
+imported. Re-run the walk rather than trusting this sentence.
+
+**The sampler's quantitative hypothesis is now a theorem, and its shape changed
+twice — say so plainly.** `samp_unif` was a quantitative `(1 ± ε')` bound on a
+*discrete* law; it became `KV97Sampler.density_au`, a `(1 ± ε'/4)` bound on a
+*continuous* density; and it is now `KV97Sampler.law_tv`, a **total-variation**
+bound at tolerance `ε'/(4·Vol(P′))` (finding 17 records why the pointwise form had
+to go). `law_tv` is the only quantitative field of `KV97Sampler`, and
+`Ttc.e2eSampler` discharges it, so on the capstone's route nothing about the
+sampler's accuracy is assumed. What an implementer owes is then not an inequality
+but an identification: that the shipped `GenerateSamples` *is* the lazy ball walk
+this development builds. See [`END-TO-END-PLAN.md`](END-TO-END-PLAN.md) STATUS.
+
+Formalising also acted as a referee: it turned up **three genuine errors**
+(findings 1, 3, 14) and **four genuine gaps** (2, 10, 13, 15) in the published
+proofs of *this* paper, plus further discrepancies in Kannan–Vempala (recorded
+separately in [`AUDIT-KV97.md`](AUDIT-KV97.md)) and one hazard in what a Lean
+statement can silently claim (16), all of them machine-checked. See
+[Findings](#findings-the-formalisation-as-a-referee).
 
 **Auditing this in a few minutes:** read [`AUDIT.md`](AUDIT.md), then the four
-files of [`Ttc/Model/`](Ttc/Model/). That is the whole trusted surface — what is
-claimed, about what object, under what assumptions — and nothing in it refers to
-a definition outside `Model/` except Mathlib. The other directories hold the proofs.
+statement files of [`Ttc/Model/`](Ttc/Model/) — `Prelude`, `Pseudocode`,
+`ProblemSetting`, `Theorem` — then
+[`Ttc/Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean) (which is the audit
+surface for the single symbol `volSol`). That fixes what every name means and
+what the abstract theorem claims. For the **oracle-free capstone** add three more
+*types*, and only their types: `Ttc.ttc_volume` in
+[`Ttc/Model/Endgoal.lean`](Ttc/Model/Endgoal.lean) (the same result restated over
+`(atoms, φ, ε, δ)` with every residual obligation a visible binder),
+`Ttc.ttc_volume_endToEnd` in [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean)
+(the same statement with the oracle binders gone) and `Ttc.ttc_volume_final` in
+[`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) (that statement with the polytope
+description gone and the budget repriced to `1 − δ`). The other directories hold
+the proofs.
+
+## Where this is against the end goal
+
+[`END-TO-END-PLAN.md`](END-TO-END-PLAN.md) opens with the target, and the README
+should state it plainly: **the capstone must eventually take `(M, φ, ε, δ)` as
+its inputs**, following `ApproxNFA.approxNFA_countNFA` (in the sibling `nfalean`
+project, `ApproxNFA/Model/Theorem.lean`) exactly —
+
+```lean
+theorem ttc_volume (M : A → Set (Space n)) (φ : BForm A) (ε δ : ℝ)
+    (hε : 0 < ε) (hε1 : ε < 1) (hδ : 0 < δ) (hδ1 : δ < 1)
+    <only genuine input conditions on (M, φ)> :
+    (1 - δ ≤ (ttcExec M φ ε δ).P.Pr
+       (fun ω => pseudocodeOutput M φ ε δ ω ∈ relErr ε (volSol M φ)))
+    ∧ <the runtime half>
+```
+
+`Ttc.TtcProb.volume_estimate` does not. It quantifies over a **59-field
+`Ttc.TtcProb`**, out of which `ε`, `δ`, `φ`, the parameter block, the probability
+space and both oracles are all *read*. A field is an assumption a reader cannot
+see from the statement, so for that theorem the honest summary is "proved, over a
+hypothesis bundle", not "proved about the algorithm's inputs" — and it keeps its
+exact statement, unchanged.
+
+`Ttc.ttc_volume_final` does. It is stated over `(atoms, φ, ε, δ)`, both halves in
+one conjunction, with no bundle quantified over, no oracle binder and no polytope
+description, and its accuracy conclusion is a clean `1 − δ`. Three differences from
+the target display above survive, and none of them is cosmetic:
+
+* the probability is an `∫⁻ … ∂(MonteCarlo.coins n)` over the joint law of the run
+  and the constructed volume oracle's coins, not a single `P.Pr` (finding 13a);
+* `hP` runs the algorithm at the internal `δ₀ = 4δ/5`, so the clean `1 − δ` is
+  bought by repricing — see the opening section for what that costs;
+* `hlen` and `big` remain, and `big` is a genuine regime condition on the instance.
+
+`Ttc.ttc_volume_endToEnd` is the intermediate: same shape, but it carries a linear
+description of the input polytopes (`Jt`, `Am`, `bv`, `hdil`, `rfac`, `hr1`,
+`hcard`, `Dm`, `hDbody`) alongside the input conditions and concludes
+`1 − δ − δ/4`.
+
+| Gap | Where it stands |
+| --- | --- |
+| the probability space is constructed, not a field | **done.** [`Ttc/Exec/Canonical.lean`](Ttc/Exec/Canonical.lean): `Ttc.canonicalTtcProb` takes the 48 arguments that genuinely have to be supplied and fills in the other **eleven** fields by construction (`Ω`, `mΩ`, `μ`, `isProb`, `O`, `toTraj`, `toTraj_meas`, `law_eq`, `oracle_eq`, `M`, `M_eq`). `Ttc.Box.boxProb_eq_canonical` checks by `rfl` that the existing witness goes through it |
+| the parameter block is computed, not a field | **done.** [`Ttc/Exec/Params.lean`](Ttc/Exec/Params.lean): `Ttc.ttcParams` builds `Params` from the DNF, the dimension and `(ε, δ)`, and discharges all five tie-back fields (`eps_eq`, `delta_eq`, `dim_eq` by `rfl`, `cubes_le`/`facets_le` by `le_refl`) |
+| inputs are the algorithm's inputs; no bundle quantified over; both halves in one conjunction | **done, in four steps.** [`Ttc/Model/Endgoal.lean`](Ttc/Model/Endgoal.lean) states `Ttc.ttc_volume` over `(atoms, φ, ε, δ)` with the space, parameters, `ρ` and `L` **constructed** and every residual obligation a visible `∀`-binder; [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) removes all eleven oracle binders; [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean) removes the polytope description; [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) reprices the budget to a clean `1 − δ`. What is left in `Ttc.ttc_volume_final`'s type is inputs, input conditions, `hlen` and `big` — read the type, not this table |
+| the polytope description is constructed, not assumed | **done.** [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean): `Ttc.canon_body_eq_smul_region` is an *equality*, so `hdil`, `hDbody`, `hcard` and the rest all follow from `M_eq`, `isPositive`, `hbdd` and `hr` with no slack |
+| the guarantee is a clean `1 − δ` | **done, by repricing, not by a better estimate.** [`Ttc/Exec/Budget.lean`](Ttc/Exec/Budget.lean) and [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) run the algorithm at `δ₀ = 4δ/5`; cost is `5/4` on the Monte-Carlo sample count and an additive `O(1/ε²)` on `Thresh` |
+| `Model/ProblemSetting` shrinks; the proof becomes a one-liner | **not done.** `Ttc.TtcProb` still has its 59 fields, `Ttc.TtcProb.volume_estimate` is still the abstract theorem the capstone is assembled from, and the assembly is not a one-liner |
+| the *efficiency* half | **not attempted.** Both constructed oracles are exponential in `n`; see [Scope](#scope-stated-precisely) |
+
+All of them are **on the build path**: `Ttc.lean` imports `Ttc.Model.Endgoal`,
+`Ttc.Exec.EndToEnd`, `Ttc.Exec.Budget`, `Ttc.Exec.CanonPolytope` and
+`Ttc.Exec.Final`, so a bare `lake build` compiles them and `import Ttc` puts
+`Ttc.ttc_volume`, `Ttc.ttc_volume_endToEnd`, `Ttc.ttc_volume_clean`,
+`Ttc.ttc_volume_endToEnd_canon` and `Ttc.ttc_volume_final` in scope. (This has
+changed twice: earlier versions of this page said `Ttc.lean` did not import
+`Ttc.Model.Endgoal`, and later ones said `Ttc.Exec.CanonPolytope` was not built at
+all. Check `Ttc.lean`'s import list rather than this sentence.)
+
+The runtime half of the conjunction also exists in isolated form:
+[`Ttc.TtcProb.runtime`](Ttc/Model/Theorem.lean) proves the paper's own accounting
+(one `Vol_ED` call plus at most `Thresh` samples per cube, over `numCubes` cubes)
+— see [Scope](#scope-stated-precisely) for exactly what it does and does not
+claim.
 
 ## Build
 
 ```bash
 lake exe cache get     # do not compile Mathlib from source
-lake build
+lake build             # builds both libraries: Ttc and Arlib
 ```
 
 Pinned to `leanprover/lean4:v4.32.0` and Mathlib `v4.32.0`
-(`lean-toolchain`, `lakefile.toml`).
+(`lean-toolchain`, `lakefile.toml`). `lakefile.toml` declares **two** libraries,
+`Ttc` and `Arlib`, both in `defaultTargets`; `Arlib`'s glob is
+`["Arlib", "Arlib.+"]`, so every file under `Arlib/` is a build target whether or
+not an area root imports it.
 
 > This checkout reuses a sibling project's Mathlib package directory via a
 > symlink at `.lake/packages` (see `CLAUDE.md` §13). If you clone it standalone,
@@ -120,73 +366,282 @@ import Ttc
 --   [propext, Classical.choice, Quot.sound]
 ```
 
-The declarations worth checking individually — the headline, the two statements
-that used to be assumed fields, and the non-degenerate witness — all return
-exactly those three:
+The declarations worth checking individually — the headline, the statements that
+used to be assumed fields, and the non-degenerate witness — all return exactly
+those three:
 
 ```lean
-#print axioms Ttc.TtcProb.volume_estimate
-#print axioms Ttc.TtcProb.numlattice
-#print axioms Ttc.TtcProb.numlattice_union
+#print axioms Ttc.TtcProb.volume_estimate    -- thm:volumettc
+#print axioms Ttc.TtcProb.numlattice         -- ex-field
+#print axioms Ttc.TtcProb.numlattice_union   -- ex-field, statement verbatim
+#print axioms Ttc.TtcProb.samp_unif          -- ex-field: eq:almostuniform
+#print axioms Ttc.TtcProb.theta_lo           -- ex-field: the paper's Invariant
+#print axioms Ttc.TtcProb.theta_hi           -- ex-field
+#print axioms Ttc.TtcProb.volED_hi           -- ex-field: Vol_ED's accuracy
 #print axioms Ttc.TtcProb.thresh_pos
-#print axioms Ttc.TtcProb.vol_le_total
-#print axioms Ttc.Box.boxProb
+#print axioms Ttc.TtcProb.vol_lt_two_total
+#print axioms Ttc.TtcProb.runtime            -- thm:runtime, as the paper charges it
+#print axioms Ttc.Box.boxProb                -- the non-degenerate witness
 #print axioms Ttc.Box.nonempty_ttcProb
+#print axioms Arlib.KV97.theorem2
 ```
 
-Those three are Mathlib's standard foundational axioms. A sweep over **every**
-declaration in the development (upwards of 600 of them: theorems, definitions and
-structures) shows that **no declaration depends on anything else** — no `sorryAx`,
-no custom `axiom`. (The per-profile counts previously tabulated here are omitted:
-the declaration set changes with every landed lemma and the numbers went stale.
-Re-derive them with the sweep below rather than trusting a table.)
+The **oracle-free capstone and everything it is assembled from** check the same
+way, and `import Ttc` reaches all of them (`Ttc.lean` imports `Model.Endgoal`,
+`Exec.VolDischarge`, `Exec.EndToEnd`, `Exec.Budget`, `Exec.CanonPolytope`,
+`Exec.Final`, `Sampler.Rates`, `Sampler.Construct`, `Volume.MonteCarlo`,
+`Witness.BoxSharp` and `Witness.TwoCube`):
 
-To reproduce the sweep:
+```lean
+#print axioms Ttc.ttc_volume_final                             -- THE result: no oracle,
+                                                               -- no polytope description, 1 − δ
+#print axioms Ttc.ttc_volume_endToEnd_canon                    -- polytope description removed
+#print axioms Ttc.canon_body_eq_smul_region                    -- the crux: body = s • region
+#print axioms Ttc.ttc_volume_clean                             -- 1 − δ, by repricing at 4δ/5
+#print axioms Ttc.ttc_volume_endToEnd_delta                    -- legacy alias for the above
+#print axioms Ttc.ttc_volume_endToEnd                          -- no oracle binder at all
+#print axioms Ttc.ttc_volume_endToEnd_ofSampler                -- sampler still a binder
+#print axioms Ttc.ttc_volume_monteCarlo                        -- Vol_ED removed
+#print axioms Ttc.ttc_volume_rates                             -- θ, theta_eq, gen_mem removed
+#print axioms Ttc.ttc_volume                                   -- the Endgoal restatement
+#print axioms Ttc.VolumeAlgorithm.monteCarlo                   -- the volume oracle, constructed
+#print axioms Ttc.e2eSampler                                   -- the sampler, constructed
+#print axioms Ttc.Box.ttc_volume_clean_box_at                  -- the clean statement, instantiated
+#print axioms Ttc.Box.clean_box_at_nine_tenths                 -- (1/3, 9/10): bound 1/10 > 0,
+                                                               -- where the old budget was −1/8
+#print axioms Ttc.Box.old_budget_vacuous_at_nine_tenths        -- that comparison, in the library
+#print axioms Ttc.Box.exists_two_ttc_volume_clean_instances    -- (1/3,9/10) and (1/2,1/4)
+#print axioms Ttc.Box.ttc_volume_endToEnd_box_at               -- one rung lower, instantiated
+#print axioms Ttc.Box.exists_two_ttc_volume_endToEnd_instances -- two instances, bounds 3/8 and 11/16
+#print axioms Ttc.TwoCube.ttc_volume_final_two_cube            -- ttc_volume_final ITSELF,
+                                                               -- on a TWO-cube DNF
+#print axioms Ttc.TwoCube.ttc_volume_final_two_cube_at         -- (1/3,9/10) and (1/2,1/4):
+                                                               -- bounds 1/10 and 3/4, both > 0
+#print axioms Ttc.TwoCube.card_toDNF_eq_two                    -- the DNF has EXACTLY two cubes
+#print axioms Ttc.TwoCube.sol_eq_union_two                     -- Sol(F) = two disjoint regions
+#print axioms Ttc.TwoCube.cenT_left_ne_right                   -- the two ball centres differ
+#print axioms Ttc.TwoCube.min_qT_le_ratesT                     -- big at m = 2: the case split
+#print axioms Ttc.TwoCube.twoProb_pos_ne_top_at_nine_tenths    -- not toReal ⊤ = 0
+```
+
+All 28 declarations of [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) return
+exactly `[propext, Classical.choice, Quot.sound]`; the file ends with a block of
+`#print axioms` commands that re-checks this on every build.
+
+The remaining newer results check the same way (`import Ttc` for the first two,
+`import Arlib` for the rest):
+
+```lean
+#print axioms Ttc.volume_estimate_joint                        -- 1 − δ − δ/4, jointly
+#print axioms Ttc.VolumeAlgorithm.cousinsVempala               -- the construction, debt in its type
+#print axioms Arlib.MarkovChains.cheeger                       -- Φ²/2 ≤ gap ≤ 2Φ
+#print axioms Arlib.MarkovChains.mixesWithin_of_conductance
+#print axioms Arlib.MarkovChains.conductance_ballWalk_ge
+#print axioms Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope
+#print axioms Arlib.uniformOn_iso_of_convex                    -- note: `Arlib.`, not `Arlib.Convexity.`
+#print axioms Arlib.brunn_minkowski_sharp
+#print axioms Arlib.GaussianCooling.zLogconcaveHypothesis_indicator
+```
+
+### The full sweep
+
+The claim is that **no declaration in either library** depends on anything but
+those three axioms, and this is the check — run over the compiled environment, so
+it is complete, where the older `grep | sed` recipe silently missed everything
+declared inside a `namespace`. It must report `offenders: []`:
+
+```lean
+import Ttc
+import Arlib
+open Lean in
+run_cmd do
+  let env ← getEnv
+  let ok : NameSet := (∅ : NameSet)
+    |>.insert ``propext |>.insert ``Classical.choice |>.insert ``Quot.sound
+  let mut count : Nat := 0        -- the ascription matters; `0` alone unifies wrong
+  let mut bad : Array Name := #[]
+  for (c, _) in env.constants.toList do
+    if c.isInternal then continue
+    let s := c.toString
+    unless s.startsWith "Ttc." || s.startsWith "Arlib." do continue
+    count := count + 1
+    for a in (← collectAxioms c) do
+      unless ok.contains a do bad := bad.push c
+  logInfo m!"checked {count} declarations; offenders: {bad}"
+```
+
+`lake env lean` that file; `offenders` must be `#[]`. The two imports now do cover
+everything `lake build` compiles — `Ttc.lean` imports `Ttc.Model.Endgoal`,
+`Ttc.Exec.EndToEnd`, `Ttc.Exec.CanonPolytope` and `Ttc.Exec.Final`, and
+`Arlib/Convexity.lean` imports `LocalizationLimit` and `DyerFrieze`, all of which
+earlier versions of this page said were unreachable.
+**The orphan probe currently reports nothing: every `.lean` file under `Ttc/` is
+imported and built.** `Ttc/Exec/CanonicalPolytope.lean` was an orphan while it was being
+written and is described as one in earlier revisions of this page; it was wired
+into `Ttc.lean` once it was green, and `lake build` compiles it. It is **not**
+superseded by `Ttc/Exec/CanonPolytope.lean`: the two are independent derivations
+of the same elimination, kept in parallel because `CanonPolytope` is what
+`Exec/Final` consumes while `CanonicalPolytope` is the one carrying a
+non-vacuity witness (`Ttc.Box.exists_two_ttc_volume_endToEnd_canonical_instances`).
+Consolidating them is outstanding work. The general hazard the old text pointed
+at is real and still worth stating: the `Ttc` library has no glob (only `Arlib`
+does), so any file under `Ttc/` that nothing imports is **never compiled**, and a
+green `lake build` says nothing whatever about it. **Nothing an unbuilt file
+contains may be cited as proved**; build it by name if you want it swept. (Note the
+two names differ by four letters and the `Canon` one *is* built; earlier revisions
+of this page said the opposite, when the roles were reversed. Re-run the orphan
+probe in [`AUDIT.md`](AUDIT.md) §5 rather than trusting this sentence.)
+(Per-profile counts are deliberately not tabulated here: the declaration set
+changes with every landed lemma and the numbers go stale. Re-derive them with the
+sweep.)
+
+### The dependency walk
+
+Which results the headline *actually reaches* is a different question from which
+files it imports, and only the walk settles it:
+
+```lean
+import Ttc
+open Lean in
+run_cmd do
+  let env ← Lean.getEnv
+  let mut seen : Lean.NameSet := {}
+  let mut todo := [`Ttc.TtcProb.volume_estimate]
+  while !todo.isEmpty do
+    let n := todo.head!; todo := todo.tail!
+    if seen.contains n then continue
+    seen := seen.insert n
+    if let some ci := env.find? n then
+      for c in ci.getUsedConstantsAsSet do todo := c :: todo
+  for t in [`Arlib.KV97.theorem2, `Arlib.KV97.ratio_bounds_tuned_sharp,
+            `Ttc.almostUniform_of_kv97_density, `Ttc.escape_of_mem_body,
+            `Ttc.TtcProb.samp_unif, `Ttc.TtcProb.theta_lo, `Ttc.TtcProb.theta_hi,
+            `Ttc.traj_numlattice_le, `Ttc.trajLaw, `Ttc.TtcProb.numlattice,
+            `Ttc.TtcProb.numlattice_union, `Ttc.exists_epoch,
+            `Ttc.TtcProb.thresh_pos, `Ttc.numlattice_failure_le,
+            `Ttc.TtcProb.volED_hi] do
+    Lean.logInfo m!"{t} reached: {seen.contains t}"
+```
+
+All of those come back `true`. Several names worth knowing come back **`false`**,
+and that is correct rather than a defect:
+
+* `Arlib.KV97.cor_linf_tuned` — the abstract theorem goes through the sharper
+  `ratio_bounds_tuned_sharp` instead;
+* `Ttc.TtcProb.ofReal_volSol` and everything else in
+  [`Ttc/Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean) — that file is an
+  *audit companion*: it checks what the symbol `volSol` means and that the
+  theorem is not vacuous, which is a statement about the statement, not a step
+  in the proof;
+* `Ttc.volume_estimate_joint` — it *consumes* `Ttc.TtcProb.volume_estimate`
+  rather than feeding it (finding 13a);
+* `Ttc.VolumeAlgorithm.cousinsVempala` — the Cousins–Vempala route is still not
+  discharged and nothing depends on it.
+
+`Arlib.MarkovChains.cheeger` and `Arlib.brunn_minkowski_sharp` also come back
+`false` **from `Ttc.TtcProb.volume_estimate`**, and that is right: the abstract
+theorem takes both oracles as fields, so it reaches neither. **Re-run the same
+walk from `Ttc.ttc_volume_endToEnd` and the picture is different.** Replace the
+seed with `` `Ttc.ttc_volume_endToEnd `` and check
+
+```lean
+  for t in [`Ttc.ttc_volume_monteCarlo, `Ttc.kv97SamplerOfBody,
+            `Ttc.VolumeAlgorithm.monteCarlo,
+            `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope,
+            `Arlib.uniformOn_iso_of_convex] do
+```
+
+All five come back `true`. So the chain isoperimetry → conductance → Cheeger →
+`L²` → mixing → `law_tv` → sampler → capstone is genuinely load-bearing on that
+route, not merely imported. (`Arlib.uniformOn_iso_of_convex` lives in the `Arlib`
+namespace, not `Arlib.Convexity` — a walk that spells it the other way silently
+reports `false`.)
+
+Add any of these to the `for t in [...]` list to re-check.
+
+### Cheap greps
 
 ```bash
-{ echo "import Ttc"; \
-  grep -h "^theorem \|^noncomputable def \|^def " Ttc/Model/*.lean Ttc/*/*.lean Ttc/*.lean \
-  | sed 's/^[a-z ]*def /#print axioms Ttc./; s/^theorem /#print axioms Ttc./' \
-  | cut -d" " -f1-3; } > /tmp/Ax.lean
-lake env lean /tmp/Ax.lean | grep -v "Classical.choice"
+# `-w` matters (a docstring saying "admits a median" is not an `admit`);
+# the second grep drops docstrings that *talk about* sorries, always in backticks
+grep -rnwE "sorry|admit|native_decide|sorryAx" Ttc.lean Ttc/ Arlib.lean Arlib/ \
+  | grep -vE '`(sorry|sorryAx|admit|native_decide)`'
+grep -rnE "^axiom " Ttc.lean Ttc/ Arlib.lean Arlib/
+
+# the staging-area rule (see below)
+grep -rn "^import Ttc" Arlib/
 ```
 
-(The one-liner above misses declarations inside `namespace FacetSystem` /
-`namespace Params` / `namespace TtcProb`; prefix those by hand, or just trust
-`lake build`, which emits **zero** `declaration uses 'sorry'` warnings.)
-
-As a cheap third check:
-
-```bash
-grep -rn "sorry\|admit\|native_decide\|sorryAx\|^axiom " Ttc.lean Ttc/ | grep -v '`sorry`'
-```
-
-returns nothing.
+The second and third return nothing. **The first returns exactly two lines, and
+both are English prose, not Lean:** `Ttc/Exec/Coverage.lean` and
+`Ttc/Model/Endgoal.lean` each contain the sentence "`CLAUDE.md` §4 does not admit
+an unchecked proof". `-w` was chosen to stop `admits` matching and does not stop
+the bare verb; the backtick filter does not fire because the word is unquoted
+prose. Earlier revisions of this page said "all three return nothing", which was
+true when they said it. Read the two hits rather than tightening the pattern until
+they vanish — `#print axioms` and the full sweep above are the authoritative
+checks, and both are clean.
 
 ## Module map
 
-A small, self-contained **audit surface** (`Ttc/Model/`) plus the proofs it rests
-on, one directory per object of the paper it discharges. To check *what is
-claimed* you read only `Model/`; nothing in it refers to a definition outside
-`Model/` except Mathlib.
+A small **audit surface** (four of `Ttc/Model/`'s five files — all but
+`Endgoal.lean` — plus `Volume/VolSolCheck`)
+plus the proofs it rests on, one directory per object of the paper it discharges.
+To check *what is claimed* you read only `Model/` — with two real exceptions:
+`ProblemSetting`'s `law_eq` and `oracle_eq` fields name
+[`Ttc.trajLaw`](Ttc/Coupling/Family.lean) and
+[`Ttc.trajOracles`](Ttc/Coupling/Family.lean), and its `sampler` field names
+[`Arlib.KV97.inflated`](Arlib/Lattice/KV97/Inflate.lean),
+[`Arlib.TVLe`](Arlib/Probability/TV.lean),
+[`Arlib.uniformOn`](Arlib/Probability/UniformOn.lean) and
+`Arlib.Lattice.Rounding.prodTent`. Those names carry the strongest assumptions in
+the development, so they have to be followed out. See [`AUDIT.md`](AUDIT.md) §4.
+For the oracle-free capstone add the *type* of `Ttc.ttc_volume` in
+`Model/Endgoal.lean`, of `Ttc.ttc_volume_endToEnd` in `Exec/EndToEnd.lean` and of
+`Ttc.ttc_volume_final` in `Exec/Final.lean`.
+
+Every file below exists on disk. **The list is no longer exhaustive**: `Ttc/` is
+67 files (~24.7k lines) and `Arlib/` is 60 (~30.7k), and a dozen or so `Arlib/`
+modules — chiefly under `MarkovChains/Continuous/`, `Convexity/GaussianCooling/`
+and the warm-start plumbing — have landed without an entry here. Re-run
+`find Ttc Arlib -name '*.lean'` and diff against this list before trusting it.
 
 ```
-Ttc.lean                    -- imports everything; the layout docstring
+Ttc.lean                    -- imports every module under Ttc/; the
+                            --   layout docstring (its per-directory file counts are stale)
 Ttc/
   Model/                    -- THE AUDIT SURFACE — read this and stop
     Prelude.lean            -- definitions only: ℝⁿ, formula syntax/semantics, the Params
                             --   block, volSol (= Vol(F)), relErr (= the (1±ε) interval)
     Pseudocode.lean         -- alg:ttc line by line, and its output ttcOutput
-    ProblemSetting.lean     -- TtcProb: the problem, the run, every assumption as fields
-    Theorem.lean            -- thm:volumettc: Pr[out ∈ (1±ε)Vol(F)] ≥ 1−δ — one theorem
+    ProblemSetting.lean     -- TtcProb (59 fields): the problem, the run, every
+                            --   assumption; also VolumeAlgorithm (Vol_ED's contract)
+                            --   and KV97Sampler (GenerateSamples' construction)
+    Theorem.lean            -- thm:volumettc: Pr[out ∈ (1±ε)Vol(F)] ≥ 1−δ, and
+                            --   thm:runtime as the paper charges it — two theorems
+    Endgoal.lean            -- Ttc.ttc_volume: the same two theorems restated over
+                            --   (atoms, φ, ε, δ) with the space and parameters
+                            --   CONSTRUCTED and every residual obligation a visible
+                            --   binder. ON the build path now (Ttc.lean imports it),
+                            --   but still a restatement, not the audit surface.
+                            --   See "Where this is against the end goal"
+  Dnf.lean                  -- Ttc.toDNF is a CORRECT ToDNF: toDNF_isDNFOf and
+                            --   toDNF_isPositive (how the witness discharges isDNF /
+                            --   isPositive; the fields themselves remain, since toDNF
+                            --   is a parameter of TtcProb)
   Invariants.lean           -- structural facts about the modelled loop: the two exit
                             --   levels, and what 𝒳 can contain
+  Runtime.lean              -- thm:runtime: runCost, and runCost_le — the paper's own
+                            --   accounting, with its two gaps stated
+  Capstone.lean             -- the two chains combining lem:lattice with lem:numlattice;
+                            --   TtcProb.sol_eq_union (thm:decomposition for the bundle)
   Constants/                -- what the algorithm's constants buy
     Arith.lean              -- claim:helper and every ε/η inequality
     Parameters.lean         -- what ε', κ, γ are chosen to satisfy
   Rounding/                 -- claim:cl, over the rounding that realises it
     Hoeffding.lean          -- claim:cl's concentration core (Hoeffding at the paper's κ)
-    Tent.lean               -- the displacement density 1−|u|: mass 1, mean 0, support [−1,1]
+    Tent.lean               -- the displacement density 1−|u| — now a pure RE-EXPORT of
+                            --   Arlib/Lattice/Rounding/Tent.lean
     TentSum.lean            -- ∑_{m∈ℤ} tent(u−m) = 1, and the n-fold partition of unity
     PiLintegral.lean        -- a product of withDensity measures is a withDensity product
     ProdKernel.lean         -- prodKernel: the kernel ∏ᵢ tent(pᵢ−xᵢ); double stochasticity
@@ -195,6 +650,8 @@ Ttc/
     RoundMoments.lean       -- that law is two-point ⇒ bounded, mean zero, independent
     Cl.lean                 -- claim:cl (a),(b),(c) over an abstract rounding kernel
     ClB.lean                -- claim:cl (b) discharged: the Q''-direction covering + averaging
+    ArlibBridge.lean        -- OFF THE PATH: which Ttc/Rounding files have been re-based
+                            --   onto Arlib and which cannot be, with rfl-checked aliases
   Nonconv/                  -- lem:nonconv
     Geometry.lean           -- facet systems; which facet attains k
     BallFacet.lean          -- inscribed ball ↔ facet form; finiteness of Q ∩ ℤⁿ; ℤⁿ ↪ ℝⁿ
@@ -207,6 +664,9 @@ Ttc/
     Decomposition.lean      -- thm:decomposition; convexity of a cube's region
     Transport.lean          -- lem:lattice: transport ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ
     Assembled.lean          -- lem:lattice for Sol(F); where GetPrecision becomes load-bearing
+    PerCube.lean            -- lem:lattice PER POLYTOPE (analysis.tex:271), via the
+                            --   singleton DNF [i]; TtcProb.lattice_cube_lo/hi, and
+                            --   TtcProb.theta_window_cube with its hypotheses discharged
   Process/                  -- lem:process, lem:chernoff, and the level process
     Poisson.lean            -- lem:process: Poisson splitting
     PoissonLaws.lean        -- lem:process as an identity of measures: splitting, thinning
@@ -222,36 +682,603 @@ Ttc/
     Transfer.lean           -- that bound transported to an arbitrary Ω/μ/O, and
                             --   TtcProb.numlattice_union — the ex-field, as a theorem;
                             --   also exists_epoch (j* is constructed, not assumed),
-                            --   TtcProb.thresh_pos and TtcProb.vol_le_total
+                            --   TtcProb.thresh_pos, TtcProb.vol_lt_two_total, and the
+                            --   ex-fields cover_all, θ_nonneg, θ_pos as theorems
     NumLattice.lean         -- lem:numlattice as a theorem, from the epoch covering
-  Capstone.lean             -- the two chains combining lem:lattice with lem:numlattice
+    Product.lean            -- TtcProb.volume_estimate over the JOINT randomness of
+                            --   run and volume oracle, at 1 − δ − δ/4 (finding 13a).
+                            --   The shape Exec/VolDischarge follows.
+                            --   Two forms: an iterated integral, and a single sample
+                            --   point of the composition-product μ_volAlg ⊗ₘ κ
+  Sampler/                  -- GenerateSamples: eq:almostuniform, PROVED
+    Contract.lean           -- Ttc.AlmostUniform (= eq:almostuniform), and theta_window:
+                            --   almost-uniformity + Vol_ED + lem:lattice ⇒ the Invariant
+    Bridge.lean             -- the join: Arlib.KV97's ℤⁿ statement transported to 𝕃ⁿ,
+                            --   escape_of_mem_body (KV97 Thm 2's escape hypothesis,
+                            --   discharged), and the ex-fields samp_unif, theta_lo,
+                            --   theta_hi recovered as theorems
+    Construct.lean          -- a KV97Sampler whose law_tv is a THEOREM: contLaw is the
+                            --   lazy ball walk on the inflated polytope from a warm
+                            --   start, and law_tv is mixesWithin_lazy_ballWalk_polytope
+                            --   at tolerance ε'/(4·Vol(P')). Geometry (diameter,
+                            --   inscribed ball) and the warm start are explicit named
+                            --   hypotheses, not fields and not axioms
+    Rates.lean              -- ttc_volume_rates: the level-0 rates θ CONSTRUCTED
+                            --   (Ttc.rates, via thm:decomposition and a classical choice
+                            --   of cube), so θ, theta_eq and gen_mem stop being binders;
+                            --   rates_pos rules out the collapsed θ ≡ 0
+  Volume/                   -- Vol_ED, and what volSol means
+    Bridge.lean             -- everything PROVED about Vol_ED: the VolumeAlgorithm.exact
+                            --   non-vacuity witness, the roundBody rescaling that
+                            --   discharges Theorem 1.1's "contains the unit ball"
+                            --   hypothesis, the union bound over the m calls
+                            --   (volGood_prob_budget), and the former field volED_hi
+                            --   recovered as a theorem
+    MonteCarlo.lean         -- VolumeAlgorithm.monteCarlo: the volume oracle CONSTRUCTED,
+                            --   with NO hypotheses — hit-and-miss Monte Carlo, coins an
+                            --   infinitePi of uniforms on the unit ball, correct by
+                            --   Chebyshev. est_ne_volume shows it is not the exact
+                            --   oracle in disguise; est_meas holds for non-measurable K
+                            --   via the measurable hull. Sample count EXPONENTIAL in n;
+                            --   emphatically NOT Cousins–Vempala Theorem 1.1
+    CousinsVempala.lean     -- OFF THE PATH: Cousins–Vempala §5.2 (telescoping product,
+                            --   Chebyshev, median boost, the hot end of the chain) proved
+                            --   unconditionally, and VolumeAlgorithm.cousinsVempala — a
+                            --   complete construction of Vol_ED's contract whose
+                            --   remaining debt is four named hypotheses in its own type.
+                            --   STILL UNDISCHARGED; MonteCarlo.lean fills the volAlg
+                            --   field by a different, exponential route, which is not a
+                            --   proof of CV Theorem 1.1. See "the volume oracle" below
+    VolSolCheck.lean        -- OFF THE PATH: the audit surface for the symbol volSol —
+                            --   an independent Bool-valued evaluator for BForm.holds,
+                            --   the ENNReal.toReal ⊤ = 0 hazard exhibited
+                            --   (volSol M .tt = 0) and then closed (ofReal_volSol)
   Witness/                  -- non-vacuity
     Box.lean                -- the box [0,c]ⁿ: its atoms, cube, DNF, formula, inscribed
                             --   ball, finite volume, and lattice count ≥ cⁿ
     BoxProb.lean            -- Box.boxProb: the non-degenerate TtcProb built on it,
-                            --   and Box.nonempty_ttcProb
+                            --   including a genuine KV97Sampler for the box, and
+                            --   Box.nonempty_ttcProb
+    BoxSharp.lean           -- the same box at ε < 1 and δ < 1: Box.ttc_volume_box_at at
+                            --   EVERY (ε,δ) ∈ (0,1]², and exists_two_ttc_volume_instances.
+                            --   Closes a real defect — the old witness sat at ε = δ = 1,
+                            --   where the accuracy conjunct reads 0 ≤ (…).toReal and is
+                            --   true of every measure (ttc_volume_box_accuracy_is_trivial)
+    TwoCube.lean            -- the witness whose DNF has TWO cubes: two disjoint boxes
+                            --   [0,c]ⁿ and [lo,lo+c]ⁿ, c = max 1 Thresh(ε,4δ/5) and
+                            --   lo = (⌈c·10^ρ⌉₊+1)/10^ρ > c a lattice multiple. It
+                            --   instantiates ttc_volume_final ITSELF (the only witness
+                            --   that does), at every (ε,δ) ∈ (0,1]², every binder
+                            --   discharged including big. card_toDNF_eq_two is an
+                            --   EQUALITY to 2; sol_eq_union_two gives two distinct,
+                            --   nonempty, DISJOINT regions; cenT_left_ne_right shows the
+                            --   two ball centres differ. big needed a new argument:
+                            --   min_qT_le_ratesT bounds every rate by min(q₁,q₂) and
+                            --   CASE-SPLITS on cubeAt s, since the box's N = L route
+                            --   holds only at one cube; volume_sbx is the exact volume
+                            --   cⁿ of the shifted box, which the Box files lacked.
+                            --   ttc_volume_final_two_cube_at: (1/3,9/10) and (1/2,1/4),
+                            --   bounds 1/10 and 3/4, both > 0 IN the statement.
+                            --   NOT proved: volSol = Vol₁ + Vol₂ (disjointness is
+                            --   proved; additivity is not, and is not needed)
+  Exec/                     -- the oracle-free capstone, and its plumbing
+    Params.lean             -- ttcParams: the parameter block COMPUTED from (D, n, ε, δ)
+    Canonical.lean          -- canonicalTtcProb: the probability space CONSTRUCTED, not
+                            --   assumed; Box.boxProb_eq_canonical checks it by rfl
+    Geometry.lean           -- the inscribed ball, volume_ne_top and the lattice
+                            --   enumeration, constructed from the input conditions
+    Coverage.lean           -- the coverage test constructed, and shown harmless: any
+                            --   admissible pair is the classical one where the run
+                            --   looks at it
+    VolDischarge.lean       -- ttc_volume_monteCarlo: ttc_volume with all SIX Vol_ED
+                            --   binders gone — volAlg constructed, vol = mcVol,
+                            --   volED_eq/vol_pos proved, volCoins INTEGRATED OUT against
+                            --   MonteCarlo.coins, volCoins_good AVERAGED OUT at ≥ 1 − δ/4.
+                            --   That is where the guarantee becomes 1 − δ − δ/4
+    EndToEnd.lean           -- ttc_volume_endToEnd: the capstone with NO oracle binder at
+                            --   all (Vol_ED, the rates and the sampler all gone), and
+                            --   ttc_volume_endToEnd_ofSampler, the intermediate that
+                            --   still binds sampD/sampler. Non-vacuity:
+                            --   Box.ttc_volume_endToEnd_box_at at every (ε,δ) ∈ (0,1]²
+                            --   and Box.exists_two_ttc_volume_endToEnd_instances at
+                            --   (1/2,1/2) and (1/4,1/4), bounds 3/8 and 11/16, both > 0
+    Budget.lean             -- ttc_volume_clean: ttc_volume_endToEnd run at the internal
+                            --   δ₀ = 4δ/5, so the conclusion is 1 − δ in the USER's δ.
+                            --   A repricing, not a better analysis — the parameter block,
+                            --   Thresh and runCost are those at 4δ/5, the Monte-Carlo
+                            --   sample count is 5/4 higher, and Thresh grows ADDITIVELY
+                            --   (log(30/δ) vs log(24/δ)). ttc_volume_endToEnd_delta is a
+                            --   legacy alias for it. Non-vacuity: Box.ttc_volume_clean_box_at
+                            --   at every (ε,δ) ∈ (0,1]², Box.clean_box_at_nine_tenths at
+                            --   (1/3, 9/10) with bound 1/10 > 0 — where the old budget was
+                            --   −1/8 (Box.old_budget_vacuous_at_nine_tenths) — and
+                            --   Box.exists_two_ttc_volume_clean_instances for the pair.
+                            --   Box.cleanProb/cleanAcc NAME that integral and assert
+                            --   nothing; Box.cleanProb_def proves the identification by rfl
+    CanonPolytope.lean      -- ttc_volume_endToEnd_canon: ttc_volume_endToEnd minus its nine
+                            --   polytope-description binders (ten with [Fintype Jt]). The
+                            --   crux is canon_body_eq_smul_region, an EQUALITY
+                            --   body (canonAm …) (canonBv …) = s • region …, strictly
+                            --   stronger than the ⊆ hdil asked for — which is why hDbody
+                            --   becomes derivable. hcard holds with equality, so no slack
+                            --   enters Params.gamma/Params.thresh. Built, and imported by
+                            --   Ttc.lean
+    Final.lean              -- ttc_volume_final: THE result. CanonPolytope's statement at
+                            --   δ₀ = 4δ/5, so: no oracle, no polytope description, clean
+                            --   1 − δ, 26 explicit binders (28 raw), all of them inputs.
+                            --   Read this file's module docstring for which δ is the
+                            --   user's and which the internal one
+    CanonicalPolytope.lean  -- a second, INDEPENDENT derivation of CanonPolytope's
+                            --   construction (ttc_volume_endToEnd_canonical, body_canon_eq).
+                            --   Imported and built. Kept because it is the one with a
+                            --   non-vacuity witness; CanonPolytope is the critical path.
+                            --   NEITHER supersedes the other. Consolidating the two is
+                            --   outstanding work
   Findings/                 -- OFF THE PATH: the formalisation refereeing the paper
     Repair.lean             -- lem:nonconv at internal parameter θ = η/2
     CubeLattice.lean        -- lem:lattice in the paper's per-polytope form
+
+Arlib.lean                  -- SECOND LIBRARY: the staging area (see below)
+Arlib/
+  Probability.lean          -- area root
+  Probability/
+    TV.lean                 -- TVLe: total variation in bounded-predicate form, and the
+                            --   transfer |∫f dμ − ∫f dν| ≤ ε for 0 ≤ f ≤ 1
+    Rejection.lean          -- conditioning; (1−θ)/V ≤ wᵢ ≤ 1/V ⇒ (1−θ)/N ≤ wᵢ/∑w ≤ (1+2θ)/N
+    SubgaussianTail.lean    -- Pr[⟨A,Y⟩ ≥ κ‖A‖] ≤ exp(−κ²/2), and the union bound
+    UniformOn.lean          -- the uniform measure on a body (an alias for condOn), and
+                            --   its integral API — what a TV statement consumes
+  Lattice.lean              -- area root
+  Lattice/
+    Basic.lean              -- ℤⁿ, 𝕃ⁿ = c⁻¹ℤⁿ, and the dilation bijection between them
+    Rounding/               -- randomized rounding, project-independent
+      Tent.lean             -- the displacement density 1−|u| (Ttc/Rounding/Tent re-exports it)
+      RoundLaw.lean         -- its law on ℤⁿ: two-point, mean zero, independent
+      ProdKernel.lean       -- ∏ᵢ tent(pᵢ−xᵢ), and ∫_{ℝⁿ} ∏ tent = 1
+      KernelIntegral.lean   -- ∫_S ∏tent ≤ 1 and = 1 − escape: Thm 2's two halves
+      ContTent.lean         -- the CONTINUOUS tent product on ℝⁿ, its independence,
+                            --   and ∫_T ∏tent = Pr[x+Y ∈ T] — discharges the escape
+    KV97/                   -- Kannan–Vempala, "Sampling Lattice Points" (STOC '97)
+      Defs.lean             -- κ = c+√(2 log r), the loss, and c = √(2 log(4/ε))
+      Inflate.lean          -- P' = {Ax ≤ b+κ‖A‖}, Vol(P') ≤ (1+κ/γ)ⁿVol(P)
+      Escape.lean           -- Pr[x+Y ∉ P'] ≤ r·exp(−κ²/2) ≤ exp(−c²/2)
+      Theorem2.lean         -- THEOREM 2, unconditional (theorem2_of_body)
+      Corollary.lean        -- cor:linf = eq:almostuniform (see finding §4g),
+                            --   and the sharp form ratio_bounds_tuned_sharp
+      Lemma1.lean           -- acceptance probability ≥ 9/(20e); and the identification
+                            --   of `acceptance` with a probability, which needs three
+                            --   hypotheses (finding 18)
+  Convexity.lean            -- area root
+  Convexity/
+    Polytope.lean           -- {x : Ax ≤ b}, its inflation, and Vol(P′) ≤ (1+κ/γ)ⁿVol(P)
+    LogConcave.lean         -- LogConcaveOn, closure properties, ↔ ConcaveOn (log ∘ f)
+    PrekopaLeindler.lean    -- 1-D Brunn–Minkowski, and 1-D PRÉKOPA–LEINDLER (proved)
+    PrekopaLeindlerN.lean   -- PRÉKOPA–LEINDLER in ℝⁿ, and the MULTIPLICATIVE
+                            --   Brunn–Minkowski (proved); the induction runs in the
+                            --   ℝ≥0∞ formulation
+    BrunnSharp.lean         -- the SHARP (1/n-concave) Brunn–Minkowski for arbitrary
+                            --   measurable sets, and Brunn's theorem in sharp form
+                            --   (brunn_slice_sharp, brunn_slice_concaveOn)
+    Localization.lean       -- what Prékopa–Leindler unlocks: marginals of log-concave
+                            --   functions, convolution, Prékopa/Borell, Brunn's theorem
+    LocalizationLemma.lean  -- WORK IN PROGRESS towards Lovász–Simonovits localization:
+                            --   concave ⇒ log-concave, and the needle weight
+    LocalizationLimit.lean  -- Blaschke selection for convex
+                            --   bodies, concavity survives Hausdorff limits, and a
+                            --   CONVERSE to Brunn showing the limit profile need not be
+                            --   affine. The Localization Lemma stays unproved+unassumed.
+                            --   (Now imported by Arlib/Convexity.lean, so `import Arlib`
+                            --   does reach it; earlier this page said otherwise)
+    Isoperimetry.lean       -- log-concave measures, set distance, scale invariance;
+                            --   the isoperimetric inequality itself is NOT proved
+    DyerFrieze.lean         -- IN FLIGHT (now imported by Arlib/Convexity.lean):
+                            --   towards the Dyer–Frieze / Lovász–Simonovits
+                            --   isoperimetric inequality. The one-dimensional case in full
+                            --   (dyerFrieze_dim_one), the free-segment lemma, the
+                            --   proportional halfspace cut, and the induction step
+                            --   (dyerFrieze_step). The inequality itself is still NOT
+                            --   proved and NOT assumed — the cut does not lower dimension,
+                            --   so closing the loop needs the Localization Lemma.
+                            --   Build it by name before trusting any of this
+    GaussianCooling/
+      Estimator.lean        -- lem:exp-bd, lem:fn-indep, the product estimator, and the
+                            --   median boost at the O(log 1/p) rate
+      Variance.lean         -- Cousins–Vempala §5.1 ported in full: the moment identities,
+                            --   Brascamp–Lieb on a needle (proved), Lemmas 5.5–5.10.
+                            --   TWO INPUTS ASSUMED, as explicit Prop hypotheses (never
+                            --   axioms): LocalizationHypothesis and ZLogconcaveHypothesis
+      ZLogconcave.lean      -- ZLogconcaveHypothesis DISCHARGED for f = c·1_K, K convex and
+                            --   measurable (paper Lemma 5.9), via the marginal theorem
+                            --   after x = y/A; so Lemma 5.10 is unconditional for a body.
+                            --   ALSO records that the predicate is FALSE for general
+                            --   log-concave f (f x = e^{−x}, fails by ≈1.93).
+                            --   LocalizationHypothesis is still assumed
+  MarkovChains.lean         -- area root
+  MarkovChains/Continuous/
+    Conductance.lean        -- flow, reversibility, conductance, + a non-vacuity witness
+    Warmness.lean           -- step/iterate, warmness propagation, TV data processing
+    MixingFromConductance.lean -- mixing time from geometric decay; Dirichlet form
+    BallWalk.lean           -- the ball walk as a Markov kernel, reversible w.r.t. the
+                            --   uniform measure on K. No conductance bound is claimed
+    Cheeger.lean            -- the L² layer: real Dirichlet form, variance, spectral gap;
+                            --   the co-area formula, L¹/L² isoperimetry, medians — and
+                            --   CHEEGER'S INEQUALITY, BOTH DIRECTIONS: Φ²/2 ≤ gap ≤ 2Φ
+                            --   (sq_conductance_div_two_le_spectralGap, cheeger), under
+                            --   (rayleighSet P pi).Nonempty. Tight two-point witness
+    L2Mixing.lean           -- gap ⇒ TV: swap-invariance of pi ⊗ₘ P, the L² contraction,
+                            --   the χ²→TV comparison, and mixesWithin_of_conductance —
+                            --   the mixing time from a conductance bound. Introduces
+                            --   HasNonnegSpectrum, which the PLAIN ball walk lacks
+    BallWalkConductance.lean -- ball-intersection geometry, the one-step overlap bound,
+                            --   separation, the laziness bridge (lazy, hasNonnegSpectrum_
+                            --   lazy), the non-vacuity witness ofReal_le_ell_unitBall,
+                            --   conductance_ballWalk_ge, and the composed chain
+                            --   mixesWithin_lazy_ballWalk / theorem2_of_lazy_ballWalk.
+                            --   Isoperimetry is an INLINE explicit hypothesis throughout;
+                            --   the only proved θ is 2⁻ⁿ, so the certified step count is
+                            --   EXPONENTIAL in n — this is not a poly-time sampler
+    PointwiseMixing.lean    -- WHY TV ⇒ pointwise is impossible, and why the ball walk
+                            --   admits no uniform minorisation (finding 17)
+    PointwiseRoute.lean     -- the route that does work: an additive TV error IS a
+                            --   relative error at tolerance θ/Vol(P′), and mixing time
+                            --   is logarithmic in the tolerance
 ```
 
-**`Findings/` is off the path.** Nothing the headline or the non-vacuity
-witness depends on imports either file: they are the formalisation acting as a referee.
-[`Repair.lean`](Ttc/Findings/Repair.lean) proves that `lem:nonconv` holds as the
-paper *states* it once the construction is run at internal parameter `θ = η/2`,
-and bounds the cost at one decimal digit of precision — the fix for README finding
-2. [`CubeLattice.lean`](Ttc/Findings/CubeLattice.lean) recovers the paper's own
-per-polytope phrasing of `lem:lattice` from the global one this development
-proves, so an auditor can check the two say the same thing. Everything else in
-the tree is on the path; this was checked mechanically, not by eye — see below.
+### What the KV97 development establishes
+
+`Arlib/Lattice/KV97/` formalises Kannan–Vempala's *Sampling Lattice Points* — the
+paper `GenerateSamples` is cited to. It is **on the headline's dependency path**
+(via `Ttc/Sampler/Bridge.lean`), and it is audited separately in
+[`AUDIT-KV97.md`](AUDIT-KV97.md), which records **discrepancies with the printed
+paper**, three of them consequential:
+
+* the escape exponent is `e^{−c²/2}`, not the printed `2e^{−c²}` (§4a);
+* `cor:linf`'s `ε` is stated relatively but derived additively, so `theorem2`'s
+  hypothesis must be *pointwise* almost-uniformity, not total variation (§4b);
+* **`cor:linf`'s upper bound is false for `ε > (7−√33)/2 ≈ 0.628`** (§4g) — at
+  `ε = 1` the true constant is `20/9`, not `2`. `TTC` uses `ε' = ε/12 ≤ 1/12`, so
+  its own use is provably inside the valid range
+  ([`Ttc.TtcProb.epsPrime_le_five_eighths`](Ttc/Sampler/Bridge.lean)).
+
+Theorem 2's escape-mass hypothesis is **not** assumed here:
+`Arlib.Lattice.Rounding.setIntegral_prodTent_compl_inflate_le_exp` proves it, and
+[`Ttc.escape_of_mem_body`](Ttc/Sampler/Bridge.lean) is the discharge, so
+`Arlib.KV97.theorem2_of_body` is unconditional.
+
+`Arlib/Lattice/KV97/Lemma1.lean` (the acceptance probability of the rejection
+step, `≥ 9/(20e)`, better than the paper's `1/8`) is **not** on the headline's
+path: it is about the sampler's *efficiency*, which is out of scope.
+
+### What the convexity and Markov-chain stack now establishes
+
+None of this is on `Ttc.TtcProb.volume_estimate`'s dependency path — that theorem
+takes both oracles as fields. **Part of it is now on
+`Ttc.ttc_volume_endToEnd`'s**: the walk from the capstone reaches
+`Arlib.uniformOn_iso_of_convex` and
+`Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`, and through the latter
+the conductance/Cheeger/`L²` chain, because that is what proves the sampler's
+`law_tv`. What is *not* reached is the Cousins–Vempala volume route
+(`VolumeAlgorithm.cousinsVempala`, the Gaussian-cooling files) — the capstone's
+volume oracle is the unrelated Monte-Carlo construction. Each result below is
+stated with the caveat that makes it honest — read the caveats, not the headlines.
+
+**Cheeger's inequality, both directions.**
+[`Arlib.MarkovChains.sq_conductance_div_two_le_spectralGap`](Arlib/MarkovChains/Continuous/Cheeger.lean)
+is the *hard* direction, `Φ²/2 ≤ gap`, and
+[`Arlib.MarkovChains.cheeger`](Arlib/MarkovChains/Continuous/Cheeger.lean) packages
+both as `Φ²/2 ≤ gap ≤ 2Φ`. Proved, axiom-clean, for a reversible kernel on a
+probability space. The ingredients — a one-dimensional layer-cake identity, the
+co-area formula, the `L¹` and `L²` isoperimetric inequalities *for the chain*, a
+median, Cauchy–Schwarz — are each proved in the file; Mathlib v4.32 has none of
+them.
+
+*Caveat.* Both directions carry `(rayleighSet P pi).Nonempty` — some `L²`
+function has nonzero variance. That is **forced**, not decoration: `spectralGap`
+is an `sInf` over `ℝ`, and `sInf ∅ = 0`, so on a space where every `L²` function
+is a.e. constant the gap is the junk value `0` while `Φ` need not be. The
+hypothesis mentions neither the conductance nor any isoperimetric constant, and
+`rayleighSet_const_piHalf_nonempty` exhibits a chain satisfying it, on which the
+hard direction reads `1/8 ≤ 1`.
+
+**Sharp Brunn–Minkowski.**
+[`Arlib.brunn_minkowski_sharp`](Arlib/Convexity/BrunnSharp.lean) is the
+`1/n`-concave form
+`λ·|A|^{1/n} + (1−λ)·|B|^{1/n} ≤ |λA + (1−λ)B|^{1/n}`, for **arbitrary measurable
+`A`, `B` in `ℝⁿ`** — no convexity, no compactness, no finiteness, and the
+Minkowski sum need not be measurable (`volume` is used as an outer measure on the
+right). It upgrades the multiplicative form of
+[`PrekopaLeindlerN`](Arlib/Convexity/PrekopaLeindlerN.lean), and yields Brunn's
+theorem in sharp form (`brunn_slice_sharp`, `brunn_slice_concaveOn`).
+
+*Caveat, and it is a real one.* `A.Nonempty` and `B.Nonempty` are **required, and
+the sharp inequality is false without them**: at `A = ∅`, `B` the unit cube,
+`λ = 1/2`, the right-hand side is `0` and the left is `1/2`. The multiplicative
+(log-concave) form had no such hypothesis, because `|∅|^λ = 0` kills its left-hand
+side. This is exactly where the sharp form is stronger and more delicate, and a
+reader who transplants the log-concave statement's hypotheses gets a false
+theorem. (The `A = ∅` counterexample is in that file's docstring, not a Lean
+theorem; the *hypotheses* are of course in the type.)
+
+**A conductance bound for the ball walk.**
+[`Arlib.MarkovChains.conductance_ballWalk_ge`](Arlib/MarkovChains/Continuous/BallWalkConductance.lean)
+proves `Φ(ball walk on K with δ-steps) ≥ min(θ/16, κ·θ²·δ/(64n))`. The geometry it
+rests on — the midpoint ball inside the intersection of two `δ`-balls, the
+one-step overlap bound, the separation it forces, and the flow accounting behind
+the paper's three-way partition — is proved unconditionally.
+
+*Caveat 1, now largely lifted: the isoperimetric inequality is an inline
+hypothesis of this theorem — and it is **proved elsewhere in the tree**.* It is
+written out as an explicit `∀`-binder `hiso` in the theorem's type — not a `def`,
+not a `structure` field, not a named `Prop` — so a reader of the type sees exactly
+what is assumed, and `κ` is universally quantified, so a caller who proves the
+inequality gets the bound at their own constant.
+
+[`Arlib/Convexity/IsoBall.lean`](Arlib/Convexity/IsoBall.lean) supplies such a
+caller, unconditionally: `uniformOn_iso_unitBall` at `κ = (1/2)ⁿ⁺¹` for the
+Euclidean unit ball, and `uniformOn_iso_of_convex` at `κ = 2⁻ⁿ/D` for **every**
+bounded convex body. Both are theorems with no hypotheses beyond the ones in their
+types, and the file declares no `def`, `structure`, `class` or `Prop` at all. The
+proof is an elementary chord argument (a free interval on each chord `a → b` from
+`exists_gap_of_separated`, integrated over `A × B` by Tonelli, each half bounded
+by re-slicing the same set the other way) — it deliberately does **not** touch the
+blocked limiting argument, trading the dimension-free `2/D` for `2⁻ⁿ/D`.
+
+[`Arlib/MarkovChains/Continuous/UnitBallMixing.lean`](Arlib/MarkovChains/Continuous/UnitBallMixing.lean)
+composes it through the rest of the stack:
+`exists_unconditional_mixing_unitBall` is the first statement here where
+isoperimetry, the local-conductance floor, Cheeger, the `L²` decay and the
+total-variation bound are all *discharged at once* rather than assumed — and the
+target is `Arlib.uniformOn volume (ball 0 1)`, which `isReversible_ballWalk` makes
+the walk's **exact** stationary measure, so there is no bias term in the
+conclusion.
+
+**The cost, which must be quoted alongside the result.** `κ = 2⁻⁽ⁿ⁺¹⁾` is
+exponentially small in the dimension, so the conductance bound and the mixing time
+it feeds are exponentially large. **This is not a polynomial-time sampler.** What
+it settles is that the four theorems compose and that their joint hypotheses are
+satisfiable by a real body — which a sharp constant *assumed* for all bodies
+cannot settle. A polynomial constant still needs the localization route below.
+[`Arlib/Convexity/DyerFrieze.lean`](Arlib/Convexity/DyerFrieze.lean) is the attack
+on it: the **one-dimensional case in full** (`dyerFrieze_dim_one`), the
+free-segment lemma, the proportional halfspace cut
+(`exists_halfSpace_proportional`, which replaces the usual Borsuk–Ulam appeal) and
+the induction step (`dyerFrieze_step`). But the cut is lossless *without* lowering
+dimension, so closing the loop needs the limit passage — i.e. the Localization
+Lemma — and that is still unproved and unassumed.
+
+That route has since been **reduced to a single statement**, and two things
+previously believed to block it do not.
+[`Arlib/Convexity/PositionalCut.lean`](Arlib/Convexity/PositionalCut.lean):
+bisection with positional control is *not* a blocker — `exists_side_extent_halved`
+is three lines, because the two sides' extents sum to the whole, so the smaller is
+at most half regardless of where the cut landed. And thinning transversely to a
+needle is *achievable*: `transverse_thin_chain_gapBox` exhibits an explicit chain
+doing it, every cut two-sided, converging in Hausdorff distance to an honest
+needle. What is genuinely impossible is thinning the **separating** direction —
+`not_two_sided_of_sign_separated` — and that is the direction the needle runs
+along, so nothing is lost. The whole remaining difficulty is (P1): for a general
+configuration, exhibit a transverse direction and level whose two sides both carry
+positive `g`- and `h`-mass. That is **weaker than the two-measure ham-sandwich**
+usually invoked — only positivity of both masses on both sides, not exact
+bisection of either — so Borsuk–Ulam may still be avoidable, as it already was in
+`exists_halfSpace_proportional`. That file declares no `Prop`
+asserting an isoperimetric inequality. **It is in flight**: green and `sorry`-free
+at the last check, but being extended, so it may not compile at any given moment;
+run `lake build Arlib.Convexity.DyerFrieze` before relying on it. (`import Arlib`
+*does* reach it now — `Arlib/Convexity.lean` imports it — which is a change from
+what earlier versions of this page said.)
+
+*Caveat 2: the constant is a factor `√n` worse than the paper's.*
+Cousins–Vempala's `thm:speedyconductance` gets separation `δ/√n` from the ball-cap
+estimate of [KLS95, Lemma 3.5]; Mathlib has no such estimate, so the elementary
+midpoint bound is used instead and delivers `θδ/n`. The gap is in the geometry,
+not in the Markov-chain argument, and everything downstream inherits it.
+
+*Caveat 3: the speediness hypothesis `hell` is forced, and the paper's `θ = 3/4`
+reading of it is vacuous.* `hell : ∀ x ∈ K, θ ≤ ell K δ x` is a uniform lower
+bound on the local conductance. Some such hypothesis is unavoidable for the
+*plain* ball walk: near a boundary point a supporting hyperplane forces `ℓ ≤ 1/2`,
+so no body with boundary satisfies `ℓ ≥ 3/4` everywhere and the paper's
+`SpeedyPoints` threshold is unsatisfiable as a *uniform* bound. Cousins–Vempala
+sidestep this by analysing the **speedy walk**, whose stationary density is
+proportional to `ℓ`; that walk is not built in this library. Hence the
+`θ`-parameterised statement, and hence the witness
+[`ofReal_le_ell_unitBall`](Arlib/MarkovChains/Continuous/BallWalkConductance.lean)
+(`ℓ ≥ 2⁻ⁿ` on the unit ball for `0 < δ ≤ 1`), which is what keeps `hell` from
+being vacuous. (The `θ = 3/4` unsatisfiability is argued in that file's
+docstrings; it is not itself a Lean theorem.)
+
+**Spectral gap ⇒ total-variation mixing.**
+[`Arlib.MarkovChains.mixesWithin_of_conductance`](Arlib/MarkovChains/Continuous/L2Mixing.lean)
+discharges the `hdecay` obligation that
+`mixesWithin_of_conductance_decay` used to leave to its caller: `O(φ⁻² log(M/ε))`
+steps of a reversible chain with conductance `≥ φ` from an `M`-warm start land
+within total variation `ε`. The route is Cheeger's hard direction, the `L²`
+contraction `Var(Tᵗf) ≤ (1−gap)^{2t} Var(f)`, and the `χ²`→TV comparison; the
+linchpin is `map_swap_compProd_of_isReversible`, detailed balance promoted from
+rectangles to all of `pi ⊗ₘ P`.
+
+*Caveat: `HasNonnegSpectrum` is a new hypothesis, and the plain ball walk does not
+have it.* The `L²` contraction is **false** without it — the deterministic
+two-cycle on `Bool` is reversible with `gap = 2` and does not contract at all —
+and the ball walk's proposal operator is convolution with a ball indicator, whose
+Fourier transform changes sign. (Both of those are the modules' stated reasons,
+not Lean theorems; what *is* machine-checked is that every theorem in `L2Mixing`
+carries `HasNonnegSpectrum` as a hypothesis and that the lazy chain satisfies it.)
+So laziness is required, not cosmetic: `lazy P x = (P x + δ_x)/2` supplies it
+(`hasNonnegSpectrum_lazy`, `isReversible_and_hasNonnegSpectrum_lazy_ballWalk`), at
+the documented price that laziness exactly halves every set's conductance
+(`conductanceOn_lazy`). `HasNonnegSpectrum` is a property of the *kernel* — it
+mentions no conductance, gap or mixing rate — and `hasNonnegSpectrum_const` plus
+`exists_hasNonnegSpectrum_and_conductance` show the whole hypothesis bundle is
+simultaneously satisfiable.
+
+**The whole chain, in one theorem — and what it is now a sampler for.**
+[`Arlib.MarkovChains.mixesWithin_lazy_ballWalk`](Arlib/MarkovChains/Continuous/BallWalkConductance.lean)
+composes every link above: geometry + isoperimetry ⇒ conductance
+(`conductance_ballWalk_ge`), laziness at an exact factor `2` (`conductance_lazy`)
+plus the spectral hypothesis (`hasNonnegSpectrum_lazy`), Cheeger's hard direction,
+the `L²` decay, and a step count — the lazy `δ`-ball walk on `K` from an `M`-warm
+start mixes to total variation `eps` in
+`conductanceMixingTime M (min(θ/32, κθ²δ/(128n))) eps` steps. And
+[`theorem2_of_lazy_ballWalk`](Arlib/MarkovChains/Continuous/BallWalkConductance.lean)
+carries that all the way to the window KV97 Theorem 2 consumes. Every input with
+content — `hiso`, `hell`, `hesc`, `hwarm` — is an inline binder;
+`mixesWithin_lazy_ballWalk_unitBall` checks the bundle is jointly satisfiable
+rather than vacuously composed, discharging every hypothesis concretely on the
+unit ball **except `hiso`**, which it still carries. (Two of the file's docstrings
+call that witness `exists_mixesWithin_lazy_ballWalk_unitBall`; no such declaration
+exists — the name above is the real one.)
+
+**And there is now an unconditional corollary for a polytope**, which is what the
+project actually consumes:
+[`Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`](Arlib/MarkovChains/Continuous/ConvexBodyMixing.lean)
+carries **no** isoperimetric hypothesis and **no** local-conductance floor — the
+first is supplied internally by `Arlib.uniformOn_iso_of_convex`, the second by
+`le_ell_of_convex_of_ball_subset` — leaving only geometry (a diameter bound, an
+inscribed ball), a warm start and the step count in its type. Its target is the
+walk's own stationary measure, so the conclusion carries no bias term.
+[`Ttc/Sampler/Construct.lean`](Ttc/Sampler/Construct.lean) instantiates it at
+`eps = ε'/(4·Vol(P′))` and gets a `Ttc.KV97Sampler` whose `law_tv` is a theorem.
+`Arlib.MarkovChains.exists_unconditional_mixing_polytope` is its non-vacuity
+witness (the cube `[−1,1]ⁿ`), stated so the polytope cannot be degenerate.
+
+*Caveat, and it is the decisive one.* **This is not a polynomial-time sampler, and
+must not be read as one.** Beyond the `√n` geometric loss above, the isoperimetric
+constant that is actually *proved* — `κ = 2⁻ⁿ/D` in `uniformOn_iso_of_convex` — and
+the only proved speediness witness — `θ = 2⁻ⁿ` (`ofReal_le_ell_unitBall`) — are
+both exponentially small in the dimension. Since the conductance is
+`min(θ/32, κθ²δ/(128n))` and the step count is `O(φ⁻² log(M/eps))`, **the step
+count this chain certifies is exponential in `n`**. A polynomial bound needs a
+dimension-free isoperimetric constant, i.e. the Localization Lemma (unproved and
+unassumed here); the *speedy walk* is built
+([`SpeedyWalk.lean`](Arlib/MarkovChains/Continuous/SpeedyWalk.lean)) and has the
+conductance bound one wants, but its stationary bias does not decay with time, so
+it is not usable at the lattice-counting tolerance — see finding 19.
+
+**`ZLogconcaveHypothesis`, and where it is false.**
+[`ZLogconcave.lean`](Arlib/Convexity/GaussianCooling/ZLogconcave.lean) discharges
+Cousins–Vempala's Lemma 5.9 for `f = c·1_K` with `K` convex and measurable — no
+boundedness, roundness or `0 ∈ K` — via the change of variables `x = y/A` and
+Prékopa's marginal theorem, making Lemma 5.10
+(`fixed_var_bound_indicator`, `fixed_var_bound_ratio_indicator`) unconditional for
+a convex body.
+
+*Caveat: the predicate as stated in `Variance.lean` quantifies over an arbitrary
+`f`, and it is* **false for general log-concave `f`.** At `n = 1`, `f x = e^{−x}`:
+`log z(A) = c + (3/2)log A + 1/(2A)` is strictly *convex* for `A < 2/3`, and at
+`a = 1/10`, `b = 1/5` the hypothesis fails by a factor `≈ 1.93`. The obstruction is
+structural — the proof needs `(A, y) ↦ f(y/A)` jointly log-concave, and a
+`0`-homogeneous convex function is constant — so up to a constant factor,
+indicators of convex sets are *exactly* the `f` for which the route works.
+`fixed_var_bound` and `fixed_var_bound_ratio` remain sound as stated (they take
+`ZLogconcaveHypothesis f` as a hypothesis), but that hypothesis must never be read
+as "true for every log-concave `f`". (The counterexample is worked out in that
+file's docstring, closed-form and checked numerically; it is not itself a Lean
+theorem.) `LocalizationHypothesis` is untouched and still assumed.
+
+**The *Cousins–Vempala* volume oracle is still not constructible — but a volume
+oracle is.** These are two different claims and the page used to run them
+together. The `volAlg` field is inhabited unconditionally by
+[`Ttc.VolumeAlgorithm.monteCarlo`](Ttc/Volume/MonteCarlo.lean) (see
+[the volume oracle](#assumed-about-the-algorithms-oracles) below), which is
+hit-and-miss Monte Carlo at an exponential sample count and is *not* a proof of CV
+Theorem 1.1. What follows is about the CV route, which remains open.
+
+[`Ttc.VolumeAlgorithm.cousinsVempala`](Ttc/Volume/CousinsVempala.lean) is a genuine,
+complete construction of `Ttc.VolumeAlgorithm` — every field discharged — built on
+`VolumeAlgorithm.ofRuns` (the median boost) from Cousins–Vempala §5.2, which is
+proved here unconditionally: the telescoping product, Chebyshev in relative-error
+form, the product estimator's accuracy, the `4/5 → 1−p` median boost at the
+`O(log 1/p)` rate, and the hot end `e^{−R²/(2s)}·Vol(K) ≤ G(s) ≤ Vol(K)`.
+
+*Caveat 1:* four of its arguments are the residual debt, spelled out inline in its
+type rather than hidden: `hphase_mean` (each phase's score is unbiased for
+`G(σᵢ₊₁²)/G(σᵢ²)`) — **this is the sampler**, blocked on isoperimetry ⇒
+conductance ⇒ mixing; `hphase_var` (§5.1, *available* as
+`fixed_var_bound_ratio_indicator`, but only at an exact sample, so it too is
+consumed through the sampler); `hphase_indep`; and `hchain_end`.
+
+*Caveat 2: the hypothesis bundle now has a non-vacuity witness, and it is worth
+being precise about what the witness shows.*
+`Ttc.VolumeAlgorithm.cousinsVempalaWitness` (and
+`cousinsVempalaBiasedWitness` for the biased-endpoint branch) instantiates every
+argument of the construction and proves every hypothesis, so the bundle is
+**satisfiable** — `cousinsVempala` is a theorem about something rather than
+vacuously quantified. But the instantiation is deliberately degenerate: `Ω = Unit`,
+`μ = dirac ()`, one phase, a deterministic score, variance budget `κ = 0`, and
+`cousinsVempalaWitness_est` is `rfl` to `(volume K).toReal` — **it is
+`VolumeAlgorithm.exact` factored through §5.2's median-of-products.** So it
+certifies that the hypotheses are *consistent*; it does **not** show that the
+paper's Gaussian schedule satisfies them, and it supplies no volume algorithm you
+did not already have. `cousinsVempala` remains a statement of what is still to be
+supplied.
+
+*Caveat 3:* §5.2's approximations are idealized to equalities in the main
+construction — `hphase_mean` asks for an *exactly* unbiased phase estimator and
+`hchain_end` for an *exact* endpoint, where the real algorithm has a
+nearly-uniform sampler and a last Gaussian that is only nearly the volume. The
+endpoint half of that is relaxed: `G_indicator_mem_relErr`,
+`run_relErr_four_fifths_biasedEnd`, `gaussianCooling_accuracy_biasedEnd` and
+`VolumeAlgorithm.cousinsVempalaOfBiasedEnd` carry the endpoint bias through
+explicitly. The *sampler* half is not relaxed, and relaxing it needs the
+total-variation bookkeeping of [`Arlib.Probability.TV`](Arlib/Probability/TV.lean).
+
+### The `Arlib/` staging area
+
+`Arlib/` is a **second Lake library** in this repo holding material with no
+kr-25-ssm content — randomized rounding, lattice counting, total variation,
+convexity, Markov-chain conductance and mixing. It exists because the shared
+library [`arlib`](https://github.com/meelgroup/arlib) is pinned to Lean/Mathlib
+**v4.15.0** while this project is on **v4.32.0**, so the two cannot be
+path-dependencies of each other today. Writing the general material here under
+`Arlib.*` namespaces makes the eventual port a `git mv`.
+
+One rule keeps that promise, and it is worth re-checking after any refactor:
+
+```bash
+grep -rn "^import Ttc" Arlib/     # must return nothing
+```
+
+`Ttc/**` may import both. **Part of `Arlib/` is on `Ttc.TtcProb.volume_estimate`'s
+dependency path** — `Lattice/Basic`, `Lattice/Rounding/*`,
+`Lattice/KV97/{Defs, Inflate, Escape, Theorem2, Corollary}`, `Convexity/Polytope`,
+`Probability/Rejection` and `Probability/SubgaussianTail` are all reached from it.
+**And much of the rest is now on `Ttc.ttc_volume_endToEnd`'s** — `Probability/TV`
+and `Probability/UniformOn` (the sampler's `law_tv` is stated with `Arlib.TVLe`
+against `Arlib.uniformOn`), `Convexity/IsoBall` (`uniformOn_iso_of_convex`) and
+the `MarkovChains/` mixing chain up to
+`mixesWithin_lazy_ballWalk_polytope`. What remains foundation-only is the
+Cousins–Vempala volume route (`Convexity/GaussianCooling/`, the localization
+files) and `KV97/Lemma1`
+([`END-TO-END-PLAN.md`](END-TO-END-PLAN.md), [`AUDIT-KV97.md`](AUDIT-KV97.md)).
+
+**Known duplication, to be resolved.** `Ttc/Rounding/Tent.lean` is now a pure
+re-export of `Arlib/Lattice/Rounding/Tent.lean` (each `Ttc.*` name is a `rfl`
+alias for the `Arlib` constant, checked mechanically by `example`s at the end of
+[`Ttc/Rounding/ArlibBridge.lean`](Ttc/Rounding/ArlibBridge.lean)). The rest of
+`Arlib/Lattice/Rounding/` still *duplicates* `Ttc/Rounding/{RoundLaw,
+RoundMoments, ProdKernel, PiLintegral, TentSum}.lean` rather than replacing it:
+the `Ttc/` copies are stated in terms of the project-specific
+`Ttc.RoundingKernel` abstraction and `Ttc.Model.Prelude`, reached via
+`Ttc.Rounding.Cl`, while the `Arlib` versions were rebuilt on a Mathlib-only
+dependency chain with different statements. Collapsing them needs
+`RoundingKernel` itself to move to `Arlib` first. `ArlibBridge.lean` is the map;
+until the refactor happens both copies are maintained and both are green.
+
+`Ttc/Lattice/PerCube.lean` and `Ttc/Findings/CubeLattice.lean` also overlap —
+both give `lem:lattice` per polytope. `PerCube` is the one on the path (its
+`TtcProb`-level form matches `Sampler/Contract`'s hypothesis shape); see
+[`END-TO-END-PLAN.md`](END-TO-END-PLAN.md) "Known duplication / debt".
 
 ### How the tree is kept minimal
 
 "Everything else is on the path" is a checkable claim, not an assertion. Two
-sweeps keep it true, and both are cheap to re-run.
+sweeps keep it honest, and both are cheap to re-run.
 
-**Files.** Take the transitive import closure of the two roots — the headline
-`Ttc.Model.Theorem` and the non-vacuity witness `Ttc.Witness.BoxProb` — and
+**Files.** Take the transitive import closure of the roots — the abstract theorem
+`Ttc.Model.Theorem`, the non-vacuity witness `Ttc.Witness.BoxProb`, the
+oracle-free capstone `Ttc.Exec.EndToEnd` and its repricing `Ttc.Exec.Budget` — and
 compare it with the files on disk:
 
 ```bash
@@ -272,13 +1299,45 @@ def closure(seeds):
         if m not in seen:
             seen.add(m); stack += mods.get(m, [])
     return seen
-need = closure(['Ttc.Model.Theorem']) | closure(['Ttc.Witness.BoxProb'])
+need = closure(['Ttc.Model.Theorem', 'Ttc.Witness.BoxProb', 'Ttc.Exec.Final'])
 print(sorted(set(mods) - need))
 EOF
 ```
 
-It should print exactly the two `[OFF-PATH]` files above. Anything else in that
-list is a file no one needs.
+It currently prints exactly six modules, and each is deliberate:
+
+```
+Ttc.Findings.Repair                                  -- refereeing the paper
+Ttc.Rounding.ArlibBridge                             -- documentation / audit companion
+Ttc.Volume.CousinsVempala                            -- the CV route, still undischarged
+Ttc.Exec.Budget                                      -- ttc_volume_clean: the same repricing
+                                                     --   one rung lower, so Final does not
+                                                     --   route through it
+Ttc.Exec.CanonicalPolytope                           -- an independent second derivation;
+                                                     --   imported and built
+Ttc.Witness.TwoCube                                  -- the two-cube non-vacuity witness;
+                                                     --   it CONSUMES Exec/Final, so it is
+                                                     --   downstream of the seeds, not off
+                                                     --   the path
+```
+
+Anything else in that list is a file no one needs. The list shrank once already
+because `Ttc.Exec.EndToEnd` pulls in `Model/Endgoal`, `Exec/{Params, Canonical,
+Geometry, Coverage, VolDischarge}`, `Sampler/{Rates, Construct}`,
+`Volume/{MonteCarlo, VolSolCheck}`, `Witness/BoxSharp`, `Findings/CubeLattice` and
+`Coupling/Product` — files that used to be off the path are now on it; and
+`Ttc.Exec.Final` now pulls in `Exec/CanonPolytope`. **Note that
+an import-closure hit is not a dependency-walk hit**: `Volume/VolSolCheck` is
+*imported* by `Model/Endgoal` but its declarations are still not *used* by any
+proof (see [the dependency walk](#the-dependency-walk)).
+
+All six are imported by `Ttc.lean` and so are compiled by `lake build`. The
+hazard to keep in mind is structural rather than current: since the `Ttc` library
+has no glob, a file under `Ttc/` that nothing imports is not compiled at all, so
+the sweep below is what covers it, not the build. Nothing the sweep would flag
+under `Arlib/` has that problem —
+the `Arlib` glob compiles every file there regardless of what the area roots
+import.
 
 **Declarations.** A declaration whose name occurs nowhere else — in code, in a
 docstring, or in `README.md`/`AUDIT.md` — is either dead or undocumented, and
@@ -300,10 +1359,16 @@ Anything you still doubt is a named lemma in one of the proof directories.
 
 | Surface module | Contains | Status |
 | --- | --- | --- |
-| [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.Params`: `η`, `ε'`, `Thresh`, `κ`, `γ`, `ρ`, [`volSol`](Ttc/Model/Prelude.lean#L173) (= `Vol(F)`), [`relErr`](Ttc/Model/Prelude.lean#L181) | definitions only |
-| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, [`Oracles`](Ttc/Model/Pseudocode.lean#L122), `dropCovered`, [`haltLevel`](Ttc/Model/Pseudocode.lean#L152), [`absorbLevel`](Ttc/Model/Pseudocode.lean#L160), `step`, [`run`](Ttc/Model/Pseudocode.lean#L182), [`ttcOutput`](Ttc/Model/Pseudocode.lean#L199) | modelled; see caveats |
-| [`Model/ProblemSetting.lean`](Ttc/Model/ProblemSetting.lean) | [`TtcProb`](Ttc/Model/ProblemSetting.lean#L43) — the complete list of assumptions, as fields | the whole hypothesis surface |
-| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean#L41) (`Pr ≥ 1−δ`) — one theorem, nothing else | proved from the `TtcProb` fields |
+| [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.toDNF`, `Ttc.Params`: `η`, `ε'`, `δ'`, `Thresh`, `κ`, `γ`, `ρ`, `volSol` (= `Vol(F)`), `relErr`, `normalisedCount` | definitions only |
+| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `haltLevel`, `absorbLevel`, `step`, `run`, `ttcOutput` | modelled; see caveats |
+| [`Model/ProblemSetting.lean`](Ttc/Model/ProblemSetting.lean) | `VolumeAlgorithm` (Cousins–Vempala Thm 1.1), `KV97Sampler` (**15** fields — `GenerateSamples`' construction; 14 named plus the `[fintypeJ : Fintype J]` instance, which is what `Lean.getStructureFields` counts and what `AUDIT.md` §2 reports), `TtcProb` (59 fields) — the complete list of assumptions | the whole hypothesis surface |
+| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`TtcProb.volume_estimate`**](Ttc/Model/Theorem.lean) (`Pr ≥ 1−δ`) and `TtcProb.runtime` | proved from the `TtcProb` fields |
+| [`Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean) | what `volSol` is a volume *of*: an independent `Bool` evaluator, the LRA form, measurability, and the `toReal ⊤` hazard | the audit surface for one symbol |
+| [`Model/Endgoal.lean`](Ttc/Model/Endgoal.lean) | `Ttc.ttc_volume`: the same two theorems restated over `(atoms, φ, ε, δ)`, space and parameters constructed, obligations as visible binders | a restatement, built by `lake build`. Read its *type* if you care about the capstone; it is not where the assumptions are enumerated |
+| [`Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) | `Ttc.ttc_volume_endToEnd`: the same statement with every oracle binder removed, at `1 − δ − δ/4` | an intermediate step. Its *type* is the honest statement of what is assumed on that route — read it, not this table |
+| [`Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean) | `Ttc.ttc_volume_endToEnd_canon`: the same, with the nine polytope-description binders discharged; `Ttc.canon_body_eq_smul_region` is the crux, and it is an **equality** | an intermediate step |
+| [`Exec/Budget.lean`](Ttc/Exec/Budget.lean) | `Ttc.ttc_volume_clean` (alias `ttc_volume_endToEnd_delta`): `ttc_volume_endToEnd` at the internal `δ₀ = 4δ/5`, so the conclusion is `1 − δ`; plus the box witnesses at `(1/3, 9/10)` and `(1/2, 1/4)` | a repricing, and where the non-vacuity witnesses for the clean budget live |
+| [`Exec/Final.lean`](Ttc/Exec/Final.lean) | **`Ttc.ttc_volume_final`**: no oracle, no polytope description, clean `1 − δ`, 26 explicit binders, all inputs | **the strongest result.** Read its *type*, and its module docstring for which `δ` is which |
 
 ### What `Ttc/Model/Pseudocode.lean` does and does not do
 
@@ -313,24 +1378,25 @@ filter, and the output `|X|/p`. Read it beside the pseudocode; the module
 docstring carries the line-by-line table and the four numbered deviations.
 
 Four external calls are **fields of `Ttc.Oracles`** rather than definitions —
-`Vol_ED`, the Poisson draw, `GenerateSamples`, and the fair-coin thinning. So the
-state evolution is deterministic *given the oracle's answers*, and all the
-randomness sits at that boundary. That is deliberate, and it is what makes the
-coupling constructible: [`Ttc.trajOracles`](Ttc/Coupling/Family.lean#L393)
-inhabits the bundle with oracles that read a trajectory of the level family, and
-the run driven by *those* is provably the family
-([`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L263)). What the
-bundle itself constrains is only the *shape* of the calls plus two contracts
+`Vol_ED` (`vol`), the Poisson draw (`pois`), `GenerateSamples` (`gen`), and the
+fair-coin thinning (`thin`). So the state evolution is deterministic *given the
+oracle's answers*, and all the randomness sits at that boundary. That is
+deliberate, and it is what makes the coupling constructible:
+[`Ttc.trajOracles`](Ttc/Coupling/Family.lean) inhabits the bundle with oracles
+that read a trajectory of the level family, and the run driven by *those* is
+provably the family ([`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean)). What
+the bundle itself constrains is only the *shape* of the calls plus two contracts
 below; what the draws are *distributed* like is said by the `law_eq`/`oracle_eq`
 fields of `Ttc.TtcProb`, which name the coupled family directly.
 
 **Two contracts were missing and are now stated.** `thin` returns a
-*sub-multiset* (`thin_le`), not merely one of no greater cardinality — the loop
-deletes elements, it never invents them; and `GenerateSamples` returns points of
-`P(cᵢ) ∩ 𝕃ⁿ` ([`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L119)), where
-before only the *count* was fixed. Both are needed before `𝒳` can be treated as a
-count vector over a fixed finite set, which
-[`TtcProb.run_state_mem`](Ttc/Lattice/Assembled.lean#L211) now proves.
+*sub-multiset* (`Ttc.Oracles.thin_le`), not merely one of no greater
+cardinality — the loop deletes elements, it never invents them; and
+`GenerateSamples` returns points of `P(cᵢ) ∩ 𝕃ⁿ`
+([`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean)), where before only the
+*count* was fixed (`Ttc.Oracles.gen_card`). Both are needed before `𝒳` can be
+treated as a count vector over a fixed finite set, which
+[`TtcProb.run_state_mem`](Ttc/Lattice/Assembled.lean) now proves.
 
 **Every randomised call is indexed by the level.** `Ttc.SketchState` carries the
 level `j` with `p = 2^(−j)` rather than `p` itself, and `thin`, `pois` and `gen`
@@ -346,33 +1412,32 @@ that index, and `thin j₀ j'` reads off the survivors at level `j'` in one call
 rather than iterating a coin (`Model/Pseudocode`, deviation (c)).
 
 The precision `ρ` is threaded properly: `GenerateSamples` is
-[`gen : ι → ℕ → ℕ → ℤ → Multiset (Space n)`](Ttc/Model/Pseudocode.lean#L142), `ρ` is
-fixed before the loop (`alg:ttc` line 17) and passed at every call, and the
-`rho_eq` field of `Ttc.TtcProb` pins it to `⌈log₁₀(γ/γ̂)⌉` (`alg:prec` line 91).
-The LP computing `γ̂` is still not modelled — `gammaHat` is an input.
+`gen : ι → ℕ → ℕ → ℤ → Multiset (Space n)`, `ρ` is fixed before the loop
+(`alg:ttc` line 17) and passed at every call, and the `rho_eq` field of
+`Ttc.TtcProb` pins it to `⌈log₁₀(γ/γ̂)⌉` (`alg:prec` line 91). The LP computing
+`γ̂` is still not modelled — `gammaHat` is an input.
 
-Both `while` loops are modelled as **exit levels**, not recursions
-(`Model/Pseudocode`, deviation (a)): [`haltLevel`](Ttc/Model/Pseudocode.lean#L152)
-and [`absorbLevel`](Ttc/Model/Pseudocode.lean#L160) are the least level at or above
-the current one at which the loop's guard fails, an `sInf` over `ℕ`, and the step
-jumps straight there. Termination is therefore neither claimed nor needed — which
-matters, because the second loop has none to give: it exits when repeated thinning
-brings `Nᵢ + |X|` under `Thresh`, which happens only with high probability. On a
-run where it never exits the `sInf` is over an empty set, `Nat.sInf` returns `0`,
-and the loop simply does not move (deviation (b)); nothing depends on that corner,
-because every consequence drawn from an exit level has the form "every level
-strictly below it had the guard true", which is then vacuous.
+Both `while` loops are modelled as **exit levels**, not recursions and not fuelled
+iterations (`Model/Pseudocode`, deviation (a)):
+[`haltLevel`](Ttc/Model/Pseudocode.lean) and
+[`absorbLevel`](Ttc/Model/Pseudocode.lean) are the least level at or above the
+current one at which the loop's guard fails, an `sInf` over `ℕ`, and the step
+jumps straight there. Termination is therefore neither claimed nor needed for the
+accuracy theorem — which matters, because the second loop has none to give: it
+exits when repeated thinning brings `Nᵢ + |X|` under `Thresh`, which happens only
+with high probability. On a run where it never exits the `sInf` is over an empty
+set, `Nat.sInf` returns `0`, and the loop simply does not move (deviation (b));
+nothing depends on that corner, because every consequence drawn from an exit level
+has the form "every level strictly below it had the guard true", which is then
+vacuous. (`Ttc.TtcProb.runtime` *does* need the loops to exit, and says so — see
+[Scope](#scope-stated-precisely).)
 
 What is proved is structural, and lives in
 [`Invariants.lean`](Ttc/Invariants.lean) so that `Model/` stays
-proof-free — the level never rewinds
-([`le_haltLevel`](Ttc/Invariants.lean#L63),
-[`le_absorbLevel`](Ttc/Invariants.lean#L66),
-[`le_step_level`](Ttc/Invariants.lean#L120)), every level a loop passed
-through had its guard true
-([`lt_haltLevel`](Ttc/Invariants.lean#L73),
-[`lt_absorbLevel`](Ttc/Invariants.lean#L86)), the filter and the thinning
-only remove points (`card_dropCovered_le`, `card_thin_le`).
+proof-free — the level never rewinds (`Ttc.le_haltLevel`, `Ttc.le_absorbLevel`,
+`Ttc.le_step_level`), every level a loop passed through had its guard true
+(`Ttc.lt_haltLevel`, `Ttc.lt_absorbLevel`), the filter and the thinning only
+remove points (`Ttc.card_dropCovered_le`, `Ttc.card_thin_le`).
 
 ### The output, and what is assumed about it
 
@@ -382,7 +1447,7 @@ reasons about — joined by a *proved* bridge saying they compute the same thing
 That bridge is what puts the operational model outside the trusted base.
 
 This development needs no such bridge, because it has only the transcription.
-[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean#L199) *is* `Ttc.run` on the cubes
+[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean) *is* `Ttc.run` on the cubes
 `ToDNF` returns for the input formula, with the oracles drawn at a sample point —
 so it takes what `TTC(F, ε, δ)` takes, and the headline measures the algorithm
 directly:
@@ -394,11 +1459,11 @@ noncomputable def Ttc.ttcOutput (P : Params) (O : Ω → Oracles n (Cube A))
 ```
 
 `lem:numlattice` itself is **not** assumed any more: it is
-[`Ttc.TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53), a theorem about that
+[`Ttc.TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean), a theorem about that
 same output. Nor is the epoch covering it is derived from: that used to be a
 `numlattice_union` field, and is now
-[`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267), a
-theorem with the deleted field's statement verbatim:
+[`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean), a theorem with the
+deleted field's statement verbatim:
 
 ```lean
 theorem Ttc.TtcProb.numlattice_union (T : TtcProb A n) :
@@ -412,39 +1477,52 @@ theorem Ttc.TtcProb.numlattice_union (T : TtcProb A n) :
 ```
 
 That the three terms total at most `δ`, at the algorithm's own `Thresh` and `δ'`,
-is [`Ttc.numlattice_failure_le`](Ttc/Process/SketchProcess.lean#L246); the
-per-epoch sizes are [`levelLaw_err_le`](Ttc/Process/SketchProcess.lean#L130) and
-[`levelLaw_noise_le`](Ttc/Process/SketchProcess.lean#L194). So the headline needs
-**no side hypothesis**. And `L` is no longer a bare real: the field
-[`L_eq`](Ttc/Model/ProblemSetting.lean#L124) pins it to
-[`normalisedCount M φ ρ`](Ttc/Model/Prelude.lean#L166) `= |Sol(F) ∩ 𝕃ⁿ|/10^(ρn)`,
-the actual lattice count of the actual solution set — which is what makes
-`lem:lattice` a theorem about it rather than an assumption.
+is [`Ttc.numlattice_failure_le`](Ttc/Process/SketchProcess.lean); the per-epoch
+sizes are [`levelLaw_err_le`](Ttc/Process/SketchProcess.lean) and
+[`levelLaw_noise_le`](Ttc/Process/SketchProcess.lean). So the headline needs
+**no side hypothesis**. And `L` is no longer a bare real: the field `L_eq` pins
+it to [`normalisedCount M φ ρ`](Ttc/Model/Prelude.lean)
+`= |Sol(F) ∩ 𝕃ⁿ|/10^(ρn)`, the actual lattice count of the actual solution set —
+which is what makes `lem:lattice` a theorem about it rather than an assumption.
+The fields `ptE_mem`/`ptE_onto` then make `ptE` a bijection onto `Sol(F) ∩ 𝕃ⁿ`, so
+`Lidx` is that count too ([`TtcProb.Lidx_eq`](Ttc/Coupling/Transfer.lean)) rather
+than a free choice.
 
-What the proof of `numlattice_union` consumes are the **sampler fields**
-([`Model/ProblemSetting.lean:133`](Ttc/Model/ProblemSetting.lean#L133) onwards).
-It is [`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35)
-applied to them: the run's failure event is the `toTraj`-preimage of the
-trajectory-space one (`oracle_eq`), `Measure.le_map_apply` pushes its measure
-forward along `law_eq`, and
-[`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685) bounds it there.
-The accuracy window comes from `rate_eq_L` through
-[`Ttc.window_of_exact`](Ttc/Coupling/Transfer.lean#L121). The epoch index
-`j*` the bound is stated at is **not** taken from the instance: it is produced by
-[`Ttc.exists_epoch`](Ttc/Coupling/Transfer.lean#L140) from `big` and
-[`Ttc.TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean#L242), and the
-first-loop cut-off it needs at that index comes from `vol_pos` and
-[`Ttc.TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260) through
-[`Ttc.rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180).
+What the proof of `numlattice_union` consumes are the **sampler fields**. It is
+[`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean) applied to them: the
+run's failure event is the `toTraj`-preimage of the trajectory-space one
+(`oracle_eq`), `Measure.le_map_apply` pushes its measure forward along `law_eq`,
+and [`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean) bounds it there. The
+accuracy window comes from the *proved* `theta_lo`/`theta_hi` through
+[`Ttc.window_of_two_sided`](Ttc/Coupling/Transfer.lean) — four factors,
+`(1±ε')` for the concentration, `(1±ε')` for `Vol_ED`, `(1±ε')` for the sampler
+and `(1±η)` for `lem:lattice`, which is why the window is `ε/2` and not the
+pre-`eq:sampler` `ε/3`. The epoch index `j*` the bound is stated at is **not**
+taken from the instance: it is produced by
+[`Ttc.exists_epoch`](Ttc/Coupling/Transfer.lean) from `big` and
+[`Ttc.TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean), and the first-loop cut-off
+it needs at that index comes from `vol_pos` and
+[`Ttc.TtcProb.vol_lt_two_total`](Ttc/Coupling/Transfer.lean) through
+[`Ttc.rate_small_of_epoch`](Ttc/Coupling/Transfer.lean).
 
 The structure is inhabited **non-degenerately**
-([`Ttc.Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean#L349), witness
-[`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean#L271)): the box `[0,c]ⁿ` with
+([`Ttc.Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean), witness
+[`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean)): the box `[0,c]ⁿ` with
 `c ≥ Thresh`, sampled by the coupled family. Its solution set is nonempty, its
 `L` is at least `cⁿ ≥ Thresh`, and its `numlattice_union` obligation is
-discharged **by proof**, not by an empty failure event. The old degenerate
-witness `Ttc.trivialProb` has been deleted: with `D = []` it forces `Lidx = 0`,
-which contradicts `θ_pos`.
+discharged **by proof**, not by an empty failure event. Since the sampler became a
+`KV97Sampler`, the witness also has to *build* that construction for the box, and
+it does: the dilated box's facet normals are unit vectors and the inflation
+`κ = √(2 log 48) + √(2 log r) > 1` exceeds the rounding radius, so every
+enumerated point's tent sits entirely inside the inflated body
+([`Ttc.Box.setIntegral_prodTent_bxInflated`](Ttc/Witness/BoxProb.lean)), each
+unnormalised weight is exactly `1`, and the rejection-normalised law is *exactly*
+uniform — `eq:almostuniform` attained with no error to spend. Had the inflation
+been smaller than the rounding radius the box would **not** have discharged
+`sampD_eq`. The old degenerate witness `Ttc.trivialProb` has been deleted: with
+`D = []` it forces `Lidx = 0` and so `∑θ = 0`, which contradicts `big` — via the
+now-*derived* [`TtcProb.theta_pos`](Ttc/Coupling/Transfer.lean), which gets
+`0 < ∑θ` out of `big` and `thresh_pos` rather than assuming it.
 
 ## Paper ↔ Lean map
 
@@ -455,70 +1533,125 @@ added or uncommented. (At the time of writing the counter runs
 `lem:numlattice` = 8; `claim:helper` = Claim 1. Note `claim:cl` uses a `lemma`
 environment, so it renders as a *Lemma*, not a Claim.)
 
+Declaration names are given without line numbers on purpose: the tree moves fast
+enough that anchors were wrong more often than right. Every name below is
+`grep`-able, and every one was checked to exist against the compiled environment.
+
 | `\label` | Statement | Lean | Status |
 | --- | --- | --- | --- |
-| `thm:decompose` | decomposition takes exponential time | — | out of scope (runtime) |
-| `thm:runtime` | `O(mn⁴)` runtime | — | out of scope (runtime) |
-| `thm:decomposition` | `⋃ᵢ P(cᵢ) = Sol(F)` | [`sol_eq_iUnion_region`](Ttc/Lattice/Decomposition.lean#L112), [`region_subset_sol`](Ttc/Lattice/Decomposition.lean#L96), [`sol_subset_iUnion_region`](Ttc/Lattice/Decomposition.lean#L103) | **proved** |
-| `lem:chernoff` | Poisson tail bound (Soos et al.) | [`poisson_tail`](Ttc/Process/Chernoff.lean#L238), [`poisson_lower_tail`](Ttc/Process/Chernoff.lean#L260), [`poisson_tail_two_sided`](Ttc/Process/Chernoff.lean#L321); engine [`mgf_poissonMeasure`](Ttc/Process/Chernoff.lean#L181), [`bennett_le`](Ttc/Process/Chernoff.lean#L102) | **proved** — no longer external |
-| ↳ its two uses | `Pr[N > Thresh] ≤ e^(−Thresh/6)` and `Pr[\|N−λ\| ≥ ε'λ] ≤ 2e^(−ε'²λ/3)` | [`poisson_overflow`](Ttc/Process/Chernoff.lean#L341), [`poisson_relative`](Ttc/Process/Chernoff.lean#L362) | **proved** — both constants confirmed exact |
-| `lem:process` | three sampling procedures are equivalent | [`poisson_splitting`](Ttc/Process/Poisson.lean#L60), [`poisson_splitting_paper`](Ttc/Process/Poisson.lean#L107), [`rate_mem_interval`](Ttc/Process/Poisson.lean#L123) | **proved** |
+| `thm:decompose` | decomposition takes exponential time | — | out of scope (runtime of the decomposition) |
+| `thm:runtime` | `O(mn⁴)` runtime | [`Ttc.runCost`, `Ttc.runCost_le`](Ttc/Runtime.lean), [`Ttc.TtcProb.runtime`](Ttc/Model/Theorem.lean) | **the paper's own accounting, proved** — under `Ttc.Terminates`, and charging only what the paper charges. See [Scope](#scope-stated-precisely) |
+| `thm:decomposition` | `⋃ᵢ P(cᵢ) = Sol(F)` | [`sol_eq_iUnion_region`](Ttc/Lattice/Decomposition.lean), `region_subset_sol`, `sol_subset_iUnion_region`; for the bundle [`TtcProb.sol_eq_union`](Ttc/Capstone.lean) | **proved** |
+| `lem:chernoff` | Poisson tail bound (Soos et al.) | [`poisson_tail`](Ttc/Process/Chernoff.lean), `poisson_lower_tail`, `poisson_tail_two_sided`; engine `mgf_poissonMeasure`, `bennett_le` | **proved** — no longer external |
+| ↳ its two uses | `Pr[N > Thresh] ≤ e^(−Thresh/6)` and `Pr[\|N−λ\| ≥ ε'λ] ≤ 2e^(−ε'²λ/3)` | [`poisson_overflow`, `poisson_relative`](Ttc/Process/Chernoff.lean) | **proved** — both constants confirmed exact |
+| `lem:process` | three sampling procedures are equivalent | [`poisson_splitting`, `poisson_splitting_paper`, `rate_mem_interval`](Ttc/Process/Poisson.lean) | **proved** |
 | `lem:integerlattice` | KV97 Thm 3, single polytope | — | external; superseded by `lem:nonconv` |
-| `lem:nonconv` | `vol Q ∈ [(1−η)\|Q∩ℤⁿ\|, (1+η)\|Q∩ℤⁿ\|]` | skeleton [`nonconv_lower`](Ttc/Nonconv/Core.lean#L101), [`nonconv_upper_deflated`](Ttc/Nonconv/Core.lean#L124), [`nonconv_upper_repaired`](Ttc/Nonconv/Core.lean#L140); geometry [`FacetSystem.inflated_subset_smul_deflated`](Ttc/Nonconv/Geometry.lean#L102), [`volume_inflated_le`](Ttc/Nonconv/Geometry.lean#L124) | proved from `claim:cl` — **see findings 1 & 2** |
-| ↳ repaired | same statement, internal `θ = η/2` | [`nonconv_repaired`](Ttc/Findings/Repair.lean#L75), [`repair_upper_arith`](Ttc/Findings/Repair.lean#L52), [`repair_lower_arith`](Ttc/Findings/Repair.lean#L58) | **proved** |
-| ↳ shell bound, instantiated | `vol Q' ≤ (1+m(K−1))·vol Q` and `vol Q ≤ (1+m(K−1))·vol Q''`, from the actual sets | [`piece_inflated_subset_homothety_zero`](Ttc/Nonconv/Recentred.lean#L211), [`volume_shell_le`](Ttc/Nonconv/Recentred.lean#L284), [`volume_body_inflated_le`](Ttc/Nonconv/Recentred.lean#L476), [`volume_body_deflated_le`](Ttc/Nonconv/Recentred.lean#L531) | **proved** — both sides; `shell_bound`'s three hypotheses discharged from geometry |
-| ↳ `Q = Sol(F)` | the facet system of a positive DNF | [`facetSystem`](Ttc/Nonconv/FacetOfDNF.lean#L57), [`region_eq_piece`](Ttc/Nonconv/FacetOfDNF.lean#L67), [`body_eq_sol`](Ttc/Nonconv/FacetOfDNF.lean#L88) | **proved** for `DNF.IsPositive` — see finding 5 |
-| ↳ without common ball | per-polytope homothety + shell bound | [`piece_inflated_subset_homothety`](Ttc/Nonconv/Recentred.lean#L69), [`volume_piece_inflated_le`](Ttc/Nonconv/Recentred.lean#L100), [`body_subset_union_shells`](Ttc/Nonconv/Recentred.lean#L183), [`shell_bound`](Ttc/Nonconv/Recentred.lean#L457) | **proved** |
-| ↳ **assembled, nothing assumed** | `lem:nonconv` for an actual facet system against its own `\|Q∩ℤⁿ\|` | [`FacetSystem.nonconv_of_ball`](Ttc/Nonconv/Assembled.lean#L216), summed forms [`card_le_of_claim_a`](Ttc/Nonconv/Assembled.lean#L126), [`deflated_le_card`](Ttc/Nonconv/Assembled.lean#L160), arithmetic [`nonconv_recentred_general`](Ttc/Nonconv/Assembled.lean#L49) | **proved** from the ball hypothesis alone |
-| ↳ `Q ∩ ℤⁿ` is finite | not assumed — it follows from `claim:cl`(a) | [`finite_of_forall_finset_card_le`](Ttc/Nonconv/BallFacet.lean#L135), [`ncard_inter_intLattice`](Ttc/Nonconv/BallFacet.lean#L170) | **proved** |
-| ↳ inscribed ball ↔ facet form | `B(cᵢ,γ) ⊆ Pᵢ  ⟺  γ‖A_ij‖ ≤ b_ij − A_ij·cᵢ` | [`FacetSystem.ball_subset_piece`](Ttc/Nonconv/BallFacet.lean#L70), [`FacetSystem.facet_of_ball_subset`](Ttc/Nonconv/BallFacet.lean#L90) | **proved** both ways |
-| `claim:cl` | rounding hits/misses `Q` w.p. `1 ± η/2` | **all three discharged for the actual rounding** — (a) [`prodKernel_claim_cl_a`](Ttc/Rounding/ProdLaw.lean#L232), (b) [`prodKernel_claim_cl_b`](Ttc/Rounding/ClB.lean#L180), (c) [`claim_cl_c`](Ttc/Rounding/Cl.lean#L114), over [`prodKernel`](Ttc/Rounding/ProdKernel.lean#L110); core [`rounding_tail_bound`](Ttc/Rounding/Hoeffding.lean#L107) | **proved**, no residual hypothesis — see finding 3 |
-| ↳ the rounding itself | `rnd p = ⌊p⌋ + Bernoulli(p−⌊p⌋)`, coordinatewise | density [`tent`](Ttc/Rounding/Tent.lean#L34), kernel [`prodKernel`](Ttc/Rounding/ProdKernel.lean#L110), normalisation [`integral_prod_tent`](Ttc/Rounding/ProdKernel.lean#L42) | **constructed** — the paper only cites KV97 |
-| ↳ (a)/(c), the `p`-side | independence of the displacement's coordinates | [`iIndepFun_disp`](Ttc/Rounding/ProdLaw.lean#L117), [`ae_disp_mem_Icc`](Ttc/Rounding/ProdLaw.lean#L106), [`integral_disp_eq_zero`](Ttc/Rounding/ProdLaw.lean#L146), [`prodKernel_escape_bound`](Ttc/Rounding/ProdLaw.lean#L213) | **proved** |
-| ↳ (b), the `z`-side | the law of `rnd p` on `ℤⁿ` is a two-point product | [`roundLaw`](Ttc/Rounding/RoundLaw.lean#L50), [`tentInt_eq_two_point`](Ttc/Rounding/RoundMoments.lean#L34), [`integral_tentInt_disp`](Ttc/Rounding/RoundMoments.lean#L72), [`iIndepFun_latDisp`](Ttc/Rounding/RoundMoments.lean#L153), [`roundLaw_escape_bound`](Ttc/Rounding/ClB.lean#L69) | **proved**; the crossing uses `−A_j` ([`cover_of_notMem_body_deflated`](Ttc/Rounding/ClB.lean#L42)) |
-| `claim:helper` | `kⁿ ≤ (1+η/4)/(1−η/4)` | [`claim_helper`](Ttc/Constants/Arith.lean#L162), [`claim_helper_of`](Ttc/Constants/Arith.lean#L133), [`exp_two_mul_le_div`](Ttc/Constants/Arith.lean#L78) | **proved** — see finding 4 |
-| `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Lattice/Assembled.lean#L91), and for the problem instance [`TtcProb.lattice_lo`](Ttc/Lattice/Assembled.lean#L222)/[`lattice_hi`](Ttc/Lattice/Assembled.lean#L227) | **proved** — formerly two fields of `TtcProb` |
-| ↳ transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | | [`lattice_of_scaled`](Ttc/Lattice/Transport.lean#L91), [`ncard_inter_lattice_smul`](Ttc/Lattice/Transport.lean#L57), [`volume_smul_body`](Ttc/Lattice/Transport.lean#L63), [`lattice_bounds`](Ttc/Lattice/Transport.lean#L144) | **proved** |
-| `lem:numlattice` | sketch output within `(1±ε/2)` w.p. `1−δ` | [`TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53), from `TtcProb.numlattice_union` plus [`numlattice_failure_le`](Ttc/Process/SketchProcess.lean#L246); skeleton [`epoch_series_le`](Ttc/Process/Sketch.lean#L87), [`err_sum_le_delta`](Ttc/Process/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Process/Sketch.lean#L126), [`numlattice_failure_bound`](Ttc/Process/Sketch.lean#L142), [`sketch_interval`](Ttc/Process/Sketch.lean#L181), [`sketch_window`](Ttc/Process/Sketch.lean#L196) | **theorem** — and so is the epoch covering it consumes, [`TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267) (see [What is assumed](#assumed-about-the-algorithm)) |
-| ↳ **the covering, from the sampler description** | the ex-field, proved: transport the coupled-run bound to an arbitrary `Ω`/`μ`/`O` | [`numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35), self-coupled form [`numlattice_union_of_traj`](Ttc/Coupling/Transfer.lean#L190), window [`window_of_two_sided`](Ttc/Coupling/Transfer.lean#L104)/[`window_of_exact`](Ttc/Coupling/Transfer.lean#L121), epoch index [`exists_epoch`](Ttc/Coupling/Transfer.lean#L140), [`rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180), and the two facts that let `j*` be *constructed* rather than assumed — [`TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean#L242), [`TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260) | **proved** — this is what deleted the last assumed field, and then the assumed epoch index too |
-| ↳ the coupled level family | `𝒳ⱼ` for **all** `j` on one space, nested thinning from level `0` | [`famCount`](Ttc/Coupling/Family.lean#L80), [`famLaw`](Ttc/Coupling/Family.lean#L125), [`trajLaw`](Ttc/Coupling/Family.lean#L209), marginals [`map_trajLaw_eval`](Ttc/Coupling/Family.lean#L274), nesting [`trajLaw_ae_nested`](Ttc/Coupling/Run.lean#L592) | **constructed** — the object finding 15 says the paper never builds |
-| ↳ the coupling to the run | the oracles read the family; `\|𝒳\| = ∑ₛ ω(J)ₛ` **pathwise** | [`trajOracles`](Ttc/Coupling/Family.lean#L393), [`CoupledAt`](Ttc/Coupling/Run.lean#L31), [`coupledAt_step`](Ttc/Coupling/Run.lean#L183), [`coupledAt_foldl`](Ttc/Coupling/Run.lean#L241), [`card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L263), [`run_eq_traj`](Ttc/Coupling/Run.lean#L281) | **proved** — equality of random variables, not of laws |
-| ↳ the halving trigger | every level the run crosses had a large rate or an overflow | [`card_add_pois_le`](Ttc/Coupling/Run.lean#L323), [`lt_haltLevel`](Ttc/Invariants.lean#L69), [`lt_absorbLevel`](Ttc/Invariants.lean#L80), [`step_trigger`](Ttc/Coupling/Run.lean#L337), [`foldl_trigger`](Ttc/Coupling/Run.lean#L366), [`level_cap_subset`](Ttc/Coupling/Run.lean#L395) | **proved** — what bounds `Pr[⋃_{j≥j*} Nois(j)]` |
-| ↳ **`lem:numlattice` for the coupled run** | the paper's three-term bound, for `Ttc.run` driven by the family | [`traj_numlattice_le`](Ttc/Coupling/Run.lean#L685), via [`traj_failure_le`](Ttc/Coupling/Run.lean#L614), [`trajLaw_err_le`](Ttc/Coupling/Run.lean#L511), [`trajLaw_noise_le`](Ttc/Coupling/Run.lean#L527), [`epoch_reindex`](Ttc/Coupling/Run.lean#L665), [`totalRate_reindex`](Ttc/Coupling/Run.lean#L672) | **proved**, nothing probabilistic assumed — and with a *smaller* right-hand side than the paper's (no `+ δ/2`) |
-| ↳ the non-degenerate witness | the box `[0,c]ⁿ`, `c ≥ Thresh`, sampled by the coupled family | [`Box.boxProb`](Ttc/Witness/BoxProb.lean#L271), [`Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean#L349); geometry [`boxAtoms`](Ttc/Witness/Box.lean#L47), [`boxCube`](Ttc/Witness/Box.lean#L270), [`boxDNF`](Ttc/Witness/Box.lean#L307), [`boxForm`](Ttc/Witness/Box.lean#L387), [`sol_boxForm`](Ttc/Witness/Box.lean#L429), [`normalisedCount_box_ge`](Ttc/Witness/Box.lean#L451) | **constructed** — replaces the deleted `trivialProb` |
-| `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Process/Sketch.lean#L181) | constant **verified** |
-| `alg:ttc` line 18 (`δ' ← δ/(4m)`) | the `Vol_ED` failure budget | [`Params.deltaPrime`](Ttc/Model/Prelude.lean#L225), [`Params.vol_failure_eq`](Ttc/Process/Sketch.lean#L159), [`numlattice_failure_bound_with_vol`](Ttc/Process/Sketch.lean#L168) | **verified** — and the paper omits it from its union bound; see finding 13 |
-| `alg:ttc` line 20 (`Thresh`) | | [`err_sum_le_delta`](Ttc/Process/Sketch.lean#L106), [`noise_bound_le_delta`](Ttc/Process/Sketch.lean#L126) | both branches **verified** |
-| `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Model/Prelude.lean#L218) | definition |
-| `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Model/Prelude.lean#L234), [`kappa_le`](Ttc/Constants/Parameters.lean#L62) | **proved** `κ ≤ 2√(log(8r/η))` |
-| ↳ deflated shell factor | `(1 + κ/(γ−κ))ⁿ ≤ 1 + η/(8m)` | [`kappa_le_gamma_half`](Ttc/Constants/Parameters.lean#L124), [`shell_factor_bound_deflated`](Ttc/Constants/Parameters.lean#L144) | **proved** — the deflated companion of `shell_factor_bound` |
-| ↳ dilation of a facet system | `c·{x \| f x ≤ b} = {y \| f y ≤ c·b}` | [`FacetSystem.scale`](Ttc/Nonconv/Recentred.lean#L345), [`scale_body_zero`](Ttc/Nonconv/Recentred.lean#L380) | **proved** — connects `body_eq_sol` to `lem:lattice`'s dilate |
-| `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean#L240), [`kappa_div_gamma_le`](Ttc/Constants/Parameters.lean#L81), [`shell_factor_bound`](Ttc/Constants/Parameters.lean#L102) | **proved** — see finding 2 |
-| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`](Ttc/Model/Pseudocode.lean#L183), [`step`](Ttc/Model/Pseudocode.lean#L176), [`absorbLevel`](Ttc/Model/Pseudocode.lean#L161), [`haltLevel`](Ttc/Model/Pseudocode.lean#L154) | modelled over an oracle bundle; both `while` loops as exit levels, so termination is neither claimed nor needed |
-| ↳ the output as a random variable | `run` on `ToDNF(F)`, oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean#L199) | definition |
-| `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L41) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean#L43) fields |
-| `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean#L247), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Lattice/Assembled.lean#L69) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Lattice/Transport.lean#L70), [`gamma_half_le`](Ttc/Findings/Repair.lean#L116), [`precision_increase_le_one`](Ttc/Findings/Repair.lean#L154), [`gamma_scale_cost`](Ttc/Nonconv/Recentred.lean#L576) | mathematical content **proved**; LP implementation not modelled |
+| `lem:nonconv` | `vol Q ∈ [(1−η)\|Q∩ℤⁿ\|, (1+η)\|Q∩ℤⁿ\|]` | skeleton [`nonconv_lower`, `nonconv_upper_deflated`, `nonconv_upper_repaired`](Ttc/Nonconv/Core.lean); geometry [`FacetSystem.inflated_subset_smul_deflated`, `volume_inflated_le`](Ttc/Nonconv/Geometry.lean) | proved from `claim:cl` — **see findings 1 & 2** |
+| ↳ repaired | same statement, internal `θ = η/2` | [`nonconv_repaired`, `repair_upper_arith`, `repair_lower_arith`](Ttc/Findings/Repair.lean) | **proved** |
+| ↳ shell bound, instantiated | `vol Q' ≤ (1+m(K−1))·vol Q` and `vol Q ≤ (1+m(K−1))·vol Q''` | [`piece_inflated_subset_homothety_zero`, `volume_shell_le`, `FacetSystem.volume_body_inflated_le`, `FacetSystem.volume_body_deflated_le`](Ttc/Nonconv/Recentred.lean) | **proved** — both sides; `shell_bound`'s three hypotheses discharged from geometry |
+| ↳ `Q = Sol(F)` | the facet system of a positive DNF | [`facetSystem`, `region_eq_piece`, `body_eq_sol`](Ttc/Nonconv/FacetOfDNF.lean) | **proved** for `DNF.IsPositive` — see finding 5 |
+| ↳ without common ball | per-polytope homothety + shell bound | [`piece_inflated_subset_homothety`, `volume_piece_inflated_le`, `body_subset_union_shells`, `shell_bound`](Ttc/Nonconv/Recentred.lean) | **proved** |
+| ↳ **assembled, nothing assumed** | `lem:nonconv` for an actual facet system against its own `\|Q∩ℤⁿ\|` | [`FacetSystem.nonconv_of_ball`, `card_le_of_claim_a`, `deflated_le_card`, `nonconv_recentred_general`](Ttc/Nonconv/Assembled.lean) | **proved** from the ball hypothesis alone |
+| ↳ `Q ∩ ℤⁿ` is finite | not assumed — it follows from `claim:cl`(a) | [`finite_of_forall_finset_card_le`, `ncard_inter_intLattice`](Ttc/Nonconv/BallFacet.lean) | **proved** |
+| ↳ inscribed ball ↔ facet form | `B(cᵢ,γ) ⊆ Pᵢ  ⟺  γ‖A_ij‖ ≤ b_ij − A_ij·cᵢ` | [`FacetSystem.ball_subset_piece`, `FacetSystem.facet_of_ball_subset`](Ttc/Nonconv/BallFacet.lean) | **proved** both ways |
+| `claim:cl` | rounding hits/misses `Q` w.p. `1 ± η/2` | **all three discharged for the actual rounding** — (a) [`prodKernel_claim_cl_a`](Ttc/Rounding/ProdLaw.lean), (b) [`prodKernel_claim_cl_b`](Ttc/Rounding/ClB.lean), (c) [`claim_cl_c`](Ttc/Rounding/Cl.lean), over [`prodKernel`](Ttc/Rounding/ProdKernel.lean); core [`rounding_tail_bound`](Ttc/Rounding/Hoeffding.lean) | **proved**, no residual hypothesis — see finding 3 |
+| ↳ the rounding itself | `rnd p = ⌊p⌋ + Bernoulli(p−⌊p⌋)`, coordinatewise | density [`tent`](Arlib/Lattice/Rounding/Tent.lean) (re-exported as `Ttc.tent`), kernel [`prodKernel`](Ttc/Rounding/ProdKernel.lean), normalisation `integral_prod_tent` | **constructed** — the paper only cites KV97 |
+| ↳ (a)/(c), the `p`-side | independence of the displacement's coordinates | [`iIndepFun_disp`, `ae_disp_mem_Icc`, `integral_disp_eq_zero`, `prodKernel_escape_bound`](Ttc/Rounding/ProdLaw.lean) | **proved** |
+| ↳ (b), the `z`-side | the law of `rnd p` on `ℤⁿ` is a two-point product | [`roundLaw`](Ttc/Rounding/RoundLaw.lean), [`tentInt_eq_two_point`, `integral_tentInt_disp`, `iIndepFun_latDisp`](Ttc/Rounding/RoundMoments.lean), [`roundLaw_escape_bound`](Ttc/Rounding/ClB.lean) | **proved**; the crossing uses `−A_j` ([`cover_of_notMem_body_deflated`](Ttc/Rounding/ClB.lean)) |
+| `claim:helper` | `kⁿ ≤ (1+η/4)/(1−η/4)` | [`claim_helper`, `claim_helper_of`, `exp_two_mul_le_div`](Ttc/Constants/Arith.lean) | **proved** — see finding 4 |
+| `lem:lattice` | `Vol(F) ∈ (1±η)·\|Sol(F) ∩ 𝕃ⁿ\|/10^(ρn)` | [`lattice_of_dnf`](Ttc/Lattice/Assembled.lean), and for the problem instance [`TtcProb.lattice_lo`/`lattice_hi`](Ttc/Lattice/Assembled.lean) | **proved** — formerly two fields of `TtcProb` |
+| ↳ per polytope (`analysis.tex:271`) | the same, for one `P(cᵢ)` | [`TtcProb.lattice_cube_lo`/`lattice_cube_hi`](Ttc/Lattice/PerCube.lean), via the singleton DNF `[i]` (`cubeForm`, `singleton_isDNFOf`, `sol_cubeForm`, `card_facetIndex_singleton_le`) | **proved**, no hypothesis added — this is what discharged `theta_window_cube`'s `hlatLo`/`hlatHi` |
+| ↳ transport `ℤⁿ ↔ 𝕃ⁿ = 10⁻ᵖ·ℤⁿ` | | [`lattice_of_scaled`, `ncard_inter_lattice_smul`, `volume_smul_body`, `lattice_bounds`](Ttc/Lattice/Transport.lean) | **proved** |
+| `lem:numlattice` | sketch output within `(1±ε/2)` w.p. `1−δ` | [`TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean), from `TtcProb.numlattice_union` plus [`numlattice_failure_le`](Ttc/Process/SketchProcess.lean); skeleton [`epoch_series_le`, `err_sum_le_delta`, `noise_bound_le_delta`, `numlattice_failure_bound`, `sketch_interval`, `sketch_window`](Ttc/Process/Sketch.lean) | **theorem** — and so is the epoch covering it consumes, [`TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean) |
+| ↳ **the covering, from the sampler description** | the ex-field, proved: transport the coupled-run bound to an arbitrary `Ω`/`μ`/`O` | [`numlattice_union_of_model`, `numlattice_union_of_traj`, `window_of_two_sided`, `window_of_exact`, `exists_epoch`, `rate_small_of_epoch`, `TtcProb.thresh_pos`, `TtcProb.vol_lt_two_total`](Ttc/Coupling/Transfer.lean) | **proved** — this is what deleted the last assumed probability field, and then the assumed epoch index too |
+| ↳ the coupled level family | `𝒳ⱼ` for **all** `j` on one space, nested thinning from level `0` | [`famCount`, `famLaw`, `trajLaw`, `map_trajLaw_eval`](Ttc/Coupling/Family.lean), nesting [`trajLaw_ae_nested`](Ttc/Coupling/Run.lean) | **constructed** — the object finding 15 says the paper never builds |
+| ↳ the coupling to the run | the oracles read the family; `\|𝒳\| = ∑ₛ ω(J)ₛ` **pathwise** | [`trajOracles`](Ttc/Coupling/Family.lean), [`CoupledAt`, `coupledAt_step`, `coupledAt_foldl`, `card_run_eq_sum_traj`, `run_eq_traj`](Ttc/Coupling/Run.lean) | **proved** — equality of random variables, not of laws |
+| ↳ the halving trigger | every level the run crosses had a large rate or an overflow | [`card_add_pois_le`, `step_trigger`, `foldl_trigger`, `level_cap_subset`](Ttc/Coupling/Run.lean), [`lt_haltLevel`, `lt_absorbLevel`](Ttc/Invariants.lean) | **proved** — what bounds `Pr[⋃_{j≥j*} Nois(j)]` |
+| ↳ **`lem:numlattice` for the coupled run** | the paper's three-term bound, for `Ttc.run` driven by the family | [`traj_numlattice_le`, `traj_failure_le`, `trajLaw_err_le`, `trajLaw_noise_le`, `epoch_reindex`, `totalRate_reindex`](Ttc/Coupling/Run.lean) | **proved**, nothing probabilistic assumed — and with a *smaller* right-hand side than the paper's (no `+ δ/2`) |
+| ↳ the non-degenerate witness | the box `[0,c]ⁿ`, `c ≥ Thresh`, sampled by the coupled family, with a genuine `KV97Sampler` | [`Box.boxProb`, `Box.nonempty_ttcProb`, `Box.smp`, `Box.setIntegral_prodTent_bxInflated`](Ttc/Witness/BoxProb.lean); geometry [`boxAtoms`, `boxCube`, `boxDNF`, `boxForm`, `sol_boxForm`, `normalisedCount_box_ge`](Ttc/Witness/Box.lean) | **constructed** — replaces the deleted `trivialProb` |
+| `eq:almostuniform` / `eq:sampler` (`related.tex:21`) | `GenerateSamples`' law is pointwise within `(1±ε')` of uniform on `P(cᵢ) ∩ 𝕃ⁿ` | [`Ttc.AlmostUniform`](Ttc/Sampler/Contract.lean); [`TtcProb.samp_unif`](Ttc/Sampler/Bridge.lean) via `almostUniform_of_kv97_density`, `almostUniform_transport`, `escape_of_mem_body`; from [`Arlib.KV97.theorem2`](Arlib/Lattice/KV97/Theorem2.lean) and [`ratio_bounds_tuned_sharp`](Arlib/Lattice/KV97/Corollary.lean) | **proved** — formerly a field. The remaining input is the *construction* `sampler : KV97Sampler`, whose one quantitative field is `law_tv` (a total-variation bound at `ε'/(4·Vol(P′))`, not the old pointwise `density_au`). On the capstone's route `sampler` is no longer an input either: [`Ttc.e2eSampler`](Ttc/Exec/EndToEnd.lean) builds it from the lazy ball walk and **proves** `law_tv` |
+| the Invariant (`analysis.tex:265`) | `(1−ε')²(1−η)/10^(ρn) ≤ θ s ≤ (1+ε')²(1+η)/10^(ρn)` | [`TtcProb.theta_lo`/`theta_hi`](Ttc/Sampler/Bridge.lean), from [`TtcProb.theta_window_cube`](Ttc/Lattice/PerCube.lean) and [`theta_window`](Ttc/Sampler/Contract.lean) | **proved** — formerly two fields, statements byte-identical |
+| `alg:ttc` line 18 (`ε' ← ε/12`) | | [`sketch_interval`](Ttc/Process/Sketch.lean), [`Params.epsPrime_window`](Ttc/Constants/Parameters.lean) | constant **verified** |
+| `alg:ttc` line 18 (`δ' ← δ/(4m)`) | the `Vol_ED` failure budget | [`Params.deltaPrime`](Ttc/Model/Prelude.lean), [`Params.vol_failure_eq`, `numlattice_failure_bound_with_vol`](Ttc/Process/Sketch.lean) | **verified** — and the union bound the paper omits is now **proved**: [`measure_volGood_ge`, `TtcProb.volGood_prob_budget`](Ttc/Volume/Bridge.lean); see finding 13 |
+| `alg:ttc` line 24 (`Vol_ED(P(cᵢ), ε', δ')`) | Cousins–Vempala Theorem 1.1 (`vol3_journal.tex:144`) | [`VolumeAlgorithm`](Ttc/Model/ProblemSetting.lean) (the contract), [`VolumeAlgorithm.monteCarlo`](Ttc/Volume/MonteCarlo.lean) (**constructed**, no hypotheses), [`VolumeAlgorithm.of_ball`](Ttc/Volume/Bridge.lean) (rounding bridge, **proved**), [`TtcProb.volED_hi`/`volED_lo`](Ttc/Volume/Bridge.lean) (**proved**, formerly a field) | **no longer assumed**: `VolumeAlgorithm.monteCarlo` inhabits the contract unconditionally, and `Ttc.ttc_volume_monteCarlo` removes all six `Vol_ED` binders from the capstone at a cost of `δ/4`. But that is hit-and-miss Monte Carlo, **exponential in `n`** — it is *not* a proof of CV Theorem 1.1. The CV route ([`Ttc/Volume/CousinsVempala.lean`](Ttc/Volume/CousinsVempala.lean) = §5.2 plus a construction, `Arlib/Convexity/GaussianCooling/` = §5.1) is **still undischarged**: the construction's sampler-side arguments are open and its non-vacuity witness is `VolumeAlgorithm.exact` in disguise |
+| `alg:ttc` line 20 (`Thresh`) | | [`err_sum_le_delta`, `noise_bound_le_delta`](Ttc/Process/Sketch.lean) | both branches **verified** |
+| `alg:ttc` line 17 (`η ← ε/8`) | | [`Params.eta`](Ttc/Model/Prelude.lean) | definition |
+| `κ` (`lem:nonconv`) | `√(2log(8/η)) + √(2log r)` | [`Params.kappa`](Ttc/Model/Prelude.lean), [`kappa_le`](Ttc/Constants/Parameters.lean) | **proved** `κ ≤ 2√(log(8r/η))` |
+| ↳ deflated shell factor | `(1 + κ/(γ−κ))ⁿ ≤ 1 + η/(8m)` | [`kappa_le_gamma_half`, `shell_factor_bound_deflated`](Ttc/Constants/Parameters.lean) | **proved** — the deflated companion of `shell_factor_bound` |
+| ↳ dilation of a facet system | `c·{x \| f x ≤ b} = {y \| f y ≤ c·b}` | [`FacetSystem.scale`, `scale_body_zero`](Ttc/Nonconv/Recentred.lean) | **proved** — connects `body_eq_sol` to `lem:lattice`'s dilate |
+| `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean), [`kappa_div_gamma_le`, `shell_factor_bound`](Ttc/Constants/Parameters.lean) | **proved** — see finding 2 |
+| `alg:ttc` line 16 (`ToDNF`) | circuit AllSAT | [`Ttc.toDNF`](Ttc/Model/Prelude.lean), [`toDNF_isDNFOf`, `toDNF_isPositive`](Ttc/Dnf.lean) | a **correct** converter is exhibited, so the `isDNF`/`isPositive` fields are satisfiable by a real procedure — but they remain fields, because `toDNF` is a parameter of `TtcProb` and the paper's AllSAT returns a different (smaller) DNF |
+| `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`, `step`, `absorbLevel`, `haltLevel`](Ttc/Model/Pseudocode.lean) | modelled over an oracle bundle; both `while` loops as exit levels |
+| ↳ the output as a random variable | `run` on `ToDNF(F)`, oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean) | definition |
+| `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean) | **proved** from the [`TtcProb`](Ttc/Model/ProblemSetting.lean) fields |
+| `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Lattice/Assembled.lean) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Lattice/Transport.lean), [`gamma_half_le`, `precision_increase_le_one`](Ttc/Findings/Repair.lean), [`gamma_scale_cost`](Ttc/Nonconv/Recentred.lean) | mathematical content **proved**; LP implementation not modelled |
 
 Results with no counterpart in the paper, produced by the formalisation:
 
 | Lean | What it establishes |
 | --- | --- |
-| [`convex_region`](Ttc/Lattice/Decomposition.lean#L76), [`convex_litSet`](Ttc/Lattice/Decomposition.lean#L53) | each cube's region is convex — and *not* closed (finding 5) |
-| [`ratio_antitone`](Ttc/Nonconv/Geometry.lean#L156), [`facet_ratio_fails`](Ttc/Nonconv/Geometry.lean#L170) | `k` is attained at the facet **nearest** the origin, so the ball hypothesis is needed at every facet (finding 2) |
-| [`claim12_factor_le`](Ttc/Nonconv/Core.lean#L155) | the `claim:helper` factor is `≤ 5/3` on `0 < η ≤ 1` |
-| [`Box.boxProb`](Ttc/Witness/BoxProb.lean#L271), [`Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean#L349) | the hypothesis bundle is inhabited **non-degenerately**, so `thm:volumettc` is not vacuous; see [`AUDIT.md`](AUDIT.md) §3 |
-| [`box_lattice_card_ge`](Ttc/Witness/Box.lean#L215), [`normalisedCount_box_ge`](Ttc/Witness/Box.lean#L451) | the witness's normalised lattice count is at least `cⁿ`, at *every* precision — what lets `c` be chosen from `Thresh` |
-| [`trajOracles`](Ttc/Coupling/Family.lean#L393) + [`card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L263) | the coupling finding 15 says `lem:numlattice`'s proof needs and the paper never constructs |
-| [`traj_numlattice_le`](Ttc/Coupling/Run.lean#L685) | `lem:numlattice`'s bound for the coupled run, with no probabilistic hypothesis |
-| [`numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35) | that bound transported to an arbitrary probability space that *is* the family — what turned the last assumed field into a theorem |
-| [`exists_epoch`](Ttc/Coupling/Transfer.lean#L140) | the epoch window `[(1−ε')·Thresh/8, Thresh/2]` has ratio ≥ 4, so a power of two always lands in it — `j*` need not be handed to the proof |
-| [`TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean#L242) | `Thresh > 0`, from `alg:ttc` line 20's own formula: `δ ≤ 1` forces `log(24/δ) ≥ log 24 > 0`, and `ε' = ε/12 ∈ (0, 1/12]` keeps `(1−ε')ε'²` positive. The paper leaves it implicit |
-| [`TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260) | each cube's rate is at most the total, because `vol_eq` sums a subset of nonnegative rates — what makes the first loop's cut-off derivable |
+| [`convex_region`, `convex_litSet`](Ttc/Lattice/Decomposition.lean) | each cube's region is convex — and *not* closed (finding 5) |
+| [`ratio_antitone`, `facet_ratio_fails`](Ttc/Nonconv/Geometry.lean) | `k` is attained at the facet **nearest** the origin, so the ball hypothesis is needed at every facet (finding 2) |
+| [`claim12_factor_le`](Ttc/Nonconv/Core.lean) | the `claim:helper` factor is `≤ 5/3` on `0 < η ≤ 1` |
+| [`Box.boxProb`, `Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean) | the hypothesis bundle is inhabited **non-degenerately**, so `thm:volumettc` is not vacuous; see [`AUDIT.md`](AUDIT.md) §3 |
+| [`box_lattice_card_ge`, `normalisedCount_box_ge`](Ttc/Witness/Box.lean) | the witness's normalised lattice count is at least `cⁿ`, at *every* precision — what lets `c` be chosen from `Thresh` |
+| [`trajOracles`](Ttc/Coupling/Family.lean) + [`card_run_eq_sum_traj`](Ttc/Coupling/Run.lean) | the coupling finding 15 says `lem:numlattice`'s proof needs and the paper never constructs |
+| [`traj_numlattice_le`](Ttc/Coupling/Run.lean) | `lem:numlattice`'s bound for the coupled run, with no probabilistic hypothesis |
+| [`numlattice_union_of_model`](Ttc/Coupling/Transfer.lean) | that bound transported to an arbitrary probability space that *is* the family |
+| [`exists_epoch`](Ttc/Coupling/Transfer.lean) | the epoch window `[(1−ε')·Thresh/8, Thresh/2]` has ratio ≥ 4, so a power of two always lands in it — `j*` need not be handed to the proof |
+| [`TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean) | `Thresh > 0`, from `alg:ttc` line 20's own formula: `δ ≤ 1` forces `log(24/δ) ≥ log 24 > 0`, and `ε' = ε/12 ∈ (0, 1/12]` keeps `(1−ε')ε'²` positive. The paper leaves it implicit |
+| [`TtcProb.vol_lt_two_total`](Ttc/Coupling/Transfer.lean) | a cube's volume estimate is under twice the total rate — what makes the first loop's cut-off derivable, so `rate_small` need not be assumed |
+| [`Ttc.escape_of_mem_body`](Ttc/Sampler/Bridge.lean) | KV97 Theorem 2's escape-mass hypothesis, discharged for every lattice point of the dilated body |
+| [`Ttc.almostUniform_transport`](Ttc/Sampler/Bridge.lean) | `eq:almostuniform` moves `ℤⁿ → 𝕃ⁿ` at the *same* `ε` — the paper asserts this ("neither side changes"), and here it is proved |
+| [`Ttc.VolSolCheck.volSol_tt_eq_zero`](Ttc/Volume/VolSolCheck.lean) + [`TtcProb.ofReal_volSol`](Ttc/Volume/VolSolCheck.lean) | the `ENNReal.toReal ⊤ = 0` hazard, exhibited and then closed (finding 16) |
+| [`Arlib.MarkovChains.not_exists_pointwiseClose_of_tvLe`](Arlib/MarkovChains/Continuous/PointwiseMixing.lean) | mixing in total variation **never** implies a pointwise density bound (finding 17) |
+| [`Arlib.prekopa_leindler_pi`, `Arlib.brunn_minkowski_pi`](Arlib/Convexity/PrekopaLeindlerN.lean) | Prékopa–Leindler and (multiplicative) Brunn–Minkowski in `ℝⁿ`, which Mathlib v4.32 does not have |
+| [`Arlib.brunn_minkowski_sharp`, `Arlib.brunn_slice_concaveOn`](Arlib/Convexity/BrunnSharp.lean) | the **sharp** `1/n`-concave Brunn–Minkowski for arbitrary measurable sets, and Brunn's theorem — with section-nonemptiness genuinely required (the sharp form is false without it) |
+| [`Arlib.MarkovChains.cheeger`](Arlib/MarkovChains/Continuous/Cheeger.lean) | **Cheeger's inequality, both directions**, `Φ²/2 ≤ gap ≤ 2Φ`, for a reversible kernel — hard direction included, under `(rayleighSet …).Nonempty` |
+| [`Arlib.MarkovChains.mixesWithin_of_conductance`](Arlib/MarkovChains/Continuous/L2Mixing.lean) | conductance ⇒ an explicit TV mixing time, via the `L²` contraction — needs `HasNonnegSpectrum`, which the plain ball walk lacks |
+| [`Arlib.MarkovChains.conductance_ballWalk_ge`](Arlib/MarkovChains/Continuous/BallWalkConductance.lean) | a conductance bound for the ball walk from an **inline** isoperimetric hypothesis, at a constant `√n` worse than Cousins–Vempala's |
+| [`Arlib.MarkovChains.mixesWithin_lazy_ballWalk`, `theorem2_of_lazy_ballWalk`](Arlib/MarkovChains/Continuous/BallWalkConductance.lean) | isoperimetry ⇒ conductance ⇒ Cheeger ⇒ `L²` decay ⇒ TV mixing ⇒ KV97 Theorem 2's window, composed. **Not a poly-time sampler**: the only proved `θ` is `2⁻ⁿ`, so the certified step count is exponential in `n` |
+| [`Arlib.GaussianCooling.zLogconcaveHypothesis_indicator`](Arlib/Convexity/GaussianCooling/ZLogconcave.lean) | Cousins–Vempala's Lemma 5.9 for indicators of convex sets — together with the counterexample showing it is *false* for general log-concave `f` |
+| [`Arlib.exists_convex_slice_profile_not_affine`](Arlib/Convexity/LocalizationLimit.lean) | sharp Brunn does **not** pin a localisation limit profile to an affine function — a converse that narrows what still has to be proved for the Localization Lemma |
+| [`Ttc.volume_estimate_joint`, `Ttc.volume_estimate_joint_compProd`](Ttc/Coupling/Product.lean) | `TtcProb.volume_estimate` at `1 − δ − δ/4` over the **joint** randomness of run and volume oracle (finding 13a) |
+| [`Ttc.CV.prod_relErr_ge`, `Ttc.CV.median_relErr_ge`](Ttc/Volume/CousinsVempala.lean) | Cousins–Vempala §5.2's product estimator and median boost, proved unconditionally |
+| [`Arlib.uniformOn_iso_unitBall`, `Arlib.uniformOn_iso_of_convex`](Arlib/Convexity/IsoBall.lean) | an isoperimetric inequality for the uniform measure on **every** bounded convex body, unconditionally, at `κ = 2⁻ⁿ/D` — exponentially worse than the sharp constant, but proved rather than assumed, which is what makes the mixing chain unconditional |
+| [`Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`](Arlib/MarkovChains/Continuous/ConvexBodyMixing.lean) | the whole mixing chain for a polytope with **no** isoperimetric hypothesis and **no** local-conductance floor — target the walk's own stationary measure, so no bias term. Step count still exponential in `n` |
+| [`Ttc.VolumeAlgorithm.monteCarlo`, `Ttc.MonteCarlo.est_ne_volume`](Ttc/Volume/MonteCarlo.lean) | the `Vol_ED` contract **inhabited with no hypotheses**, by hit-and-miss Monte Carlo — and shown not to be the exact oracle in disguise. Sample count exponential in `n`; **not** Cousins–Vempala Theorem 1.1 |
+| [`Ttc.e2eSampler`](Ttc/Exec/EndToEnd.lean), [`Ttc.kv97SamplerOfBallWalk`](Ttc/Sampler/Construct.lean) | a `KV97Sampler` whose quantitative field `law_tv` is a **theorem** about a lazy ball-walk iterate, not a hypothesis. It is *not* proved that the finite-time iterate differs from `uniformOn` on the inflated body |
+| [`Ttc.rates`, `Ttc.theta_eq_rates`, `Ttc.rates_pos`](Ttc/Sampler/Rates.lean) | the level-`0` rates constructed from `sampD` and `vol` via `thm:decomposition`, with the collapsed `θ ≡ 0` ruled out |
+| [`Ttc.ttc_volume_endToEnd`](Ttc/Exec/EndToEnd.lean), [`Ttc.Box.exists_two_ttc_volume_endToEnd_instances`](Ttc/Exec/EndToEnd.lean) | `thm:volumettc` over the algorithm's own inputs with **no oracle binder**, at `1 − δ − δ/4`, plus two structurally different instances with bounds `3/8` and `11/16` proved positive |
+| [`Ttc.canon_body_eq_smul_region`, `Ttc.ttc_volume_endToEnd_canon`](Ttc/Exec/CanonPolytope.lean) | the canonical linear system read off `atoms` cuts out the dilated region **exactly** — an equality, not the inclusion `hdil` asked for — which is what makes all nine polytope-description binders (and in particular `hDbody`) discharge with no slack |
+| [`Ttc.ttc_volume_final`](Ttc/Exec/Final.lean) | **the strongest result**: `thm:volumettc` over `(atoms, φ, ε, δ)` and input conditions alone — no oracle, no polytope description, clean `1 − δ`. The clean budget is a **repricing** at `δ₀ = 4δ/5`, costing `5/4` on the Monte-Carlo sample count and an additive `O(1/ε²)` on `Thresh` |
+| [`Ttc.Box.clean_box_at_nine_tenths`, `Ttc.Box.old_budget_vacuous_at_nine_tenths`, `Ttc.Box.exists_two_ttc_volume_clean_instances`](Ttc/Exec/Budget.lean) | non-vacuity **in the regime the old budget could not reach**: at `(ε,δ) = (1/3, 9/10)` the bound is `1/10`, proved `> 0`, where `1 − δ − δ/4 = −1/8` said nothing — the comparison itself is in the library, not only in prose |
+| [`Ttc.TwoCube.ttc_volume_final_two_cube`, `ttc_volume_final_two_cube_at`, `card_toDNF_eq_two`, `sol_eq_union_two`, `cenT_left_ne_right`, `min_qT_le_ratesT`, `volume_sbx`](Ttc/Witness/TwoCube.lean) | non-vacuity **for `ttc_volume_final` itself**, on a DNF with **two** cubes — two disjoint boxes, every binder discharged including `big`, at every `(ε,δ) ∈ (0,1]²` and at the numeral pairs `(1/3, 9/10)` and `(1/2, 1/4)` with bounds `1/10` and `3/4` proved `> 0`. It is the only witness for the strongest statement; before it there was none. `card_toDNF_eq_two` is an equality, `sol_eq_union_two` gives two distinct nonempty disjoint regions and `cenT_left_ne_right` two distinct ball centres — none of which the one-cube box exercises. `big` required the new `min(q₁,q₂)` argument (`min_qT_le_ratesT` case-splits on `cubeAt s`), since the box's route needs `N = L`. **Not** proved: `volSol = Vol₁ + Vol₂` |
+| [`Ttc.Box.ttc_volume_box_accuracy_is_trivial`](Ttc/Witness/BoxSharp.lean) | that a non-vacuity witness at `ε = δ = 1` certifies **nothing about the conclusion** — the accuracy conjunct there is `0 ≤ (…).toReal`, provable without mentioning the algorithm. Which is why `BoxSharp` re-does the witness at `ε, δ < 1` |
+| [`Arlib.dyerFrieze_dim_one`, `Arlib.exists_halfSpace_proportional`, `Arlib.dyerFrieze_step`](Arlib/Convexity/DyerFrieze.lean) | the one-dimensional isoperimetric inequality in full, a proportional halfspace cut in place of Borsuk–Ulam, and the induction step — the inequality itself still unproved and unassumed. **IN FLIGHT**: this file was green and `sorry`-free at the last check but is being extended, so `lake build Arlib.Convexity.DyerFrieze` before relying on it |
 
-`Ttc.lean` re-exports everything, so `import Ttc` and a bare `lake build` expose
-the headline theorem.
+`Ttc.lean` re-exports every module under `Ttc/`, so `import Ttc` and a bare
+`lake build` expose `Ttc.TtcProb.volume_estimate`, `Ttc.ttc_volume`,
+`Ttc.ttc_volume_endToEnd`, `Ttc.ttc_volume_endToEnd_canon`,
+`Ttc.ttc_volume_clean` (= `Ttc.ttc_volume_endToEnd_delta`),
+`Ttc.ttc_volume_endToEnd_canonical` and `Ttc.ttc_volume_final` alike. Because the
+`Ttc` library has no glob, that re-export is load-bearing: a module dropped from
+this list would stop being compiled rather than merely stop being visible.
+`Arlib.lean` re-exports the four
+area roots, which now do cover every `Arlib/` module (including
+`LocalizationLimit` and `DyerFrieze`, which earlier versions of this page said
+they did not). If a name is missing, check the relevant area root rather than
+assuming it is gone: the lakefile's glob (`["Arlib", "Arlib.+"]`) *builds* every
+file whether or not a root imports it, so a green build is not by itself evidence
+that `import Arlib` reaches it.
 
-## The headline theorem
+## The two headline theorems
+
+There are two — an abstract one over a hypothesis bundle, and an oracle-free one
+over the algorithm's inputs — and conflating them is the easiest way to overstate
+this work. (The oracle-free one now exists in four versions, of which
+`Ttc.ttc_volume_final` is the strongest; they are laid out below.)
+
+**The abstract one** is over the hypothesis bundle. It concludes a clean `1 − δ`
+and it is what all the analysis is proved into:
 
 ```lean
 theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
@@ -533,120 +1666,235 @@ drawn at `ω`, so the measured quantity is the algorithm's own output.
 set of the actual SMT(LRA) formula** — not a surrogate. That the set in question
 is exactly the union of the polytopes the algorithm enumerates is
 `Ttc.TtcProb.sol_eq_union` (`thm:decomposition`), so the object the algorithm
-targets and the object the theorem bounds coincide.
+targets and the object the theorem bounds coincide. What `volSol` *is* — down to
+an independently written `Bool`-valued evaluator for the formula semantics — is
+checked in [`Ttc/Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean).
 
 **Non-vacuity.** `Ttc.TtcProb` is inhabited by
-[`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean#L271)
-([`Ttc.Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean#L349)), the box `[0,c]ⁿ`
+[`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean)
+([`Ttc.Box.nonempty_ttcProb`](Ttc/Witness/BoxProb.lean)), the box `[0,c]ⁿ`
 with `c ≥ Thresh` sampled by the coupled family — so the theorem is not
 vacuously quantified, and not by a degenerate instance either; see
-[`AUDIT.md`](AUDIT.md) §3.
+[`AUDIT.md`](AUDIT.md) §3. It is also not vacuous in the subtler `toReal ⊤ = 0`
+sense: see finding 16.
+
+**The oracle-free one** is
+[`Ttc.ttc_volume_final`](Ttc/Exec/Final.lean). It quantifies over no bundle, binds
+no oracle and binds no polytope description; it takes `(atoms, φ, ε, δ)`, the
+input conditions, `hlen` and `big` — 26 explicit binders — and concludes **both**
+halves: accuracy at a clean `1 − δ`, over the joint law of the run and the
+constructed volume oracle's coins, and the charged running-time bound. Read its
+type; it is long, and that is the point — every residual obligation is visible in
+it rather than hidden in a field. Read the module docstring too, for which `δ` is
+the user's and which the internal `4δ/5`.
+
+Its three predecessors are the honest intermediate steps, not rival headlines:
+[`Ttc.ttc_volume_endToEnd`](Ttc/Exec/EndToEnd.lean) (still binds the polytope
+description; `1 − δ − δ/4`),
+[`Ttc.ttc_volume_endToEnd_canon`](Ttc/Exec/CanonPolytope.lean) (description gone;
+`1 − δ − δ/4`) and [`Ttc.ttc_volume_clean`](Ttc/Exec/Budget.lean) (description
+still there; `1 − δ`).
+
+**Non-vacuity for `ttc_volume_final` itself** is
+[`Ttc.TwoCube.ttc_volume_final_two_cube`](Ttc/Witness/TwoCube.lean): the theorem
+instantiated at every `(ε, δ) ∈ (0,1]²` on a **two-cube** DNF — two disjoint boxes
+— with every binder discharged, `big` included, and
+`Ttc.TwoCube.ttc_volume_final_two_cube_at` giving `(1/3, 9/10)` and `(1/2, 1/4)`
+with bounds `1/10` and `3/4` proved `> 0` in the statement. It is the **only**
+witness that applies `ttc_volume_final`; the box witnesses below are about the
+intermediates. See the opening section for what arity two exercises and what it
+still does not prove (`volSol = Vol₁ + Vol₂` is not proved).
+
+The intermediates are checked the same way, at one cube:
+`Ttc.Box.ttc_volume_clean_box_at` puts the clean statement on the box at
+every `(ε, δ) ∈ (0,1]²` (by repricing the `ttc_volume_endToEnd` box instance, not
+by applying `ttc_volume_clean`), `Ttc.Box.exists_two_ttc_volume_clean_instances` gives
+`(1/3, 9/10)` and `(1/2, 1/4)` with strictly positive bounds `1/10` and `3/4`, and
+`Ttc.Box.clean_box_prob_pos_ne_top_at_nine_tenths` rules out the
+`ENNReal.toReal ⊤ = 0` reading. One rung lower,
+`Ttc.Box.ttc_volume_endToEnd_box_at` and
+`Ttc.Box.exists_two_ttc_volume_endToEnd_instances` do the same at `(1/2,1/2)` and
+`(1/4,1/4)` with bounds `3/8` and `11/16`, `Ttc.Box.bxRates_pos` rules out the
+collapsed `θ ≡ 0` that would satisfy `theta_eq` vacuously, and
+`Ttc.Box.endToEnd_box_lintegral_pos_ne_top` closes the `toReal ⊤` reading there.
+Compare [`Ttc/Witness/BoxSharp.lean`](Ttc/Witness/BoxSharp.lean), which exists
+because the *previous* witness sat at `ε = δ = 1`, where the accuracy conjunct
+degenerates to `0 ≤ (…).toReal` — true of every measure, and certifying nothing.
+
+**Every witness in the last paragraph is the same single-cube box, and the
+`ttc_volume_final` witness above is not.** At the box, `m = 1`, so the union bound
+over cubes and `lem:numlattice`'s multi-cube content are exercised there by
+nothing; `Ttc.TwoCube` exercises them at `m = 2`, on the strongest statement. See
+the opening section.
 
 ## What is assumed
 
-Everything in the tree is proved, and **no lemma of the paper is a hypothesis any
-more**. What remains assumed about the algorithm is a *description of its
-sampler* — 19 fields saying the randomness is the Poisson/thinning family, not a
-bound on how often it fails. Two contracts on the external samplers sit beside
-them (`Oracles.gen_card` and `Oracles.halve_le` in the bundle itself, and
-[`gen_mem`](Ttc/Model/ProblemSetting.lean#L119), that `GenerateSamples` returns
-points of `P(cᵢ) ∩ 𝕃ⁿ`). And `Ttc.TtcProb` carries hypotheses about the *input*,
-which is a different kind of assumption again: properties of the formula handed
-to `TTC`, checkable before it runs, not claims about what `TTC` does.
+This section is about `Ttc.TtcProb`, the **abstract** hypothesis bundle. It is
+still the right place to read what the analysis rests on, but it is no longer the
+last word on what the *development* assumes: `Ttc.ttc_volume_endToEnd` constructs
+every oracle field below, so on that route none of them is an input. Read this to
+understand the analysis; read the capstone's type to see what is assumed.
+
+`Ttc.TtcProb` has **59 fields**. They fall into four groups, and it is worth
+being blunt about which is which.
+
+1. **Structure, not assumption** — `ε`, `δ` and their range; `atoms`, `M`, `φ`,
+   `toDNF`; `Ω`, `mΩ`, `μ`, `isProb`; `P`, `ρ`, `L`; `Lidx`, `ptE`, `θ`, `vol`,
+   `sampD`, `cover`, `memPt`, `toTraj`, `O`, `cen`, `gammaHat`, `volCoins`. These
+   name the objects the rest of the fields talk about; on their own they assume
+   nothing, and each is pinned by an equation elsewhere in the list.
+2. **Assumed of the input** — checkable of a formula before `TTC` runs.
+3. **Assumed of the external oracles** — this is what is left of the two oracles,
+   and it is not nothing.
+4. **Proved, and formerly assumed** — listed for the record, because knowing what
+   *used* to be a field is how a reader calibrates the rest.
 
 ### Proved, and previously assumed
 
-**`lem:lattice` is now a theorem** ([`Ttc.TtcProb.lattice_lo`](Ttc/Lattice/Assembled.lean#L222),
-[`lattice_hi`](Ttc/Lattice/Assembled.lean#L227)), where it used to be two
-fields of `Ttc.TtcProb`. With it, `claim:cl` and `lem:nonconv` are discharged end
-to end:
+* **`lem:lattice`** — [`TtcProb.lattice_lo`/`lattice_hi`](Ttc/Lattice/Assembled.lean),
+  and per polytope [`lattice_cube_lo`/`lattice_cube_hi`](Ttc/Lattice/PerCube.lean).
+* **`lem:numlattice` and its epoch covering** —
+  [`TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean),
+  [`TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean).
+* **`eq:almostuniform` and the paper's Invariant** —
+  [`TtcProb.samp_unif`](Ttc/Sampler/Bridge.lean),
+  [`theta_lo`/`theta_hi`](Ttc/Sampler/Bridge.lean).
+* **`Vol_ED`'s deterministic accuracy** —
+  [`TtcProb.volED_hi`/`volED_lo`](Ttc/Volume/Bridge.lean).
+* **The epoch index and its window** (five fields) — `Ttc.exists_epoch`,
+  `Ttc.rate_small_of_epoch`, `TtcProb.thresh_pos`, `TtcProb.vol_lt_two_total`.
+* **`vol_eq`, `cover_all`, `θ_nonneg`, `θ_pos`, `rate_eq_L`** — all former fields,
+  all now theorems or consequences:
+  [`TtcProb.cover_all`, `theta_nonneg`, `theta_pos`, `sum_theta_lo`,
+  `sum_theta_hi`, `Lidx_eq`, `L_eq_Lidx`](Ttc/Coupling/Transfer.lean). `vol` is
+  pinned by `volED_eq` (it *is* `Vol_ED`'s output) rather than by an assumed sum
+  identity, and `rate_eq_L` is replaced by the *two-sided* window the proved
+  Invariant gives, so an instance no longer has to claim the rates are exactly the
+  lattice count.
+
+With `lem:lattice` proved, `claim:cl` and `lem:nonconv` are discharged end to end:
 
 * **`claim:cl`, all three parts, for a concrete rounding.** The paper cites `rnd`
   to KV97 without a construction; we supply the standard one — independent
   coordinatewise rounding `xₖ = ⌊pₖ⌋ + Bernoulli(pₖ − ⌊pₖ⌋)`, whose displacement
-  density is the tent `1−|u|` ([`Rounding/Tent`](Ttc/Rounding/Tent.lean)) — and
-  prove every property the analysis uses. Reading it in the `p` variable gives
-  double stochasticity ([`integral_prod_tent`](Ttc/Rounding/ProdKernel.lean#L42))
-  and parts **(a)** ([`prodKernel_claim_cl_a`](Ttc/Rounding/ProdLaw.lean#L232))
-  and **(c)** ([`claim_cl_c`](Ttc/Rounding/Cl.lean#L114)); reading the *same*
-  kernel in the lattice variable gives the law of `rnd p` on `ℤⁿ`
-  ([`roundLaw`](Ttc/Rounding/RoundLaw.lean#L50)), which is a two-point product
-  ([`tentInt_eq_two_point`](Ttc/Rounding/RoundMoments.lean#L34)) — hence bounded,
-  mean-zero ([`integral_tentInt_disp`](Ttc/Rounding/RoundMoments.lean#L72)) and
-  independent ([`iIndepFun_latDisp`](Ttc/Rounding/RoundMoments.lean#L153)), so
-  Hoeffding applies on that side too and yields **(b)**
-  ([`prodKernel_claim_cl_b`](Ttc/Rounding/ClB.lean#L180)). The geometry differs
-  between the two directions: in (a) the escaping point crosses a facet outward,
-  in (b) inward, so (b) applies the tail bound to `−A_j`
-  ([`cover_of_notMem_body_deflated`](Ttc/Rounding/ClB.lean#L42)).
+  density is the tent `1−|u|` — and prove every property the analysis uses.
+  Reading it in the `p` variable gives double stochasticity
+  (`integral_prod_tent`) and parts **(a)** (`prodKernel_claim_cl_a`) and **(c)**
+  (`claim_cl_c`); reading the *same* kernel in the lattice variable gives the law
+  of `rnd p` on `ℤⁿ` (`roundLaw`), which is a two-point product
+  (`tentInt_eq_two_point`) — hence bounded, mean-zero (`integral_tentInt_disp`)
+  and independent (`iIndepFun_latDisp`), so Hoeffding applies on that side too and
+  yields **(b)** (`prodKernel_claim_cl_b`). The geometry differs between the two
+  directions: in (a) the escaping point crosses a facet outward, in (b) inward, so
+  (b) applies the tail bound to `−A_j` (`cover_of_notMem_body_deflated`).
 * **`lem:nonconv` over an actual facet system**
-  ([`FacetSystem.nonconv_of_ball`](Ttc/Nonconv/Assembled.lean#L216)) — no
-  free reals, no abstract kernel. Its one hypothesis is the paper's: each `Pᵢ`
-  contains an `ℓ₂`-ball of radius `γ` about its own centre.
+  ([`FacetSystem.nonconv_of_ball`](Ttc/Nonconv/Assembled.lean)) — no free reals,
+  no abstract kernel. Its one hypothesis is the paper's: each `Pᵢ` contains an
+  `ℓ₂`-ball of radius `γ` about its own centre.
 * **Finiteness of `Q ∩ ℤⁿ` is not assumed.** It follows from `claim:cl`(a), which
   bounds `|T|` for *every* finite `T ⊆ Q ∩ ℤⁿ`
-  ([`finite_of_forall_finset_card_le`](Ttc/Nonconv/BallFacet.lean#L135)).
+  ([`finite_of_forall_finset_card_le`](Ttc/Nonconv/BallFacet.lean)).
 * **`GetPrecision` became load-bearing.** `ρ = ⌈log₁₀(γ/γ̂)⌉` is exactly what makes
   the dilated polytopes contain a ball of radius `γ`
-  ([`gamma_le_latticeScale_mul`](Ttc/Lattice/Assembled.lean#L69)), which is
-  what the shell bound stands on. In the previous version `rho_eq` was inert.
+  ([`gamma_le_latticeScale_mul`](Ttc/Lattice/Assembled.lean)), which is what the
+  shell bound stands on.
 
 ### Assumed about the input
 
-Fields of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean#L43), all of them
-hypotheses `lem:nonconv` needs and the paper states (or silently uses):
+Fields of [`Ttc.TtcProb`](Ttc/Model/ProblemSetting.lean), all of them hypotheses
+`lem:nonconv` needs and the paper states (or silently uses). None says anything
+about the algorithm's behaviour.
 
 | Field | Assumption |
 | --- | --- |
-| [`M_eq`](Ttc/Model/ProblemSetting.lean#L62) | the atoms really are linear constraints `A x ≤ b` — the formula is in the LRA fragment |
-| [`isPositive`](Ttc/Model/ProblemSetting.lean#L71) | no literal of the DNF is negated, so each `P(cᵢ)` is *closed* (finding 5) |
-| [`ball_subset`](Ttc/Model/ProblemSetting.lean#L107) | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂` about `cen i` — the paper's own hypothesis, with the common-centre gap of finding 2 removed |
-| [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L109) | each `P(cᵢ)` has finite volume |
-| [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L93) | every facet has a nonzero normal vector — implicit in the paper, and false only for a degenerate "constraint" `0 ≤ b` |
-| [`cubes_le`](Ttc/Model/ProblemSetting.lean#L89), [`facets_le`](Ttc/Model/ProblemSetting.lean#L91) | `m` and `r` really do bound the number of cubes and of facets |
-| [`eps_eq`](Ttc/Model/ProblemSetting.lean#L83), [`delta_eq`](Ttc/Model/ProblemSetting.lean#L85), [`dim_eq`](Ttc/Model/ProblemSetting.lean#L87) | the parameter block is the one for *this* `ε`, *this* `δ` and *this* dimension |
-| [`isDNF`](Ttc/Model/ProblemSetting.lean#L71) | `ToDNF`/AllSAT is correct (unchanged) |
+| `M_eq` | the atoms really are linear constraints `A x ≤ b` — the formula is in the LRA fragment |
+| `isPositive` | no literal of the DNF is negated, so each `P(cᵢ)` is *closed* (finding 5). [`Ttc.toDNF_isPositive`](Ttc/Dnf.lean) derives it from a negation-free input formula |
+| `isDNF` | `ToDNF`/AllSAT is correct. [`Ttc.toDNF_isDNFOf`](Ttc/Dnf.lean) exhibits a converter that satisfies it, so the assumption is not vacuous — but the field stays, because `toDNF` is a parameter |
+| `ball_subset`, `hgammaHat` | each `P(cᵢ)` contains an `ℓ₂`-ball of radius `γ̂ > 0` about `cen i` — the paper's own hypothesis, with the common-centre gap of finding 2 removed |
+| `volume_ne_top` | each `P(cᵢ)` has finite volume — the one hypothesis with no counterpart at all in the paper (finding 10), and also what stops the headline being vacuous (finding 16) |
+| `normal_ne_zero` | every facet has a nonzero normal vector — implicit in the paper, and false only for a degenerate "constraint" `0 ≤ b` |
+| `cubes_le`, `facets_le` | `m` and `r` really do bound the number of cubes and of facets |
+| `eps_eq`, `delta_eq`, `dim_eq` | the parameter block is the one for *this* `ε`, *this* `δ` and *this* dimension |
+| `rho_eq` | `ρ` is `GetPrecision`'s output for this `γ̂` |
+| `L_eq`, `ptE_mem`, `ptE_onto`, `ptE_inj`, `memPt_eq`, `cover_eq` | `L` and `Lidx` are the actual lattice count, `ptE` enumerates the actual lattice points bijectively, and the coverage tests are the geometric ones — definitions, pinned |
 
-None of these says anything about the algorithm's behaviour.
+### Assumed about the algorithm's oracles
 
-### Assumed about the algorithm
+This is the residue **of `Ttc.TtcProb`**, and it is where an implementer's
+obligations live. Every row below except `law_eq`/`oracle_eq` is *constructed*
+rather than assumed on the capstone's route — the "How strong" column says which
+construction, and [`Exec/EndToEnd`](Ttc/Exec/EndToEnd.lean) is where they are all
+supplied at once. `law_eq` and `oracle_eq` do not disappear so much as change
+form: the capstone builds a run whose randomness *is* the coupled family, which is
+a construction, not evidence that a shipped implementation matches it.
 
-**Not a probability bound any more — a description of the sampler.** The last
-field asserting a *conclusion* about probabilities (`numlattice_union`, the epoch
-covering) has been **deleted**. In its place `Ttc.TtcProb` carries 19 fields,
-starting at [`Model/ProblemSetting.lean:133`](Ttc/Model/ProblemSetting.lean#L133),
-that say what the algorithm's randomness *is*. Read them as one paragraph: *the
-solution set's lattice points are enumerated injectively, each carries a
-nonnegative Poisson rate, every sample point reads as a trajectory of the coupled
-thinning family, the oracles answer by reading that trajectory, the cubes cover
-the enumerated points, each cube's rate is the total rate of the points it
-covers, the instance is big enough to be worth sketching, and the rates sum to
-the lattice count.*
+| Field(s) | Oracle | What it says | How strong |
+| --- | --- | --- | --- |
+| **`law_eq`** | the run's randomness | `μ.map toTraj = trajLaw θ` — the randomness **is** the coupled level family | **the strongest field in the development.** Not "the draws are Poisson"; "the draws are *this construction*" |
+| **`oracle_eq`** | the run's randomness | `O ω = trajOracles ptE_inj vol cover memPt (toTraj ω)` — the oracles answer by reading that trajectory | pins `O` completely; also what makes `vol` deterministic (see finding 13a) |
+| `toTraj`, `toTraj_meas` | | each `ω` reads as a trajectory `ℕ → Fin Lidx → ℕ`, measurably | structure |
+| **`sampler`** (14 subfields) | `GenerateSamples` | the discrete law `sampD` is the rejection-normalised randomized rounding of a continuous draw from the inflated dilate `10^ρ·P(cᵢ)` | a **description**, except for `law_tv`: the continuous law is within total variation `ε'/(4·Vol(P′))` of uniform on the inflated polytope. That one is quantitative — and it is now **constructed and proved**, `Ttc.e2eSampler` with `law_tv` from `mixesWithin_lazy_ballWalk_polytope`. What an implementer owes is the *identification* of the shipped sampler with that lazy ball walk, not an inequality |
+| `theta_eq` | `GenerateSamples` | each lattice point's level-`0` rate is the sampler's mass there times the volume estimate of the cube it was drawn from | a description of `alg:ttc` lines 43–46; **constructed** by `Ttc.rates` (`Sampler/Rates`), so it is not a binder of the capstone |
+| `gen_mem` | `GenerateSamples` | the points returned really are lattice points of `P(cᵢ)` | `Ttc.Oracles` fixes only *how many*; this fixes *where*. Not distributional; **proved** by `Ttc.gen_mem_of_geometry` from the input conditions |
+| **`volAlg`** | `Vol_ED` | it is *a* volume algorithm meeting `VolumeAlgorithm n` | **no longer an assumption.** `Ttc.VolumeAlgorithm.monteCarlo : (n : ℕ) → VolumeAlgorithm n` is a total function with no hypotheses, so the field can always be filled. It is **not** Cousins–Vempala Theorem 1.1 — see below |
+| `volCoins`, `volED_eq` | `Vol_ED` | `vol i = γ̂ⁿ · volAlg.est (roundBody …) ε' δ' volCoins` — the run's estimates *are* Theorem 1.1's output on the normalised body | transcription of `alg:ttc` line 24; the `γ̂ⁿ` rescaling is the **proved** `VolumeAlgorithm.of_ball`. In the capstone `volCoins` is **integrated out** against `Ttc.MonteCarlo.coins` and `volED_eq` is the theorem `Ttc.mcVol_eq` |
+| **`volCoins_good`** | `Vol_ED` | the `m` calls all landed in their good event | a field here, but its probability is *proved* (`volGood_prob_budget`, `≥ 1 − δ/4`). In the capstone it is **averaged out** rather than assumed — which is exactly what costs the `δ/4`. See finding 13a |
+| `vol_pos` | the instance | `0 < vol i` for every cube of the DNF | with the derived `vol_lt_two_total` it is what replaced `rate_small`; **proved** in the capstone as `Ttc.mcVol_pos` |
+| **`big`** | the instance | `(1−ε')·Thresh/8 ≤ ∑θ` — the instance is large enough for the sketch to be worth running | a genuine assumption, but the paper's own regime; the box witness arranges it by choosing the side from `Thresh` (`Ttc.Box.epsPrime_thresh_le_volume`, since the box's `∑θ` is `Vol(box)` rather than `L`). At **two** cubes that route fails — it needs `N = L` — and `Ttc.TwoCube.big_two` replaces it with a `min(q₁,q₂)` bound that case-splits on which cube the point came from (`Ttc.TwoCube.min_qT_le_ratesT`) |
 
-| Field(s) | Line | What it says |
-| --- | --- | --- |
-| `Lidx`, `ptE`, `ptE_inj` | [133](Ttc/Model/ProblemSetting.lean#L133), [135](Ttc/Model/ProblemSetting.lean#L135), [137](Ttc/Model/ProblemSetting.lean#L137) | the lattice points the family is indexed by, and an injective enumeration of them |
-| `θ`, `θ_nonneg`, `θ_pos` | [139](Ttc/Model/ProblemSetting.lean#L139), [141](Ttc/Model/ProblemSetting.lean#L141), [143](Ttc/Model/ProblemSetting.lean#L143) | each point's level-`0` rate, nonnegative, with positive total — the instance is not empty |
-| `vol`, `cover`, `memPt` | [145](Ttc/Model/ProblemSetting.lean#L145), [147](Ttc/Model/ProblemSetting.lean#L147), [149](Ttc/Model/ProblemSetting.lean#L149) | the rate the run draws each cube with, its coverage test, and cube membership on the enumerated points |
-| `toTraj`, `toTraj_meas` | [151](Ttc/Model/ProblemSetting.lean#L151), [153](Ttc/Model/ProblemSetting.lean#L153) | how a sample point is read as a trajectory `ℕ → Fin Lidx → ℕ`, measurably |
-| **`law_eq`** | [155](Ttc/Model/ProblemSetting.lean#L155) | **`μ.map toTraj = trajLaw θ`** — the randomness *is* the coupled family |
-| **`oracle_eq`** | [157](Ttc/Model/ProblemSetting.lean#L157) | **`O ω = trajOracles …`** — the oracles answer by reading it |
-| `cover_eq`, `cover_all` | [159](Ttc/Model/ProblemSetting.lean#L159), [161](Ttc/Model/ProblemSetting.lean#L161) | the coverage test agrees with cube membership on the lattice, and the cubes cover every enumerated point |
-| **`vol_eq`**, `vol_pos` | [165](Ttc/Model/ProblemSetting.lean#L165), [167](Ttc/Model/ProblemSetting.lean#L167) | **`∑_{s : memPt i s} θ s = vol i`** — each cube's rate *is* the total level-`0` rate of the points it covers, and it is positive. This is what makes `vol` a description of the instance instead of a free function |
-| **`big`** | [172](Ttc/Model/ProblemSetting.lean#L172) | **`(1−ε')·Thresh/8 ≤ ∑θ`** — the instance is large enough for the sketch to be worth running. The paper's own regime, and what [`Ttc.Box.boxProb`](Ttc/Witness/BoxProb.lean#L271) arranges by choosing the box side from `Thresh` |
-| **`theta_lo`, `theta_hi`** | [`ProblemSetting`](Ttc/Model/ProblemSetting.lean) | **`(1−ε')²(1−η)/10^(ρn) ≤ θ s ≤ (1+ε')²(1+η)/10^(ρn)`** — the paper's Invariant, *per lattice point*. This is where the geometry meets the probability, and it replaces the earlier exact `∑θ = L`. The `(1±ε')` appears **squared**: once for `Vol_ED`, once for the almost-uniformity of `GenerateSamples` (`eq:sampler`) |
+**The volume oracle is constructed.** `volAlg` was assumed for the whole of this
+project's life. It no longer is:
+[`Ttc.VolumeAlgorithm.monteCarlo`](Ttc/Volume/MonteCarlo.lean) is a term of
+`Ttc.VolumeAlgorithm n` for every `n`, taking **no hypotheses at all**, and
+`#print axioms` on it is `[propext, Classical.choice, Quot.sound]`.
 
-**Almost-uniform sampling (`eq:sampler`).** `GenerateSamples` no longer has to
-return exactly uniform lattice points: it draws from a distribution `D` over
-`P(cᵢ) ∩ 𝕃ⁿ` with `(1−ε')/|P(cᵢ) ∩ 𝕃ⁿ| ≤ D(x) ≤ (1+ε')/|P(cᵢ) ∩ 𝕃ⁿ|` pointwise.
-The whole of that change lands in one place — the extra `(1±ε')` factor in
-`theta_lo`/`theta_hi` — because the model already carried a **per-point** rate
-`θ s` rather than a single rate, which is exactly what a non-uniform sampler
-produces. Nothing else in the run can see the difference, and the headline is
-unchanged. Three knock-on constants moved with it: `lem:numlattice`'s window is
-now `(1±ε/2)` (three `(1±ε')` factors and one `(1±η)` no longer fit in `ε/3` —
-the first-order term alone is `3/8`), `δ' = δ/(4m)` leaves room for the sampler's
-own failure event beside `Vol_ED`'s, and `Thresh`'s second branch carries `15`.
+It is plain hit-and-miss Monte Carlo: coins are the countable product
+(`Measure.infinitePi`) of the uniform law on the unit ball — `K`-independent, as
+they must be, since `Ω` and `μ` are fixed before `K` is seen — rescaled by a radius
+`R` manufactured from exactly the three facts `correct` supplies, and `correct`
+follows from Chebyshev on i.i.d. Bernoulli`(vol K / vol B(0,R))`.
+
+Two things make it honest rather than a restatement of the placeholder it replaces:
+
+* **`est` is not the true volume.** `Ttc.MonteCarlo.est_ne_volume` exhibits `K, ε,
+  p, ω` satisfying *every* hypothesis of `correct` where the estimate differs from
+  `(volume K).toReal`. This is the check that the previous witness,
+  `cousinsVempalaWitness`, fails: its `est` is `rfl`-equal to the true volume — the
+  exact oracle in disguise.
+* **`est_meas` holds for every `K`, including non-measurable ones.** Mathlib gives
+  convex sets only `NullMeasurableSet`, so a naive count is not measurable. The
+  estimator is defined through the measurable hull `toMeasurable volume K`, and
+  `Ttc.MonteCarlo.volume_hull_inter_ball` shows the hull intersected back with the
+  enclosing ball has *exactly* `volume K` — an identity, not an a.e. argument.
+
+**What this does and does not buy.** `VolumeAlgorithm` carries **no complexity
+field** — only `est`, `est_meas`, `correct` — which is precisely why an
+exponential-time algorithm satisfies it; the sample count here is `Θ(Rⁿ/ε²p)`.
+So this discharges the *existence* of the oracle, not the efficiency claim.
+`volCoins_good` is a hypothesis of `Ttc.ttc_volume` about specific coins;
+[`Ttc.ttc_volume_monteCarlo`](Ttc/Exec/VolDischarge.lean) removes it by
+integrating the coins out against `Ttc.MonteCarlo.coins` and paying `δ/4` for the
+event `Ttc.mcGood` (`Ttc.measure_mcGood_ge`), which is where the capstone's
+`1 − δ − δ/4` comes from.
+
+Note too that `VolumeAlgorithm.correct` is **strictly stronger** than
+Cousins–Vempala Theorem 1.1, which additionally assumes `E_K(‖X‖²) = O(n)`. So a
+complete formalisation of Theorem 1.1 would *not* by itself have discharged this
+field — one would still owe the rounding/isotropic-position algorithm. Gaussian
+cooling remains blocked for an unrelated reason recorded in
+[`CV-ROADMAP.md`](CV-ROADMAP.md) §0: its `hphase_mean` is an *equality* of
+expectations, which no MCMC sampler can satisfy.
+
+**Almost-uniform sampling, and why two-sidedness matters.** `GenerateSamples` does
+not have to return exactly uniform lattice points: `eq:almostuniform` asks only
+that `(1−ε')/|P(cᵢ) ∩ 𝕃ⁿ| ≤ D(x) ≤ (1+ε')/|P(cᵢ) ∩ 𝕃ⁿ|` pointwise, and that is now
+*proved* rather than assumed. The whole of that lands in one place — the extra
+`(1±ε')` factor in `theta_lo`/`theta_hi` — because the model carries a **per-point**
+rate `θ s` rather than a single rate, which is exactly what a non-uniform sampler
+produces. Three knock-on constants moved with it: `lem:numlattice`'s window is
+`(1±ε/2)` (three `(1±ε')` factors and one `(1±η)` no longer fit in `ε/3` — the
+first-order term alone is `3/8`), `δ' = δ/(4m)` leaves room for the sampler's own
+failure event beside `Vol_ED`'s, and `Thresh`'s second branch carries `15`.
 
 The two-sidedness is **not** decorative. A one-sided `D(x) ≤ (1+ε')/|·|` gives
 only `D(A) ≥ |A|/|P ∩ 𝕃ⁿ| − ε'` for a region `A` — an *additive* loss, vacuous
@@ -654,48 +1902,23 @@ when `A` is the sliver of `P(cᵢ)` no later cube covers, which is precisely the
 mass the estimate accumulates. It would leave `theta_lo` unprovable, and with it
 the lower half of the headline.
 
-Five fields that used to sit between `cover_all` and `rate_eq_L` — `jstar`,
-`hjstar`, `rate_small`, `rate_le`, `lamStar_ge` — are **gone**. They handed the
-proof a chosen epoch index together with both ends of its rate window; `j*` is
-now built by [`Ttc.exists_epoch`](Ttc/Coupling/Transfer.lean#L140) inside
-[`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267), and
-`rate_small` is derived from `vol_pos` and
-[`Ttc.TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260) by
-[`Ttc.rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180). The
-positivity of `Thresh` that both need is
-[`Ttc.TtcProb.thresh_pos`](Ttc/Coupling/Transfer.lean#L242) — proved from
-the algorithm's own formula, not assumed.
+**How honest is the current trade?** It is a real reduction, and it is not zero.
 
-**How honest is this trade?** It is a real reduction, and it is not zero.
-
-* *Real*: nothing in the list mentions `ε`, `δ`, accuracy, or a failure
-  probability. Everything quantitative — the per-epoch `Err` estimate, the
-  `Noise` overflow, the epoch series, the `Vol_ED` budget, the `1 − δ` — is now
-  **derived** from them
-  ([`TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267) →
-  [`TtcProb.numlattice`](Ttc/Coupling/NumLattice.lean#L53) →
-  [`TtcProb.volume_estimate`](Ttc/Model/Theorem.lean#L41)). Previously the
-  conclusion of the paper's hardest lemma was an input.
-* *Not zero*: `law_eq` and `oracle_eq` are strong. They do not merely say the
-  primitives are Poisson and fair-coin — they name one specific construction
-  ([`Ttc.trajLaw`](Ttc/Coupling/Family.lean#L209),
-  [`Ttc.trajOracles`](Ttc/Coupling/Family.lean#L393)) and assert the
-  implementation is it. Whether a real `TTC` implementation matches is a
-  modelling judgement no machine check can settle. `rate_eq_L` likewise assumes
-  the family's rates are *exactly* the lattice count rather than an estimate of
-  it — the general two-sided case is available
-  ([`Ttc.window_of_two_sided`](Ttc/Coupling/Transfer.lean#L104)) but the
-  field commits to the exact one. `big` is a genuine assumption too — it says
-  `∑θ` clears `(1−ε')·Thresh/8`, i.e. that the instance is in the regime the
-  sketch is for. It is not an artifact of the formalisation: it is the paper's
-  own regime, and the witness satisfies it by construction
-  ([`Ttc.Box.epsPrime_thresh_le_Lval`](Ttc/Witness/BoxProb.lean#L210)). What is
-  *no longer* assumed is the epoch index: `jstar` and its window used to be five
-  more fields — a *chosen* `j*` plus the four conditions on it — and
-  `Ttc.exists_epoch` now proves them for every input that satisfies `big`, from
-  `0 < Thresh`, `0 ≤ ε'` and `big` alone. (`Ttc.Box.exists_jstar`
-  survives at [BoxProb:221](Ttc/Witness/BoxProb.lean#L221) but is **unused** —
-  nothing needs it now.)
+* *Real*: nothing among the sampler fields mentions `ε`, `δ`, accuracy, or a
+  failure probability except `law_tv` (and that is about the *continuous* draw,
+  one step upstream of the algorithm) — and `law_tv` is itself now proved for the
+  constructed sampler. Everything quantitative — the per-epoch `Err` estimate, the
+  `Noise` overflow, the epoch series, the `Vol_ED` budget, `eq:almostuniform`, the
+  Invariant, the `1 − δ` — is **derived**. Previously the conclusions of the
+  paper's two hardest lemmas were inputs.
+* *Not zero*: `law_eq` and `oracle_eq` name one specific construction and assert
+  the implementation is it. Whether a real `TTC` implementation matches is a
+  modelling judgement no machine check can settle, and constructing an instance
+  that satisfies them does not settle it either. `big` is a genuine assumption.
+  Both constructed oracles are exponential in the dimension. And the sampler's
+  quantitative hypothesis has changed shape twice (`samp_unif` → `density_au` →
+  `law_tv`) on different objects, so the successive bundles are **incomparable**,
+  not nested; see [`END-TO-END-PLAN.md`](END-TO-END-PLAN.md).
 * Also note the sampling interface is **level-aware** where the paper's is not
   (`pois` and `gen` receive the cube and level). That deviation is what makes the
   coupling constructible at all; see [`AUDIT.md`](AUDIT.md) §1 and finding 15.
@@ -723,12 +1946,15 @@ the algorithm's own formula, not assumed.
   behind `ε' = ε/12` (`Ttc.sketch_interval`, `Ttc.sketch_window`,
   `Ttc.Params.epsPrime_window`); and the `Vol_ED` failure budget the paper omits
   (`Ttc.Params.vol_failure_eq`, `Ttc.numlattice_failure_bound_with_vol`; finding 13).
+* **Kannan–Vempala's Theorem 2 and the `ε ≤ 5/8` form of `cor:linf`**
+  (`Arlib.KV97.theorem2_of_body`, `Arlib.KV97.ratio_bounds_tuned_sharp`), which is
+  what makes `eq:almostuniform` a theorem here.
 
 *How the probabilistic model got built.* Every estimate the proof invokes is a
-theorem, and they are now composed into a statement about `Ttc.run` — first for
-the run driven by the *coupled family*, and then, via the sampler fields above,
-for the arbitrary `Ω`/`μ`/`O` a `Ttc.TtcProb` carries. All four of the original
-obstacles are cleared:
+theorem, and they are composed into a statement about `Ttc.run` — first for the
+run driven by the *coupled family*, and then, via the sampler fields, for the
+arbitrary `Ω`/`μ`/`O` a `Ttc.TtcProb` carries. All four of the original obstacles
+are cleared:
 
 1. ~~`Ttc.Oracles` cannot express independence.~~ **Fixed.** Oracle calls are now
    indexed by the level (and the cube), so "the draws at distinct levels are
@@ -736,50 +1962,42 @@ obstacles are cleared:
    This also repaired a real distributional defect in the old model — see
    [the `Pseudocode` notes](#what-ttcmodelpseudocodelean-does-and-does-not-do).
 2. ~~`lem:process` is only a pmf identity.~~ **Fixed.**
-   [`Ttc.countLaw_eq_pi`](Ttc/Process/PoissonLaws.lean#L91) proves it as an
-   identity of *measures*, which yields independence of the cell counts
-   ([`iIndepFun_countLaw`](Ttc/Process/PoissonLaws.lean#L106)), Poisson thinning
-   ([`poisson_thinning`](Ttc/Process/PoissonLaws.lean#L204)) and superposition
-   ([`poisson_add`](Ttc/Process/PoissonLaws.lean#L217)) — exactly the three
-   operations the loop performs on the invariant.
+   [`Ttc.countLaw_eq_pi`](Ttc/Process/PoissonLaws.lean) proves it as an identity
+   of *measures*, which yields independence of the cell counts
+   (`iIndepFun_countLaw`), Poisson thinning (`poisson_thinning`) and
+   superposition (`poisson_add`) — exactly the three operations the loop performs
+   on the invariant.
 3. ~~The number of halvings is a stopping time.~~ **Resolved, and it turned up a
    genuine error** — see finding 14. Conditioning on the rate is not merely hard,
    it is *wrong*; the invariant has to be read non-adaptively. The level-`j`
-   process ([`Ttc.levelLaw`](Ttc/Process/SketchProcess.lean#L55)) is that
-   reading, and **both branch estimates and the whole `δ` budget are now proved
-   over it**: [`levelLaw_err_le`](Ttc/Process/SketchProcess.lean#L130),
-   [`err_branch_sum`](Ttc/Process/SketchProcess.lean#L179),
-   [`levelLaw_noise_le`](Ttc/Process/SketchProcess.lean#L194), assembled in
-   [`numlattice_failure_le`](Ttc/Process/SketchProcess.lean#L246) — the paper's
-   `δ/6 + δ/6 + δ/2 ≤ δ`, with the algorithm's own `Thresh` and `δ'`.
+   process ([`Ttc.levelLaw`](Ttc/Process/SketchProcess.lean)) is that reading, and
+   **both branch estimates and the whole `δ` budget are proved over it**:
+   `levelLaw_err_le`, `err_branch_sum`, `levelLaw_noise_le`, assembled in
+   `numlattice_failure_le` — the paper's `δ/6 + δ/6 + δ/2 ≤ δ`, with the
+   algorithm's own `Thresh` and `δ'`.
 4. ~~The coupling is missing.~~ **Built.** On the event that the run stops at
    level `J`, the run's final `𝒳` must *be* the level-`J` process. It now is,
-   pathwise: [`Ttc.trajOracles`](Ttc/Coupling/Family.lean#L393) is an
-   `Ttc.Oracles` bundle that answers every call by reading a trajectory `ω` of
-   the family, and
-   [`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L263) proves
-   `|𝒳| = ∑ₛ ω(J)ₛ` on every nested trajectory —
-   [`run_eq_traj`](Ttc/Coupling/Run.lean#L281) turns that into
-   `|𝒳|/p = 2^J·∑ₛ ω(J)ₛ`, the output itself. See finding 15 for the details;
-   the structural half that made it possible was the two missing contracts,
-   both added: `Oracles.halve_le` (thinning returns a *sub*-multiset, not merely
-   a smaller one) and [`TtcProb.gen_mem`](Ttc/Model/ProblemSetting.lean#L119)
-   (`GenerateSamples` returns points of `P(cᵢ) ∩ 𝕃ⁿ` — previously only their
-   *number* was constrained). Together they give
-   [`TtcProb.run_state_mem`](Ttc/Lattice/Assembled.lean#L211): the run's
-   `𝒳` never leaves `Sol(F) ∩ 𝕃ⁿ`, so it *is* a count vector over a fixed finite
-   set.
+   pathwise: [`Ttc.trajOracles`](Ttc/Coupling/Family.lean) is an `Ttc.Oracles`
+   bundle that answers every call by reading a trajectory `ω` of the family, and
+   [`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean) proves `|𝒳| = ∑ₛ ω(J)ₛ` on
+   every nested trajectory — [`run_eq_traj`](Ttc/Coupling/Run.lean) turns that
+   into `|𝒳|/p = 2^J·∑ₛ ω(J)ₛ`, the output itself. See finding 15 for the details;
+   the structural half that made it possible was the two missing contracts, both
+   added: `Ttc.Oracles.thin_le` (thinning returns a *sub*-multiset, not merely a
+   smaller one) and `TtcProb.gen_mem`. Together they give
+   [`TtcProb.run_state_mem`](Ttc/Lattice/Assembled.lean): the run's `𝒳` never
+   leaves `Sol(F) ∩ 𝕃ⁿ`, so it *is* a count vector over a fixed finite set.
 
-   The **two operations on the invariant** are now proved, in the exact form the
+   The **two operations on the invariant** are proved, in the exact form the
    induction consumes:
    * *thinning* (line 33/40's `halve`) —
-     [`pi_poisson_bind_binomial_half`](Ttc/Process/Thinning.lean#L207): a product
-     of `Pois(θᵢ)` binomially thinned coordinatewise is a product of `Pois(θᵢ/2)`.
+     [`pi_poisson_bind_binomial_half`](Ttc/Process/Thinning.lean): a product of
+     `Pois(θᵢ)` binomially thinned coordinatewise is a product of `Pois(θᵢ/2)`.
      In **kernel** form (`Measure.bind`), not as a marginal, since that is what a
      loop step actually does. Needs Tonelli for a finite product of series in
-     `ℝ≥0∞`, which Mathlib lacks — [`tsum_pi_prod`](Ttc/Process/Thinning.lean#L177);
+     `ℝ≥0∞`, which Mathlib lacks — `tsum_pi_prod`;
    * *block replacement* (`dropCovered` then `GenerateSamples`) —
-     [`pi_poisson_replace`](Ttc/Process/Thinning.lean#L252).
+     [`pi_poisson_replace`](Ttc/Process/Thinning.lean).
 
    And a simplification worth recording: because `dropCovered` deletes **every**
    point of `P(cᵢ)` before `gen` re-adds them, each point's count comes from
@@ -789,97 +2007,150 @@ obstacles are cleared:
    The **past-measurability layer** is not needed at all, and this is a
    consequence of the level indexing. Every randomised call reads the level it is
    made at, and the level only ever increases
-   ([`le_step_level`](Ttc/Invariants.lean#L116)), so the run's state is a
-   read-off of one level-indexed family rather than a history of draws. The
-   independence the argument uses is the independence *across levels* built into
-   [`Ttc.trajLaw`](Ttc/Coupling/Family.lean#L209), not an ordering fact about a
-   draw counter. (An earlier version of this development carried a `clock` field
-   and a window-congruence layer for exactly this purpose; both are gone.)
+   ([`le_step_level`](Ttc/Invariants.lean)), so the run's state is a read-off of
+   one level-indexed family rather than a history of draws. The independence the
+   argument uses is the independence *across levels* built into
+   [`Ttc.trajLaw`](Ttc/Coupling/Family.lean), not an ordering fact about a draw
+   counter. (An earlier version carried a `clock` field and a window-congruence
+   layer for exactly this purpose; both are gone.)
 
 5. **And the bound itself is proved for the coupled run.**
-   [`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685) bounds
+   [`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean) bounds
    ```
    Pr[ ¬( (1−ε/2)·L ≤ run P (trajOracles …) ρ l ≤ (1+ε/2)·L ) ]
    ```
    by `∑_{t<j*} 2exp(−ε'²·λ*·2ᵗ/3) + exp(−Thresh/6)` — the paper's expression,
    and in fact **smaller than the paper's**: the covering statement carries an
    extra `+ δ/2` and a factor `m` on the overflow term that the proof does not
-   need.
-   Its hypotheses are `hlo`/`hhi` (the window relating `∑θ` to `L`, supplied by
-   the already-proved `lem:lattice`), `hsmall` and `hrate` (conditions on
-   `Thresh` and `vol`), and `hall`/`hcov` (the cubes cover every lattice point,
-   and the oracle's coverage test agrees with cube membership). **No probability
-   claim is assumed.** The pieces are
-   [`traj_failure_le`](Ttc/Coupling/Run.lean#L614) (the epoch union
-   bound), [`trajLaw_err_le`](Ttc/Coupling/Run.lean#L511) and
-   [`trajLaw_noise_le`](Ttc/Coupling/Run.lean#L527) (the level estimates
-   transported to the trajectory space along
-   [`map_trajLaw_eval`](Ttc/Coupling/Family.lean#L274)),
-   [`level_cap_subset`](Ttc/Coupling/Run.lean#L471) (reaching `j*` forces
-   an overflow), and [`trajLaw_ae_nested`](Ttc/Coupling/Run.lean#L592)
-   (nestedness, the one hypothesis every pathwise result carries, holds almost
-   surely).
+   need. Its hypotheses are `hlo`/`hhi` (the window relating `∑θ` to `L`),
+   `hsmall` and `hrate` (conditions on `Thresh` and `vol`), and `hall`/`hcov` (the
+   cubes cover every lattice point, and the oracle's coverage test agrees with
+   cube membership). **No probability claim is assumed.** The pieces are
+   `traj_failure_le` (the epoch union bound), `trajLaw_err_le` and
+   `trajLaw_noise_le` (the level estimates transported to the trajectory space
+   along `map_trajLaw_eval`), `level_cap_subset` (reaching `j*` forces an
+   overflow), and `trajLaw_ae_nested` (nestedness, the one hypothesis every
+   pathwise result carries, holds almost surely).
 
-6. **And the field is gone.** `traj_numlattice_le` is about the trajectory model
-   — `trajLaw θ` on `ℕ → (Fin L → ℕ)`, with the oracles `trajOracles` — whereas
+6. **And the field is gone.** `traj_numlattice_le` is about the trajectory model —
+   `trajLaw θ` on `ℕ → (Fin L → ℕ)`, with the oracles `trajOracles` — whereas
    `Ttc.TtcProb` carries an arbitrary `Ω`, `μ` and `O`. The sampler fields close
-   that last gap, and
-   [`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35) is
+   that gap, and [`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean) is
    the transport: the failure event is the `toTraj`-preimage of the
    trajectory-space one (by `oracle_eq`), `Measure.le_map_apply` bounds its
    measure by the pushforward, and `law_eq` identifies that pushforward as
-   `trajLaw θ`. (No measurability of the failure event is needed — the
-   inequality only runs one way.) Feeding it the fields gives
-   [`Ttc.TtcProb.numlattice_union`](Ttc/Coupling/Transfer.lean#L267),
-   which is the deleted field's statement, verbatim, as a theorem.
+   `trajLaw θ`. (No measurability of the failure event is needed — the inequality
+   only runs one way.)
 
-**No termination hypothesis is needed.** Both `while` loops are modelled as exit
-levels, so one might expect the result to need to know that the second loop
-actually exits; it does not. The coupling makes the output a function of whatever
-level the run reached, and the `hsmall` hypothesis — no cube's rate still triggers
-the first loop at level `j*−1` — does the work the paper leaves to termination.
-That hypothesis used to be the `rate_small` field; it is now *derived*, from
-`vol_pos` and [`Ttc.TtcProb.vol_le_total`](Ttc/Coupling/Transfer.lean#L260)
-via [`Ttc.rate_small_of_epoch`](Ttc/Coupling/Transfer.lean#L180). The paper
-addresses none of this.
+**No termination hypothesis is needed for the accuracy theorem.** Both `while`
+loops are modelled as exit levels, so one might expect the result to need to know
+that the second loop actually exits; it does not. The coupling makes the output a
+function of whatever level the run reached, and the `hsmall` hypothesis — no
+cube's rate still triggers the first loop at level `j*−1` — does the work the
+paper leaves to termination. That hypothesis used to be the `rate_small` field; it
+is now *derived*, from `vol_pos` and `TtcProb.vol_lt_two_total` via
+`Ttc.rate_small_of_epoch`. The paper addresses none of this. (`Ttc.TtcProb.runtime`
+*does* need termination, as `Ttc.Terminates`, and says so.)
 
 **These proofs confirm the algorithm's constants.** `ε' ← ε/12` (`alg:ttc` line
-18) is exactly what makes the two-sided `(1±ε')` loss fit inside `(1±ε/2)`; each
+18) is exactly what makes the two-sided `(1±ε')` losses fit inside `(1±ε/2)`; each
 branch of `Thresh` (line 20) is exactly what makes its failure branch `δ/6`
-(total `δ/3`, so there is slack); `γ` is exactly what makes
-`κ/γ ≤ η/(32mn)` — with no slack at all, which is why `γ` and `κ` must use the
-same logarithm argument (`Ttc.Params.kappa_div_gamma_le`,
-`Ttc.Params.shell_factor_bound`); and `ρ ← ⌈log₁₀(γ/γ̂)⌉` is exactly what lifts the
-input's inscribed radius `γ̂` to the `γ` the shell bound needs, after dilating to
-`ℤⁿ` (`Ttc.gamma_le_latticeScale_mul`).
+(total `δ/3`, so there is slack); `γ` is exactly what makes `κ/γ ≤ η/(32mn)` —
+with no slack at all, which is why `γ` and `κ` must use the same logarithm
+argument (`Ttc.Params.kappa_div_gamma_le`, `Ttc.Params.shell_factor_bound`); and
+`ρ ← ⌈log₁₀(γ/γ̂)⌉` is exactly what lifts the input's inscribed radius `γ̂` to the
+`γ` the shell bound needs, after dilating to `ℤⁿ`
+(`Ttc.gamma_le_latticeScale_mul`).
 
 ## Scope, stated precisely
 
-* **This is an accuracy guarantee, not an FPRAS claim.** `thm:runtime` (the `O(mn⁴)`
-  runtime) and `thm:decompose` (the exponential decomposition cost) are **not**
-  formalised. Nothing here says anything about running time.
+* **This is an accuracy guarantee. The runtime half is *the paper's own
+  accounting*, not an FPRAS claim.** [`Ttc.TtcProb.runtime`](Ttc/Model/Theorem.lean)
+  proves `runCost ≤ numCubes · (cVol + cSample · Thresh)` — one iteration per cube
+  of the DNF, one `Vol_ED` call and at most `Thresh` samples each — and
+  instantiating `cVol`, `cSample` at
+  the paper's `O(n⁴)`, `O(n³)` gives `thm:runtime` verbatim. Two things it does
+  *not* do, both also true of the paper:
+  * the two `while` loops' thinning and Poisson work is **not charged**; the paper
+    calls it dominated, and "dominated" is not a theorem here or there, because
+    the number of those calls is exactly the quantity with no deterministic bound;
+  * it assumes the loops exit (`Ttc.Terminates`), which is not provable — the real
+    loop exits only with high probability.
+
+  `thm:decompose` (the exponential cost of the decomposition itself) is **not**
+  formalised at all. The capstone's second conjunct is *the same* charged cost —
+  removing the oracles changed nothing about running time, and both constructed
+  oracles (`VolumeAlgorithm.monteCarlo`, the lazy ball walk) are **exponential in
+  the dimension**. "Unconditional" and "efficient" are independent claims and only
+  the first is established.
 * **The `δ` is derived, end to end.** `Ttc.TtcProb.volume_estimate` really does
   conclude `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ`: `Ttc.TtcProb.numlattice` gives
-  `Pr[ output ∈ (1±ε/2)·L ] ≥ 1 − δ` — *proved*, from
-  `Ttc.TtcProb.numlattice_union` plus the algorithm's own `Thresh` and `δ'` — and
-  the deterministic chain shows the first event *contains* the second, so measure
-  monotonicity carries the bound. The covering is itself proved
-  ([`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35), from
-  [`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685)). **What the
-  chain rests on is the sampler description**, not a probability bound: if the
-  implemented sampler is not `Ttc.trajOracles` reading `Ttc.trajLaw`, the theorem
-  says nothing about it.
+  `Pr[ output ∈ (1±ε/2)·L ] ≥ 1 − δ` — *proved* — and the deterministic chain
+  shows the first event *contains* the second, so measure monotonicity carries the
+  bound. **What the chain rests on is the oracle descriptions**, not a probability
+  bound: if the implemented sampler is not `Ttc.trajOracles` reading
+  `Ttc.trajLaw`, the theorem says nothing about it. The capstone concludes
+  `1 − δ − δ/4` instead, because the volume oracle's coins are integrated out
+  rather than conditioned on; `Ttc.ttc_volume_clean` and `Ttc.ttc_volume_final`
+  recover `1 − δ` by running at the internal `δ₀ = 4δ/5`, at strictly more work —
+  `5/4` on the Monte-Carlo sample count, an additive `O(1/ε²)` on `Thresh`.
 * **`GetPrecision` is not verified as an algorithm.** Its *mathematical
   content* — that dilation scales inscribed-ball radii (`Ttc.ball_radius_scales`)
   and volumes (`Ttc.volume_smul_body`), and that the resulting `γ` satisfies
-  `claim:helper` (`Ttc.claim_helper`) — is proved; the LP-based implementation is not
-  modelled.
+  `claim:helper` (`Ttc.claim_helper`) — is proved; the LP-based implementation is
+  not modelled.
+* **`Arlib/Convexity/GaussianCooling/` is not a proof of `Vol_ED`.** It ports
+  Cousins–Vempala §5.1 (the variance analysis), which is one section of the proof
+  of Theorem 1.1. It carried two of its own explicit hypotheses; one of them,
+  `ZLogconcaveHypothesis`, is now **discharged** for a convex body
+  (`Arlib/Convexity/GaussianCooling/ZLogconcave.lean`) — but it is **false for
+  general log-concave `f`**, so it must not be read as a general fact; and
+  `LocalizationHypothesis` (the Lovász–Simonovits Localization Lemma) is still
+  assumed — as a `Prop` argument of the theorems that need it, never as an
+  `axiom`. Nothing there discharges `volAlg`.
+* **The *Cousins–Vempala* volume oracle is not constructible today, and this is
+  not a matter of wiring.**
+  [`Ttc/Volume/CousinsVempala.lean`](Ttc/Volume/CousinsVempala.lean)
+  proves §5.2 unconditionally and *constructs* a `Ttc.VolumeAlgorithm`
+  (`VolumeAlgorithm.cousinsVempala`), but four of the construction's arguments —
+  chiefly `hphase_mean` — can only come from a sampler. Its hypothesis bundle *is*
+  now witnessed (`cousinsVempalaWitness`), but the witness is
+  `VolumeAlgorithm.exact` in disguise — it shows the hypotheses are consistent,
+  not that the paper's schedule meets them. What *does* fill the `volAlg` field is
+  the unrelated `VolumeAlgorithm.monteCarlo`, at an exponential sample count. See
+  [the caveats above](#what-the-convexity-and-markov-chain-stack-now-establishes).
+* **The ball-walk mixing stack now does produce a sampler — an exponential-time
+  one.** `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope` is
+  **unconditional** in the two places this used to break: it assumes no
+  isoperimetric inequality (supplied internally by `Arlib.uniformOn_iso_of_convex`,
+  proved at `κ = 2⁻ⁿ/D` for every bounded convex body) and no local-conductance
+  floor (supplied by `le_ell_of_convex_of_ball_subset`). Its target is the walk's
+  own stationary measure, so there is no bias term. That is what
+  [`Ttc/Sampler/Construct.lean`](Ttc/Sampler/Construct.lean) turns into a
+  `KV97Sampler` with `law_tv` proved. **It is not a polynomial-time sampler**: the
+  proved isoperimetric constant is exponentially small in `n`, so the certified
+  step count is exponential in `n`. A polynomial constant needs the localization
+  route, which is still open, or the speedy walk, whose stationary bias does not
+  decay (finding 19). Each link also carries a caveat that changes what it is
+  worth (`(rayleighSet …).Nonempty`; `HasNonnegSpectrum`, which the *plain* ball
+  walk lacks, hence the laziness; a `√n` loss against Cousins–Vempala's constant);
+  they are set out in
+  [What the convexity and Markov-chain stack now establishes](#what-the-convexity-and-markov-chain-stack-now-establishes).
+* **It is not proved that the sampler's finite-time iterate differs from the
+  uniform law.** The constructed `contLaw` is a lazy ball-walk iterate from a warm
+  start, and what is proved of it is a total-variation bound. Whether it is
+  *strictly* different from `Arlib.uniformOn volume P′` at finite time would need
+  an `L²`/aperiodicity argument that is not in the development. This does not
+  weaken `law_tv`; it means the non-degeneracy of the sampler is not certified.
 
 ## Findings: the formalisation as a referee
 
 Formalising forced hypotheses the paper does not state. Line references are to
 the **current** working tree; statuses reflect edits already applied to
-`sections/analysis.tex`.
+`sections/analysis.tex`. Findings about *Kannan–Vempala* rather than about this
+paper are collected in [`AUDIT-KV97.md`](AUDIT-KV97.md) §4 and summarised
+[above](#what-the-kv97-development-establishes); findings 16–18 below are the ones
+that changed what this development can claim.
 
 ### 1. Genuine error — `lem:nonconv`'s upper bound. *Partially fixed; residual gap.*
 
@@ -1008,11 +2279,11 @@ the lattice point `0`, and on the fine lattice `𝕃ⁿ = 10^(−ρ)·ℤⁿ` a 
 hyperplane can carry many such points. Since `L` is *defined* as
 `|Q ∩ 𝕃ⁿ|/10^(ρn)`, "volumes agree so nothing breaks" covers only half the claim.
 
-This is why [`Ttc.facetSystem`](Ttc/Nonconv/FacetOfDNF.lean#L57) is built only
-for DNFs whose literals are all positive
-([`Ttc.DNF.IsPositive`](Ttc/Model/Prelude.lean#L129)): a
-`Ttc.FacetSystem.piece` is an intersection of closed half-spaces, so no facet
-system can denote a region with a negated atom.
+This is why [`Ttc.facetSystem`](Ttc/Nonconv/FacetOfDNF.lean) is built only for
+DNFs whose literals are all positive (`Ttc.DNF.IsPositive`,
+[`Model/Prelude`](Ttc/Model/Prelude.lean)): a `Ttc.FacetSystem.piece` is an
+intersection of closed half-spaces, so no facet system can denote a region with a
+negated atom.
 
 ### 6. Fine, implicit — `thm:decomposition`'s soundness argument is misphrased
 
@@ -1056,10 +2327,11 @@ best and, with Lean's `Set.ncard`-of-an-infinite-set convention, to `∞ ≤ 0` 
 worst. Both summation steps also divide by `vol Q'` and `vol Q''`, which must
 therefore be finite and nonzero.
 
-Carried explicitly as [`volume_ne_top`](Ttc/Model/ProblemSetting.lean#L109). It is
-the one hypothesis here with no counterpart at all in the paper. (Positivity is
-*not* assumed: it follows from the inscribed ball, via
-[`FacetSystem.volume_piece_pos`](Ttc/Nonconv/Assembled.lean#L104).)
+Carried explicitly as `volume_ne_top`. It is the one hypothesis here with no
+counterpart at all in the paper. (Positivity is *not* assumed: it follows from the
+inscribed ball, via
+[`FacetSystem.volume_piece_pos`](Ttc/Nonconv/Assembled.lean).) It is also what
+closes finding 16.
 
 ### 11. Fine, implicit — a facet needs a nonzero normal, and finiteness of `Q ∩ ℤⁿ` needs an argument
 
@@ -1067,13 +2339,12 @@ Two more things the proof uses without saying so.
 
 * **`A_ij ≠ 0`.** The Azuma/Hoeffding step divides by `‖A_ij‖`, and the crossing
   event `A_ij·Y ≥ κ‖A_ij‖` is *certain* when `A_ij = 0`, so the tail bound is
-  false for a degenerate "constraint" `0 ≤ b`. Carried as
-  [`normal_ne_zero`](Ttc/Model/ProblemSetting.lean#L93).
+  false for a degenerate "constraint" `0 ≤ b`. Carried as `normal_ne_zero`.
 * **`|Q ∩ ℤⁿ|` is a finite number.** The paper writes it throughout without
   remark. It is *not* assumed here: `claim:cl`(a) bounds `|T|` for every finite
   `T ⊆ Q ∩ ℤⁿ` by `vol Q'/(1−θ/2)`, and a set all of whose finite subsets have
   bounded cardinality is finite
-  ([`finite_of_forall_finset_card_le`](Ttc/Nonconv/BallFacet.lean#L135)). So the
+  ([`finite_of_forall_finset_card_le`](Ttc/Nonconv/BallFacet.lean)). So the
   gap is real but self-closing.
 
 ### 12. Fine, implicit — the deflated shell loses twice what the inflated one does
@@ -1082,14 +2353,14 @@ The shell argument is run once and applied in both directions, as if the inflate
 and deflated bodies cost the same factor. They do not: the deflated side compares
 against a ball of radius `γ − κ`, not `γ`, so its factor is `(1 + κ/(γ−κ))ⁿ`
 rather than `(1 + κ/γ)ⁿ` — a factor `2` worse once `κ ≤ γ/2`
-([`Ttc.Params.shell_factor_bound`](Ttc/Constants/Parameters.lean#L102) gives
-`1 + η/(16m)`, [`shell_factor_bound_deflated`](Ttc/Constants/Parameters.lean#L144)
+([`Ttc.Params.shell_factor_bound`](Ttc/Constants/Parameters.lean) gives
+`1 + η/(16m)`, [`shell_factor_bound_deflated`](Ttc/Constants/Parameters.lean)
 only `1 + η/(8m)`).
 
 Harmless — the two-sided bound still closes with the two losses kept apart
-([`nonconv_recentred_general`](Ttc/Nonconv/Assembled.lean#L49): the lower
-bound consumes only the inflated loss and the upper bound only the deflated one) —
-but a proof that equalises them silently is off by a factor of two.
+([`nonconv_recentred_general`](Ttc/Nonconv/Assembled.lean): the lower bound
+consumes only the inflated loss and the upper bound only the deflated one) — but
+a proof that equalises them silently is off by a factor of two.
 
 ### 14. Genuine error — the sketch invariant is false if read as conditioning
 
@@ -1114,10 +2385,8 @@ actually uses is `Pr[Nois(j) ∧ Err(j)] ≤ Pr[Err(j)]` — the conditioning is
 *discarded*, so `Err(j)` only ever needs to be an unconditional event about the
 **non-adaptive** level-`j` process, in which every lattice point independently
 carries `Pois(θ/2ʲ)` copies whether or not the run stops there. That is how it is
-formalised here ([`Ttc.levelLaw`](Ttc/Process/SketchProcess.lean#L55)), and both
-branch estimates are proved over it
-([`levelLaw_err_le`](Ttc/Process/SketchProcess.lean#L130),
-[`levelLaw_noise_le`](Ttc/Process/SketchProcess.lean#L194)).
+formalised here ([`Ttc.levelLaw`](Ttc/Process/SketchProcess.lean)), and both
+branch estimates are proved over it (`levelLaw_err_le`, `levelLaw_noise_le`).
 
 So the defect is in the *statement* of the invariant, not in the result — but a
 reader who takes the invariant at face value is proving something false.
@@ -1147,80 +2416,66 @@ finding 14, and false.
 * the run's final state equals `𝒳_J` where `J` is its actual stopping level.
 
 **Both halves are now proved.** The family is
-[`Ttc.famCount`](Ttc/Coupling/Family.lean#L80): a level-`0` count `A s` per
-lattice point, plus a fair coin per (point, *rank*, level), thinned recursively.
-Indexing the coins by rank among the current survivors rather than by original
-copy is what makes the recursion implementable from a count alone — which is all
-the `halve` oracle gets to see. Its law is
-[`Ttc.trajLaw`](Ttc/Coupling/Family.lean#L209), a measure on whole trajectories
-`ℕ → (Fin L → ℕ)` built by iterating
-[`thinKernel`](Ttc/Coupling/Family.lean#L164), and its marginals are right:
+[`Ttc.famCount`](Ttc/Coupling/Family.lean): a level-`0` count `A s` per lattice
+point, plus a fair coin per (point, *rank*, level), thinned recursively. Indexing
+the coins by rank among the current survivors rather than by original copy is what
+makes the recursion implementable from a count alone — which is all the `halve`
+oracle gets to see. Its law is [`Ttc.trajLaw`](Ttc/Coupling/Family.lean), a
+measure on whole trajectories `ℕ → (Fin L → ℕ)` built by iterating `thinKernel`,
+and its marginals are right:
 
-* [`Ttc.map_trajLaw_eval`](Ttc/Coupling/Family.lean#L274) — coordinate `j` of a
-  trajectory carries exactly `Ttc.levelLaw θ j`, so *every* branch estimate
-  already proved for a single level transports to an event of one measure
-  ([`trajLaw_err_le`](Ttc/Coupling/Run.lean#L511),
-  [`trajLaw_noise_le`](Ttc/Coupling/Run.lean#L527)). Underneath is
-  [`chainLaw_eq_levelLaw`](Ttc/Process/SketchProcess.lean#L105): nested thinning
-  from level `0` reproduces `levelLaw θ j` at every `j`.
-* [`Ttc.trajLaw_ae_nested`](Ttc/Coupling/Run.lean#L592) — thinning only
-  removes copies, so `ω(j+1)ₛ ≤ ω(j)ₛ` almost surely. Every pathwise result below
-  is stated for nested trajectories; this is where that hypothesis is discharged.
+* `Ttc.map_trajLaw_eval` — coordinate `j` of a trajectory carries exactly
+  `Ttc.levelLaw θ j`, so *every* branch estimate already proved for a single level
+  transports to an event of one measure (`trajLaw_err_le`, `trajLaw_noise_le`).
+  Underneath is [`chainLaw_eq_levelLaw`](Ttc/Process/SketchProcess.lean): nested
+  thinning from level `0` reproduces `levelLaw θ j` at every `j`.
+* `Ttc.trajLaw_ae_nested` — thinning only removes copies, so `ω(j+1)ₛ ≤ ω(j)ₛ`
+  almost surely. Every pathwise result below is stated for nested trajectories;
+  this is where that hypothesis is discharged.
 
 The second half — the *coupling to the run* — is
-[`Ttc.trajOracles`](Ttc/Coupling/Family.lean#L393): an honest `Ttc.Oracles`
-bundle, satisfying both of the interface's contracts, whose `halve` returns the
-family's next level, whose `pois` returns the family's total over the cube, and
-whose `gen` returns the family restricted to the cube. (`gen` must return exactly
-`N` points for *every* `N`, so it has a never-taken filler branch — the run only
-ever passes it the `N` that `pois` produced — which is what discharges `gen_card`
-unconditionally; see [`Ttc.padPoint`](Ttc/Coupling/Family.lean#L387).) Driving
-the real `Ttc.run` off that bundle,
+[`Ttc.trajOracles`](Ttc/Coupling/Family.lean): an honest `Ttc.Oracles` bundle,
+satisfying both of the interface's contracts, whose `thin` returns the family's
+next level, whose `pois` returns the family's total over the cube, and whose `gen`
+returns the family restricted to the cube. (`gen` must return exactly `N` points
+for *every* `N`, so it has a never-taken filler branch — the run only ever passes
+it the `N` that `pois` produced — which is what discharges `gen_card`
+unconditionally; see `Ttc.padPoint`.) Driving the real `Ttc.run` off that bundle,
 
-* [`Ttc.CoupledAt`](Ttc/Coupling/Run.lean#L31) — the state holds the
-  family's counts at the current level, at the points seen so far and nowhere
-  else — is preserved by every operation of the loop
-  ([`coupledAt_thin`](Ttc/Coupling/Run.lean#L63),
-  [`coupledAt_dropCovered`](Ttc/Coupling/Run.lean#L112),
-  [`coupledAt_step`](Ttc/Coupling/Run.lean#L164),
-  [`coupledAt_foldl`](Ttc/Coupling/Run.lean#L215)) — one lemma per
-  operation, with no induction over loop iterations, because both loops are a
-  single jump to their exit level;
-* so [`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean#L237) gives
-  `|𝒳| = ∑ₛ ω(J)ₛ` **pathwise**, at the run's own stopping level `J`, on every
-  nested trajectory, and [`run_eq_traj`](Ttc/Coupling/Run.lean#L255)
-  gives the output itself as `2^J · ∑ₛ ω(J)ₛ`.
+* [`Ttc.CoupledAt`](Ttc/Coupling/Run.lean) — the state holds the family's counts
+  at the current level, at the points seen so far and nowhere else — is preserved
+  by every operation of the loop (`coupledAt_thin`, `coupledAt_dropCovered`,
+  `coupledAt_step`, `coupledAt_foldl`) — one lemma per operation, with no
+  induction over loop iterations, because both loops are a single jump to their
+  exit level;
+* so [`Ttc.card_run_eq_sum_traj`](Ttc/Coupling/Run.lean) gives `|𝒳| = ∑ₛ ω(J)ₛ`
+  **pathwise**, at the run's own stopping level `J`, on every nested trajectory,
+  and `run_eq_traj` gives the output itself as `2^J · ∑ₛ ω(J)ₛ`.
 
 That is equality of *random variables*, not of laws — which is the point:
 `lem:process` supplies only equality in law, and the union bound needs the run
 and the level process to agree on each path. The halving triggers close the other
 branch: every level the run crosses had either a cube whose rate was still large
-or a family total above `Thresh`
-([`foldl_trigger`](Ttc/Coupling/Run.lean#L441)), so reaching the cap `j*`
-forces an overflow ([`level_cap_subset`](Ttc/Coupling/Run.lean#L471)) —
-which is what `Pr[⋃_{j≥j*} Nois(j)]` was supposed to mean. Assembling,
-[`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean#L685) proves
-`lem:numlattice`'s bound outright for the coupled run, with a *smaller*
-right-hand side than the paper's.
+or a family total above `Thresh` (`foldl_trigger`), so reaching the cap `j*`
+forces an overflow (`level_cap_subset`) — which is what `Pr[⋃_{j≥j*} Nois(j)]`
+was supposed to mean. Assembling,
+[`Ttc.traj_numlattice_le`](Ttc/Coupling/Run.lean) proves `lem:numlattice`'s bound
+outright for the coupled run, with a *smaller* right-hand side than the paper's.
 
 The paper cites `lem:process` for the *equivalence* of its three procedures but
 never builds the coupled family, and without it the union bound has nothing to
 range over. So `lem:numlattice`'s proof as written is not merely imprecise: the
 object its main estimate is about does not exist.
 
-**And the repair is now wired into the headline.** `traj_numlattice_le` is about
-the trajectory model specifically, while `Ttc.TtcProb` carries an arbitrary `Ω`,
-`μ` and `O`; the sampler fields
-([`Model/ProblemSetting.lean:133`](Ttc/Model/ProblemSetting.lean#L133) onwards)
-identify the two, and
-[`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean#L35)
-transports the bound across. The `numlattice_union` field is **deleted**; the
-same statement is now [a theorem](Ttc/Coupling/Transfer.lean#L267). So
-the coupling is not a side construction the capstone ignores — a transitive
-dependency walk from `Ttc.TtcProb.volume_estimate` reaches
-`Ttc.traj_numlattice_le` and `Ttc.trajLaw` (see [`AUDIT.md`](AUDIT.md) §5).
-What remains is the modelling judgement the fields encode, not a missing
-estimate.
+**And the repair is wired into the headline.** `traj_numlattice_le` is about the
+trajectory model specifically, while `Ttc.TtcProb` carries an arbitrary `Ω`, `μ`
+and `O`; the sampler fields identify the two, and
+[`Ttc.numlattice_union_of_model`](Ttc/Coupling/Transfer.lean) transports the bound
+across. The `numlattice_union` field is **deleted**; the same statement is now a
+theorem. A transitive dependency walk from `Ttc.TtcProb.volume_estimate` reaches
+`Ttc.traj_numlattice_le` and `Ttc.trajLaw` (see
+[Verifying the claim](#the-dependency-walk)). What remains is the modelling
+judgement the fields encode, not a missing estimate.
 
 ### 13. Genuine gap — the `Vol_ED` failures are never union-bounded
 
@@ -1231,27 +2486,281 @@ proof of `lem:numlattice` uses their output as if it were exact —
 such that `t ∈ [(1−ε')vol Pⁱ, (1+ε')vol Pⁱ]`" — and then bounds only
 `δ/6 + δ/6`. The `δ/2` never enters the union bound.
 
-**It is harmless, but only because of the slack**: `δ/2 + δ/6 + δ/6 = 5δ/6 ≤ δ`
-([`Ttc.numlattice_failure_bound_with_vol`](Ttc/Process/Sketch.lean#L168), with
-[`Ttc.Params.vol_failure_eq`](Ttc/Process/Sketch.lean#L159) showing
-`m·δ' = δ/2` exactly). Had `Thresh` been chosen to make each branch `δ/2` rather
-than `δ/6`, the stated conclusion would be false. `δ'` was also missing from the
-parameter block entirely; it is now
-[`Ttc.Params.deltaPrime`](Ttc/Model/Prelude.lean#L225).
+**It is harmless, but only because of the slack**: `δ/4 + δ/4 + δ/6 + δ/6 = 5δ/6
+≤ δ` ([`Ttc.numlattice_failure_bound_with_vol`](Ttc/Process/Sketch.lean), with
+[`Ttc.Params.vol_failure_eq`](Ttc/Process/Sketch.lean) showing `m·δ' = δ/4` for
+each of the two oracle families). Had `Thresh` been chosen to make each branch
+`δ/2` rather than `δ/6`, the stated conclusion would be false. `δ'` was also
+missing from the parameter block entirely; it is now
+[`Ttc.Params.deltaPrime`](Ttc/Model/Prelude.lean).
+
+**The missing union bound is now supplied.** Since `Vol_ED`'s contract became
+Cousins–Vempala Theorem 1.1 (`Ttc.VolumeAlgorithm`), the `m` calls can be charged
+properly: [`Ttc.measure_volGood_ge`](Ttc/Volume/Bridge.lean) is the union bound
+over the calls, and [`Ttc.TtcProb.volGood_prob_budget`](Ttc/Volume/Bridge.lean)
+instantiates it at `δ' = δ/(4m)` to give `1 − δ/4` — landing inside the share
+[`Ttc.numlattice_failure_le`](Ttc/Process/SketchProcess.lean) already reserved. So
+on this side the estimate the paper skips is proved, not assumed; what it is
+proved *about* is the run's assumption `volCoins_good`, not the run's own
+randomness (see finding 13a).
+
+### 13a. What is still assumed about `Vol_ED`
+
+`Ttc.TtcProb.vol` is deterministic by construction — `oracle_eq` binds it outside
+the sample point — so the development conditions on `Vol_ED` having succeeded
+(`volCoins_good`) rather than integrating over its coins. The probability of that
+condition is proved (`volGood_prob_budget`), and the headline
+`Ttc.TtcProb.volume_estimate` still reads `1 − δ` over the *run's* randomness at
+a fixed good `volCoins`.
+
+**The joint form is now proved, additively, alongside it.**
+[`Ttc/Coupling/Product.lean`](Ttc/Coupling/Product.lean) gives `1 − δ − δ/4` over
+the randomness of *both* oracle and run, in two forms:
+[`Ttc.volume_estimate_joint`](Ttc/Coupling/Product.lean) as an iterated integral
+`∫⁻ c, trajLaw (θ c) (…) ∂volAlg.μ`, and
+[`Ttc.volume_estimate_joint_compProd`](Ttc/Coupling/Product.lean) as a single
+sample point of a single space. The route is: transport `volume_estimate` onto the
+constructed trajectory space (`TtcProb.volume_estimate_traj`, spending
+`law_eq`/`oracle_eq` through `Measure.le_map_apply`, so no measurability of the
+success set is needed); an abstract union bound
+(`Ttc.toReal_lintegral_ge_of_cond`); and, at every good coin,
+`Ttc.canonicalTtcProb` to build a genuine `Ttc.TtcProb` on that space. Nothing in
+`Coupling/{Family,Run,Transfer}`, `Model/ProblemSetting`, `Model/Theorem` or
+`Witness/BoxProb` is touched, and `Ttc.TtcProb.volume_estimate` keeps its exact
+statement and axiom profile.
+
+**Three caveats, all of which matter.**
+
+* **The joint law is a composition-product, not a product.** It is emphatically
+  *not* `T.μ.prod T.volAlg.μ`: the run's law `trajLaw θ` is a *function of the
+  coins* (`theta_eq` ties `θ s` to `vol i`, `volED_eq` ties `vol i` to the
+  oracle's estimate at the coins), so the second marginal moves with the first
+  coordinate. The right object is `volAlg.μ ⊗ₘ κ` with `κ c = trajLaw (θ c)` —
+  coins first, then the run they drive.
+* **The bound is vacuous for `δ > 4/5`.** `1 − δ − δ/4 ≤ 0` there, and `TtcProb`'s
+  `hδ0`/`hδ1` give only `0 < δ ≤ 1`. The theorems hold for every `δ ∈ (0,1]` and
+  are simply uninformative above `4/5`; that is stated rather than patched. The
+  same `δ/4` is what `Ttc.ttc_volume_endToEnd` concludes at, and
+  [`Ttc.ttc_volume_clean`](Ttc/Exec/Budget.lean) /
+  [`Ttc.ttc_volume_final`](Ttc/Exec/Final.lean) only *reprice* it — running at the
+  internal `δ₀ = 4δ/5` so the user's number is the delivered one — which does not
+  improve the analysis and does cost `5/4` in Monte-Carlo samples and an additive
+  `O(1/ε²)` in `Thresh`. `Ttc.Box.old_budget_vacuous_at_nine_tenths` records the
+  `δ = 9/10` comparison (`−1/8` versus `1/10`) as a lemma rather than as prose.
+* **The single-sample-point form costs one extra hypothesis, and it is visible.**
+  `volume_estimate_joint_compProd` takes the kernel `κ` and `hκ : ∀ c, κ c =
+  trajLaw (θ c)` as binders, i.e. it assumes `c ↦ trajLaw (θ c)` is *measurable*
+  in `c` — a regularity condition on the map, not a probabilistic claim, and what
+  a joint space costs, since without it `volAlg.μ ⊗ₘ κ` does not exist. It is not
+  vacuous: `Ttc.kernelOfDiscrete` supplies it for any discrete coin space, in
+  particular for `Ttc.VolumeAlgorithm.exact`, whose coin space is `Unit`.
+
+What is *not* done: `Ttc.TtcProb.volume_estimate` itself has not been restated
+jointly, and `volCoins_good` is still a field of `TtcProb`. What **is** done is
+downstream: [`Ttc.ttc_volume_monteCarlo`](Ttc/Exec/VolDischarge.lean) follows this
+file's shape with the oracle *constructed* rather than assumed, integrating
+`Ttc.MonteCarlo.coins` out and averaging `volCoins_good` out on `Ttc.mcGood`
+(`Ttc.measure_mcGood_ge`), so on the capstone's route neither is a hypothesis. See
+[`CV-ROADMAP.md`](CV-ROADMAP.md) §6.
+
+### 16. Genuine hazard in the *statement* — `ENNReal.toReal ⊤ = 0`. *Closed.*
+
+Not a defect in the paper, but in what a Lean formalisation can silently claim,
+and it is the kind of thing `#print axioms` cannot see. `Ttc.volSol M φ` is
+`(volume (sol M φ)).toReal`, and Mathlib's `ENNReal.toReal ⊤ = 0`. So if `Sol(F)`
+had infinite volume, the headline would read "the output is within `(1±ε)` of
+`0`" — true, and vacuous.
+
+The hazard is real and exhibited, not hypothetical:
+[`Ttc.VolSolCheck.volSol_tt_eq_zero`](Ttc/Volume/VolSolCheck.lean) proves
+`volSol M .tt = 0` for every interpretation `M` in dimension `n ≥ 1`, even though
+`Sol(⊤) = ℝⁿ`.
+
+What rules it out for an actual `Ttc.TtcProb` is the field `volume_ne_top`
+(finding 10), which asserts finiteness of each `region M c` **separately** — not
+of `sol M φ`. That this suffices is
+[`Ttc.VolSolCheck.volume_sol_ne_top`](Ttc/Volume/VolSolCheck.lean): a DNF is a
+`List`, hence finite, and measures are countably subadditive (no measurability
+needed). The consequence worth quoting is
+[`Ttc.TtcProb.ofReal_volSol`](Ttc/Volume/VolSolCheck.lean): under that hypothesis
+`volSol` loses no information, `ENNReal.ofReal (volSol M φ) = volume (sol M φ)`.
+
+The same file also cross-checks the *semantics* rather than the plumbing:
+`Ttc.BForm.holds` is a `Prop`-valued recursion and nothing forces it to be the
+usual truth tables, so `Ttc.VolSolCheck.evalBool` re-implements it as an
+independent `Bool`-valued evaluator and `sol_eq_evalBool` / `volSol_eq_lra`
+identify the two.
+
+### 17. Total variation → pointwise is **provably unbridgeable**, and the ball walk has no uniform minorisation
+
+This one killed a plan rather than a proof, and it is machine-checked
+([`Arlib/MarkovChains/Continuous/PointwiseMixing.lean`](Arlib/MarkovChains/Continuous/PointwiseMixing.lean),
+axiom-clean).
+
+`AUDIT-KV97.md` §4b establishes that Kannan–Vempala's Theorem 2 needs a
+**pointwise** `(1±ε)` density hypothesis, not a total-variation one: a TV
+hypothesis buys only an *additive* error, and summing over the `N` lattice points
+contributes `N·ε`. The plan of record was to obtain the pointwise hypothesis by
+running the ball walk until it mixed. That cannot work:
+
+* `not_exists_pointwiseClose_of_tvLe` — for **every** TV tolerance `δ ≠ 0` there
+  is **no** `ε` whatsoever making `TVLe μ ν δ → PointwiseClose μ ν ε`, `ε = ⊤`
+  included;
+* `exists_tvLe_not_pointwiseClose` — even restricted to `μ ≪ ν`, two probability
+  measures at TV `≤ δ` can have density ratio `1/δ`. So the failure is not an
+  artefact of demanding a density; it is the *ratio* that TV does not control;
+* `not_uniformMinorisation_of_unreachable` plus ball-walk locality — one step of
+  `ballWalk K δ` from `x` is supported in `ball x δ ∪ {x}`, so for any `K` of
+  diameter `> δ` **no uniform minorisation constant exists**. This is *locality*,
+  a separate and worse obstruction than the `ℓ(x) → 0` boundary degeneracy that
+  Cousins–Vempala's speedy walk repairs; restricting to speedy points fixes the
+  holding probability and does **not** fix locality.
+
+A candidate replacement is worked out in
+[`PointwiseRoute.lean`](Arlib/MarkovChains/Continuous/PointwiseRoute.lean): an
+additive error `ε` **is** a relative error `ε·V`, so a TV tolerance of
+`θ/Vol(P')` — not `θ` — delivers the window Theorem 2 needs, and mixing time is
+*logarithmic* in the tolerance, so the price is a factor `O(n · bits)` in the step
+count. That file also records a second obstruction neither the audit nor
+`PointwiseMixing` had noticed: a ball-walk law started at a point keeps an atom
+forever, and one atom destroys pointwise closeness for every `ε` at every finite
+time — so for the actual chain from the actual start the pointwise hypothesis is
+not merely hard to obtain, it is *false*.
+
+**Status: acted on.** The replacement was carried out. `contDensity`, `density_au`
+and `density_int` are **no longer fields** of `Ttc.KV97Sampler`; it now carries a
+law and a total-variation bound (`contLaw`, `isProbContLaw`, `contVol`,
+`contVol_pos`, `contVol_eq`, `law_tv`). The pointwise route is retained in
+`PointwiseRoute.lean` as the *consumer* of a TV hypothesis, not as a hypothesis of
+its own.
+
+Two consequences worth stating, both machine-checked:
+
+* the TV formulation is **strictly more permissive**, not merely different.
+  `Arlib.TVWitness.exists_nondegenerate_theorem2_of_tvLe_witness`
+  ([`TVWitness.lean`](Arlib/MarkovChains/Continuous/TVWitness.lean)) inhabits the
+  whole hypothesis bundle at *strictly positive* TV — so the bundle is not
+  vacuous — and the same witness proves
+  `∀ ε, ¬ PointwiseClose μ (uniformOn volume S) ε`. The law that satisfies the TV
+  route is exactly the atom-carrying shape the pointwise route provably cannot
+  describe. A second witness, `boxDensityLaw`, is absolutely continuous, so the
+  inhabitation does not depend on the atom either;
+* the earlier `AUDIT-KV97.md` §4b conclusion — that TV *cannot* suffice — was
+  **wrong**, and is retracted there. TV suffices at tolerance `θ/V`, and mixing
+  time is logarithmic in the tolerance. What is *not* fixed by this is finding 19.
+
+**And the route has since been walked.** `law_tv` is no longer a hypothesis
+anywhere on the capstone's path: [`Ttc/Sampler/Construct.lean`](Ttc/Sampler/Construct.lean)
+builds `contLaw` as a lazy ball-walk iterate on the inflated polytope and proves
+`law_tv` at exactly the `ε'/(4·Vol(P′))` tolerance this finding identified, from
+`Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`. The price is the one
+finding 19 predicted for any route that keeps a *uniform* stationary measure: an
+exponentially small isoperimetric constant, hence an exponential step count. So
+this finding is **closed as stated** — the pointwise route is dead and the TV
+route works — while the efficiency question it opened is not.
+
+### 18. Fine, implicit — `Arlib.KV97.acceptance` is not a probability without three hypotheses
+
+The equation `Pr[rnd p ∈ P] = ∑_{x ∈ P∩ℤⁿ} Pr[rnd p = x] = acceptance pt w`
+appears in the prose of Kannan–Vempala's Lemma 1 and in the original docstring of
+`Arlib.KV97.acceptance`, which named **one** hypothesis. Proving it needed
+**three**, and `Arlib.KV97.acceptance_eq_measure_apply` now states and uses all
+of them ([`Arlib/Lattice/KV97/Lemma1.lean`](Arlib/Lattice/KV97/Lemma1.lean)):
+
+* **`pt` is injective** — a repeated point is counted twice by the sum and once by
+  the event. Not a technicality:
+  `Arlib.KV97.measure_range_lt_acceptance_of_not_injective` exhibits a probability
+  measure and a two-element constant `pt` with mass `1` but `acceptance = 2`;
+* **`pt` is exhaustive** (`P ∩ ℤⁿ = Set.range pt`) — otherwise the sum misses mass
+  the event contains. The bounds of the lemma never need this, which is why it
+  went unnoticed;
+* **the law is carried by the lattice** (`μ (ℤⁿ)ᶜ = 0`) — otherwise the event
+  contains non-lattice mass no singleton accounts for. Free for the rounding law.
+
+Plus a fourth, technical: each point mass must be finite (`μ {pt i} ≠ ⊤`), since
+`ENNReal.toReal ⊤ = 0` again. **Consequence for the audit:** the non-vacuity
+witness `Arlib.KV97.exp_neg_one_le_acceptance_cube` takes `pt` *constant*, so for
+that witness `acceptance` is **not** a probability — it witnesses that the
+hypothesis bundle of the numeric bounds is inhabited, and nothing more.
+
+### 19. The speedy walk's stationary bias does **not** decay with time
+
+Not a finding about the paper — a finding about this development's own plan, and
+the reason the sampling oracle cannot be discharged *efficiently*. (It **is**
+discharged: [`Ttc/Sampler/Construct.lean`](Ttc/Sampler/Construct.lean) uses the
+lazy **ball** walk, whose stationary measure is exactly uniform, and pays this
+finding's price as an exponential step count rather than as a bias.)
+Machine-checked in
+[`SpeedyToUniform.lean`](Arlib/MarkovChains/Continuous/SpeedyToUniform.lean) and
+[`HoldingTime.lean`](Arlib/MarkovChains/Continuous/HoldingTime.lean).
+
+Cousins–Vempala's *speedy walk* has the conductance bound one wants
+(`conductance_speedyWalk_ge`, with **no** local-conductance hypothesis), but its
+stationary measure is `ellProb` — density proportional to the local conductance
+`ℓ` — not the uniform measure. `tvLe_ellProb_uniformOn` bridges the two at cost
+`s/(1-s)` under `IsSmooth K δ s`.
+
+That cost is a bias **in a fixed measure**: running longer does not reduce it.
+Only shrinking `δ` does, and `δ` enters the step count as `δ⁻²`. Kannan–Vempala
+Theorem 2 needs total variation below `θ/V` with `V = Vol(P')` exponentially large
+in the bit-length, so the bias forces `δ ≲ θ/(nV)` and the composed step count
+becomes polynomial in `V` — i.e. **exponential in the input size**. The *mixing*
+half of the same tolerance costs only `log V`
+(`conductanceMixingTime_inv_volume_le`); it is the bias alone that is fatal. So
+`mixesWithin_lazy_speedyWalk_uniformOn` is a genuine uniform sampler at **fixed**
+tolerance and is not usable at the lattice-counting tolerance. Both caveats are in
+the theorems' own docstrings.
+
+The natural repair — bound the ball walk's conductance below, since
+`isReversible_ballWalk` makes its stationary measure *exactly* uniform — is
+**refuted, and the refutation is now formal**.
+`conductanceOn_ballWalk_mul_volume_inter` proves the *equality*
+
+`Φ_ball(A) · vol(A ∩ K) = Φ_speedy(A) · ellMeasure(A)`,
+
+so the loss is exactly the average of `ℓ` over `A`, and
+`conductanceOn_ballWalk_le_conductanceOn_speedyWalk` shows the inequality only ever
+goes the useless way. `IsSmooth` bounds the average of `ℓ` over `K`, not over every
+`A`, and a set hugging the boundary has small average `ℓ`. A global floor on `ℓ` is
+exponentially bad (`ℓ ≥ 2⁻ⁿ` is the best uniform bound on the unit ball).
+
+What *is* established, unconditionally, is the exact time-change identity
+`ellMeasure_withDensity_inv_ell`:
+
+`(ellMeasure K δ).withDensity (fun x => (ℓ x)⁻¹) = volume.restrict K`,
+
+the measure-level statement that (density ∝ `ℓ`) × (mean holding time `1/ℓ`) is
+uniform exactly, with no error term and no smoothness hypothesis. Turning it into a
+mixing-time statement needs the *trajectory*-level fact that the holding times are
+conditionally independent `Geom(ℓ(Yᵢ))` given the jump chain. Mathlib has the raw
+material (`Kernel.traj`, Ionescu–Tulcea) but nothing here builds a trajectory
+measure for these kernels; that is the open step.
+
+---
 
 **The main result stands.** Finding 1 changes constants, not the shape of the
 theorem, and finding 2 is now closed by a different proof; finding 3 is a typo in
 an exponent whose corrected form is stronger than needed; finding 14 is a false
 *statement* of a true step; findings 10 and 13 are gaps the paper genuinely needs
-closing (one by an added hypothesis, one absorbed by existing slack); 4–9, 11 and
-12 are presentational or self-closing. **Finding 15 is the one that needed a
-construction, and it now has one**: the coupled family and its pathwise
+closing (one by an added hypothesis, one absorbed by existing slack); 4–9, 11, 12
+and 18 are presentational or self-closing; 16 is closed; 13a's remaining step is
+now taken, additively, by [`Coupling/Product`](Ttc/Coupling/Product.lean).
+**Finding 15 is the one
+that needed a construction, and it has one**: the coupled family and its pathwise
 identification with the run are built here
 ([`Coupling/Family`](Ttc/Coupling/Family.lean),
-[`Coupling/Run`](Ttc/Coupling/Run.lean)), `lem:numlattice`'s
-bound is proved for the run they drive, and
-[`Coupling/Transfer`](Ttc/Coupling/Transfer.lean) transports it to
-any problem instance whose randomness *is* that construction — which is what
-deleted the last assumed field. What is left is not mathematics but the
-modelling judgement: whether a real `TTC` implementation's sampler is the one
-`law_eq` and `oracle_eq` describe.
+[`Coupling/Run`](Ttc/Coupling/Run.lean)), `lem:numlattice`'s bound is proved for
+the run they drive, and [`Coupling/Transfer`](Ttc/Coupling/Transfer.lean)
+transports it to any problem instance whose randomness *is* that construction.
+**Finding 17 is closed too**: the pointwise route it killed was replaced by the
+total-variation one, `density_au` by `law_tv`, and `law_tv` is now *proved* for a
+constructed lazy ball-walk sampler — so the sampling oracle is discharged, not
+merely reduced.
+
+**What is still open is finding 19, and it is an efficiency finding.** Both
+constructed oracles — hit-and-miss Monte Carlo for `Vol_ED`, the lazy ball walk
+for `GenerateSamples` — are **exponential in the dimension**, and no polynomial
+route is proved: that needs the Localization Lemma (still unproved and unassumed)
+or a speedy walk whose stationary bias does not decay. `thm:runtime` beyond the
+paper's own charged accounting remains out of scope. The development establishes
+that the analysis holds unconditionally, not that the algorithm is fast.

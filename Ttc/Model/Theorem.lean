@@ -88,4 +88,7 @@ end TtcProb
 #print axioms TtcProb.volume_estimate
 #print axioms TtcProb.runtime
 
+-- (`Vol_ED`'s contract, the former field re-derived, and the union bound over the
+-- `m` calls are checked in `Ttc/Volume/Bridge.lean`, where they are proved.)
+
 end Ttc

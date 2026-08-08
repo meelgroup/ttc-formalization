@@ -19,15 +19,18 @@ content, one directory per object of the paper it discharges:
 
 ```
 Ttc/
-  Model/         the statement — read this and stop            (4 files)
+  Model/         the statement — read this and stop            (5 files)
+  Exec/          the oracle-free capstone, and its plumbing    (9)
+  Sampler/       GenerateSamples, constructed                  (4)
+  Volume/        Vol_ED, constructed                           (4)
   Invariants     structural facts about the modelled loop      (1)
   Constants/     what ε', κ, γ are chosen to satisfy           (2)
-  Rounding/      claim:cl, over the rounding that realises it (10)
+  Rounding/      claim:cl, over the rounding that realises it (11)
   Nonconv/       lem:nonconv                                   (6)
-  Lattice/       thm:decomposition and lem:lattice             (3)
+  Lattice/       thm:decomposition and lem:lattice             (4)
   Process/       lem:process, lem:chernoff, the level process  (6)
-  Coupling/      the run realises the family; lem:numlattice   (4)
-  Witness/       non-vacuity: the box [0,c]ⁿ                    (2)
+  Coupling/      the run realises the family; lem:numlattice   (5)
+  Witness/       non-vacuity: the box [0,c]ⁿ                    (3)
   Capstone       the two chains combined                       (1)
   Findings/      off the path: findings about the paper        (2)
 ```
@@ -40,6 +43,11 @@ Ttc/
   output `Ttc.ttcOutput`. **No proofs.**
 * `Ttc.Model.ProblemSetting` — `Ttc.TtcProb`: every assumption, as fields.
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.TtcProb.volume_estimate`.
+* `Ttc.Model.Endgoal`        — the same result restated in the nfalean template:
+  `Ttc.ttc_volume` takes `(atoms, φ, ε, δ)` — the algorithm's own inputs — with
+  the probability space, the parameters, `ρ`, `L` and the oracle bundle all
+  *constructed*, and both halves of the guarantee in one conjunction. The
+  residual obligations are visible `∀`-binders rather than invisible fields.
 
 ### `Constants/` — what the algorithm's constants buy
 
@@ -94,6 +102,84 @@ Ttc/
 * `Ttc.Capstone` — the two chains combined.
 * `Ttc.Witness.Box`, `Ttc.Witness.BoxProb` — the box `[0,c]ⁿ` and the
   non-degenerate `Ttc.TtcProb` built on it, `Ttc.Box.nonempty_ttcProb`.
+* `Ttc.Witness.TwoCube` — **the witness for `Ttc.ttc_volume_final`**, and the only
+  one whose DNF has more than one cube: `Ttc.TwoCube.card_toDNF_eq_two` proves it
+  has *exactly* two. Two disjoint boxes `[0,c]ⁿ` and `[lo, lo+c]ⁿ`, with `lo` a
+  lattice multiple so the second box contains a lattice point. It matters because
+  every other witness in the development is the single-cube box, which never
+  exercises `thm:decomposition`, the union bound across cubes, or the
+  `cubeAt`-varies-with-the-point branch — a multi-cube statement could have been
+  vacuous or wrong there and every single-cube witness would still have passed.
+  `Ttc.TwoCube.sol_eq_union_two` proves the two regions distinct, nonempty and
+  disjoint, and `Ttc.TwoCube.cenT_left_ne_right` that the inscribed-ball centres
+  genuinely differ. **Not** proved, and not needed: additivity
+  `volSol = Vol₁ + Vol₂`.
+
+### `Exec/` — the oracle-free capstone
+
+* `Ttc.Exec.Params`, `Ttc.Exec.Canonical`, `Ttc.Exec.Geometry`,
+  `Ttc.Exec.Coverage` — the parameter block, the canonical probability space,
+  and the geometric and covering data, all *constructed* rather than assumed.
+* `Ttc.Exec.VolDischarge` — `Ttc.ttc_volume_monteCarlo`: the volume oracle
+  eliminated, its coins integrated out against `Ttc.MonteCarlo.coins`.
+* `Ttc.Exec.EndToEnd` — `Ttc.ttc_volume_endToEnd`: `thm:volumettc` with *no oracle
+  hypothesis of any kind*. None of `volAlg`, `volCoins`, `vol`, `θ`, `theta_eq`,
+  `gen_mem`, `sampD` or `sampler` is a binder. What remains are the algorithm's
+  inputs, the input conditions, and a linear description of the input polytopes.
+* `Ttc.Exec.CanonPolytope` — `Ttc.ttc_volume_endToEnd_canon`: that description
+  discharged too. `M_eq` already says each `region M c` *is* a polytope presented
+  by the rows `atoms l`, `l ∈ c`, so `Jt`, `Am`, `bv`, `hdil`, `rfac`, `hr1`,
+  `hcard`, `Dm`, `hDbody` are all redundant. What is proved is stronger than
+  `hdil` asks for — `Ttc.canon_body_eq_smul_region` is an **equality**, the
+  described body *is* the dilated region — and `hcard` holds with equality, so no
+  slack enters `Ttc.Params.gamma` or `Ttc.Params.thresh`.
+* `Ttc.Exec.CanonicalPolytope` — **a second, independent derivation of the same
+  elimination**, landed in parallel with `Exec/CanonPolytope` and kept because it
+  is the one that carries a non-vacuity witness: `Ttc.ttc_volume_endToEnd_canonical`
+  plus `Ttc.Box.exists_two_ttc_volume_endToEnd_canonical_instances`. Its
+  `canonNormal`/`canonOffset`/`canonDiam` are renamed away from
+  `Exec/CanonPolytope`'s `canonAm`/`canonBv`/`canonDm` so the two co-import; the
+  key lemma `Ttc.body_canon_eq` is again an equality. **This duplication is debt**
+  — an auditor should read `Exec/CanonPolytope` for the critical path (it is what
+  `Exec/Final` consumes) and this file for the witness, and the two should be
+  consolidated.
+* `Ttc.Exec.Budget` — `Ttc.ttc_volume_endToEnd_delta`: the `δ`-repricing that
+  turns `1 − δ − δ/4` into a clean `1 − δ`, by running at internal `δ₀ = 4δ/5`.
+* `Ttc.Exec.Final` — **`Ttc.ttc_volume_final`**, the strongest result in the
+  development and the one to read first: the two preceding steps composed. It
+  takes `(atoms, φ, ε, δ)` and the input conditions, binds **no oracle and no
+  polytope description**, and concludes `1 − δ` together with `alg:ttc`'s charged
+  cost. 28 raw binders, every one an input or an input condition.
+
+The two oracles are discharged by construction, not assumed:
+
+* `Vol_ED` (`alg:ttc` line 24) — `Ttc.VolumeAlgorithm.monteCarlo`
+  (`Ttc/Volume/MonteCarlo.lean`), a `VolumeAlgorithm n` with no hypotheses.
+* `GenerateSamples` (`alg:ttc` line 43) — `Ttc.kv97SamplerOfBody`
+  (`Ttc/Sampler/Construct.lean`), whose `law_tv` field is a *theorem*, proved
+  from the ball walk's mixing time via
+  `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope`. The chain
+  isoperimetry → conductance → Cheeger → L² decay → TV mixing is load-bearing,
+  checked by a transitive dependency walk, not merely imported.
+
+**Two scope caveats, stated here because they are what an auditor is most likely
+to assume wrongly.**
+
+*Cost.* Both constructions are **exponential in the dimension** — the Monte
+Carlo volume estimator and the ball walk's step count alike. Unconditional and
+efficient are independent claims; what is established is the first. `thm:runtime`
+remains out of scope, as it is throughout.
+
+*The sampler.* What is proved is that no *accuracy assumption* about the sampler
+is made. It is **not** proved that the finite-time ball-walk iterate differs from
+the uniform law on the inflated body; that needs an `L²`/aperiodicity argument
+which is not in the development.
+
+Non-vacuity is witnessed at two structurally different parameter pairs by
+`Ttc.Box.exists_two_ttc_volume_endToEnd_instances`, with achieved bounds `3/8`
+and `11/16`, both proved positive inside the statement — so the conclusion is not
+the vacuously-true one. Note that `1 − δ − δ/4` is vacuous for `δ > 4/5`
+(README finding 13a).
 
 ### `Findings/` — off the path to the theorem
 
@@ -110,10 +196,19 @@ deliberately and out of the audit surface.
 Every other module is on the path, checked mechanically against the import graph
 rather than by eye; the recipe is in `README.md`.
 
+**A hazard worth stating, because a green build does not reveal it.** The `Ttc`
+lake library declares no `globs`: it is built by walking the imports of this
+file. A `.lean` file under `Ttc/` that nothing imports is therefore **never
+compiled at all**, so `lake build` reporting success says nothing whatever about
+it — including whether it contains `sorry`. Any file added under `Ttc/` must be
+imported here before its "green" means anything. The audit recipe in `AUDIT.md`
+lists the current orphans; the `grep` sweep for `sorry` covers the whole tree
+precisely because the build does not.
+
 ## The audit surface (`Model/`)
 
 `Model/` is kept deliberately small. A referee who wants to trust the *statement*
-reads exactly these four files and stops. One caveat, since it used to be untrue
+reads exactly these five files and stops. One caveat, since it used to be untrue
 and no longer is: `Model/ProblemSetting` now imports `Coupling/Family` and
 `Process/SketchProcess`, because the sampler fields name the coupled Poisson
 family (`Ttc.trajLaw`, `Ttc.trajOracles`, `Ttc.totalRate`) directly. Those three
@@ -159,7 +254,22 @@ import Ttc.Model.Prelude
 import Ttc.Model.Pseudocode
 import Ttc.Model.ProblemSetting
 import Ttc.Model.Theorem
-import Ttc.Model.VolOracle
+import Ttc.Model.Endgoal
+import Ttc.Exec.Params
+import Ttc.Exec.Canonical
+import Ttc.Exec.Geometry
+import Ttc.Exec.Coverage
+import Ttc.Exec.VolDischarge
+import Ttc.Exec.EndToEnd
+import Ttc.Exec.Budget
+import Ttc.Exec.CanonPolytope
+import Ttc.Exec.CanonicalPolytope
+import Ttc.Exec.Final
+import Ttc.Coupling.Product
+import Ttc.Volume.Bridge
+import Ttc.Volume.VolSolCheck
+import Ttc.Volume.CousinsVempala
+import Ttc.Volume.MonteCarlo
 
 -- The modelled loop, and what a run costs
 import Ttc.Invariants
@@ -194,6 +304,7 @@ import Ttc.Nonconv.Assembled
 import Ttc.Lattice.Decomposition
 import Ttc.Lattice.Transport
 import Ttc.Lattice.Assembled
+import Ttc.Lattice.PerCube
 
 -- lem:process, lem:chernoff, the level process
 import Ttc.Process.Poisson
@@ -213,7 +324,14 @@ import Ttc.Coupling.NumLattice
 import Ttc.Capstone
 import Ttc.Witness.Box
 import Ttc.Witness.BoxProb
+import Ttc.Witness.BoxSharp
+import Ttc.Witness.TwoCube
 
 -- off the path to the theorem: findings about the paper
 import Ttc.Findings.Repair
 import Ttc.Findings.CubeLattice
+import Ttc.Sampler.Contract
+import Ttc.Sampler.Bridge
+import Ttc.Sampler.Rates
+import Ttc.Sampler.Construct
+import Ttc.Rounding.ArlibBridge

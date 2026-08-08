@@ -4,7 +4,9 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Coupling.Run
 import Ttc.Model.ProblemSetting
+import Ttc.Volume.Bridge
 import Ttc.Lattice.Assembled
+import Ttc.Sampler.Bridge
 
 /-!
 # `lem:numlattice` from the model, not from an assumption

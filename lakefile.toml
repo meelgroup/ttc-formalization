@@ -1,7 +1,7 @@
 name = "ttc"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["Ttc"]
+defaultTargets = ["Ttc", "Arlib"]
 
 [leanOptions]
 pp.unicode.fun = true
@@ -15,3 +15,14 @@ rev = "v4.32.0"
 
 [[lean_lib]]
 name = "Ttc"
+
+# The ArLib staging area. General, reusable, project-independent material —
+# randomized rounding, lattice counting, total variation, convexity, Markov
+# chain mixing. Written against `Arlib.*` namespaces and arlib's conventions so
+# that porting it into https://github.com/meelgroup/arlib is a `git mv` once
+# that repo is bumped from Lean v4.15.0 to v4.32.0.
+#
+# HARD RULE: nothing under `Arlib/` may import `Ttc.*`. `Ttc/**` may import both.
+[[lean_lib]]
+name = "Arlib"
+globs = ["Arlib", "Arlib.+"]

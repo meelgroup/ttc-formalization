@@ -21,6 +21,8 @@ general not closed — see the README, finding 5.
 
 namespace Ttc
 
+open scoped Pointwise
+
 /-- `ℝⁿ` with the Euclidean (`ℓ₂`) norm and Lebesgue measure. The `ℓ₂` norm
 matters: the paper's inscribed-ball hypotheses are about `ℓ₂`-balls. -/
 abbrev Space (n : ℕ) := EuclideanSpace ℝ (Fin n)
@@ -220,6 +222,18 @@ noncomputable def volSol {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : B
 /-- The paper's `(1 ± ε)·b` interval. `@[reducible]` so it is transparent to
 `Set.Icc`. -/
 @[reducible] def relErr (ε b : ℝ) : Set ℝ := Set.Icc ((1 - ε) * b) ((1 + ε) * b)
+
+/-- **The normalisation `Vol_ED` is called on.** `K` moved so that its inscribed
+ball becomes the unit ball at the origin: the image of `K` under
+`y ↦ γ⁻¹ · (y − c)`.
+
+Cousins–Vempala Theorem 1.1 (`Ttc.VolumeAlgorithm`, `Model/ProblemSetting`) speaks
+only about bodies containing the unit ball, whereas `Ttc.TtcProb.ball_subset`
+supplies a ball of radius `γ̂` about a centre that is not the origin. This is the
+change of variable that closes the gap; that it does is *proved* in
+`Ttc/Volume/Bridge.lean` (`Ttc.VolumeAlgorithm.of_ball`), not assumed. -/
+noncomputable def roundBody {n : ℕ} (c : Space n) (γ : ℝ) (K : Set (Space n)) :
+    Set (Space n) := γ⁻¹ • ((-c) +ᵥ K)
 
 /-! ## The parameter block
 

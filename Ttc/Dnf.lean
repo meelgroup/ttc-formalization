@@ -12,13 +12,20 @@ into a DNF. `Ttc.toDNF` (`Model/Prelude`) is that call, written as a function, a
 this file proves the two things the rest of the development needs of it:
 
 * `Ttc.toDNF_isDNFOf` — its output represents the formula, on every Boolean
-  assignment. This used to be the `isDNF` **field** of `Ttc.TtcProb`, assumed of
-  an external tool; it is now a theorem, so the headline assumes nothing about
-  line 16.
+  assignment.
 * `Ttc.toDNF_isPositive` — on a **positive** input formula (no negation anywhere,
   `Ttc.BForm.IsPositive`) the output has no negated literal, so each `P(cᵢ)` is an
-  intersection of closed half-spaces. That was the `isPositive` field; it is now a
-  consequence of a condition on the *input*.
+  intersection of closed half-spaces.
+
+**What these do and do not buy.**  `isDNF` and `isPositive` are **still fields** of
+`Ttc.TtcProb` (`Model/ProblemSetting.lean`), so the headline *does* still assume
+that the external AllSAT call at line 16 got it right.  What this file establishes
+is that those assumptions are **satisfiable** — `Ttc.toDNF` is a witness meeting
+both — which is the §11 non-vacuity check, not an elimination.
+
+An earlier version of this docstring claimed the two fields had become theorems and
+that "the headline assumes nothing about line 16".  That was false; the fields are
+at `ProblemSetting.lean:376` and `:381`.
 
 The recursion carries a polarity (`Ttc.dnfAux`), so negation is handled by
 flipping a flag instead of rewriting the formula — which is what makes the whole
