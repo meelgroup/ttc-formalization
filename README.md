@@ -2901,8 +2901,28 @@ unconditional; **both are machine-checked and on the build path.**
    [`Ttc.ttc_volume_rescaled`](Ttc/Exec/Rescaled.lean) with no volume hypothesis at
    all, and [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) inherits it.
 
-**The paper needs that line.** As printed, `thm:volumettc` is false for
-`Vol(Sol F) ≲ Θ/4` — not merely unproved. Correspondingly,
+**The paper needs that line, and "false" is now a theorem rather than an argument.**
+[`Ttc.SmallBody.small_box_refutes_final_accuracy`](Ttc/Findings/SmallBody.lean) negates
+the accuracy conjunct of [`Ttc.ttc_volume_final`](Ttc/Exec/Final.lean) itself — the
+`MonteCarlo.coins` integral — at an explicit small box, for `δ ∈ (0, 5/6)`, at a **good**
+coin of the constructed volume oracle, so it is not an artefact of a bad volume estimate.
+`Ttc.SmallBody.final_accuracy_shape` is the lookalike guard: it *proves* the very
+proposition that is negated, from `Ttc.Box.ttc_volume_final_at_box`, with `big` as its
+only hypothesis — so the refuted statement really is the capstone's, and `big` is the
+only thing standing between `ttc_volume_final` and a contradiction.
+
+The chain is: `p ← 1` and only halves (`Ttc.SmallBody.p_run_le_one`), so on a small body
+the sketch never leaves level `0` and is empty with probability `e^(−Λ)`
+(`Ttc.SmallBody.trajLaw_level_zero`, an exact computation, not a bound); an empty sketch
+outputs `0` (`run_eq_zero_of_card_eq_zero`); and `0 ∉ (1 ± ε)·V` for `V > 0`, `ε < 1`
+(`output_zero_not_mem_relErr`).
+
+*Scope, stated precisely.* The coins-integrated refutation covers `δ ∈ (0, 5/6)` — the
+development supplies only `Pr[volume oracle fails] ≤ δ/5`, so beating `1 − δ` needs
+`6δ/5 < 1`; nothing is claimed on `[5/6, 1)`. The **per-coin** refutation
+(`small_box_refutes_accuracy`) has no such restriction. Both are about the *modelled*
+run, so they inherit `Model/Pseudocode`'s four documented deviations, and `thm:runtime`'s
+`runCost` conjunct is untouched. Correspondingly,
 `Ttc.ttc_volume_estimate` is unconditional **for the amended algorithm** and says
 nothing about the printed one on a small body. Do not quote it as a guarantee for
 `alg:ttc` as printed.

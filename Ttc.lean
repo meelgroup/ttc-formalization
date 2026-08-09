@@ -418,6 +418,7 @@ import Ttc.Exec.Statement
 import Ttc.Findings.Repair
 import Ttc.Findings.Independence
 import Ttc.Findings.OpenHalfspace
+import Ttc.Findings.SmallBody
 import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
 import Ttc.Sampler.Bridge
