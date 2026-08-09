@@ -533,6 +533,273 @@ theorem small_box_refutes_accuracy (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     exact not_accuracy_of_small_rate M (boxForm n hn) P ρ vol Ttc.toDNF hθ hε1 hVpos
       hT0.le hvolT hδexp
 
+/-! ## 8.  The same, integrated over the volume oracle's coins
+
+`Ttc.ttc_volume_final`'s accuracy conjunct integrates §6's quantity against
+`Ttc.MonteCarlo.coins`.  Splitting the coin space into the volume oracle's good
+event `G` and its complement bounds that integral by
+`(1 − e^(−Λ)) + Pr[Gᶜ]` whenever `Λ` caps the total rate on `G` — nothing is
+assumed off `G`, where the trivial bound `Pr ≤ 1` is used.
+
+At the box, `Ttc.measure_mcGood_ge` puts `Pr[Gᶜ] ≤ δ/5` (the internal failure
+parameter is `4δ/5`), so the bound reads `(1 − e^(−Λ)) + δ/5`, and it is below
+`1 − δ` exactly when `e^(−Λ) > 6δ/5`.  That needs `δ < 5/6`: above it, the
+`δ/5` the analysis already spends on the volume oracle exceeds what is left to
+contradict, and this argument says nothing.  `Ttc.ttc_volume_final`'s bound is
+informative on all of `δ ∈ (0,1)`, so the refutation below covers `(0, 5/6)` of it.
+-/
+
+/-- **The coins-integrated correctness probability, bounded.**  `G` is the volume
+oracle's good event and `Λ` a cap on the total rate there; off `G` nothing is
+assumed. -/
+theorem lintegral_trajLaw_relErr_le {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω)
+    [IsProbabilityMeasure μ] {G : Set Ω} (hG : MeasurableSet G)
+    (M : A → Set (Space n)) (φ : BForm A) (P : Params) (ρ : ℤ)
+    (vol : Ω → Cube A → ℝ) (toDNF : BForm A → DNF A)
+    (θ : Ω → Fin (latticeCount M φ ρ) → ℝ) {ε Λ : ℝ} (hε : ε < 1) (hV : 0 < volSol M φ)
+    (hT : 0 ≤ P.thresh)
+    (hgood : ∀ c ∈ G, (∀ s, 0 ≤ θ c s)
+      ∧ (∀ i ∈ toDNF φ, ¬ P.thresh / vol c i ≤ 1) ∧ ∑ s, θ c s ≤ Λ) :
+    (∫⁻ c, trajLaw (θ c) {t : ℕ → Fin (latticeCount M φ ρ) → ℕ |
+          ttcOutput P (coveredOracles M φ ρ (vol c)) toDNF ρ φ t
+            ∈ relErr ε (volSol M φ)} ∂μ)
+      ≤ (1 - ENNReal.ofReal (Real.exp (-Λ))) + μ Gᶜ := by
+  have hpt : ∀ c : Ω, trajLaw (θ c) {t : ℕ → Fin (latticeCount M φ ρ) → ℕ |
+        ttcOutput P (coveredOracles M φ ρ (vol c)) toDNF ρ φ t
+          ∈ relErr ε (volSol M φ)}
+      ≤ (1 - ENNReal.ofReal (Real.exp (-Λ))) + Gᶜ.indicator 1 c := by
+    intro c
+    by_cases hcG : c ∈ G
+    · obtain ⟨hθ, hvl, hΛ⟩ := hgood c hcG
+      refine le_trans (trajLaw_relErr_le M φ P ρ (vol c) toDNF hθ hε hV hT hvl) ?_
+      refine le_trans (tsub_le_tsub_left (ENNReal.ofReal_le_ofReal ?_) 1) le_self_add
+      exact Real.exp_le_exp.2 (by linarith)
+    · rw [Set.indicator_of_mem (Set.mem_compl hcG), Pi.one_apply]
+      exact le_trans prob_le_one le_add_self
+  refine le_trans (lintegral_mono hpt) (le_of_eq ?_)
+  rw [lintegral_add_left measurable_const, lintegral_const, measure_univ, mul_one,
+    lintegral_indicator_one hG.compl]
+
+/-- **A side length at which the box is smaller than any prescribed target.**
+`Vol([0,a]ⁿ) = aⁿ·Vol([0,1]ⁿ) ≤ a·Vol([0,1]ⁿ)` for `a ≤ 1` and `n ≥ 1`. -/
+theorem exists_small_side (n : ℕ) (hn : 1 ≤ n) (P : Params) (hep0 : 0 < P.epsPrime)
+    {B : ℝ} (hB : 0 < B) :
+    ∃ a : ℝ, 0 < a ∧ (1 + P.epsPrime) ^ 2 * (volume (bxOf n a)).toReal < B := by
+  have hV1 : 0 < (volume (bxOf n 1)).toReal := volume_bxOf_pos n one_pos
+  set K : ℝ := (1 + P.epsPrime) ^ 2 * (volume (bxOf n 1)).toReal with hKdef
+  have hKpos : 0 < K := by rw [hKdef]; positivity
+  have ha0 : 0 < min 1 (B / (2 * K)) :=
+    lt_min one_pos (div_pos hB (by linarith))
+  refine ⟨min 1 (B / (2 * K)), ha0, ?_⟩
+  set a := min 1 (B / (2 * K)) with hadef
+  have ha1 : a ≤ 1 := min_le_left _ _
+  have haB : a ≤ B / (2 * K) := min_le_right _ _
+  have hvolbox : (volume (bxOf n a)).toReal = a ^ n * (volume (bxOf n 1)).toReal :=
+    Box.volume_bxOf_eq n ha0
+  have han : a ^ n ≤ a := by
+    calc a ^ n ≤ a ^ 1 := pow_le_pow_of_le_one ha0.le ha1 hn
+      _ = a := pow_one a
+  calc (1 + P.epsPrime) ^ 2 * (volume (bxOf n a)).toReal
+      = K * a ^ n := by rw [hvolbox, hKdef]; ring
+    _ ≤ K * a := mul_le_mul_of_nonneg_left han hKpos.le
+    _ ≤ K * (B / (2 * K)) := mul_le_mul_of_nonneg_left haB hKpos.le
+    _ = B / 2 := by field_simp
+    _ < B := by linarith
+
+/-- **The volume oracle fails on at most a `δ₀/4` share of its coins, at the box.**
+`Ttc.measure_mcGood_ge`, complemented. -/
+theorem coins_mcGood_compl_le (n : ℕ) (hn : 1 ≤ n) {a : ℝ} (ha : 0 < a) (P : Params)
+    {δ₀ : ℝ} (hδeq : P.δ = δ₀) (hδ0 : 0 < δ₀) (hδ1 : δ₀ ≤ 1) :
+    (MonteCarlo.coins n (mcGood (fun x => (boxAtoms n a x).halfspace)
+        (Ttc.toDNF (boxForm n hn)) (fun _ => boxCentre n a) (a / 2)
+        P.epsPrime P.deltaPrime)ᶜ).toReal ≤ δ₀ / 4 := by
+  have hlen : ((Ttc.toDNF (boxForm n hn)).length : ℝ) ≤ (P.m : ℝ) := by
+    rw [length_toDNF_boxForm n hn]
+    exact_mod_cast P.hm
+  have hmeas := measure_mcGood_ge (fun x => (boxAtoms n a x).halfspace)
+    (Ttc.toDNF (boxForm n hn)) P hδeq hδ0 hδ1 (by positivity : (0 : ℝ) < a / 2)
+    (fun _ => boxCentre n a) (ball_subset_bxOf n a hn)
+    (fun i => convex_region (boxAtoms n a) i.val)
+    (volume_region_ne_top_of_isBounded (toDNF_isDNFOf (boxForm n hn))
+      (isBounded_sol_bxOf n a hn)) hlen
+  rw [measure_compl (measurableSet_mcGood _ _ _ _ _ _) (measure_ne_top _ _), measure_univ,
+    ENNReal.toReal_sub_of_le prob_le_one ENNReal.one_ne_top, ENNReal.toReal_one]
+  linarith
+
+/-- **What a good coin gives at a small box**: nonnegative rates, every volume
+estimate under `Thresh`, and a total rate capped by `(1+ε')²·Vol([0,a]ⁿ)`.  These
+are exactly the three hypotheses §6 and §8 consume. -/
+theorem box_good_coin_bounds (n : ℕ) (hn : 1 ≤ n) {a : ℝ} (ha : 0 < a) (P : Params)
+    (hep0 : 0 < P.epsPrime) (hep : P.epsPrime ≤ 1 / 2)
+    (hsmall : (1 + P.epsPrime) ^ 2 * (volume (bxOf n a)).toReal < P.thresh)
+    (c : ℕ → Space n)
+    (hc : c ∈ mcGood (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+      (fun _ => boxCentre n a) (a / 2) P.epsPrime P.deltaPrime) :
+    (∀ s, 0 ≤ rates (fun x => (boxAtoms n a x).halfspace) (boxForm n hn)
+        (Ttc.toDNF (boxForm n hn)) (P.precision (a / 2))
+        (canonSampD (boxAtoms n a) (Ttc.toDNF (boxForm n hn)) P
+          (fun _ => boxCentre n a) (a / 2))
+        (mcVol (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+          (fun _ => boxCentre n a) (a / 2) P.epsPrime P.deltaPrime c) s)
+      ∧ (∀ i ∈ Ttc.toDNF (boxForm n hn),
+          ¬ P.thresh / mcVol (fun x => (boxAtoms n a x).halfspace)
+            (Ttc.toDNF (boxForm n hn)) (fun _ => boxCentre n a) (a / 2)
+            P.epsPrime P.deltaPrime c i ≤ 1)
+      ∧ ∑ s, rates (fun x => (boxAtoms n a x).halfspace) (boxForm n hn)
+          (Ttc.toDNF (boxForm n hn)) (P.precision (a / 2))
+          (canonSampD (boxAtoms n a) (Ttc.toDNF (boxForm n hn)) P
+            (fun _ => boxCentre n a) (a / 2))
+          (mcVol (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+            (fun _ => boxCentre n a) (a / 2) P.epsPrime P.deltaPrime c) s
+        ≤ (1 + P.epsPrime) ^ 2 * (volume (bxOf n a)).toReal := by
+  have hep1 : P.epsPrime < 1 := by linarith
+  set M := fun x => (boxAtoms n a x).halfspace with hMdef
+  set D := Ttc.toDNF (boxForm n hn) with hDdef
+  set ρ := P.precision (a / 2) with hρdef
+  set vol := mcVol M D (fun _ => boxCentre n a) (a / 2) P.epsPrime P.deltaPrime c with hvoldef
+  have hfin : ∀ i : {cu : Cube (Fin n ⊕ Fin n) // cu ∈ D}, volume (region M i.val) ≠ ⊤ :=
+    volume_region_ne_top_of_isBounded (toDNF_isDNFOf (boxForm n hn))
+      (isBounded_sol_bxOf n a hn)
+  have hvolpos : ∀ i ∈ D, 0 < vol i :=
+    mcVol_pos M D (fun _ => boxCentre n a) (by positivity) hep1
+      (ball_subset_bxOf n a hn) hfin hc
+  have hAU := Box.canonSampD_box_almostUniform n hn ha P hep0 hep
+  refine ⟨?_, ?_, (Box.sum_rates_box_window n hn ha P hep0 hep hc).2⟩
+  · intro s
+    refine le_of_lt (rates_pos_of_almostUniform (toDNF_isDNFOf (boxForm n hn))
+      (hasLatticeEnum_bxOf n a hn ρ) hvolpos hep1 ?_ s)
+    intro i hi
+    have hib : i = boxCube n := by
+      simpa only [hDdef, toDNF_boxForm hn, boxDNF, List.mem_singleton] using hi
+    subst hib
+    exact hAU
+  · intro i hi
+    have hup : vol i ≤ (1 + P.epsPrime) * (volume (region M i)).toReal :=
+      (mcVol_mem_relErr M D (fun _ => boxCentre n a) (a / 2) P.epsPrime P.deltaPrime hc
+        i hi).2
+    rw [region_eq_bxOf n a hn hi] at hup
+    have h1 : (1 + P.epsPrime) * (volume (bxOf n a)).toReal
+        ≤ (1 + P.epsPrime) ^ 2 * (volume (bxOf n a)).toReal := by
+      have hnn : (0 : ℝ) ≤ (volume (bxOf n a)).toReal := ENNReal.toReal_nonneg
+      have hcross : (0 : ℝ) ≤ (1 + P.epsPrime) * P.epsPrime * (volume (bxOf n a)).toReal :=
+        mul_nonneg (mul_nonneg (by linarith) hep0.le) hnn
+      nlinarith [hcross]
+    exact not_le.2 ((one_lt_div (hvolpos i hi)).2 (by linarith))
+
+set_option maxHeartbeats 2000000 in
+/-- **`Ttc.ttc_volume_final`'s accuracy conclusion fails on a small box**, for every
+dimension `n ≥ 1`, every `ε ∈ (0,1)` and every `δ ∈ (0, 5/6)`.
+
+The statement is the accuracy conjunct of `Ttc.ttc_volume_final` — the
+`Ttc.MonteCarlo.coins`-integral, written with the capstone's own `Ttc.e2eSampD`,
+`Ttc.mcVol`, `Ttc.rates` and `Ttc.coveredOracles` terms — at the box `[0,a]ⁿ`, and
+it is **negated**.  Every other hypothesis of `Ttc.ttc_volume_final` holds at that
+instance (`Ttc.Box.big_not_derivable` produces them, one per conjunct, at the same
+kind of witness); only `big` fails, and `big` is precisely what a small body cannot
+supply.
+
+Restriction to `δ < 5/6`: the bound proved here is
+`Pr[correct] ≤ (1 − e^(−Λ)) + Pr[volume oracle fails] ≤ (1 − e^(−Λ)) + δ/5`, and it
+beats `1 − δ` only when `e^(−Λ) > 6δ/5`, which needs `6δ/5 < 1`.  See §8. -/
+theorem small_box_refutes_final_accuracy (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε < 1) (hδ0 : 0 < δ) (hδ1 : δ < 5 / 6) :
+    ∃ a : ℝ, 0 < a ∧
+      ¬ (1 - δ ≤
+        (∫⁻ c, trajLaw (rates (fun x => (boxAtoms n a x).halfspace) (boxForm n hn)
+              (Ttc.toDNF (boxForm n hn))
+              ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))
+              (e2eSampD (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+                ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))
+                (parS n hn ε (4 * δ / 5) hε0 hε1.le).epsPrime
+                (canonRfac (Ttc.toDNF (boxForm n hn)))
+                (Jt := Fin (Nat.card (FacetIndex (Ttc.toDNF (boxForm n hn)))))
+                (canonAm (boxAtoms n a) (Ttc.toDNF (boxForm n hn)))
+                (canonBv (boxAtoms n a) (Ttc.toDNF (boxForm n hn))
+                  (latticeScale ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))))
+                (fun _ => boxCentre n a) (a / 2)
+                (canonDm (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+                  ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))))
+              (mcVol (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+                (fun _ => boxCentre n a) (a / 2)
+                (parS n hn ε (4 * δ / 5) hε0 hε1.le).epsPrime
+                (parS n hn ε (4 * δ / 5) hε0 hε1.le).deltaPrime c))
+            {t : ℕ → Fin (latticeCount (fun x => (boxAtoms n a x).halfspace) (boxForm n hn)
+                ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))) → ℕ |
+              ttcOutput (parS n hn ε (4 * δ / 5) hε0 hε1.le)
+                  (coveredOracles (fun x => (boxAtoms n a x).halfspace) (boxForm n hn)
+                    ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))
+                    (mcVol (fun x => (boxAtoms n a x).halfspace) (Ttc.toDNF (boxForm n hn))
+                      (fun _ => boxCentre n a) (a / 2)
+                      (parS n hn ε (4 * δ / 5) hε0 hε1.le).epsPrime
+                      (parS n hn ε (4 * δ / 5) hε0 hε1.le).deltaPrime c))
+                  Ttc.toDNF ((parS n hn ε (4 * δ / 5) hε0 hε1.le).precision (a / 2))
+                  (boxForm n hn) t
+                ∈ relErr ε
+                    (volSol (fun x => (boxAtoms n a x).halfspace) (boxForm n hn))}
+          ∂(MonteCarlo.coins n)).toReal) := by
+  classical
+  have hd0 : (0 : ℝ) < 4 * δ / 5 := by linarith
+  have hd1 : (4 : ℝ) * δ / 5 ≤ 1 := by linarith
+  set P := parS n hn ε (4 * δ / 5) hε0 hε1.le with hPdef
+  have hep0 : 0 < P.epsPrime := parS_epsPrime_pos (n := n) (δ := 4 * δ / 5) hn hε0 hε1.le
+  have hep12 : P.epsPrime ≤ 1 / 12 := parS_epsPrime_le (n := n) (δ := 4 * δ / 5) hn hε0 hε1.le
+  have hT0 : 0 < P.thresh := parS_thresh_pos (n := n) hn hε0 hε1.le hd0 hd1
+  -- the target the total rate must beat
+  have h65 : (0 : ℝ) < 6 * δ / 5 := by linarith
+  have h65' : (6 : ℝ) * δ / 5 < 1 := by linarith
+  set Lg : ℝ := -Real.log (6 * δ / 5) with hLgdef
+  have hLg : 0 < Lg := by
+    rw [hLgdef]; have := Real.log_neg h65 h65'; linarith
+  obtain ⟨a, ha0, hsmall⟩ :=
+    exists_small_side n hn P hep0 (B := min P.thresh Lg) (lt_min hT0 hLg)
+  refine ⟨a, ha0, ?_⟩
+  set M := fun x => (boxAtoms n a x).halfspace with hMdef
+  set ρ := P.precision (a / 2) with hρdef
+  set Λ : ℝ := (1 + P.epsPrime) ^ 2 * (volume (bxOf n a)).toReal with hΛdef
+  have hΛ0 : 0 ≤ Λ := by rw [hΛdef]; positivity
+  have hΛT : Λ < P.thresh := lt_of_lt_of_le hsmall (min_le_left _ _)
+  have hΛL : Λ < Lg := lt_of_lt_of_le hsmall (min_le_right _ _)
+  have hVpos : 0 < volSol M (boxForm n hn) := by
+    rw [volSol, sol_eq_bxOf n a hn]; exact volume_bxOf_pos n ha0
+  -- the coin-wise bound, integrated
+  have hlint := lintegral_trajLaw_relErr_le (MonteCarlo.coins n)
+    (measurableSet_mcGood M (Ttc.toDNF (boxForm n hn)) (fun _ => boxCentre n a) (a / 2)
+      P.epsPrime P.deltaPrime)
+    M (boxForm n hn) P ρ
+    (fun c => mcVol M (Ttc.toDNF (boxForm n hn)) (fun _ => boxCentre n a) (a / 2)
+      P.epsPrime P.deltaPrime c)
+    Ttc.toDNF
+    (fun c => rates M (boxForm n hn) (Ttc.toDNF (boxForm n hn)) ρ
+      (e2eSampD M (Ttc.toDNF (boxForm n hn)) ρ P.epsPrime
+        (canonRfac (Ttc.toDNF (boxForm n hn)))
+        (Jt := Fin (Nat.card (FacetIndex (Ttc.toDNF (boxForm n hn)))))
+        (canonAm (boxAtoms n a) (Ttc.toDNF (boxForm n hn)))
+        (canonBv (boxAtoms n a) (Ttc.toDNF (boxForm n hn)) (latticeScale ρ))
+        (fun _ => boxCentre n a) (a / 2)
+        (canonDm M (Ttc.toDNF (boxForm n hn)) ρ))
+      (mcVol M (Ttc.toDNF (boxForm n hn)) (fun _ => boxCentre n a) (a / 2)
+        P.epsPrime P.deltaPrime c))
+    (Λ := Λ) hε1 hVpos hT0.le
+    (fun c hc => box_good_coin_bounds n hn ha0 P hep0 (by linarith) hΛT c hc)
+  -- the numbers
+  intro hacc
+  have hAne : (1 : ℝ≥0∞) - ENNReal.ofReal (Real.exp (-Λ)) ≠ ⊤ :=
+    ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self
+  have hofr : ENNReal.ofReal (Real.exp (-Λ)) ≤ 1 :=
+    ENNReal.ofReal_le_one.2 (Real.exp_le_one_iff.2 (by linarith))
+  have hsum := ENNReal.toReal_mono
+    (ENNReal.add_ne_top.2 ⟨hAne, measure_ne_top _ _⟩) hlint
+  rw [ENNReal.toReal_add hAne (measure_ne_top _ _),
+    ENNReal.toReal_sub_of_le hofr ENNReal.one_ne_top, ENNReal.toReal_one,
+    ENNReal.toReal_ofReal (Real.exp_nonneg _)] at hsum
+  have hcompl := coins_mcGood_compl_le n hn ha0 P (δ₀ := 4 * δ / 5) rfl hd0 hd1
+  rw [← hMdef] at hcompl
+  have hexp : 6 * δ / 5 < Real.exp (-Λ) := by
+    have hlt : Real.log (6 * δ / 5) < -Λ := by rw [hLgdef] at hΛL; linarith
+    calc 6 * δ / 5 = Real.exp (Real.log (6 * δ / 5)) := (Real.exp_log h65).symm
+      _ < _ := Real.exp_lt_exp.2 hlt
+  linarith
+
 end SmallBody
 
 end Ttc
