@@ -948,8 +948,9 @@ not by the statement.
 
 ### The seven quantities, in detail
 
-`Ttc/Model/Theorem.lean` defines these seven and gives each a one-line docstring; the
-detail lives here.
+`Ttc/Exec/Api.lean` defines these seven (section `Measured`, after `ttc_volume_api`)
+and gives each a one-line docstring; the detail lives here.  `Ttc/Model/Theorem.lean`
+holds the theorem and nothing else, and names them.
 
 * **`Ttc.ttcIndex`** — `|Sol(F) ∩ 𝕃ⁿ|` at the computed precision, i.e. the index the
   run's sample coins range over, so a sample trajectory has type
@@ -975,8 +976,8 @@ detail lives here.
 * **`Ttc.ttcNumCubes`** — `m`, the length of the preprocessed formula's DNF. The cost
   bound is `m · (C_vol + C_sample · Thresh)`.
 
-Each carries an identifying `rfl` lemma (`Ttc.ttcEstimate_def` and friends) in the same
-file, and `Ttc.ttcEstimate_eq_ttcOutput` pins the measured quantity to
+Each carries an identifying `rfl` lemma (`Ttc.ttcEstimate_def` and friends) alongside them in
+`Exec/Api.lean`, and `Ttc.ttcEstimate_eq_ttcOutput` pins the measured quantity to
 `Model/Pseudocode`'s own `Ttc.ttcOutput` — lines A12–A13 of that file's transcription.
 
 ### What is certified is `alg:ttc` plus three preprocessing steps

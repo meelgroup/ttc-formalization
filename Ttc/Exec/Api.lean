@@ -23,17 +23,18 @@ atoms φ ε δ hε0 hε1 hn hφ hpos
 `Ttc.runScale`, `Ttc.scaledAtoms` and `Ttc.inputParams` internally.  Its proof is
 one application of `Ttc.ttc_volume_prune`.
 
-**The seven quantities the headline is *about* are not here.**  `Ttc.ttcIndex`,
-`Ttc.ttcRates`, `Ttc.ttcEstimate`, `Ttc.ttcThresh`, `Ttc.ttcTerminates`,
-`Ttc.ttcCost` and `Ttc.ttcNumCubes` are defined in `Model/Theorem.lean`, so that
-every quantity `Ttc.ttc_volume_estimate` names is defined inside `Model/`.  What
-stays here is the *auxiliary* layer their bodies are built from — the
+**The seven quantities the headline is *about* are here too**, in the `Measured`
+section at the end: `Ttc.ttcIndex`, `Ttc.ttcRates`, `Ttc.ttcEstimate`,
+`Ttc.ttcThresh`, `Ttc.ttcTerminates`, `Ttc.ttcCost` and `Ttc.ttcNumCubes`.  They
+sit on top of the *auxiliary* layer their bodies are built from — the
 preprocessed input, the inscribed-ball data, the dilation, the parameter block,
-the precision and the oracle bundle.  `Ttc.ttc_volume_api` below therefore states
-the guarantee with those seven bodies written out; `Model/Theorem.lean` states it
-with the seven names, and the two statements are definitionally the same term,
-which is exactly why `Ttc.ttc_volume_estimate`'s proof is the bare application
-`ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.
+the precision and the oracle bundle.  `Ttc.ttc_volume_api` below states the
+guarantee with those seven bodies written out; `Model/Theorem.lean` states it
+over `Model/Pseudocode`'s own `Ttc.ttcOutput` (divided by the dilation factor)
+together with the two names whose unfolding is a wall of proof terms,
+`Ttc.ttcRates` and `Ttc.ttcIndex`.  The two statements are definitionally the same
+term, which is exactly why `Ttc.ttc_volume_estimate`'s proof is the bare
+application `ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.
 
 ## What the algorithm is actually handed
 
@@ -108,7 +109,8 @@ and the three obligations these discharge from the headline's own binders,
 
 The measured quantities built out of them — `Ttc.ttcIndex`, `Ttc.ttcRates`,
 `Ttc.ttcEstimate`, `Ttc.ttcThresh`, `Ttc.ttcTerminates`, `Ttc.ttcCost`,
-`Ttc.ttcNumCubes` — are in `Model/Theorem.lean`.
+`Ttc.ttcNumCubes` — are in the `Measured` section below, after the headline they
+are the sub-terms of.
 -/
 
 namespace Ttc
@@ -280,8 +282,8 @@ theorem ttcPrec_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
 /-! ## The oracle bundle
 
 The last auxiliary.  Its sample-coin argument is indexed by `|Sol(F) ∩ 𝕃ⁿ|` at the
-computed precision — the quantity `Model/Theorem.lean` names `Ttc.ttcIndex`, written
-out here since the name is not in scope. -/
+computed precision — the quantity the `Measured` section below names `Ttc.ttcIndex`,
+written out here since the name is not yet in scope. -/
 
 /-- **The oracle bundle `alg:ttc` reads on the run `(c, t)`** — `Vol_ED` is
 `Ttc.mcVol` at the volume coins `c`, the covered-lattice sampler is at the sample
@@ -325,10 +327,10 @@ sub-term it names.
 
 The seven measured quantities are written out here rather than named, because
 their names — `Ttc.ttcIndex`, `Ttc.ttcRates`, `Ttc.ttcEstimate`, `Ttc.ttcThresh`,
-`Ttc.ttcTerminates`, `Ttc.ttcCost`, `Ttc.ttcNumCubes` — are introduced downstream,
-in `Model/Theorem.lean`.  Each conjunct below is *literally* the body of the
-corresponding definition there, so `Ttc.ttc_volume_estimate` is this theorem
-applied, with no rewriting. -/
+`Ttc.ttcTerminates`, `Ttc.ttcCost`, `Ttc.ttcNumCubes` — are introduced in the
+`Measured` section immediately below, out of these very sub-terms.  Each conjunct
+here is *literally* the body of the corresponding definition there, so
+`Ttc.ttc_volume_estimate` is this theorem applied, with no rewriting. -/
 
 /-- **`thm:volumettc` + `thm:runtime`, in the statement API.**  `TTC(F, ε, δ)` run
 on `φ` — with the two preprocessing passes (`Ttc.pruneForm`, `Ttc.cleanForm`), the
@@ -388,11 +390,152 @@ theorem ttc_volume_api
   ttc_volume_prune atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ
     (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) hpos
 
+section Measured
+
+/-! ## The seven quantities the guarantee is about
+
+Each takes exactly the algorithm's inputs `atoms φ ε δ hε0 hε1 hn hφ hpos`, and each
+is a pure abbreviation: a `def` with a closed body, plus a `rfl` lemma exhibiting that
+body.  Nothing here asserts anything.  Each body is *literally* the corresponding
+sub-term of `Ttc.ttc_volume_api` above, which is what lets `Model/Theorem.lean` state
+the headline over these names and prove it by the bare application.
+
+The eight shared inputs are written once, as the `variable` block below; Lean re-adds
+them, in that order, to each declaration that mentions them.  `Ttc.ttcNumCubes` mentions
+only `atoms` and `φ`, so it takes only those two.  `#check @Ttc.ttcEstimate` and friends
+print the argument lists in full. -/
+
+variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
+    (hpos : 0 < volSol (atomSet atoms) φ)
+
+/-- **`|Sol(F) ∩ 𝕃ⁿ|` at the computed precision** — the sample coins' index. -/
+noncomputable def ttcIndex : ℕ :=
+  runCount (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
+    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos)
+
+theorem ttcIndex_def :
+    ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos
+      = runCount (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
+          (isPositive_cleanForm atoms (pruneForm atoms φ))
+          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) := rfl
+
+/-- **The level-`0` rate vector `θ`** (`alg:ttc` line 20); `Ttc.trajLaw` of it is the
+law the sample coins are drawn from (`AUDIT.md` §1h). -/
+noncomputable def ttcRates (c : ℕ → Space n) :
+    Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℝ :=
+  runRates (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
+    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c
+
+theorem ttcRates_def (c : ℕ → Space n) :
+    ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c
+      = runRates (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
+          (isPositive_cleanForm atoms (pruneForm atoms φ))
+          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c := rfl
+
+/-- **What `TTC(F, ε, δ)` returns on `(c, t)`, brought back to the original scale** —
+`Ttc.ttcRunOutput` at the dilated input, divided by `ttcScaleⁿ` (`AUDIT.md` §1h). -/
+noncomputable def ttcEstimate (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) : ℝ :=
+  ttcRunOutput (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ
+      hε0 hε1 hn (ttcInput_isPositive atoms φ)
+      (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+      (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+      (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c t
+    / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n
+
+theorem ttcEstimate_def (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = ttcRunOutput (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
+            (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
+            (isPositive_cleanForm atoms (pruneForm atoms φ))
+            (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+            (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+            (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c t
+          / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n := rfl
+
+/-- **The sample threshold `Thresh`** of the computed parameter block — the quantity
+the cost bound is linear in. -/
+noncomputable def ttcThresh : ℝ :=
+  (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).thresh
+
+theorem ttcThresh_def :
+    ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos
+      = (inputParams atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
+          (isPositive_cleanForm atoms (pruneForm atoms φ))
+          (cleanBdd atoms (isPositive_pruneForm atoms φ)
+            (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos)
+            (pruneInt atoms hφ hpos))).thresh := rfl
+
+/-- **The run's absorption loop exits at every cube** — `Ttc.Terminates`; the
+hypothesis `thm:runtime` needs and the paper leaves unstated (`AUDIT.md` §1h). -/
+def ttcTerminates (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) : Prop :=
+  Terminates (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) (toDNFd (ttcInput atoms φ))
+
+theorem ttcTerminates_def (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = Terminates (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t)
+          (toDNFd (cleanForm atoms (pruneForm atoms φ))) := rfl
+
+/-- **The charged cost of the run `(c, t)`** — `Ttc.runCost` folded over the
+preprocessed formula's cube list (`AUDIT.md` §1h). -/
+noncomputable def ttcCost (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
+    (cVol cSample : ℕ) : ℕ :=
+  runCost (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) cVol cSample
+    (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos) (toDNFd (ttcInput atoms φ))
+
+theorem ttcCost_def (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
+    (cVol cSample : ℕ) :
+    ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample
+      = runCost (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) cVol cSample
+          (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (toDNFd (cleanForm atoms (pruneForm atoms φ))) := rfl
+
+/-- **`m`, the number of cubes the run iterates over.** -/
+noncomputable def ttcNumCubes : ℕ :=
+  (toDNFd (ttcInput atoms φ)).length
+
+theorem ttcNumCubes_def :
+    ttcNumCubes atoms φ = (toDNFd (cleanForm atoms (pruneForm atoms φ))).length := rfl
+
+/-- **The measured quantity is `Model/Pseudocode`'s `Ttc.ttcOutput`, divided by `qⁿ`** —
+lines A12–A13 of the preprocessing transcription, by `rfl`.  `Model/Theorem.lean`'s
+accuracy conjunct is stated with the right-hand side, so this lemma is also the
+statement of what that conjunct measures. -/
+theorem ttcEstimate_eq_ttcOutput (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = ttcOutput (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c) toDNFd
+          (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) t
+        / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n := rfl
+
+end Measured
+
 /-! ## The bridge to `Model/Pseudocode`
 
 The input the run is on is `Model/Pseudocode`'s own `Ttc.preprocess`, by `rfl`.  The
-companion bridge for the *measured* quantity, `Ttc.ttcEstimate_eq_ttcOutput`, is in
-`Model/Theorem.lean` alongside `Ttc.ttcEstimate` itself. -/
+companion bridge for the *measured* quantity is `Ttc.ttcEstimate_eq_ttcOutput`, at the
+end of the `Measured` section above; `Model/Theorem.lean`'s accuracy conjunct is
+stated over that lemma's right-hand side, so the headline measures
+`Model/Pseudocode`'s `Ttc.ttcOutput` directly. -/
 
 /-- **The input the run is on is `Model/Pseudocode`'s `Ttc.preprocess`**, by `rfl`. -/
 theorem ttcInput_eq_preprocess {A : Type*} {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) :
@@ -417,4 +560,12 @@ end Ttc
 #print axioms Ttc.ttcPrec_def
 #print axioms Ttc.ttcOracleBundle_def
 #print axioms Ttc.ttc_volume_api
+#print axioms Ttc.ttcIndex_def
+#print axioms Ttc.ttcRates_def
+#print axioms Ttc.ttcEstimate_def
+#print axioms Ttc.ttcThresh_def
+#print axioms Ttc.ttcTerminates_def
+#print axioms Ttc.ttcCost_def
+#print axioms Ttc.ttcNumCubes_def
+#print axioms Ttc.ttcEstimate_eq_ttcOutput
 #print axioms Ttc.ttcInput_eq_preprocess

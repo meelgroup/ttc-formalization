@@ -2,6 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
+import Ttc.Exec.Api
 import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
 
@@ -82,12 +83,17 @@ and only the accuracy *target* `Ttc.volSol` is at the user's original
 `Ttc.TwoCube.twoForm n` (the preprocessing moves no volume:
 `Ttc.volSol_pruneForm`, `Ttc.volSol_cleanForm`).
 
-None of that is spelled out below, because `Ttc/Model/Theorem.lean` names it:
+None of that is spelled out below, because `Ttc/Exec/Api.lean` names it:
 `Ttc.ttcRates` and `Ttc.ttcEstimate` take exactly `atoms φ ε δ hε0 hε1 hn hφ hpos`
 and compose the preprocessing, the ball and the dilation internally.  So
 `Ttc.TwoCube.twoProbFull` is a five-line abbreviation for the integral in the
 headline's conclusion; it asserts nothing, and `Ttc.TwoCube.twoProbFull_def` writes
 it out by `rfl`.
+
+`Ttc.ttc_volume_estimate` states that integral over `Model/Pseudocode`'s
+`Ttc.ttcOutput` divided by `Ttc.ttcScale ^ n` rather than over `Ttc.ttcEstimate`;
+the two are the same term (`Ttc.ttcEstimate_eq_ttcOutput`, by `rfl`), which is why
+the applications below need no rewriting.
 
 It is **not** `Ttc.TwoCube.twoAccD` or `Ttc.TwoCube.twoAcc` (`Ttc/Witness/Inputs.lean`),
 which are undilated, unpruned, uncleaned runs under a *supplied* ball.  Those are
@@ -161,7 +167,7 @@ abbreviation for the integral in the headline's conclusion, asserting nothing
 
 Everything the run does to the input — pruning, cleaning, constructing the inscribed
 ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcRates` and
-`Ttc.ttcEstimate` (`Ttc/Model/Theorem.lean`).  Only the accuracy target `Ttc.volSol` is at
+`Ttc.ttcEstimate` (`Ttc/Exec/Api.lean`).  Only the accuracy target `Ttc.volSol` is at
 the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ENNReal :=
@@ -173,9 +179,10 @@ noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 <
     ∂(MonteCarlo.coins n)
 
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
-verbatim the integral in `Ttc.ttc_volume_estimate`'s conclusion at
-`atoms := Ttc.TwoCube.atomsT …` and `φ := Ttc.TwoCube.twoForm n`, and nothing else
-changes. -/
+the integral in `Ttc.ttc_volume_estimate`'s conclusion at
+`atoms := Ttc.TwoCube.atomsT …` and `φ := Ttc.TwoCube.twoForm n` — the headline writes
+the integrand as `Ttc.ttcOutput … / Ttc.ttcScale ^ n`, which is `Ttc.ttcEstimate` by
+`rfl` (`Ttc.ttcEstimate_eq_ttcOutput`) — and nothing else changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     twoProbFull n hn ε δ hε0 hε1 =
       ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
