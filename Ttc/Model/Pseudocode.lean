@@ -3,16 +3,68 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Dnf
+import Ttc.Lattice.Decomposition
 
 /-!
 # `Model/Pseudocode`: `alg:ttc`, **and the preprocessing that precedes it**
 
 A line-by-line transcription of Algorithm 1, followed by a line-by-line
 transcription of the **four preprocessing steps** the verified algorithm applies
-before it. No proofs; the structural invariants of the modelled execution are in
+before it, ending in `Ttc.ttcAlgOutput` — `TTC(F, ε, δ)`'s output as one term, over
+an oracle bundle. The structural invariants of the modelled execution are in
 `Invariants`, and every theorem about the preprocessing vocabulary stays in
 `Exec/` (`Exec/Scale`, `Exec/ScaleFactor`, `Exec/Inscribed`, `Exec/Cleanup`,
 `Exec/Prune`).
+
+## What proof content is here, and why
+
+This file **is not proof-free**, and it used to claim it was. It carries about a
+dozen tactic proofs, and they are of exactly two kinds — no others:
+
+1. **What a `Ttc.Params` cannot be built without.** `Ttc.Params` bundles five
+   *proof* fields (`hε0 hε1 hn hm hr`), so the parameter block of lines 17–20
+   cannot be *written down* without proofs that the decomposition has a cube
+   (`hm`) and a facet (`hr`). The algorithm's own preprocessing supplies both, so
+   the lemmas that supply them have to live where the block is built — here:
+   `Ttc.instFiniteCubeMem`, `Ttc.instFiniteFacetIndex`, `Ttc.one_le_card_cubes`,
+   `Ttc.one_le_card_facets`, `Ttc.region_nil`, `Ttc.not_isBounded_univ_space`,
+   `Ttc.exists_lit_of_isBounded`, `Ttc.one_le_card_cubes_of_ne_nil`,
+   `Ttc.one_le_card_facets_of_isBounded`. Likewise `Ttc.dnfForm_isPositive` and
+   `Ttc.preprocess_isPositive`, which supply `Ttc.inputParams`' `hφ` for the
+   formula the algorithm is handed.
+2. **The basic properties of this file's own converter** `Ttc.toDNFd` (line A1),
+   which `Ttc.inputParams` instantiates the two facts above *at*:
+   `Ttc.mem_toDNFd`, `Ttc.exists_mem_toDNF`, `Ttc.toDNFd_isDNFOf`,
+   `Ttc.toDNFd_ne_nil`. They cannot sit in `Exec/Dedup`, which imports this file.
+
+Nothing else. No geometry, no measure theory, no probability, and nothing about
+what the algorithm *achieves* — the two tables below say where each of those
+lives. A referee reading `Model/` for the *statement* may skip every proof here;
+none of them is load-bearing for what the theorem says, only for what can be
+written down.
+
+## The divergence from the reference layout
+
+The reference for this layout is
+`nfalean/ApproxNFA/Model/`, whose theorem is stated about `countNFAExec A n ε δ` —
+the algorithm applied to its **inputs alone**. This file cannot do that, and the
+reason is item 1 above.
+
+`Ttc.inputParams`, and through it `Ttc.runScale`, `Ttc.runPrec`, `Ttc.runCount`
+and `Ttc.ttcAlgOutput`, carry *proof* binders: `hε0`, `hε1`, `hn`, the input's
+positivity, and a proof that the preprocessed formula's solution set is bounded.
+**So the algorithm in `Model/` depends on proof terms**, and `Ttc.ttcAlgOutput`
+cannot be applied to `(atoms, φ, ε, δ)` alone. nfalean deliberately avoids this —
+its parameter block is data only, which is exactly what lets its theorem write
+`countNFAExec A n ε δ` and name nothing else.
+
+The cause is `Ttc.Params` bundling five proof fields alongside its five data
+fields. Unbundling them — carrying `ε δ n m r` as data and passing the five facts
+to the theorems that need them — is a **~101-site refactor** across the
+development, and it is **not undertaken here**. The visible cost is one name in
+`Ttc.ttc_volume_estimate`'s type that is a proof rather than a quantity,
+`Ttc.preprocess_bdd` (`Exec/Api`); it is *derived* from `hφ` and `hpos`
+(`Exec/BddFromPos`), never assumed.
 
 **This file imports no `Exec/` file.** `Ttc.toDNFd`, the deduplicated line-16
 converter that `Ttc.pruneForm` and `Ttc.cleanForm` are defined over, used to live
@@ -20,8 +72,11 @@ in `Exec/Dedup`; it is defined *here* now (line A1 below), a two-line wrapper on
 `Ttc.toDNF` of `Model/Prelude`. Its theorems (`Ttc.mem_toDNFd`,
 `Ttc.toDNFd_nodup`, `Ttc.toDNFd_isDNFOf`, `Ttc.length_toDNFd_le_card`, …) stay in
 `Exec/Dedup`, which now imports this file — the edge runs `Model/ → Exec/`, never
-back. The single import here is `Ttc.Dnf` (for `Ttc.conj`, which `Ttc.cubeForm`
-folds), and `Ttc.Dnf` itself depends on nothing but `Model/Prelude`.
+back. The two imports here are `Ttc.Dnf` (for `Ttc.conj`, which `Ttc.cubeForm`
+folds, and `Ttc.toDNF_isDNFOf`) and `Ttc.Lattice.Decomposition` (for
+`Ttc.region_subset_sol`, which the parameter block's `hr` needs); `Ttc.Dnf` and
+`Ttc.Lattice.Decomposition` both depend on nothing but Mathlib and
+`Model/Prelude`.
 
 ```
 line 22        p ← 1 ;  X ← ∅
@@ -138,14 +193,17 @@ line A13       output (that run's output) / qⁿ
 | A5 (`Vacuous`) | `Ttc.VacuousLit`, filtered by `Ttc.cleanCube` | here |
 | A4–A6 together | `Ttc.cleanForm` | here |
 | A2–A6 together | `Ttc.preprocess` | here |
-| A8 (`SomeInscribedBall`) | `Ttc.ballData` | here |
+| A8 (`SomeInscribedBall`) | `Ttc.ballData`, `Ttc.autoCen` | here |
 | A8 (centres) | `Ttc.cenOf` | here |
-| A9 (`γ̂`) | `Ttc.gammaOf` | here |
+| A9 (`γ̂`) | `Ttc.gammaOf`, `Ttc.autoGamma` | here |
 | A10 (`Vₙ`) | `Ttc.unitBallVol` | here |
-| A10 (`q`) | `Ttc.scaleFactor` | here |
-| A11 (dilate) | `Ttc.scaleAtoms` | here |
+| A10 (`q`) | `Ttc.scaleFactor`, `Ttc.runScale` | here |
+| A11 (dilate) | `Ttc.scaleAtoms`, `Ttc.scaledAtoms` | here |
+| (line 17, `ρ`) | `Ttc.runPrec` | here |
+| (the coins' index) | `Ttc.runCount` | here |
 | A12 (the run) | `Ttc.run` / `Ttc.ttcOutput`, above | here |
-| A13 (`/qⁿ`) | the division in `Ttc.ttcEstimate` | `Exec/Api` |
+| A13 (`/qⁿ`) | the division in `Ttc.ttcAlgOutput` | here |
+| A12–A13 as one term | `Ttc.ttcAlgOutput` | here |
 
 ## Which of the four are in the paper
 
@@ -154,10 +212,17 @@ either, but unlike the other three it is not a change to the algorithm: it rewri
 the input syntax and leaves the body alone.
 
 * **Step 1, the pruning (A2–A3), is not in `alg:ttc`.** It changes `Sol(F)` — by a
-  **null set only**: the deleted cubes have convex regions with empty interior,
-  `Ttc.sol_pruneForm_subset` is a genuine `⊆` that `Ttc.degForm` makes strict, and
-  only the *measure* survives (`Ttc.volSol_pruneForm`). This is legitimate solely
-  because the headline's conclusion merely **measures** `Ttc.sol`.
+  **null set only**: the deleted cubes have convex regions with empty interior, so
+  `Ttc.sol_pruneForm_subset` is a genuine `⊆` and may in general be *strict* (an
+  isolated lower-dimensional piece sitting beside the surviving union is dropped),
+  while the **measure** is preserved exactly (`Ttc.volSol_pruneForm`). The soundness
+  of the substitution rests on that volume equality, not on any claim about the set,
+  and it is legitimate solely because the headline's conclusion merely **measures**
+  `Ttc.sol`. (`Ttc.degForm` is *not* an example of the strictness — its `thinCube`
+  region is the point `0` inside `fatCube`'s `[−1,1]`, so pruning leaves `Sol`
+  unchanged there. It is the witness for something else: that pruning destroys
+  `Ttc.IsDNFOf`, `Ttc.not_isDNFOf_nondegenCubes_degForm`, because `IsDNFOf` is a
+  statement about Boolean valuations rather than about the solution set.)
 * **Step 2, the cleaning (A4–A6), does not change what the algorithm does.**
   `Ttc.sol_cleanForm` is an **exact set equality**: a literal `0·x ≤ b` with
   `0 ≤ b` denotes `Set.univ` and a cube containing one with `b < 0` denotes `∅`, so
@@ -185,12 +250,14 @@ exception — `Ttc.toDNFd`, the line-16 converter, included. In particular
 composite with the cleaning pass, `Ttc.preprocess`. Every *theorem* about them
 stays in `Exec/`; only the definitions moved.
 
-That the headline really measures these definitions is machine-checked, by two
-lemmas whose proofs are `rfl` (both in `Exec/Api`):
+That the headline really measures these definitions is machine-checked. Its
+accuracy conjunct is stated about `Ttc.ttcAlgOutput` *directly*, so no bridge is
+needed to see what is measured; two `rfl` lemmas in `Exec/Api` connect that term to
+the run's own vocabulary:
 
-* `Ttc.ttcEstimate_eq_ttcOutput` — the quantity `Ttc.ttc_volume_estimate` bounds is
-  this file's `Ttc.ttcOutput`, at this file's parameter block and precision,
-  divided by `qⁿ`. That is lines A12–A13.
+* `Ttc.ttcAlgOutput_eq_ttcEstimate` — `Ttc.ttcAlgOutput` at the constructed oracle
+  bundle **is** the run's estimate. That is lines A12–A13 at the bundle the
+  development builds.
 * `Ttc.ttcInput_eq_preprocess` — the formula that run is on is this file's
   `Ttc.preprocess atoms φ`. That is lines A2–A6.
 
@@ -512,5 +579,382 @@ def scaleAtoms (c : ℝ) (atoms : A → LinAtom n) : A → LinAtom n :=
   fun a => ⟨(atoms a).coeff, c * (atoms a).bound⟩
 
 end Preprocess
+
+/-! # The parameter block, and the six facts a `Ttc.Params` needs to exist
+
+`alg:ttc` lines 17–20 *compute* `η, ε', δ', Thresh, κ, γ, ρ` from `(F, ε, δ)`.  All
+seven are already `def`s on `Ttc.Params` (`Model/Prelude`), so what is left is the
+block itself: `Ttc.ttcParams`, which reads `m` and `r` off the decomposition, and
+`Ttc.inputParams`, which is `ttcParams` at the algorithm's own inputs.
+
+**Why there are proofs in this file.**  `Ttc.Params` bundles five *proof* fields
+(`hε0 hε1 hn hm hr`), so a parameter block cannot be built without them; `hm`
+(at least one cube) and `hr` (at least one facet) are not free.  The algorithm's
+own preprocessing supplies both, so the lemmas that supply them have to be
+available where the block is built — here.  They are, exhaustively:
+
+| lemma | says | was in |
+| --- | --- | --- |
+| `Ttc.instFiniteCubeMem`, `Ttc.instFiniteFacetIndex` | both index types are finite, so `Nat.card` is not the junk value `0` | `Exec/Params` |
+| `Ttc.one_le_card_cubes`, `Ttc.one_le_card_facets` | one member ⟹ `1 ≤ Nat.card` | `Exec/Params` |
+| `Ttc.region_nil` | a literal-free cube denotes `Set.univ` | `Exec/CubeBounds` |
+| `Ttc.not_isBounded_univ_space` | `ℝⁿ` is unbounded for `1 ≤ n` | `Exec/CubeBounds` |
+| `Ttc.exists_lit_of_isBounded` | bounded `Sol` ⟹ every cube carries a literal | `Exec/CubeBounds` |
+| `Ttc.one_le_card_cubes_of_ne_nil`, `Ttc.one_le_card_facets_of_isBounded` | the two packaged conclusions | `Exec/CubeBounds` |
+
+Four more come up for a different reason: they are the **basic properties of this
+file's own converter**, `Ttc.toDNFd` (line A1), and `Ttc.inputParams` instantiates
+the two facts above *at* `toDNFd φ`.  They were in `Exec/Dedup`, which imports this
+file for the definition, so leaving them there was a genuine import cycle
+(`Model/Pseudocode → Exec/Dedup → Model/Pseudocode`).  They are:
+
+| lemma | says | was in |
+| --- | --- | --- |
+| `Ttc.mem_toDNFd` | deduplication preserves the cubes | `Exec/Dedup` |
+| `Ttc.exists_mem_toDNF` | a positive formula's DNF has a cube | `Exec/Dedup` |
+| `Ttc.toDNFd_isDNFOf` | `toDNFd φ` is still a correct DNF of `φ` | `Exec/Dedup` |
+| `Ttc.toDNFd_ne_nil` | `toDNFd` of a positive formula is nonempty | `Exec/Dedup` |
+
+**That is the whole of the proof content `Model/` carries, together with the three
+positivity lemmas of the next section** (`Ttc.cubeForm_isPositive`,
+`Ttc.dnfForm_isPositive`, `Ttc.preprocess_isPositive`, which supply
+`Ttc.inputParams`' `hφ` for the preprocessed formula), **and it is not an
+accident.**  It is exactly: the facts without which a `Ttc.Params` cannot be
+constructed, plus the four properties of the converter this file defines.  Nothing
+else moved.  The tie-back lemmas about `ttcParams` (`Ttc.ttcParams_eps`, …) stay in
+`Exec/Params`; the positivity route to a nonempty raw DNF
+(`Ttc.exists_mem_dnfAux_true`, `Ttc.toDNF_ne_nil`, …) stays in `Exec/CubeBounds`;
+and the counting lemmas (`Ttc.natCard_mem_list`, `Ttc.natCard_mem_list_of_nodup`,
+`Ttc.card_toDNFd`, `Ttc.length_toDNFd_le_card`) together with `Ttc.toDNFd_nodup`,
+`Ttc.toDNFd_isPositive` and `Ttc.toDNFd_ne_nil_of` stay in `Exec/Dedup`.
+
+This file's one new import is `Ttc.Lattice.Decomposition`, for
+`Ttc.region_subset_sol`; that module imports only Mathlib and `Model/Prelude`, so
+the edge still runs `Model/ → Exec/` and never back.
+-/
+
+section ParamBlock
+
+variable {A : Type*}
+
+/-! ## Finiteness of the two index types
+
+Both are subtypes cut out by membership in a `List`, hence finite; `Nat.card` of an
+infinite type is `0`, so the positivity lemmas below would be *false* without this.
+-/
+
+instance instFiniteCubeMem (D : DNF A) : Finite {c : Cube A // c ∈ D} :=
+  List.finite_toSet D |>.to_subtype
+
+instance instFiniteFacetIndex (D : DNF A) : Finite (FacetIndex D) := by
+  unfold FacetIndex
+  have : ∀ c : {c : Cube A // c ∈ D}, Finite {l : Lit A // l ∈ c.val} := fun c =>
+    (List.finite_toSet c.val).to_subtype
+  infer_instance
+
+/-- **The DNF has a cube ⟹ `1 ≤ m`.**  Reduces `Params`' `hm` to a statement about
+the input formula's decomposition. -/
+theorem one_le_card_cubes {D : DNF A} {c : Cube A} (hc : c ∈ D) :
+    1 ≤ Nat.card {c : Cube A // c ∈ D} :=
+  Nat.one_le_iff_ne_zero.mpr <| Nat.card_ne_zero.mpr ⟨⟨⟨c, hc⟩⟩, inferInstance⟩
+
+/-- **Some cube has a literal ⟹ `1 ≤ r`.**  Reduces `Params`' `hr` likewise.  A cube
+with no literals is the empty conjunction, whose region is all of `Space n`; the
+facet count is then genuinely `0` and `Params` genuinely does not apply. -/
+theorem one_le_card_facets {D : DNF A} {c : Cube A} (hc : c ∈ D) {l : Lit A}
+    (hl : l ∈ c) : 1 ≤ Nat.card (FacetIndex D) :=
+  Nat.one_le_iff_ne_zero.mpr <| Nat.card_ne_zero.mpr ⟨⟨⟨⟨c, hc⟩, ⟨l, hl⟩⟩⟩, inferInstance⟩
+
+/-! ## The block itself -/
+
+/-- **The parameter block `TTC(F, ε, δ)` computes**, from the DNF its AllSAT call
+returned, the ambient dimension, and the requested accuracy and confidence.
+
+`m` and `r` are the *exact* counts, not bounds: `alg:ttc` reads them off the
+decomposition.  Taking them exactly is what makes `Ttc.ttcParams_cubes_le` and
+`Ttc.ttcParams_facets_le` (`Exec/Params`) `le_refl` rather than assumptions.
+
+Everything downstream — `η = ε/8`, `ε' = ε/12`, `δ' = δ/(4m)`, `Thresh`, `κ`, `γ`,
+`ρ = ⌈log₁₀(γ/γ̂)⌉` — is already a `def` on `Params` (`Model/Prelude.lean`), so no
+further computation is needed here. -/
+noncomputable def ttcParams (D : DNF A) (n : ℕ) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
+    (hm : 1 ≤ Nat.card {c : Cube A // c ∈ D})
+    (hr : 1 ≤ Nat.card (FacetIndex D)) : Params where
+  ε := ε
+  δ := δ
+  n := n
+  m := Nat.card {c : Cube A // c ∈ D}
+  r := (Nat.card (FacetIndex D) : ℝ)
+  hε0 := hε0
+  hε1 := hε1
+  hn := hn
+  hm := hm
+  hr := by exact_mod_cast hr
+
+/-! ## `hm` and `hr`, derived rather than assumed
+
+`hm` comes from the DNF being nonempty; `hr` from the solution set being bounded.
+Neither is derivable from nothing — an unsatisfiable `φ` has an empty DNF, and
+`φ = tt` has the single literal-free cube `[]` — so each is derived from a
+hypothesis the top-level statement already carries.
+-/
+
+/-- A cube with no literals denotes all of the ambient space: `Cube.holds` is a
+bounded universal quantifier over the cube's literals, hence vacuously true. -/
+theorem region_nil {X : Type*} {M : A → Set X} : region M ([] : Cube A) = Set.univ :=
+  Set.eq_univ_of_forall fun _ _ h => absurd h (List.not_mem_nil)
+
+/-- `ℝⁿ` is unbounded as soon as `1 ≤ n`.  Used to contradict `hbdd` in
+`Ttc.exists_lit_of_isBounded`. -/
+theorem not_isBounded_univ_space {n : ℕ} (hn : 1 ≤ n) :
+    ¬ Bornology.IsBounded (Set.univ : Set (Space n)) := by
+  haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
+  haveI : Nontrivial (Space n) := inferInstance
+  exact NormedSpace.unbounded_univ ℝ (Space n)
+
+/-- **Every cube of a DNF of a formula with bounded solution set has a literal.**
+
+If some cube `c` were literal-free then `region M c = Set.univ`, and soundness of
+the decomposition (`Ttc.region_subset_sol`) would give `Set.univ ⊆ sol M φ`,
+making `sol M φ` unbounded — contradicting `hbdd`.  This is what discharges
+`Ttc.ttcParams`' `hr` without assuming it. -/
+theorem exists_lit_of_isBounded {n : ℕ} (hn : 1 ≤ n)
+    {M : A → Set (Space n)} {φ : BForm A} {D : DNF A}
+    (hD : IsDNFOf D φ) (hbdd : Bornology.IsBounded (sol M φ))
+    {c : Cube A} (hc : c ∈ D) : ∃ l : Lit A, l ∈ c := by
+  by_contra hno
+  have hcnil : c = [] :=
+    List.eq_nil_iff_forall_not_mem.mpr fun l hl => hno ⟨l, hl⟩
+  subst hcnil
+  have huniv : (Set.univ : Set (Space n)) ⊆ sol M φ := by
+    rw [← region_nil (M := M) (A := A)]
+    exact region_subset_sol hD hc
+  exact not_isBounded_univ_space hn (hbdd.subset huniv)
+
+/-- **A nonempty DNF has at least one cube**, in the `Nat.card` form
+`Ttc.ttcParams` wants for its `hm`. -/
+theorem one_le_card_cubes_of_ne_nil {D : DNF A} (hne : D ≠ []) :
+    1 ≤ Nat.card {c : Cube A // c ∈ D} := by
+  obtain ⟨c, hc⟩ := List.exists_mem_of_ne_nil D hne
+  exact one_le_card_cubes hc
+
+/-- **`hr`, from boundedness of the solution set.**  Combines
+`Ttc.exists_lit_of_isBounded` with `Ttc.one_le_card_facets`.  Stated for an
+arbitrary DNF `D` of `φ`, so that it applies to deduplicated variants of
+`Ttc.toDNF φ` as well. -/
+theorem one_le_card_facets_of_isBounded {n : ℕ} (hn : 1 ≤ n)
+    {M : A → Set (Space n)} {φ : BForm A} {D : DNF A}
+    (hD : IsDNFOf D φ) (hbdd : Bornology.IsBounded (sol M φ)) (hne : D ≠ []) :
+    1 ≤ Nat.card (FacetIndex D) := by
+  obtain ⟨c, hc⟩ := List.exists_mem_of_ne_nil D hne
+  obtain ⟨l, hl⟩ := exists_lit_of_isBounded hn hD hbdd hc
+  exact one_le_card_facets hc hl
+
+/-! ## The four properties of `Ttc.toDNFd` that `Ttc.inputParams` instantiates at
+
+`Ttc.inputParams` applies the two lemmas above to `D := toDNFd φ`, so it needs
+`IsDNFOf (toDNFd φ) φ` and `toDNFd φ ≠ []`.  Both are properties of the converter
+*defined in this file* (line A1), which is why they are here and not in
+`Exec/Dedup`: that module imports this one.  Everything else proved about `toDNFd`
+— duplicate-freeness, positivity, and the counting route to `hlen` — stays in
+`Exec/Dedup`.
+-/
+
+/-- **Deduplication preserves the cubes.**  Everything the development asks of a DNF
+is a statement about its members, so this single lemma is what makes `toDNFd` a
+drop-in replacement for `toDNF`.
+
+`Ttc.Cube A` has no `DecidableEq` to synthesize, so `List.mem_dedup`'s instance
+argument is handed over by hand, matching `Ttc.toDNFd`'s own `Classical.decEq`. -/
+theorem mem_toDNFd {φ : BForm A} {c : Cube A} : c ∈ toDNFd φ ↔ c ∈ toDNF φ :=
+  @List.mem_dedup _ (Classical.decEq (Cube A)) c (toDNF φ)
+
+/-- **`toDNFd` is still a correct DNF of `φ`.**  `DNF.holds v D = ∃ c ∈ D, c.holds v`
+depends on `D` only through its members, and `Ttc.mem_toDNFd` says those are
+unchanged; `Ttc.toDNF_isDNFOf` does the rest. -/
+theorem toDNFd_isDNFOf (φ : BForm A) : IsDNFOf (toDNFd φ) φ := by
+  intro v
+  rw [← toDNF_isDNFOf φ v]
+  constructor
+  · rintro ⟨c, hc, hcv⟩
+    exact ⟨c, mem_toDNFd.1 hc, hcv⟩
+  · rintro ⟨c, hc, hcv⟩
+    exact ⟨c, mem_toDNFd.2 hc, hcv⟩
+
+/-- **A positive formula has at least one cube.**  Structural induction: `BForm` has
+no `false` constructor, `neg` is excluded by positivity, `or` appends and `and`
+crosses, and both operations preserve "has a member". -/
+theorem exists_mem_toDNF : ∀ (φ : BForm A), φ.IsPositive → ∃ c, c ∈ toDNF φ := by
+  intro φ
+  induction φ with
+  | tt => intro _; exact ⟨[], List.mem_singleton_self _⟩
+  | atom a => intro _; exact ⟨[⟨a, true⟩], List.mem_singleton_self _⟩
+  | neg φ _ => intro h; exact absurd h id
+  | and φ ψ ihφ ihψ =>
+      rintro ⟨hφ, hψ⟩
+      obtain ⟨c, hc⟩ := ihφ hφ
+      obtain ⟨d, hd⟩ := ihψ hψ
+      refine ⟨c ++ d, ?_⟩
+      show c ++ d ∈ (toDNF φ).cross (toDNF ψ)
+      rw [DNF.cross, List.mem_flatMap]
+      exact ⟨c, hc, List.mem_map_of_mem hd⟩
+  | or φ ψ ihφ ihψ =>
+      rintro ⟨hφ, _⟩
+      obtain ⟨c, hc⟩ := ihφ hφ
+      exact ⟨c, List.mem_append_left _ hc⟩
+
+/-- **A positive formula has a non-empty deduplicated DNF.**  Together with
+`Ttc.one_le_card_cubes_of_ne_nil` this discharges `hm` for `toDNFd`. -/
+theorem toDNFd_ne_nil {φ : BForm A} (h : φ.IsPositive) : toDNFd φ ≠ [] := by
+  obtain ⟨c, hc⟩ := exists_mem_toDNF φ h
+  exact List.ne_nil_of_mem (mem_toDNFd.2 hc)
+
+/-! ## The block at the algorithm's own inputs -/
+
+/-- **The parameter block `TTC` computes** (`alg:ttc` lines 17–20), with `hm` and
+`hr` supplied by `Ttc.one_le_card_cubes_of_ne_nil` and
+`Ttc.one_le_card_facets_of_isBounded` rather than assumed.  The headline used to
+carry `P` as a binder with `hP : P = ttcParams …`; this is that right-hand side,
+named, so that both are discharged by `rfl`.
+
+The internal failure parameter is `δ₀ = 4δ/5`, so that the conclusion is a clean
+`1 − δ` — see `Exec/Final.lean` for what that reprices. -/
+noncomputable def inputParams {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
+    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ)) : Params :=
+  ttcParams (toDNFd φ) n ε (4 * δ / 5) hε0 hε1 hn
+    (one_le_card_cubes_of_ne_nil (toDNFd_ne_nil hφ))
+    (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
+
+end ParamBlock
+
+/-! # The algorithm's output, lines A7–A13 completed
+
+What is left of `alg:ttc` after the parameter block is the *rest of the
+preprocessing* — the inscribed ball of lines A7–A9, the dilation factor of line
+A10, the dilated atoms of line A11 — and then line A12's run and line A13's
+division.  All of it is here, so that `Ttc.ttcAlgOutput` below is
+`TTC(F, ε, δ)`'s output written in one term, at the algorithm's own inputs.
+
+The six wrappers `Ttc.autoCen`, `Ttc.autoGamma`, `Ttc.runScale`,
+`Ttc.scaledAtoms`, `Ttc.runPrec`, `Ttc.runCount` were in `Exec/Rescaled` and
+`Exec/Inputs`; they are definitions with no proof content and they name no
+theorem, so they belong with the pseudocode they transcribe. -/
+
+section Algorithm
+
+variable {A : Type*}
+
+/-! ## The preprocessed formula is positive
+
+`Ttc.inputParams` needs `φ.IsPositive`, and the formula the algorithm is handed is
+`Ttc.preprocess atoms φ`, which is a `Ttc.dnfForm` — built from `.and`, `.or`,
+`.atom` and `.tt` only, hence positive with no hypothesis at all.  This is the
+one fact `Ttc.ttcAlgOutput` needs and gets for free.
+
+(`Exec/Cleanup` proves the same thing under the name `Ttc.isPositive_dnfForm`;
+that module imports this one, so the two-line induction is repeated here rather
+than imported.  Neither is an assumption — both are proofs.) -/
+
+/-- A cube's formula is positive: it is a `Ttc.conj` of atoms. -/
+theorem cubeForm_isPositive (c : Cube A) : (cubeForm c).IsPositive := isPositive_conj _
+
+/-- **`Ttc.dnfForm` is always positive** — it is built from `.or`, `.and`, `.atom`
+and `.tt` only, and `Ttc.BForm.IsPositive` is exactly "no `.neg`". -/
+theorem dnfForm_isPositive : ∀ D : DNF A, (dnfForm D).IsPositive := by
+  intro D
+  induction D with
+  | nil => exact trivial
+  | cons c D ih =>
+      cases D with
+      | nil => exact cubeForm_isPositive c
+      | cons c' D' => exact ⟨cubeForm_isPositive c, ih⟩
+
+/-- **The formula the algorithm is handed is positive**, unconditionally: lines
+A3 and A6 both rebuild it with `Ttc.dnfForm`. -/
+theorem preprocess_isPositive {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) :
+    (preprocess atoms φ).IsPositive := dnfForm_isPositive _
+
+/-! ## Lines A7–A9: the ball `GetPrecision` computes -/
+
+/-- **Lines A7–A8.**  The centre map `GetPrecision` produces: `Ttc.cenOf` over the
+input's own cube list. -/
+noncomputable def autoCen {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) :
+    {c : Cube A // c ∈ toDNFd φ} → Space n :=
+  cenOf (atomSet atoms) (toDNFd φ)
+
+/-- **Line A9.**  The inscribed radius `γ̂` `GetPrecision` produces — the least of
+the per-cube radii. -/
+noncomputable def autoGamma {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) : ℝ :=
+  gammaOf (atomSet atoms) (toDNFd φ)
+
+section Wrappers
+
+variable {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+  (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
+  (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
+
+/-- **Line A10.**  The dilation `q` the algorithm applies to its input, at the
+parameter block the inputs determine.  `≥ 1` always (`Ttc.runScale_pos`,
+`Exec/Rescaled`), and computable from `γ̂` and `n` alone — **no knowledge of
+`Vol(F)`**. -/
+noncomputable def runScale (gammaHat : ℝ) : ℝ :=
+  scaleFactor n (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd) gammaHat
+
+/-- **Line A11.**  The dilated input: same normals, bounds scaled by
+`Ttc.runScale`. -/
+noncomputable def scaledAtoms (gammaHat : ℝ) : A → LinAtom n :=
+  scaleAtoms (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) atoms
+
+/-- **`GetPrecision`'s output** (`alg:ttc` line 17): `ρ ← ⌈log₁₀(γ/γ̂)⌉`, computed
+from the parameter block and the inscribed radius. -/
+noncomputable def runPrec (gammaHat : ℝ) : ℤ :=
+  (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat
+
+/-- **`|Sol(F) ∩ 𝕃ⁿ|`** at that precision — the index the run's sample coins range
+over. -/
+noncomputable def runCount (gammaHat : ℝ) : ℕ :=
+  latticeCount (atomSet atoms) φ (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
+
+end Wrappers
+
+/-! ## Lines A12–A13: the run, and the estimate brought back to scale -/
+
+/-- **`TTC(F, ε, δ)`'s output**, as `alg:ttc` computes it: the fold of lines 22–46
+(`Ttc.run`) over the preprocessed formula's cubes `Ttc.toDNFd (Ttc.preprocess atoms φ)`,
+at the computed parameter block `Ttc.inputParams` (lines 17–20) and the computed
+precision `Ttc.runPrec` (line 17, at the *dilated* radius `q·γ̂`), with the estimate
+divided by `qⁿ` to bring it back to the original scale (line A13).
+
+`O` is the **oracle bundle**: `alg:ttc` line 24's `Vol_ED` and line 43's
+`GenerateSamples` are calls into it, exactly as the paper prints them.  Nothing
+about `O` is assumed here — it is an argument.  `Ttc.ttcOracleBundle` (`Exec/Api`)
+is the bundle the verified run reads, built from the Monte-Carlo volume estimator
+and the constructed sampler, and `Ttc.ttcAlgOutput_eq_ttcEstimate` (`Exec/Api`,
+by `rfl`) identifies this term at that bundle with the quantity the headline
+bounds.
+
+**Why a proof binder.**  `hbdd` is not decoration: `Ttc.Params` bundles five proof
+fields, so `Ttc.inputParams` cannot be applied without a proof that the
+preprocessed formula's solution set is bounded (that is what supplies `Params.hr`,
+`1 ≤ r`).  See this module's docstring, "The divergence from the reference
+layout".  It is *derived*, not assumed — `Ttc.preprocess_bdd` (`Exec/Api`) proves
+it from `hφ` and `hpos` alone. -/
+noncomputable def ttcAlgOutput {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
+    (hbdd : Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ)))
+    (O : Oracles n (Cube A)) : ℝ :=
+  run (inputParams atoms (preprocess atoms φ) ε δ hε0 hε1 hn
+        (preprocess_isPositive atoms φ) hbdd) O
+      (runPrec atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
+        (runScale atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ)
+            hbdd (autoGamma atoms (preprocess atoms φ))
+          * autoGamma atoms (preprocess atoms φ)))
+      (toDNFd (preprocess atoms φ))
+    / (runScale atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ)
+        hbdd (autoGamma atoms (preprocess atoms φ))) ^ n
+
+end Algorithm
 
 end Ttc

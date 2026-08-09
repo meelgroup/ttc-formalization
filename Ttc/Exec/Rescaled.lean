@@ -88,17 +88,9 @@ variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
   (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
   (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
 
-/-- **The dilation `TTC` applies to its input**, at the parameter block the inputs
-determine.  `≥ 1` always, and computable from `γ̂` and `n` alone. -/
-noncomputable def runScale (gammaHat : ℝ) : ℝ :=
-  scaleFactor n (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd) gammaHat
-
+/-- The dilation `Ttc.runScale` (`Model/Pseudocode`, line A10) is positive. -/
 theorem runScale_pos (gammaHat : ℝ) : 0 < runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat :=
   scaleFactor_pos _ _ _
-
-/-- The dilated formula's atoms: same normals, bounds scaled by `Ttc.runScale`. -/
-noncomputable def scaledAtoms (gammaHat : ℝ) : A → LinAtom n :=
-  scaleAtoms (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) atoms
 
 /-- `Sol` of the dilated formula is bounded, since `Sol(F)` is. -/
 theorem scaledBdd (gammaHat : ℝ) :
@@ -222,19 +214,12 @@ theorem ttc_volume_rescaled
 /-! ## `GetPrecision`'s inscribed ball, constructed
 
 `alg:prec` line 86 is `γ̂ ← MaxInscribedBall(P^i)` — the ball is *computed*, not
-supplied.  `Ttc.cenOf` and `Ttc.gammaOf` (`Exec/Inscribed`) construct one, with
-`Ttc.ball_subset_cenOf` **unconditional** (an empty-interior region gets radius `0`,
-and `Metric.ball _ 0 = ∅`).  Only positivity needs an input condition, and it is the
-readable one: every cube's region has nonempty interior. -/
-
-/-- The centre map `GetPrecision` produces. -/
-noncomputable def autoCen (atoms : A → LinAtom n) (φ : BForm A) :
-    {c : Cube A // c ∈ toDNFd φ} → Space n :=
-  cenOf (atomSet atoms) (toDNFd φ)
-
-/-- The inscribed radius `GetPrecision` produces — the least over the cubes. -/
-noncomputable def autoGamma (atoms : A → LinAtom n) (φ : BForm A) : ℝ :=
-  gammaOf (atomSet atoms) (toDNFd φ)
+supplied.  `Ttc.cenOf` and `Ttc.gammaOf` (`Model/Pseudocode`, lines A8–A9) construct
+one, and `Ttc.autoCen`/`Ttc.autoGamma` (`Model/Pseudocode`) are those at the input's
+own cube list; `Ttc.ball_subset_cenOf` (`Exec/Inscribed`) is **unconditional** (an
+empty-interior region gets radius `0`, and `Metric.ball _ 0 = ∅`).  Only positivity
+needs an input condition, and it is the readable one: every cube's region has
+nonempty interior. -/
 
 /-- **`thm:volumettc` at 13 binders: no oracle, no precision, no parameter block, no
 volume hypothesis and no inscribed-ball data.**

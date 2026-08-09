@@ -76,8 +76,9 @@ with its
 * **degenerate cubes pruned** (`Ttc.pruneForm`, `Ttc/Exec/Prune.lean`),
 * **zero-normal atoms cleaned** (`Ttc.cleanForm`, `Ttc/Exec/Cleanup.lean`) — the
   composite of the two is `Ttc.ttcInput`,
-* inscribed ball **constructed** on that (`Ttc.autoCen`, `Ttc.autoGamma`), and the
-  whole body then **dilated** by `Ttc.runScale`, with the estimate divided by `cⁿ`;
+* inscribed ball **constructed** on that (`Ttc.autoCen`, `Ttc.autoGamma`,
+  `Model/Pseudocode` lines A7–A9), and the whole body then **dilated** by
+  `Ttc.runScale` (line A10), with the estimate divided by `cⁿ` (line A13);
 
 and only the accuracy *target* `Ttc.volSol` is at the user's original
 `Ttc.TwoCube.twoForm n` (the preprocessing moves no volume:
@@ -91,9 +92,9 @@ headline's conclusion; it asserts nothing, and `Ttc.TwoCube.twoProbFull_def` wri
 it out by `rfl`.
 
 `Ttc.ttc_volume_estimate` states that integral over `Model/Pseudocode`'s
-`Ttc.ttcOutput` divided by `Ttc.ttcScale ^ n` rather than over `Ttc.ttcEstimate`;
-the two are the same term (`Ttc.ttcEstimate_eq_ttcOutput`, by `rfl`), which is why
-the applications below need no rewriting.
+`Ttc.ttcAlgOutput`, at the constructed bundle `Ttc.ttcOracleBundle`, rather than over
+`Ttc.ttcEstimate`; the two are the same term (`Ttc.ttcAlgOutput_eq_ttcEstimate`, by
+`rfl`), which is why the applications below need no rewriting.
 
 It is **not** `Ttc.TwoCube.twoAccD` or `Ttc.TwoCube.twoAcc` (`Ttc/Witness/Inputs.lean`),
 which are undilated, unpruned, uncleaned runs under a *supplied* ball.  Those are
@@ -181,8 +182,9 @@ noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 <
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
 the integral in `Ttc.ttc_volume_estimate`'s conclusion at
 `atoms := Ttc.TwoCube.atomsT …` and `φ := Ttc.TwoCube.twoForm n` — the headline writes
-the integrand as `Ttc.ttcOutput … / Ttc.ttcScale ^ n`, which is `Ttc.ttcEstimate` by
-`rfl` (`Ttc.ttcEstimate_eq_ttcOutput`) — and nothing else changes. -/
+the integrand as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle …)`, which is
+`Ttc.ttcEstimate` by `rfl` (`Ttc.ttcAlgOutput_eq_ttcEstimate`) — and nothing else
+changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     twoProbFull n hn ε δ hε0 hε1 =
       ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn

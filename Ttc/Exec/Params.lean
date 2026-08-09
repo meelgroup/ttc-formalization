@@ -1,4 +1,4 @@
-import Ttc.Model.Prelude
+import Ttc.Model.Pseudocode
 
 /-!
 # The parameter block, computed from the algorithm's inputs
@@ -8,10 +8,11 @@ it back to the run — `eps_eq`, `delta_eq`, `dim_eq`, and the two bounds
 `cubes_le`, `facets_le`.  So the parameter block that `alg:ttc` lines 12–20
 *computes* is currently *assumed*.
 
-This file removes that gap: `Ttc.ttcParams` builds the block from exactly the data
-the algorithm has — the DNF it enumerates, the dimension, and the requested
-`(ε, δ)` — and the lemmas below discharge all five tie-back fields, four of them by
-`rfl` and the two bounds by `le_refl`.
+This file removes that gap.  `Ttc.ttcParams` — which lives in `Model/Pseudocode`,
+with the rest of the algorithm — builds the block from exactly the data the
+algorithm has: the DNF it enumerates, the dimension, and the requested `(ε, δ)`.
+The lemmas below discharge all five tie-back fields, four of them by `rfl` and the
+two bounds by `le_refl`.
 
 This is step 4 of the capstone restatement (`END-TO-END-PLAN.md`, *The endgoal*),
 mirroring `ApproxNFA.countNFAParams` (`nfalean/ApproxNFA/Algorithm/Faithful.lean`),
@@ -22,9 +23,9 @@ which likewise computes the whole block from `(A, n, ε, δ)` alone.
 derivable from nothing — an unsatisfiable `φ` has an empty DNF — so they are
 carried as hypotheses of `ttcParams` rather than manufactured.  They are, however,
 *visible* hypotheses about the input, which is exactly the difference the
-restatement is about.  `Ttc.one_le_card_cubes` and `Ttc.one_le_card_facets` below
-reduce them to the two honest statements "the DNF has a cube" and "that cube has a
-literal".
+restatement is about.  `Ttc.one_le_card_cubes` and `Ttc.one_le_card_facets`
+(`Model/Pseudocode`) reduce them to the two honest statements "the DNF has a cube"
+and "that cube has a literal".
 
 `Params.m` is `ℕ` while `Params.r` is `ℝ`; the two bounds are therefore stated with
 a cast on each side, matching `Ttc.TtcProb.cubes_le` / `facets_le` verbatim.
@@ -34,60 +35,19 @@ namespace Ttc
 
 variable {A : Type*}
 
-/-! ## Finiteness of the two index types
+/-! ## Where the block and its side conditions now live
 
-Both are subtypes cut out by membership in a `List`, hence finite; `Nat.card` of an
-infinite type is `0`, so the positivity lemmas below would be *false* without this.
+`Ttc.ttcParams` itself, the two `Finite` instances (`Ttc.instFiniteCubeMem`,
+`Ttc.instFiniteFacetIndex`) and the two positivity lemmas (`Ttc.one_le_card_cubes`,
+`Ttc.one_le_card_facets`) moved to `Model/Pseudocode.lean`: the block is part of the
+algorithm, and a `Ttc.Params` cannot be constructed without those four.  See that
+file's `ParamBlock` section docstring for the exhaustive list of proof content
+`Model/` carries and why.
+
+What is here is everything *proved about* the block — the tie-back lemmas below,
+which are what `Ttc.TtcProb`'s five fields become once the block is computed rather
+than assumed.
 -/
-
-instance instFiniteCubeMem (D : DNF A) : Finite {c : Cube A // c ∈ D} :=
-  List.finite_toSet D |>.to_subtype
-
-instance instFiniteFacetIndex (D : DNF A) : Finite (FacetIndex D) := by
-  unfold FacetIndex
-  have : ∀ c : {c : Cube A // c ∈ D}, Finite {l : Lit A // l ∈ c.val} := fun c =>
-    (List.finite_toSet c.val).to_subtype
-  infer_instance
-
-/-- **The DNF has a cube ⟹ `1 ≤ m`.**  Reduces `Params`' `hm` to a statement about
-the input formula's decomposition. -/
-theorem one_le_card_cubes {D : DNF A} {c : Cube A} (hc : c ∈ D) :
-    1 ≤ Nat.card {c : Cube A // c ∈ D} :=
-  Nat.one_le_iff_ne_zero.mpr <| Nat.card_ne_zero.mpr ⟨⟨⟨c, hc⟩⟩, inferInstance⟩
-
-/-- **Some cube has a literal ⟹ `1 ≤ r`.**  Reduces `Params`' `hr` likewise.  A cube
-with no literals is the empty conjunction, whose region is all of `Space n`; the
-facet count is then genuinely `0` and `Params` genuinely does not apply. -/
-theorem one_le_card_facets {D : DNF A} {c : Cube A} (hc : c ∈ D) {l : Lit A}
-    (hl : l ∈ c) : 1 ≤ Nat.card (FacetIndex D) :=
-  Nat.one_le_iff_ne_zero.mpr <| Nat.card_ne_zero.mpr ⟨⟨⟨⟨c, hc⟩, ⟨l, hl⟩⟩⟩, inferInstance⟩
-
-/-! ## The block itself -/
-
-/-- **The parameter block `TTC(F, ε, δ)` computes**, from the DNF its AllSAT call
-returned, the ambient dimension, and the requested accuracy and confidence.
-
-`m` and `r` are the *exact* counts, not bounds: `alg:ttc` reads them off the
-decomposition.  Taking them exactly is what makes `cubes_le` and `facets_le`
-`le_refl` rather than assumptions.
-
-Everything downstream — `η = ε/8`, `ε' = ε/12`, `δ' = δ/(4m)`, `Thresh`, `κ`, `γ`,
-`ρ = ⌈log₁₀(γ/γ̂)⌉` — is already a `def` on `Params` (`Model/Prelude.lean`), so no
-further computation is needed here. -/
-noncomputable def ttcParams (D : DNF A) (n : ℕ) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
-    (hm : 1 ≤ Nat.card {c : Cube A // c ∈ D})
-    (hr : 1 ≤ Nat.card (FacetIndex D)) : Params where
-  ε := ε
-  δ := δ
-  n := n
-  m := Nat.card {c : Cube A // c ∈ D}
-  r := (Nat.card (FacetIndex D) : ℝ)
-  hε0 := hε0
-  hε1 := hε1
-  hn := hn
-  hm := hm
-  hr := by exact_mod_cast hr
 
 variable (D : DNF A) (n : ℕ) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
   (hm : 1 ≤ Nat.card {c : Cube A // c ∈ D}) (hr : 1 ≤ Nat.card (FacetIndex D))

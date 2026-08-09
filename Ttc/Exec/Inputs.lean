@@ -19,7 +19,7 @@ the point of this file is that each of them is *discharged*, not weakened away.
 | Gone | Why |
 | --- | --- |
 | `M`, `M_eq` | `M_eq : M = fun a => (atoms a).halfspace` **defines** `M`.  Substituting it is a substitution, not a strengthening: `M := Ttc.atomSet atoms` and `M_eq := rfl`. |
-| `toDNF`, `isDNF`, `isPositive` | the converter is pinned to `Ttc.toDNFd` (`Exec/Dedup`), `isDNF` is `Ttc.toDNFd_isDNFOf`, and `isPositive` is `Ttc.toDNFd_isPositive` applied to `hφ : φ.IsPositive` — a syntactic condition on the **input formula**. |
+| `toDNF`, `isDNF`, `isPositive` | the converter is pinned to `Ttc.toDNFd` (`Model/Pseudocode`), `isDNF` is `Ttc.toDNFd_isDNFOf`, and `isPositive` is `Ttc.toDNFd_isPositive` applied to `hφ : φ.IsPositive` — a syntactic condition on the **input formula**. |
 | `hm` | `Ttc.one_le_card_cubes_of_ne_nil` at `Ttc.toDNFd_ne_nil hφ`.  A positive formula's DNF is never empty, because `Ttc.BForm` has **no `false` constructor** and `IsPositive (.neg _)` is `False`. |
 | `hr` | `Ttc.one_le_card_facets_of_isBounded`, from `hbdd` and `hn`.  A literal-free cube has `region = Set.univ ⊆ sol`, and `Set.univ` is unbounded in `Ttc.Space n` for `n ≥ 1`. |
 | `P`, `hP` | `hP : P = ttcParams …` **defines** `P`.  Substituting it gives `P := Ttc.inputParams …` and `hP := rfl`. |
@@ -81,24 +81,16 @@ variable {A : Type*} {n : ℕ}
 
 /-! ## The two substitutions, as definitions
 
-The first of them, `Ttc.atomSet` — the interpretation `M` the theorem used to take
-as a binder, with `M_eq : M = fun a => (atoms a).halfspace` — now lives in
-`Model/Pseudocode`, since every preprocessing step transcribed there is stated over
-it.  The second is below. -/
+Both of them now live in `Model/Pseudocode`.  The first, `Ttc.atomSet`, is the
+interpretation `M` the theorem used to take as a binder with
+`M_eq : M = fun a => (atoms a).halfspace`; every preprocessing step transcribed
+there is stated over it.
 
-/-- **The parameter block `TTC` computes** (`alg:ttc` lines 17–20), with `hm` and
-`hr` supplied by `Ttc.one_le_card_cubes_of_ne_nil` and
-`Ttc.one_le_card_facets_of_isBounded` rather than assumed.  `hP` said
-`P = ttcParams …`; this is that right-hand side, named.
-
-The internal failure parameter is `δ₀ = 4δ/5`, so that the conclusion is a clean
-`1 − δ` — see `Exec/Final.lean` for what that reprices. -/
-noncomputable def inputParams (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ)) : Params :=
-  ttcParams (toDNFd φ) n ε (4 * δ / 5) hε0 hε1 hn
-    (one_le_card_cubes_of_ne_nil (toDNFd_ne_nil hφ))
-    (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
+The second is `Ttc.inputParams` — the parameter block `TTC` computes (`alg:ttc`
+lines 17–20), with `hm` and `hr` supplied by `Ttc.one_le_card_cubes_of_ne_nil` and
+`Ttc.one_le_card_facets_of_isBounded` rather than assumed.  It is in
+`Model/Pseudocode` because the block is part of the algorithm; the old binder pair
+`P` / `hP : P = ttcParams …` is discharged by passing it with `rfl`. -/
 
 /-! ## The statement -/
 
@@ -200,23 +192,17 @@ are definitional wrappers over the terms above — not abstraction barriers — 
 `Ttc.ttc_volume_estimate` stays one application (today, of `Ttc.ttc_volume_api`).  They
 live in `Ttc/Exec/Api.lean` (section `Measured`); `Model/Theorem.lean` holds the
 theorem and nothing else.  What remains here is the plumbing those definitions'
-bodies reach for. -/
+bodies reach for.
+
+`Ttc.runPrec` and `Ttc.runCount` used to be here; they are steps of the algorithm
+(`GetPrecision`'s output, and the index the sample coins range over) with no proof
+content, so they are now in `Model/Pseudocode`. -/
 
 section Measured
 
 variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
   (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
   (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
-
-/-- **`GetPrecision`'s output** (`alg:ttc` line 17): `ρ ← ⌈log₁₀(γ/γ̂)⌉`, computed
-from the parameter block and the inscribed radius. -/
-noncomputable def runPrec (gammaHat : ℝ) : ℤ :=
-  (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat
-
-/-- **`|Sol(F) ∩ 𝕃ⁿ|`** at that precision — the index the run's sample coins range
-over. -/
-noncomputable def runCount (gammaHat : ℝ) : ℕ :=
-  latticeCount (atomSet atoms) φ (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
 
 /-- **The oracle bundle `alg:ttc` reads**, as a closed term: `Vol_ED` is `Ttc.mcVol`
 at the volume coins `c`, the rest is `Ttc.coveredOracles` at the sample coins `t`.
@@ -327,5 +313,6 @@ end Ttc
 
 #check @Ttc.ttc_volume_inputs
 
+#print axioms Ttc.inputParams
 #print axioms Ttc.ttc_volume_inputs
 #print axioms Ttc.ttc_volume_vol

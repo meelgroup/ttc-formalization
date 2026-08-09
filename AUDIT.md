@@ -12,28 +12,30 @@ in a few minutes without reading a single hard proof.
 the name. Every name on this page was checked to exist in the compiled
 environment; §5 has the probe that re-checks them all in one pass.
 
-The vocabulary, the pseudocode and the assumptions are in
-[`Ttc/Model/`](Ttc/Model/) — **five files**
-([`Prelude`](Ttc/Model/Prelude.lean), [`Pseudocode`](Ttc/Model/Pseudocode.lean),
-[`ProblemSetting`](Ttc/Model/ProblemSetting.lean),
-[`Theorem`](Ttc/Model/Theorem.lean)) —
-carrying declarations and assumptions, and no proofs worth the name. Everything
-*proved* about `Vol_ED` was moved out to
+The vocabulary, the pseudocode and the problem statement are in
+[`Ttc/Model/`](Ttc/Model/) — **four files**:
+[`Prelude`](Ttc/Model/Prelude.lean) (the vocabulary),
+[`ProblemSetting`](Ttc/Model/ProblemSetting.lean) (what `Vol(F)` is and what
+`(1 ± ε)·b` means), [`Pseudocode`](Ttc/Model/Pseudocode.lean) (`alg:ttc` and the
+preprocessing, transcribed line by line, together with the parameter block the
+algorithm computes) and [`Theorem`](Ttc/Model/Theorem.lean) (**one theorem, and
+nothing else** — no `def`, no auxiliary lemma, and a proof that is a single
+application). Everything *proved* about `Vol_ED` was moved out to
 [`Ttc/Volume/Bridge.lean`](Ttc/Volume/Bridge.lean) to keep that true.
 
-> The four-file invariant this page used to assert is **retired**.  It was dropped
-> deliberately so that `Model/Theorem.lean` could hold the theorem *and nothing else*
-> while still naming only `Model/` definitions: the quantities it names live in the
-> fifth file, [`Model/Run.lean`](Ttc/Model/Run.lean), which sits downstream of
-> `Exec/Api`.  A probe over the compiled type (§5) confirms the headline names nothing
-> outside `Ttc.Model` but `Ttc.MonteCarlo.coins` and `Ttc.trajLaw`, the run's
-> probability space — which the reference layout also keeps outside.
->
-> Historical note: this page twice said "four files" while `Model/` held five (`Endgoal` was the
-> extra one). `Endgoal.lean` has since moved to [`Ttc/Exec/`](Ttc/Exec/), and `ls
-> Ttc/Model/` at the time of writing returns exactly `Prelude.lean`,
-> `ProblemSetting.lean`, `Pseudocode.lean`, `Theorem.lean` — four. §1b is about
-> `Exec/Endgoal`. Re-run `ls Ttc/Model/` rather than trusting this sentence.
+**Re-run `ls Ttc/Model/` rather than trusting the previous sentence.** This page
+has more than once named a file count the directory did not have, in both
+directions, and the count is the cheapest thing on the page to re-check.
+
+> **Git-history note, so that the intermediate state does not read as the target.**
+> For a stretch `Model/` held a **fifth** file, `Model/Run.lean`, carrying the
+> quantities `Model/Theorem` names, and a revision of this page declared the
+> four-file invariant "retired". It was not retired: the fifth file was scaffolding
+> while those quantities were being placed, and the invariant — four files, the
+> algorithm in `Model/Pseudocode`, the theorem in `Model/Theorem` — is the target
+> and is restored. An earlier confusion of the same shape (this page saying "four
+> files" while `Endgoal.lean` was still under `Model/`) is why §1b is about
+> [`Exec/Endgoal`](Ttc/Exec/Endgoal.lean) and not about a `Model/` file.
 
 > **`Model/Theorem` no longer states the bundle version.** It used to state
 > [`Ttc.TtcProb.volume_estimate`](Ttc/Estimate.lean), whose type names the bundle's
@@ -55,14 +57,30 @@ carrying declarations and assumptions, and no proofs worth the name. Everything
 > reads only `Model/` will read a strictly weaker statement than the one the
 > project now claims.
 
-**One caveat this page used to overstate.** It said "nothing in `Model/` refers to
-a definition outside `Model/` except Mathlib." That is not accurate and never was:
-`ProblemSetting` names [`Ttc.trajLaw`](Ttc/Coupling/Family.lean) and
-[`Ttc.trajOracles`](Ttc/Coupling/Family.lean) in its `law_eq` and `oracle_eq`
-fields, and `region`/`FacetIndex`/`Oracles` come from elsewhere too. Those two
-are the strongest assumptions in the development and §4 is about exactly that, so
-an auditor **does** have to follow those two names out of `Model/`. Everything
-else in the five files is Mathlib or locally defined.
+**Where the `Model/` boundary is drawn, and that it is drawn deliberately.**
+`Model/Theorem`'s type does **not** name only `Model/` definitions, and it is not
+meant to. What it names from outside `Model/` is two things, and an auditor should
+know both before reading it:
+
+* **the run's probability space** — the sample-coin law
+  [`Ttc.trajLaw`](Ttc/Coupling/Family.lean) and the volume-coin law
+  [`Ttc.MonteCarlo.coins`](Ttc/Volume/MonteCarlo.lean); and
+* **the constructed oracle bundle** the run is driven by — the term that supplies
+  `Vol_ED` and the sampler, built rather than assumed (§1c, §1h).
+
+Neither can live in `Model/` without `Model/` importing the development it is
+supposed to be the front of. **This is the same boundary the reference layout
+draws:** nfalean's `ApproxNFA/Model/Theorem.lean` names
+`(countNFAExec A n ε δ).P.Pr`, and `countNFAExec` is defined in
+`ApproxNFA/Algorithm/Faithful.lean` — outside its `Model/`. §1e says what the
+boundary buys, §1h enumerates what lies beyond it, and §5 carries a probe that
+lists what the headline's *type* names outside `Ttc.Model`, so the boundary can be
+re-checked against the compiled environment instead of against this paragraph.
+
+A second, weaker caveat that this page once got wrong in the other direction: the
+*bodies* of the names `Model/Theorem` uses are **not** self-contained even when the
+names are `Model/`'s. That definitional closure is §1h, and it is the larger of the
+two things to read before quoting the statement.
 
 ---
 
@@ -139,10 +157,9 @@ The hazard is real, not hypothetical:
 for `n ≥ 1` and **any** interpretation, `volSol M ⊤ = 0` even though
 `Sol(⊤) = ℝⁿ`.
 
-What rules it out is the field `volume_ne_top`
-([`ProblemSetting`](Ttc/Model/ProblemSetting.lean)) — but that is stated **per
-cube**, `∀ i, volume (region M i.val) ≠ ⊤`, not for `sol M φ`. Both steps are
-proved:
+What rules it out is `Ttc.TtcProb`'s field `volume_ne_top`
+([`Ttc/TtcProb.lean`](Ttc/TtcProb.lean)) — but that is stated **per cube**,
+`∀ i, volume (region M i.val) ≠ ⊤`, not for `sol M φ`. Both steps are proved:
 
 * [`Ttc.VolSolCheck.volume_sol_ne_top`](Ttc/Volume/VolSolCheck.lean) — a
   `DNF` is a `List`, hence finite, so countable subadditivity gives
@@ -517,71 +534,137 @@ Removing binders removed **no** cost and **no** scope limitation. In particular:
 ## 1e. The statement layer: `Ttc.ttc_volume_estimate` — the theorem `Model/` states
 
 [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) is what an auditor who reads
-only `Model/` reads. It takes **12 explicit binders** (14 raw, the extra two being
-the implicit ambient `{A}` and `{n}`), and its type contains no `Ttc.TtcProb`, no
-`Ttc.VolumeAlgorithm` and no `Ttc.KV97Sampler` — checked by a probe over the
-compiled type, not by reading:
+only `Model/` reads. It is the **one declaration** in
+[`Model/Theorem.lean`](Ttc/Model/Theorem.lean) — no `def`, no auxiliary lemma —
+and its proof is a bare application of `Ttc.ttc_volume_api`
+([`Exec/Api`](Ttc/Exec/Api.lean)) with no rewriting, which is the structural check
+that the names in the statement name what they claim to: a wrong abbreviation
+would be a build error, not a silent divergence.
+
+It takes **11 explicit binders** (13 raw, the extra two being the implicit ambient
+`{A}` and `{n}`), and its type contains no `Ttc.TtcProb`, no `Ttc.VolumeAlgorithm`
+and no `Ttc.KV97Sampler`:
 
 ```
-atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
 ```
 
-**Twelve binders**, and the earlier `hvol : Thresh/4 ≤ Vol(F)` is **not among them** —
-it is gone, and so are `hcoeff` and the four inscribed-ball binders `cen`,
-`gammaHat`, `hgammaHat`, `ball_subset`. Three rounds landed after the
-seventeen-binder form, and **not one of them was a sharper analysis** — each changed
-what the algorithm is handed or does. §1g grades them, and two of the three are
-changes a reader could mistake for a stronger theorem. Read §1g before quoting this
-statement.
+**Eleven binders**, and it is worth naming what is *not* among them: no
+interpretation `M`, no parameter block `P`, no DNF converter, no oracle argument,
+no precision argument, no inscribed-ball data, no regime condition
+`hvol : Thresh/4 ≤ Vol(F)`, no `hcoeff`, no per-cube full-dimensionality `hint`,
+and **no boundedness hypothesis `hbdd`**. Those did not all go the same way, and
+the difference matters more than the count: some were substituted for definitions,
+some were *derived*, and **four rounds removed binders by changing what the
+algorithm is handed or does** — a dilation, a constructed inscribed ball, a
+cleanup and a pruning. §1g grades the first three and flags the fourth; §1h grades
+the three *preprocessing passes* (dilation, pruning, cleanup) as what the headline
+certifies `alg:ttc` **plus**, with the constructed ball alongside them. Read both
+before quoting this statement.
 
-The first nine (`atoms … hn`) are exactly `ApproxNFA.approxNFA_countNFA`'s (the
-nfalean template) binder list; they are the inputs and the parameter range and assert
-nothing about the instance. The other **three** — `hφ`, `hbdd`, `hint` — are the
-honest residue, every one a condition on the *input*:
+**Two conjuncts, not one.** The accuracy conjunct is
+`1 − δ ≤ (∫⁻ c, trajLaw … {t | …} ∂(MonteCarlo.coins n)).toReal` — a bound over the
+**joint** law of the volume coins `c` and the sample coins `t`, with the measured
+quantity `Model/Pseudocode`'s own `Ttc.ttcOutput` on the preprocessed input,
+divided by the dilation factor to the `n`, and the target the **user's own**
+`volSol (atomSet atoms) φ`. The running-time conjunct bounds `alg:ttc`'s *charged*
+cost by `m · (C_vol + C_sample · Thresh)` **conditional on the run terminating**;
+it is not a termination proof and not a polynomial-time claim (`thm:runtime`
+remains out of scope, and both oracle routes are exponential in `n` — §1c caveat
+2).
+
+The first nine binders (`atoms … hn`) are exactly `ApproxNFA.approxNFA_countNFA`'s
+(the nfalean template) binder list; they are the inputs and the parameter range and
+assert nothing about the instance. The other **two** — `hφ` and `hpos` — are the
+honest residue, and both are conditions on the *input*:
 
 | binder | says | status |
 | --- | --- | --- |
-| `hφ : φ.IsPositive` | the formula is negation-free | removable in principle, at a price — §1g and [`Ttc/Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean) |
-| `hbdd : IsBounded (sol (atomSet atoms) φ)` | `Sol(F)` is bounded | **necessary** — `Ttc.volSol` is an `ENNReal.toReal` and `toReal ⊤ = 0`, so without it the theorem would certify "the output is ≈ 0" (README finding 16) |
-| `hint : ∀ i, (interior (region (atomSet atoms) i.val)).Nonempty` | every polytope of the decomposition is full-dimensional | **proved not derivable** — [`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean) |
+| `hφ : φ.IsPositive` | the formula is negation-free | removable in principle, at a price that is itself machine-checked — §1g's third negative result and [`Ttc/Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean) |
+| `hpos : 0 < volSol (atomSet atoms) φ` | the solution set has positive volume | **strictly weaker than the per-cube full-dimensionality `hint` it replaced**: [`Ttc.volSol_pos_of_interior`](Ttc/Exec/Prune.lean) proves `hint → hpos`, and [`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean) refutes the converse |
 
-`hφ` and `hbdd` are **logically independent in both directions** — neither can be
-dropped in favour of the other
+`hφ` and boundedness are **logically independent in both directions** — this is why
+neither could ever be dropped in favour of the other while `hbdd` was a binder
 ([`Ttc.Independence.exists_isBounded_not_isPositive`](Ttc/Findings/Independence.lean),
 [`Ttc.Independence.exists_isPositive_not_isBounded`](Ttc/Findings/Independence.lean),
 the latter also at a non-degenerate witness as
 [`…exists_isPositive_not_isBounded_halfspace`](Ttc/Findings/Independence.lean)).
-That file claims nothing more: it does **not** claim `hφ ∧ hbdd` is the weakest usable
-pair.
+That file claims nothing more: it does **not** claim any particular pair is the
+weakest usable one. **`hbdd` is now gone, and it went by derivation rather than by
+weakening** — §1h has the derivation and why it became available only after the
+pruning round.
 
 **`hvol` is no longer a binder, and §1f is no longer about the headline's last
 binder.** §1f's counterexample [`Ttc.Box.big_not_derivable`](Ttc/Exec/Regime.lean)
 still stands and is *why* the algorithm had to be amended; the amendment (a dilation
 step) is §1g's first item.
 
+### What this statement names, and what it does not
+
+This is the boundary the four-file target is drawn around, and it is the thing to
+check first, because it is the one claim about `Model/` that a machine can settle.
+
+* **The algorithm's own data is `Model/Pseudocode`'s.** The transcription
+  `Ttc.ttcOutput`, the converter `Ttc.toDNFd`, the three preprocessing passes
+  `Ttc.pruneForm` / `Ttc.cleanForm` / `Ttc.preprocess`, the inscribed-ball
+  construction `Ttc.ballData` / `Ttc.cenOf` / `Ttc.gammaOf`, the dilation factor
+  `Ttc.scaleFactor`, and the parameter block `Ttc.ttcParams` / `Ttc.inputParams`
+  (`alg:ttc` lines 17–20) are all declarations of
+  [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean). `Ttc.volSol` and
+  `Ttc.relErr` are `Model/ProblemSetting`'s; the vocabulary (`Ttc.BForm`,
+  `Ttc.sol`, `Ttc.region`, `Ttc.Params` and its derived constants including
+  `Ttc.Params.precision`) is `Model/Prelude`'s.
+* **What remains outside `Model/` is the constructed oracle bundle and the run's
+  probability space** — the term supplying `Vol_ED` and the sampler, and the two
+  laws [`Ttc.trajLaw`](Ttc/Coupling/Family.lean) and
+  [`Ttc.MonteCarlo.coins`](Ttc/Volume/MonteCarlo.lean) the two conjuncts integrate
+  against. Both are *constructions*, not assumptions, which is the content of §1c
+  and §1d; neither can sit in `Model/` without `Model/` importing the whole
+  development.
+
+**The reference layout draws the same boundary**, and that is the argument that
+this is a layout decision rather than a leak: nfalean's
+`ApproxNFA/Model/Theorem.lean` names `(countNFAExec A n ε δ).P.Pr`, and
+`countNFAExec` is defined in `ApproxNFA/Algorithm/Faithful.lean` — outside its
+`Model/`. §5 has the probe that lists what this theorem's *type* names outside
+`Ttc.Model`, and says what answer is acceptable; run it rather than trusting this
+subsection, especially after any move between `Model/` and `Exec/`.
+
+What this boundary does **not** buy is self-containedness of the *bodies*: the
+names above abbreviate terms that reach deep into `Exec/`, and that definitional
+closure — the trusted base beyond `Model/` — is §1h.
+
 ### What is *not* an input, and what replaced it
 
-| Was a binder | Is now |
-| --- | --- |
-| `M`, `M_eq` | `Ttc.atomSet atoms`, a definition. `M_eq` was an equation *defining* `M`; substituting it is a substitution, not a strengthening |
-| `P`, `hP` | `Ttc.inputParams …`, a definition (`alg:ttc` lines 17–20). Same reason |
-| `toDNF`, `isDNF`, `isPositive` | pinned to `Ttc.toDNFd`; `isDNF` is `Ttc.toDNFd_isDNFOf`, `isPositive` follows from `hφ` on the **input formula** |
-| `hm` | `Ttc.one_le_card_cubes_of_isPositive` — `Ttc.BForm` has no `false` constructor and `IsPositive (.neg _)` is `False`, so a positive formula's DNF is never `[]` |
-| `hr` | `Ttc.one_le_card_facets_of_isBounded` — a literal-free cube has `region = Set.univ ⊆ sol`, and `Set.univ` is unbounded in `Ttc.Space n` for `n ≥ 1`, so `hbdd` excludes it |
-| `hlen` | `Ttc.length_toDNFd_le_card`, with **equality** |
-| `T.O` | `Ttc.runOracles`, a closed term: `Ttc.mcVol` for `Vol_ED`, `Ttc.coveredOracles` for the rest |
-| `T.ρ` | `P.precision gammaHat` = [`Ttc.Params.precision`](Ttc/Model/Prelude.lean) = `⌈log₁₀(γ/γ̂)⌉`, `GetPrecision`'s **output** |
-| `hvol : Thresh/4 ≤ Vol(F)` | **discharged by amending the algorithm**: the input is dilated by [`Ttc.runScale`](Ttc/Exec/Rescaled.lean) and the estimate divided by `cⁿ` ([`Ttc.hvol_scaled`](Ttc/Exec/Rescaled.lean)). §1g — this one is *not* a substitution |
-| `cen`, `gammaHat`, `hgammaHat`, `ball_subset` | [`Ttc.autoCen`](Ttc/Exec/Rescaled.lean) and [`Ttc.autoGamma`](Ttc/Exec/Rescaled.lean), built from [`Ttc.cenOf`](Ttc/Exec/Inscribed.lean)/[`Ttc.gammaOf`](Ttc/Exec/Inscribed.lean). `ball_subset` becomes the unconditional [`Ttc.ball_subset_cenOf`](Ttc/Exec/Inscribed.lean); `hgammaHat` becomes [`Ttc.gammaOf_pos_of_interior`](Ttc/Exec/Inscribed.lean), which needs `hint`. **Not the paper's LP** — §1g |
-| `hcoeff` | the algorithm is run on the cleaned formula [`Ttc.cleanForm`](Ttc/Exec/Cleanup.lean), for which it holds outright ([`Ttc.coeff_ne_zero_toDNFd_cleanForm`](Ttc/Exec/Cleanup.lean)). Benign: [`Ttc.sol_cleanForm`](Ttc/Exec/Cleanup.lean) is an **exact set equality** — §1g |
+**Read the third column before the second.** Substituting a definition for a
+binder is bookkeeping; deriving a binder is a genuine gain; changing the algorithm
+so that a binder holds is neither, and is the row an auditor is most likely to
+misread as a stronger theorem.
+
+| Was a binder | Is now | Kind |
+| --- | --- | --- |
+| `M`, `M_eq` | `Ttc.atomSet atoms`, a definition of [`Model/Pseudocode`](Ttc/Model/Pseudocode.lean). `M_eq` was an equation *defining* `M` | substitution |
+| `P`, `hP` | `Ttc.inputParams …`, a definition (`alg:ttc` lines 17–20), at the internal failure parameter `δ₀ = 4δ/5` — §1d prices that | substitution (with §1d's repricing) |
+| `toDNF`, `isDNF`, `isPositive` | pinned to `Ttc.toDNFd`; `isDNF` is `Ttc.toDNFd_isDNFOf`, `isPositive` follows from `hφ` on the **input formula** | substitution, but see "bought rather than proved" below |
+| `hm` | `Ttc.one_le_card_cubes_of_ne_nil` together with `Ttc.toDNFd_ne_nil` — `Ttc.BForm` has no `false` constructor and `IsPositive (.neg _)` is `False`, so a positive formula's DNF is never `[]` | derived from `hφ` |
+| `hr` | [`Ttc.one_le_card_facets_of_isBounded`](Ttc/Exec/CubeBounds.lean) — a literal-free cube has `region = Set.univ ⊆ sol`, and `Set.univ` is unbounded in `Ttc.Space n` for `n ≥ 1`, so boundedness excludes it | derived |
+| `hlen` | [`Ttc.length_toDNFd_le_card`](Ttc/Exec/Dedup.lean), with **equality** | derived, once the converter is `toDNFd` |
+| `T.O` | a closed term, not a hypothesis: the constructed oracle bundle, with `Ttc.mcVol` (a Monte-Carlo estimator) for `Vol_ED` and the covered-lattice sampler for the rest | **construction** — §1c, and item 7 of "Checks that a green build does not perform" |
+| `T.ρ` | `P.precision γ̂` = [`Ttc.Params.precision`](Ttc/Model/Prelude.lean) = `⌈log₁₀(γ/γ̂)⌉`, `GetPrecision`'s **output** | substitution |
+| `hvol : Thresh/4 ≤ Vol(F)` | **discharged by amending the algorithm**: the input is dilated by `Ttc.runScale` and the estimate divided by `cⁿ` ([`Ttc.hvol_scaled`](Ttc/Exec/Rescaled.lean)) | **algorithm change** — §1g |
+| `cen`, `gammaHat`, `hgammaHat`, `ball_subset` | `Ttc.autoCen`/`Ttc.autoGamma`, built from [`Ttc.cenOf`](Ttc/Model/Pseudocode.lean)/[`Ttc.gammaOf`](Ttc/Model/Pseudocode.lean). `ball_subset` becomes the unconditional [`Ttc.ball_subset_cenOf`](Ttc/Exec/Inscribed.lean); `hgammaHat` becomes [`Ttc.gammaOf_pos_of_interior`](Ttc/Exec/Inscribed.lean), which needs full-dimensionality — supplied by the pruning. **Not the paper's LP** | **algorithm change** — §1g |
+| `hcoeff` | the algorithm is run on the cleaned formula [`Ttc.cleanForm`](Ttc/Model/Pseudocode.lean), for which it holds outright ([`Ttc.coeff_ne_zero_toDNFd_cleanForm`](Ttc/Exec/Cleanup.lean)) | **algorithm change, but the benign one**: [`Ttc.sol_cleanForm`](Ttc/Exec/Cleanup.lean) is an **exact set equality** — §1g |
+| `hint : ∀ i, (interior (region …)).Nonempty` | the degenerate cubes are *pruned* ([`Ttc.pruneForm`](Ttc/Model/Pseudocode.lean)), and the surviving hypothesis is the strictly weaker `hpos` | **algorithm change** — pruning moves `Sol(F)` by a null set; §1h |
+| `hbdd : IsBounded (sol (atomSet atoms) φ)` | [`Ttc.isBounded_sol_pruneForm_of_volSol_pos`](Ttc/Exec/BddFromPos.lean) — boundedness of the *pruned* `Sol`, proved from `hφ` and `hpos` alone | **derived**, and the derivation is only available after the pruning round — §1h |
 
 ### The one thing that was bought rather than proved
 
 `hlen` is a duplicate-freeness condition and `Ttc.toDNF` **provably fails it**
 ([`Ttc.toDNF_length_gt_card_cubes`](Ttc/Exec/Statement.lean): `a ∨ a` has DNF
 `[[a],[a]]`). Pinning the converter to the deduplicated
-[`Ttc.toDNFd`](Ttc/Exec/Dedup.lean) changes *what the algorithm runs on*.
-Deduplication preserves the semantics exactly (`Ttc.mem_toDNFd` — same cubes, hence
+[`Ttc.toDNFd`](Ttc/Model/Pseudocode.lean) changes *what the algorithm runs on*.
+Deduplication preserves the semantics exactly
+([`Ttc.mem_toDNFd`](Ttc/Exec/Dedup.lean) — same cubes, hence
 the same `IsDNFOf`, the same regions, the same union) but it changes the **cost
 profile**: `m` shrinks, so `P.deltaPrime = δ₀/(4m)` grows and each surviving cube is
 estimated at a looser confidence. Read it as a repricing, exactly like the
@@ -600,7 +683,7 @@ line 86 computes by an LP, and were kept as instance *data* because replacing th
 with a bare existence hypothesis would force the conclusion to name a
 `Classical.choose` and make `big` unprovable for concrete instances. They are now
 gone — but the ball that replaced them **is** a `Classical.choose`
-([`Ttc.ballData`](Ttc/Exec/Inscribed.lean)), and what made that affordable is that
+([`Ttc.ballData`](Ttc/Model/Pseudocode.lean)), and what made that affordable is that
 `big` is no longer a binder either. See §1g for what the constructed ball is and is
 not.
 
@@ -613,8 +696,11 @@ applies **this theorem** — not a predecessor — to the two-cube witness at ev
 `(1/2, 1/4)` with the achieved bounds `1/10` and `3/4` proved **strictly positive
 inside the statement**, so neither conclusion is the vacuous `0 ≤ (…).toReal`;
 [`Ttc.TwoCube.twoProbFull_pos_ne_top`](Ttc/Witness/FullTwoCube.lean) is the separate
-`≠ ⊤` check. The new obligation `hint` is discharged by
-[`Ttc.TwoCube.interior_region_nonempty_two_d`](Ttc/Witness/FullTwoCube.lean), and
+`≠ ⊤` check. The residual obligation `hpos` is discharged by
+[`Ttc.TwoCube.twoVolPos`](Ttc/Witness/FullTwoCube.lean) — one application of
+`Ttc.volSol_pos_of_interior` to
+[`Ttc.TwoCube.interior_region_nonempty_two_d`](Ttc/Witness/FullTwoCube.lean), with
+no volume computed — and
 [`Ttc.TwoCube.twoProbFull_def`](Ttc/Witness/FullTwoCube.lean) writes the named
 probability out, by `rfl`, in exactly the shape the headline's conclusion has. The
 hypotheses transported to the deduplicated cube list are in
@@ -695,7 +781,7 @@ is the structural check that nothing in it is `big` wearing a hat.
 [`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) proves `big` from
 `hvol : Thresh/4 ≤ Vol(Sol F)`, which is what turned `big` from a binder into a
 theorem; `hvol` itself was then discharged by the dilation (§1g), which is why
-neither appears in the headline's twelve binders (§1e). The chain is four steps, each
+neither appears in the headline's eleven binders (§1e). The chain is four steps, each
 a named lemma:
 
 | Step | Lemma |
@@ -735,6 +821,14 @@ auditor must know that none of them went away by a sharper proof.** In one line 
 
 The three rows are not equally serious, and the table's last column is the point.
 
+> **A fourth round landed after this section was written, and it is not in the table
+> above.** A **pruning** ([`Exec/Prune`](Ttc/Exec/Prune.lean)) drops the degenerate
+> (lower-dimensional) cubes, which is what removed `hint` in favour of the weaker
+> `hpos` and what made the derivation of `hbdd` available. It changes `Sol(F)` by a
+> null set, so it belongs in the "yes, the behaviour changed" class. §1h grades it
+> alongside the dilation and the cleanup; read §1h's list, not this table, for the
+> complete set of preprocessing steps the headline certifies `alg:ttc` *plus*.
+
 ### `hvol` → a dilation step
 
 `alg:ttc` sets `p ← 1` and only ever halves it (lines 21, 33, 40), so the sketch is
@@ -762,8 +856,8 @@ The parameter block is unchanged by the dilation — it is computed from
 ### `cen`, `gammaHat`, `hgammaHat`, `ball_subset` → `GetPrecision` constructs the ball
 
 `alg:prec` line 86 is `γ̂ ← MaxInscribedBall(P^i)`: the ball is *computed*.
-[`Ttc.ballData`](Ttc/Exec/Inscribed.lean) picks an inscribed ball per cube,
-[`Ttc.gammaOf`](Ttc/Exec/Inscribed.lean) takes the least radius, and
+[`Ttc.ballData`](Ttc/Model/Pseudocode.lean) picks an inscribed ball per cube,
+[`Ttc.gammaOf`](Ttc/Model/Pseudocode.lean) takes the least radius, and
 [`Ttc.ball_subset_cenOf`](Ttc/Exec/Inscribed.lean) is **unconditional** — a region with
 empty interior gets radius `0`, and `Metric.ball _ 0 = ∅` is inside anything. Only
 positivity needs an input condition, and that is `hint`.
@@ -799,7 +893,7 @@ all: with a nonnegative bound the half-space is `Set.univ`
 ([`Ttc.atomSet_eq_univ_of_coeff_zero`](Ttc/Exec/Cleanup.lean)) and the literal can be
 deleted; with a negative bound it is `∅`
 ([`Ttc.atomSet_eq_empty_of_coeff_zero`](Ttc/Exec/Cleanup.lean)) and the whole cube
-can be dropped. [`Ttc.cleanDNF`](Ttc/Exec/Cleanup.lean) does both, and
+can be dropped. [`Ttc.cleanDNF`](Ttc/Model/Pseudocode.lean) does both, and
 [`Ttc.coeff_ne_zero_cleanDNF`](Ttc/Exec/Cleanup.lean) holds **with no hypothesis at
 all**.
 
@@ -829,8 +923,11 @@ transported obligations are
 
 ### The three negative results
 
-These are the results that stop an auditor reading the twelve binders as "three
-hypotheses someone has not got round to removing yet".
+These are the results that stop an auditor reading the residual hypotheses as
+"conditions someone has not got round to removing yet".  They are stated about
+`hint`, `hφ` and boundedness — the first because `hint` is what the *pruning* round
+replaced by the weaker `hpos` (§1h), the other two because they are what remains
+and what was derived.  All three are unaffected by the binder count moving.
 
 **1. `hint` is not derivable.**
 [`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean) exhibits
@@ -887,18 +984,21 @@ prices, each machine-checked:
 
 Nothing in that file removes `hφ`, and **nothing in it is imported by the capstone**.
 
-### Non-vacuity at twelve binders
+### Non-vacuity at eleven binders
 
 [`Ttc.TwoCube.ttc_volume_estimate_two_cube_full`](Ttc/Witness/FullTwoCube.lean) applies
 **this** statement to the two-cube instance at every `n ≥ 1` and every
 `(ε, δ) ∈ (0,1]²`, and
 [`…_full_at`](Ttc/Witness/FullTwoCube.lean) pins `(1/3, 9/10)` and `(1/2, 1/4)` with
-the bounds `1/10` and `3/4` proved strictly positive inside the statement. `hint`
-holds because each region contains an open ball of positive radius — a few lines from
+the bounds `1/10` and `3/4` proved strictly positive inside the statement. `hpos`
+holds by [`Ttc.TwoCube.twoVolPos`](Ttc/Witness/FullTwoCube.lean), one application of
+`Ttc.volSol_pos_of_interior` to full-dimensionality — and *that* holds because each
+region contains an open ball of positive radius, a few lines from
 `Ttc.TwoCube.ball_subset_two_d` and `Ttc.TwoCube.gamT_pos`, no box geometry
 ([`Ttc.TwoCube.interior_region_nonempty_two_d`](Ttc/Witness/FullTwoCube.lean)). The
-former thirteenth binder `hcoeff` is **not passed at all** any more; it was discharged
-upstream by the cleanup.
+former binders `hcoeff`, `hint` and `hbdd` are **not passed at all** any more; the
+first two were discharged upstream by the cleanup and the pruning, and the third is
+derived (§1h).
 
 **The earlier two-cube theorems — including those in
 [`Ttc/Witness/Headline.lean`](Ttc/Witness/Headline.lean) — witness
@@ -911,63 +1011,97 @@ numbers is claimed, and none should be read into the shared names.
 
 ---
 
-## 1h. The headline's definitional closure, its preprocessing, and its hypotheses
+## 1h. What lies beyond `Model/`: the definitional closure, the preprocessing, and the hypotheses
 
-This section is the prose that `Ttc/Model/Theorem.lean` deliberately does not carry,
-so that that file stays the statement.  Read the two together.
+This section is the prose that [`Ttc/Model/Theorem.lean`](Ttc/Model/Theorem.lean)
+deliberately does not carry, so that that file stays the statement.  Read the two
+together.  Four things belong here and not there, and an auditor needs all four:
+the **definitional closure**, the **three preprocessing steps** the headline
+certifies `alg:ttc` *plus*, the **two residual hypotheses** `hφ` and `hpos`, and the
+fact that **`hbdd` was derived** rather than dropped.
 
-### Definitional closure — what those seven bodies reach for
+### The boundary, and how to re-check it
 
-The seven definitions are *stated* here; their **bodies are not self-contained**.
-Exactly as in the reference layout, the names live in `Model/` and the terms they
-abbreviate live outside it, and this is the enumeration of everything outside
-`Model/` that the statement's meaning therefore depends on.  **None of the
-following is in `Model/`; all of it is the trusted base beyond `Model/`.**
+The target layout is four files: the algorithm — `alg:ttc`, the preprocessing, the
+converter, the inscribed-ball construction, the dilation factor and the parameter
+block — in [`Model/Pseudocode`](Ttc/Model/Pseudocode.lean); the theorem, and
+nothing else, in [`Model/Theorem`](Ttc/Model/Theorem.lean).  What the theorem's
+**type** names outside `Model/` is then two things:
 
-* **The `Exec/Api` auxiliaries** the bodies name directly — `Ttc.ttcInput` (the
-  preprocessed formula, `Ttc.cleanForm ∘ Ttc.pruneForm`), its two discharged
-  obligations `Ttc.ttcInput_isPositive` and `Ttc.ttcInput_bdd`, the inscribed-ball
-  and dilation data `Ttc.ttcRadius`, `Ttc.ttcScale`, `Ttc.ttcAtoms`,
-  `Ttc.ttcAtoms_bdd`, `Ttc.ttcCen`, `Ttc.ttcScaledRadius`, the parameter block
-  `Ttc.ttcBlock`, the precision `Ttc.ttcPrec`, and the oracle bundle
-  `Ttc.ttcOracleBundle`.
-* **Through those, the `Exec/Inputs` run wrappers** `Ttc.runCount`, `Ttc.runRates`,
-  `Ttc.ttcRunOutput`, `Ttc.runOracles`, `Ttc.runPrec`, `Ttc.inputParams`, and the
-  dilation `Ttc.runScale` / `Ttc.scaledAtoms` (`Exec/Rescaled`), the deduplicated
-  cube list `Ttc.toDNFd` (`Exec/Dedup`) and the cost/termination predicates
-  `Ttc.runCost` and `Ttc.Terminates` (`Runtime`).
-* **The constructed oracle bundle** — `Ttc.coveredOracles` (`Exec/Endgoal`) over
-  `Ttc.mcVol` (`Exec/VolDischarge`), which is the volume oracle
-  `Ttc.VolumeAlgorithm.monteCarlo` (`Volume/MonteCarlo`).  So `Vol_ED` is a
+* **the constructed oracle bundle** — the closed term supplying `Vol_ED` and the
+  sampler for the run, together with the rate vector read off it; and
+* **the run's probability space** — [`Ttc.trajLaw`](Ttc/Coupling/Family.lean) for
+  the sample coins and [`Ttc.MonteCarlo.coins`](Ttc/Volume/MonteCarlo.lean) for the
+  volume coins.
+
+Neither is a hypothesis; both are constructions (§1c, §1d).  Neither can move into
+`Model/` without `Model/` importing the development it is the front of.  **The
+reference layout draws the same boundary:** nfalean's
+`ApproxNFA/Model/Theorem.lean` names `(countNFAExec A n ε δ).P.Pr`, and
+`countNFAExec` is defined in `ApproxNFA/Algorithm/Faithful.lean`, outside its
+`Model/`.  §5's boundary probe is how to re-check that the list is still those two
+and has not quietly grown; run it after any move between `Model/` and `Exec/`.
+
+### Definitional closure — what the `Model/` names unfold to
+
+The statement names quantities; their **bodies are not self-contained**.  Exactly
+as in the reference layout, a name may live in `Model/` while the term it
+abbreviates lives outside, so this is the enumeration of everything outside
+`Model/` that the statement's *meaning* depends on.  **All of it is trusted base
+beyond `Model/`**, whatever the name's own file:
+
+* **The run wrappers** the quantities are built from — the count of enumerated
+  lattice points, the rate vector, the run's output, the oracle bundle, the
+  precision, and the dilation, together with the cost and termination predicates
+  `Ttc.runCost` and `Ttc.Terminates` ([`Ttc/Runtime.lean`](Ttc/Runtime.lean)).
+* **The two discharged preprocessing obligations** the bodies feed those wrappers —
+  `Ttc.ttcInput_isPositive` and `Ttc.ttcInput_bdd`
+  ([`Exec/Api`](Ttc/Exec/Api.lean)), which are where `hφ` and `hpos` are turned
+  into positivity and boundedness *of the preprocessed formula*.
+* **The constructed oracle bundle** — the covered-lattice oracle bundle over
+  `Ttc.mcVol`, which is the volume oracle
+  [`Ttc.VolumeAlgorithm.monteCarlo`](Ttc/Volume/MonteCarlo.lean).  So `Vol_ED` is a
   *constructed* Monte-Carlo estimator, not an assumed one.
-* **The constructed sampler** — `Ttc.e2eSampD` (`Exec/EndToEnd`) and the KV97 /
-  ball-walk development it is built from, together with the canonicalisation data
-  `Ttc.canonRfac`/`Ttc.canonAm`/`Ttc.canonBv`/`Ttc.canonDm` (`Exec/Canonical`).
-* **The parameter block** — `Ttc.ttcParams` (`Exec/Params`), which `Ttc.inputParams`
-  instantiates at `δ₀ = 4δ/5`.
-* **The run's probability space** — `Ttc.trajLaw` (`Coupling/Family`) for the sample
-  coins and `Ttc.MonteCarlo.coins` (`Volume/MonteCarlo`) for the volume coins.
+* **The constructed sampler** — `Ttc.e2eSampD` and the KV97 / ball-walk development
+  it is built from, together with the canonicalisation data
+  `Ttc.canonRfac`/`Ttc.canonAm`/`Ttc.canonBv`/`Ttc.canonDm`
+  ([`Exec/CanonPolytope`](Ttc/Exec/CanonPolytope.lean)).
+* **The internal failure parameter** — `Ttc.inputParams` instantiates the parameter
+  block at `δ₀ = 4δ/5`, which is what makes the conclusion a clean `1 − δ`; §1d
+  prices that.
+* **The run's probability space** — `Ttc.trajLaw` and `Ttc.MonteCarlo.coins`, as
+  above.
 
-So the definitional closure of what is asserted is `Model/Prelude` +
-`Model/ProblemSetting` + `Model/Pseudocode` + this file + the list above.  What is
-*not* in it is every proof: `Exec/Prune`, `Exec/BddFromPos`, `Exec/Final` and the
-whole probabilistic development are consumed only by `Ttc.ttc_volume_api`'s proof,
-not by the statement.
+What is **not** in the closure is every proof: `Exec/Prune`, `Exec/BddFromPos`,
+`Exec/Final` and the whole probabilistic development are consumed only by
+`Ttc.ttc_volume_api`'s proof, not by the statement.
 
-### The seven quantities, in detail
+### The quantities the theorem names, in detail
 
-`Ttc/Exec/Api.lean` defines these seven (section `Measured`, after `ttc_volume_api`)
-and gives each a one-line docstring; the detail lives here.  `Ttc/Model/Theorem.lean`
-holds the theorem and nothing else, and names them.
+Each is a pure abbreviation carrying an identifying `rfl` lemma
+(`Ttc.ttcEstimate_def` and friends) — nothing is asserted by naming, which is the
+`def`-that-stands-in-for-a-proof hazard of §4 being closed by construction.
 
+* **`Ttc.ttcInput`** — the formula `TTC` is actually run on: the user's `φ` with its
+  degenerate cubes pruned and its zero-normal atoms cleaned.
+  `Ttc.ttcInput_eq_preprocess` pins it, by `rfl`, to `Model/Pseudocode`'s own
+  [`Ttc.preprocess`](Ttc/Model/Pseudocode.lean).
+* **`Ttc.ttcScale`** — the dilation the run applies to its input; the headline
+  divides the run's output by `ttcScale ^ n`, which is exactly the preprocessing's
+  dilation lines taken back out.
+* **`Ttc.ttcBlock`**, **`Ttc.ttcPrec`** — the parameter block `alg:ttc` computes
+  (lines 17–20) and `GetPrecision`'s output `ρ`, both at the preprocessed formula.
 * **`Ttc.ttcIndex`** — `|Sol(F) ∩ 𝕃ⁿ|` at the computed precision, i.e. the index the
   run's sample coins range over, so a sample trajectory has type
   `ℕ → Fin (ttcIndex …) → ℕ`.
+* **`Ttc.ttcOracleBundle`** — the oracle bundle `alg:ttc` reads on the run `(c, t)`:
+  the constructed Monte-Carlo `Vol_ED` at the volume coins, the covered-lattice
+  sampler at the sample coins.  **A closed term, not a hypothesis.**
 * **`Ttc.ttcRates`** — the level-`0` rate vector `θ` (`alg:ttc` line 20) at the volume
   coins `c`: the sampler's mass at each enumerated lattice point times that point's
   cube's volume estimate. `Ttc.trajLaw` of it is the law the sample coins are drawn from.
 * **`Ttc.ttcEstimate`** — what `TTC(F, ε, δ)` returns on the run `(c, t)`, brought back
-  to the original scale: `Ttc.ttcRunOutput` at the dilated input, divided by
+  to the original scale: the run's output at the dilated input, divided by
   `ttcScaleⁿ`. **The division is part of the measured quantity** — the run is performed
   on the dilated body `c · Sol(F)`, whose volume is `cⁿ · Vol(Sol F)`, so this, and not
   the raw output, is what the accuracy conjunct compares with `Ttc.volSol` of the
@@ -984,9 +1118,11 @@ holds the theorem and nothing else, and names them.
 * **`Ttc.ttcNumCubes`** — `m`, the length of the preprocessed formula's DNF. The cost
   bound is `m · (C_vol + C_sample · Thresh)`.
 
-Each carries an identifying `rfl` lemma (`Ttc.ttcEstimate_def` and friends) alongside them in
-`Exec/Api.lean`, and `Ttc.ttcEstimate_eq_ttcOutput` pins the measured quantity to
-`Model/Pseudocode`'s own `Ttc.ttcOutput` — lines A12–A13 of that file's transcription.
+`Ttc.ttcEstimate_eq_ttcOutput` pins the measured quantity, by `rfl`, to
+`Model/Pseudocode`'s own [`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean) divided by
+`ttcScaleⁿ` — the two bridges back to the transcription are that lemma and
+`Ttc.ttcInput_eq_preprocess`, and they are what stop the wrapper vocabulary from
+being a second model.
 
 ### What is certified is `alg:ttc` plus three preprocessing steps
 
@@ -998,12 +1134,18 @@ Read this before quoting the statement.  Two of the three change what the algori
   `Pois(10⁻⁶)` points and returns `0`.  **The printed algorithm is wrong there**, not
   merely unproved (`Ttc.Box.big_not_derivable`, README finding 20).  So the input is
   dilated by `Ttc.runScale` and the estimate divided by `cⁿ`.
-* **A pruning** (`Exec/Prune`).  Degenerate (lower-dimensional) cubes are dropped.  This
-  changes `Sol(F)` by a null set — `Ttc.sol_pruneForm_subset` is a genuine `⊆`, strict on
-  `Ttc.degForm` — and is sound *only* because the conclusion merely measures `sol`
-  (`Ttc.volSol_pruneForm`).
-* **A cleanup** (`Exec/Cleanup`).  Zero-normal atoms are constant-folded.  Benign:
-  `Ttc.sol_cleanForm` is an exact set equality.
+* **A pruning** ([`Exec/Prune`](Ttc/Exec/Prune.lean)).  Degenerate
+  (lower-dimensional) cubes are dropped.  This changes `Sol(F)` by a null set:
+  `Ttc.sol_pruneForm_subset` is a genuine `⊆` and **deliberately not an equality**
+  — the file's own docstring says so, and says that is why it proves a `Ttc.volSol`
+  equality (`Ttc.volSol_pruneForm`) instead of a `Ttc.sol` one.  The step is sound
+  *only* because the conclusion merely measures `sol`.  (No lemma in the tree
+  exhibits an input where the inclusion is *strict*; on `Ttc.degForm` in particular
+  it is not, since the pruned cube `{0}` sits inside the surviving `[−1, 1]`.  An
+  earlier revision of this page claimed strictness there and was wrong.)
+* **A cleanup** ([`Exec/Cleanup`](Ttc/Exec/Cleanup.lean)).  Zero-normal atoms are
+  constant-folded.  Benign, and the only one of the three that is:
+  `Ttc.sol_cleanForm` is an **exact set equality**.
 
 The inscribed ball is *constructed* (`Ttc.autoCen`, `Ttc.autoGamma`), but it is **not**
 `alg:prec` line 86's LP — it is *some* inscribed ball, and non-maximality only inflates
@@ -1011,21 +1153,32 @@ The inscribed ball is *constructed* (`Ttc.autoCen`, `Ttc.autoGamma`), but it is 
 
 ### The two residual hypotheses
 
-* `hφ` — negation-free.  Independent of boundedness in **both** directions
-  (`Ttc.Independence.exists_isBounded_not_isPositive`,
-  `Ttc.Independence.exists_isPositive_not_isBounded`), so neither can replace the other.
-  Removable in principle at a bad price — see `Findings/OpenHalfspace.lean`.
-* `hpos` — `0 < Vol(F)`.  Strictly weaker than the per-cube full-dimensionality it
-  replaced: `Ttc.volSol_pos_of_interior` proves that implication, and
-  `Ttc.hint_not_derivable` refutes the converse.
+* `hφ : φ.IsPositive` — negation-free.  Independent of boundedness in **both**
+  directions ([`Ttc.Independence.exists_isBounded_not_isPositive`](Ttc/Findings/Independence.lean),
+  [`Ttc.Independence.exists_isPositive_not_isBounded`](Ttc/Findings/Independence.lean)),
+  so neither could ever replace the other.  Removable in principle at a price that
+  is itself machine-checked — see
+  [`Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean), and §1g's third
+  negative result for the three items of that price.  Nothing in that file removes
+  `hφ`, and nothing in it is imported by the capstone.
+* `hpos : 0 < volSol (atomSet atoms) φ` — the solution set has positive volume.
+  Strictly weaker than the per-cube full-dimensionality `hint` it replaced:
+  [`Ttc.volSol_pos_of_interior`](Ttc/Exec/Prune.lean) proves that implication, and
+  [`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean) refutes the converse.
+
+Those are the only two.  §1g's **three negative results** are what stop a reader
+treating them, and the removed `hint`, as hypotheses nobody has got round to
+deleting: `hint` is proved not derivable and the obvious repair is proved blocked;
+`hφ` and boundedness are proved independent in both directions; and the cost of
+removing `hφ` is costed rather than guessed.
 
 ### `hbdd` is gone — **derived**, not dropped
 
-The statement used to carry a twelfth binder,
+The statement used to carry a further binder,
 `hbdd : Bornology.IsBounded (sol (atomSet atoms) φ)`.  What the chain actually needs is
 boundedness of `Sol` of the **pruned** formula, and
-`Ttc.isBounded_sol_pruneForm_of_volSol_pos` (`Exec/BddFromPos`) proves exactly that
-from `hφ` and `hpos` alone: `hpos` bounds the volume of `Sol(F)` away from `⊤`, every
+[`Ttc.isBounded_sol_pruneForm_of_volSol_pos`](Ttc/Exec/BddFromPos.lean) proves exactly
+that from `hφ` and `hpos` alone: `hpos` bounds the volume of `Sol(F)` away from `⊤`, every
 surviving cube's region is convex with a nonempty interior *by construction*, and a
 convex set with an interior point and finite volume is bounded
 (`Ttc.isBounded_of_convex_of_interior_of_volume_ne_top` — the step Mathlib does not
@@ -1069,7 +1222,7 @@ quantifies over the structure and adds nothing — no side hypothesis, no
 
 **`Ttc.TtcProb` has 59 fields.** That number, and the field list below, were read
 out of the compiled environment with `Lean.getStructureFields`, not by grepping
-the file. That distinction has bitten this project before: `ProblemSetting.lean`'s
+the file. That distinction has bitten this project before: `Ttc/TtcProb.lean`'s
 docstrings quote field-shaped Lean at two-space indentation, so a `grep` for
 `^  name :` reports fields that are *prose about theorems* — `samp_unif`,
 `theta_lo`, `theta_hi` and `volED_hi` all appear that way and **none of them is a
@@ -1954,7 +2107,7 @@ import Ttc
 #print axioms Ttc.TwoCube.min_qT_le_ratesT       -- §3g: big at m = 2, by cases on cubeAt
 #print axioms Ttc.TwoCube.volume_sbx             -- §3g: the shifted box's exact volume
 #print axioms Ttc.TwoCube.twoProb_pos_ne_top_at_nine_tenths -- §3g: not toReal ⊤ = 0
-#print axioms Ttc.ttc_volume_estimate            -- §1e: the twelve-binder headline
+#print axioms Ttc.ttc_volume_estimate            -- §1e: the eleven-binder headline
 #print axioms Ttc.hvol_scaled                    -- §1g: the dilation discharges hvol
 #print axioms Ttc.ball_subset_cenOf              -- §1g: the constructed ball, uncond.
 #print axioms Ttc.sol_cleanForm                  -- §1g: the cleanup is a set EQUALITY
@@ -1994,7 +2147,7 @@ full-development axiom sweep.
 ### Read the assumptions off the compiled structure, not off the file
 
 This is the check that catches the failure mode §2 warns about — docstrings in
-`ProblemSetting.lean` quote field-shaped Lean, so `grep` over-reports.
+`Ttc/TtcProb.lean` quote field-shaped Lean, so `grep` over-reports.
 
 ```lean
 import Ttc
@@ -2031,7 +2184,67 @@ run_cmd do
 `{A}` and `{n}` from the `variable` line. So `Ttc.ttc_volume_final` reports **28**,
 against the **26 explicit** binders §1d lists and a caller must supply — the same
 `raw = explicit + 2` relation §1b explains for `Ttc.ttc_volume`. Quote whichever
-you like, but say which.
+you like, but say which. Add `` `Ttc.ttc_volume_estimate `` to the list to check
+§1e's **11 explicit / 13 raw**.
+
+### Re-check the `Model/` boundary yourself
+
+This is the check behind the top-of-page claim that what the headline's *type*
+names outside `Model/` is the constructed oracle bundle and the run's probability
+space. It is worth re-running after **any** move between `Model/` and `Exec/`,
+because it is the one claim about the layout that a machine can settle, and it is
+cheap:
+
+```lean
+import Ttc
+open Lean in
+run_cmd do
+  let env ← Lean.getEnv
+  let some ci := env.find? `Ttc.ttc_volume_estimate | throwError "missing"
+  let mut t := ci.type
+  while t.isForall do t := t.bindingBody!
+  let mut bad : Array Name := #[]
+  for c in t.getUsedConstants do
+    if let some m := env.getModuleFor? c then
+      let ms := m.toString
+      if ms.startsWith "Ttc" && !ms.startsWith "Ttc.Model" then bad := bad.push c
+  Lean.logInfo m!"named outside Ttc.Model: {bad.toList}"
+```
+
+It walks past the binders, collects the constants of the **conclusion**, and keeps
+those whose defining module is under `Ttc` but not under `Ttc.Model`. Mathlib names
+are filtered out by the `Ttc` prefix test, so what comes back is exactly the
+project's own leakage.
+
+**What is acceptable.** `Ttc.trajLaw` and `Ttc.MonteCarlo.coins` — the sample-coin
+and volume-coin laws — and the constructed oracle bundle the run is driven by
+(together with the rate vector read off it, which is a function of the volume
+coins). Those are constructions rather than assumptions, and they are outside
+`Model/` for the same structural reason nfalean keeps `countNFAExec`
+(`ApproxNFA/Algorithm/Faithful.lean`) outside `ApproxNFA/Model/`: `Model/` cannot
+name them without importing the development it is the front of.
+
+**What would indicate a leak**, and what each would mean:
+
+* `Ttc.TtcProb`, `Ttc.KV97Sampler` or `Ttc.VolumeAlgorithm` — a *hypothesis bundle*
+  back in the statement. This is the one that matters: it would mean the headline
+  had reacquired an assumed oracle or an assumed sampler, and §1c's whole point
+  would be gone from the statement layer.
+* An `Exec/` definition of the **algorithm's own data** — the preprocessed input,
+  the dilation factor, the parameter block, the precision, the converter. These
+  belong in `Model/Pseudocode` under the target layout; finding one here means the
+  algorithm is being described from two places, which is the arrangement that lets
+  the statement and the transcription drift apart silently.
+* Anything from `Exec/Final`, `Exec/Budget`, `Exec/EndToEnd` or the probabilistic
+  development — proof machinery in the statement. `Ttc.ttc_volume_api`'s proof may
+  reach all of it; the *type* must not.
+
+An empty answer is **not** the target and should be treated with suspicion rather
+than satisfaction: it would mean the probability space had been re-declared inside
+`Model/`, and `Model/` would then no longer be a layer you can read before the rest
+of the development. Note also what the probe does not do: it says nothing about
+what the named terms **unfold to**. That is §1h's definitional closure, and no
+probe replaces reading it.
 
 ### Which results does the headline actually reach?
 

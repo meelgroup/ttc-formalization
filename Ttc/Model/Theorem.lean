@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.Run
+import Ttc.Exec.Api
 
 /-!
 # The main theorem: `thm:volumettc` + `thm:runtime` for `TTC(F, ε, δ)`
@@ -11,11 +11,10 @@ The **statement layer**, and nothing else: this file contains one theorem,
 `Ttc.ttc_volume_estimate`, and no definition, no auxiliary lemma and no proof to work
 through — the proof is one application of `Ttc.ttc_volume_api` (`Exec/Api`).
 
-Audit path — `Model/`, then stop, **five files**: `Model/Prelude` (the vocabulary),
+Audit path — `Model/`, then stop, **four files**: `Model/Prelude` (the vocabulary),
 `Model/ProblemSetting` (what `Vol(F)` is and what `(1 ± ε)` means),
-`Model/Pseudocode` (`alg:ttc`, transcribed line by line), `Model/Run` (the
-quantities the theorem below names, each a pure abbreviation with an identifying
-`rfl` lemma), this file.
+`Model/Pseudocode` (`alg:ttc` and its preprocessing, transcribed line by line, ending
+in the algorithm's output `Ttc.ttcAlgOutput`), this file.
 
 `TTC` takes three inputs, so three inputs is what this statement takes: the formula
 `F = (atoms, φ)`, the accuracy `ε`, the confidence `δ`.  **Eleven binders**
@@ -27,41 +26,65 @@ atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
 and among them there is no interpretation, no parameter block, no converter, no
 oracle, no precision, no inscribed-ball data — and no boundedness hypothesis.
 
-## What is measured: `Model/Pseudocode`'s own `Ttc.ttcOutput`
+## What is measured: `Model/Pseudocode`'s own `Ttc.ttcAlgOutput`
 
-The accuracy conjunct is about `Ttc.ttcOutput` — the transcription of `alg:ttc` in
-`Model/Pseudocode`, run on `Ttc.ttcInput atoms φ` (which is `Ttc.preprocess atoms φ`,
-by `Ttc.ttcInput_eq_preprocess`) — divided by `Ttc.ttcScale ^ n`, the dilation factor
-that lines A12–A13 of the preprocessing put in and this division takes back out.  So a
-reader of the statement sees the transcribed algorithm being measured, not a wrapper
-around it.  `Ttc.toDNFd` handed to it is the line-16 converter, and it too is a
-definition of `Model/Pseudocode`.  The runtime conjunct, by contrast, is stated in
-the folded vocabulary of `Model/Run` — `Ttc.ttcTerminates`, `Ttc.ttcCost`,
-`Ttc.ttcNumCubes`, `Ttc.ttcThresh` — each of which unfolds by `rfl` to the
-corresponding term of `Runtime.lean` (`Ttc.ttcTerminates_def`, `Ttc.ttcCost_def`,
-`Ttc.ttcNumCubes_def`, `Ttc.ttcThresh_def`).
+The accuracy conjunct says, in one term,
+
+```
+Pr[ ttcAlgOutput atoms φ ε δ … (the run's oracle bundle) ∈ relErr ε (volSol (atomSet atoms) φ) ] ≥ 1 − δ
+```
+
+`Ttc.ttcAlgOutput` is **the algorithm**: `Model/Pseudocode` defines it as `Ttc.run` —
+the fold of `alg:ttc` lines 22–46 — over the preprocessed formula's cubes
+`Ttc.toDNFd (Ttc.preprocess atoms φ)`, at the computed parameter block
+`Ttc.inputParams` (lines 17–20) and the computed precision `Ttc.runPrec` (line 17),
+with the estimate divided by `qⁿ` for the dilation `q = Ttc.runScale` (lines
+A10–A13).  Its last argument is the **oracle bundle**, because `alg:ttc` line 24's
+`Vol_ED` and line 43's `GenerateSamples` are calls into one — exactly as the paper
+prints them.
+
+The bundle supplied here, `Ttc.ttcOracleBundle` (`Exec/Api`), is *constructed*, not
+assumed: `Vol_ED` is the Monte-Carlo estimator `Ttc.mcVol` at the volume coins `c`,
+and `GenerateSamples` is the ball-walk sampler at the sample coins `t`.  The target
+is the **user's own** `Vol(F)`, at the original `φ`: neither preprocessing pass moves
+it.
+
+The runtime conjunct is stated in the folded vocabulary of `Exec/Api` —
+`Ttc.ttcTerminates`, `Ttc.ttcCost`, `Ttc.ttcNumCubes`, `Ttc.ttcThresh` — each of
+which unfolds by `rfl` to the corresponding term of `Runtime.lean`
+(`Ttc.ttcTerminates_def`, `Ttc.ttcCost_def`, `Ttc.ttcNumCubes_def`,
+`Ttc.ttcThresh_def`).
 
 ## What the statement names
 
-**Two properties hold at once, and `Model/Run` is what buys the second.**  This
-file is *one declaration* — no `def`, no auxiliary lemma — **and** the theorem's
-type names nothing defined outside `Model/` at all, save the run's probability
-space (`Ttc.MonteCarlo.coins`, `Ttc.trajLaw`).  Every quantity of the headline —
-`Ttc.ttcInput`, `Ttc.ttcScale`, `Ttc.ttcBlock`, `Ttc.ttcPrec`,
-`Ttc.ttcOracleBundle`, `Ttc.ttcRates`, `Ttc.ttcIndex`, and the seven measured
-quantities `Ttc.ttcEstimate`, `Ttc.ttcCost` and companions — is defined in
-`Model/Run.lean`, each as a pure abbreviation carrying an identifying `rfl` lemma
-(`Ttc.ttcEstimate_def` and friends); `Ttc.ttcOutput` and `Ttc.toDNFd` are
-`Model/Pseudocode`'s.  Their *bodies* reach into `Exec/`; that definitional
-closure is `AUDIT.md` §1h, not this file.
+This file is *one declaration* — no `def`, no auxiliary lemma — and the theorem's
+type names, outside `Model/`, only
+
+```
+ttcRates  ttcIndex  ttcOracleBundle  trajLaw  MonteCarlo.coins
+preprocess_bdd
+ttcTerminates  ttcCost  ttcThresh  ttcNumCubes
+```
+
+The first line is **the constructed oracle bundle and the run's probability space**:
+the rate vector the sample coins are drawn at, the index they range over, the bundle
+itself, its law, and the volume coins' law.  These are outside `Model/` on purpose —
+`alg:ttc` treats `Vol_ED` and `GenerateSamples` as oracle calls, so the *construction*
+that discharges them is proof content, not statement content.  The last line is the
+runtime conjunct's four folded names, each with its `rfl` lemma in `Exec/Api`.
+
+`Ttc.preprocess_bdd` is the odd one out, and it is a **proof term**, not a quantity:
+`Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ))`, derived from `hφ`
+and `hpos` alone (`Exec/BddFromPos`).  It appears because `Ttc.Params` bundles five
+*proof* fields, so `Ttc.inputParams` — and hence `Ttc.ttcAlgOutput` — cannot be
+applied without it.  `Model/Pseudocode`'s docstring, "The divergence from the
+reference layout", states this plainly and says what removing it would cost.
 
 The property is machine-checkable in one `run_cmd`: walk
 `Ttc.ttc_volume_estimate`'s type past its binders, collect
 `Expr.getUsedConstants`, and keep those whose defining module starts with `Ttc`
-but not `Ttc.Model`.  The answer is `[Ttc.MonteCarlo.coins, Ttc.trajLaw]`.
-`Ttc.ttcEstimate_eq_ttcOutput` (`Model/Run`, by `rfl`) is the bridge in the other
-direction, for anyone who prefers the wrapper to the raw `Ttc.ttcOutput` measured
-above.
+but not `Ttc.Model`.  `Ttc.ttcAlgOutput_eq_ttcEstimate` (`Exec/Api`, by `rfl`) is the
+bridge in the other direction, identifying the measured term with the run's estimate.
 
 The fact that this theorem's proof is a bare application, with no rewriting, is the
 structural check that the names above name what they claim to name: a wrong
@@ -92,10 +115,12 @@ open MeasureTheory Set
 /-- **`thm:volumettc` + `thm:runtime`.**  `TTC` is run on `F = (atoms, φ)` at accuracy
 `ε` and confidence `δ`.
 
-* **Accuracy.**  `Pr[ output ∈ (1 ± ε)·Vol(F) ] ≥ 1 − δ`, over the volume coins (law
-  `Ttc.MonteCarlo.coins n`) and the sample coins (law `Ttc.trajLaw`).  The output is
-  `Model/Pseudocode`'s `Ttc.ttcOutput` on the preprocessed input, divided by the
-  dilation factor `Ttc.ttcScale ^ n`, and the target is the **user's own** `Vol(F)`.
+* **Accuracy.**  `Pr[ TTC(F, ε, δ) ∈ (1 ± ε)·Vol(F) ] ≥ 1 − δ`, over the volume coins
+  (law `Ttc.MonteCarlo.coins n`) and the sample coins (law `Ttc.trajLaw`).  The output
+  is `Model/Pseudocode`'s own `Ttc.ttcAlgOutput` — the fold of `alg:ttc` lines 22–46
+  at the computed parameter block and precision, rescaled by `1/qⁿ` — evaluated at the
+  constructed oracle bundle `Ttc.ttcOracleBundle`, and the target is the **user's own**
+  `Vol(F)`.
 * **Running time.**  On every run, `alg:ttc`'s charged cost `Ttc.ttcCost` — one
   `Vol_ED` call plus one `GenerateSamples` draw per returned point — is at most
   `Ttc.ttcNumCubes · (C_vol + C_sample · Ttc.ttcThresh)`, that is
@@ -110,14 +135,12 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    -- (accuracy) `alg:ttc`'s own output, rescaled, is within `(1 ± ε)·Vol(F)` with
-    -- probability `≥ 1 − δ`
+    -- (accuracy) `alg:ttc`'s own output, at the constructed oracle bundle, is within
+    -- `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
       (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)
-          {t | ttcOutput (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
-                    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c) toDNFd
-                    (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) t
-                  / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n
+          {t | ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
+                    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t)
                 ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧

@@ -41,8 +41,8 @@ The one wrinkle is the usual one: `Cube A` has no `DecidableEq` instance to
 synthesize, so `List.mem_dedup` and `List.nodup_dedup` cannot be applied by
 `exact`/`rw` — their instance argument has to be handed over by hand
 (`@List.mem_dedup _ (Classical.decEq (Cube A)) …`).  That is done once each, in
-`Ttc.mem_toDNFd` and `Ttc.toDNFd_nodup`; every later proof goes through those two and
-never mentions an instance again.  In particular the counting lemmas
+`Ttc.mem_toDNFd` (now in `Model/Pseudocode`) and `Ttc.toDNFd_nodup` below; every
+later proof goes through those two and never mentions an instance again.  In particular the counting lemmas
 (`Ttc.natCard_mem_list`, `Ttc.natCard_mem_list_of_nodup`) take `[DecidableEq α]` as an
 ordinary instance binder and are discharged by `classical`, since `Nat.card` does not
 depend on the instance at all.
@@ -99,32 +99,24 @@ theorem natCard_mem_list_of_nodup {α : Type*} {l : List α} (h : l.Nodup) :
 
 `Ttc.toDNFd` itself is **not** defined here: it is line A1 of the preprocessing, so
 it lives with the rest of the transcription in `Model/Pseudocode`, which this file
-imports.  What is here is everything *proved* about it.
+imports.  Nor are its four basic properties — `Ttc.mem_toDNFd`,
+`Ttc.toDNFd_isDNFOf`, `Ttc.exists_mem_toDNF` and `Ttc.toDNFd_ne_nil` — which
+`Ttc.inputParams` needs and which are therefore in `Model/Pseudocode` too.  What is
+here is everything else proved about it: duplicate-freeness, positivity, the
+conditional non-emptiness, and the counting route to `hlen`.
 -/
-
-/-- **Deduplication preserves the cubes.**  Everything the development asks of a DNF
-is a statement about its members, so this single lemma is what makes `toDNFd` a
-drop-in replacement for `toDNF`. -/
-theorem mem_toDNFd {φ : BForm A} {c : Cube A} : c ∈ toDNFd φ ↔ c ∈ toDNF φ :=
-  @List.mem_dedup _ (Classical.decEq (Cube A)) c (toDNF φ)
 
 /-- **The output is duplicate-free** — the property `Ttc.toDNF` provably lacks. -/
 theorem toDNFd_nodup (φ : BForm A) : (toDNFd φ).Nodup :=
   @List.nodup_dedup _ (Classical.decEq (Cube A)) (toDNF φ)
 
-/-! ## The two correctness properties transfer -/
+/-! ## Positivity transfers
 
-/-- **`toDNFd` is still a correct DNF of `φ`.**  `DNF.holds v D = ∃ c ∈ D, c.holds v`
-depends on `D` only through its members, and `Ttc.mem_toDNFd` says those are
-unchanged; `Ttc.toDNF_isDNFOf` does the rest. -/
-theorem toDNFd_isDNFOf (φ : BForm A) : IsDNFOf (toDNFd φ) φ := by
-  intro v
-  rw [← toDNF_isDNFOf φ v]
-  constructor
-  · rintro ⟨c, hc, hcv⟩
-    exact ⟨c, mem_toDNFd.1 hc, hcv⟩
-  · rintro ⟨c, hc, hcv⟩
-    exact ⟨c, mem_toDNFd.2 hc, hcv⟩
+The other correctness property, `Ttc.toDNFd_isDNFOf`, moved to `Model/Pseudocode`
+with `Ttc.mem_toDNFd` and `Ttc.toDNFd_ne_nil`: `Ttc.inputParams` is built there and
+needs both, and this module imports `Model/Pseudocode` for the definition of
+`Ttc.toDNFd`, so leaving them here was an import cycle.
+-/
 
 /-- **`toDNFd` is still positive on a positive formula.**  `DNF.IsPositive D`
 quantifies over the members of `D`, and deduplication only removes members. -/
@@ -150,30 +142,11 @@ theorem length_toDNFd_le_card (φ : BForm A) :
 /-! ## Non-emptiness
 
 `hm : 1 ≤ Nat.card {c // c ∈ toDNFd φ}` is the other side condition a caller must
-meet; it follows from any member, hence from non-emptiness.
+meet; it follows from any member, hence from non-emptiness.  The form the algorithm
+uses, `Ttc.toDNFd_ne_nil`, is in `Model/Pseudocode`; what stays here is the
+conditional version, which assumes non-emptiness of the raw DNF rather than
+deriving it from positivity.
 -/
-
-/-- **A positive formula has at least one cube.**  Structural induction: `BForm` has
-no `false` constructor, `neg` is excluded by positivity, `or` appends and `and`
-crosses, and both operations preserve "has a member". -/
-theorem exists_mem_toDNF : ∀ (φ : BForm A), φ.IsPositive → ∃ c, c ∈ toDNF φ := by
-  intro φ
-  induction φ with
-  | tt => intro _; exact ⟨[], List.mem_singleton_self _⟩
-  | atom a => intro _; exact ⟨[⟨a, true⟩], List.mem_singleton_self _⟩
-  | neg φ _ => intro h; exact absurd h id
-  | and φ ψ ihφ ihψ =>
-      rintro ⟨hφ, hψ⟩
-      obtain ⟨c, hc⟩ := ihφ hφ
-      obtain ⟨d, hd⟩ := ihψ hψ
-      refine ⟨c ++ d, ?_⟩
-      show c ++ d ∈ (toDNF φ).cross (toDNF ψ)
-      rw [DNF.cross, List.mem_flatMap]
-      exact ⟨c, hc, List.mem_map_of_mem hd⟩
-  | or φ ψ ihφ ihψ =>
-      rintro ⟨hφ, _⟩
-      obtain ⟨c, hc⟩ := ihφ hφ
-      exact ⟨c, List.mem_append_left _ hc⟩
 
 /-- **Deduplication does not empty a non-empty DNF** — the conditional form, which
 depends on nothing but `Ttc.mem_toDNFd`. -/
@@ -181,24 +154,14 @@ theorem toDNFd_ne_nil_of {φ : BForm A} (h : toDNF φ ≠ []) : toDNFd φ ≠ []
   obtain ⟨c, hc⟩ := List.exists_mem_of_ne_nil _ h
   exact List.ne_nil_of_mem (mem_toDNFd.2 hc)
 
-/-- **A positive formula has a non-empty deduplicated DNF.**  Together with
-`Ttc.one_le_card_cubes` this discharges `hm` for `toDNFd`. -/
-theorem toDNFd_ne_nil {φ : BForm A} (h : φ.IsPositive) : toDNFd φ ≠ [] := by
-  obtain ⟨c, hc⟩ := exists_mem_toDNF φ h
-  exact List.ne_nil_of_mem (mem_toDNFd.2 hc)
-
 /-! ## Axiom audit -/
 
 #print axioms natCard_mem_list
 #print axioms natCard_mem_list_of_nodup
-#print axioms mem_toDNFd
 #print axioms toDNFd_nodup
-#print axioms toDNFd_isDNFOf
 #print axioms toDNFd_isPositive
 #print axioms card_toDNFd
 #print axioms length_toDNFd_le_card
-#print axioms exists_mem_toDNF
 #print axioms toDNFd_ne_nil_of
-#print axioms toDNFd_ne_nil
 
 end Ttc

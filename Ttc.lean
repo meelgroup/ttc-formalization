@@ -19,7 +19,7 @@ content, one directory per object of the paper it discharges:
 
 ```
 Ttc/
-  Model/         the statement — read this and stop            (5 files)
+  Model/         the statement — read this and stop            (4 files)
   TtcProb        the abstract interface: every assumption      (1)
   Exec/          the oracle-free capstone, and its plumbing   (10)
   Sampler/       GenerateSamples, interface and construction   (5)
@@ -44,23 +44,23 @@ Ttc/
 * `Ttc.Model.ProblemSetting` — the problem: `volSol` (= `Vol(F)`, what is
   estimated) and `relErr` (= the `(1±ε)` interval, how accurately). **Two
   definitions, no assumption.**
-* `Ttc.Model.Pseudocode`     — `alg:ttc`, transcribed line by line, and its
-  output `Ttc.ttcOutput`. **No proofs.**
-* `Ttc.Model.Run`            — the quantities the headline *names*:
-  `Ttc.ttcInput`, `Ttc.ttcScale`, `Ttc.ttcBlock`, `Ttc.ttcPrec`,
-  `Ttc.ttcOracleBundle` and the seven measured `Ttc.ttcIndex`, `Ttc.ttcRates`,
-  `Ttc.ttcEstimate`, `Ttc.ttcThresh`, `Ttc.ttcTerminates`, `Ttc.ttcCost`,
-  `Ttc.ttcNumCubes`. Pure abbreviations, each with an identifying `rfl` lemma;
-  **no assumption**. It sits downstream of `Ttc.Exec.Api` (its bodies reach into
-  `Exec/`; that closure is `AUDIT.md` §1h) and upstream of `Ttc.Model.Theorem`,
-  which is what lets the next file be the statement alone *and* name only
-  `Model/` definitions.
+* `Ttc.Model.Pseudocode`     — `alg:ttc` and its preprocessing, transcribed line
+  by line, ending in the algorithm's **output** `Ttc.ttcAlgOutput` over an oracle
+  bundle. Not proof-free: it carries about a dozen tactic proofs, all of them
+  either facts without which a `Ttc.Params` cannot be *written down* or basic
+  properties of the converter it defines. Its docstring says which, and states
+  the one divergence from the nfalean layout — that `Ttc.Params` bundles five
+  proof fields, so the algorithm here depends on proof terms.
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
                               guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
-                              at **17 explicit binders**, with no interpretation, no
-                              parameter block, no converter, no oracle argument and
-                              no precision argument (the precision is
-                              `GetPrecision`'s output `P.precision gammaHat`).  The
+                              at **eleven explicit binders**, with no interpretation,
+                              no parameter block, no converter, no oracle argument
+                              and no precision argument (the precision is
+                              `GetPrecision`'s output `P.precision gammaHat`).  Its
+                              accuracy conjunct is stated directly about
+                              `Ttc.ttcAlgOutput`, `Model/Pseudocode`'s transcription
+                              of the algorithm, at the constructed bundle
+                              `Ttc.ttcOracleBundle`.  The
                               bundle version `Ttc.TtcProb.volume_estimate`, whose
                               type names the *assumed* `T.O` and `T.ρ`, is
                               `Ttc.Estimate`.  Which lemma discharged which former
@@ -68,10 +68,14 @@ Ttc/
                               one, `big`, **cannot** be discharged is proved in
                               `Ttc.Exec.Regime`.
 
-Five files, and the count is an invariant rather than a description: `Model/` is
-what a referee reads to trust the *statement*, so anything with proof content
-belongs elsewhere — `Model/Run` qualifies because it is 12 abbreviations and 14
-`rfl` lemmas, and nothing else. `Ttc/Model/Endgoal.lean` sat here for a while and did not
+Four files, and the count is an invariant rather than a description: `Model/` is
+what a referee reads to trust the *statement* and the *algorithm*, so anything
+that is neither belongs elsewhere. `Ttc/Model/Run.lean` — 12 abbreviations and 14
+`rfl` lemmas naming the run's quantities — was the fifth file for a while; its
+contents are now in `Ttc/Exec/Api.lean`, except the six that are steps of the
+algorithm (`Ttc.autoCen`, `Ttc.autoGamma`, `Ttc.runScale`, `Ttc.scaledAtoms`,
+`Ttc.runPrec`, `Ttc.runCount`), which went the other way, into
+`Model/Pseudocode`. `Ttc/Model/Endgoal.lean` sat here for a while and did not
 qualify — 33 declarations and 21 tactic proofs, including the lattice
 enumeration, the oracle bundle and a box-witness chain, against 0/0/0/1 for the
 four above. It now lives at `Ttc/Exec/Endgoal.lean`, where its consumers already
@@ -261,7 +265,7 @@ precisely because the build does not.
 ## The audit surface (`Model/`)
 
 `Model/` is kept deliberately small. A referee who wants to trust the *statement*
-reads exactly these five files and stops.
+reads exactly these four files and stops.
 
 * `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
                            and semantics, `sol` (= `Sol(F)`), the lattice, and the
@@ -273,21 +277,21 @@ reads exactly these five files and stops.
                            `volSol` is the volume of the right set is checked, for
                            that symbol alone, in `Volume/VolSolCheck`.
 * `Model/Pseudocode`     — `alg:ttc`, transcribed line by line from `algo.tex`
-                           over an oracle bundle, and its output
-                           `Ttc.ttcOutput`; **no proofs**.
-* `Model/Run`            — the quantities the headline names, as pure
-                           abbreviations with `rfl` lemmas exhibiting their
-                           bodies; **no assumption**. Downstream of
-                           `Ttc.Exec.Api`, upstream of `Model/Theorem`.
+                           over an oracle bundle, its four preprocessing steps
+                           `A1`–`A13`, and the algorithm's output
+                           `Ttc.ttcAlgOutput` as a function of that bundle. It
+                           does carry proofs — the docstring's "What proof
+                           content is here, and why" enumerates them and the
+                           divergence from nfalean that forces them.
 * `Model/Theorem`        — the headline `Ttc.ttc_volume_estimate`: one theorem,
                            no proof to work through (it is one application of
-                           `Ttc.ttc_volume_stmt`), stated over `TTC`'s own inputs.
+                           `Ttc.ttc_volume_api`), stated over `TTC`'s own inputs.
                            **No oracle and no precision are among them**: the
-                           oracle bundle is the closed term `Ttc.runOracles` and
-                           every precision is `P.precision gammaHat`, i.e.
-                           `GetPrecision`, `alg:ttc` line 17.  It therefore
-                           imports `Exec/Statement`, which is downstream of the
-                           whole development.
+                           oracle bundle is the closed term `Ttc.ttcOracleBundle`
+                           and every precision is `P.precision gammaHat`, i.e.
+                           `GetPrecision`, `alg:ttc` line 17.  It imports
+                           `Exec/Api`, which is downstream of the whole
+                           development.
 
 **The assumptions are not in `Model/`.** `Ttc.ttc_volume_estimate` quantifies
 over inputs, not over a bundle; what it rests on *through the proof* are the 59
@@ -332,7 +336,6 @@ import Ttc.Sampler.Interface
 import Ttc.TtcProb
 import Ttc.Access
 import Ttc.Estimate
-import Ttc.Model.Run
 import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
