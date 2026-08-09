@@ -33,101 +33,22 @@ identifying `rfl` lemma (`Ttc.ttcEstimate_def` and friends), and the fact that t
 theorem's proof is a bare application, with no rewriting, is the structural check
 that they name what they claim to name.
 
-## Definitional closure — what those seven bodies reach for
+## What is assumed, and what the seven bodies reach for
 
-The seven definitions are *stated* here; their **bodies are not self-contained**.
-Exactly as in the reference layout, the names live in `Model/` and the terms they
-abbreviate live outside it, and this is the enumeration of everything outside
-`Model/` that the statement's meaning therefore depends on.  **None of the
-following is in `Model/`; all of it is the trusted base beyond `Model/`.**
+Four things an auditor needs and this file deliberately does **not** restate, so
+that it stays the statement:
 
-* **The `Exec/Api` auxiliaries** the bodies name directly — `Ttc.ttcInput` (the
-  preprocessed formula, `Ttc.cleanForm ∘ Ttc.pruneForm`), its two discharged
-  obligations `Ttc.ttcInput_isPositive` and `Ttc.ttcInput_bdd`, the inscribed-ball
-  and dilation data `Ttc.ttcRadius`, `Ttc.ttcScale`, `Ttc.ttcAtoms`,
-  `Ttc.ttcAtoms_bdd`, `Ttc.ttcCen`, `Ttc.ttcScaledRadius`, the parameter block
-  `Ttc.ttcBlock`, the precision `Ttc.ttcPrec`, and the oracle bundle
-  `Ttc.ttcOracleBundle`.
-* **Through those, the `Exec/Inputs` run wrappers** `Ttc.runCount`, `Ttc.runRates`,
-  `Ttc.ttcRunOutput`, `Ttc.runOracles`, `Ttc.runPrec`, `Ttc.inputParams`, and the
-  dilation `Ttc.runScale` / `Ttc.scaledAtoms` (`Exec/Rescaled`), the deduplicated
-  cube list `Ttc.toDNFd` (`Exec/Dedup`) and the cost/termination predicates
-  `Ttc.runCost` and `Ttc.Terminates` (`Runtime`).
-* **The constructed oracle bundle** — `Ttc.coveredOracles` (`Exec/Endgoal`) over
-  `Ttc.mcVol` (`Exec/VolDischarge`), which is the volume oracle
-  `Ttc.VolumeAlgorithm.monteCarlo` (`Volume/MonteCarlo`).  So `Vol_ED` is a
-  *constructed* Monte-Carlo estimator, not an assumed one.
-* **The constructed sampler** — `Ttc.e2eSampD` (`Exec/EndToEnd`) and the KV97 /
-  ball-walk development it is built from, together with the canonicalisation data
-  `Ttc.canonRfac`/`Ttc.canonAm`/`Ttc.canonBv`/`Ttc.canonDm` (`Exec/Canonical`).
-* **The parameter block** — `Ttc.ttcParams` (`Exec/Params`), which `Ttc.inputParams`
-  instantiates at `δ₀ = 4δ/5`.
-* **The run's probability space** — `Ttc.trajLaw` (`Coupling/Family`) for the sample
-  coins and `Ttc.MonteCarlo.coins` (`Volume/MonteCarlo`) for the volume coins.
+* the **definitional closure** — what those seven bodies name outside `Model/`
+  (the `Exec/Api` auxiliaries, the constructed oracle bundle, the constructed
+  sampler, the parameter block, and the run's probability space);
+* the **three preprocessing steps** the headline certifies `alg:ttc` *plus*, and
+  which of them change the algorithm's behaviour;
+* the **two residual hypotheses** `hφ` and `hpos`, and what is known about each;
+* that **`hbdd` was derived**, not dropped.
 
-So the definitional closure of what is asserted is `Model/Prelude` +
-`Model/ProblemSetting` + `Model/Pseudocode` + this file + the list above.  What is
-*not* in it is every proof: `Exec/Prune`, `Exec/BddFromPos`, `Exec/Final` and the
-whole probabilistic development are consumed only by `Ttc.ttc_volume_api`'s proof,
-not by the statement.
-
-## What is certified is `alg:ttc` plus three preprocessing steps
-
-Read this before quoting the statement.  Two of the three change what the algorithm
-*does*; only one is cosmetic.
-
-* **A dilation** (`Exec/Rescaled`).  `alg:ttc` sets `p ← 1` and only halves it, so its
-  sketch is `Poisson(Λ)` with `Λ ≤ Vol(Sol F)`; on a body of volume `10⁻⁶` it draws
-  `Pois(10⁻⁶)` points and returns `0`.  **The printed algorithm is wrong there**, not
-  merely unproved (`Ttc.Box.big_not_derivable`, README finding 20).  So the input is
-  dilated by `Ttc.runScale` and the estimate divided by `cⁿ`.
-* **A pruning** (`Exec/Prune`).  Degenerate (lower-dimensional) cubes are dropped.  This
-  changes `Sol(F)` by a null set — `Ttc.sol_pruneForm_subset` is a genuine `⊆`, strict on
-  `Ttc.degForm` — and is sound *only* because the conclusion merely measures `sol`
-  (`Ttc.volSol_pruneForm`).
-* **A cleanup** (`Exec/Cleanup`).  Zero-normal atoms are constant-folded.  Benign:
-  `Ttc.sol_cleanForm` is an exact set equality.
-
-The inscribed ball is *constructed* (`Ttc.autoCen`, `Ttc.autoGamma`), but it is **not**
-`alg:prec` line 86's LP — it is *some* inscribed ball, and non-maximality only inflates
-`ρ = ⌈log₁₀(γ/γ̂)⌉`, so the guarantee is unaffected and only the precision is looser.
-
-## The two residual hypotheses
-
-* `hφ` — negation-free.  Independent of boundedness in **both** directions
-  (`Ttc.Independence.exists_isBounded_not_isPositive`,
-  `Ttc.Independence.exists_isPositive_not_isBounded`), so neither can replace the other.
-  Removable in principle at a bad price — see `Findings/OpenHalfspace.lean`.
-* `hpos` — `0 < Vol(F)`.  Strictly weaker than the per-cube full-dimensionality it
-  replaced: `Ttc.volSol_pos_of_interior` proves that implication, and
-  `Ttc.hint_not_derivable` refutes the converse.
-
-## `hbdd` is gone — **derived**, not dropped
-
-The statement used to carry a twelfth binder,
-`hbdd : Bornology.IsBounded (sol (atomSet atoms) φ)`.  What the chain actually needs is
-boundedness of `Sol` of the **pruned** formula, and
-`Ttc.isBounded_sol_pruneForm_of_volSol_pos` (`Exec/BddFromPos`) proves exactly that
-from `hφ` and `hpos` alone: `hpos` bounds the volume of `Sol(F)` away from `⊤`, every
-surviving cube's region is convex with a nonempty interior *by construction*, and a
-convex set with an interior point and finite volume is bounded
-(`Ttc.isBounded_of_convex_of_interior_of_volume_ne_top` — the step Mathlib does not
-have).  The pruned `Sol` is the finite union of those regions.
-
-That derivation became possible **only after the pruning round**.  Before it a cube of
-the DNF can be a *line*: convex, unbounded, and of volume `0` — so it contributes
-nothing to `Vol(F)` and `hpos` was perfectly consistent with an unbounded `Sol(F)`.
-`Ttc.hint_not_derivable` (`Exec/Degenerate`) is the machine-checked witness that
-`hpos` does not imply per-cube full-dimensionality, which is exactly the gap.
-Pruning deletes those cubes, `Ttc.interior_nonempty_pruneForm` supplies the interior
-point, and only then does "positive volume" imply "bounded".  Nothing here claims
-`0 < Vol(F) → IsBounded (sol (atomSet atoms) φ)` at the **unpruned** formula; that
-implication is false, and it is not needed.
-
-Non-vacuity: `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` (`Witness/FullTwoCube.lean`).
-The audit is `AUDIT.md` §1e–§1g.
-
-`sorry`-free, axioms `[propext, Classical.choice, Quot.sound]`.
+All four are in [`AUDIT.md`](../../AUDIT.md) §1h, which is written to be read
+alongside this file.  `Model/Pseudocode`'s `A1`–`A13` block is the pseudocode for
+the preprocessing itself.
 -/
 
 namespace Ttc
