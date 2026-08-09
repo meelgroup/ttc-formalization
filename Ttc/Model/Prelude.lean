@@ -213,28 +213,6 @@ noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)
     (ρ : ℤ) : ℝ :=
   (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
 
-/-! ## What is estimated, and how accurately -/
-
-/-- The paper's `Vol(F)`: the Lebesgue volume of the solution set. -/
-noncomputable def volSol {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A) : ℝ :=
-  (MeasureTheory.volume (sol M φ)).toReal
-
-/-- The paper's `(1 ± ε)·b` interval. `@[reducible]` so it is transparent to
-`Set.Icc`. -/
-@[reducible] def relErr (ε b : ℝ) : Set ℝ := Set.Icc ((1 - ε) * b) ((1 + ε) * b)
-
-/-- **The normalisation `Vol_ED` is called on.** `K` moved so that its inscribed
-ball becomes the unit ball at the origin: the image of `K` under
-`y ↦ γ⁻¹ · (y − c)`.
-
-Cousins–Vempala Theorem 1.1 (`Ttc.VolumeAlgorithm`, `Model/ProblemSetting`) speaks
-only about bodies containing the unit ball, whereas `Ttc.TtcProb.ball_subset`
-supplies a ball of radius `γ̂` about a centre that is not the origin. This is the
-change of variable that closes the gap; that it does is *proved* in
-`Ttc/Volume/Bridge.lean` (`Ttc.VolumeAlgorithm.of_ball`), not assumed. -/
-noncomputable def roundBody {n : ℕ} (c : Space n) (γ : ℝ) (K : Set (Space n)) :
-    Set (Space n) := γ⁻¹ • ((-c) +ᵥ K)
-
 /-! ## The parameter block
 
 The five scalars `alg:ttc` (lines 17–20) and `alg:prec` (line 86) compute before

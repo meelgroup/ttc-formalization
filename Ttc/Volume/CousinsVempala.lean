@@ -9,7 +9,7 @@ import Arlib.Convexity.GaussianCooling.ZLogconcave
 /-!
 # `Volume/CousinsVempala`: §5.2 assembled, and what the volume oracle still owes
 
-`Ttc.VolumeAlgorithm` (`Model/ProblemSetting`) is Cousins–Vempala Theorem 1.1 as an
+`Ttc.VolumeAlgorithm` (`Volume/Oracle`) is Cousins–Vempala Theorem 1.1 as an
 *assumption*. This file is the assembly step towards making it a *theorem*: it puts
 together §5.2 of
 

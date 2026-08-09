@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.ProblemSetting
+import Ttc.TtcProb
 import Arlib.MarkovChains.Continuous.ConvexBodyMixing
 import Arlib.MarkovChains.Continuous.WarmStart
 import Arlib.MarkovChains.Continuous.WarmStartGeneral
@@ -12,7 +12,7 @@ import Arlib.Lattice.Rounding.ProdKernel
 /-!
 # `Sampler/Construct`: a `Ttc.KV97Sampler` whose `law_tv` is a theorem
 
-`Ttc.KV97Sampler` (`Ttc/Model/ProblemSetting.lean`) has fifteen fields.  Fourteen
+`Ttc.KV97Sampler` (`Ttc/Sampler/Interface.lean`) has fifteen fields.  Fourteen
 are *descriptive* — they say which polytope the sampler runs on, how it is
 normalised, and what its output law is.  Exactly one is *quantitative*:
 

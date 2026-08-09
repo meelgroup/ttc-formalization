@@ -20,9 +20,11 @@ content, one directory per object of the paper it discharges:
 ```
 Ttc/
   Model/         the statement — read this and stop            (4 files)
+  TtcProb        the abstract interface: every assumption      (1)
   Exec/          the oracle-free capstone, and its plumbing   (10)
-  Sampler/       GenerateSamples, constructed                  (4)
-  Volume/        Vol_ED, constructed                           (4)
+  Sampler/       GenerateSamples, interface and construction   (5)
+  Volume/        Vol_ED, interface and construction            (5)
+  Access         derived accessors on Ttc.TtcProb              (1)
   Invariants     structural facts about the modelled loop      (1)
   Constants/     what ε', κ, γ are chosen to satisfy           (2)
   Rounding/      claim:cl, over the rounding that realises it (11)
@@ -38,11 +40,24 @@ Ttc/
 ### `Model/` — the statement
 
 * `Ttc.Model.Prelude`        — the vocabulary: `ℝⁿ`, formula syntax and
-  semantics, the parameter block `Params`, `volSol` (= `Vol(F)`), `relErr`.
+  semantics, `sol` (= `Sol(F)`), the parameter block `Params`.
+* `Ttc.Model.ProblemSetting` — the problem: `volSol` (= `Vol(F)`, what is
+  estimated) and `relErr` (= the `(1±ε)` interval, how accurately). **Two
+  definitions, no assumption.**
 * `Ttc.Model.Pseudocode`     — `alg:ttc`, transcribed line by line, and its
   output `Ttc.ttcOutput`. **No proofs.**
-* `Ttc.Model.ProblemSetting` — `Ttc.TtcProb`: every assumption, as fields.
-* `Ttc.Model.Theorem`        — the one theorem, `Ttc.TtcProb.volume_estimate`.
+* `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
+                              guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
+                              at **17 explicit binders**, with no interpretation, no
+                              parameter block, no converter, no oracle argument and
+                              no precision argument (the precision is
+                              `GetPrecision`'s output `P.precision gammaHat`).  The
+                              bundle version `Ttc.TtcProb.volume_estimate`, whose
+                              type names the *assumed* `T.O` and `T.ρ`, is
+                              `Ttc.Estimate`.  Which lemma discharged which former
+                              binder is tabulated in `Ttc.Exec.Inputs`; why the last
+                              one, `big`, **cannot** be discharged is proved in
+                              `Ttc.Exec.Regime`.
 
 Four files, and the count is an invariant rather than a description: `Model/` is
 what a referee reads to trust the *statement*, so anything with proof content
@@ -51,6 +66,29 @@ qualify — 33 declarations and 21 tactic proofs, including the lattice
 enumeration, the oracle bundle and a box-witness chain, against 0/0/0/1 for the
 four above. It now lives at `Ttc/Exec/Endgoal.lean`, where its consumers already
 were.
+
+`Model/ProblemSetting` is held to a sharper form of the same rule, modelled on
+`nfalean/ApproxNFA/Model/ProblemSetting.lean`: it states the **problem** — the
+quantity the algorithm estimates and what "approximately" means — and carries no
+hypothesis bundle at all. Everything that used to sit there has moved out,
+unchanged in name, type and docstring:
+
+* `structure Ttc.TtcProb` → **`Ttc/TtcProb.lean`**. Fifty fields of hypotheses.
+  It is the *abstract interface* (`CLAUDE.md` §1's layer 1), not the problem, so
+  it is no longer in the audit surface; `Model/Theorem` quantifies over it.
+* `Ttc.VolumeAlgorithm` and `Ttc.volGood` → `Ttc.Volume.Oracle`. Cousins–Vempala
+  Theorem 1.1 as an interface, and the good event of the `m` `Vol_ED` calls —
+  another paper's assumption bundle.
+* `Ttc.KV97Sampler` → `Ttc.Sampler.Interface`. Kannan–Vempala's sampler as a
+  construction — likewise another paper's.
+* `Ttc.TtcProb.D`, `numCubes`, `cubeAt`, `volEvent` → `Ttc.Access`. Proof
+  support: `def`s that *read* a `Ttc.TtcProb` rather than assume anything of it.
+
+`volSol` and `relErr` moved the other way, *in* from `Model/Prelude`, since they
+are the problem rather than vocabulary. The resulting order is
+`Model/Prelude → Model/ProblemSetting → Volume/Oracle, Sampler/Interface →
+Ttc/TtcProb → Ttc/Access`, and `Model/ProblemSetting` imports nothing but
+`Model/Prelude`.
 
 ### `Constants/` — what the algorithm's constants buy
 
@@ -213,26 +251,43 @@ precisely because the build does not.
 ## The audit surface (`Model/`)
 
 `Model/` is kept deliberately small. A referee who wants to trust the *statement*
-reads exactly these five files and stops. One caveat, since it used to be untrue
-and no longer is: `Model/ProblemSetting` now imports `Coupling/Family` and
-`Process/SketchProcess`, because the sampler fields name the coupled Poisson
-family (`Ttc.trajLaw`, `Ttc.trajOracles`, `Ttc.totalRate`) directly. Those three
-definitions are therefore part of the audit surface too.
+reads exactly these four files and stops.
 
 * `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
-                           and semantics, the parameter block `Params`, `volSol`
-                           (= `Vol(F)`) and `relErr` (= the `(1±ε)` interval).
+                           and semantics, `sol` (= `Sol(F)`), the lattice, and the
+                           parameter block `Params`.
+* `Model/ProblemSetting` — the **problem**: `volSol` (= `Vol(F)`, the quantity
+                           `alg:ttc` estimates) and `relErr` (= the `(1±ε)`
+                           interval it must land in). Two definitions and no
+                           assumption; it imports only `Model/Prelude`. That
+                           `volSol` is the volume of the right set is checked, for
+                           that symbol alone, in `Volume/VolSolCheck`.
 * `Model/Pseudocode`     — `alg:ttc`, transcribed line by line from `algo.tex`
                            over an oracle bundle, and its output
                            `Ttc.ttcOutput`; **no proofs**.
-* `Model/ProblemSetting` — `Ttc.TtcProb`, **every assumption** of the result as
-                           fields: the input, the run, the probability space, and
-                           the description of the sampler. That the set the
-                           algorithm enumerates is the set the theorem bounds is
-                           `thm:decomposition`, *proved* in
-                           `Capstone` (`Ttc.TtcProb.sol_eq_union`).
-* `Model/Theorem`        — the headline `Ttc.TtcProb.volume_estimate`: one
-                           theorem, no proof to work through.
+* `Model/Theorem`        — the headline `Ttc.ttc_volume_estimate`: one theorem,
+                           no proof to work through (it is one application of
+                           `Ttc.ttc_volume_stmt`), stated over `TTC`'s own inputs.
+                           **No oracle and no precision are among them**: the
+                           oracle bundle is the closed term `Ttc.runOracles` and
+                           every precision is `P.precision gammaHat`, i.e.
+                           `GetPrecision`, `alg:ttc` line 17.  It therefore
+                           imports `Exec/Statement`, which is downstream of the
+                           whole development.
+
+**The assumptions are not in `Model/`.** `Ttc.ttc_volume_estimate` quantifies
+over inputs, not over a bundle; what it rests on *through the proof* are the 59
+fields of `Ttc.TtcProb` (`Ttc/TtcProb.lean`), which the bundle-level
+`Ttc.TtcProb.volume_estimate` (`Ttc/Estimate.lean`) quantifies over, plus
+the two *other papers'* assumption bundles two of those fields name —
+`Ttc.VolumeAlgorithm` (`Volume/Oracle`, Cousins–Vempala Theorem 1.1) and
+`Ttc.KV97Sampler` (`Sampler/Interface`, Kannan–Vempala's sampler). Reading the
+statement and reading the hypotheses are therefore two separate acts; `AUDIT.md`
+§2 tabulates the fields with the `file:line` at which each is discharged.
+`Ttc/TtcProb.lean` imports `Coupling/Family` and `Process/SketchProcess`, because
+the sampler fields name the coupled Poisson family (`Ttc.trajLaw`,
+`Ttc.trajOracles`, `Ttc.totalRate`) directly; those three definitions are part of
+the hypothesis surface too.
 
 The headline is `sorry`-free and axiom-clean
 (`[propext, Classical.choice, Quot.sound]`).
@@ -256,9 +311,16 @@ time (`thm:runtime`) is out of scope throughout.
 
 -- The audit surface (statement layer)
 import Ttc.Model.Prelude
-import Ttc.Model.Pseudocode
 import Ttc.Model.ProblemSetting
+import Ttc.Model.Pseudocode
+import Ttc.Volume.Oracle
+import Ttc.Sampler.Interface
+import Ttc.TtcProb
+import Ttc.Access
+import Ttc.Estimate
 import Ttc.Model.Theorem
+import Ttc.Witness.Inputs
+import Ttc.Witness.Headline
 import Ttc.Exec.Endgoal
 import Ttc.Exec.Params
 import Ttc.Exec.Canonical
@@ -266,9 +328,14 @@ import Ttc.Exec.Geometry
 import Ttc.Exec.Coverage
 import Ttc.Exec.VolDischarge
 import Ttc.Exec.EndToEnd
+import Ttc.Exec.OracleFree
 import Ttc.Exec.Budget
 import Ttc.Exec.CanonPolytope
 import Ttc.Exec.Final
+import Ttc.Exec.CubeBounds
+import Ttc.Exec.Dedup
+import Ttc.Exec.Inputs
+import Ttc.Exec.Regime
 import Ttc.Coupling.Product
 import Ttc.Volume.Bridge
 import Ttc.Volume.VolSolCheck
@@ -330,6 +397,7 @@ import Ttc.Witness.Box
 import Ttc.Witness.BoxProb
 import Ttc.Witness.BoxSharp
 import Ttc.Witness.TwoCube
+import Ttc.Exec.Statement
 
 -- off the path to the theorem: findings about the paper
 import Ttc.Findings.Repair

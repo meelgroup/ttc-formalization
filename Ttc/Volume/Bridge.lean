@@ -2,12 +2,13 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.ProblemSetting
+import Ttc.TtcProb
+import Ttc.Access
 
 /-!
 # `Volume/Bridge`: everything *proved* about `Vol_ED`
 
-`Ttc.VolumeAlgorithm` (`Model/ProblemSetting`) states Cousins–Vempala Theorem 1.1
+`Ttc.VolumeAlgorithm` (`Volume/Oracle`) states Cousins–Vempala Theorem 1.1
 as the contract `Vol_ED` is called under. It is an assumption. This file holds
 everything that is a **theorem** about it, so that `Model/` stays four files of
 declarations and assumptions with no proofs worth the name — see `AUDIT.md`.
@@ -174,7 +175,7 @@ theorem VolumeAlgorithm.of_ball (V : VolumeAlgorithm n) {ε p : ℝ}
 
 `alg:ttc` line 24 calls `Vol_ED` once per polytope, at confidence
 `δ' = δ/(4m)` (`Ttc.Params.deltaPrime`, `alg:ttc` line 18). `Ttc.volGood`
-(`Model/ProblemSetting`) is the event that *all* `m` calls succeed, and
+(`Volume/Oracle`) is the event that *all* `m` calls succeed, and
 `Ttc.measure_volGood_ge` bounds its failure probability by `m·δ'` — the union
 bound the paper omits (README finding 13), now supplied. -/
 

@@ -3,7 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Exec.Canonical
-import Ttc.Model.Theorem
+import Ttc.Estimate
 import Ttc.Volume.Bridge
 
 /-!

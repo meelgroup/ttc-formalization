@@ -13,7 +13,7 @@ see §6.) The intended discharge was Cousins–Vempala Theorem 1.1
 
 That theorem is **not** formalized in the `gaussian-cooling-vempala` submodule,
 and this file records honestly what closing the gap involves. The statement is
-now written in Lean as `Ttc.VolumeAlgorithm` (`Ttc/Model/ProblemSetting.lean`) so that
+now written in Lean as `Ttc.VolumeAlgorithm` (`Ttc/Volume/Oracle.lean`) so that
 a future formalization plugs in without touching the rest of `Ttc`.
 
 ---
@@ -329,12 +329,12 @@ now `Done`, and the section has been overtaken**: rather than stopping at "Theor
 consequently not "the only thing left to supply" — it is not needed for
 correctness at all, only for complexity.
 
-- **Done** — `Ttc.VolumeAlgorithm` (`Ttc/Model/ProblemSetting.lean`) states Theorem 1.1
+- **Done** — `Ttc.VolumeAlgorithm` (`Ttc/Volume/Oracle.lean`) states Theorem 1.1
   in Lean, with a non-vacuity witness (`VolumeAlgorithm.exact`) and the halves the
   Invariant consumes (`upper`, `lower`).
 - **Done** — the **rounding bridge**. Theorem 1.1 needs `K ⊇ B(0,1)`; `TtcProb`
   supplies `ball_subset : Metric.ball (cen i) gammaHat ⊆ region M i`
-  (`Ttc/Model/ProblemSetting.lean:114`). `Ttc.roundBody` is the change of
+  (`Ttc/Volume/Oracle.lean`). `Ttc.roundBody` is the change of
   variable `y ↦ γ̂⁻¹·(y − cen i)`; `ball_subset_roundBody`, `convex_roundBody`
   and `volume_roundBody_ne_top` discharge Theorem 1.1's three hypotheses for its
   image, and `VolumeAlgorithm.of_ball` transports the `(1 ± ε)` conclusion back

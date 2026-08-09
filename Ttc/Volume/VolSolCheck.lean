@@ -4,7 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Model.Prelude
 import Ttc.Lattice.Decomposition
-import Ttc.Model.ProblemSetting
+import Ttc.TtcProb
 import Mathlib.MeasureTheory.Constructions.Pi
 
 /-!

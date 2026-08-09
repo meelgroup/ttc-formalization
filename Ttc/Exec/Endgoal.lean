@@ -116,7 +116,7 @@ The 28, grouped as they appear in the statement:
      implementation found, and is what keeps `Ttc.Box.ttc_volume_box` — the only
      non-vacuity witness — a witness.
 4. **The sampling oracle** — `θ, sampD, sampler, theta_eq`.  `sampler` is
-   `Ttc.KV97Sampler` (`Model/ProblemSetting.lean:259`), **15 fields** — `J`,
+   `Ttc.KV97Sampler` (`Sampler/Interface.lean`), **15 fields** — `J`,
    `fintypeJ`, `Amat`, `bvec`, `dilate_eq`, `facetBound`, `one_le_facetBound`,
    `card_le_facetBound`, `contLaw`, `isProbContLaw`, `contVol`, `contVol_pos`,
    `contVol_eq`, `law_tv`, `sampD_eq` — of which all but one are *descriptive*

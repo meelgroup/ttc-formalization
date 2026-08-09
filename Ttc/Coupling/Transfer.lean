@@ -3,7 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Coupling.Run
-import Ttc.Model.ProblemSetting
+import Ttc.TtcProb
 import Ttc.Volume.Bridge
 import Ttc.Lattice.Assembled
 import Ttc.Sampler.Bridge

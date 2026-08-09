@@ -230,7 +230,7 @@ into `arlib/Arlib/` is mechanical.
 
 | From `VolOracle.lean` | To | Why |
 |---|---|---|
-| `roundBody` (`:163`) | `Model/Prelude.lean` | a pure definition; Prelude's charter is "definitions only" |
+| `roundBody` (`:163`) | `Ttc/Volume/Oracle.lean` | it is `Vol_ED`'s normalisation, not vocabulary of the paper's problem. (It went to `Model/Prelude` first; moved on when `Model/` was trimmed to the nfalean brevity.) |
 | `structure VolumeAlgorithm` (`:79`) | `Model/ProblemSetting.lean`, above `TtcProb` | it is an assumption bundle; ProblemSetting's charter is "everything assumed" |
 | `VolumeAlgorithm.exact` (`:115`), `ball_subset_roundBody`, `convex_roundBody`, `volume_roundBody`, `volume_roundBody_ne_top`, `toReal_volume_eq`, `mem_relErr_smul`, `of_ball`, `volGood`, `measurableSet_good`, `measure_bad_le`, `measure_volGood_ge` | **new** `Ttc/Volume/Bridge.lean` | proofs |
 

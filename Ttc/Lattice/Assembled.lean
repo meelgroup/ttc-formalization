@@ -5,7 +5,8 @@ Released under Apache 2.0 license.
 import Ttc.Nonconv.Assembled
 import Ttc.Lattice.Transport
 import Ttc.Nonconv.FacetOfDNF
-import Ttc.Model.ProblemSetting
+import Ttc.TtcProb
+import Ttc.Access
 import Ttc.Invariants
 
 /-!

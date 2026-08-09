@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.ProblemSetting
+import Ttc.TtcProb
 import Arlib.Convexity.GaussianCooling.Unblock
 import Arlib.Probability.UniformOn
 import Mathlib.Probability.Independence.InfinitePi
@@ -12,7 +12,7 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 /-!
 # `Volume/MonteCarlo`: the volume oracle, constructed
 
-`Ttc.VolumeAlgorithm n` (`Model/ProblemSetting`) was, until this file, an *assumption*:
+`Ttc.VolumeAlgorithm n` (`Volume/Oracle`) was, until this file, an *assumption*:
 a field of `Ttc.TtcProb` with no witness that constructs its estimate from randomness.
 This file constructs one, `Ttc.VolumeAlgorithm.monteCarlo`, with no hypotheses at all.
 

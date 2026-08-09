@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Nonconv.Core
+import Ttc.Model.ProblemSetting
 
 /-!
 # `lem:lattice`: transporting `lem:nonconv` to the fine lattice `𝕃ⁿ`

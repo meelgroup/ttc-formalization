@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Lattice.Decomposition
+import Ttc.Model.ProblemSetting
 import Arlib.Lattice.Basic
 import Mathlib.Analysis.Convex.Measure
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
