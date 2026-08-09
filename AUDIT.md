@@ -946,6 +946,39 @@ So the definitional closure of what is asserted is `Model/Prelude` +
 whole probabilistic development are consumed only by `Ttc.ttc_volume_api`'s proof,
 not by the statement.
 
+### The seven quantities, in detail
+
+`Ttc/Model/Theorem.lean` defines these seven and gives each a one-line docstring; the
+detail lives here.
+
+* **`Ttc.ttcIndex`** — `|Sol(F) ∩ 𝕃ⁿ|` at the computed precision, i.e. the index the
+  run's sample coins range over, so a sample trajectory has type
+  `ℕ → Fin (ttcIndex …) → ℕ`.
+* **`Ttc.ttcRates`** — the level-`0` rate vector `θ` (`alg:ttc` line 20) at the volume
+  coins `c`: the sampler's mass at each enumerated lattice point times that point's
+  cube's volume estimate. `Ttc.trajLaw` of it is the law the sample coins are drawn from.
+* **`Ttc.ttcEstimate`** — what `TTC(F, ε, δ)` returns on the run `(c, t)`, brought back
+  to the original scale: `Ttc.ttcRunOutput` at the dilated input, divided by
+  `ttcScaleⁿ`. **The division is part of the measured quantity** — the run is performed
+  on the dilated body `c · Sol(F)`, whose volume is `cⁿ · Vol(Sol F)`, so this, and not
+  the raw output, is what the accuracy conjunct compares with `Ttc.volSol` of the
+  original body.
+* **`Ttc.ttcThresh`** — the sample threshold `Thresh` of the computed parameter block,
+  the quantity the cost bound is linear in.
+* **`Ttc.ttcTerminates`** — the run's absorption loop exits at every cube
+  (`Ttc.Terminates` at the computed parameter block, the run's own oracles and the
+  preprocessed formula's cube list). **This is the hypothesis `thm:runtime` needs and
+  the paper leaves unstated.**
+* **`Ttc.ttcCost`** — the charged cost of the run `(c, t)`: `Ttc.runCost` at the computed
+  parameter block, the run's oracles, the per-call costs `cVol`/`cSample` and the
+  computed precision, folded over the preprocessed formula's cube list.
+* **`Ttc.ttcNumCubes`** — `m`, the length of the preprocessed formula's DNF. The cost
+  bound is `m · (C_vol + C_sample · Thresh)`.
+
+Each carries an identifying `rfl` lemma (`Ttc.ttcEstimate_def` and friends) in the same
+file, and `Ttc.ttcEstimate_eq_ttcOutput` pins the measured quantity to
+`Model/Pseudocode`'s own `Ttc.ttcOutput` — lines A12–A13 of that file's transcription.
+
 ### What is certified is `alg:ttc` plus three preprocessing steps
 
 Read this before quoting the statement.  Two of the three change what the algorithm
