@@ -196,7 +196,7 @@ theorem ttc_volume_inputs
 
 `Model/Theorem` states the guarantee about these four names and nothing else.  They
 are definitional wrappers over the terms above — not abstraction barriers — so
-`Ttc.ttc_volume_estimate` stays one application of `Ttc.ttc_volume_inputs`.  They
+`Ttc.ttc_volume_estimate` stays one application (today, of `Ttc.ttc_volume_api`).  They
 live here rather than in `Model/` so that `Model/Theorem.lean` contains the paper's
 theorem and nothing else. -/
 

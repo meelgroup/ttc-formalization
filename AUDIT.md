@@ -509,34 +509,47 @@ Removing binders removed **no** cost and **no** scope limitation. In particular:
 ## 1e. The statement layer: `Ttc.ttc_volume_estimate` — the theorem `Model/` states
 
 [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) is what an auditor who reads
-only `Model/` reads. It takes **17 explicit binders** (19 raw, the extra two being
+only `Model/` reads. It takes **12 explicit binders** (14 raw, the extra two being
 the implicit ambient `{A}` and `{n}`), and its type contains no `Ttc.TtcProb`, no
 `Ttc.VolumeAlgorithm` and no `Ttc.KV97Sampler` — checked by a probe over the
 compiled type, not by reading:
 
 ```
-atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff hint
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
 ```
 
-**Thirteen binders.** Two further rounds landed after the seventeen-binder form, and
-both changed the *algorithm* rather than the analysis — read §1g before quoting this.
+**Twelve binders**, and the earlier `hvol : Thresh/4 ≤ Vol(F)` is **not among them** —
+it is gone, and so are `hcoeff` and the four inscribed-ball binders `cen`,
+`gammaHat`, `hgammaHat`, `ball_subset`. Three rounds landed after the
+seventeen-binder form, and **not one of them was a sharper analysis** — each changed
+what the algorithm is handed or does. §1g grades them, and two of the three are
+changes a reader could mistake for a stronger theorem. Read §1g before quoting this
+statement.
 
-The first nine are exactly `ApproxNFA.approxNFA_countNFA`'s (the nfalean template)
-binder list. The other eight are the honest residue, and §1f is about the last one.
+The first nine (`atoms … hn`) are exactly `ApproxNFA.approxNFA_countNFA`'s (the
+nfalean template) binder list; they are the inputs and the parameter range and assert
+nothing about the instance. The other **three** — `hφ`, `hbdd`, `hint` — are the
+honest residue, every one a condition on the *input*:
 
-**The last binder is now readable.** It used to be `big`, a `∀` over the volume coins
-mentioning `Ttc.e2eSampD`, `Ttc.mcVol` and `Ttc.mcGood` — nothing an auditor could
-check of an instance. It is now
+| binder | says | status |
+| --- | --- | --- |
+| `hφ : φ.IsPositive` | the formula is negation-free | removable in principle, at a price — §1g and [`Ttc/Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean) |
+| `hbdd : IsBounded (sol (atomSet atoms) φ)` | `Sol(F)` is bounded | **necessary** — `Ttc.volSol` is an `ENNReal.toReal` and `toReal ⊤ = 0`, so without it the theorem would certify "the output is ≈ 0" (README finding 16) |
+| `hint : ∀ i, (interior (region (atomSet atoms) i.val)).Nonempty` | every polytope of the decomposition is full-dimensional | **proved not derivable** — [`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean) |
 
-```
-hvol : (inputParams …).thresh / 4 ≤ volSol (atomSet atoms) φ
-```
+`hφ` and `hbdd` are **logically independent in both directions** — neither can be
+dropped in favour of the other
+([`Ttc.Independence.exists_isBounded_not_isPositive`](Ttc/Findings/Independence.lean),
+[`Ttc.Independence.exists_isPositive_not_isBounded`](Ttc/Findings/Independence.lean),
+the latter also at a non-degenerate witness as
+[`…exists_isPositive_not_isBounded_halfspace`](Ttc/Findings/Independence.lean)).
+That file claims nothing more: it does **not** claim `hφ ∧ hbdd` is the weakest usable
+pair.
 
-*the solution set is at least a quarter of the threshold*, and
-[`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) derives the sampler-level condition
-from it. **This did not widen the theorem** — §1f's counterexample still stands, and
-the restriction is the same one. What changed is that it is legible, and that it is
-visibly the paper's own unstated `j* ≥ 1`.
+**`hvol` is no longer a binder, and §1f is no longer about the headline's last
+binder.** §1f's counterexample [`Ttc.Box.big_not_derivable`](Ttc/Exec/Regime.lean)
+still stands and is *why* the algorithm had to be amended; the amendment (a dilation
+step) is §1g's first item.
 
 ### What is *not* an input, and what replaced it
 
@@ -550,6 +563,9 @@ visibly the paper's own unstated `j* ≥ 1`.
 | `hlen` | `Ttc.length_toDNFd_le_card`, with **equality** |
 | `T.O` | `Ttc.runOracles`, a closed term: `Ttc.mcVol` for `Vol_ED`, `Ttc.coveredOracles` for the rest |
 | `T.ρ` | `P.precision gammaHat` = [`Ttc.Params.precision`](Ttc/Model/Prelude.lean) = `⌈log₁₀(γ/γ̂)⌉`, `GetPrecision`'s **output** |
+| `hvol : Thresh/4 ≤ Vol(F)` | **discharged by amending the algorithm**: the input is dilated by [`Ttc.runScale`](Ttc/Exec/Rescaled.lean) and the estimate divided by `cⁿ` ([`Ttc.hvol_scaled`](Ttc/Exec/Rescaled.lean)). §1g — this one is *not* a substitution |
+| `cen`, `gammaHat`, `hgammaHat`, `ball_subset` | [`Ttc.autoCen`](Ttc/Exec/Rescaled.lean) and [`Ttc.autoGamma`](Ttc/Exec/Rescaled.lean), built from [`Ttc.cenOf`](Ttc/Exec/Inscribed.lean)/[`Ttc.gammaOf`](Ttc/Exec/Inscribed.lean). `ball_subset` becomes the unconditional [`Ttc.ball_subset_cenOf`](Ttc/Exec/Inscribed.lean); `hgammaHat` becomes [`Ttc.gammaOf_pos_of_interior`](Ttc/Exec/Inscribed.lean), which needs `hint`. **Not the paper's LP** — §1g |
+| `hcoeff` | the algorithm is run on the cleaned formula [`Ttc.cleanForm`](Ttc/Exec/Cleanup.lean), for which it holds outright ([`Ttc.coeff_ne_zero_toDNFd_cleanForm`](Ttc/Exec/Cleanup.lean)). Benign: [`Ttc.sol_cleanForm`](Ttc/Exec/Cleanup.lean) is an **exact set equality** — §1g |
 
 ### The one thing that was bought rather than proved
 
@@ -569,31 +585,55 @@ on `Ttc.toDNF`, this one on `Ttc.toDNFd`; they are guarantees about *different r
 of the algorithm, and neither implies the other. `Exec/Statement.lean` is
 deliberately kept and is deliberately off the headline's import closure.
 
-### Why four binders stay that could look removable
+### The four inscribed-ball binders that used to stay
 
-`cen`, `gammaHat`, `hgammaHat`, `ball_subset` describe the inscribed ball `alg:ttc`
-computes by an LP. Replacing them with an existence hypothesis would force the
-conclusion to name a `Classical.choose`, and `big` would then be unprovable for any
-concrete instance — destroying every non-vacuity witness. They are instance *data*,
-and pinning them is closer to the paper, not further from it.
+`cen`, `gammaHat`, `hgammaHat`, `ball_subset` described the inscribed ball `alg:prec`
+line 86 computes by an LP, and were kept as instance *data* because replacing them
+with a bare existence hypothesis would force the conclusion to name a
+`Classical.choose` and make `big` unprovable for concrete instances. They are now
+gone — but the ball that replaced them **is** a `Classical.choose`
+([`Ttc.ballData`](Ttc/Exec/Inscribed.lean)), and what made that affordable is that
+`big` is no longer a binder either. See §1g for what the constructed ball is and is
+not.
 
 ### Non-vacuity
 
-[`Ttc.TwoCube.ttc_volume_estimate_two_cube`](Ttc/Witness/Headline.lean) applies
-**this theorem** — not a predecessor — to the two-cube witness at every
-`(ε, δ) ∈ (0,1]²`, and `…_two_cube_at` pins `(1/3, 9/10)` and `(1/2, 1/4)` with the
-achieved bounds `1/10` and `3/4` proved **strictly positive inside the statement**,
-so neither conclusion is the vacuous `0 ≤ (…).toReal`. The hypotheses transported to
-the deduplicated cube list are in [`Ttc/Witness/Inputs.lean`](Ttc/Witness/Inputs.lean),
-whose `Ttc.TwoCube.toDNFd_twoForm` proves the two-cube DNF is already duplicate-free
-— **special to this witness**, not a general fact.
+[`Ttc.TwoCube.ttc_volume_estimate_two_cube_full`](Ttc/Witness/FullTwoCube.lean)
+applies **this theorem** — not a predecessor — to the two-cube witness at every
+`n ≥ 1` and every `(ε, δ) ∈ (0,1]²`, and
+[`…_two_cube_full_at`](Ttc/Witness/FullTwoCube.lean) pins `(1/3, 9/10)` and
+`(1/2, 1/4)` with the achieved bounds `1/10` and `3/4` proved **strictly positive
+inside the statement**, so neither conclusion is the vacuous `0 ≤ (…).toReal`;
+[`Ttc.TwoCube.twoProbFull_pos_ne_top`](Ttc/Witness/FullTwoCube.lean) is the separate
+`≠ ⊤` check. The new obligation `hint` is discharged by
+[`Ttc.TwoCube.interior_region_nonempty_two_d`](Ttc/Witness/FullTwoCube.lean), and
+[`Ttc.TwoCube.twoProbFull_def`](Ttc/Witness/FullTwoCube.lean) writes the named
+probability out, by `rfl`, in exactly the shape the headline's conclusion has. The
+hypotheses transported to the deduplicated cube list are in
+[`Ttc/Witness/Inputs.lean`](Ttc/Witness/Inputs.lean), whose
+`Ttc.TwoCube.toDNFd_twoForm` proves the two-cube DNF is already duplicate-free —
+**special to this witness**, not a general fact.
+
+> **Do not cite [`Ttc/Witness/Headline.lean`](Ttc/Witness/Headline.lean) for this.**
+> `Ttc.TwoCube.ttc_volume_estimate_two_cube` and `…_at` witness
+> [`Ttc.ttc_volume_inputs`](Ttc/Exec/Inputs.lean) — several rungs down, below the
+> dilation, the constructed ball and the cleanup — and that file says so itself
+> (its own "moved on twice" predates the cleanup round). Dilating the input makes it
+> a **different run** with a different probability; no equality between the two
+> numbers is claimed and none should be read into the shared names.
 
 ---
 
 ## 1f. `big` is independent — proved, not conceded
 
+> **This section is about a binder the headline no longer has.** `big`, and its
+> readable successor `hvol : Thresh/4 ≤ Vol(Sol F)`, are both gone from
+> `Ttc.ttc_volume_estimate` (§1e). They are gone because the **algorithm was
+> amended** (§1g), not because the counterexample below stopped being true. Read
+> this section as: *why `alg:ttc` as printed needs the regime condition*.
+
 [`Ttc.Box.big_not_derivable`](Ttc/Exec/Regime.lean) is the answer to the obvious
-question about the last binder. It exhibits an explicit box instance satisfying
+question about that binder. It exhibits an explicit box instance satisfying
 **every other hypothesis** of `Ttc.ttc_volume_final` — `isDNF`, `isPositive`, `hm`,
 `hr`, `hP`, `hlen`, `hbdd`, `hcoeff`, `hgammaHat`, `ball_subset`, all asserted
 positively in one conjunction — together with `¬big`. Note that refuting a
@@ -624,8 +664,10 @@ while `Thresh` depends only on `(ε, δ, m)` and does not shrink with the body. 
 > `γ̂ = a/2` preserves all of them while `∑ θ → 0`.
 
 This is why the development's own witnesses size their boxes at `max 1 Thresh`. An
-auditor should read the headline as: *correct on instances whose solution set is
-large relative to the threshold `Thresh(ε, δ, m)`*.
+auditor should read **`alg:ttc` as printed** as: *correct only on instances whose
+solution set is large relative to the threshold `Thresh(ε, δ, m)`*. The headline
+`Ttc.ttc_volume_estimate` has no such condition because it is about the **amended**
+algorithm, the one with the dilation line (§1g).
 
 **The paper has the same gap, and this is where it is.** `sections/analysis.tex:284`
 defines `j*` as the smallest `j` with `1/(2^j·10^{ρn}) < Θ/(4|S^{(m)}|)`; the proof
@@ -643,8 +685,10 @@ is the structural check that nothing in it is `big` wearing a hat.
 ### `big` is now derived, and the independence is unaffected
 
 [`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) proves `big` from
-`hvol : Thresh/4 ≤ Vol(Sol F)`, so the headline no longer carries `big` as a binder
-(§1e). The chain is four steps, each a named lemma:
+`hvol : Thresh/4 ≤ Vol(Sol F)`, which is what turned `big` from a binder into a
+theorem; `hvol` itself was then discharged by the dilation (§1g), which is why
+neither appears in the headline's twelve binders (§1e). The chain is four steps, each
+a named lemma:
 
 | Step | Lemma |
 | --- | --- |
@@ -659,19 +703,29 @@ the capstone's own sampler, at every cube, **with no nonemptiness hypothesis**) 
 [`Ttc.lattice_cube_of_dnf`](Ttc/Exec/RegimeCube.lean) (`lem:lattice` per cube over
 plain data).
 
-**Read this as a change of presentation, not of strength.** `hvol` is false for
-small bodies exactly as `big` was; `Ttc.Box.big_not_derivable` is what says so, and
-it is unchanged. The two-cube witness satisfies `hvol` because it sizes its boxes at
-`max 1 Thresh` ([`Ttc.TwoCube.two_cube_thresh_le_volSol`](Ttc/Witness/TwoCubeVol.lean)).
+**Read `big → hvol` as a change of presentation, not of strength.** `hvol` is false
+for small bodies exactly as `big` was; `Ttc.Box.big_not_derivable` is what says so,
+and it is unchanged. The two-cube witness satisfies `hvol` at that rung because it
+sizes its boxes at `max 1 Thresh`
+([`Ttc.TwoCube.two_cube_thresh_le_volSol`](Ttc/Witness/TwoCubeVol.lean)). Getting rid
+of `hvol` altogether was **not** a change of presentation — that is §1g.
 
 ---
 
 
-## 1g. Two rounds that changed the algorithm, not the analysis
+## 1g. Three rounds that changed the algorithm, not the analysis
 
-The seventeen-binder statement carried `hvol : Thresh/4 ≤ Vol(Sol F)` and four binders
-describing the inscribed ball. Both groups are gone, and **an auditor must know that
-neither went away by a sharper proof.**
+The seventeen-binder statement carried `hvol : Thresh/4 ≤ Vol(Sol F)`, four binders
+describing the inscribed ball, and `hcoeff`. All three groups are gone, and **an
+auditor must know that none of them went away by a sharper proof.** In one line each:
+
+| Round | Binders removed | What actually happened | Is the algorithm's behaviour changed? |
+| --- | --- | --- | --- |
+| dilation ([`Exec/Rescaled`](Ttc/Exec/Rescaled.lean)) | `hvol` | the input is scaled up by `c` before the run and the estimate divided by `cⁿ` after | **yes** — a new line in `alg:ttc`; the printed algorithm is *wrong*, not merely unproved, on a small body |
+| constructed ball ([`Exec/Inscribed`](Ttc/Exec/Inscribed.lean)) | `cen`, `gammaHat`, `hgammaHat`, `ball_subset` | the ball is chosen classically instead of supplied | **yes** — it is *some* inscribed ball, not `alg:prec`'s maximal one; the run uses a possibly larger `ρ` |
+| cleanup ([`Exec/Cleanup`](Ttc/Exec/Cleanup.lean), [`Exec/CleanInput`](Ttc/Exec/CleanInput.lean)) | `hcoeff` | the algorithm is handed `Ttc.cleanForm atoms φ` rather than `φ` | **only the description** — [`Ttc.sol_cleanForm`](Ttc/Exec/Cleanup.lean) is an *exact set equality*, so the body measured is literally the same set |
+
+The three rows are not equally serious, and the table's last column is the point.
 
 ### `hvol` → a dilation step
 
@@ -706,26 +760,146 @@ The parameter block is unchanged by the dilation — it is computed from
 empty interior gets radius `0`, and `Metric.ball _ 0 = ∅` is inside anything. Only
 positivity needs an input condition, and that is `hint`.
 
+The centre map and radius the headline actually uses are
+[`Ttc.autoCen`](Ttc/Exec/Rescaled.lean) and
+[`Ttc.autoGamma`](Ttc/Exec/Rescaled.lean) — `cenOf`/`gammaOf` at `Ttc.atomSet atoms`
+and `Ttc.toDNFd _`. Note **at which formula**: in `Ttc.ttc_volume_estimate` every
+occurrence is `autoCen atoms (cleanForm atoms φ)` / `autoGamma atoms (cleanForm atoms
+φ)`, since the cleaned formula is what the algorithm is handed; only the accuracy
+*target* `volSol (atomSet atoms) φ` is at the original `φ`.
+
 Two caveats, both in the module docstring:
 
-* **This is not the LP.** The ball is *some* inscribed ball, chosen classically, not the
-  maximal one. Non-maximality only inflates `ρ = ⌈log₁₀(γ/γ̂)⌉`, so the guarantee is
-  unaffected and only the precision is looser than the paper's.
-* **`hint` is a genuine restriction.** A DNF cube may be empty or lower-dimensional, and
-  then no positive-radius ball exists. `hint` is exactly the condition under which
-  `alg:prec`'s LP would return a positive radius.
+* **This is not the LP, and it is not a maximal ball.** `Ttc.ballData` is
+  `Exists.choose` on "a ball of positive radius fits"; nothing in the file claims
+  optimality, and `Ttc.gammaOf` then takes the *least* of the per-cube radii.
+  Non-maximality is sound but not free: the radius enters only through
+  `ρ = ⌈log₁₀(γ/γ̂)⌉`, and a smaller `γ̂` makes `ρ` **larger** — a finer lattice, a
+  more expensive but still correct run. The guarantee is unaffected; the **cost is
+  looser than `alg:prec`'s**, and the run is not the paper's run.
+* **`hint` is a genuine restriction on the input, and it is proved not derivable.**
+  A DNF cube may be empty (two contradictory literals) or lower-dimensional (an
+  equality-like conjunction such as `x ≤ 0 ∧ −x ≤ 0`), and then no positive-radius
+  ball exists and `γ̂ = 0`. `hint` is exactly the condition under which `alg:prec`'s
+  LP is feasible. See "The three negative results" below.
 
-### Non-vacuity at thirteen binders
+### `hcoeff` → run on the cleaned formula
+
+`hcoeff` said *no facet of the DNF has a zero normal vector*; it is needed because
+the KV97 rounding argument divides by `‖A_ij‖`. A zero normal is not a constraint at
+all: with a nonnegative bound the half-space is `Set.univ`
+([`Ttc.atomSet_eq_univ_of_coeff_zero`](Ttc/Exec/Cleanup.lean)) and the literal can be
+deleted; with a negative bound it is `∅`
+([`Ttc.atomSet_eq_empty_of_coeff_zero`](Ttc/Exec/Cleanup.lean)) and the whole cube
+can be dropped. [`Ttc.cleanDNF`](Ttc/Exec/Cleanup.lean) does both, and
+[`Ttc.coeff_ne_zero_cleanDNF`](Ttc/Exec/Cleanup.lean) holds **with no hypothesis at
+all**.
+
+> **This round is benign, and it is the only one of the three that is.**
+> [`Ttc.sol_cleanForm`](Ttc/Exec/Cleanup.lean) is an equality of **sets** —
+> `sol (atomSet atoms) (cleanForm atoms φ) = sol (atomSet atoms) φ` — so
+> [`Ttc.volSol_cleanForm`](Ttc/Exec/CleanInput.lean) is an equality of volumes, the
+> accuracy conclusion is stated about the **original** `volSol (atomSet atoms) φ`, and
+> **no post-processing of the estimate is needed**. Only the *description* handed to
+> the algorithm — the list of polytopes — changes. Contrast the dilation, where
+> `Sol(F)` genuinely moves to `c · Sol(F)` and the estimate is divided by `cⁿ`.
+
+One thing had to move with the DNF: `Ttc.IsDNFOf` quantifies over **all** Boolean
+assignments, not only those induced by a point, and
+[`Ttc.not_isDNFOf_cleanDNF`](Ttc/Exec/Cleanup.lean) is the machine-checked refutation
+of the naive "clean the DNF in place" version. So the *formula* is rebuilt from the
+cleaned cubes, `Ttc.cleanForm = dnfForm ∘ cleanDNF ∘ toDNFd`
+([`Ttc.toDNF_dnfForm`](Ttc/Exec/Cleanup.lean) is what makes that round-trip work).
+No hypothesis is added: the side condition `cleanDNF atoms (toDNFd φ) ≠ []` follows
+from the headline's own `hint` via
+[`Ttc.sol_nonempty_of_interior`](Ttc/Exec/CleanInput.lean) and
+[`Ttc.cleanDNF_ne_nil_of_sol_nonempty`](Ttc/Exec/Cleanup.lean), and the three
+transported obligations are
+[`Ttc.isPositive_cleanForm`](Ttc/Exec/Cleanup.lean) (unconditional),
+[`Ttc.cleanBdd`](Ttc/Exec/CleanInput.lean) and
+[`Ttc.cleanInt`](Ttc/Exec/CleanInput.lean).
+
+### The three negative results
+
+These are the results that stop an auditor reading the twelve binders as "three
+hypotheses someone has not got round to removing yet".
+
+**1. `hint` is not derivable.**
+[`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean) exhibits
+[`Ttc.degForm`](Ttc/Exec/Degenerate.lean) — `(x ≤ 0 ∧ −x ≤ 0) ∨ (x ≤ 1 ∧ −x ≤ 1)` in
+dimension `1` — satisfying `hφ`, `hbdd`, `hcoeff` **and** `0 < Vol(F)`
+([`Ttc.volSol_degForm_pos`](Ttc/Exec/Degenerate.lean), so the conclusion is not
+vacuous for it) while `hint` fails. The obvious repair is blocked *in principle*, not
+merely unattempted: dropping the degenerate cubes is invisible to the volume
+([`Ttc.volume_biUnion_nondegenCubes`](Ttc/Exec/Degenerate.lean),
+[`Ttc.volSol_eq_toReal_biUnion_nondegenCubes`](Ttc/Exec/Degenerate.lean)) but
+provably destroys `Ttc.IsDNFOf`
+([`Ttc.not_isDNFOf_nondegenCubes_degForm`](Ttc/Exec/Degenerate.lean)) — and
+`lem:lattice` counts **lattice points**, which are themselves a null set, so an
+almost-everywhere decomposition would give no control over the count. Nor can `hint`
+be weakened to "some cube is full-dimensional": `Ttc.gammaOf` is an infimum, and
+`ball_subset` is consumed per cube downstream because the walk runs inside *every*
+cube.
+
+**2. `hφ` and `hbdd` are independent — both ways.**
+[`Ttc.Independence.exists_isBounded_not_isPositive`](Ttc/Findings/Independence.lean)
+gives a formula with solution set `[−1, 1] ⊆ ℝ¹`, bounded, containing a genuine
+negation (the third atom is there so the negated conjunct is not vacuous), so `hbdd`
+does not imply `hφ`.
+[`Ttc.Independence.exists_isPositive_not_isBounded`](Ttc/Findings/Independence.lean)
+gives `Ttc.BForm.tt`, and
+[`…exists_isPositive_not_isBounded_halfspace`](Ttc/Findings/Independence.lean) the
+non-degenerate version — the single atom `x₀ ≤ 0`, whose solution set is a genuine
+half-space (`≠ Set.univ`) and still unbounded — so `hφ` does not imply `hbdd`. One is
+syntactic, the other semantic; **neither can be dropped in favour of the other**. The
+file explicitly does *not* claim the pair is the weakest usable one.
+
+**3. `hφ` is removable in principle, at a price that is stated.**
+[`Ttc/Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean) is the costing,
+and its verdict is *bounded refactor, two extra hypotheses, not research-scale*. The
+volume cannot see the difference between a closed and an open half-space
+([`Ttc.volume_halfspace_open_eq`](Ttc/Findings/OpenHalfspace.lean),
+[`Ttc.volume_sol_openAtomSet_eq`](Ttc/Findings/OpenHalfspace.lean), the atom's normal
+being nonzero is *necessary* there), and `Ttc.posify` turns an arbitrary cube into a
+positive one with the volume preserved
+([`Ttc.posify_isPositive`](Ttc/Findings/OpenHalfspace.lean),
+[`Ttc.volume_sol_eq_iUnion_posify`](Ttc/Findings/OpenHalfspace.lean)). The three
+prices, each machine-checked:
+
+* the **lattice count** does see the difference —
+  [`Ttc.exists_latticeCount_ne_of_open`](Ttc/Findings/OpenHalfspace.lean): `x ≤ 0 ∧
+  −x ≤ 0` in `n = 1` is `{0}` closed and `∅` open, same volume `0`, count `1` against
+  `0` at **every** precision. So the refactored run would enumerate the lattice points
+  of the *closed relaxation*, a provably different set — a repricing, not bookkeeping;
+* `hbdd` stops transferring
+  ([`Ttc.exists_isBounded_region_not_isBounded_posify`](Ttc/Findings/OpenHalfspace.lean)):
+  it would have to be assumed of the relaxation, which is strictly stronger;
+* `toDNFd φ ≠ []` stops being free — `Ttc.BForm` has no `false` constructor, and
+  positivity is currently what makes the DNF nonempty, so a binder appears.
+
+Nothing in that file removes `hφ`, and **nothing in it is imported by the capstone**.
+
+### Non-vacuity at twelve binders
 
 [`Ttc.TwoCube.ttc_volume_estimate_two_cube_full`](Ttc/Witness/FullTwoCube.lean) applies
-**this** statement to the two-cube instance at every `(ε, δ) ∈ (0,1]²`, and `…_full_at`
-pins `(1/3, 9/10)` and `(1/2, 1/4)` with the bounds `1/10` and `3/4` proved strictly
-positive inside the statement. `hint` holds because each region contains an open ball
-of positive radius — five lines from `ball_subset_two` and `gamT_pos`, no box geometry.
+**this** statement to the two-cube instance at every `n ≥ 1` and every
+`(ε, δ) ∈ (0,1]²`, and
+[`…_full_at`](Ttc/Witness/FullTwoCube.lean) pins `(1/3, 9/10)` and `(1/2, 1/4)` with
+the bounds `1/10` and `3/4` proved strictly positive inside the statement. `hint`
+holds because each region contains an open ball of positive radius — a few lines from
+`Ttc.TwoCube.ball_subset_two_d` and `Ttc.TwoCube.gamT_pos`, no box geometry
+([`Ttc.TwoCube.interior_region_nonempty_two_d`](Ttc/Witness/FullTwoCube.lean)). The
+former thirteenth binder `hcoeff` is **not passed at all** any more; it was discharged
+upstream by the cleanup.
 
-**The earlier two-cube theorems witness `Ttc.ttc_volume_inputs`, not this statement.**
-Dilating the input makes it a different run with a different probability; no equality
-between the two is claimed, and none should be read into the shared names.
+**The earlier two-cube theorems — including those in
+[`Ttc/Witness/Headline.lean`](Ttc/Witness/Headline.lean) — witness
+`Ttc.ttc_volume_inputs`, not this statement.** The run here is on the *dilated* body
+of the *cleaned* formula under the *constructed* ball
+([`Ttc.TwoCube.twoProbFull`](Ttc/Witness/FullTwoCube.lean)), and it is **not**
+`Ttc.TwoCube.twoAccD`, the undilated run on the raw formula under the supplied ball.
+They are different runs with different probabilities; no equality between the two
+numbers is claimed, and none should be read into the shared names.
 
 ---
 
@@ -1635,6 +1809,17 @@ import Ttc
 #print axioms Ttc.TwoCube.min_qT_le_ratesT       -- §3g: big at m = 2, by cases on cubeAt
 #print axioms Ttc.TwoCube.volume_sbx             -- §3g: the shifted box's exact volume
 #print axioms Ttc.TwoCube.twoProb_pos_ne_top_at_nine_tenths -- §3g: not toReal ⊤ = 0
+#print axioms Ttc.ttc_volume_estimate            -- §1e: the twelve-binder headline
+#print axioms Ttc.hvol_scaled                    -- §1g: the dilation discharges hvol
+#print axioms Ttc.ball_subset_cenOf              -- §1g: the constructed ball, uncond.
+#print axioms Ttc.sol_cleanForm                  -- §1g: the cleanup is a set EQUALITY
+#print axioms Ttc.ttc_volume_cleanInput          -- §1g: hcoeff gone, nothing added
+#print axioms Ttc.hint_not_derivable             -- §1g: hint is not derivable
+#print axioms Ttc.not_isDNFOf_nondegenCubes_degForm -- §1g: and the repair is blocked
+#print axioms Ttc.Independence.exists_isBounded_not_isPositive   -- §1g: hbdd ⊬ hφ
+#print axioms Ttc.Independence.exists_isPositive_not_isBounded   -- §1g: hφ ⊬ hbdd
+#print axioms Ttc.exists_latticeCount_ne_of_open -- §1g: what dropping hφ would cost
+#print axioms Ttc.TwoCube.ttc_volume_estimate_two_cube_full -- §1e: non-vacuity, now
 ```
 
 All 28 declarations of `Ttc/Exec/EndToEnd.lean` report

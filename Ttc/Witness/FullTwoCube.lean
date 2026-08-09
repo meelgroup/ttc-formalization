@@ -8,11 +8,10 @@ import Ttc.Witness.Inputs
 /-!
 # `Witness/FullTwoCube`: `Ttc.ttc_volume_estimate` is not vacuous
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) is a `∀` under **twelve**
-hypotheses
+`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) is a `∀` under **twelve** binders
 
 ```
-atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hint
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
 ```
 
 and a `∀` whose hypotheses nothing satisfies is worth nothing (`CLAUDE.md` §11).
@@ -25,8 +24,8 @@ otherwise permit.
 The data is the **two-cube** instance of `Ttc/Witness/TwoCube.lean`: the pair of
 disjoint axis-aligned boxes `[0,c]ⁿ` and `[lo, lo+c]ⁿ` with side
 `c = Ttc.TwoCube.sideT = max 1 Thresh` and `lo > c` a multiple of the lattice
-spacing.  Eleven of the twelve arguments are lemmas that file (or
-`Ttc/Witness/Inputs.lean`) already proves, used unchanged:
+spacing.  The shape binders are lemmas that file (or `Ttc/Witness/Inputs.lean`)
+already proves, used unchanged:
 
 | binder | discharged by |
 | --- | --- |
@@ -34,65 +33,65 @@ spacing.  Eleven of the twelve arguments are lemmas that file (or
 | `φ` | `Ttc.TwoCube.twoForm` |
 | `hφ` | `Ttc.TwoCube.twoForm_isPositive` |
 | `hbdd` | `Ttc.TwoCube.isBounded_sol_T` |
-| `hint` | `Ttc.TwoCube.interior_region_nonempty_two_d`, new here |
+| `hpos` | `Ttc.TwoCube.twoVolPos`, new here |
 
 (`Ttc.atomSet (Ttc.TwoCube.atomsT …) = Ttc.TwoCube.MTT …` by `rfl` —
-`Ttc.TwoCube.atomSet_atomsT`.)  The former thirteenth binder `hcoeff` —
-*no facet of the DNF has a zero normal* — is **no longer passed**: it was discharged
-upstream by running the algorithm on the cleaned formula `Ttc.cleanForm atoms φ`
-(`Ttc/Exec/CleanInput.lean`), so `Ttc.TwoCube.coeff_ne_zero_two_d` is no longer
-needed here.
+`Ttc.TwoCube.atomSet_atomsT`.)  Two binders the statement used to carry are **no
+longer passed**: `hcoeff` — *no facet of the DNF has a zero normal* — because the
+run is on the **cleaned** formula (`Ttc/Exec/Cleanup.lean`), and `hint` — *every
+cube is full-dimensional* — because the run is on the **pruned** formula
+(`Ttc/Exec/Prune.lean`), which makes that condition true rather than assuming it.
 
-## Why `hint` holds: each region contains an open ball of positive radius
+## Why `hpos` holds: one region contains an open ball of positive radius
 
-`hint` asks that every polytope of the decomposition be **full-dimensional**:
-
-```
-∀ i, (interior (region (atomSet atoms) i.val)).Nonempty
-```
-
-No box geometry is computed here.  `Ttc/Witness/TwoCube.lean` already proves
-`Metric.ball (cenT …) (gamT …) ⊆ region (MTT …) i.val`
+The twelfth binder is now `0 < Ttc.volSol (Ttc.atomSet atoms) φ`, and it is *not*
+proved from box geometry here.  `Ttc.volSol_pos_of_interior` (`Ttc/Exec/Prune.lean`)
+turns per-cube full-dimensionality into positive volume for a bounded body, so all
+that is needed is the old `hint`, which this file still proves as
+`Ttc.TwoCube.interior_region_nonempty_two_d`: `Ttc/Witness/TwoCube.lean` already
+exhibits `Metric.ball (cenT …) (gamT …) ⊆ region (MTT …) i.val`
 (`Ttc.TwoCube.ball_subset_two`, transported to the deduplicated cube list as
-`Ttc.TwoCube.ball_subset_two_d`) with `gamT = sideT/2 > 0`
-(`Ttc.TwoCube.gamT_pos`, `Ttc.TwoCube.sideT_pos`).  An **open** subset of a set is
-contained in its interior (`interior_maximal` with `Metric.isOpen_ball`), and a ball
-of positive radius is nonempty (`Metric.nonempty_ball`), so the interior is nonempty.
-That is the whole proof.
+`Ttc.TwoCube.ball_subset_two_d`) with `gamT = sideT/2 > 0` (`Ttc.TwoCube.gamT_pos`,
+`Ttc.TwoCube.sideT_pos`).  An **open** subset of a set is contained in its interior
+(`interior_maximal` with `Metric.isOpen_ball`), and a ball of positive radius is
+nonempty (`Metric.nonempty_ball`), so the interior is nonempty.  `hpos` is then one
+application of `Ttc.volSol_pos_of_interior`.
+
+Note the implication runs one way only: `Ttc.hint_not_derivable` refutes the
+converse, which is exactly why the headline could drop `hint` for the weaker `hpos`.
 
 ## What the run is, and what it is not
 
-The twelve-binder statement no longer takes the inscribed ball as data: the ball is
-*constructed* (`Ttc.autoCen`, `Ttc.autoGamma`), and — see `Ttc/Exec/Rescaled.lean`'s
-module docstring — the run is on the input **dilated** by `Ttc.runScale`, with the
-estimate divided by `cⁿ`, which is how the volume hypothesis `hvol` is discharged
-rather than assumed.  On top of that, the formula the algorithm is handed is the
-**cleaned** one, `Ttc.cleanForm atoms φ` (`Ttc/Exec/CleanInput.lean`): every
-occurrence of the formula in the conclusion — the constructed ball `Ttc.autoCen` /
-`Ttc.autoGamma`, the dilation `Ttc.runScale`, the dilated atoms `Ttc.scaledAtoms`
-and the boundedness proof `Ttc.scaledBdd` — is at `Ttc.cleanForm atoms φ`, and only
-the accuracy *target* `Ttc.volSol` is at the original `φ` (the two solution sets are
-equal, `Ttc.sol_cleanForm`).
+The twelve-binder statement takes neither the inscribed ball nor full-dimensionality
+as data.  What `Ttc.ttc_volume_estimate` measures is a run on the input with its
 
-So the probability bounded here, `Ttc.TwoCube.twoProbFull`, is the law of a run on
-the *dilated* body of the *cleaned* formula under the *constructed* ball, and it is
-**not** `Ttc.TwoCube.twoAccD` (`Ttc/Witness/Inputs.lean`), which is the undilated run
-on the raw formula under the *supplied* ball `(cenD, gamT)`.  They are different runs
-and no attempt is made here to relate them; nothing about `Ttc.cleanForm`,
-`Ttc.runScale`, `Ttc.scaledAtoms`, `Ttc.autoCen` or `Ttc.autoGamma` is computed or
-simplified.
+* **degenerate cubes pruned** (`Ttc.pruneForm`, `Ttc/Exec/Prune.lean`),
+* **zero-normal atoms cleaned** (`Ttc.cleanForm`, `Ttc/Exec/Cleanup.lean`) — the
+  composite of the two is `Ttc.ttcInput`,
+* inscribed ball **constructed** on that (`Ttc.autoCen`, `Ttc.autoGamma`), and the
+  whole body then **dilated** by `Ttc.runScale`, with the estimate divided by `cⁿ`;
 
-`Ttc.TwoCube.twoProbFull` and its four helper `def`s (`gamFull`, `scaleFull`,
-`atomsFull`, `cenFull`) are pure abbreviations for the terms
-`Ttc.ttc_volume_estimate` puts in its own slots; none of them asserts anything, and
-`Ttc.TwoCube.twoProbFull_def` writes the abbreviation out in full, by `rfl`, in
-exactly the shape the main theorem's conclusion has.
+and only the accuracy *target* `Ttc.volSol` is at the user's original
+`Ttc.TwoCube.twoForm n` (the preprocessing moves no volume:
+`Ttc.volSol_pruneForm`, `Ttc.volSol_cleanForm`).
+
+None of that is spelled out below, because `Ttc/Exec/Api.lean` names it:
+`Ttc.ttcRates` and `Ttc.ttcEstimate` take exactly `atoms φ ε δ hε0 hε1 hn hφ hbdd
+hpos` and compose the preprocessing, the ball and the dilation internally.  So
+`Ttc.TwoCube.twoProbFull` is a five-line abbreviation for the integral in the
+headline's conclusion; it asserts nothing, and `Ttc.TwoCube.twoProbFull_def` writes
+it out by `rfl`.
+
+It is **not** `Ttc.TwoCube.twoAccD` or `Ttc.TwoCube.twoAcc` (`Ttc/Witness/Inputs.lean`),
+which are undilated, unpruned, uncleaned runs under a *supplied* ball.  Those are
+different runs; nothing here is computed, simplified, or claimed to relate to them.
 
 ## What is landed
 
 | result | content |
 | --- | --- |
-| `Ttc.TwoCube.interior_region_nonempty_two_d` | `hint`: both regions are full-dimensional |
+| `Ttc.TwoCube.interior_region_nonempty_two_d` | both regions are full-dimensional |
+| `Ttc.TwoCube.twoVolPos` | `hpos`: `0 < Vol(Sol F)`, from the line above |
 | `Ttc.TwoCube.twoProbFull_def` | the named probability **is** `Ttc.ttc_volume_estimate`'s integral, here |
 | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` | `Ttc.ttc_volume_estimate` itself, at every `(ε, δ) ∈ (0,1]²` |
 | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full_at` | the same at `(1/3, 9/10)` and `(1/2, 1/4)`, bounds `1/10` and `3/4`, both proved positive |
@@ -100,15 +99,15 @@ exactly the shape the main theorem's conclusion has.
 
 ## Cost caveat
 
-**Exponential in `n` on both oracle routes, paid twice, and now on a dilated body.**
+**Exponential in `n` on both oracle routes, paid twice, and on a dilated body.**
 The volume estimator is hit-and-miss Monte Carlo at `Θ(Rⁿ/(ε'²δ'))` samples, the ball
 walk's certified step count is `2^Θ(n)·log(M·Vol(P′)/ε′)`, and the lattice
-transcription enumerates `Ttc.latticeCount ≈ Θ((c·10^ρ)ⁿ)` points; with `m = 2` each
-of those costs is paid **once per cube**.  On top of that, the dilation step of
-`Ttc/Exec/Rescaled.lean` inflates the body by `Ttc.runScale ≥ 1` *before* the lattice
-is enumerated, so the enumerated lattice is that of the dilated body — a further
+transcription enumerates `Ttc.latticeCount ≈ Θ((c·10^ρ)ⁿ)` points; with `m = 2` cubes
+surviving the pruning, each of those costs is paid **once per cube**.  On top of that,
+the dilation inflates the body by `Ttc.runScale ≥ 1` *before* the lattice is
+enumerated, so the enumerated lattice is that of the dilated body — a further
 `Ttc.runScale ^ n` factor in the point count.  What is established is unconditional
-*correctness*; `thm:runtime` remains out of scope.
+*correctness*; `thm:runtime`'s efficiency claim remains out of scope.
 -/
 
 namespace Ttc
@@ -117,14 +116,17 @@ namespace TwoCube
 
 open MeasureTheory Set Pointwise
 
-/-! ## `hint`: both regions are full-dimensional -/
+/-! ## `hpos`: the two-cube body has positive volume -/
 
-/-- **`hint` at the two-cube witness.**  Each of the two regions is an axis-aligned
-box of side `Ttc.TwoCube.sideT > 0`, and `Ttc/Witness/TwoCube.lean` already exhibits
-an open ball of radius `Ttc.TwoCube.gamT > 0` inside it
-(`Ttc.TwoCube.ball_subset_two_d`).  An open subset of a set lies in its interior, and
-a ball of positive radius is nonempty, so the interior is nonempty.  No box geometry
-is recomputed. -/
+/-- **Each of the two regions is full-dimensional.**  Each is an axis-aligned box of
+side `Ttc.TwoCube.sideT > 0`, and `Ttc/Witness/TwoCube.lean` already exhibits an open
+ball of radius `Ttc.TwoCube.gamT > 0` inside it (`Ttc.TwoCube.ball_subset_two_d`).  An
+open subset of a set lies in its interior, and a ball of positive radius is nonempty,
+so the interior is nonempty.  No box geometry is recomputed.
+
+This is no longer a binder of `Ttc.ttc_volume_estimate` — pruning makes it true rather
+than assuming it — but it is what `Ttc.volSol_pos_of_interior` consumes to give the
+binder that *is* there, `Ttc.TwoCube.twoVolPos`. -/
 theorem interior_region_nonempty_two_d (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ∀ i : {c : Cube (A2 n) // c ∈ Ttc.toDNFd (twoForm n)},
@@ -136,179 +138,51 @@ theorem interior_region_nonempty_two_d (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     interior_maximal (ball_subset_two_d n hn ε δ hε0 hε1 i) Metric.isOpen_ball
   exact (Metric.nonempty_ball.2 (gamT_pos n hn ε δ hε0 hε1)).mono hsub
 
-/-! ## The run, named
+/-- **`hpos` at the two-cube witness**: the body has strictly positive volume.  One
+application of `Ttc.volSol_pos_of_interior` to the full-dimensionality above and the
+boundedness `Ttc.TwoCube.isBounded_sol_T`; no volume is computed. -/
+theorem twoVolPos (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
+    0 < volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n) :=
+  volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
+    (isBounded_sol_T n hn ε δ hε0 hε1) (interior_region_nonempty_two_d n hn ε δ hε0 hε1)
 
-Pure abbreviations for the terms `Ttc.ttc_volume_estimate` computes from
-`(atoms, φ, ε, δ)` on this witness — all of them at the **cleaned** formula
-`Ttc.cleanForm (Ttc.TwoCube.atomsT …) (Ttc.TwoCube.twoForm n)`, which is what the
-algorithm is handed.  They assert nothing; `Ttc.TwoCube.twoProbFull_def` identifies
-the last of them.
--/
+/-! ## The run, named -/
 
-/-- The inscribed radius `GetPrecision` **constructs** at the two-cube instance, on
-the cleaned formula — `Ttc.autoGamma`, not the supplied `Ttc.TwoCube.gamT`. -/
-noncomputable def gamFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) : ℝ :=
-  autoGamma (atomsT n hn ε δ hε0 hε1) (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
+/-- **The probability `Ttc.ttc_volume_estimate` bounds on this witness.**  A pure
+abbreviation for the integral in the headline's conclusion, asserting nothing
+(`Ttc.TwoCube.twoProbFull_def`).
 
-/-- The dilation factor `Ttc.runScale` the run applies to its (cleaned) input. -/
-noncomputable def scaleFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) : ℝ :=
-  runScale (atomsT n hn ε δ hε0 hε1) (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-    ε δ hε0 hε1 hn
-    (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-    (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-      (isBounded_sol_T n hn ε δ hε0 hε1) (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-    (gamFull n hn ε δ hε0 hε1)
-
-/-- The **dilated** atoms the run is actually performed on. -/
-noncomputable def atomsFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    A2 n → LinAtom n :=
-  scaledAtoms (atomsT n hn ε δ hε0 hε1) (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-    ε δ hε0 hε1 hn
-    (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-    (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-      (isBounded_sol_T n hn ε δ hε0 hε1) (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-    (gamFull n hn ε δ hε0 hε1)
-
-/-- The dilated ball centres: `Ttc.autoCen` at the cleaned formula, scaled by
-`Ttc.runScale`. -/
-noncomputable def cenFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    {c : Cube (A2 n) //
-        c ∈ Ttc.toDNFd (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))} → Space n :=
-  fun i => scaleFull n hn ε δ hε0 hε1 •
-    autoCen (atomsT n hn ε δ hε0 hε1) (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) i
-
-/-- **The probability `Ttc.ttc_volume_estimate` bounds on this witness.**  An
-abbreviation for the integral, asserting nothing
-(`Ttc.TwoCube.twoProbFull_def`).  Note this is a run on the *dilated* body of the
-*cleaned* formula under the *constructed* ball; it is not `Ttc.TwoCube.twoProbD`. -/
+Everything the run does to the input — pruning, cleaning, constructing the inscribed
+ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcRates` and
+`Ttc.ttcEstimate` (`Ttc/Exec/Api.lean`).  Only the accuracy target `Ttc.volSol` is at
+the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ENNReal :=
-  ∫⁻ c, trajLaw
-      (runRates (atomsFull n hn ε δ hε0 hε1)
-        (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-        (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-        (scaledBdd (atomsT n hn ε δ hε0 hε1)
-          (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-          (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-          (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-            (isBounded_sol_T n hn ε δ hε0 hε1)
-            (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-          (gamFull n hn ε δ hε0 hε1))
-        (cenFull n hn ε δ hε0 hε1)
-        (scaleFull n hn ε δ hε0 hε1 * gamFull n hn ε δ hε0 hε1) c)
-      {t | ttcRunOutput (atomsFull n hn ε δ hε0 hε1)
-              (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-              (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-              (scaledBdd (atomsT n hn ε δ hε0 hε1)
-                (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                  (isBounded_sol_T n hn ε δ hε0 hε1)
-                  (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                (gamFull n hn ε δ hε0 hε1))
-              (cenFull n hn ε δ hε0 hε1)
-              (scaleFull n hn ε δ hε0 hε1 * gamFull n hn ε δ hε0 hε1) c t
-            / (scaleFull n hn ε δ hε0 hε1) ^ n
+  ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+        twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
+        (twoVolPos n hn ε δ hε0 hε1) c)
+      {t | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+            twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
+            (twoVolPos n hn ε δ hε0 hε1) c t
           ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
     ∂(MonteCarlo.coins n)
 
-/-- **The abbreviation, written out.**  This is verbatim the integral in
-`Ttc.ttc_volume_estimate`'s conclusion with `atoms := Ttc.TwoCube.atomsT …` and
-`φ := Ttc.TwoCube.twoForm n`; the four helper `def`s above are folded into it and
-nothing else changes.  Every occurrence of the formula is at the cleaned formula
-`Ttc.cleanForm (Ttc.TwoCube.atomsT …) (Ttc.TwoCube.twoForm n)` except the accuracy
-target `Ttc.volSol`, which is at the original `Ttc.TwoCube.twoForm n`. -/
+/-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
+verbatim the integral in `Ttc.ttc_volume_estimate`'s conclusion at
+`atoms := Ttc.TwoCube.atomsT …` and `φ := Ttc.TwoCube.twoForm n`, and nothing else
+changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     twoProbFull n hn ε δ hε0 hε1 =
-      ∫⁻ c, trajLaw
-          (runRates
-            (scaledAtoms (atomsT n hn ε δ hε0 hε1)
-              (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-              (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-              (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                (isBounded_sol_T n hn ε δ hε0 hε1)
-                (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-              (autoGamma (atomsT n hn ε δ hε0 hε1)
-                (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))))
-            (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-            (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-            (scaledBdd (atomsT n hn ε δ hε0 hε1)
-              (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-              (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-              (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                (isBounded_sol_T n hn ε δ hε0 hε1)
-                (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-              (autoGamma (atomsT n hn ε δ hε0 hε1)
-                (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))))
-            (fun i =>
-              runScale (atomsT n hn ε δ hε0 hε1)
-                  (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                  (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                    (isBounded_sol_T n hn ε δ hε0 hε1)
-                    (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                  (autoGamma (atomsT n hn ε δ hε0 hε1)
-                    (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)))
-                • autoCen (atomsT n hn ε δ hε0 hε1)
-                    (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) i)
-            (runScale (atomsT n hn ε δ hε0 hε1)
-                  (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                  (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                    (isBounded_sol_T n hn ε δ hε0 hε1)
-                    (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                  (autoGamma (atomsT n hn ε δ hε0 hε1)
-                    (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)))
-              * autoGamma (atomsT n hn ε δ hε0 hε1)
-                  (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))) c)
-          {t | ttcRunOutput
-                  (scaledAtoms (atomsT n hn ε δ hε0 hε1)
-                    (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                    (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                      (isBounded_sol_T n hn ε δ hε0 hε1)
-                      (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                    (autoGamma (atomsT n hn ε δ hε0 hε1)
-                      (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))))
-                  (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                  (scaledBdd (atomsT n hn ε δ hε0 hε1)
-                    (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                    (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                      (isBounded_sol_T n hn ε δ hε0 hε1)
-                      (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                    (autoGamma (atomsT n hn ε δ hε0 hε1)
-                      (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))))
-                  (fun i =>
-                    runScale (atomsT n hn ε δ hε0 hε1)
-                        (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                        (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                        (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                          (isBounded_sol_T n hn ε δ hε0 hε1)
-                          (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                        (autoGamma (atomsT n hn ε δ hε0 hε1)
-                          (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)))
-                      • autoCen (atomsT n hn ε δ hε0 hε1)
-                          (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) i)
-                  (runScale (atomsT n hn ε δ hε0 hε1)
-                        (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                        (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                        (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                          (isBounded_sol_T n hn ε δ hε0 hε1)
-                          (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                        (autoGamma (atomsT n hn ε δ hε0 hε1)
-                          (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)))
-                    * autoGamma (atomsT n hn ε δ hε0 hε1)
-                        (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))) c t
-                / (runScale (atomsT n hn ε δ hε0 hε1)
-                    (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n))
-                    (cleanBdd (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                      (isBounded_sol_T n hn ε δ hε0 hε1)
-                      (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-                    (autoGamma (atomsT n hn ε δ hε0 hε1)
-                      (cleanForm (atomsT n hn ε δ hε0 hε1) (twoForm n)))) ^ n
+      ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+            twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
+            (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
+              (isBounded_sol_T n hn ε δ hε0 hε1)
+              (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) c)
+          {t | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+                twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
+                (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
+                  (isBounded_sol_T n hn ε δ hε0 hε1)
+                  (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) c t
               ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
         ∂(MonteCarlo.coins n) := rfl
 
@@ -321,21 +195,18 @@ noncomputable def twoAccFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < 
 /-- **`Ttc.ttc_volume_estimate` on a DNF with two cubes**, at every
 `(ε, δ) ∈ (0,1]²` and every `n ≥ 1`.
 
-All twelve binders are met by the two-cube data of `Ttc/Witness/TwoCube.lean`:
-`hφ` is `Ttc.TwoCube.twoForm_isPositive`, `hbdd` is `Ttc.TwoCube.isBounded_sol_T`,
-and `hint` is `Ttc.TwoCube.interior_region_nonempty_two_d` — the two regions are
-boxes of side `Ttc.TwoCube.sideT > 0`, hence full-dimensional.  Nothing is supplied
-for the inscribed ball: at twelve binders the ball is constructed by the statement
-itself (`Ttc.autoCen`, `Ttc.autoGamma`), the run is on the body dilated by
-`Ttc.runScale` with the estimate divided by `cⁿ`, and the formula handed to the
-algorithm is the cleaned one `Ttc.cleanForm atoms φ` — which is why the former
-`hcoeff` binder (`Ttc.TwoCube.coeff_ne_zero_two_d`) is no longer passed.
+All twelve binders are met by the two-cube data of `Ttc/Witness/TwoCube.lean`: `hφ` is
+`Ttc.TwoCube.twoForm_isPositive`, `hbdd` is `Ttc.TwoCube.isBounded_sol_T`, and `hpos`
+is `Ttc.TwoCube.twoVolPos`.  Nothing is supplied for the inscribed ball, for
+full-dimensionality, or for nondegenerate facets: at twelve binders the statement
+prunes and cleans the formula itself, constructs the ball (`Ttc.autoCen`,
+`Ttc.autoGamma`) and dilates by `Ttc.runScale`, dividing the estimate by `cⁿ`.
 
-`Ttc.ttc_volume_estimate` now concludes a conjunction (accuracy ∧ runtime); this is
-its accuracy half, `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` in the **user's** `δ`, about
-the **original** `Vol(Sol F)`.  `Ttc.TwoCube.twoProbFull_def` writes the probability
-out.  It is a *different run* from `Ttc.TwoCube.twoAccD` (`Ttc/Witness/Inputs.lean`),
-which is undilated, uncleaned and takes the ball as data; the two are not claimed
+`Ttc.ttc_volume_estimate` concludes a conjunction (accuracy ∧ runtime); this is its
+accuracy half, `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` in the **user's** `δ`, about the
+**original** `Vol(Sol F)`.  `Ttc.TwoCube.twoProbFull_def` writes the probability out.
+It is a *different run* from `Ttc.TwoCube.twoAccD` (`Ttc/Witness/Inputs.lean`), which
+is undilated, unpruned, uncleaned and takes the ball as data; the two are not claimed
 equal.
 
 **Cost — exponential in `n`, paid twice, on a dilated body.**  See this module's
@@ -345,7 +216,7 @@ theorem ttc_volume_estimate_two_cube_full (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     1 - δ ≤ twoAccFull n hn ε δ hε0 hε1 :=
   (ttc_volume_estimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn
     twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
-    (interior_region_nonempty_two_d n hn ε δ hε0 hε1)).1
+    (twoVolPos n hn ε δ hε0 hε1)).1
 
 /-- **`Ttc.ttc_volume_estimate` on a two-cube DNF at two structurally different
 parameter pairs, with the achieved bound a positive numeral.**
@@ -354,8 +225,8 @@ parameter pairs, with the achieved bound a positive numeral.**
   `Ttc.ttc_volume_endToEnd`'s budget `1 − δ − δ/4 = −1/8` certifies nothing.
 * `(ε, δ) = (1/2, 1/4)`: a different accuracy *and* confidence, so the two runs have
   different sides `Ttc.TwoCube.sideT`, different corners `Ttc.TwoCube.loT`, different
-  cleaned formulas `Ttc.cleanForm`, different constructed radii `Ttc.autoGamma` and
-  different dilations `Ttc.runScale` — two instances, not one instance twice.
+  preprocessed formulas `Ttc.ttcInput`, different constructed radii `Ttc.ttcRadius`
+  and different dilations `Ttc.ttcScale` — two instances, not one instance twice.
 
 Both numerals are proved strictly positive **in the statement**, so neither conclusion
 is the vacuous `0 ≤ (…).toReal`.  Both runs carry the exponential cost recorded in
@@ -400,10 +271,7 @@ no `native_decide`. -/
 #check @Ttc.TwoCube.ttc_volume_estimate_two_cube_full
 
 #print axioms Ttc.TwoCube.interior_region_nonempty_two_d
-#print axioms Ttc.TwoCube.gamFull
-#print axioms Ttc.TwoCube.scaleFull
-#print axioms Ttc.TwoCube.atomsFull
-#print axioms Ttc.TwoCube.cenFull
+#print axioms Ttc.TwoCube.twoVolPos
 #print axioms Ttc.TwoCube.twoProbFull
 #print axioms Ttc.TwoCube.twoProbFull_def
 #print axioms Ttc.TwoCube.twoAccFull

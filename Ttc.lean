@@ -226,7 +226,7 @@ the vacuously-true one. Note that `1 − δ − δ/4` is vacuous for `δ > 4/5`
 
 ### `Findings/` — off the path to the theorem
 
-Nothing the headline or the non-vacuity witness depends on imports these two;
+Nothing the headline or the non-vacuity witness depends on imports these;
 they are the formalisation acting as a referee on the paper, and are kept
 deliberately and out of the audit surface.
 
@@ -325,6 +325,8 @@ import Ttc.Exec.Inscribed
 import Ttc.Exec.Cleanup
 import Ttc.Exec.Degenerate
 import Ttc.Exec.CleanInput
+import Ttc.Exec.Prune
+import Ttc.Exec.Api
 import Ttc.Witness.FullTwoCube
 import Ttc.Witness.Headline
 import Ttc.Exec.Endgoal

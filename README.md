@@ -323,11 +323,22 @@ theorem ttc_volume (M : A → Set (Space n)) (φ : BForm A) (ε δ : ℝ)
 ```
 
 `Ttc.ttc_volume_estimate` ([`Ttc/Model/Theorem.lean`](Ttc/Model/Theorem.lean))
-**is** that shape: `(atoms, φ, ε, δ)` and input conditions, both halves in one
-conjunction, no bundle quantified over, no oracle argument, and the precision
-`P.precision gammaHat` computed by `GetPrecision` rather than supplied. The three
-differences from the display that survive are listed below for
-`Ttc.ttc_volume_final`, of which it is a restatement.
+**is** that shape: `(atoms, φ, ε, δ)` and three input conditions (`hφ`, `hbdd`,
+`hint`), both halves in one conjunction, no bundle quantified over, no oracle
+argument, and the precision `P.precision gammaHat` computed by `GetPrecision` rather
+than supplied. Two of the three differences listed below for `Ttc.ttc_volume_final`
+survive here too (the `∫⁻` form of the probability, and the internal `δ₀ = 4δ/5`);
+`hlen` and `big` do not, both having been discharged upstream.
+
+**But it is no longer a restatement of `Ttc.ttc_volume_final`.** Five rungs sit
+between them, and three of those rungs *changed the algorithm*: the run is on the
+input **dilated** by `Ttc.runScale` with the estimate divided by `cⁿ`
+([`Exec/Rescaled`](Ttc/Exec/Rescaled.lean), finding 20), under a **constructed**
+inscribed ball that is not `alg:prec`'s maximal one
+([`Exec/Inscribed`](Ttc/Exec/Inscribed.lean)), on the **cleaned** formula
+`Ttc.cleanForm atoms φ` ([`Exec/CleanInput`](Ttc/Exec/CleanInput.lean); this last one
+is benign — `Ttc.sol_cleanForm` is an exact set equality). `AUDIT.md` §1g is the
+place that spells out what each cost.
 
 `Ttc.TtcProb.volume_estimate` ([`Ttc/Estimate.lean`](Ttc/Estimate.lean)) does not,
 and still exists: it quantifies over a **59-field `Ttc.TtcProb`**, out of which
@@ -360,8 +371,8 @@ description of the input polytopes (`Jt`, `Am`, `bv`, `hdil`, `rfac`, `hr1`,
 | inputs are the algorithm's inputs; no bundle quantified over; both halves in one conjunction | **done, in four steps.** [`Ttc/Exec/Endgoal.lean`](Ttc/Exec/Endgoal.lean) states `Ttc.ttc_volume` over `(atoms, φ, ε, δ)` with the space, parameters, `ρ` and `L` **constructed** and every residual obligation a visible `∀`-binder; [`Ttc/Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) removes all eleven oracle binders; [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean) removes the polytope description; [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) reprices the budget to a clean `1 − δ`. What is left in `Ttc.ttc_volume_final`'s type is inputs, input conditions, `hlen` and `big` — read the type, not this table |
 | the polytope description is constructed, not assumed | **done.** [`Ttc/Exec/CanonPolytope.lean`](Ttc/Exec/CanonPolytope.lean): `Ttc.canon_body_eq_smul_region` is an *equality*, so `hdil`, `hDbody`, `hcard` and the rest all follow from `M_eq`, `isPositive`, `hbdd` and `hr` with no slack |
 | the guarantee is a clean `1 − δ` | **done, by repricing, not by a better estimate.** [`Ttc/Exec/Budget.lean`](Ttc/Exec/Budget.lean) and [`Ttc/Exec/Final.lean`](Ttc/Exec/Final.lean) run the algorithm at `δ₀ = 4δ/5`; cost is `5/4` on the Monte-Carlo sample count and an additive `O(1/ε²)` on `Thresh` |
-| the statement lives in `Model/`, over `(M, φ, ε, δ)`, with no oracle and no precision among the inputs | **done.** [`Ttc/Model/Theorem.lean`](Ttc/Model/Theorem.lean) states `Ttc.ttc_volume_estimate` — **17 explicit binders, every one a condition on the input**, oracle bundle the closed term `Ttc.runOracles`, precision `P.precision gammaHat` = `GetPrecision`'s output — and its proof is one application of `Ttc.ttc_volume_inputs`. The bundle version, whose type names the *assumed* `T.O` and `T.ρ`, moved to [`Ttc/Estimate.lean`](Ttc/Estimate.lean) |
-| the hypothesis list shrinks to genuine input conditions | **partly, and the rest is proved impossible.** Seven binders came off in [`Ttc/Exec/Inputs.lean`](Ttc/Exec/Inputs.lean) (`M`, `M_eq`, the converter and its two properties, `hm`, `hr`, `P`, `hP`, `hlen`). Of the eight that remain, `hbdd` is *necessary*, `cen`/`gammaHat`/`hgammaHat`/`ball_subset` are the LP's output (instance data), and **`big` is proved independent** — [`Ttc.Box.big_not_derivable`](Ttc/Exec/Regime.lean). `hφ` (finding 5) and `hcoeff` (degenerate atoms) are the two that a future round could still attack |
+| the statement lives in `Model/`, over `(M, φ, ε, δ)`, with no oracle and no precision among the inputs | **done.** [`Ttc/Model/Theorem.lean`](Ttc/Model/Theorem.lean) states `Ttc.ttc_volume_estimate` — **12 explicit binders, every one an input or a condition on the input**, oracle bundle the closed term `Ttc.runOracles`, precision `P.precision gammaHat` = `GetPrecision`'s output — and its proof is one application of `Ttc.ttc_volume_cleanInput`. The bundle version, whose type names the *assumed* `T.O` and `T.ρ`, moved to [`Ttc/Estimate.lean`](Ttc/Estimate.lean) |
+| the hypothesis list shrinks to genuine input conditions | **done down to three, and all three are now costed.** Seven binders came off in [`Ttc/Exec/Inputs.lean`](Ttc/Exec/Inputs.lean) (`M`, `M_eq`, the converter and its two properties, `hm`, `hr`, `P`, `hP`, `hlen`); then `hvol` came off by **amending the algorithm** with a dilation ([`Ttc/Exec/Rescaled.lean`](Ttc/Exec/Rescaled.lean)), the four inscribed-ball binders by constructing *some* ball ([`Ttc/Exec/Inscribed.lean`](Ttc/Exec/Inscribed.lean)), and `hcoeff` by running on the cleaned formula ([`Ttc/Exec/CleanInput.lean`](Ttc/Exec/CleanInput.lean)). What remains is `hφ`, `hbdd`, `hint`: `hbdd` is *necessary* (finding 16); `hint` is **proved not derivable** ([`Ttc.hint_not_derivable`](Ttc/Exec/Degenerate.lean)); `hφ` and `hbdd` are **independent both ways** ([`Ttc/Findings/Independence.lean`](Ttc/Findings/Independence.lean)) and `hφ` is removable only at a stated price ([`Ttc/Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean)) |
 | `Model/ProblemSetting` shrinks; the proof becomes a one-liner | **done for both, but read what it cost.** `Model/ProblemSetting` is 46 lines (two definitions, no hypothesis bundle; nfalean's is 53) and `Model/Theorem`'s proof *is* one application. `Ttc.TtcProb` still has its 59 fields and is still what the capstone is assembled from — it moved to `Ttc/TtcProb.lean`, it did not shrink |
 | the *efficiency* half | **not attempted.** Both constructed oracles are exponential in `n`; see [Scope](#scope-stated-precisely) |
 
@@ -852,9 +863,24 @@ Ttc/
                             --   1 − δ, 26 explicit binders (28 raw), all of them inputs.
                             --   Read this file's module docstring for which δ is the
                             --   user's and which the internal one
-  Findings/                 -- OFF THE PATH: the formalisation refereeing the paper
+  Findings/                 -- OFF THE PATH TO THE THEOREM: the formalisation
+                            --   refereeing the paper. Imported by Ttc.lean so they
+                            --   are compiled, but nothing the headline or its
+                            --   non-vacuity witness depends on imports them
     Repair.lean             -- lem:nonconv at internal parameter θ = η/2
     CubeLattice.lean        -- lem:lattice in the paper's per-polytope form
+    Independence.lean       -- hφ and hbdd are independent BOTH WAYS:
+                            --   exists_isBounded_not_isPositive (bounded [-1,1] with a
+                            --   genuine negation) and exists_isPositive_not_isBounded
+                            --   (plus a non-degenerate half-space version). Neither
+                            --   headline binder can replace the other
+    OpenHalfspace.lean      -- what removing hφ would cost. The volume cannot tell an
+                            --   open half-space from its closure
+                            --   (volume_sol_openAtomSet_eq) but the LATTICE COUNT can
+                            --   (exists_latticeCount_ne_of_open, at every precision),
+                            --   and hbdd stops transferring
+                            --   (exists_isBounded_region_not_isBounded_posify).
+                            --   A costing, not a removal
 
 Arlib.lean                  -- SECOND LIBRARY: the staging area (see below)
 Arlib/
@@ -1414,12 +1440,12 @@ Anything you still doubt is a named lemma in one of the proof directories.
 | [`Ttc/Volume/Oracle.lean`](Ttc/Volume/Oracle.lean) | `VolumeAlgorithm` (Cousins–Vempala Thm 1.1), `volGood` | `Vol_ED`'s interface — **another paper's** assumption bundle, so not part of this paper's problem setting |
 | [`Ttc/Sampler/Interface.lean`](Ttc/Sampler/Interface.lean) | `KV97Sampler` (**15** fields — 14 named plus the `[fintypeJ : Fintype J]` instance, which is what `Lean.getStructureFields` counts and what `AUDIT.md` §2 reports) | `GenerateSamples`' interface, likewise another paper's |
 | [`Ttc/TtcProb.lean`](Ttc/TtcProb.lean) | `TtcProb` (**59** fields — count re-checked with `Lean.getStructureFields`, which is authoritative; a hand count of the source undercounts) | the abstract interface: the complete list of assumptions |
-| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`Ttc.ttc_volume_estimate`**](Ttc/Model/Theorem.lean): `thm:volumettc` over `TTC`'s own inputs `(atoms, φ, ε, δ)`, **13 explicit binders**, no volume hypothesis and no inscribed-ball data — no interpretation, no parameter block, no converter, **no oracle** (the bundle is the closed term `Ttc.runOracles`) and **no precision** (every occurrence is `P.precision gammaHat`, `GetPrecision`'s output) | the statement layer: one theorem, proof is one application of `Ttc.ttc_volume_inputs` |
+| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`Ttc.ttc_volume_estimate`**](Ttc/Model/Theorem.lean): `thm:volumettc` over `TTC`'s own inputs `(atoms, φ, ε, δ)`, **12 explicit binders** — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos` — no volume hypothesis, no inscribed-ball data, no degeneracy hypothesis, no interpretation, no parameter block, no converter, **no oracle** (the bundle is the closed term `Ttc.runOracles`) and **no precision** (every occurrence is `P.precision gammaHat`, `GetPrecision`'s output) | the statement layer: one theorem, proof is one application of `Ttc.ttc_volume_cleanInput`. **It is the guarantee for the *amended* algorithm** — with the dilation line, on the cleaned formula, under a constructed (not maximal) ball. `AUDIT.md` §1g |
 | [`Ttc/Estimate.lean`](Ttc/Estimate.lean) | [**`TtcProb.volume_estimate`**](Ttc/Estimate.lean) (`Pr ≥ 1−δ`) and `TtcProb.runtime`, the bundle versions — their types name the *assumed* `T.O` and `T.ρ` | proved from the `TtcProb` fields. Moved out of `Model/Theorem` for that reason; still load-bearing (`Coupling/Product` consumes it) |
 | [`Exec/Statement.lean`](Ttc/Exec/Statement.lean) | `Ttc.ttc_volume_stmt`: `ttc_volume_final` with the converter pinned to `Ttc.toDNF`, 24 explicit binders; plus `Ttc.toDNF_length_gt_card_cubes`, which proves `hlen` is *not* derivable | a **sibling**, not a predecessor: it is the guarantee for the *undeduplicated* run, so `Ttc.ttc_volume_inputs` does not imply it |
 | [`Exec/CubeBounds.lean`](Ttc/Exec/CubeBounds.lean) | `Ttc.one_le_card_cubes_of_isPositive` (`hm` from `hφ`) and `Ttc.one_le_card_facets_of_isBounded` (`hr` from `hbdd`, via `region [] = univ` being unbounded) | two former binders, discharged |
 | [`Exec/Dedup.lean`](Ttc/Exec/Dedup.lean) | `Ttc.toDNFd`, the duplicate-free DNF, with `mem_toDNFd`, `toDNFd_isDNFOf`, `toDNFd_isPositive` and `length_toDNFd_le_card` (an **equality**) | `hlen`, discharged — at the cost of a smaller `m`, hence a larger `deltaPrime` |
-| [`Exec/Inputs.lean`](Ttc/Exec/Inputs.lean) | **`Ttc.ttc_volume_inputs`** (`ttc_volume_final` with `M`/`M_eq`, the converter and its two properties, `hm`, `hr`, `P`/`hP` and `hlen` discharged — **17 explicit binders**) and **`Ttc.ttc_volume_vol`**, the same with `big` replaced by `hvol : Thresh/4 ≤ Vol(F)` | **the strongest statements in the development.** Read their *types* |
+| [`Exec/Inputs.lean`](Ttc/Exec/Inputs.lean) | **`Ttc.ttc_volume_inputs`** (`ttc_volume_final` with `M`/`M_eq`, the converter and its two properties, `hm`, `hr`, `P`/`hP` and `hlen` discharged — **17 explicit binders**) and **`Ttc.ttc_volume_vol`**, the same with `big` replaced by `hvol : Thresh/4 ≤ Vol(F)` | two intermediate rungs, **no longer the strongest**: `hvol` is discharged one rung up in `Exec/Rescaled`. Read their *types* |
 | [`Exec/Regime.lean`](Ttc/Exec/Regime.lean) | `Ttc.Box.big_not_derivable` (an explicit counterexample), `big_of_thresh_le_volume`, `thresh_le_volume_of_big`, `sum_rates_box_window` | **`big` is independent, proved.** No `def`/`structure`/`class` in the file at all |
 | [`Witness/Inputs.lean`](Ttc/Witness/Inputs.lean) | `Ttc.TwoCube.ttc_volume_inputs_two_cube`, the two-cube hypotheses transported to `Ttc.toDNFd`, and `toDNFd_twoForm` | non-vacuity for the 17-binder statement |
 | [`Exec/RegimeSum.lean`](Ttc/Exec/RegimeSum.lean) | `Ttc.rate_ge_pointwise` — every enumerated lattice point contributes `≥ (1−ε')²(1−η)/10^{ρn}`, **pointwise, no fiber counting** — and its sum | the crux of making `big` a theorem |
@@ -1430,9 +1456,14 @@ Anything you still doubt is a named lemma in one of the proof directories.
 | [`Exec/Scale.lean`](Ttc/Exec/Scale.lean) | `Ttc.scaleAtoms` and the dilation algebra: `sol`, `region`, `volSol`, boundedness and the inscribed ball all transport, `volSol` scaling by `cⁿ` | the input dilation |
 | [`Exec/ScaleFactor.lean`](Ttc/Exec/ScaleFactor.lean) | `Ttc.scaleFactor = max 1 (Thresh/(Vₙ·γ̂ⁿ))` — computable from `γ̂` and `n`, **no knowledge of `Vol`** — and `thresh_le_scaled_ball_volume` | how far to dilate |
 | [`Exec/Inscribed.lean`](Ttc/Exec/Inscribed.lean) | `Ttc.cenOf`/`Ttc.gammaOf`: `GetPrecision`'s ball, constructed. `ball_subset_cenOf` is **unconditional**; only positivity needs `hint` | `alg:prec` line 86, minus the optimality claim |
-| [`Exec/Rescaled.lean`](Ttc/Exec/Rescaled.lean) | **`Ttc.ttc_volume_rescaled`** (16 binders, no volume hypothesis) and **`Ttc.ttc_volume_full`** (13, no ball data) | **the strongest statements.** Read their *types* |
-| [`Witness/FullTwoCube.lean`](Ttc/Witness/FullTwoCube.lean) | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` and `…_at`: non-vacuity at 13 binders, bounds `1/10` and `3/4` positive inside the statement | non-vacuity of the current statement |
-| [`Witness/Headline.lean`](Ttc/Witness/Headline.lean) | `Ttc.TwoCube.ttc_volume_estimate_two_cube` and `…_at`: the two-cube non-vacuity witness for `Ttc.ttc_volume_estimate`, with the bounds `1/10` and `3/4` proved positive **inside** the statement | non-vacuity |
+| [`Exec/Rescaled.lean`](Ttc/Exec/Rescaled.lean) | **`Ttc.ttc_volume_rescaled`** (16 binders, no volume hypothesis — `Ttc.hvol_scaled` discharges `hvol` by the dilation) and **`Ttc.ttc_volume_full`** (13, no ball data); also `Ttc.autoCen`/`Ttc.autoGamma`, the ball the headline actually uses | **an amendment to `alg:ttc`, not a sharper analysis.** The printed algorithm returns `0` on a body of volume `10⁻⁶` and is *wrong* there — finding 20 |
+| [`Exec/Cleanup.lean`](Ttc/Exec/Cleanup.lean) | `Ttc.cleanDNF` / `Ttc.cleanForm`: zero-normal atoms constant-folded away (`Set.univ` literals deleted, `∅` cubes dropped), so `Ttc.coeff_ne_zero_toDNFd_cleanForm` holds outright. `Ttc.not_isDNFOf_cleanDNF` is why the *formula* has to move with the DNF | **benign**: `Ttc.sol_cleanForm` is an **exact set equality**, so the body measured is literally unchanged and nothing is post-processed |
+| [`Exec/CleanInput.lean`](Ttc/Exec/CleanInput.lean) | **`Ttc.ttc_volume_cleanInput`** (12 binders — `hcoeff` gone, nothing added): `ttc_volume_full` run on `Ttc.cleanForm atoms φ`, with `Ttc.cleanBdd`, `Ttc.cleanInt` and `Ttc.volSol_cleanForm` transporting the hypotheses and the target | **the rung the headline restates.** `hcoeff`, discharged; the accuracy conclusion is still about the **original** `volSol (atomSet atoms) φ` |
+| [`Exec/Degenerate.lean`](Ttc/Exec/Degenerate.lean) | **`Ttc.hint_not_derivable`**: `(x ≤ 0 ∧ −x ≤ 0) ∨ (x ≤ 1 ∧ −x ≤ 1)` satisfies `hφ`, `hbdd`, `hcoeff` and `0 < Vol(F)` while `hint` fails; plus `Ttc.volume_biUnion_nondegenCubes` (pruning is invisible to the volume) and `Ttc.not_isDNFOf_nondegenCubes_degForm` (but destroys `IsDNFOf`) | **a negative result.** `hint` is a genuine condition on the input; the null-set repair is blocked because `lem:lattice` counts lattice points, which are themselves null |
+| [`Findings/Independence.lean`](Ttc/Findings/Independence.lean) | `Ttc.Independence.exists_isBounded_not_isPositive` and `…exists_isPositive_not_isBounded` (plus a non-degenerate half-space version of the latter) | **`hφ` and `hbdd` are independent both ways.** Neither can be dropped in favour of the other. No claim that the pair is weakest |
+| [`Findings/OpenHalfspace.lean`](Ttc/Findings/OpenHalfspace.lean) | what removing `hφ` would cost: `Ttc.volume_sol_openAtomSet_eq` (the volume cannot tell open from closed), `Ttc.exists_latticeCount_ne_of_open` (the **lattice count can**, at every precision), `Ttc.exists_isBounded_region_not_isBounded_posify` (`hbdd` stops transferring) | a costing, **not** a removal: bounded refactor, two extra hypotheses, and the run would count the lattice points of a provably different set. Nothing here is imported by the capstone |
+| [`Witness/FullTwoCube.lean`](Ttc/Witness/FullTwoCube.lean) | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` and `…_full_at`: non-vacuity at **12 binders**, bounds `1/10` and `3/4` positive inside the statement; `hint` from `Ttc.TwoCube.interior_region_nonempty_two_d` | **non-vacuity of the current headline.** The run is on the *dilated* body of the *cleaned* formula under the *constructed* ball |
+| [`Witness/Headline.lean`](Ttc/Witness/Headline.lean) | `Ttc.TwoCube.ttc_volume_estimate_two_cube` and `…_at`, with the bounds `1/10` and `3/4` proved positive **inside** the statement | non-vacuity for [`Ttc.ttc_volume_inputs`](Ttc/Exec/Inputs.lean) — **two rungs down, not the current headline**; the file says so itself. Use `Witness/FullTwoCube` for the headline |
 | [`Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean) | what `volSol` is a volume *of*: an independent `Bool` evaluator, the LRA form, measurability, and the `toReal ⊤` hazard | the audit surface for one symbol |
 | [`Exec/Endgoal.lean`](Ttc/Exec/Endgoal.lean) | `Ttc.ttc_volume`: the same two theorems restated over `(atoms, φ, ε, δ)`, space and parameters constructed, obligations as visible binders | a restatement, built by `lake build`. Read its *type* if you care about the capstone; it is not where the assumptions are enumerated |
 | [`Exec/EndToEnd.lean`](Ttc/Exec/EndToEnd.lean) | `Ttc.ttc_volume_endToEnd`: the same statement with every oracle binder removed, at `1 − δ − δ/4` | an intermediate step. Its *type* is the honest statement of what is assumed on that route — read it, not this table |
@@ -2844,23 +2875,37 @@ inequality at `analysis.tex:295` fails.
 15(ln(6/δ)+ln m))` with `ε' = ε/12`, so at `ε = δ = 0.1, m = 1` the guarantee needs
 `Vol(Sol F) ≳ 4.8 × 10⁵`; at `ε = 1, δ = 0.1` it still needs `≳ 5 × 10³`.
 
-**Corrected form, and it is now implemented.** Two fixes were needed, and only the
-second makes the theorem unconditional.
+**Corrected form — and the corrected algorithm is now implemented, not merely
+stated.** Two fixes were needed, and only the second makes the theorem
+unconditional; **both are machine-checked and on the build path.**
 
 1. *State the condition.* `lem:numlattice` holds as stated with the added hypothesis
    `Θ/4 ≤ Vol(Sol F)` (equivalently `j* ≥ 1`), and
    [`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) derives `analysis.tex:295` from it.
-2. *Remove it, by amending the algorithm.* The condition cannot be dropped from
-   `alg:ttc` **as printed** — `p ← 1` and only halves, so the sketch is `Poisson(Λ)`
-   with `Λ ≤ Vol(Sol F)`, and on a body of volume `10⁻⁶` the algorithm draws
-   `Pois(10⁻⁶)` points and returns `0`. So the algorithm gains one line: dilate the
-   input by `c = max 1 (Θ/(Vₙ·γ̂ⁿ))`, run, divide the estimate by `cⁿ`. `Vol(c·S) =
-   cⁿ·Vol(S)` exactly and `c` is computable from `γ̂` and `n` alone, so nothing is
-   assumed. [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) is unconditional for
-   the amended algorithm.
+   That is the rung [`Ttc.ttc_volume_vol`](Ttc/Exec/Inputs.lean) sits at, carrying
+   `hvol : Thresh/4 ≤ Vol(F)` as a hypothesis.
+2. *Remove it, by amending the algorithm — done.* The condition cannot be dropped
+   from `alg:ttc` **as printed** — `p ← 1` and only halves, so the sketch is
+   `Poisson(Λ)` with `Λ ≤ Vol(Sol F)`, and on a body of volume `10⁻⁶` the algorithm
+   draws `Pois(10⁻⁶)` points and returns `0`. So the algorithm gains one line, and
+   the formalisation now **runs it**: the input is dilated by
+   [`Ttc.runScale`](Ttc/Exec/Rescaled.lean) `= max 1 (Θ/(Vₙ·γ̂ⁿ))`
+   ([`Ttc.scaleFactor`](Ttc/Exec/ScaleFactor.lean)), the run happens on
+   [`Ttc.scaledAtoms`](Ttc/Exec/Rescaled.lean), and the estimate is divided by `cⁿ`
+   inside the conclusion. `Vol(c·S) = cⁿ·Vol(S)` exactly
+   ([`Ttc.volSol_scaleAtoms`](Ttc/Exec/Scale.lean)); `c` is computable from `γ̂` and
+   `n` alone, with **no knowledge of `Vol`**, and the parameter block does not move
+   ([`Ttc.inputParams_scaleAtoms`](Ttc/Exec/Rescaled.lean), by `rfl`), so there is no
+   circularity and nothing is assumed. The hypothesis is then *discharged*
+   ([`Ttc.hvol_scaled`](Ttc/Exec/Rescaled.lean)), giving
+   [`Ttc.ttc_volume_rescaled`](Ttc/Exec/Rescaled.lean) with no volume hypothesis at
+   all, and [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) inherits it.
 
 **The paper needs that line.** As printed, `thm:volumettc` is false for
-`Vol(Sol F) ≲ Θ/4` — not merely unproved.
+`Vol(Sol F) ≲ Θ/4` — not merely unproved. Correspondingly,
+`Ttc.ttc_volume_estimate` is unconditional **for the amended algorithm** and says
+nothing about the printed one on a small body. Do not quote it as a guarantee for
+`alg:ttc` as printed.
 
 
 **The main result stands.** Finding 1 changes constants, not the shape of the
@@ -2882,10 +2927,14 @@ total-variation one, `density_au` by `law_tv`, and `law_tv` is now *proved* for 
 constructed lazy ball-walk sampler — so the sampling oracle is discharged, not
 merely reduced.
 
-**Findings 19 and 20 are what remain open.** Finding 20 is a genuine gap in
-`lem:numlattice` — its proof certifies nothing when `Vol(Sol F) < Thresh/4`, and the
-counterexample is machine-checked. The development carries the missing hypothesis
-explicitly rather than proving the paper's version of the step.
+**Finding 19 is what remains open; finding 20 is a genuine gap in the paper that
+the development has closed by *changing the algorithm*.** Finding 20's gap is real —
+`lem:numlattice`'s proof certifies nothing when `Vol(Sol F) < Thresh/4`, and the
+counterexample [`Ttc.Box.big_not_derivable`](Ttc/Exec/Regime.lean) is machine-checked.
+The development no longer carries the missing hypothesis: it dilates the input
+([`Ttc/Exec/Rescaled.lean`](Ttc/Exec/Rescaled.lean)) and discharges it. **That is an
+amendment to `alg:ttc`, not a proof of the paper's step** — as printed the algorithm
+is *wrong* in that regime, and nothing here says otherwise.
 
 **Finding 19 is an efficiency finding.** Both
 constructed oracles — hit-and-miss Monte Carlo for `Vol_ED`, the lazy ball walk
