@@ -130,17 +130,11 @@ theorem lit_holds_pos {M : A → Set X} {l : Lit A} (hl : l.pos = true) {x : X} 
   rw [hl]
   exact Iff.rfl
 
-/-! ## The two degeneracies, named -/
+/-! ## The two degeneracies, named
 
-/-- A literal is **vacuous** when its atom's normal is `0` and its bound is `≥ 0`:
-positively, it constrains nothing. -/
-def VacuousLit (atoms : A → LinAtom n) (l : Lit A) : Prop :=
-  (atoms l.atom).coeff = 0 ∧ 0 ≤ (atoms l.atom).bound
-
-/-- A cube is **void** when it contains a literal whose atom's normal is `0` and
-whose bound is `< 0`: positively, it is unsatisfiable. -/
-def VoidCube (atoms : A → LinAtom n) (c : Cube A) : Prop :=
-  ∃ l ∈ c, (atoms l.atom).coeff = 0 ∧ (atoms l.atom).bound < 0
+`Ttc.VacuousLit` and `Ttc.VoidCube` — the `Vacuous` and `Void` predicates of lines
+A5 and A4 of the preprocessing — are **defined in `Model/Pseudocode`**, with the
+rest of the amended algorithm's vocabulary; only their theory is here. -/
 
 /-- **The exhaustiveness fact.**  A literal with a zero normal is either vacuous or
 lies in a void cube — there is no third case, because `0 ≤ b` and `b < 0` are
@@ -154,13 +148,10 @@ theorem vacuous_or_void {atoms : A → LinAtom n} {c : Cube A} {l : Lit A} (hl :
 
 /-! ## Cleaning one cube
 
-`Ttc.Cube A` is a `List`, and `A` carries no `DecidableEq`, so the filter's
+`Ttc.cleanCube` — line A5 — is **defined in `Model/Pseudocode`**; only its theory is
+here.  `Ttc.Cube A` is a `List`, and `A` carries no `DecidableEq`, so the filter's
 predicate is decided classically — the idiom of `Ttc.toDNFd` (`Exec/Dedup`).
 -/
-
-/-- **The cube with its vacuous literals deleted.** -/
-noncomputable def cleanCube (atoms : A → LinAtom n) (c : Cube A) : Cube A :=
-  c.filter fun l => !(@decide (VacuousLit atoms l) (Classical.propDecidable _))
 
 @[simp] theorem mem_cleanCube {atoms : A → LinAtom n} {c : Cube A} {l : Lit A} :
     l ∈ cleanCube atoms c ↔ l ∈ c ∧ ¬ VacuousLit atoms l := by
@@ -205,13 +196,10 @@ theorem region_eq_empty_of_voidCube (atoms : A → LinAtom n) {c : Cube A}
   · intro hx
     exact hx.elim
 
-/-! ## Cleaning the DNF -/
+/-! ## Cleaning the DNF
 
-/-- **The cleaned DNF**: void cubes dropped, vacuous literals deleted from the
-rest. -/
-noncomputable def cleanDNF (atoms : A → LinAtom n) (D : DNF A) : DNF A :=
-  (D.filter fun c => !(@decide (VoidCube atoms c) (Classical.propDecidable _))).map
-    (cleanCube atoms)
+`Ttc.cleanDNF` — lines A4–A5 — is **defined in `Model/Pseudocode`**; only its theory
+is here. -/
 
 theorem mem_cleanDNF {atoms : A → LinAtom n} {D : DNF A} {c : Cube A} :
     c ∈ cleanDNF atoms D ↔ ∃ c₀ ∈ D, ¬ VoidCube atoms c₀ ∧ c = cleanCube atoms c₀ := by
@@ -374,10 +362,10 @@ theorem not_isDNFOf_cleanDNF :
 The repair: a positive DNF is the `Ttc.toDNF` of its own disjunction of
 conjunctions, so the cleaned cube list *is* a genuine DNF — of a new formula with
 the same solution set.
--/
 
-/-- The formula of a cube: the conjunction of its atoms, via `Ttc.conj`. -/
-def cubeForm (c : Cube A) : BForm A := conj (c.map Lit.atom)
+`Ttc.cubeForm` and `Ttc.dnfForm` — lines A3 and A6, which both rewriting passes
+use — are **defined in `Model/Pseudocode`**; only their theory is here.
+-/
 
 /-- Re-tagging a positive cube's literals with `pos = true` is the identity. -/
 theorem map_mk_atom_true : ∀ {c : Cube A}, Cube.IsPositive c →
@@ -400,15 +388,6 @@ theorem toDNF_cubeForm {c : Cube A} (hc : Cube.IsPositive c) : toDNF (cubeForm c
   exact congrArg (fun l => [l]) (map_mk_atom_true hc)
 
 theorem isPositive_cubeForm (c : Cube A) : (cubeForm c).IsPositive := isPositive_conj _
-
-/-- The formula of a DNF: the disjunction of its cubes' formulas.  `[]` has no
-positive formula denoting `∅` (`Ttc.BForm` has no `false` constructor and
-`IsPositive (.neg _)` is `False`), so it is sent to the junk value `BForm.tt`;
-every theorem below about `dnfForm` therefore assumes `D ≠ []`. -/
-def dnfForm : DNF A → BForm A
-  | [] => .tt
-  | [c] => cubeForm c
-  | c :: D => .or (cubeForm c) (dnfForm D)
 
 @[simp] theorem dnfForm_singleton (c : Cube A) : dnfForm [c] = cubeForm c := rfl
 
@@ -452,12 +431,10 @@ theorem isDNFOf_dnfForm {D : DNF A} (hD : D ≠ []) (hp : DNF.IsPositive D) :
   conv_lhs => rw [← h]
   exact toDNF_isDNFOf (dnfForm D) v
 
-/-! ## The cleaned formula, and `hcoeff` for it -/
+/-! ## The cleaned formula, and `hcoeff` for it
 
-/-- **The cleaned input formula**: `Ttc.toDNFd φ`, cleaned, read back as a
-formula. -/
-noncomputable def cleanForm (atoms : A → LinAtom n) (φ : BForm A) : BForm A :=
-  dnfForm (cleanDNF atoms (toDNFd φ))
+`Ttc.cleanForm` — lines A4–A6 as one step — is **defined in `Model/Pseudocode`**;
+only its theory is here. -/
 
 /-- The cleaned formula is positive, so `hφ` survives it. -/
 theorem isPositive_cleanForm (atoms : A → LinAtom n) (φ : BForm A) :

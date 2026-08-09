@@ -3,13 +3,24 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Model.Prelude
+import Ttc.Exec.Dedup
 
 /-!
-# `Model/Pseudocode`: `alg:ttc`
+# `Model/Pseudocode`: `alg:ttc`, **and the preprocessing that precedes it**
 
-A line-by-line transcription of Algorithm 1. Put `sections/algo.tex` beside this
-file and check the control flow. No proofs; the structural invariants of the
-modelled execution are in `Invariants`.
+A line-by-line transcription of Algorithm 1, followed by a line-by-line
+transcription of the **four preprocessing steps** the verified algorithm applies
+before it. No proofs; the structural invariants of the modelled execution are in
+`Invariants`, and every theorem about the preprocessing vocabulary stays in
+`Exec/` (`Exec/Scale`, `Exec/ScaleFactor`, `Exec/Inscribed`, `Exec/Cleanup`,
+`Exec/Prune`).
+
+**Why this file imports `Exec/Dedup`.** `Ttc.cleanForm` is defined over
+`Ttc.toDNFd`, the deduplicated converter of `Exec/Dedup` — a two-line wrapper on
+`Ttc.toDNF` of `Model/Prelude` whose only dependency is `Ttc.Dnf`. That import is
+the one place `Model/` reaches into `Exec/`, and it reaches into the two cheapest
+files there (`Ttc.Exec.Dedup` and `Ttc.Dnf` together depend on nothing but
+`Model/Prelude`).
 
 ```
 line 22        p ← 1 ;  X ← ∅
@@ -90,6 +101,109 @@ what a distributional hypothesis needs in order to speak of independence. The le
 in particular is needed because `lem:numlattice`'s `Err(j)` must be an event about a
 level-`j` process coupled to the run, and a level-blind sampler cannot realise that
 coupling — see README finding 15 and `AUDIT.md`.
+
+# The preprocessing: what `Model/Theorem` certifies `alg:ttc` **plus**
+
+`Ttc.ttc_volume_estimate` does not measure a run of `alg:ttc` on the user's `F`.
+It measures a run of `alg:ttc` on an input that four steps have already rewritten,
+with the returned estimate divided by `qⁿ`. Those four steps are transcribed here,
+in the same style as `alg:ttc` above, because the audit path is `Model/` and
+nothing outside `Model/` may carry a step of the algorithm.
+
+```
+line A1        D  ← ToDNFd(F_bool)                        -- line 16, deduplicated
+line A2        D  ← [ c ∈ D | interior(P(c)) ≠ ∅ ]        -- STEP 1: prune
+line A3        F  ← DnfForm(D)                            -- read D back as a formula
+line A4        D  ← [ c ∈ ToDNFd(F) | ¬ Void(c) ]         -- STEP 2a: drop void cubes
+line A5        D  ← [ [ l ∈ c | ¬ Vacuous(l) ] | c ∈ D ]  -- STEP 2b: delete vacuous literals
+line A6        F  ← DnfForm(D)                            -- read D back as a formula
+line A7        for c ∈ ToDNFd(F):
+line A8            (cen c, γ c) ← SomeInscribedBall(P(c)) -- STEP 3: the ball
+line A9        γ̂  ← min over c of (γ c)
+line A10       q  ← max 1 ( Thresh / (Vₙ · γ̂ ⁿ) )         -- STEP 4: the dilation factor
+line A11       for a an atom of F:  a ← ⟨a.coeff, q · a.bound⟩
+line A12       run alg:ttc (lines 22–46) on the dilated F, at radius q·γ̂
+line A13       output (that run's output) / qⁿ
+```
+
+| line | Lean | where |
+| --- | --- | --- |
+| A1 (`ToDNFd`) | `Ttc.toDNFd` | `Exec/Dedup` |
+| (the reading `M`) | `Ttc.atomSet` | here |
+| A2 (prune) | `Ttc.nondegenCubes` | here |
+| A3, A6 (`DnfForm`) | `Ttc.dnfForm`, over `Ttc.cubeForm` | here |
+| A2–A3 together | `Ttc.pruneForm` | here |
+| A4 (`Void`) | `Ttc.VoidCube`, filtered by `Ttc.cleanDNF` | here |
+| A5 (`Vacuous`) | `Ttc.VacuousLit`, filtered by `Ttc.cleanCube` | here |
+| A4–A6 together | `Ttc.cleanForm` | here |
+| A2–A6 together | `Ttc.preprocess` | here |
+| A8 (`SomeInscribedBall`) | `Ttc.ballData` | here |
+| A8 (centres) | `Ttc.cenOf` | here |
+| A9 (`γ̂`) | `Ttc.gammaOf` | here |
+| A10 (`Vₙ`) | `Ttc.unitBallVol` | here |
+| A10 (`q`) | `Ttc.scaleFactor` | here |
+| A11 (dilate) | `Ttc.scaleAtoms` | here |
+| A12 (the run) | `Ttc.run` / `Ttc.ttcOutput`, above | here |
+| A13 (`/qⁿ`) | the division in `Ttc.ttcEstimate` | `Exec/Api` |
+
+## Which of the four are in the paper
+
+**Steps 1, 3 and 4 are not in the paper's `alg:ttc`.** Step 2 is not printed there
+either, but unlike the other three it is not a change to the algorithm: it rewrites
+the input syntax and leaves the body alone.
+
+* **Step 1, the pruning (A2–A3), is not in `alg:ttc`.** It changes `Sol(F)` — by a
+  **null set only**: the deleted cubes have convex regions with empty interior,
+  `Ttc.sol_pruneForm_subset` is a genuine `⊆` that `Ttc.degForm` makes strict, and
+  only the *measure* survives (`Ttc.volSol_pruneForm`). This is legitimate solely
+  because the headline's conclusion merely **measures** `Ttc.sol`.
+* **Step 2, the cleaning (A4–A6), does not change what the algorithm does.**
+  `Ttc.sol_cleanForm` is an **exact set equality**: a literal `0·x ≤ b` with
+  `0 ≤ b` denotes `Set.univ` and a cube containing one with `b < 0` denotes `∅`, so
+  deleting them is constant folding. Not printed in `alg:ttc`, but nothing is lost
+  or gained.
+* **Step 3, the ball construction (A7–A9), is not `alg:ttc`.** `alg:prec` line 86
+  computes the *maximum* inscribed ball by an LP; `Ttc.ballData` picks *some*
+  inscribed ball, classically. Non-maximality only inflates the precision
+  `ρ = ⌈log₁₀(γ/γ̂)⌉`, so the guarantee is untouched and only the run gets more
+  expensive.
+* **Step 4, the dilation (A10–A13), is not in `alg:ttc` and changes what the
+  algorithm does.** `alg:ttc` sets `p ← 1` and only ever halves it, so its sketch is
+  `Poisson(Λ)` with `Λ ≤ Vol(Sol F)`; on a body of volume `10⁻⁶` it draws
+  `Pois(10⁻⁶)` points and returns `0`. **The printed algorithm is wrong there**
+  (`Ttc.Box.big_not_derivable`, README finding 20). So the input is dilated by
+  `q = Ttc.scaleFactor` and the estimate divided by `qⁿ` — exact, because volume is
+  homogeneous of degree `n` (`Ttc.volSol_scaleAtoms`).
+
+## The transcription is complete, and two `rfl`s say so
+
+Every line of the table above is now a definition of *this* file, `Ttc.toDNFd`
+excepted (it is the line-16 converter, imported, and the reason for the
+`Exec/Dedup` import discussed above). In particular `Ttc.atomSet`,
+`Ttc.nondegenCubes` and `Ttc.pruneForm` — which used to sit in `Exec/Inputs`,
+`Exec/Degenerate` and `Exec/Prune` — are here, and so is their composite with the
+cleaning pass, `Ttc.preprocess`. Every *theorem* about them stays in `Exec/`; only
+the definitions moved.
+
+That the headline really measures these definitions is machine-checked, by two
+lemmas whose proofs are `rfl` (`Exec/Api`):
+
+* `Ttc.ttcEstimate_eq_ttcOutput` — the quantity `Ttc.ttc_volume_estimate` bounds is
+  this file's `Ttc.ttcOutput`, at this file's parameter block and precision,
+  divided by `qⁿ`. That is lines A12–A13.
+* `Ttc.ttcInput_eq_preprocess` — the formula that run is on is this file's
+  `Ttc.preprocess atoms φ`. That is lines A2–A6.
+
+So a reader who reads `Model/Prelude`, `Model/ProblemSetting`, this file and
+`Model/Theorem`, and stops, has read the algorithm that is certified *and* the
+input it is certified on. Nothing in the algorithm's statement is left in `Exec/`.
+
+**What this does not make true.** The transcription being complete is a claim about
+*where the definitions live*, not a claim that the transcribed algorithm is the
+paper's. The four honesty notes above stand unchanged: steps 1, 3 and 4 are not in
+the paper's `alg:ttc`; step 1 changes `Sol` by a null set (`⊆`, not `=`); step 2 is
+an exact set equality and so changes nothing; and step 3 constructs *some* inscribed
+ball, not `alg:prec`'s maximal one.
 -/
 
 namespace Ttc
@@ -205,5 +319,180 @@ noncomputable def ttcOutput {A : Type*} {Ω : Type} (P : Params)
     (O : Ω → Oracles n (Cube A)) (toDNF : BForm A → DNF A) (ρ : ℤ)
     (φ : BForm A) (ω : Ω) : ℝ :=
   run P (O ω) ρ (toDNF φ)
+
+/-! # The preprocessing, lines A1–A13
+
+Definitions only, exactly as above: what each step *is*. Everything proved about
+them stays in `Exec/` — `Ttc.sol_cleanForm` and `Ttc.volSol_pruneForm` (that the
+body is preserved), `Ttc.volSol_scaleAtoms` (that the dilation is exact),
+`Ttc.ball_subset_cenOf` and `Ttc.gammaOf_pos` (that the constructed ball is one),
+`Ttc.thresh_le_scaled_ball_volume` (that `q` is large enough).
+
+See the module docstring for the `alg:ttc` line each of these implements, and for
+the two `rfl` bridges (`Ttc.ttcEstimate_eq_ttcOutput`, `Ttc.ttcInput_eq_preprocess`)
+that pin the headline's measured quantity to them. -/
+
+section Preprocess
+
+variable {A : Type*}
+
+/-! ## The interpretation: what an atom denotes
+
+Every step below is stated over the *set* an atom denotes, not over the atom
+itself. `Ttc.atomSet` is that reading — the map `M` the headline used to take as a
+binder together with an equation defining it. -/
+
+/-- **The interpretation `M`.** The theorem used to take `M` as a binder together
+with `M_eq : M = fun a => (atoms a).halfspace`; this is that right-hand side, named,
+so that the binder and its defining equation are both discharged by `rfl`. -/
+def atomSet (atoms : A → LinAtom n) : A → Set (Space n) := fun a => (atoms a).halfspace
+
+/-! ## Step 2, lines A4–A6: cleaning the zero-normal atoms
+
+A literal whose atom has a zero normal is not a constraint: with a nonnegative
+bound it denotes `Set.univ`, with a negative bound `∅`. Line A5 deletes the first
+kind; line A4 deletes the cubes containing the second. `Ttc.Cube A` is a `List` and
+`A` carries no `DecidableEq`, so both filters decide their predicate classically —
+the idiom of `Ttc.toDNFd`. -/
+
+/-- A literal is **vacuous** when its atom's normal is `0` and its bound is `≥ 0`:
+positively, it constrains nothing. The `Vacuous` of line A5. -/
+def VacuousLit (atoms : A → LinAtom n) (l : Lit A) : Prop :=
+  (atoms l.atom).coeff = 0 ∧ 0 ≤ (atoms l.atom).bound
+
+/-- A cube is **void** when it contains a literal whose atom's normal is `0` and
+whose bound is `< 0`: positively, it is unsatisfiable. The `Void` of line A4. -/
+def VoidCube (atoms : A → LinAtom n) (c : Cube A) : Prop :=
+  ∃ l ∈ c, (atoms l.atom).coeff = 0 ∧ (atoms l.atom).bound < 0
+
+/-- **Line A5.** The cube with its vacuous literals deleted. -/
+noncomputable def cleanCube (atoms : A → LinAtom n) (c : Cube A) : Cube A :=
+  c.filter fun l => !(@decide (VacuousLit atoms l) (Classical.propDecidable _))
+
+/-- **Lines A4–A5.** The cleaned DNF: void cubes dropped, vacuous literals deleted
+from the rest. -/
+noncomputable def cleanDNF (atoms : A → LinAtom n) (D : DNF A) : DNF A :=
+  (D.filter fun c => !(@decide (VoidCube atoms c) (Classical.propDecidable _))).map
+    (cleanCube atoms)
+
+/-! ## Lines A3 and A6: reading a cube list back as a formula
+
+Both rewriting steps rebuild the *formula* from the surviving cubes rather than
+editing the DNF in place. They have to: `Ttc.IsDNFOf D φ` quantifies over **all**
+Boolean assignments, and neither rewrite is justified at an arbitrary assignment —
+`Ttc.not_isDNFOf_cleanDNF` and `Ttc.not_isDNFOf_nondegenCubes_degForm` are the
+machine-checked refutations. A positive DNF is the `Ttc.toDNF` of its own
+disjunction of conjunctions (`Ttc.toDNF_dnfForm`), so the rebuilt formula is a
+genuine `Ttc.IsDNFOf` of the surviving cubes. -/
+
+/-- The formula of a cube: the conjunction of its atoms, via `Ttc.conj`. -/
+def cubeForm (c : Cube A) : BForm A := conj (c.map Lit.atom)
+
+/-- **Lines A3 and A6.** The formula of a DNF: the disjunction of its cubes'
+formulas. `[]` has no positive formula denoting `∅` (`Ttc.BForm` has no `false`
+constructor and `IsPositive (.neg _)` is `False`), so it is sent to the junk value
+`BForm.tt`; every theorem about `dnfForm` therefore assumes `D ≠ []`. -/
+def dnfForm : DNF A → BForm A
+  | [] => .tt
+  | [c] => cubeForm c
+  | c :: D => .or (cubeForm c) (dnfForm D)
+
+/-! ## Step 1, lines A2–A3: pruning the degenerate cubes
+
+A cube whose region has empty interior is either unsatisfiable or
+lower-dimensional; either way its region is convex and Lebesgue-null. Line A2
+deletes those cubes and line A3 reads the survivors back as a formula. Having
+nonempty interior is not decidable, so the filter decides classically — hence the
+`noncomputable`. -/
+
+/-- **Line A2.** The sublist of cubes whose region has nonempty interior: the
+full-dimensional cubes of the decomposition. -/
+noncomputable def nondegenCubes (M : A → Set (Space n)) (D : DNF A) : DNF A :=
+  D.filter fun c => @decide _ (Classical.propDecidable (interior (region M c)).Nonempty)
+
+/-- **Lines A2–A3 as one step: `φ` with its degenerate (lower-dimensional or empty)
+cubes pruned away.**
+
+`Ttc.nondegenCubes` keeps exactly the cubes whose region has nonempty interior, and
+`Ttc.dnfForm` reads the surviving list back as a formula, so that `Ttc.IsDNFOf`
+survives (it would not, for the pruned list against the original `φ`:
+`Ttc.not_isDNFOf_nondegenCubes_degForm`). `Ttc.volSol_pruneForm` says the deletion
+is invisible to the measure; `Ttc.sol_pruneForm_subset` says it is *not* invisible
+to the set. -/
+noncomputable def pruneForm (atoms : A → LinAtom n) (φ : BForm A) : BForm A :=
+  dnfForm (nondegenCubes (atomSet atoms) (toDNFd φ))
+
+/-- **Lines A4–A6 as one step.** The cleaned input formula: `Ttc.toDNFd φ`, cleaned,
+read back as a formula. `Ttc.sol_cleanForm` says this denotes literally the same
+subset of `Ttc.Space n` as `φ` does. -/
+noncomputable def cleanForm (atoms : A → LinAtom n) (φ : BForm A) : BForm A :=
+  dnfForm (cleanDNF atoms (toDNFd φ))
+
+/-- The input the amended algorithm actually runs on: degenerate cubes pruned,
+then zero-normal atoms constant-folded. -/
+noncomputable def preprocess (atoms : A → LinAtom n) (φ : BForm A) : BForm A :=
+  cleanForm atoms (pruneForm atoms φ)
+
+/-! ## Step 3, lines A7–A9: the inscribed ball
+
+`alg:prec` line 86 obtains `γ̂` from an LP, `γ̂ ← MaxInscribedBall(Pⁱ)`. What is
+transcribed here is weaker and total: *some* inscribed ball per cube, chosen
+classically, and the least of the resulting radii. Non-maximality costs nothing in
+soundness — the radius enters only through `ρ = ⌈log₁₀(γ/γ̂)⌉`, and a smaller `γ̂`
+only makes the lattice finer. -/
+
+open Classical in
+/-- **Line A8.** Some inscribed ball of the region of `i`, if one exists; `(0, 0)`
+otherwise. The pair is `(centre, radius)`. The choice is classical and carries
+**no** optimality claim: it is *an* inscribed ball, not the largest one.
+
+The `open Classical in` supplies the `Decidable` instance for the (undecidable)
+existential; the definition is `noncomputable` regardless. -/
+noncomputable def ballData (M : A → Set (Space n)) (i : Cube A) : Space n × ℝ :=
+  if h : ∃ p : Space n × ℝ, 0 < p.2 ∧ Metric.ball p.1 p.2 ⊆ region M i then h.choose else (0, 0)
+
+/-- **Line A8.** The centre map: each cube gets its own inscribed-ball centre. -/
+noncomputable def cenOf (M : A → Set (Space n)) (D : DNF A) :
+    {c : Cube A // c ∈ D} → Space n := fun i => (ballData M i.val).1
+
+/-- **Line A9.** The shared inscribed radius `γ̂`: the least of the per-cube radii.
+
+Total by construction — on an empty DNF the infimum of the empty family of reals is
+`0`, which is exactly the degenerate value `Ttc.ball_subset_cenOf` tolerates. -/
+noncomputable def gammaOf (M : A → Set (Space n)) (D : DNF A) : ℝ :=
+  ⨅ i : {c : Cube A // c ∈ D}, (ballData M i.val).2
+
+/-! ## Step 4, lines A10–A11: the dilation
+
+Volume is homogeneous of degree `n`, so dilating the input by `q ≥ 1` multiplies
+`Vol(Sol F)` by exactly `qⁿ` — as large as needed to clear `Thresh`, which is what
+`alg:ttc`'s Poisson sketch requires and what the printed algorithm does not
+guarantee. Line A13's division by `qⁿ` undoes it; relative error is invariant. -/
+
+/-- **`Vₙ`, the volume of the unit ball of `Ttc.Space n`, as a real.** Deliberately
+opaque: the Gamma-function formula `π^{n/2}/Γ(n/2+1)` is never needed, only
+`Ttc.unitBallVol_pos` and `Ttc.volume_ball_eq`. -/
+noncomputable def unitBallVol (n : ℕ) : ℝ :=
+  (MeasureTheory.volume (Metric.ball (0 : Space n) 1)).toReal
+
+/-- **Line A10.** The dilation factor `q`: enough to push `Vol(Sol F)` past `Thresh`.
+Computed from the inscribed radius `γ̂` and the dimension, with **no knowledge of
+`Vol`** — that is what makes this preprocessing rather than a hypothesis.
+
+`max 1 (…)` overshoots the exact factor `(Thresh/(Vₙ γ̂ⁿ))^{1/n}`; that is
+deliberate. It avoids an `n`-th root — `1 ≤ q` gives `q ≤ qⁿ`, which is all
+`Ttc.thresh_le_scaled_ball_volume` needs — at the price of a larger dilation, and
+the price is zero because line A13 divides by `qⁿ`. -/
+noncomputable def scaleFactor (n : ℕ) (P : Params) (gammaHat : ℝ) : ℝ :=
+  max 1 (P.thresh / (unitBallVol n * gammaHat ^ n))
+
+/-- **Line A11.** The input formula's atoms, dilated by `c`: same normals, bounds
+scaled. Scaling the bound and not the normal is what dilates rather than rotates —
+the half-space `{x | ⟪a, x⟫ ≤ b}` becomes `{x | ⟪a, x⟫ ≤ c·b} = c · {x | ⟪a, x⟫ ≤ b}`
+(`Ttc.halfspace_scaleAtoms`). -/
+def scaleAtoms (c : ℝ) (atoms : A → LinAtom n) : A → LinAtom n :=
+  fun a => ⟨(atoms a).coeff, c * (atoms a).bound⟩
+
+end Preprocess
 
 end Ttc

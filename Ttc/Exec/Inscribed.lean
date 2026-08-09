@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Uddalok Sarkar
 -/
 import Ttc.Exec.Params
+import Ttc.Model.Pseudocode
 
 /-!
 # The inscribed ball, constructed rather than supplied
@@ -51,18 +52,10 @@ namespace Ttc
 
 variable {A : Type*} {n : ℕ}
 
-/-! ## The per-cube ball -/
+/-! ## The per-cube ball
 
-open Classical in
-/-- Some inscribed ball of the region of `i`, if one exists; `(0, 0)` otherwise.
-
-The pair is `(centre, radius)`. The choice is classical and carries **no** optimality
-claim: it is *an* inscribed ball, not the largest one.
-
-The `open Classical in` supplies the `Decidable` instance for the (undecidable)
-existential; the definition is `noncomputable` regardless. -/
-noncomputable def ballData (M : A → Set (Space n)) (i : Cube A) : Space n × ℝ :=
-  if h : ∃ p : Space n × ℝ, 0 < p.2 ∧ Metric.ball p.1 p.2 ⊆ region M i then h.choose else (0, 0)
+`Ttc.ballData` — line A8 of the preprocessing — is **defined in `Model/Pseudocode`**,
+with the rest of the amended algorithm's vocabulary; only its theory is here. -/
 
 /-- **Soundness, unconditional.** Either the choice gives a genuine inscribed ball, or
 the radius is `0` and the ball is empty — either way it sits inside the region. -/
@@ -89,19 +82,11 @@ theorem ballData_snd_nonneg (M : A → Set (Space n)) (i : Cube A) : 0 ≤ (ball
   · rename_i h; exact h.choose_spec.1.le
   · exact le_refl 0
 
-/-! ## The shared radius: the least of the per-cube radii -/
+/-! ## The shared radius: the least of the per-cube radii
 
-/-- The centre map: each cube gets its own inscribed-ball centre. This is the
-replacement for the headline's `cen` binder. -/
-noncomputable def cenOf (M : A → Set (Space n)) (D : DNF A) :
-    {c : Cube A // c ∈ D} → Space n := fun i => (ballData M i.val).1
-
-/-- The shared inscribed radius `γ̂`: the least of the per-cube radii.
-
-Total by construction — on an empty DNF the infimum of the empty family of reals is `0`,
-which is exactly the degenerate value the soundness lemma below tolerates. -/
-noncomputable def gammaOf (M : A → Set (Space n)) (D : DNF A) : ℝ :=
-  ⨅ i : {c : Cube A // c ∈ D}, (ballData M i.val).2
+`Ttc.cenOf` and `Ttc.gammaOf` — lines A8 and A9 of the preprocessing — are
+**defined in `Model/Pseudocode`**; only their theory is here. `Ttc.cenOf` is the
+replacement for the headline's `cen` binder, `Ttc.gammaOf` for `gammaHat`. -/
 
 /-- The per-cube radii are bounded below by `0`, so the infimum defining `gammaOf` is a
 genuine greatest lower bound rather than the junk value of an unbounded family. -/

@@ -494,6 +494,32 @@ theorem ttc_volume_api
   ttc_volume_prune atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ
     (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) hpos
 
+/-! ## The two bridges to `Model/Pseudocode`
+
+The headline measures `Ttc.ttcEstimate` at `Ttc.ttcInput`.  These two `rfl`s exhibit
+that pair as `Model/Pseudocode`'s own `Ttc.ttcOutput` at `Model/Pseudocode`'s own
+`Ttc.preprocess` — so the audit path `Model/Prelude → Model/ProblemSetting →
+Model/Pseudocode → Model/Theorem` contains both the algorithm that is certified and
+the input it is certified on, with nothing left to take on trust. -/
+
+/-- **The measured quantity is `Model/Pseudocode`'s `Ttc.ttcOutput`, divided by `qⁿ`** —
+lines A12–A13 of the preprocessing transcription, by `rfl`. -/
+theorem ttcEstimate_eq_ttcOutput {A : Type*} {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
+    (hpos : 0 < volSol (atomSet atoms) φ)
+    (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = ttcOutput (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c) toDNFd
+          (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) t
+        / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n := rfl
+
+/-- **The input the run is on is `Model/Pseudocode`'s `Ttc.preprocess`**, by `rfl`. -/
+theorem ttcInput_eq_preprocess {A : Type*} {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) :
+    ttcInput atoms φ = preprocess atoms φ := rfl
+
 end Api
 
 end Ttc
@@ -520,3 +546,5 @@ end Ttc
 #print axioms Ttc.ttcTerminates_def
 #print axioms Ttc.ttcCost_def
 #print axioms Ttc.ttc_volume_api
+#print axioms Ttc.ttcEstimate_eq_ttcOutput
+#print axioms Ttc.ttcInput_eq_preprocess

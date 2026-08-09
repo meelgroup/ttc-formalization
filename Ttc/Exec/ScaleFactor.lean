@@ -104,13 +104,11 @@ variable {A : Type*} {n : ℕ}
 Abstractly, as a real.  Nothing below needs its closed form (`π^{n/2}/Γ(n/2+1)`); all
 that is used is positivity and the Haar scaling law, and both come from the
 measure-theoretic API.
--/
 
-/-- **`Vₙ`, the volume of the unit ball of `Ttc.Space n`, as a real.**  Deliberately
-opaque: the Gamma-function formula is never needed, only
-`Ttc.unitBallVol_pos` and `Ttc.volume_ball_eq`. -/
-noncomputable def unitBallVol (n : ℕ) : ℝ :=
-  (volume (Metric.ball (0 : Space n) 1)).toReal
+`Ttc.unitBallVol` — line A10 of the preprocessing — is **defined in
+`Model/Pseudocode`**, with the rest of the amended algorithm's vocabulary; only its
+theory is here.
+-/
 
 /-- **`0 < Vₙ`.**  The unit ball is open and nonempty, so its measure is positive
 (`MeasureTheory.measure_ball_pos`, Lebesgue measure being open-positive), and it is
@@ -148,18 +146,10 @@ theorem volume_ball_eq_of_one_le_dim (n : ℕ) (hn : 1 ≤ n) (x : Space n) {r :
 /-! ## 2. The scale factor
 
 A function of `n`, `P` and `γ̂` alone — in particular **not** of `Vol(Sol F)`.
+
+`Ttc.scaleFactor` — line A10 of the preprocessing — is **defined in
+`Model/Pseudocode`**; only its theory is here.
 -/
-
-/-- **The dilation `TTC` applies to its input**: enough to push `Vol(Sol F)` past
-`Thresh`.  Computed from the inscribed radius `γ̂` (which `alg:prec` line 86 already
-produces) and the dimension, with no knowledge of `Vol`.
-
-`max 1 (…)` overshoots the exact factor `(Thresh/(Vₙ γ̂ⁿ))^{1/n}`; that is deliberate.
-It avoids an `n`-th root — `1 ≤ c` gives `c ≤ cⁿ`, which is all
-`Ttc.thresh_le_scaled_ball_volume` needs — at the price of a larger dilation, and the
-price is zero because the estimate is divided by `cⁿ` at the end. -/
-noncomputable def scaleFactor (n : ℕ) (P : Params) (gammaHat : ℝ) : ℝ :=
-  max 1 (P.thresh / (unitBallVol n * gammaHat ^ n))
 
 /-- **`1 ≤ c`.**  Immediate from the `max`; this is the half of the definition that
 replaces the `n`-th root, via `le_self_pow`. -/

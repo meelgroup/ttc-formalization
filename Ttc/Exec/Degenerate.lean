@@ -119,14 +119,10 @@ theorem volume_region_eq_zero_of_interior_empty (M : A → Set (Space n))
 
 /-! ## 2. Dropping the degenerate cubes preserves the volume
 
-`Ttc.nondegenCubes` keeps exactly the cubes whose region has nonempty interior — the
-cubes `hint` is about.  The choice is classical (having nonempty interior is not
-decidable), hence the `noncomputable`. -/
-
-/-- The sublist of cubes whose region has nonempty interior: the cubes that satisfy
-`Ttc.ttc_volume_estimate`'s `hint`. -/
-noncomputable def nondegenCubes (M : A → Set (Space n)) (D : DNF A) : DNF A :=
-  D.filter fun c => @decide _ (Classical.propDecidable (interior (region M c)).Nonempty)
+`Ttc.nondegenCubes` — line A2 of the preprocessing, defined in `Model/Pseudocode` —
+keeps exactly the cubes whose region has nonempty interior, the cubes `hint` is
+about.  The choice is classical (having nonempty interior is not decidable), hence
+its `noncomputable`.  Everything proved about it is here. -/
 
 @[simp]
 theorem mem_nondegenCubes {M : A → Set (Space n)} {D : DNF A} {c : Cube A} :

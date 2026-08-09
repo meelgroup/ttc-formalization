@@ -114,16 +114,12 @@ section Prune
 
 variable {A : Type*} {n : ℕ}
 
-/-! ## The pruned formula -/
+/-! ## The pruned formula
 
-/-- **`φ` with its degenerate (lower-dimensional or empty) cubes pruned away.**
-
-`Ttc.nondegenCubes` keeps exactly the cubes whose region has nonempty interior —
-the cubes `hint` is about — and `Ttc.dnfForm` reads the surviving list back as a
-formula, so that `Ttc.IsDNFOf` survives (it would not, for the pruned list against
-the original `φ`: `Ttc.not_isDNFOf_nondegenCubes_degForm`). -/
-noncomputable def pruneForm (atoms : A → LinAtom n) (φ : BForm A) : BForm A :=
-  dnfForm (nondegenCubes (atomSet atoms) (toDNFd φ))
+`Ttc.pruneForm atoms φ = dnfForm (nondegenCubes (atomSet atoms) (toDNFd φ))` is
+lines A2–A3 of the preprocessing, and it is **defined in `Model/Pseudocode`**
+alongside every other step of the amended algorithm — the audit path carries the
+definition, this file carries what is proved about it. -/
 
 /-- The pruned formula is positive, so `hφ` survives it — unconditionally, since
 `Ttc.dnfForm` is built from `.or`, `.and`, `.atom` and `.tt` only. -/

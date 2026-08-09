@@ -34,6 +34,8 @@ an approximation.
 ## What is in this file
 
 The **dilation algebra**: everything about what scaling does to the input data.
+`Ttc.scaleAtoms` itself is a *definition of the amended algorithm*, so it lives in
+`Model/Pseudocode` (line A11) and only its theory is here.
 `Ttc.scaleAtoms c atoms` keeps every normal vector and multiplies every bound by
 `c`, which dilates each half-space by `c` (`Ttc.halfspace_scaleAtoms`).  From that
 one fact everything else is structural:
@@ -63,15 +65,11 @@ open MeasureTheory Set Pointwise
 
 variable {A : Type*} {n : ℕ}
 
-/-! ## The dilation -/
+/-! ## The dilation
 
-/-- **The input formula's atoms, dilated by `c`**: same normals, bounds scaled.
-
-Scaling the bound and not the normal is what dilates rather than rotates: the
-half-space `{x | ⟪a, x⟫ ≤ b}` becomes `{x | ⟪a, x⟫ ≤ c·b} = c · {x | ⟪a, x⟫ ≤ b}`
-(`Ttc.halfspace_scaleAtoms`). -/
-def scaleAtoms (c : ℝ) (atoms : A → LinAtom n) : A → LinAtom n :=
-  fun a => ⟨(atoms a).coeff, c * (atoms a).bound⟩
+`Ttc.scaleAtoms` — line A11 of the preprocessing — is **defined in
+`Model/Pseudocode`**, with the rest of the amended algorithm's vocabulary. Only
+the theorems about it are here. -/
 
 /-- The normals are untouched.  This is what transports `hcoeff` (no atom is
 degenerate) from the original formula to the dilate. -/

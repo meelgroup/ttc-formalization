@@ -79,11 +79,12 @@ section Inputs
 
 variable {A : Type*} {n : ℕ}
 
-/-! ## The two substitutions, as definitions -/
+/-! ## The two substitutions, as definitions
 
-/-- **The interpretation `M` the theorem used to take as a binder.**  `M_eq` said
-`M = fun a => (atoms a).halfspace`; this is that right-hand side, named. -/
-def atomSet (atoms : A → LinAtom n) : A → Set (Space n) := fun a => (atoms a).halfspace
+The first of them, `Ttc.atomSet` — the interpretation `M` the theorem used to take
+as a binder, with `M_eq : M = fun a => (atoms a).halfspace` — now lives in
+`Model/Pseudocode`, since every preprocessing step transcribed there is stated over
+it.  The second is below. -/
 
 /-- **The parameter block `TTC` computes** (`alg:ttc` lines 17–20), with `hm` and
 `hr` supplied by `Ttc.one_le_card_cubes_of_ne_nil` and
