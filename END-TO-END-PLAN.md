@@ -185,7 +185,7 @@ below.
 * **Continuous sampler**: *construct* it, don't assume it. Build the
   isoperimetry → conductance → mixing stack for the **ball walk** (matches
   Cousins–Vempala §4.1 and the kernels already stated in
-  `gaussian-cooling-vempala/lean/Conductance.lean`).
+  `../gaussian-cooling-vempala/lean/Conductance.lean`).
 * **Ordering**: the KV97 chain lands **first**, against an almost-uniform draw as
   a hypothesis, so the sampling oracle discharges early. The mixing stack lands
   underneath and removes that hypothesis later. (Note §4b: the hypothesis the
@@ -281,7 +281,7 @@ unchanged, zero `sorry` warnings.
 
 4. `Arlib/Probability/TV.lean` — the `TVLe μ ν ε` predicate and its API
    (symmetry, triangle, `≤ 1`, `tv = 0 ↔ equal`, chain bound, and the transfer
-   `μ S ≤ ν S + ε`). **Port from** `gaussian-cooling-vempala/lean/TV.lean`
+   `μ S ≤ ν S + ε`). **Port from** `../gaussian-cooling-vempala/lean/TV.lean`
    (proved, nothing assumed) and/or
    `/home/devel/Documents/arlib/Arlib/MarkovChains/Continuous/TotalVariation.lean`
    (`Arlib.Kernel.TVLe.measure_le_add`). Both are v4.15; expect light porting.
@@ -398,17 +398,17 @@ convergence. Budget accordingly; this phase is measured in months, not days.
 `Arlib/Convexity/`
 * `LogConcave.lean` — logconcave functions/measures, closure properties. Port
   from `arlib/Arlib/Convexity/LogConcave.lean` (v4.15) and
-  `gaussian-cooling-vempala/lean/Isoperimetry.lean`.
+  `../gaussian-cooling-vempala/lean/Isoperimetry.lean`.
 * `PrekopaLeindler.lean` — **the crux of this phase.** Everything above needs
   it; nothing in Mathlib supplies it. Do the 1-D case first, then induct.
 * `Isoperimetry.lean` — isoperimetric inequality for logconcave densities
-  (CV §3). `gaussian-cooling-vempala/lean/Isoperimetry.lean` has the
+  (CV §3). `../gaussian-cooling-vempala/lean/Isoperimetry.lean` has the
   specialisation §4 consumes but **assumes** `IsoInput`/`OneDimIso`; those are
   the two predicates this file must turn into theorems.
 
 `Arlib/MarkovChains/Continuous/`
 * `Conductance.lean` — conductance of a kernel w.r.t. its stationary measure.
-  `gaussian-cooling-vempala/lean/Conductance.lean` already builds the Metropolis
+  `../gaussian-cooling-vempala/lean/Conductance.lean` already builds the Metropolis
   filter, ball walk and speedy walk as genuine Markov kernels — **reuse those**;
   what it assumes (`MixingFromConductance`, `SpeedyConductance`,
   `BallWalkMixing`) is what to prove.
@@ -429,7 +429,7 @@ convergence. Budget accordingly; this phase is measured in months, not days.
 
 With Phase 4 landed, `VolumeAlgorithm` becomes constructible:
 * `Arlib/Convexity/GaussianCooling/` — port the **proved** §5.1 material from
-  `gaussian-cooling-vempala/lean`: `Ratio.lean` (`expect_ratio`,
+  `../gaussian-cooling-vempala/lean`: `Ratio.lean` (`expect_ratio`,
   `expect_ratio_sq`, `variance_ratio`), `Main.lean` (`lc_variance_bound`,
   `fast_var_bound`), `FixedRate.lean`, `Needle.lean`/`VDeriv.lean`
   (Brascamp–Lieb, **already proved there**), `Estimator.lean` (`lem:exp-bd`,

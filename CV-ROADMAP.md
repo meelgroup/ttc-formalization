@@ -1,17 +1,28 @@
 # Formalizing Cousins–Vempala Theorem 1.1 — what it would take
 
+> **`gaussian-cooling-vempala` is no longer a submodule of this repository.** It
+> was never a build dependency — `lakefile.toml` requires only Mathlib, and every
+> `GaussianCooling` import in this project is `Arlib.Convexity.GaussianCooling.*`,
+> in-repo under [`Arlib/Convexity/GaussianCooling/`](Arlib/Convexity/GaussianCooling/).
+> The submodule was the *source* the §5.1 material was ported from, and that port
+> has happened, so it was removed and the checkout relocated to
+> `../gaussian-cooling-vempala` (a sibling directory, with its uncommitted work
+> intact). Paths of the form `../gaussian-cooling-vempala/…` below refer to that
+> checkout; if you do not have it, they are citations you can skip — nothing here
+> depends on them.
+
 Scope note for `Ttc`: `Ttc.TtcProb` carries `volAlg : VolumeAlgorithm n`, an
 assumption that `Vol_ED` is accurate. (An older revision of this line named
 `Ttc.TtcProb.volED_hi`; that is **no longer a field** — it came back as a theorem,
 see §6.) The intended discharge was Cousins–Vempala Theorem 1.1
-(`gaussian-cooling-vempala/vol3_journal.tex:144`):
+(`../gaussian-cooling-vempala/vol3_journal.tex:144`):
 
 > There is an algorithm that, for any `ε > 0`, `p > 0` and convex body `K` in `ℝⁿ`
 > that contains the unit ball and has `E_K(‖X‖²) = O(n)`, with probability `1 − p`,
 > approximates the volume of `K` within relative error `ε`, with complexity
 > `O*(n³)` in the membership oracle model.
 
-That theorem is **not** formalized in the `gaussian-cooling-vempala` submodule,
+That theorem is **not** formalized in the sibling `gaussian-cooling-vempala` checkout,
 and this file records honestly what closing the gap involves. The statement is
 now written in Lean as `Ttc.VolumeAlgorithm` (`Ttc/Volume/Oracle.lean`) so that
 a future formalization plugs in without touching the rest of `Ttc`.
@@ -148,7 +159,7 @@ Monte-Carlo construction makes is that this is no longer the *only* way to obtai
 
 ## 1. What the submodule has today
 
-`gaussian-cooling-vempala/lean` is 3904 lines. §5.1 — the accelerated-cooling variance
+`../gaussian-cooling-vempala/lean` is 3904 lines. §5.1 — the accelerated-cooling variance
 bound — is proved end to end; §3, §4 and §5.2 now carry *interface* layers on top of it
 (see §2a below):
 

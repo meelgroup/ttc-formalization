@@ -11,7 +11,7 @@ import Mathlib.Analysis.Normed.Affine.AddTorsor
 /-!
 # Overlap, separation, and a conductance bound for the ball walk
 
-Cousins-Vempala section 4.1 (`gaussian-cooling-vempala/vol3_journal.tex:514-746`) bound the
+Cousins-Vempala section 4.1 (`../gaussian-cooling-vempala/vol3_journal.tex:514-746`) bound the
 conductance of the ball walk in three moves: a *one-step overlap* estimate, the
 *separation* it forces, and an assembly against the isoperimetric inequality.  This file
 carries out all three over the uniform ball walk built in

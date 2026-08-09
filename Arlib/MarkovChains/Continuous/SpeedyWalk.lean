@@ -8,7 +8,7 @@ import Arlib.MarkovChains.Continuous.BallWalkConductance
 /-!
 # The speedy walk on a convex body
 
-Cousins-Vempala (`gaussian-cooling-vempala/vol3_journal.tex:829`) analyse not the ball walk
+Cousins-Vempala (`../gaussian-cooling-vempala/vol3_journal.tex:829`) analyse not the ball walk
 itself but the **speedy walk**: the subsequence of *proper* steps of the ball walk, i.e.
 "from `x`, resample uniformly from `x + delta*B` until the sample lands in `K`".
 Equivalently, the one-step distribution from `x` is the uniform measure on

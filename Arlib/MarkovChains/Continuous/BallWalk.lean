@@ -13,7 +13,7 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 # The ball walk on a convex body, as a Markov kernel
 
 Cousins-Vempala, *Gaussian cooling and `O*(n^3)` algorithms for volume and Gaussian
-volume*, section 4.1 (`gaussian-cooling-vempala/vol3_journal.tex:514-746`), define the
+volume*, section 4.1 (`../gaussian-cooling-vempala/vol3_journal.tex:514-746`), define the
 **ball walk with `δ`-steps** on a convex body `K ⊆ ℝⁿ`: from the current point `x`, pick
 `y` uniformly at random from the ball `x + δBₙ`, move to `y` if `y ∈ K`, and otherwise
 stay at `x`.  This module builds that walk as a genuine `ProbabilityTheory.Kernel` on

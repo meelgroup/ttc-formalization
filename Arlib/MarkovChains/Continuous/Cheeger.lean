@@ -103,7 +103,7 @@ exhibit a chain satisfying it, on which the inequality reads `1/8 ≤ 1`.
 There is no `def`, `structure` field or predicate anywhere in this file that names the
 Cheeger inequality (or isoperimetry) and stands in for its proof.  That failure mode — a
 predicate whose name asserts the theorem — is what `CLAUDE.md` §11 and `CV-ROADMAP.md` §2a
-warn about, and what `gaussian-cooling-vempala`'s `Isoperimetry` / `MixingFromConductance` /
+warn about, and what `../gaussian-cooling-vempala`'s `Isoperimetry` / `MixingFromConductance` /
 `SpeedyConductance` / `BallWalkMixing` exhibit.
 
 ## What is still NOT here

@@ -81,7 +81,7 @@ lemmas `step_const_eq` and `mixesWithin_const`.
 assumed: there is no `def` or `structure` field in this module that names either statement
 and stands in for its proof, which is the failure mode `CLAUDE.md` §11 and
 `AUDIT-KV97.md` §0 warn about, and which
-`gaussian-cooling-vempala/lean/GaussianCooling/Conductance.lean:439`
+`../gaussian-cooling-vempala/lean/GaussianCooling/Conductance.lean:439`
 (`MixingFromConductance`) exhibits.  The decay bound enters the one theorem that needs it,
 `mixesWithin_of_conductance_decay`, as an explicit hypothesis on the caller, so that
 substituting a real proof later is a matter of supplying that argument.

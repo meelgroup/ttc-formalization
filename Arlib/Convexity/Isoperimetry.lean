@@ -79,7 +79,7 @@ proves nothing about the case with content; see `CV-ROADMAP.md` §2a.
 ## References
 
 Cousins and Vempala, *Gaussian Cooling and O\*(n³) Algorithms for Volume and Gaussian
-Volume*, §3 (`gaussian-cooling-vempala/vol3_journal.tex:404–508`).
+Volume*, §3 (`../gaussian-cooling-vempala/vol3_journal.tex:404–508`).
 -/
 
 namespace Arlib
