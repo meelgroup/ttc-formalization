@@ -13,7 +13,7 @@ the name. Every name on this page was checked to exist in the compiled
 environment; §5 has the probe that re-checks them all in one pass.
 
 The vocabulary, the pseudocode and the assumptions are in
-[`Ttc/Model/`](Ttc/Model/) — **four files**
+[`Ttc/Model/`](Ttc/Model/) — **five files**
 ([`Prelude`](Ttc/Model/Prelude.lean), [`Pseudocode`](Ttc/Model/Pseudocode.lean),
 [`ProblemSetting`](Ttc/Model/ProblemSetting.lean),
 [`Theorem`](Ttc/Model/Theorem.lean)) —
@@ -21,7 +21,15 @@ carrying declarations and assumptions, and no proofs worth the name. Everything
 *proved* about `Vol_ED` was moved out to
 [`Ttc/Volume/Bridge.lean`](Ttc/Volume/Bridge.lean) to keep that true.
 
-> This page twice said "four files" while `Model/` held five (`Endgoal` was the
+> The four-file invariant this page used to assert is **retired**.  It was dropped
+> deliberately so that `Model/Theorem.lean` could hold the theorem *and nothing else*
+> while still naming only `Model/` definitions: the quantities it names live in the
+> fifth file, [`Model/Run.lean`](Ttc/Model/Run.lean), which sits downstream of
+> `Exec/Api`.  A probe over the compiled type (§5) confirms the headline names nothing
+> outside `Ttc.Model` but `Ttc.MonteCarlo.coins` and `Ttc.trajLaw`, the run's
+> probability space — which the reference layout also keeps outside.
+>
+> Historical note: this page twice said "four files" while `Model/` held five (`Endgoal` was the
 > extra one). `Endgoal.lean` has since moved to [`Ttc/Exec/`](Ttc/Exec/), and `ls
 > Ttc/Model/` at the time of writing returns exactly `Prelude.lean`,
 > `ProblemSetting.lean`, `Pseudocode.lean`, `Theorem.lean` — four. §1b is about
@@ -54,7 +62,7 @@ a definition outside `Model/` except Mathlib." That is not accurate and never wa
 fields, and `region`/`FacetIndex`/`Oracles` come from elsewhere too. Those two
 are the strongest assumptions in the development and §4 is about exactly that, so
 an auditor **does** have to follow those two names out of `Model/`. Everything
-else in the four files is Mathlib or locally defined.
+else in the five files is Mathlib or locally defined.
 
 ---
 

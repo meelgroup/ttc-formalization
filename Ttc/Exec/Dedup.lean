@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Dnf
+import Ttc.Model.Pseudocode
 
 /-!
 # A duplicate-free `ToDNF`
@@ -20,9 +21,13 @@ development's own converter does **not** satisfy it, and provably so —
 formula `a ∨ a`, whose DNF is `[[a], [a]]`: length `2`, one distinct cube, so
 `hlen` would read `(2 : ℝ) ≤ 1`.
 
-This file supplies the fix: `Ttc.toDNFd`, which is `Ttc.toDNF` with duplicate cubes
-removed, and `Ttc.length_toDNFd_le_card`, which is `hlen` for it — **discharged, not
-assumed**.
+This file supplies the fix's proofs: `Ttc.length_toDNFd_le_card`, which is `hlen`
+for `Ttc.toDNFd` — **discharged, not assumed** — and the lemmas that make `toDNFd` a
+drop-in replacement for `Ttc.toDNF`.
+
+The **definition** `Ttc.toDNFd` is not here.  It is line A1 of the preprocessing
+transcription, so it lives in `Model/Pseudocode` with the other twelve lines, and
+this file imports it; that is what keeps `Model/` free of any `Exec/` import.
 
 ## Definition used
 
@@ -90,13 +95,12 @@ theorem natCard_mem_list_of_nodup {α : Type*} {l : List α} (h : l.Nodup) :
   classical
   rw [natCard_mem_list l, List.card_toFinset, h.dedup]
 
-/-! ## The converter -/
+/-! ## The converter
 
-/-- **`Ttc.toDNF` with duplicate cubes removed** — `alg:ttc` line 16, run through a
-deduplication pass.  Noncomputable only because `Cube A` carries no `DecidableEq`
-for an abstract atom type `A`; the instance is supplied by `Classical.decEq`. -/
-noncomputable def toDNFd (φ : BForm A) : DNF A :=
-  @List.dedup _ (Classical.decEq (Cube A)) (toDNF φ)
+`Ttc.toDNFd` itself is **not** defined here: it is line A1 of the preprocessing, so
+it lives with the rest of the transcription in `Model/Pseudocode`, which this file
+imports.  What is here is everything *proved* about it.
+-/
 
 /-- **Deduplication preserves the cubes.**  Everything the development asks of a DNF
 is a statement about its members, so this single lemma is what makes `toDNFd` a

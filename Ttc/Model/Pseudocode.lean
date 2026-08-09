@@ -2,8 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.Prelude
-import Ttc.Exec.Dedup
+import Ttc.Dnf
 
 /-!
 # `Model/Pseudocode`: `alg:ttc`, **and the preprocessing that precedes it**
@@ -15,12 +14,14 @@ before it. No proofs; the structural invariants of the modelled execution are in
 `Exec/` (`Exec/Scale`, `Exec/ScaleFactor`, `Exec/Inscribed`, `Exec/Cleanup`,
 `Exec/Prune`).
 
-**Why this file imports `Exec/Dedup`.** `Ttc.cleanForm` is defined over
-`Ttc.toDNFd`, the deduplicated converter of `Exec/Dedup` — a two-line wrapper on
-`Ttc.toDNF` of `Model/Prelude` whose only dependency is `Ttc.Dnf`. That import is
-the one place `Model/` reaches into `Exec/`, and it reaches into the two cheapest
-files there (`Ttc.Exec.Dedup` and `Ttc.Dnf` together depend on nothing but
-`Model/Prelude`).
+**This file imports no `Exec/` file.** `Ttc.toDNFd`, the deduplicated line-16
+converter that `Ttc.pruneForm` and `Ttc.cleanForm` are defined over, used to live
+in `Exec/Dedup`; it is defined *here* now (line A1 below), a two-line wrapper on
+`Ttc.toDNF` of `Model/Prelude`. Its theorems (`Ttc.mem_toDNFd`,
+`Ttc.toDNFd_nodup`, `Ttc.toDNFd_isDNFOf`, `Ttc.length_toDNFd_le_card`, …) stay in
+`Exec/Dedup`, which now imports this file — the edge runs `Model/ → Exec/`, never
+back. The single import here is `Ttc.Dnf` (for `Ttc.conj`, which `Ttc.cubeForm`
+folds), and `Ttc.Dnf` itself depends on nothing but `Model/Prelude`.
 
 ```
 line 22        p ← 1 ;  X ← ∅
@@ -128,7 +129,7 @@ line A13       output (that run's output) / qⁿ
 
 | line | Lean | where |
 | --- | --- | --- |
-| A1 (`ToDNFd`) | `Ttc.toDNFd` | `Exec/Dedup` |
+| A1 (`ToDNFd`) | `Ttc.toDNFd` | here |
 | (the reading `M`) | `Ttc.atomSet` | here |
 | A2 (prune) | `Ttc.nondegenCubes` | here |
 | A3, A6 (`DnfForm`) | `Ttc.dnfForm`, over `Ttc.cubeForm` | here |
@@ -177,13 +178,12 @@ the input syntax and leaves the body alone.
 
 ## The transcription is complete, and two `rfl`s say so
 
-Every line of the table above is now a definition of *this* file, `Ttc.toDNFd`
-excepted (it is the line-16 converter, imported, and the reason for the
-`Exec/Dedup` import discussed above). In particular `Ttc.atomSet`,
-`Ttc.nondegenCubes` and `Ttc.pruneForm` — which used to sit in `Exec/Inputs`,
-`Exec/Degenerate` and `Exec/Prune` — are here, and so is their composite with the
-cleaning pass, `Ttc.preprocess`. Every *theorem* about them stays in `Exec/`; only
-the definitions moved.
+Every line of the table above is now a definition of *this* file, with no
+exception — `Ttc.toDNFd`, the line-16 converter, included. In particular
+`Ttc.atomSet`, `Ttc.nondegenCubes` and `Ttc.pruneForm` — which used to sit in
+`Exec/Inputs`, `Exec/Degenerate` and `Exec/Prune` — are here, and so is their
+composite with the cleaning pass, `Ttc.preprocess`. Every *theorem* about them
+stays in `Exec/`; only the definitions moved.
 
 That the headline really measures these definitions is machine-checked, by two
 lemmas whose proofs are `rfl` (both in `Exec/Api`):
@@ -346,6 +346,24 @@ binder together with an equation defining it. -/
 with `M_eq : M = fun a => (atoms a).halfspace`; this is that right-hand side, named,
 so that the binder and its defining equation are both discharged by `rfl`. -/
 def atomSet (atoms : A → LinAtom n) : A → Set (Space n) := fun a => (atoms a).halfspace
+
+/-! ## Line A1: the converter, deduplicated -/
+
+/-- **Line A1.** `Ttc.toDNF` — `alg:ttc` line 16, the circuit-AllSAT call — run
+through a deduplication pass. Noncomputable only because `Ttc.Cube A` carries no
+`DecidableEq` for an abstract atom type `A`; the instance is supplied by
+`Classical.decEq`, written explicitly in the body.
+
+Deduplication is needed because `Ttc.ttc_volume_final`'s side condition
+`((toDNF φ).length : ℝ) ≤ P.m` with `P.m = Nat.card {c // c ∈ toDNF φ}` is a
+`Nodup` condition in disguise, and the raw converter provably fails it
+(`Ttc.toDNF_length_gt_card_cubes`, on `a ∨ a`). Everything proved about `toDNFd`
+— that it has the same members as `toDNF φ` (`Ttc.mem_toDNFd`), is duplicate-free
+(`Ttc.toDNFd_nodup`), is still a correct positive DNF (`Ttc.toDNFd_isDNFOf`,
+`Ttc.toDNFd_isPositive`), and discharges the side condition
+(`Ttc.length_toDNFd_le_card`) — is in `Exec/Dedup`, which imports this file. -/
+noncomputable def toDNFd (φ : BForm A) : DNF A :=
+  @List.dedup _ (Classical.decEq (Cube A)) (toDNF φ)
 
 /-! ## Step 2, lines A4–A6: cleaning the zero-normal atoms
 

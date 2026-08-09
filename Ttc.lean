@@ -19,7 +19,7 @@ content, one directory per object of the paper it discharges:
 
 ```
 Ttc/
-  Model/         the statement — read this and stop            (4 files)
+  Model/         the statement — read this and stop            (5 files)
   TtcProb        the abstract interface: every assumption      (1)
   Exec/          the oracle-free capstone, and its plumbing   (10)
   Sampler/       GenerateSamples, interface and construction   (5)
@@ -46,6 +46,15 @@ Ttc/
   definitions, no assumption.**
 * `Ttc.Model.Pseudocode`     — `alg:ttc`, transcribed line by line, and its
   output `Ttc.ttcOutput`. **No proofs.**
+* `Ttc.Model.Run`            — the quantities the headline *names*:
+  `Ttc.ttcInput`, `Ttc.ttcScale`, `Ttc.ttcBlock`, `Ttc.ttcPrec`,
+  `Ttc.ttcOracleBundle` and the seven measured `Ttc.ttcIndex`, `Ttc.ttcRates`,
+  `Ttc.ttcEstimate`, `Ttc.ttcThresh`, `Ttc.ttcTerminates`, `Ttc.ttcCost`,
+  `Ttc.ttcNumCubes`. Pure abbreviations, each with an identifying `rfl` lemma;
+  **no assumption**. It sits downstream of `Ttc.Exec.Api` (its bodies reach into
+  `Exec/`; that closure is `AUDIT.md` §1h) and upstream of `Ttc.Model.Theorem`,
+  which is what lets the next file be the statement alone *and* name only
+  `Model/` definitions.
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
                               guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
                               at **17 explicit binders**, with no interpretation, no
@@ -59,9 +68,10 @@ Ttc/
                               one, `big`, **cannot** be discharged is proved in
                               `Ttc.Exec.Regime`.
 
-Four files, and the count is an invariant rather than a description: `Model/` is
+Five files, and the count is an invariant rather than a description: `Model/` is
 what a referee reads to trust the *statement*, so anything with proof content
-belongs elsewhere. `Ttc/Model/Endgoal.lean` sat here for a while and did not
+belongs elsewhere — `Model/Run` qualifies because it is 12 abbreviations and 14
+`rfl` lemmas, and nothing else. `Ttc/Model/Endgoal.lean` sat here for a while and did not
 qualify — 33 declarations and 21 tactic proofs, including the lattice
 enumeration, the oracle bundle and a box-witness chain, against 0/0/0/1 for the
 four above. It now lives at `Ttc/Exec/Endgoal.lean`, where its consumers already
@@ -251,7 +261,7 @@ precisely because the build does not.
 ## The audit surface (`Model/`)
 
 `Model/` is kept deliberately small. A referee who wants to trust the *statement*
-reads exactly these four files and stops.
+reads exactly these five files and stops.
 
 * `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
                            and semantics, `sol` (= `Sol(F)`), the lattice, and the
@@ -265,6 +275,10 @@ reads exactly these four files and stops.
 * `Model/Pseudocode`     — `alg:ttc`, transcribed line by line from `algo.tex`
                            over an oracle bundle, and its output
                            `Ttc.ttcOutput`; **no proofs**.
+* `Model/Run`            — the quantities the headline names, as pure
+                           abbreviations with `rfl` lemmas exhibiting their
+                           bodies; **no assumption**. Downstream of
+                           `Ttc.Exec.Api`, upstream of `Model/Theorem`.
 * `Model/Theorem`        — the headline `Ttc.ttc_volume_estimate`: one theorem,
                            no proof to work through (it is one application of
                            `Ttc.ttc_volume_stmt`), stated over `TTC`'s own inputs.
@@ -318,6 +332,7 @@ import Ttc.Sampler.Interface
 import Ttc.TtcProb
 import Ttc.Access
 import Ttc.Estimate
+import Ttc.Model.Run
 import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
