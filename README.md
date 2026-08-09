@@ -1414,7 +1414,7 @@ Anything you still doubt is a named lemma in one of the proof directories.
 | [`Ttc/Volume/Oracle.lean`](Ttc/Volume/Oracle.lean) | `VolumeAlgorithm` (Cousins–Vempala Thm 1.1), `volGood` | `Vol_ED`'s interface — **another paper's** assumption bundle, so not part of this paper's problem setting |
 | [`Ttc/Sampler/Interface.lean`](Ttc/Sampler/Interface.lean) | `KV97Sampler` (**15** fields — 14 named plus the `[fintypeJ : Fintype J]` instance, which is what `Lean.getStructureFields` counts and what `AUDIT.md` §2 reports) | `GenerateSamples`' interface, likewise another paper's |
 | [`Ttc/TtcProb.lean`](Ttc/TtcProb.lean) | `TtcProb` (**59** fields — count re-checked with `Lean.getStructureFields`, which is authoritative; a hand count of the source undercounts) | the abstract interface: the complete list of assumptions |
-| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`Ttc.ttc_volume_estimate`**](Ttc/Model/Theorem.lean): `thm:volumettc` + `thm:runtime` over `TTC`'s own inputs `(atoms, φ, ε, δ)`, **17 explicit binders** — no interpretation, no parameter block, no converter, **no oracle** (the bundle is the closed term `Ttc.runOracles`) and **no precision** (every occurrence is `P.precision gammaHat`, `GetPrecision`'s output) | the statement layer: one theorem, proof is one application of `Ttc.ttc_volume_inputs` |
+| [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`Ttc.ttc_volume_estimate`**](Ttc/Model/Theorem.lean): `thm:volumettc` over `TTC`'s own inputs `(atoms, φ, ε, δ)`, **13 explicit binders**, no volume hypothesis and no inscribed-ball data — no interpretation, no parameter block, no converter, **no oracle** (the bundle is the closed term `Ttc.runOracles`) and **no precision** (every occurrence is `P.precision gammaHat`, `GetPrecision`'s output) | the statement layer: one theorem, proof is one application of `Ttc.ttc_volume_inputs` |
 | [`Ttc/Estimate.lean`](Ttc/Estimate.lean) | [**`TtcProb.volume_estimate`**](Ttc/Estimate.lean) (`Pr ≥ 1−δ`) and `TtcProb.runtime`, the bundle versions — their types name the *assumed* `T.O` and `T.ρ` | proved from the `TtcProb` fields. Moved out of `Model/Theorem` for that reason; still load-bearing (`Coupling/Product` consumes it) |
 | [`Exec/Statement.lean`](Ttc/Exec/Statement.lean) | `Ttc.ttc_volume_stmt`: `ttc_volume_final` with the converter pinned to `Ttc.toDNF`, 24 explicit binders; plus `Ttc.toDNF_length_gt_card_cubes`, which proves `hlen` is *not* derivable | a **sibling**, not a predecessor: it is the guarantee for the *undeduplicated* run, so `Ttc.ttc_volume_inputs` does not imply it |
 | [`Exec/CubeBounds.lean`](Ttc/Exec/CubeBounds.lean) | `Ttc.one_le_card_cubes_of_isPositive` (`hm` from `hφ`) and `Ttc.one_le_card_facets_of_isBounded` (`hr` from `hbdd`, via `region [] = univ` being unbounded) | two former binders, discharged |
@@ -1427,6 +1427,11 @@ Anything you still doubt is a named lemma in one of the proof directories.
 | [`Exec/RegimeInputs.lean`](Ttc/Exec/RegimeInputs.lean) | `Ttc.e2eSampD_almostUniform`: `eq:almostuniform` for the capstone's own sampler at every cube, **with no nonemptiness hypothesis** (`exists_intLattice_mem_ball`); `Ttc.mcVol_ge` | the other per-cube input |
 | [`Exec/RegimeMain.lean`](Ttc/Exec/RegimeMain.lean) | **`Ttc.big_of_volume`**: the regime condition **proved** from `Thresh/4 ≤ Vol(Sol F)` | what turns `big` from a binder into a theorem |
 | [`Witness/TwoCubeVol.lean`](Ttc/Witness/TwoCubeVol.lean) | `Ttc.TwoCube.two_cube_thresh_le_volSol`: the two-cube instance meets `hvol`, because it sizes its boxes at `max 1 Thresh` | non-vacuity of the volume hypothesis |
+| [`Exec/Scale.lean`](Ttc/Exec/Scale.lean) | `Ttc.scaleAtoms` and the dilation algebra: `sol`, `region`, `volSol`, boundedness and the inscribed ball all transport, `volSol` scaling by `cⁿ` | the input dilation |
+| [`Exec/ScaleFactor.lean`](Ttc/Exec/ScaleFactor.lean) | `Ttc.scaleFactor = max 1 (Thresh/(Vₙ·γ̂ⁿ))` — computable from `γ̂` and `n`, **no knowledge of `Vol`** — and `thresh_le_scaled_ball_volume` | how far to dilate |
+| [`Exec/Inscribed.lean`](Ttc/Exec/Inscribed.lean) | `Ttc.cenOf`/`Ttc.gammaOf`: `GetPrecision`'s ball, constructed. `ball_subset_cenOf` is **unconditional**; only positivity needs `hint` | `alg:prec` line 86, minus the optimality claim |
+| [`Exec/Rescaled.lean`](Ttc/Exec/Rescaled.lean) | **`Ttc.ttc_volume_rescaled`** (16 binders, no volume hypothesis) and **`Ttc.ttc_volume_full`** (13, no ball data) | **the strongest statements.** Read their *types* |
+| [`Witness/FullTwoCube.lean`](Ttc/Witness/FullTwoCube.lean) | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` and `…_at`: non-vacuity at 13 binders, bounds `1/10` and `3/4` positive inside the statement | non-vacuity of the current statement |
 | [`Witness/Headline.lean`](Ttc/Witness/Headline.lean) | `Ttc.TwoCube.ttc_volume_estimate_two_cube` and `…_at`: the two-cube non-vacuity witness for `Ttc.ttc_volume_estimate`, with the bounds `1/10` and `3/4` proved positive **inside** the statement | non-vacuity |
 | [`Volume/VolSolCheck.lean`](Ttc/Volume/VolSolCheck.lean) | what `volSol` is a volume *of*: an independent `Bool` evaluator, the LRA form, measurability, and the `toReal ⊤` hazard | the audit surface for one symbol |
 | [`Exec/Endgoal.lean`](Ttc/Exec/Endgoal.lean) | `Ttc.ttc_volume`: the same two theorems restated over `(atoms, φ, ε, δ)`, space and parameters constructed, obligations as visible binders | a restatement, built by `lake build`. Read its *type* if you care about the capstone; it is not where the assumptions are enumerated |
@@ -2839,19 +2844,23 @@ inequality at `analysis.tex:295` fails.
 15(ln(6/δ)+ln m))` with `ε' = ε/12`, so at `ε = δ = 0.1, m = 1` the guarantee needs
 `Vol(Sol F) ≳ 4.8 × 10⁵`; at `ε = 1, δ = 0.1` it still needs `≳ 5 × 10³`.
 
-**Corrected form, and it is now proved.** `lem:numlattice` holds as stated with the
-added hypothesis `Θ/4 ≤ Vol(Sol F)` (equivalently `j* ≥ 1`), and that hypothesis is
-what the headline now carries: [`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean)
-derives the paper's `analysis.tex:295` step from it, so
-[`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean)'s last binder is the scalar
-inequality rather than a condition on the sampler. In this development that hypothesis is
-the `big` binder of [`Ttc.ttc_volume_inputs`](Ttc/Exec/Inputs.lean), and
-[`Ttc.Box.big_of_thresh_le_volume`](Ttc/Exec/Regime.lean) proves the paper's
-inequality from it. Three ways to close it properly, in increasing order of work:
-state the volume condition as a precondition of the theorem; repair the proof with
-a `j* = 0` case (the body is small, `p` never decreases, and the estimator is still
-fine — the paper's decomposition is simply not the right one there); or dilate the
-body by `c` until `Vol ≥ Θ` and divide the estimate by `cⁿ`, which is exact.
+**Corrected form, and it is now implemented.** Two fixes were needed, and only the
+second makes the theorem unconditional.
+
+1. *State the condition.* `lem:numlattice` holds as stated with the added hypothesis
+   `Θ/4 ≤ Vol(Sol F)` (equivalently `j* ≥ 1`), and
+   [`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) derives `analysis.tex:295` from it.
+2. *Remove it, by amending the algorithm.* The condition cannot be dropped from
+   `alg:ttc` **as printed** — `p ← 1` and only halves, so the sketch is `Poisson(Λ)`
+   with `Λ ≤ Vol(Sol F)`, and on a body of volume `10⁻⁶` the algorithm draws
+   `Pois(10⁻⁶)` points and returns `0`. So the algorithm gains one line: dilate the
+   input by `c = max 1 (Θ/(Vₙ·γ̂ⁿ))`, run, divide the estimate by `cⁿ`. `Vol(c·S) =
+   cⁿ·Vol(S)` exactly and `c` is computable from `γ̂` and `n` alone, so nothing is
+   assumed. [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) is unconditional for
+   the amended algorithm.
+
+**The paper needs that line.** As printed, `thm:volumettc` is false for
+`Vol(Sol F) ≲ Θ/4` — not merely unproved.
 
 
 **The main result stands.** Finding 1 changes constants, not the shape of the

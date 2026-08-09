@@ -35,6 +35,13 @@ parameter pairs with the achieved bound proved **strictly positive inside the
 statement**, so neither conclusion is the vacuous `0 ≤ (…).toReal`
 (`ENNReal.toReal ⊤ = 0`).
 
+**These witness `Ttc.ttc_volume_inputs`, not the current `Ttc.ttc_volume_estimate`.**
+The Model-layer statement has since moved on twice — the volume hypothesis was
+discharged by dilating the input (`Exec/Rescaled`) and the inscribed ball is now
+constructed rather than supplied (`Exec/Inscribed`) — so its run is a *different*
+run and its probability is a different number.  The witness at the current statement
+is `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` (`Witness/FullTwoCube.lean`).
+
 **Cost.**  Exponential in `n`, and paid twice: hit-and-miss Monte Carlo at
 `Θ(Rⁿ/(ε'²δ'))` samples per cube, `2^Θ(n)·log(M·Vol(P′)/ε′)` certified ball-walk
 steps, and `Θ((c·10^ρ)ⁿ)` lattice points enumerated, for each of the two cubes.
@@ -105,47 +112,6 @@ theorem twoProbD_pos_ne_top_of_estimate (n : ℕ) (hn : 1 ≤ n)
     lt_of_lt_of_le (by norm_num : (0:ℝ) < 1/10) h
   exact ⟨(ENNReal.toReal_pos_iff.1 hpos).1, (ENNReal.toReal_pos_iff.1 hpos).2.ne⟩
 
-/-! ## The Model-layer theorem, applied
-
-`Ttc.ttc_volume_estimate` carries `hvol : Thresh/4 ≤ Vol(F)` rather than the
-sampler-level `big`, and the two-cube instance satisfies it
-(`Ttc.TwoCube.two_cube_thresh_le_volSol_atomSet` — the witness sizes its boxes at
-`max 1 Thresh` precisely so that it does).  So the Model-layer name can be applied
-here directly, with no transport: `Ttc.Params.thresh` is a real number, not a type
-index, so `Ttc.TwoCube.inputParams_eq` rewrites under it. -/
-
-/-- **`Ttc.ttc_volume_estimate` itself, on the two-cube witness.**
-
-All seven side conditions discharged, at every `(ε, δ) ∈ (0,1]²` and every `n ≥ 1`,
-with the conclusion in the Model layer's own vocabulary (`Ttc.runRates`,
-`Ttc.ttcRunOutput`).  The runtime half is the second conjunct of
-`Ttc.TwoCube.ttc_volume_inputs_two_cube`. -/
-theorem ttc_volume_estimate_two_cube_direct (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
-    1 - δ ≤
-      (∫⁻ c, trajLaw (runRates (atomsT n hn ε (4 * δ / 5) hε0 hε1) (twoForm n) ε δ
-            hε0 hε1 hn twoForm_isPositive (isBounded_sol_T n hn ε (4 * δ / 5) hε0 hε1)
-            (cenD n hn ε (4 * δ / 5) hε0 hε1 (Ttc.toDNFd (twoForm n)))
-            (gamT n hn ε (4 * δ / 5) hε0 hε1) c)
-          {t | ttcRunOutput (atomsT n hn ε (4 * δ / 5) hε0 hε1) (twoForm n) ε δ
-              hε0 hε1 hn twoForm_isPositive (isBounded_sol_T n hn ε (4 * δ / 5) hε0 hε1)
-              (cenD n hn ε (4 * δ / 5) hε0 hε1 (Ttc.toDNFd (twoForm n)))
-              (gamT n hn ε (4 * δ / 5) hε0 hε1) c t
-            ∈ relErr ε (volSol (atomSet (atomsT n hn ε (4 * δ / 5) hε0 hε1)) (twoForm n))}
-        ∂(MonteCarlo.coins n)).toReal := by
-  have h0 : (0 : ℝ) < 4 * δ / 5 := by linarith
-  have h1 : (4 : ℝ) * δ / 5 ≤ 1 := by linarith
-  exact (ttc_volume_estimate (atomsT n hn ε (4 * δ / 5) hε0 hε1) (twoForm n) ε δ
-    hε0 hε1 hδ0 hδ1 hn twoForm_isPositive
-    (isBounded_sol_T n hn ε (4 * δ / 5) hε0 hε1)
-    (coeff_ne_zero_two_d n hn ε (4 * δ / 5) hε0 hε1)
-    (cenD n hn ε (4 * δ / 5) hε0 hε1 (Ttc.toDNFd (twoForm n)))
-    (gamT n hn ε (4 * δ / 5) hε0 hε1) (gamT_pos n hn ε (4 * δ / 5) hε0 hε1)
-    (ball_subset_two_d n hn ε (4 * δ / 5) hε0 hε1)
-    (by
-      rw [inputParams_eq n hn ε δ hε0 hε1]
-      exact two_cube_thresh_le_volSol_atomSet n hn ε (4 * δ / 5) hε0 hε1 h0 h1)).1
-
 end TwoCube
 
 end Ttc
@@ -155,4 +121,3 @@ end Ttc
 #print axioms Ttc.TwoCube.ttc_volume_estimate_two_cube
 #print axioms Ttc.TwoCube.ttc_volume_estimate_two_cube_at
 #print axioms Ttc.TwoCube.twoProbD_pos_ne_top_of_estimate
-#print axioms Ttc.TwoCube.ttc_volume_estimate_two_cube_direct

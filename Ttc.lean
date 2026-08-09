@@ -321,6 +321,11 @@ import Ttc.Estimate
 import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
+import Ttc.Exec.Inscribed
+import Ttc.Exec.Cleanup
+import Ttc.Exec.Degenerate
+import Ttc.Exec.CleanInput
+import Ttc.Witness.FullTwoCube
 import Ttc.Witness.Headline
 import Ttc.Exec.Endgoal
 import Ttc.Exec.Params
@@ -341,6 +346,9 @@ import Ttc.Exec.RegimeCube
 import Ttc.Exec.RegimeSum
 import Ttc.Exec.RegimeInputs
 import Ttc.Exec.RegimeMain
+import Ttc.Exec.Scale
+import Ttc.Exec.ScaleFactor
+import Ttc.Exec.Rescaled
 import Ttc.Coupling.Product
 import Ttc.Volume.Bridge
 import Ttc.Volume.VolSolCheck
@@ -406,6 +414,8 @@ import Ttc.Exec.Statement
 
 -- off the path to the theorem: findings about the paper
 import Ttc.Findings.Repair
+import Ttc.Findings.Independence
+import Ttc.Findings.OpenHalfspace
 import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
 import Ttc.Sampler.Bridge

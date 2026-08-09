@@ -515,8 +515,11 @@ the implicit ambient `{A}` and `{n}`), and its type contains no `Ttc.TtcProb`, n
 compiled type, not by reading:
 
 ```
-atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff cen gammaHat hgammaHat ball_subset hvol
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff hint
 ```
+
+**Thirteen binders.** Two further rounds landed after the seventeen-binder form, and
+both changed the *algorithm* rather than the analysis — read §1g before quoting this.
 
 The first nine are exactly `ApproxNFA.approxNFA_countNFA`'s (the nfalean template)
 binder list. The other eight are the honest residue, and §1f is about the last one.
@@ -663,6 +666,68 @@ it is unchanged. The two-cube witness satisfies `hvol` because it sizes its boxe
 
 ---
 
+
+## 1g. Two rounds that changed the algorithm, not the analysis
+
+The seventeen-binder statement carried `hvol : Thresh/4 ≤ Vol(Sol F)` and four binders
+describing the inscribed ball. Both groups are gone, and **an auditor must know that
+neither went away by a sharper proof.**
+
+### `hvol` → a dilation step
+
+`alg:ttc` sets `p ← 1` and only ever halves it (lines 21, 33, 40), so the sketch is
+`Poisson(Λ)` with `Λ ≤ Vol(Sol F)`, and a Poisson count has relative standard
+deviation `Λ^(-1/2)`. On a body of volume `10⁻⁶` the run draws `Pois(10⁻⁶)` points and
+returns `0`, which is not in `(1 ± ε)·10⁻⁶`. **The printed algorithm is wrong there**,
+and [`Ttc.Box.big_not_derivable`](Ttc/Exec/Regime.lean) is the machine-checked form.
+
+So the algorithm was amended: dilate the input by
+`c = Ttc.scaleFactor n P γ̂ = max 1 (Thresh/(Vₙ·γ̂ⁿ))`, run, divide the estimate by
+`cⁿ`. `Vol(c·S) = cⁿ·Vol(S)` exactly ([`Ttc.volSol_scaleAtoms`](Ttc/Exec/Scale.lean)),
+`c` is computable from `γ̂` and `n` **with no knowledge of `Vol`**, and after the
+dilation the body clears the threshold
+([`Ttc.thresh_le_scaled_ball_volume`](Ttc/Exec/ScaleFactor.lean)), so `hvol` is
+discharged ([`Ttc.hvol_scaled`](Ttc/Exec/Rescaled.lean)).
+
+> **What is certified is `alg:ttc` *plus one line*.** The paper's algorithm does not
+> dilate. `Ttc.ttc_volume_estimate` is unconditional for the amended algorithm; it says
+> nothing about the printed one on a small body, where the printed one is false.
+
+The parameter block is unchanged by the dilation — it is computed from
+`(toDNFd φ, n, ε, δ)`, so [`Ttc.inputParams_scaleAtoms`](Ttc/Exec/Rescaled.lean) is
+`rfl`. That is why `c` can be defined from `P` without circularity.
+
+### `cen`, `gammaHat`, `hgammaHat`, `ball_subset` → `GetPrecision` constructs the ball
+
+`alg:prec` line 86 is `γ̂ ← MaxInscribedBall(P^i)`: the ball is *computed*.
+[`Ttc.ballData`](Ttc/Exec/Inscribed.lean) picks an inscribed ball per cube,
+[`Ttc.gammaOf`](Ttc/Exec/Inscribed.lean) takes the least radius, and
+[`Ttc.ball_subset_cenOf`](Ttc/Exec/Inscribed.lean) is **unconditional** — a region with
+empty interior gets radius `0`, and `Metric.ball _ 0 = ∅` is inside anything. Only
+positivity needs an input condition, and that is `hint`.
+
+Two caveats, both in the module docstring:
+
+* **This is not the LP.** The ball is *some* inscribed ball, chosen classically, not the
+  maximal one. Non-maximality only inflates `ρ = ⌈log₁₀(γ/γ̂)⌉`, so the guarantee is
+  unaffected and only the precision is looser than the paper's.
+* **`hint` is a genuine restriction.** A DNF cube may be empty or lower-dimensional, and
+  then no positive-radius ball exists. `hint` is exactly the condition under which
+  `alg:prec`'s LP would return a positive radius.
+
+### Non-vacuity at thirteen binders
+
+[`Ttc.TwoCube.ttc_volume_estimate_two_cube_full`](Ttc/Witness/FullTwoCube.lean) applies
+**this** statement to the two-cube instance at every `(ε, δ) ∈ (0,1]²`, and `…_full_at`
+pins `(1/3, 9/10)` and `(1/2, 1/4)` with the bounds `1/10` and `3/4` proved strictly
+positive inside the statement. `hint` holds because each region contains an open ball
+of positive radius — five lines from `ball_subset_two` and `gamT_pos`, no box geometry.
+
+**The earlier two-cube theorems witness `Ttc.ttc_volume_inputs`, not this statement.**
+Dilating the input makes it a different run with a different probability; no equality
+between the two is claimed, and none should be read into the shared names.
+
+---
 
 ## 2. What is assumed? Read the fields of `TtcProb`
 

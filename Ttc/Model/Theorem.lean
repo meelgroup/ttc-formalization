@@ -2,38 +2,65 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Exec.Inputs
+import Ttc.Exec.CleanInput
 
 /-!
 # The main theorem: `thm:volumettc` + `thm:runtime` for `TTC(F, ε, δ)`
 
 One theorem, and no proof to work through — it is one application of
-`Ttc.ttc_volume_vol` (`Exec/Inputs`).
+`Ttc.ttc_volume_cleanInput` (`Exec/CleanInput`).
 
 Audit path — `Model/`, then stop: `Model/Prelude` (the vocabulary),
 `Model/ProblemSetting` (what `Vol(F)` is and what `(1 ± ε)` means),
 `Model/Pseudocode` (`alg:ttc`, transcribed line by line), this file.
 
-`TTC` takes three inputs, so three inputs is what this statement takes: the
-formula `F = (atoms, φ)`, the accuracy `ε`, the confidence `δ`.  There is **no
-interpretation, no parameter block, no converter, no oracle and no precision**
-among them: the four quantities the guarantee is about are `Ttc.runOracles`,
-`Ttc.ttcRunOutput`, `Ttc.runRates` and `Ttc.runPrec` (`Exec/Inputs`), each a
-closed term computed from `(atoms, φ, ε, δ)` — in particular `Ttc.runPrec` is
-`GetPrecision`'s output `⌈log₁₀(γ/γ̂)⌉` (`alg:ttc` line 17), and the oracle bundle
-is built from `Ttc.VolumeAlgorithm.monteCarlo` and the ball walk.  The
-bundle-level versions, whose types name the *assumed* `T.O` and `T.ρ`, are
+`TTC` takes three inputs, so three inputs is what this statement takes: the formula
+`F = (atoms, φ)`, the accuracy `ε`, the confidence `δ`.  **Twelve binders in all**, and
+among them there is no interpretation, no parameter block, no converter, no oracle, no
+precision, no inscribed-ball data and no condition on the size of `Sol(F)`.  Everything
+the guarantee is about is a closed term computed from `(atoms, φ, ε, δ)`:
+`Ttc.runOracles`, `Ttc.ttcRunOutput`, `Ttc.runRates`, `Ttc.runPrec` (`Exec/Inputs`),
+`Ttc.autoCen`/`Ttc.autoGamma` (`Exec/Inscribed`), `Ttc.runScale`/`Ttc.scaledAtoms`
+(`Exec/Rescaled`) and `Ttc.cleanForm` (`Exec/Cleanup`).  In particular `Ttc.runPrec` is
+`GetPrecision`'s output `⌈log₁₀(γ/γ̂)⌉` (`alg:ttc` line 17), and the oracle bundle is
+built from `Ttc.VolumeAlgorithm.monteCarlo` and the ball walk.  The bundle-level
+versions, whose types name the *assumed* `T.O` and `T.ρ`, are
 `Ttc.TtcProb.volume_estimate` and `Ttc.TtcProb.runtime` (`Ttc/Estimate.lean`).
 
-Elsewhere, deliberately: which lemma discharges which former binder, in
-`Exec/Inputs.lean`; how the sampler-level regime condition is derived from `hvol`,
-in `Exec/RegimeMain.lean`; why no hypothesis of that kind can be dropped — it is
-*proved* independent — in `Exec/Regime.lean` and README finding 20; non-vacuity in
-`Witness/Headline.lean`; the audit in `AUDIT.md` §1e–§1f.
+## What is certified is `alg:ttc` plus two preprocessing steps
+
+Read this before quoting the statement.
+
+* **A dilation** (`Exec/Rescaled`).  The printed algorithm sets `p ← 1` and only halves
+  it, so its sketch is `Poisson(Λ)` with `Λ ≤ Vol(Sol F)`; on a body of volume `10⁻⁶` it
+  draws `Pois(10⁻⁶)` points and returns `0`.  So the input is dilated by
+  `Ttc.runScale` first and the estimate divided by `cⁿ`.  This **changes what the
+  algorithm runs on**; `Ttc.Box.big_not_derivable` and README finding 20 are why it is
+  needed.
+* **A cleanup** (`Exec/Cleanup`).  Zero-normal atoms are constant-folded away.  This one
+  is benign: `Ttc.sol_cleanForm` gives *exact set equality*, so nothing geometric moves.
+  `Ttc.not_isDNFOf_cleanDNF` records why the formula has to move with the DNF rather
+  than the DNF being cleaned in place.
+
+## The three residual hypotheses, and what is known about each
+
+* `hφ` — negation-free.  Independent of `hbdd` in **both** directions
+  (`Ttc.Independence.exists_isBounded_not_isPositive`,
+  `…exists_isPositive_not_isBounded`), so neither can replace the other.  Removable in
+  principle, but at a bad price — see `Findings/OpenHalfspace.lean`.
+* `hbdd` — bounded solution set.  *Necessary*: `Ttc.volSol` is an `ENNReal.toReal` and
+  `toReal ⊤ = 0`, so an unbounded `Sol(F)` would certify "the output is ≈ 0"
+  (finding 16).
+* `hint` — every cube full-dimensional.  **Proved not derivable**
+  (`Ttc.hint_not_derivable`, with `0 < Vol(F)` so the conclusion is not vacuous), and
+  the null-set escape is blocked in principle: `lem:lattice` counts lattice points, which
+  are themselves null (`Exec/Degenerate.lean`).
+
+Non-vacuity: `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` (`Witness/FullTwoCube.lean`).
+The audit is `AUDIT.md` §1e–§1g.
 
 `sorry`-free, axioms `[propext, Classical.choice, Quot.sound]`.
 -/
-
 namespace Ttc
 
 open MeasureTheory Set
@@ -63,30 +90,123 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
     (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
-    (hcoeff : ∀ j : FacetIndex (toDNFd φ), (atoms j.2.val.atom).coeff ≠ 0)
-    (cen : {c : Cube A // c ∈ toDNFd φ} → Space n) (gammaHat : ℝ) (hgammaHat : 0 < gammaHat)
-    (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val)
-    (hvol : (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 4
-      ≤ volSol (atomSet atoms) φ) :
-    -- (accuracy) the output is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
+    (hint : ∀ i : {c : Cube A // c ∈ toDNFd φ},
+      (interior (region (atomSet atoms) i.val)).Nonempty) :
     (1 - δ ≤
-      (∫⁻ c, trajLaw (runRates atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c)
-            {t | ttcRunOutput atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t
-              ∈ relErr ε (volSol (atomSet atoms) φ)}
-          ∂(MonteCarlo.coins n)).toReal)
+      (∫⁻ c, trajLaw
+            (runRates
+              (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                (autoGamma atoms (cleanForm atoms φ)))
+              (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
+              (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                (autoGamma atoms (cleanForm atoms φ)))
+              (fun i =>
+                runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                      (isPositive_cleanForm atoms φ)
+                      (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                  • autoCen atoms (cleanForm atoms φ) i)
+              (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                    (isPositive_cleanForm atoms φ)
+                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                  * autoGamma atoms (cleanForm atoms φ)) c)
+          {t | ttcRunOutput
+                (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                  (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                  (autoGamma atoms (cleanForm atoms φ)))
+                (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
+                (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                  (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                  (autoGamma atoms (cleanForm atoms φ)))
+                (fun i =>
+                  runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                        (isPositive_cleanForm atoms φ)
+                        (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                    • autoCen atoms (cleanForm atoms φ) i)
+                (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                      (isPositive_cleanForm atoms φ)
+                      (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                    * autoGamma atoms (cleanForm atoms φ)) c t
+              /
+                (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                  (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                  (autoGamma atoms (cleanForm atoms φ))) ^ n
+            ∈ relErr ε (volSol (atomSet atoms) φ)}
+        ∂(MonteCarlo.coins n)).toReal)
     ∧
-    -- (running time) `alg:ttc`'s charged cost, on every run, under `Ttc.Terminates`
-    (∀ (c : ℕ → Space n) (t : ℕ → Fin (runCount atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) → ℕ)
+    (∀ (c : ℕ → Space n)
+        (t : ℕ → Fin (runCount
+          (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (autoGamma atoms (cleanForm atoms φ)))
+          (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
+          (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (autoGamma atoms (cleanForm atoms φ)))
+          (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                (isPositive_cleanForm atoms φ)
+                (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+              * autoGamma atoms (cleanForm atoms φ))) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
-      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t) (toDNFd φ) →
-      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t)
-          cVol cSample (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) (toDNFd φ)
-        ≤ (toDNFd φ).length * (cVol + cSample * thr)) :=
-  ttc_volume_vol atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff
-    cen gammaHat hgammaHat ball_subset hvol
+      (thr : ℝ) =
+        (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+          (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)).thresh →
+      Terminates
+          (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint))
+          (runOracles
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
+            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (autoGamma atoms (cleanForm atoms φ)))
+            (fun i =>
+              runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                    (isPositive_cleanForm atoms φ)
+                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                • autoCen atoms (cleanForm atoms φ) i)
+            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                  (isPositive_cleanForm atoms φ)
+                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                * autoGamma atoms (cleanForm atoms φ)) c t) (toDNFd (cleanForm atoms φ)) →
+      runCost
+          (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint))
+          (runOracles
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
+            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (autoGamma atoms (cleanForm atoms φ)))
+            (fun i =>
+              runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                    (isPositive_cleanForm atoms φ)
+                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                • autoCen atoms (cleanForm atoms φ) i)
+            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                  (isPositive_cleanForm atoms φ)
+                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                * autoGamma atoms (cleanForm atoms φ)) c t)
+          cVol cSample
+          (runPrec
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
+            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (autoGamma atoms (cleanForm atoms φ)))
+            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
+                  (isPositive_cleanForm atoms φ)
+                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                * autoGamma atoms (cleanForm atoms φ))) (toDNFd (cleanForm atoms φ))
+        ≤ (toDNFd (cleanForm atoms φ)).length * (cVol + cSample * thr)) :=
+  ttc_volume_cleanInput atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hint
 
 #print axioms ttc_volume_estimate
 
