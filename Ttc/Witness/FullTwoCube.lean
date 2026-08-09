@@ -82,7 +82,7 @@ and only the accuracy *target* `Ttc.volSol` is at the user's original
 `Ttc.TwoCube.twoForm n` (the preprocessing moves no volume:
 `Ttc.volSol_pruneForm`, `Ttc.volSol_cleanForm`).
 
-None of that is spelled out below, because `Ttc/Exec/Api.lean` names it:
+None of that is spelled out below, because `Ttc/Model/Theorem.lean` names it:
 `Ttc.ttcRates` and `Ttc.ttcEstimate` take exactly `atoms φ ε δ hε0 hε1 hn hφ hpos`
 and compose the preprocessing, the ball and the dilation internally.  So
 `Ttc.TwoCube.twoProbFull` is a five-line abbreviation for the integral in the
@@ -161,7 +161,7 @@ abbreviation for the integral in the headline's conclusion, asserting nothing
 
 Everything the run does to the input — pruning, cleaning, constructing the inscribed
 ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcRates` and
-`Ttc.ttcEstimate` (`Ttc/Exec/Api.lean`).  Only the accuracy target `Ttc.volSol` is at
+`Ttc.ttcEstimate` (`Ttc/Model/Theorem.lean`).  Only the accuracy target `Ttc.volSol` is at
 the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ENNReal :=

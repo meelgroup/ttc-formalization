@@ -198,8 +198,9 @@ theorem ttc_volume_inputs
 `Model/Theorem` states the guarantee about these four names and nothing else.  They
 are definitional wrappers over the terms above — not abstraction barriers — so
 `Ttc.ttc_volume_estimate` stays one application (today, of `Ttc.ttc_volume_api`).  They
-live here rather than in `Model/` so that `Model/Theorem.lean` contains the paper's
-theorem and nothing else. -/
+were later moved to `Model/Theorem.lean`, so that every quantity the headline *names*
+is defined in `Model/` (the `nfalean` standard); what remains here is the plumbing
+those definitions' bodies reach for. -/
 
 section Measured
 

@@ -144,7 +144,7 @@ line A13       output (that run's output) / qⁿ
 | A10 (`q`) | `Ttc.scaleFactor` | here |
 | A11 (dilate) | `Ttc.scaleAtoms` | here |
 | A12 (the run) | `Ttc.run` / `Ttc.ttcOutput`, above | here |
-| A13 (`/qⁿ`) | the division in `Ttc.ttcEstimate` | `Exec/Api` |
+| A13 (`/qⁿ`) | the division in `Ttc.ttcEstimate` | `Model/Theorem` |
 
 ## Which of the four are in the paper
 
@@ -186,7 +186,7 @@ cleaning pass, `Ttc.preprocess`. Every *theorem* about them stays in `Exec/`; on
 the definitions moved.
 
 That the headline really measures these definitions is machine-checked, by two
-lemmas whose proofs are `rfl` (`Exec/Api`):
+lemmas whose proofs are `rfl` (the first in `Model/Theorem`, the second in `Exec/Api`):
 
 * `Ttc.ttcEstimate_eq_ttcOutput` — the quantity `Ttc.ttc_volume_estimate` bounds is
   this file's `Ttc.ttcOutput`, at this file's parameter block and precision,
