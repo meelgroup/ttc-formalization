@@ -8,7 +8,7 @@ import Ttc.Exec.Inputs
 # The main theorem: `thm:volumettc` + `thm:runtime` for `TTC(F, ε, δ)`
 
 One theorem, and no proof to work through — it is one application of
-`Ttc.ttc_volume_inputs` (`Exec/Inputs`).
+`Ttc.ttc_volume_vol` (`Exec/Inputs`).
 
 Audit path — `Model/`, then stop: `Model/Prelude` (the vocabulary),
 `Model/ProblemSetting` (what `Vol(F)` is and what `(1 ± ε)` means),
@@ -26,8 +26,9 @@ bundle-level versions, whose types name the *assumed* `T.O` and `T.ρ`, are
 `Ttc.TtcProb.volume_estimate` and `Ttc.TtcProb.runtime` (`Ttc/Estimate.lean`).
 
 Elsewhere, deliberately: which lemma discharges which former binder, in
-`Exec/Inputs.lean`; why `big` cannot be discharged — it is *proved* independent —
-in `Exec/Regime.lean` and README finding 20; non-vacuity in
+`Exec/Inputs.lean`; how the sampler-level regime condition is derived from `hvol`,
+in `Exec/RegimeMain.lean`; why no hypothesis of that kind can be dropped — it is
+*proved* independent — in `Exec/Regime.lean` and README finding 20; non-vacuity in
 `Witness/Headline.lean`; the audit in `AUDIT.md` §1e–§1f.
 
 `sorry`-free, axioms `[propext, Classical.choice, Quot.sound]`.
@@ -45,12 +46,16 @@ accuracy `ε` and confidence `δ`.
 * **Running time.**  On every run, `alg:ttc`'s charged cost
   `m · (C_vol + C_sample · Thresh)`, under `Ttc.Terminates`.
 
-Seven hypotheses besides the inputs and the parameter range: `hφ` the formula is
-negation-free (finding 5); `hbdd` its solution set is bounded (*necessary* —
-otherwise `Vol(F) = ∞`); `hcoeff` no atom is degenerate;
-`cen`/`gammaHat`/`hgammaHat`/`ball_subset` the inscribed ball `alg:ttc` computes by
-an LP; and `big` the regime condition, which is **not** removable
-(`Ttc.Box.big_not_derivable`).
+Seven hypotheses besides the inputs and the parameter range, every one a condition
+on the **input**: `hφ` the formula is negation-free (finding 5); `hbdd` its solution
+set is bounded (*necessary* — otherwise `Vol(F) = ∞`); `hcoeff` no atom is
+degenerate; `cen`/`gammaHat`/`hgammaHat`/`ball_subset` the inscribed ball `alg:ttc`
+computes by an LP; and `hvol : Thresh/4 ≤ Vol(F)`, the regime condition.
+
+`hvol` is **not** removable — `Ttc.Box.big_not_derivable` proves the restriction is
+real, and it is the paper's own unstated `j* ≥ 1` (`sections/analysis.tex:284`,
+README finding 20). What it is not is opaque: `Ttc.big_of_volume` derives the
+sampler-level condition from this one scalar inequality about `Vol(F)`.
 
 Correctness, not efficiency: both oracle routes are exponential in `n`. -/
 theorem ttc_volume_estimate {A : Type*} {n : ℕ}
@@ -61,12 +66,8 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (hcoeff : ∀ j : FacetIndex (toDNFd φ), (atoms j.2.val.atom).coeff ≠ 0)
     (cen : {c : Cube A // c ∈ toDNFd φ} → Space n) (gammaHat : ℝ) (hgammaHat : 0 < gammaHat)
     (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val)
-    (big : ∀ c ∈ mcGood (atomSet atoms) (toDNFd φ) cen gammaHat
-        (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-        (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime,
-      (1 - (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime)
-          * (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 8
-        ≤ ∑ s, runRates atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c s) :
+    (hvol : (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 4
+      ≤ volSol (atomSet atoms) φ) :
     -- (accuracy) the output is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
       (∫⁻ c, trajLaw (runRates atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c)
@@ -84,8 +85,8 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
           (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t)
           cVol cSample (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) (toDNFd φ)
         ≤ (toDNFd φ).length * (cVol + cSample * thr)) :=
-  ttc_volume_inputs atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff
-    cen gammaHat hgammaHat ball_subset big
+  ttc_volume_vol atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff
+    cen gammaHat hgammaHat ball_subset hvol
 
 #print axioms ttc_volume_estimate
 

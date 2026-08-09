@@ -5,6 +5,7 @@ Released under Apache 2.0 license.
 import Ttc.Exec.Final
 import Ttc.Exec.CubeBounds
 import Ttc.Exec.Dedup
+import Ttc.Exec.RegimeMain
 
 /-!
 # `Exec/Inputs`: `ttc_volume_final` with seven binders removed
@@ -256,6 +257,64 @@ noncomputable def runRates (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
       (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
       (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c)
 
+
+/-! ## The regime condition, replaced by a condition on the input
+
+`Ttc.ttc_volume_inputs`' last binder, `big`, is a `∀` over the volume coins
+mentioning `Ttc.e2eSampD`, `Ttc.mcVol` and `Ttc.mcGood` — nothing a reader can check
+of an instance.  `Ttc.big_of_volume` (`Exec/RegimeMain`) proves it from one scalar
+inequality about the input, so the statement can carry that instead.
+
+**This does not widen the theorem's reach.**  `Ttc.Box.big_not_derivable`
+(`Exec/Regime`) shows the restriction is real: `big` fails for small bodies and no
+choice of precision escapes it.  What changes is that the restriction becomes
+legible — and it is exactly the paper's own unstated `j* ≥ 1`
+(`sections/analysis.tex:284`; README finding 20). -/
+
+/-- **`thm:volumettc` + `thm:runtime` with the regime condition made legible.**
+
+`Ttc.ttc_volume_inputs` with `big` replaced by
+
+```
+hvol : P.thresh / 4 ≤ volSol (atomSet atoms) φ
+```
+
+— *the solution set is at least a quarter of the threshold*.  Same 17 binders, same
+conclusion; the last one is now a scalar inequality about `Vol(F)` rather than a
+quantified statement about the sampler's internals. -/
+theorem ttc_volume_vol
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
+    (hφ : φ.IsPositive)
+    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
+    (hcoeff : ∀ j : FacetIndex (toDNFd φ), (atoms j.2.val.atom).coeff ≠ 0)
+    (cen : {c : Cube A // c ∈ toDNFd φ} → Space n) (gammaHat : ℝ) (hgammaHat : 0 < gammaHat)
+    (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val)
+    (hvol : (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 4
+      ≤ volSol (atomSet atoms) φ) :
+    (1 - δ ≤
+      (∫⁻ c, trajLaw (runRates atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c)
+            {t | ttcRunOutput atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t
+              ∈ relErr ε (volSol (atomSet atoms) φ)}
+          ∂(MonteCarlo.coins n)).toReal)
+    ∧
+    (∀ (c : ℕ → Space n) (t : ℕ → Fin (runCount atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) → ℕ)
+        (cVol cSample thr : ℕ),
+      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
+      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
+          (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t) (toDNFd φ) →
+      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
+          (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t)
+          cVol cSample (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) (toDNFd φ)
+        ≤ (toDNFd φ).length * (cVol + cSample * thr)) :=
+  ttc_volume_inputs atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff
+    cen gammaHat hgammaHat ball_subset
+    (fun c hc => big_of_volume atoms (toDNFd_isDNFOf φ) (toDNFd_isPositive hφ)
+      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd) rfl le_rfl
+      (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
+      le_rfl (normal_ne_zero_of_coeff_ne_zero hcoeff) hbdd cen hgammaHat ball_subset
+      rfl hvol hc)
+
 end Measured
 
 end Inputs
@@ -267,3 +326,4 @@ end Ttc
 #check @Ttc.ttc_volume_inputs
 
 #print axioms Ttc.ttc_volume_inputs
+#print axioms Ttc.ttc_volume_vol

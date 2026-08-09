@@ -320,6 +320,7 @@ import Ttc.Access
 import Ttc.Estimate
 import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
+import Ttc.Witness.TwoCubeVol
 import Ttc.Witness.Headline
 import Ttc.Exec.Endgoal
 import Ttc.Exec.Params
@@ -336,6 +337,10 @@ import Ttc.Exec.CubeBounds
 import Ttc.Exec.Dedup
 import Ttc.Exec.Inputs
 import Ttc.Exec.Regime
+import Ttc.Exec.RegimeCube
+import Ttc.Exec.RegimeSum
+import Ttc.Exec.RegimeInputs
+import Ttc.Exec.RegimeMain
 import Ttc.Coupling.Product
 import Ttc.Volume.Bridge
 import Ttc.Volume.VolSolCheck

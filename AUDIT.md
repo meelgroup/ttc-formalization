@@ -515,11 +515,25 @@ the implicit ambient `{A}` and `{n}`), and its type contains no `Ttc.TtcProb`, n
 compiled type, not by reading:
 
 ```
-atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff cen gammaHat hgammaHat ball_subset big
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff cen gammaHat hgammaHat ball_subset hvol
 ```
 
 The first nine are exactly `ApproxNFA.approxNFA_countNFA`'s (the nfalean template)
 binder list. The other eight are the honest residue, and §1f is about the last one.
+
+**The last binder is now readable.** It used to be `big`, a `∀` over the volume coins
+mentioning `Ttc.e2eSampD`, `Ttc.mcVol` and `Ttc.mcGood` — nothing an auditor could
+check of an instance. It is now
+
+```
+hvol : (inputParams …).thresh / 4 ≤ volSol (atomSet atoms) φ
+```
+
+*the solution set is at least a quarter of the threshold*, and
+[`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) derives the sampler-level condition
+from it. **This did not widen the theorem** — §1f's counterexample still stands, and
+the restriction is the same one. What changed is that it is legible, and that it is
+visibly the paper's own unstated `j* ≥ 1`.
 
 ### What is *not* an input, and what replaced it
 
@@ -622,6 +636,30 @@ the numeric size of the excluded regime (`Vol ≳ 4.8 × 10⁵` at `ε = δ = 0.
 
 `Ttc/Exec/Regime.lean` contains **no `def`, `structure` or `class` at all**, which
 is the structural check that nothing in it is `big` wearing a hat.
+
+### `big` is now derived, and the independence is unaffected
+
+[`Ttc.big_of_volume`](Ttc/Exec/RegimeMain.lean) proves `big` from
+`hvol : Thresh/4 ≤ Vol(Sol F)`, so the headline no longer carries `big` as a binder
+(§1e). The chain is four steps, each a named lemma:
+
+| Step | Lemma |
+| --- | --- |
+| every enumerated lattice point contributes `≥ (1−ε')²(1−η)/10^{ρn}` — **pointwise, no fiber counting** | [`Ttc.rate_ge_pointwise`](Ttc/Exec/RegimeSum.lean) |
+| hence `∑ θ ≥ (1−ε')²(1−η)·L` | [`Ttc.sum_rates_ge_of_pointwise`](Ttc/Exec/RegimeSum.lean) |
+| `L ≥ Vol(Sol F)/(1+η)` | [`Ttc.lattice_of_dnf`](Ttc/Lattice/Assembled.lean), upper half |
+| `(1−ε')(1−η)/(1+η) ≥ 1/2` on `ε ∈ (0,1]` | [`Ttc.half_le_of_eps`](Ttc/Exec/RegimeMain.lean) |
+
+with the two per-cube inputs supplied by
+[`Ttc.e2eSampD_almostUniform`](Ttc/Exec/RegimeInputs.lean) (`eq:almostuniform` for
+the capstone's own sampler, at every cube, **with no nonemptiness hypothesis**) and
+[`Ttc.lattice_cube_of_dnf`](Ttc/Exec/RegimeCube.lean) (`lem:lattice` per cube over
+plain data).
+
+**Read this as a change of presentation, not of strength.** `hvol` is false for
+small bodies exactly as `big` was; `Ttc.Box.big_not_derivable` is what says so, and
+it is unchanged. The two-cube witness satisfies `hvol` because it sizes its boxes at
+`max 1 Thresh` ([`Ttc.TwoCube.two_cube_thresh_le_volSol`](Ttc/Witness/TwoCubeVol.lean)).
 
 ---
 
