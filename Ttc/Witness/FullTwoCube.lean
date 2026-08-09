@@ -8,14 +8,14 @@ import Ttc.Witness.Inputs
 /-!
 # `Witness/FullTwoCube`: `Ttc.ttc_volume_estimate` is not vacuous
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) is a `∀` under **twelve** binders
+`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) is a `∀` under **eleven** binders
 
 ```
-atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
 ```
 
 and a `∀` whose hypotheses nothing satisfies is worth nothing (`CLAUDE.md` §11).
-This file exhibits data satisfying all twelve, at **every** `n ≥ 1` and **every**
+This file exhibits data satisfying all eleven, at **every** `n ≥ 1` and **every**
 `(ε, δ) ∈ (0,1]²`, and then pins the conclusion at two parameter numerals where the
 achieved bound is proved **strictly positive inside the statement** — so neither
 conclusion is the vacuous `0 ≤ (…).toReal` that `ENNReal.toReal ⊤ = 0` would
@@ -32,19 +32,25 @@ already proves, used unchanged:
 | `atoms` | `Ttc.TwoCube.atomsT` |
 | `φ` | `Ttc.TwoCube.twoForm` |
 | `hφ` | `Ttc.TwoCube.twoForm_isPositive` |
-| `hbdd` | `Ttc.TwoCube.isBounded_sol_T` |
 | `hpos` | `Ttc.TwoCube.twoVolPos`, new here |
 
 (`Ttc.atomSet (Ttc.TwoCube.atomsT …) = Ttc.TwoCube.MTT …` by `rfl` —
-`Ttc.TwoCube.atomSet_atomsT`.)  Two binders the statement used to carry are **no
+`Ttc.TwoCube.atomSet_atomsT`.)  Three binders the statement used to carry are **no
 longer passed**: `hcoeff` — *no facet of the DNF has a zero normal* — because the
-run is on the **cleaned** formula (`Ttc/Exec/Cleanup.lean`), and `hint` — *every
-cube is full-dimensional* — because the run is on the **pruned** formula
-(`Ttc/Exec/Prune.lean`), which makes that condition true rather than assuming it.
+run is on the **cleaned** formula (`Ttc/Exec/Cleanup.lean`); `hint` — *every cube is
+full-dimensional* — because the run is on the **pruned** formula
+(`Ttc/Exec/Prune.lean`), which makes that condition true rather than assuming it;
+and `hbdd` — *`Sol(F)` is bounded* — because at the pruned formula it is *derived*
+from `hφ` and `hpos` (`Ttc.isBounded_sol_pruneForm_of_volSol_pos`,
+`Ttc/Exec/BddFromPos.lean`).
+
+`Ttc.TwoCube.isBounded_sol_T` is still used here, but only *inside* the proof of
+`hpos`: `Ttc.volSol_pos_of_interior` runs the other direction (full-dimensionality
+plus boundedness give positive volume) and needs its own boundedness proof.
 
 ## Why `hpos` holds: one region contains an open ball of positive radius
 
-The twelfth binder is now `0 < Ttc.volSol (Ttc.atomSet atoms) φ`, and it is *not*
+The last binder is `0 < Ttc.volSol (Ttc.atomSet atoms) φ`, and it is *not*
 proved from box geometry here.  `Ttc.volSol_pos_of_interior` (`Ttc/Exec/Prune.lean`)
 turns per-cube full-dimensionality into positive volume for a bounded body, so all
 that is needed is the old `hint`, which this file still proves as
@@ -62,8 +68,9 @@ converse, which is exactly why the headline could drop `hint` for the weaker `hp
 
 ## What the run is, and what it is not
 
-The twelve-binder statement takes neither the inscribed ball nor full-dimensionality
-as data.  What `Ttc.ttc_volume_estimate` measures is a run on the input with its
+The eleven-binder statement takes neither the inscribed ball, nor full-dimensionality,
+nor boundedness as data.  What `Ttc.ttc_volume_estimate` measures is a run on the input
+with its
 
 * **degenerate cubes pruned** (`Ttc.pruneForm`, `Ttc/Exec/Prune.lean`),
 * **zero-normal atoms cleaned** (`Ttc.cleanForm`, `Ttc/Exec/Cleanup.lean`) — the
@@ -76,8 +83,8 @@ and only the accuracy *target* `Ttc.volSol` is at the user's original
 `Ttc.volSol_pruneForm`, `Ttc.volSol_cleanForm`).
 
 None of that is spelled out below, because `Ttc/Exec/Api.lean` names it:
-`Ttc.ttcRates` and `Ttc.ttcEstimate` take exactly `atoms φ ε δ hε0 hε1 hn hφ hbdd
-hpos` and compose the preprocessing, the ball and the dilation internally.  So
+`Ttc.ttcRates` and `Ttc.ttcEstimate` take exactly `atoms φ ε δ hε0 hε1 hn hφ hpos`
+and compose the preprocessing, the ball and the dilation internally.  So
 `Ttc.TwoCube.twoProbFull` is a five-line abbreviation for the integral in the
 headline's conclusion; it asserts nothing, and `Ttc.TwoCube.twoProbFull_def` writes
 it out by `rfl`.
@@ -159,11 +166,9 @@ the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ENNReal :=
   ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-        twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
-        (twoVolPos n hn ε δ hε0 hε1) c)
+        twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) c)
       {t | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-            twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
-            (twoVolPos n hn ε δ hε0 hε1) c t
+            twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) c t
           ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
     ∂(MonteCarlo.coins n)
 
@@ -174,12 +179,12 @@ changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     twoProbFull n hn ε δ hε0 hε1 =
       ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-            twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
+            twoForm_isPositive
             (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
               (isBounded_sol_T n hn ε δ hε0 hε1)
               (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) c)
           {t | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-                twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
+                twoForm_isPositive
                 (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
                   (isBounded_sol_T n hn ε δ hε0 hε1)
                   (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) c t
@@ -195,10 +200,10 @@ noncomputable def twoAccFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < 
 /-- **`Ttc.ttc_volume_estimate` on a DNF with two cubes**, at every
 `(ε, δ) ∈ (0,1]²` and every `n ≥ 1`.
 
-All twelve binders are met by the two-cube data of `Ttc/Witness/TwoCube.lean`: `hφ` is
-`Ttc.TwoCube.twoForm_isPositive`, `hbdd` is `Ttc.TwoCube.isBounded_sol_T`, and `hpos`
-is `Ttc.TwoCube.twoVolPos`.  Nothing is supplied for the inscribed ball, for
-full-dimensionality, or for nondegenerate facets: at twelve binders the statement
+All eleven binders are met by the two-cube data of `Ttc/Witness/TwoCube.lean`: `hφ` is
+`Ttc.TwoCube.twoForm_isPositive` and `hpos` is `Ttc.TwoCube.twoVolPos`.  Nothing is
+supplied for the inscribed ball, for full-dimensionality, for nondegenerate facets or
+for boundedness of `Sol(F)`: at eleven binders the statement
 prunes and cleans the formula itself, constructs the ball (`Ttc.autoCen`,
 `Ttc.autoGamma`) and dilates by `Ttc.runScale`, dividing the estimate by `cⁿ`.
 
@@ -215,8 +220,7 @@ theorem ttc_volume_estimate_two_cube_full (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
     1 - δ ≤ twoAccFull n hn ε δ hε0 hε1 :=
   (ttc_volume_estimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn
-    twoForm_isPositive (isBounded_sol_T n hn ε δ hε0 hε1)
-    (twoVolPos n hn ε δ hε0 hε1)).1
+    twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1)).1
 
 /-- **`Ttc.ttc_volume_estimate` on a two-cube DNF at two structurally different
 parameter pairs, with the achieved bound a positive numeral.**

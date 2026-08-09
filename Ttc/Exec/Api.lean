@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Exec.Prune
+import Ttc.Exec.BddFromPos
 
 /-!
 # `Exec/Api`: the statement API — the quantities the headline is *about*
@@ -16,7 +16,7 @@ This module names the sub-terms.  Each definition below takes **exactly the
 algorithm's inputs** —
 
 ```
-atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+atoms φ ε δ hε0 hε1 hn hφ hpos
 ```
 
 — and composes `Ttc.pruneForm`, `Ttc.cleanForm`, `Ttc.autoGamma`, `Ttc.autoCen`,
@@ -59,15 +59,26 @@ body, proved by `rfl`.  So no name in this file stands in for a proof: what a na
 means is exhibited, machine-checked, next to the name.
 
 The single structural check that these are the *right* abbreviations is
-`Ttc.ttc_volume_api` itself.  Its proof is the bare application
+`Ttc.ttc_volume_api` itself.  Its proof is the single application
 
 ```
-ttc_volume_prune atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
+ttc_volume_prune atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ
+  (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) hpos
 ```
 
 with no rewriting, no `show`, and no conversion: it typechecks exactly when every
 definition here is **definitionally** the sub-term of `ttc_volume_prune` it claims
 to name.  A wrong abbreviation is a build error, not a silent divergence.
+
+## Where `hbdd` went
+
+`Ttc.ttc_volume_prune` asks for boundedness of `Sol` of the **pruned** formula, and
+`Ttc.isBounded_sol_pruneForm_of_volSol_pos` (`Exec/BddFromPos`) proves exactly that
+from `hφ` and `hpos` alone.  So the boundedness binder the chain used to carry is
+gone — *derived*, not assumed — and that is the sole reason this module imports
+`Exec/BddFromPos` rather than `Exec/Prune`.  The derivation is available only after
+the pruning round: before it, a cube may be a *line* — convex, unbounded, of volume
+`0` — so `hpos` was consistent with an unbounded `Sol(F)`.
 
 ## What each name is
 
@@ -122,13 +133,14 @@ theorem ttcInput_isPositive (atoms : A → LinAtom n) (φ : BForm A) :
   isPositive_cleanForm atoms (pruneForm atoms φ)
 
 /-- `Sol` of the preprocessed formula is bounded — `Ttc.cleanBdd` over
-`Ttc.pruneBdd`/`Ttc.pruneInt`, so `hbdd` and `hpos` are all that is spent. -/
+`Ttc.isBounded_sol_pruneForm_of_volSol_pos`/`Ttc.pruneInt`, so `hφ` and `hpos` are
+all that is spent.  No boundedness hypothesis: it is *derived* from `hpos` at the
+pruned formula (`Exec/BddFromPos`). -/
 theorem ttcInput_bdd (atoms : A → LinAtom n) (φ : BForm A) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
     Bornology.IsBounded (sol (atomSet atoms) (ttcInput atoms φ)) :=
-  cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
-    (pruneInt atoms hφ hpos)
+  cleanBdd atoms (isPositive_pruneForm atoms φ)
+    (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) (pruneInt atoms hφ hpos)
 
 /-! ## The inscribed-ball data and the dilation
 
@@ -147,20 +159,18 @@ theorem ttcRadius_def (atoms : A → LinAtom n) (φ : BForm A) :
 formula and the radius above.  `≥ 1` always (`Ttc.runScale_pos`). -/
 noncomputable def ttcScale (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : ℝ :=
   runScale atoms (ttcInput atoms φ) ε δ hε0 hε1 hn (ttcInput_isPositive atoms φ)
-    (ttcInput_bdd atoms φ hφ hbdd hpos) (ttcRadius atoms φ)
+    (ttcInput_bdd atoms φ hφ hpos) (ttcRadius atoms φ)
 
 theorem ttcScale_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+    ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos
       = runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
-            (pruneInt atoms hφ hpos))
+          (cleanBdd atoms (isPositive_pruneForm atoms φ)
+            (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) (pruneInt atoms hφ hpos))
           (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))) := rfl
 
 /-- **The dilated input** — the preprocessed formula's atoms with their bounds
@@ -168,64 +178,57 @@ scaled by `Ttc.ttcScale`.  This is the `A → LinAtom n` the run wrappers are ap
 to. -/
 noncomputable def ttcAtoms (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : A → LinAtom n :=
   scaledAtoms atoms (ttcInput atoms φ) ε δ hε0 hε1 hn (ttcInput_isPositive atoms φ)
-    (ttcInput_bdd atoms φ hφ hbdd hpos) (ttcRadius atoms φ)
+    (ttcInput_bdd atoms φ hφ hpos) (ttcRadius atoms φ)
 
 theorem ttcAtoms_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+    ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos
       = scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
-            (pruneInt atoms hφ hpos))
+          (cleanBdd atoms (isPositive_pruneForm atoms φ)
+            (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) (pruneInt atoms hφ hpos))
           (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))) := rfl
 
 /-- `Sol` of the dilated input is bounded — `Ttc.scaledBdd`, restated at
 `Ttc.ttcAtoms` so that the run wrappers below can be applied to it. -/
 theorem ttcAtoms_bdd (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
     Bornology.IsBounded
-      (sol (atomSet (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)) (ttcInput atoms φ)) :=
+      (sol (atomSet (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)) (ttcInput atoms φ)) :=
   scaledBdd atoms (ttcInput atoms φ) ε δ hε0 hε1 hn (ttcInput_isPositive atoms φ)
-    (ttcInput_bdd atoms φ hφ hbdd hpos) (ttcRadius atoms φ)
+    (ttcInput_bdd atoms φ hφ hpos) (ttcRadius atoms φ)
 
 /-- **The dilated centres** — `Ttc.autoCen` at the preprocessed formula, moved by
 the dilation, so that each dilated cube's inscribed ball is centred correctly. -/
 noncomputable def ttcCen (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
     {c : Cube A // c ∈ toDNFd (ttcInput atoms φ)} → Space n :=
-  fun i => ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos • autoCen atoms (ttcInput atoms φ) i
+  fun i => ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos • autoCen atoms (ttcInput atoms φ) i
 
 theorem ttcCen_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
-      = fun i => ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+    ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos
+      = fun i => ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos
           • autoCen atoms (cleanForm atoms (pruneForm atoms φ)) i := rfl
 
 /-- **The inscribed radius after the dilation**, `ttcScale * ttcRadius` — the `γ̂`
 every run wrapper of `Exec/Inputs` is applied to. -/
 noncomputable def ttcScaledRadius (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : ℝ :=
-  ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos * ttcRadius atoms φ
+  ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos * ttcRadius atoms φ
 
 theorem ttcScaledRadius_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
-      = ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+    ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos
+      = ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos
           * autoGamma atoms (cleanForm atoms (pruneForm atoms φ)) := rfl
 
 /-! ## The parameter block, the precision and the cube count -/
@@ -235,58 +238,53 @@ at the preprocessed formula.  Note it is at the *original* `atoms`: the dilation
 not move the parameter block (`Ttc.inputParams_scaleAtoms`). -/
 noncomputable def ttcBlock (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : Params :=
   inputParams atoms (ttcInput atoms φ) ε δ hε0 hε1 hn (ttcInput_isPositive atoms φ)
-    (ttcInput_bdd atoms φ hφ hbdd hpos)
+    (ttcInput_bdd atoms φ hφ hpos)
 
 theorem ttcBlock_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcBlock atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+    ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos
       = inputParams atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
-            (pruneInt atoms hφ hpos)) := rfl
+          (cleanBdd atoms (isPositive_pruneForm atoms φ)
+            (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) (pruneInt atoms hφ hpos)) := rfl
 
 /-- **The sample threshold `Thresh`** of that block — the quantity the cost bound is
 linear in. -/
 noncomputable def ttcThresh (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : ℝ :=
-  (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hbdd hpos).thresh
+  (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).thresh
 
 theorem ttcThresh_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcThresh atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
+    ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos
       = (inputParams atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+          (cleanBdd atoms (isPositive_pruneForm atoms φ)
+            (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos)
             (pruneInt atoms hφ hpos))).thresh := rfl
 
 /-- **`GetPrecision`'s output `ρ`** (`alg:ttc` line 17), at the dilated input. -/
 noncomputable def ttcPrec (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : ℤ :=
-  runPrec (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
-    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+  runPrec (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
+    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos)
 
 theorem ttcPrec_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcPrec atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
-      = runPrec (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+    ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos
+      = runPrec (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
           (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) := rfl
+          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) := rfl
 
 /-- **`m`, the number of cubes the run iterates over** — the length of the
 preprocessed formula's DNF.  The cost bound is `m · (C_vol + C_sample · Thresh)`. -/
@@ -302,76 +300,70 @@ theorem ttcNumCubes_def (atoms : A → LinAtom n) (φ : BForm A) :
 range over, so a sample trajectory has type `ℕ → Fin (ttcIndex …) → ℕ`. -/
 noncomputable def ttcIndex (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) : ℕ :=
-  runCount (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
-    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+  runCount (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
+    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos)
 
 theorem ttcIndex_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos
-      = runCount (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+    ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos
+      = runCount (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
           (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) := rfl
+          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) := rfl
 
 /-- **The level-`0` rate vector `θ`** (`alg:ttc` line 20) at the volume coins `c`:
 the sampler's mass at each enumerated lattice point times that point's cube's volume
 estimate.  `Ttc.trajLaw` of this is the law the sample coins are drawn from. -/
 noncomputable def ttcRates (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
-    (c : ℕ → Space n) : Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℝ :=
-  runRates (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
-    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) c
+    (c : ℕ → Space n) : Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℝ :=
+  runRates (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
+    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c
 
 theorem ttcRates_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n) :
-    ttcRates atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c
-      = runRates (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+    ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c
+      = runRates (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
           (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) c := rfl
+          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c := rfl
 
 /-- **The oracle bundle `alg:ttc` reads on the run `(c, t)`** — `Vol_ED` is
 `Ttc.mcVol` at the volume coins `c`, the covered-lattice sampler is at the sample
 coins `t`.  Nothing here is a hypothesis; it is a closed term. -/
 noncomputable def ttcOracleBundle (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ) : Oracles n (Cube A) :=
-  runOracles (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
-    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) c t
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) : Oracles n (Cube A) :=
+  runOracles (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ hε0 hε1 hn
+    (ttcInput_isPositive atoms φ) (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c t
 
 theorem ttcOracleBundle_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ) :
-    ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t
-      = runOracles (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = runOracles (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
           (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) c t := rfl
+          (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c t := rfl
 
 /-- **What `TTC(F, ε, δ)` returns on the run `(c, t)`, brought back to the original
 scale** — `Ttc.ttcRunOutput` at the dilated input, divided by `ttcScaleⁿ`.
@@ -382,31 +374,29 @@ output — is what the accuracy conjunct compares with `Ttc.volSol` of the origi
 body. -/
 noncomputable def ttcEstimate (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ) : ℝ :=
-  ttcRunOutput (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) (ttcInput atoms φ) ε δ
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) : ℝ :=
+  ttcRunOutput (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) ε δ
       hε0 hε1 hn (ttcInput_isPositive atoms φ)
-      (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-      (ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-      (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) c t
-    / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) ^ n
+      (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+      (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+      (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c t
+    / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n
 
 theorem ttcEstimate_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ) :
-    ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t
-      = ttcRunOutput (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = ttcRunOutput (ttcAtoms atoms φ ε δ hε0 hε1 hn hφ hpos)
             (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
             (isPositive_cleanForm atoms (pruneForm atoms φ))
-            (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-            (ttcCen atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-            (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) c t
-          / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) ^ n := rfl
+            (ttcAtoms_bdd atoms φ ε δ hε0 hε1 hn hφ hpos)
+            (ttcCen atoms φ ε δ hε0 hε1 hn hφ hpos)
+            (ttcScaledRadius atoms φ ε δ hε0 hε1 hn hφ hpos) c t
+          / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n := rfl
 
 /-! ## Termination and cost -/
 
@@ -415,22 +405,20 @@ computed parameter block, the run's own oracles and the preprocessed formula's c
 list.  This is the hypothesis `thm:runtime` needs and the paper leaves unstated. -/
 def ttcTerminates (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ) : Prop :=
-  Terminates (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t) (toDNFd (ttcInput atoms φ))
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) : Prop :=
+  Terminates (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) (toDNFd (ttcInput atoms φ))
 
 theorem ttcTerminates_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ) :
-    ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t
-      = Terminates (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos c t
+      = Terminates (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t)
           (toDNFd (cleanForm atoms (pruneForm atoms φ))) := rfl
 
 /-- **The charged cost of the run `(c, t)`** — `Ttc.runCost` at the computed
@@ -438,34 +426,33 @@ parameter block, the run's oracles, the per-call costs `cVol`/`cSample` and the
 computed precision, folded over the preprocessed formula's cube list. -/
 noncomputable def ttcCost (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
     (cVol cSample : ℕ) : ℕ :=
-  runCost (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t) cVol cSample
-    (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) (toDNFd (ttcInput atoms φ))
+  runCost (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) cVol cSample
+    (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos) (toDNFd (ttcInput atoms φ))
 
 theorem ttcCost_def (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ)
     (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
     (cVol cSample : ℕ) :
-    ttcCost atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t cVol cSample
-      = runCost (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
-          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t) cVol cSample
-          (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hbdd hpos)
+    ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample
+      = runCost (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) cVol cSample
+          (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos)
           (toDNFd (cleanForm atoms (pruneForm atoms φ))) := rfl
 
 /-! ## The headline, restated
 
-Same theorem as `Ttc.ttc_volume_prune`, same twelve binders, same conclusion — only
-spelled with the names above.  The proof is the bare application; it typechecks
-exactly when every definition of this module is definitionally the sub-term it
-names. -/
+Same theorem as `Ttc.ttc_volume_prune`, same conclusion — only spelled with the
+names above, and with the pruned-boundedness argument supplied rather than assumed,
+so this statement has **eleven** binders.  The proof is the single application; it
+typechecks exactly when every definition of this module is definitionally the
+sub-term it names. -/
 
 /-- **`thm:volumettc` + `thm:runtime`, in the statement API.**  `TTC(F, ε, δ)` run
 on `φ` — with the two preprocessing passes (`Ttc.pruneForm`, `Ttc.cleanForm`), the
@@ -481,29 +468,31 @@ names.
 * **Running time.**  On every run `(c, t)` whose absorption loops exit, the charged
   cost is at most `m · (C_vol + C_sample · Thresh)` with `m = ttcNumCubes atoms φ`.
 
-Only the FPRAS parameter range is required; the shape hypotheses are the three the
-input itself must satisfy — positivity, boundedness of `Sol(F)`, and `Vol(F) > 0`.
-No full-dimensionality hypothesis is left: pruning *makes* it true, and it is not
-derivable (`Ttc.hint_not_derivable`). -/
+Only the FPRAS parameter range is required; the shape hypotheses are the **two** the
+input itself must satisfy — positivity and `Vol(F) > 0`.  No full-dimensionality
+hypothesis is left (pruning *makes* it true, and it is not derivable,
+`Ttc.hint_not_derivable`), and no boundedness hypothesis is left either: what the
+chain needs is boundedness of the *pruned* `Sol`, and
+`Ttc.isBounded_sol_pruneForm_of_volSol_pos` derives that from `hφ` and `hpos`. -/
 theorem ttc_volume_api
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
     (1 - δ ≤
-      (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c)
-          {t | ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t
+      (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)
+          {t | ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t
                 ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧
-    (∀ (c : ℕ → Space n) (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ)
+    (∀ (c : ℕ → Space n) (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = ttcThresh atoms φ ε δ hε0 hε1 hn hφ hbdd hpos →
-      ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t →
-      ttcCost atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t cVol cSample
+      (thr : ℝ) = ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos →
+      ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos c t →
+      ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample
         ≤ ttcNumCubes atoms φ * (cVol + cSample * thr)) :=
-  ttc_volume_prune atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
+  ttc_volume_prune atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ
+    (isBounded_sol_pruneForm_of_volSol_pos atoms hφ hpos) hpos
 
 end Api
 

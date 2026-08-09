@@ -326,6 +326,7 @@ import Ttc.Exec.Cleanup
 import Ttc.Exec.Degenerate
 import Ttc.Exec.CleanInput
 import Ttc.Exec.Prune
+import Ttc.Exec.BddFromPos
 import Ttc.Exec.Api
 import Ttc.Witness.FullTwoCube
 import Ttc.Witness.Headline

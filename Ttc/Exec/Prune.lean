@@ -22,7 +22,7 @@ it by the strictly weaker
 hpos : 0 < volSol (atomSet atoms) φ
 ```
 
-— *the body has positive volume* — keeping the binder count at twelve.
+— *the body has positive volume* — without adding a binder.
 
 ## `hint` is **not** derivable, so it is discharged **by construction**
 
@@ -69,8 +69,11 @@ sol (atomSet atoms) (pruneForm atoms φ) ⊊ sol (atomSet atoms) φ    -- in gen
 ```
 
 and only the inclusion `⊆` is available (`Ttc.sol_pruneForm_subset`) — enough to
-transport `hbdd` (`Ttc.isBounded_sol_pruneForm`), not enough to transport anything
-stated as a set equality.  What *is* preserved is the measure: the deleted regions
+transport `hbdd` *into* the pruned formula (`Ttc.isBounded_sol_pruneForm`,
+`Ttc.pruneBdd`), not enough to transport anything stated as a set equality.  Note the
+transport is not needed by the chain: `Ttc.ttc_volume_prune` asks for boundedness of
+the **pruned** `Sol` and `Exec/BddFromPos` derives that from `hφ` and `hpos` alone.
+What *is* preserved is the measure: the deleted regions
 are convex with empty interior, hence Lebesgue-null, and there are finitely many of
 them (`Ttc.volume_sol_eq_volume_biUnion_nondegenCubes`), so
 
@@ -252,7 +255,12 @@ theorem volSol_pruneForm (atoms : A → LinAtom n) {φ : BForm A} (hφ : φ.IsPo
 
 /-! ## The two obligations, packaged against `hpos` -/
 
-/-- `hbdd` at the pruned formula, from `hpos`. -/
+/-- `hbdd` at the pruned formula, from the user's `hbdd` at `φ`.
+
+No longer on the chain: `Ttc.isBounded_sol_pruneForm_of_volSol_pos` (`Exec/BddFromPos`)
+proves the same conclusion from `hφ` and `hpos` alone, and that is what
+`Ttc.ttc_volume_api` passes.  Kept as the left-hand side of the drop-in check
+`Ttc.pruneBdd_eq_isBounded_sol_pruneForm_of_volSol_pos`. -/
 theorem pruneBdd (atoms : A → LinAtom n) {φ : BForm A} (hφ : φ.IsPositive)
     (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
@@ -268,12 +276,20 @@ theorem pruneInt (atoms : A → LinAtom n) {φ : BForm A} (hφ : φ.IsPositive)
 
 /-! ## The headline with `hint` traded for `hpos` -/
 
-/-- **`thm:volumettc` at 12 binders, with `hint` replaced by `0 < Vol(F)`.**
+/-- **`thm:volumettc` with `hint` replaced by `0 < Vol(F)`.**
 
 `Ttc.ttc_volume_cleanInput` run on `Ttc.pruneForm atoms φ` instead of `φ`.  The
 degeneracy hypothesis is gone and what replaces it is strictly weaker: `hint` is not
 derivable (`Ttc.hint_not_derivable`) but it is *made true* by pruning, and `hpos` is
 spent only on `Ttc.pruneNeNil`.
+
+**`hbdd` is at the pruned formula.**  This module only ever needs `Sol` of
+`Ttc.pruneForm atoms φ` to be bounded, so that — and not boundedness of the user's
+own `Sol(F)` — is what the binder asks for.  `Ttc.pruneBdd` supplies it from the
+user's `hbdd`; `Ttc.isBounded_sol_pruneForm_of_volSol_pos` (`Exec/BddFromPos`,
+downstream of this file) supplies it from `hφ` and `hpos` alone, which is what
+`Ttc.ttc_volume_api` (`Exec/Api`) passes — so no boundedness hypothesis survives
+into the headline.
 
 Every mention of the formula in the conclusion is at the pruned formula — that is
 what the algorithm is handed — except the accuracy target, which is the **original**
@@ -283,66 +299,66 @@ theorem ttc_volume_prune
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
+    (hbdd : Bornology.IsBounded (sol (atomSet atoms) (pruneForm atoms φ)))
     (hpos : 0 < volSol (atomSet atoms) φ) :
     (1 - δ ≤
       (∫⁻ c, trajLaw
             (runRates
               (scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                 (isPositive_cleanForm atoms (pruneForm atoms φ))
-                  (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                  (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                     (pruneInt atoms hφ hpos))
                 (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
               (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                 (isPositive_cleanForm atoms (pruneForm atoms φ))
               (scaledBdd atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                 (isPositive_cleanForm atoms (pruneForm atoms φ))
-                  (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                  (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                     (pruneInt atoms hφ hpos))
                 (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
               (fun i =>
                 runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                       (isPositive_cleanForm atoms (pruneForm atoms φ))
-                      (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                      (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                         (pruneInt atoms hφ hpos))
                         (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                   • autoCen atoms (cleanForm atoms (pruneForm atoms φ)) i)
               (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                     (isPositive_cleanForm atoms (pruneForm atoms φ))
-                    (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                    (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                       (pruneInt atoms hφ hpos))
                       (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                   * autoGamma atoms (cleanForm atoms (pruneForm atoms φ))) c)
           {t | ttcRunOutput
                 (scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
-                    (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                    (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                       (pruneInt atoms hφ hpos))
                   (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
                 (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
                 (scaledBdd atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
-                    (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                    (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                       (pruneInt atoms hφ hpos))
                   (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
                 (fun i =>
                   runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                         (isPositive_cleanForm atoms (pruneForm atoms φ))
-                        (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                        (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                           (pruneInt atoms hφ hpos))
                           (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                     • autoCen atoms (cleanForm atoms (pruneForm atoms φ)) i)
                 (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                       (isPositive_cleanForm atoms (pruneForm atoms φ))
-                      (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                      (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                         (pruneInt atoms hφ hpos))
                         (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                     * autoGamma atoms (cleanForm atoms (pruneForm atoms φ))) c t
               /
                 (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
-                    (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                    (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                       (pruneInt atoms hφ hpos))
                   (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))) ^ n
             ∈ relErr ε (volSol (atomSet atoms) φ)}
@@ -352,55 +368,55 @@ theorem ttc_volume_prune
         (t : ℕ → Fin (runCount
           (scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
             (isPositive_cleanForm atoms (pruneForm atoms φ))
-              (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+              (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                 (pruneInt atoms hφ hpos))
             (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
           (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
             (isPositive_cleanForm atoms (pruneForm atoms φ))
           (scaledBdd atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
             (isPositive_cleanForm atoms (pruneForm atoms φ))
-              (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+              (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                 (pruneInt atoms hφ hpos))
             (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
           (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                 (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos)) (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
               * autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))) → ℕ)
         (cVol cSample thr : ℕ),
       (thr : ℝ) =
         (inputParams atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
           (isPositive_cleanForm atoms (pruneForm atoms φ))
-            (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+            (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
               (pruneInt atoms hφ hpos))).thresh →
       Terminates
           (inputParams atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
             (isPositive_cleanForm atoms (pruneForm atoms φ))
-              (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+              (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                 (pruneInt atoms hφ hpos)))
           (runOracles
             (scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos))
               (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
             (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
             (scaledBdd atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos))
               (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
             (fun i =>
               runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                     (isPositive_cleanForm atoms (pruneForm atoms φ))
-                    (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                    (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                       (pruneInt atoms hφ hpos))
                       (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                 • autoCen atoms (cleanForm atoms (pruneForm atoms φ)) i)
             (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
-                  (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                  (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                     (pruneInt atoms hφ hpos))
                     (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                 * autoGamma atoms (cleanForm atoms (pruneForm atoms φ))) c t)
@@ -408,31 +424,31 @@ theorem ttc_volume_prune
       runCost
           (inputParams atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
             (isPositive_cleanForm atoms (pruneForm atoms φ))
-              (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+              (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                 (pruneInt atoms hφ hpos)))
           (runOracles
             (scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos))
               (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
             (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
             (scaledBdd atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos))
               (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
             (fun i =>
               runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                     (isPositive_cleanForm atoms (pruneForm atoms φ))
-                    (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                    (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                       (pruneInt atoms hφ hpos))
                       (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                 • autoCen atoms (cleanForm atoms (pruneForm atoms φ)) i)
             (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
-                  (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                  (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                     (pruneInt atoms hφ hpos))
                     (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                 * autoGamma atoms (cleanForm atoms (pruneForm atoms φ))) c t)
@@ -440,26 +456,26 @@ theorem ttc_volume_prune
           (runPrec
             (scaledAtoms atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos))
               (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
             (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
             (scaledBdd atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
               (isPositive_cleanForm atoms (pruneForm atoms φ))
-                (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                   (pruneInt atoms hφ hpos))
               (autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
             (runScale atoms (cleanForm atoms (pruneForm atoms φ)) ε δ hε0 hε1 hn
                   (isPositive_cleanForm atoms (pruneForm atoms φ))
-                  (cleanBdd atoms (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos)
+                  (cleanBdd atoms (isPositive_pruneForm atoms φ) hbdd
                     (pruneInt atoms hφ hpos))
                     (autoGamma atoms (cleanForm atoms (pruneForm atoms φ)))
                 * autoGamma atoms (cleanForm atoms (pruneForm atoms φ))))
                 (toDNFd (cleanForm atoms (pruneForm atoms φ)))
         ≤ (toDNFd (cleanForm atoms (pruneForm atoms φ))).length * (cVol + cSample * thr)) := by
   have h := ttc_volume_cleanInput atoms (pruneForm atoms φ) ε δ hε0 hε1 hδ0 hδ1 hn
-    (isPositive_pruneForm atoms φ) (pruneBdd atoms hφ hbdd hpos) (pruneInt atoms hφ hpos)
+    (isPositive_pruneForm atoms φ) hbdd (pruneInt atoms hφ hpos)
   rwa [volSol_pruneForm atoms hφ (pruneNeNil atoms hpos)] at h
 
 end Prune

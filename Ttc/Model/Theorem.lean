@@ -15,9 +15,14 @@ Audit path — `Model/`, then stop: `Model/Prelude` (the vocabulary),
 `Model/Pseudocode` (`alg:ttc`, transcribed line by line), this file.
 
 `TTC` takes three inputs, so three inputs is what this statement takes: the formula
-`F = (atoms, φ)`, the accuracy `ε`, the confidence `δ`.  **Twelve binders**, and among
-them there is no interpretation, no parameter block, no converter, no oracle, no
-precision and no inscribed-ball data.
+`F = (atoms, φ)`, the accuracy `ε`, the confidence `δ`.  **Eleven binders**
+
+```
+atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
+```
+
+and among them there is no interpretation, no parameter block, no converter, no
+oracle, no precision, no inscribed-ball data — and no boundedness hypothesis.
 
 The four quantities the guarantee is *about* — `Ttc.ttcRates`, `Ttc.ttcEstimate`,
 `Ttc.ttcCost`, `Ttc.ttcNumCubes` (`Exec/Api`) — each take exactly these inputs and
@@ -47,17 +52,37 @@ The inscribed ball is *constructed* (`Ttc.autoCen`, `Ttc.autoGamma`), but it is 
 `alg:prec` line 86's LP — it is *some* inscribed ball, and non-maximality only inflates
 `ρ = ⌈log₁₀(γ/γ̂)⌉`, so the guarantee is unaffected and only the precision is looser.
 
-## The three residual hypotheses
+## The two residual hypotheses
 
-* `hφ` — negation-free.  Independent of `hbdd` in **both** directions
+* `hφ` — negation-free.  Independent of boundedness in **both** directions
   (`Ttc.Independence.exists_isBounded_not_isPositive`,
   `Ttc.Independence.exists_isPositive_not_isBounded`), so neither can replace the other.
   Removable in principle at a bad price — see `Findings/OpenHalfspace.lean`.
-* `hbdd` — bounded solution set.  *Necessary*: `Ttc.volSol` is an `ENNReal.toReal` and
-  `toReal ⊤ = 0`, so an unbounded `Sol(F)` would certify "the output is ≈ 0" (finding 16).
 * `hpos` — `0 < Vol(F)`.  Strictly weaker than the per-cube full-dimensionality it
   replaced: `Ttc.volSol_pos_of_interior` proves that implication, and
   `Ttc.hint_not_derivable` refutes the converse.
+
+## `hbdd` is gone — **derived**, not dropped
+
+The statement used to carry a twelfth binder,
+`hbdd : Bornology.IsBounded (sol (atomSet atoms) φ)`.  What the chain actually needs is
+boundedness of `Sol` of the **pruned** formula, and
+`Ttc.isBounded_sol_pruneForm_of_volSol_pos` (`Exec/BddFromPos`) proves exactly that
+from `hφ` and `hpos` alone: `hpos` bounds the volume of `Sol(F)` away from `⊤`, every
+surviving cube's region is convex with a nonempty interior *by construction*, and a
+convex set with an interior point and finite volume is bounded
+(`Ttc.isBounded_of_convex_of_interior_of_volume_ne_top` — the step Mathlib does not
+have).  The pruned `Sol` is the finite union of those regions.
+
+That derivation became possible **only after the pruning round**.  Before it a cube of
+the DNF can be a *line*: convex, unbounded, and of volume `0` — so it contributes
+nothing to `Vol(F)` and `hpos` was perfectly consistent with an unbounded `Sol(F)`.
+`Ttc.hint_not_derivable` (`Exec/Degenerate`) is the machine-checked witness that
+`hpos` does not imply per-cube full-dimensionality, which is exactly the gap.
+Pruning deletes those cubes, `Ttc.interior_nonempty_pruneForm` supplies the interior
+point, and only then does "positive volume" imply "bounded".  Nothing here claims
+`0 < Vol(F) → IsBounded (sol (atomSet atoms) φ)` at the **unpruned** formula; that
+implication is false, and it is not needed.
 
 Non-vacuity: `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` (`Witness/FullTwoCube.lean`).
 The audit is `AUDIT.md` §1e–§1g.
@@ -79,31 +104,31 @@ open MeasureTheory Set
   `GenerateSamples` draw per returned point — is at most
   `m · (C_vol + C_sample · Thresh)`, under `Ttc.ttcTerminates`.
 
-Twelve binders, all conditions on the input.  See this module's docstring for the three
-preprocessing steps this certifies `alg:ttc` *plus*, and for what is known about each of
-`hφ`, `hbdd`, `hpos`.  Correctness, not efficiency: both oracle routes are exponential
-in `n`. -/
+Eleven binders, all conditions on the input, and only two of them shape hypotheses:
+`hφ` and `hpos`.  See this module's docstring for the three preprocessing steps this
+certifies `alg:ttc` *plus*, for what is known about `hφ` and `hpos`, and for why the
+former `hbdd` binder is now derived rather than assumed.  Correctness, not efficiency:
+both oracle routes are exponential in `n`. -/
 theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
     (hpos : 0 < volSol (atomSet atoms) φ) :
     -- (accuracy) the output is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c)
-          {t | ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t
+      (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)
+          {t | ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t
                 ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧
     -- (running time) `alg:ttc`'s charged cost, on every run, under `Ttc.ttcTerminates`
-    (∀ (c : ℕ → Space n) (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hbdd hpos) → ℕ)
+    (∀ (c : ℕ → Space n) (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = ttcThresh atoms φ ε δ hε0 hε1 hn hφ hbdd hpos →
-      ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t →
-      ttcCost atoms φ ε δ hε0 hε1 hn hφ hbdd hpos c t cVol cSample
+      (thr : ℝ) = ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos →
+      ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos c t →
+      ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample
         ≤ ttcNumCubes atoms φ * (cVol + cSample * thr)) :=
-  ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos
+  ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
 
 #print axioms ttc_volume_estimate
 
