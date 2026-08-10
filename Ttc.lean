@@ -440,6 +440,7 @@ import Ttc.Findings.OpenHalfspace
 import Ttc.Findings.SmallBody
 import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Kernel
+import Ttc.Monadic.EventMeasurable
 import Ttc.Audit.ClosureCheck
 import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
