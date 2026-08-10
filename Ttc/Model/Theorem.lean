@@ -70,15 +70,46 @@ Mathlib's measure at Mathlib's `setOf`, read as a real.  Nothing of ours is name
 ### Why the running-time half is `∀ p` and not `All[p ← ttcLaw; …]`
 
 Deliberate, and it is the **stronger** statement.  nfalean writes its running-time half
-as `All[r ← countNFAM …; …]`, where `All` is `PMF.support p ⊆ {x | E x}` — *no*
-exceptional outcome exists at all — which is the natural notion for a `PMF`.  Ours
-cannot be that: for a general measure Mathlib's support is topological, would drag a
-`[TopologicalSpace]` instance into this statement, and does not carry full mass, so our
-`All[p ← μ; E p]` is `∀ᵐ p ∂μ, E p` (`Monadic/MeasurePr`).  That permits an exceptional
-set, provided `μ` cannot see it — and the cost bound we can actually prove has **no**
-exceptional set at all: it holds at *every* point of the space, null or not.  Writing it
-as `All[…]` would throw that strength away to look more like nfalean.  So it is a plain
-`∀ p`, and it is a strictly stronger claim than the a.e. form.
+as `All[r ← countNFAM …; …]`, where `All` is `PMF.support p ⊆ {x | E x}`.  It is tempting
+to read that as "no exceptional outcome exists at all", i.e. as strictly stronger than
+almost-everywhere.  **It is not**: for a `PMF`,
+`support p ⊆ {x | E x}` ⟺ `∀ x, ¬E x → p x = 0` ⟺ `p.toOuterMeasure {¬E} = 0`, so the
+support form and the a.e. form *coincide*.  A discrete law has no room for a
+large-but-null exceptional set.
+
+A support-based quantifier is in fact available to us: `AllS[x ← μ; E x]`
+(`Monadic/MeasurePr`) is `μ.support ⊆ {x | E x}` over Mathlib's topological
+`Measure.support`, and both carriers here — `(ℕ → Space n) × (ℕ → Fin k → ℕ)` and
+`ℝ × ℕ` — get every instance it needs by `infer_instance`.  An earlier version of this
+docstring claimed that support "does not carry full mass"; **that was wrong**, and is
+refuted in `Monadic/MeasurePr`: `Measure.measure_compl_support` needs only
+`[HereditarilyLindelofSpace]`, which second countability supplies here, so the support is
+conull automatically.
+
+The real reason is the one that survives: `AllS` is still **strictly weaker** than the
+pointwise `∀ p`, and for *this* measure the gap is real rather than hypothetical.
+`Ttc.MonteCarlo.coinLaw` is `Arlib.uniformOn volume (Metric.ball 0 1)`, so `ttcLaw` is
+supported on a proper closed subset of the carrier and is not `IsOpenPosMeasure` — the
+hypothesis under which `AllS` and `∀` would coincide (`allS_iff_forall`).  Restating the
+runtime half as `AllS[…]` would therefore genuinely discard the claim at coin sequences
+leaving the unit ball.  `Monadic/MeasurePr` proves both gaps are strict, by
+counterexample rather than by prose: `exists_all_and_not_allS` and
+`exists_allS_and_not_forall`, giving `∀ ⟹ AllS ⟹ All` with both arrows strict.
+
+The same collapse happens for **our** law, for a structural reason rather than by
+analogy: `Ttc.ttcPairLaw` (`Monadic/Program`) is a pushforward along a *countably
+determined* map, so it is carried by a countable set, and
+`Ttc.ae_map_iff_atoms_of_countablyDetermined` (`Monadic/Pair`) — hypothesis named, not
+silent — gives `∀ᵐ r, E r ↔ ∀ r, ttcPairLaw {r} ≠ 0 → E r`, instantiated for this law as
+`Ttc.all_ttcPairLaw_iff_atoms`.  So a support-style quantifier over the pair law buys
+nothing over `All[…]` either.
+
+The cost bound we can actually prove holds at *every* point of the space, null or not.
+Writing it as `All[…]` or `AllS[…]` would throw that away to look more like nfalean.  So
+it is a plain `∀ p`, and it is strictly stronger than all of them.  The measure-side
+counterpart, for the paired law, is `Ttc.ttcPairLaw_cost_le_of_terminates`, stated over
+`Set.range (Ttc.ttcPair …)` — "every run the program can produce" — which is the honest
+analogue of nfalean's shape.
 
 ## What is measured: `Model/Pseudocode`'s own `Ttc.ttcRun`
 

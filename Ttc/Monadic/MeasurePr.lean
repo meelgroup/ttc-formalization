@@ -5,10 +5,13 @@ Released under Apache 2.0 license.
 import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.MeasureTheory.Measure.Dirac
 import Mathlib.MeasureTheory.Measure.Map
+import Mathlib.MeasureTheory.Measure.Support
+import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 import Mathlib.Util.Notation3
 
 /-!
-# `Pr[…]` / `All[…]` over a `MeasureTheory.Measure`
+# `Pr[…]` / `All[…]` / `AllS[…]` over a `MeasureTheory.Measure`
 
 This is the `Measure`-level analogue of nfalean's `ApproxNFA/Monadic/PMFPr.lean`.  It exists for
 the same reason: an FPRAS guarantee is an inequality between **reals**, `1 - δ ≤ Pr[good]`, and a
@@ -36,23 +39,56 @@ The practical consequences, all visible in the hypotheses below:
   `Pr ≤ 1` needs `[IsProbabilityMeasure μ]`.  These are added exactly where a law genuinely needs
   them rather than globally, so nothing here is silently false for a sub-probability measure.
 
-## `All[…]` is almost-everywhere, **not** support-based
+## Two quantifiers, not one: `All[…]` (a.e.) and `AllS[…]` (support)
 
 nfalean's `All[x ← p; E x]` is `PMF.support p ⊆ {x | E x}`: *no* exceptional outcome exists at
-all.  We deliberately do **not** copy that.  Mathlib's `MeasureTheory.Measure.support` is the
-topological support, `{x | ∃ᶠ u in (𝓝 x).smallSets, 0 < μ u}`, and it requires a
-`[TopologicalSpace α]` instance — which would drag topology into the *statement* of the headline
-theorem, and which is not available for a general carrier.  Worse, for a general measure it is not
-even the right notion: `μ (μ.support)ᶜ = 0` needs second countability, so a support-based `All`
-would not imply `Pr = 1` without extra hypotheses.
+all.  A `Measure` has two candidate readings of that, and this file provides **both**, because
+they are genuinely different strengths and the honest thing is to let a statement say which one
+it means.
 
-So `All[x ← μ; E x]` is Mathlib's `∀ᵐ x ∂μ, E x`.  **This is strictly weaker than nfalean's
-`All`**: it permits a set of exceptional points, provided that set is null.  For an atomless `μ`
-such a set can be large (uncountable, dense) — it just cannot be seen by `μ`.  What it buys is
-that `PrR_of_all` below is unconditional in the event: an a.e.-true event has probability exactly
-`1`, no measurability required.  Under nfalean's discrete reading the two agree, because a `PMF`
-has no nonempty null sets inside its support; the divergence is a genuine feature of the
-continuous setting, and it is why the docstrings below say "a.e." wherever nfalean says "every".
+* `All[x ← μ; E x]` is Mathlib's `∀ᵐ x ∂μ, E x`.  **Strictly weaker than nfalean's `All`**: it
+  permits a set of exceptional points, provided that set is null.  For an atomless `μ` such a set
+  can be large (uncountable, dense) — it just cannot be seen by `μ`.  What it buys is that
+  `PrR_of_all` below is unconditional in the event: an a.e.-true event has probability exactly
+  `1`, no measurability required.
+
+* `AllS[x ← μ; E x]` is `μ.support ⊆ {x | E x}` for Mathlib's `MeasureTheory.Measure.support`,
+  the **topological** support `{x | ∃ᶠ u in (𝓝 x).smallSets, 0 < μ u}`.  This is the literal
+  analogue of nfalean's `All`, and it is **strictly stronger** than the a.e. form: `E` must hold
+  at *every* point every neighbourhood of which the measure can see, with no exceptional set.
+
+The price of `AllS[…]`, stated plainly, is two typeclasses that `All[…]` does not need:
+
+1. **`[TopologicalSpace α]` to even write it.**  `Measure.support` is not defined for a bare
+   measurable space; Mathlib v4.32 has no measure-theoretic (topology-free) notion of support.
+   So an `AllS[…]` in a headline statement drags a topology into the statement.
+2. **`[HereditarilyLindelofSpace α]` to make it imply anything.**  `μ μ.supportᶜ = 0` is
+   `Measure.measure_compl_support`, which Mathlib proves only under a Lindelöf hypothesis
+   (`Measure.support_mem_ae`); without it, `AllS` need not imply `All`, and so need not imply
+   `Pr = 1`.  `SecondCountableTopology → HereditarilyLindelofSpace` is an instance, so this is
+   automatic on a second-countable carrier.
+
+Both are in fact **discharged automatically on this project's two carriers** — see the
+`example`s at the end of the `AllS` section: `(ℕ → EuclideanSpace ℝ (Fin n)) × (ℕ → Fin k → ℕ)`
+(the space `Ttc.ttcLaw` lives on) and `ℝ × ℕ` (the space an output law would live on) are both
+second countable, so `all_of_allS` applies to them with no side conditions.  The cost is
+therefore real but bounded: it is a widening of the statement's vocabulary, not an unprovable
+hypothesis.
+
+The two are **not** interchangeable, and the file records the gap as theorems rather than prose:
+
+* `all_of_allS` : `AllS → All`, under `[HereditarilyLindelofSpace α]`.
+* `exists_all_and_not_allS` : the converse is **false** — a machine-checked counterexample,
+  Lebesgue measure on `ℝ` with `E x := x ≠ 0`.
+* `allS_of_all_of_isClosed` : the converse holds once `{x | E x}` is **closed**.
+* `exists_allS_and_not_forall` : `AllS` is in turn **strictly weaker** than a pointwise `∀`
+  (`Measure.dirac`), so restating a genuinely pointwise guarantee as `AllS[…]` does lose
+  strength unless `μ` has full support — `allS_iff_forall` is the exact repair
+  (`[μ.IsOpenPosMeasure]`).
+
+Under nfalean's discrete reading `All` and `AllS` agree, because a `PMF` has no nonempty null
+sets inside its support; the divergence is a genuine feature of the continuous setting, and it is
+why the docstrings below say "a.e." wherever nfalean says "every".
 
 ## Design
 
@@ -107,15 +143,42 @@ syntax with `Pr[…]` so that two guarantees about the same program read the sam
 `filter_upwards`/`Filter.Eventually.mono` open it.
 
 **This is weaker than nfalean's `All`,** which is `PMF.support p ⊆ {x | E x}` — *no* exceptional
-outcome at all.  See the module docstring: Mathlib's `Measure.support` is topological, needs a
-`[TopologicalSpace α]` instance we do not want in the headline's statement, and for a general
-measure does not even carry full mass.  `∀ᵐ` permits an exceptional set, provided `μ` cannot see
-it.  For the atomless `Ttc.MonteCarlo.coins` that is the honest statement.
+outcome at all.  `∀ᵐ` permits an exceptional set, provided `μ` cannot see it.  The literal
+analogue of nfalean's quantifier is `AllS[…]` below, and `all_of_allS` is the one-way bridge;
+`exists_all_and_not_allS` shows the two are genuinely different, so a statement must choose.
 
 It is deliberately not written as `Pr[x ← μ; E x] = 1`: `PrR_of_all` converts (and needs
 `[IsProbabilityMeasure μ]` to do so), but the `∀ᵐ` form is what proofs actually produce, and it
 survives without any measurability hypothesis on the event. -/
 notation3 "All["(...)" ← "μ"; "r:(scoped E => Filter.Eventually E (MeasureTheory.ae μ))"]" => r
+
+/-- **`AllS[x ← μ; E x]` — `E` holds at every point of `μ`'s support.**
+
+Notation only: it elaborates to `μ.support ⊆ {x | E x}` for Mathlib's
+`MeasureTheory.Measure.support`, so — exactly as with `Pr[…]` and `All[…]` — nothing of ours
+appears in a statement written with it.  It is the literal analogue of nfalean's
+`All[x ← p; E x] = PMF.support p ⊆ {x | E x}`, with Mathlib's measure support in place of
+Mathlib's `PMF` support.
+
+**It is strictly stronger than `All[…]`.**  `all_of_allS` is the implication (and needs
+`[HereditarilyLindelofSpace α]`, see below); `exists_all_and_not_allS` is a machine-checked
+witness that the converse is false, so the two notations do not say the same thing and a
+statement written with `AllS[…]` is making the larger claim.
+
+**It is strictly weaker than a pointwise `∀ x, E x`.**  `allS_of_forall` is the introduction
+rule; `exists_allS_and_not_forall` witnesses that it cannot be reversed.  So rewriting a
+guarantee that is genuinely true at *every* point of the carrier into `AllS[…]` **discards
+information** — namely, what happens off the support.  `allS_iff_forall` says exactly when
+nothing is lost: when `μ` has full support (`[μ.IsOpenPosMeasure]`).
+
+**What it costs.**  `Measure.support` is the *topological* support, so writing `AllS[…]` requires
+a `[TopologicalSpace α]` instance in the statement; and it entails `All[…]` — hence `Pr = 1` —
+only under a Lindelöf hypothesis, since `Measure.measure_compl_support` is proved there.  Mathlib
+v4.32 offers no topology-free notion of the support of a measure, so this is not avoidable by a
+different choice of definition; it is the price of the quantifier.  On this project's carriers
+both instances are found automatically (second countability); see the `example`s below. -/
+notation3 "AllS["(...)" ← "μ";
+  "r:(scoped E => ((μ : MeasureTheory.Measure _)).support ⊆ setOf E)"]" => r
 
 variable {α β ι : Type*} [MeasurableSpace α] [MeasurableSpace β] {μ : Measure α}
 
@@ -323,6 +386,190 @@ theorem all_of_PrR_eq_one [IsProbabilityMeasure μ] {E : α → Prop}
     exact this
   exact MeasureTheory.ae_iff.2 hcompl
 
+/-! ## `AllS[…]`: the support-based quantifier
+
+nfalean's running-time half reads `All[r ← countNFAM …; …]` with `All` meaning
+`PMF.support p ⊆ {x | E x}` — *every run the program can produce*, no exceptional set.  This
+section is the honest `Measure` analogue of that quantifier, so that a restatement can match the
+shape without silently swapping in the weaker a.e. reading.
+
+Everything here needs `[TopologicalSpace α]` (that is what `Measure.support` is defined over),
+and the bridge to `All[…]` additionally needs `[HereditarilyLindelofSpace α]` (that is what
+`Measure.measure_compl_support` is proved over).  Neither is a hypothesis we can drop: Mathlib
+v4.32 has exactly two notions of "support" in this area — `PMF.support`, unavailable to us, and
+the topological `Measure.support` — and the latter is conull only under a Lindelöf assumption.
+
+The three relationships, with their exact status:
+
+| claim | status |
+| --- | --- |
+| `∀ x, E x` → `AllS` | theorem, no hypotheses (`allS_of_forall`) |
+| `AllS` → `∀ x, E x` | **false**; repaired by `[μ.IsOpenPosMeasure]` (`allS_iff_forall`) |
+| `AllS` → `All` | theorem, needs `[HereditarilyLindelofSpace α]` (`all_of_allS`) |
+| `All` → `AllS` | **false**; repaired by `IsClosed {x | E x}` (`allS_of_all_of_isClosed`) |
+
+The two "false" rows are not editorial: `exists_allS_and_not_forall` and
+`exists_all_and_not_allS` are proved counterexamples. -/
+
+section Support
+
+variable [TopologicalSpace α]
+
+/-- `AllS[…]` and the support inclusion are the same term. -/
+theorem allS_eq_support_subset (μ : Measure α) (E : α → Prop) :
+    (AllS[x ← μ; E x]) = (μ.support ⊆ {x | E x}) := rfl
+
+/-- **Introduction from a genuinely pointwise `∀`.**  This is the rule that lets a cost bound
+proved at *every* point of the carrier — which is what `Ttc`'s running-time analysis actually
+produces — be exported in nfalean's `AllS[…]` shape.  Note the direction: information is lost
+here (see `exists_allS_and_not_forall`), never gained. -/
+theorem allS_of_forall {E : α → Prop} (h : ∀ x, E x) : AllS[x ← μ; E x] := fun x _ => h x
+
+/-- `AllS[…]` is monotone in the event. -/
+theorem allS_mono {E F : α → Prop} (h : ∀ x, E x → F x) (hE : AllS[x ← μ; E x]) :
+    AllS[x ← μ; F x] := fun _ hx => h _ (hE hx)
+
+/-- `AllS[…]` is closed under conjunction. -/
+theorem allS_and {E F : α → Prop} (hE : AllS[x ← μ; E x]) (hF : AllS[x ← μ; F x]) :
+    AllS[x ← μ; (E x ∧ F x)] := fun _ hx => ⟨hE hx, hF hx⟩
+
+/-- **The bridge: support-based implies almost-everywhere.**
+
+The hypothesis `[HereditarilyLindelofSpace α]` is exactly what `Measure.support_mem_ae` asks for,
+and it is *not* removable: for a general topological measure space the complement of the support
+is an uncountable union of null open sets and need not be null.  A second-countable carrier gets
+it by instance (`SecondCountableTopology.toHereditarilyLindelof`), which covers both of this
+project's carriers. -/
+theorem all_of_allS [HereditarilyLindelofSpace α] {E : α → Prop} (h : AllS[x ← μ; E x]) :
+    All[x ← μ; E x] :=
+  Filter.mem_of_superset (Measure.support_mem_ae (μ := μ)) h
+
+/-- **A support-based guarantee has probability one.**  Composite of `all_of_allS` and
+`PrR_of_all`; the `[HereditarilyLindelofSpace α]` hypothesis is inherited from the former and is
+the reason a support-based `All` does *not* give `Pr = 1` for free. -/
+theorem PrR_of_allS [HereditarilyLindelofSpace α] [IsProbabilityMeasure μ] {E : α → Prop}
+    (h : AllS[x ← μ; E x]) : μ.PrR E = 1 :=
+  PrR_of_all (all_of_allS h)
+
+/-- **The converse of `all_of_allS`, repaired.**  `All → AllS` is false in general
+(`exists_all_and_not_allS`); it becomes true as soon as the event's extension is closed, because
+the support is the smallest closed conull set (`Measure.support_subset_of_isClosed`).  No Lindelöf
+hypothesis is needed for this direction. -/
+theorem allS_of_all_of_isClosed {E : α → Prop} (hE : IsClosed {x | E x})
+    (h : All[x ← μ; E x]) : AllS[x ← μ; E x] :=
+  Measure.support_subset_of_isClosed hE h
+
+/-- **The converse of `allS_of_forall`, repaired.**  When `μ` has full support — every nonempty
+open set has positive measure — `AllS[…]` *is* the pointwise `∀`, and nothing is lost by writing
+the statement in nfalean's shape.  Without `[μ.IsOpenPosMeasure]` the implication fails
+(`exists_allS_and_not_forall`). -/
+theorem allS_iff_forall [μ.IsOpenPosMeasure] {E : α → Prop} :
+    (AllS[x ← μ; E x]) ↔ ∀ x, E x := by
+  rw [allS_eq_support_subset, Measure.support_eq_univ]
+  exact ⟨fun h x => h (Set.mem_univ x), fun h _ _ => h _⟩
+
+omit [TopologicalSpace α] in
+/-- **Pushforward.**  The shape a restated headline would use if it spoke about the law of the
+algorithm's *output* rather than of its raw randomness: an a.e. guarantee upstairs becomes a
+support guarantee downstairs, provided the event's extension is closed.  Both hypotheses are
+genuine — `ae_map_iff` needs the event measurable (supplied here by `IsClosed` together with
+`[OpensMeasurableSpace β]`), and the closedness is what `allS_of_all_of_isClosed` consumes. -/
+theorem allS_map_of_all [TopologicalSpace β] [OpensMeasurableSpace β] {f : α → β}
+    (hf : AEMeasurable f μ) {E : β → Prop} (hE : IsClosed {y | E y})
+    (h : All[x ← μ; E (f x)]) : AllS[y ← μ.map f; E y] :=
+  allS_of_all_of_isClosed hE ((MeasureTheory.ae_map_iff hf hE.measurableSet).2 h)
+
+/-- **A deterministic program's support is its single outcome.**  The analogue of
+`PMF.support_pure`, and the sanity check that `AllS[…]` really is "every outcome the program can
+produce": for `Measure.dirac` it is decidable by the one outcome, exactly as nfalean's `All` is.
+`[T1Space α]` is what makes `{a}` closed. -/
+theorem support_dirac [T1Space α] [OpensMeasurableSpace α] (a : α) :
+    (Measure.dirac a).support = {a} := by
+  ext x
+  rw [Measure.mem_support_iff_forall]
+  constructor
+  · intro h
+    by_contra hx
+    have hU : ({a}ᶜ : Set α) ∈ nhds x := isOpen_compl_singleton.mem_nhds hx
+    have hpos := h _ hU
+    rw [Measure.dirac_apply' a (isOpen_compl_singleton (x := a)).measurableSet] at hpos
+    simp at hpos
+  · intro hx U hU
+    rw [Set.mem_singleton_iff] at hx
+    subst hx
+    rw [Measure.dirac_apply_of_mem (mem_of_mem_nhds hU)]
+    exact zero_lt_one
+
+/-- `AllS[…]` at a `Measure.dirac` is the event at the single outcome — the `Measure` form of
+nfalean's `PMF.pure` computation. -/
+theorem allS_dirac [T1Space α] [OpensMeasurableSpace α] (a : α) {E : α → Prop} :
+    (AllS[x ← Measure.dirac a; E x]) ↔ E a := by
+  rw [allS_eq_support_subset, support_dirac]
+  exact ⟨fun h => h rfl, fun h _ hx => hx ▸ h⟩
+
+end Support
+
+/-! ### The two implications that are **false**, with witnesses
+
+These are stated as existentials and *proved*, not asserted in a docstring, because they are the
+whole reason `All[…]` and `AllS[…]` are separate notations. -/
+
+/-- **`All → AllS` is false.**  Lebesgue measure on `ℝ` and the event `x ≠ 0`: the exceptional set
+`{0}` is null, so the event holds almost everywhere, but `volume` has full support, so `0` lies in
+`volume.support` and the support inclusion fails.  This is the precise sense in which restating a
+support-based guarantee as an a.e. one weakens it. -/
+theorem exists_all_and_not_allS :
+    ∃ (μ : Measure ℝ) (E : ℝ → Prop), (All[x ← μ; E x]) ∧ ¬ (AllS[x ← μ; E x]) := by
+  refine ⟨volume, fun x => x ≠ 0, compl_mem_ae_iff.2 (measure_singleton (0 : ℝ)), ?_⟩
+  intro h
+  rw [allS_eq_support_subset, Measure.support_eq_univ] at h
+  exact h (Set.mem_univ (0 : ℝ)) rfl
+
+/-- **`AllS → ∀` is false.**  `Measure.dirac 0` on `ℝ` and the event `x = 0`: the support is `{0}`
+(`support_dirac`), so the support inclusion holds, but the event certainly does not hold at every
+real.  This is the precise sense in which restating a *pointwise* guarantee — which is what this
+project's running-time analysis proves — as `AllS[…]` weakens it. -/
+theorem exists_allS_and_not_forall :
+    ∃ (μ : Measure ℝ) (E : ℝ → Prop), (AllS[x ← μ; E x]) ∧ ¬ (∀ x, E x) := by
+  refine ⟨Measure.dirac 0, fun x => x = 0, (allS_dirac (0 : ℝ)).2 rfl, ?_⟩
+  intro h
+  exact one_ne_zero (h 1)
+
+/-! ### `AllS[…]` is available on this project's two carriers
+
+The two typeclass costs above are discharged by `infer_instance` on both spaces the development
+uses: `(ℕ → EuclideanSpace ℝ (Fin n)) × (ℕ → Fin k → ℕ)` — the carrier of `Ttc.ttcLaw`, a
+countable product of Euclidean spaces times a countable product of countable discrete spaces —
+and `ℝ × ℕ`, the carrier an output law would live on.  Both are second countable, hence
+hereditarily Lindelöf, so `all_of_allS` and `PrR_of_allS` apply to them with no side conditions.
+
+These `example`s are the machine check of that claim; they are stated with `EuclideanSpace ℝ
+(Fin n)` written out rather than as `Ttc.Space n` so that this file stays independent of `Ttc`. -/
+
+example (n k : ℕ) :
+    HereditarilyLindelofSpace ((ℕ → EuclideanSpace ℝ (Fin n)) × (ℕ → Fin k → ℕ)) :=
+  inferInstance
+
+example (n k : ℕ) :
+    OpensMeasurableSpace ((ℕ → EuclideanSpace ℝ (Fin n)) × (ℕ → Fin k → ℕ)) := inferInstance
+
+example : HereditarilyLindelofSpace (ℝ × ℕ) := inferInstance
+
+example : OpensMeasurableSpace (ℝ × ℕ) := inferInstance
+
+/-- The bridge, specialised to the carrier of `Ttc.ttcLaw`: no hypothesis beyond the measure
+itself.  Stated as a theorem rather than an `example` so that `#print axioms` can see it. -/
+theorem all_of_allS_ttcCarrier {n k : ℕ}
+    (μ : Measure ((ℕ → EuclideanSpace ℝ (Fin n)) × (ℕ → Fin k → ℕ)))
+    {E : (ℕ → EuclideanSpace ℝ (Fin n)) × (ℕ → Fin k → ℕ) → Prop}
+    (h : AllS[x ← μ; E x]) : All[x ← μ; E x] :=
+  all_of_allS h
+
+/-- The bridge, specialised to an output carrier `ℝ × ℕ` — nfalean's carrier exactly. -/
+theorem all_of_allS_outputCarrier (μ : Measure (ℝ × ℕ)) {E : ℝ × ℕ → Prop}
+    (h : AllS[x ← μ; E x]) : All[x ← μ; E x] :=
+  all_of_allS h
+
 /-! ## Small computations -/
 
 /-- The certain event. -/
@@ -379,5 +626,20 @@ theorem PrR_dirac (a : α) {E : α → Prop} (hE : MeasurableSet {x | E x}) :
 #print axioms Ttc.Monadic.PrR_true
 #print axioms Ttc.Monadic.PrR_false
 #print axioms Ttc.Monadic.PrR_dirac
+#print axioms Ttc.Monadic.allS_eq_support_subset
+#print axioms Ttc.Monadic.allS_of_forall
+#print axioms Ttc.Monadic.allS_mono
+#print axioms Ttc.Monadic.allS_and
+#print axioms Ttc.Monadic.all_of_allS
+#print axioms Ttc.Monadic.PrR_of_allS
+#print axioms Ttc.Monadic.allS_of_all_of_isClosed
+#print axioms Ttc.Monadic.allS_iff_forall
+#print axioms Ttc.Monadic.allS_map_of_all
+#print axioms Ttc.Monadic.support_dirac
+#print axioms Ttc.Monadic.allS_dirac
+#print axioms Ttc.Monadic.exists_all_and_not_allS
+#print axioms Ttc.Monadic.exists_allS_and_not_forall
+#print axioms Ttc.Monadic.all_of_allS_ttcCarrier
+#print axioms Ttc.Monadic.all_of_allS_outputCarrier
 
 end Ttc.Monadic

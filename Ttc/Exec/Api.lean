@@ -652,6 +652,228 @@ theorem ttcRun_eq_ttcEstimate (c : ℕ → Space n)
     ttcRun atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos) c t
       = ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t := rfl
 
+/-! ## The runtime conjunct in closed arithmetic form
+
+The runtime bound `m · (C_vol + C_sample · Thresh)` names two quantities,
+`Ttc.ttcNumCubes` and `Ttc.ttcThresh`.  This block says what each **is**, as
+arithmetic in the algorithm's own inputs, so that the headline can be restated in
+the shape `ApproxNFA.approxNFA_countNFA` uses — explicit arithmetic, no named
+auxiliary constants.
+
+Two of the five names of the conjunct do **not** have such a form, and saying so is
+part of the audit:
+
+* `Ttc.ttcIndex` is `|Sol(F̂) ∩ 𝕃ⁿ|` at the computed precision
+  `ρ = ⌈log₁₀(γ / (q·γ̂))⌉`, where `γ̂ = Ttc.autoGamma` is the *inscribed radius* of
+  the preprocessed body and `q = Ttc.runScale` the dilation computed from it.  Both
+  are geometric data of the input body, not arithmetic in `ε`, `δ`, `n`; the index
+  is a lattice-point count, and no closed form for it exists.  It appears only as
+  the *type* of the sample coins, never in the bound.
+* `Ttc.ttcTerminates` and `Ttc.ttcCost` are properties/functions of the run's own
+  fold; they are structural, not numeric.
+
+`Ttc.ttcThresh`, by contrast, **is** closed-form: `Ttc.Params.thresh` reads only
+`P.δ`, `P.ε` (through `P.epsPrime = ε/12`) and `P.m`, and never `P.r`, `γ`, `κ` or
+`ρ`.  So no geometry enters it. -/
+
+/-- **`m` is the cube count of the preprocessed formula's DNF**, spelled with
+`Model/Pseudocode`'s own `Ttc.preprocess`, by `rfl`. -/
+theorem ttcNumCubes_eq (atoms : A → LinAtom n) (φ : BForm A) :
+    ttcNumCubes atoms φ = (toDNFd (preprocess atoms φ)).length := rfl
+
+/-- **`m` is also the parameter block's `Ttc.Params.m`** — `Ttc.toDNFd` is
+duplicate-free (`Ttc.toDNFd_nodup`), so the list's length and the cardinality of its
+member subtype agree.  This is the bridge between the `Ttc.ttcNumCubes` of the
+runtime bound and the `P.m` that `Ttc.Params.thresh` is written in terms of. -/
+theorem ttcNumCubes_eq_card (atoms : A → LinAtom n) (φ : BForm A) :
+    ttcNumCubes atoms φ = Nat.card {c : Cube A // c ∈ toDNFd (preprocess atoms φ)} :=
+  (card_toDNFd _).symm
+
+/-- **The parameter block's `m` is `Ttc.ttcNumCubes`.** -/
+theorem ttcBlock_m :
+    (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).m = ttcNumCubes atoms φ :=
+  card_toDNFd _
+
+/-- **The parameter block's accuracy is the user's `ε`**, by `rfl`. -/
+theorem ttcBlock_eps : (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).ε = ε := rfl
+
+/-- **The parameter block's failure probability is `4δ/5`**, by `rfl` — the internal
+budget `δ₀`, so that the headline's conclusion is a clean `1 − δ`. -/
+theorem ttcBlock_delta : (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).δ = 4 * δ / 5 := rfl
+
+/-- **The parameter block's dimension is `n`**, by `rfl`. -/
+theorem ttcBlock_n : (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).n = n := rfl
+
+/-- **The parameter block's facet count**, by `rfl` — the one field that is *not*
+arithmetic in the inputs.  It does not enter `Ttc.ttcThresh`; it enters only `κ` and
+`γ`, hence the precision `ρ`. -/
+theorem ttcBlock_r :
+    (ttcBlock atoms φ ε δ hε0 hε1 hn hφ hpos).r
+      = (Nat.card (FacetIndex (toDNFd (preprocess atoms φ))) : ℝ) := rfl
+
+/-- **`Thresh` in closed arithmetic form.**  Unfolding `Ttc.Params.thresh` at the
+block `Ttc.inputParams` computes — whose `δ` is the internal `4δ/5`, whose
+`Ttc.Params.epsPrime` is `ε/12`, and whose `m` is `Ttc.ttcNumCubes` — gives
+
+```
+Thresh = max ( 24·log(24/(4δ/5)) / ((1 − ε/12)·(ε/12)²) ,
+               15·(log(6/(4δ/5)) + log m) )
+```
+
+**No geometric quantity occurs**: not the inscribed radius `γ̂`, not the dilation
+`q`, not the facet count `r`, not the precision `ρ`.  So the runtime bound *is*
+reachable in `ApproxNFA.approxNFA_countNFA`'s shape, with `m` playing the role
+`Fintype.card Q` plays there. -/
+theorem ttcThresh_eq :
+    ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos
+      = max (24 * Real.log (24 / (4 * δ / 5)) / ((1 - ε / 12) * (ε / 12) ^ 2))
+          (15 * (Real.log (6 / (4 * δ / 5))
+            + Real.log (ttcNumCubes atoms φ))) := by
+  have hm : Nat.card {c : Cube A // c ∈ toDNFd (preprocess atoms φ)}
+      = ttcNumCubes atoms φ := card_toDNFd _
+  show max (24 * Real.log (24 / (4 * δ / 5)) / ((1 - ε / 12) * (ε / 12) ^ 2))
+      (15 * (Real.log (6 / (4 * δ / 5))
+        + Real.log (Nat.card {c : Cube A // c ∈ toDNFd (preprocess atoms φ)}))) = _
+  rw [hm]
+
+/-- **`Thresh`, with the internal `δ₀ = 4δ/5` divided out** — `24/(4δ/5) = 30/δ` and
+`6/(4δ/5) = 15/(2δ)`.  Needs `δ ≠ 0`, which is why it is separate from
+`Ttc.ttcThresh_eq`. -/
+theorem ttcThresh_eq' (hδ0 : 0 < δ) :
+    ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos
+      = max (24 * Real.log (30 / δ) / ((1 - ε / 12) * (ε / 12) ^ 2))
+          (15 * (Real.log (15 / (2 * δ))
+            + Real.log (ttcNumCubes atoms φ))) := by
+  rw [ttcThresh_eq]
+  have h1 : (24 : ℝ) / (4 * δ / 5) = 30 / δ := by
+    field_simp
+    ring
+  have h2 : (6 : ℝ) / (4 * δ / 5) = 15 / (2 * δ) := by
+    field_simp
+    ring
+  rw [h1, h2]
+
+/-- **`Thresh ≥ 0`.**  The first branch's numerator `24·log(24/δ₀)` is nonnegative
+because `δ₀ = 4δ/5 ≤ 4/5 < 24`, and its denominator is positive because
+`ε/12 ∈ (0, 1/12]`. -/
+theorem ttcThresh_nonneg (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
+    0 ≤ ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos := by
+  rw [ttcThresh_eq]
+  refine le_trans ?_ (le_max_left _ _)
+  have hd : (0 : ℝ) < 4 * δ / 5 := by linarith
+  have h1 : (1 : ℝ) ≤ 24 / (4 * δ / 5) := by
+    rw [le_div_iff₀ hd]; linarith
+  have hlog : 0 ≤ Real.log (24 / (4 * δ / 5)) := Real.log_nonneg h1
+  have hden : (0 : ℝ) ≤ (1 - ε / 12) * (ε / 12) ^ 2 :=
+    mul_nonneg (by linarith) (by positivity)
+  exact div_nonneg (by linarith) hden
+
+/-! ### The bound at an integer threshold
+
+`Ttc.runCost_le` (`Runtime.lean`) asks for a natural `thr` with `(thr : ℝ)` **equal**
+to `Thresh`.  That is an integrality constraint on a real number built from
+`Real.log`, and for generic `ε`, `δ` **no such `thr` exists** — so a runtime conjunct
+phrased as `∀ thr : ℕ, (thr : ℝ) = Thresh → …` is satisfied vacuously at generic
+inputs.  The bound the proof actually gives is monotone in `thr`, so it holds at any
+`thr` *above* `Thresh`; `Ttc.runCost_le_of_thresh_le` is that version, and
+`Ttc.ttcCost_le_ceilThresh` / `Ttc.ttcCost_le_thresh_add_one` instantiate it at
+`⌈Thresh⌉₊`, giving an unconditional numeric bound with no integrality side
+condition. -/
+
+/-- **`Ttc.runCost_le` with `=` weakened to `≤`.**  The proof of `Ttc.runCost_le`
+uses `hthr` only to turn `(Nᵢ : ℝ) ≤ P.thresh` into `Nᵢ ≤ thr`, which needs no more
+than `P.thresh ≤ (thr : ℝ)`.  Everything else is unchanged. -/
+theorem runCost_le_of_thresh_le {ι : Type*} (P : Params) (O : Oracles n ι)
+    (cVol cSample : ℕ) (ρ : ℤ) (cubes : List ι) (thr : ℕ)
+    (hthr : P.thresh ≤ (thr : ℝ)) (h : Terminates P O cubes) :
+    runCost P O cVol cSample ρ cubes ≤ cubes.length * (cVol + cSample * thr) := by
+  have key : ∀ (l : List ι), (∀ (st : SketchState n) (i : ι), i ∈ l →
+        AbsorbExits P O i (O.vol i) (dropCovered O i st.X) st.level
+          (haltLevel P (O.vol i) st.level)) →
+      ∀ (st : SketchState n) (acc : ℕ),
+      (l.foldl (fun (a : ℕ × SketchState n) i =>
+          (a.1 + stepCost cVol cSample (stepPre P O a.2 i).2, step P O ρ a.2 i))
+        (acc, st)).1 ≤ acc + l.length * (cVol + cSample * thr) := by
+    intro l
+    induction l with
+    | nil => intro _ st acc; simp
+    | cons i rest ih =>
+        intro hmem st acc
+        have hi := hmem st i List.mem_cons_self
+        have hN : (stepPre P O st i).2 ≤ thr := by
+          have hle : ((stepPre P O st i).2 : ℝ) ≤ (thr : ℝ) :=
+            le_trans (stepPre_snd_le P O st i hi) hthr
+          exact_mod_cast hle
+        have hstep : stepCost cVol cSample (stepPre P O st i).2 ≤ cVol + cSample * thr :=
+          Nat.add_le_add_left (Nat.mul_le_mul_left cSample hN) cVol
+        have hrec := ih (fun st' i' hi' => hmem st' i' (List.mem_cons_of_mem _ hi'))
+          (step P O ρ st i) (acc + stepCost cVol cSample (stepPre P O st i).2)
+        simp only [List.foldl_cons, List.length_cons]
+        have hmid : acc + stepCost cVol cSample (stepPre P O st i).2
+              + rest.length * (cVol + cSample * thr)
+            ≤ acc + (rest.length + 1) * (cVol + cSample * thr) := by
+          have hh := Nat.add_le_add_right (Nat.add_le_add_left hstep acc)
+            (rest.length * (cVol + cSample * thr))
+          calc acc + stepCost cVol cSample (stepPre P O st i).2
+                + rest.length * (cVol + cSample * thr)
+              ≤ acc + (cVol + cSample * thr) + rest.length * (cVol + cSample * thr) := hh
+            _ = acc + (rest.length + 1) * (cVol + cSample * thr) := by ring
+        exact le_trans hrec hmid
+  have hk := key cubes h ⟨0, 0⟩ 0
+  simpa [runCost] using hk
+
+/-- **The runtime bound at `⌈Thresh⌉₊`** — same conclusion as the runtime conjunct of
+`Ttc.ttc_volume_api`, but with the integrality side condition `(thr : ℝ) = Thresh`
+replaced by the explicit witness `thr = ⌈Thresh⌉₊`, which always exists.  The
+`Ttc.ttcTerminates` guard is still there, and is **not** removable — see
+`Ttc.ttcCost_le_thresh_add_one`'s docstring. -/
+theorem ttcCost_le_ceilThresh (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) (cVol cSample : ℕ)
+    (hterm : ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos c t) :
+    ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample
+      ≤ ttcNumCubes atoms φ
+          * (cVol + cSample * ⌈ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos⌉₊) :=
+  runCost_le_of_thresh_le _ _ cVol cSample _ _ _ (Nat.le_ceil _) hterm
+
+/-- **The runtime bound as real arithmetic in the algorithm's inputs.**  Combining
+`Ttc.ttcCost_le_ceilThresh` with `⌈x⌉₊ < x + 1` and `Ttc.ttcThresh_eq`,
+
+```
+cost ≤ m · (C_vol + C_sample · (Thresh + 1)),
+Thresh = max ( 24·log(24/(4δ/5)) / ((1 − ε/12)·(ε/12)²) ,
+               15·(log(6/(4δ/5)) + log m) ),
+m      = (toDNFd (preprocess atoms φ)).length
+```
+
+with no side condition on `C_vol`, `C_sample` and no integrality constraint.
+
+**The `Ttc.ttcTerminates` guard cannot be dropped.**  `Ttc.absorbLevel` is
+`max j₁ (sInf S)`; off `Ttc.AbsorbExits` the set `S` is empty, `sInf ∅ = 0`, and the
+loop's exit level defaults to `j₁`, at which the Poisson oracle's value
+`O.pois i j₁ …` is an arbitrary natural.  For the constructed bundle that value is
+the read-off `Ttc.trajPois` of the sample coins `t`, which range over *all* of
+`ℕ → Fin _ → ℕ`, so for every candidate bound there is a `t` exceeding it.  No
+deterministic cost bound is true off the guard; removing it would need the algorithm
+to be interrupt-truncated (a level budget) plus a tail bound saying the budget is
+rarely hit — which is exactly what `ApproxNFA` has and this development does not. -/
+theorem ttcCost_le_thresh_add_one (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) (cVol cSample : ℕ)
+    (hterm : ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos c t) :
+    (ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample : ℝ)
+      ≤ (ttcNumCubes atoms φ : ℝ)
+          * ((cVol : ℝ) + (cSample : ℝ)
+              * (ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos + 1)) := by
+  have hcast : (ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample : ℝ)
+      ≤ (ttcNumCubes atoms φ : ℝ)
+          * ((cVol : ℝ) + (cSample : ℝ)
+              * (⌈ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos⌉₊ : ℝ)) := by
+    exact_mod_cast ttcCost_le_ceilThresh atoms φ ε δ hε0 hε1 hn hφ hpos c t cVol cSample hterm
+  refine le_trans hcast ?_
+  have hceil : (⌈ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos⌉₊ : ℝ)
+      ≤ ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos + 1 :=
+    le_of_lt (Nat.ceil_lt_add_one (ttcThresh_nonneg atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1))
+  gcongr
+
 end Measured
 
 end Ttc
@@ -685,3 +907,16 @@ end Ttc
 #print axioms Ttc.algIndex_eq_ttcIndex
 #print axioms Ttc.ttcRun_eq_ttcAlgOutput
 #print axioms Ttc.ttcRun_eq_ttcEstimate
+#print axioms Ttc.ttcNumCubes_eq
+#print axioms Ttc.ttcNumCubes_eq_card
+#print axioms Ttc.ttcBlock_m
+#print axioms Ttc.ttcBlock_eps
+#print axioms Ttc.ttcBlock_delta
+#print axioms Ttc.ttcBlock_n
+#print axioms Ttc.ttcBlock_r
+#print axioms Ttc.ttcThresh_eq
+#print axioms Ttc.ttcThresh_eq'
+#print axioms Ttc.ttcThresh_nonneg
+#print axioms Ttc.runCost_le_of_thresh_le
+#print axioms Ttc.ttcCost_le_ceilThresh
+#print axioms Ttc.ttcCost_le_thresh_add_one
