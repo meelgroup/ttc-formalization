@@ -17,16 +17,26 @@ Cousins–Vempala shape needs: `r` independent *runs*, each run a product of `m`
 independent *phase scores*, together with a measurable median of the runs.
 
 Everything here is stated over an *abstract* score: the randomness of run `j`,
-phase `i` is one real coordinate, and the score is an arbitrary measurable
-function of that coordinate.  No geometry, no sampler, no convex body.
+phase `i` is one coordinate of an **arbitrary measurable space** `E`, and the
+score is an arbitrary measurable `E → ℝ`.  No geometry, no sampler, no convex
+body.
+
+The coordinate space `E` carries **no assumption beyond `MeasurableSpace E`** —
+no topology, no `BorelSpace`, no second countability, no standard-Borel
+hypothesis, no `MeasurableSingletonClass`.  Only the coordinate *measures* are
+constrained, and only by `IsProbabilityMeasure`.  So `E` may be a trajectory
+space such as `ℕ → EuclideanSpace ℝ (Fin n)`; see the `traj*` declarations at the
+end of the file for a worked non-`ℝ` instance.  The *scores* stay real-valued:
+the median needs a linear order on the values, and `memLp_two_runProd` needs
+`|·|` and `L²` on them.
 
 ## Two spaces
 
-* **Finite.** `RunSpace r m := Fin r → Fin m → ℝ`, carrying `runMeasure ν :=
+* **Finite.** `RunSpace E r m := Fin r → Fin m → E`, carrying `runMeasure ν :=
   Measure.pi fun j => Measure.pi fun i => ν j i` for an arbitrary family `ν` of
-  probability measures on `ℝ`.  A probability space by
+  probability measures on `E`.  A probability space by
   `MeasureTheory.Measure.pi.instIsProbabilityMeasure`.
-* **Universal.** `NatRunSpace := ℕ → ℕ → ℝ` with
+* **Universal.** `NatRunSpace E := ℕ → ℕ → E` with
   `natRunMeasure ν := Measure.infinitePi fun j => Measure.infinitePi fun i => ν j i`.
   **This is the one a consumer wants**: an estimator interface fixes a single
   `Ω` and `μ` up front while the repetition count `r` and phase count `m` vary
@@ -61,6 +71,9 @@ non-vacuity section.
   declarations — the **non-vacuity** witness: two runs of two phases (resp. every
   `(r, m)`) of independent fair coins, with a non-constant score, and a proof
   that no score is almost-everywhere constant.
+* The `traj*` declarations — a second non-vacuity witness whose coordinate space
+  is **not** `ℝ` but the trajectory space `ℕ → ℝ`, exhibiting that the results
+  above really are available at an abstract `E`.
 
 ## Auxiliary results proved here that Mathlib appears to lack
 
@@ -289,33 +302,38 @@ theorem iIndepFun_const {Ω ι : Type*} {_ : MeasurableSpace Ω} {μ : Measure �
         ⊆ (fun _ : Ω => c i₀) ⁻¹' sets i₀ := Set.biInter_subset_of_mem hi₀S
     rw [measure_mono_null hsub hzero, Finset.prod_eq_zero hi₀S hzero]
 
-/-! ## The sample space: one real coordinate per (run, phase) -/
+/-! ## The sample space: one abstract coordinate per (run, phase) -/
 
 variable {r m : ℕ}
 
-/-- **The sample space of `r` runs of `m` phases**: one real coordinate per
-(run, phase) pair, arranged as a *nested* product `Fin r → (Fin m → ℝ)`.
+/-- **The sample space of `r` runs of `m` phases**: one `E`-valued coordinate per
+(run, phase) pair, arranged as a *nested* product `Fin r → (Fin m → E)`.
 
-Nested rather than flat (`Fin r × Fin m → ℝ`) on purpose: with this arrangement
+`E` is an arbitrary measurable space — in the intended application it is the
+space of one phase's randomness (a sampler trajectory), not a real number.
+
+Nested rather than flat (`Fin r × Fin m → E`) on purpose: with this arrangement
 each *run* is a function of a single outer coordinate, so independence of the
 runs — the grouping step, which is what a flat arrangement makes hard — is a
 direct application of `ProbabilityTheory.iIndepFun_pi`. -/
-abbrev RunSpace (r m : ℕ) : Type := Fin r → Fin m → ℝ
+abbrev RunSpace (E : Type*) (r m : ℕ) := Fin r → Fin m → E
 
-/-- The product measure on `RunSpace r m`: run `j`, phase `i` draws from `ν j i`,
-all `r · m` draws independent. -/
-noncomputable def runMeasure (ν : Fin r → Fin m → Measure ℝ) : Measure (RunSpace r m) :=
+variable {E : Type*} [MeasurableSpace E]
+
+/-- The product measure on `RunSpace E r m`: run `j`, phase `i` draws from
+`ν j i`, all `r · m` draws independent. -/
+noncomputable def runMeasure (ν : Fin r → Fin m → Measure E) : Measure (RunSpace E r m) :=
   Measure.pi fun j => Measure.pi fun i => ν j i
 
 /-- `runMeasure` of probability measures is a probability measure. -/
-instance isProbabilityMeasure_runMeasure (ν : Fin r → Fin m → Measure ℝ)
+instance isProbabilityMeasure_runMeasure (ν : Fin r → Fin m → Measure E)
     [∀ j i, IsProbabilityMeasure (ν j i)] : IsProbabilityMeasure (runMeasure ν) := by
   rw [runMeasure]; infer_instance
 
 /-- The coordinate projection is measure preserving onto the corresponding factor. -/
-theorem measurePreserving_coord (ν : Fin r → Fin m → Measure ℝ)
+theorem measurePreserving_coord (ν : Fin r → Fin m → Measure E)
     [∀ j i, IsProbabilityMeasure (ν j i)] (j : Fin r) (i : Fin m) :
-    MeasurePreserving (fun ω : RunSpace r m => ω j i) (runMeasure ν) (ν j i) :=
+    MeasurePreserving (fun ω : RunSpace E r m => ω j i) (runMeasure ν) (ν j i) :=
   (measurePreserving_eval (fun i => ν j i) i).comp
     (measurePreserving_eval (fun j => Measure.pi fun i => ν j i) j)
 
@@ -328,47 +346,48 @@ consumer needs, since its estimator family is indexed by `ℕ`. -/
 
 /-- The score of run `j`, phase `i`: `g j i` applied to the `(j, i)` coordinate,
 and `1` at out-of-range indices. -/
-noncomputable def score (g : Fin r → Fin m → ℝ → ℝ) (j i : ℕ) (ω : RunSpace r m) : ℝ :=
+noncomputable def score (g : Fin r → Fin m → E → ℝ) (j i : ℕ) (ω : RunSpace E r m) : ℝ :=
   if hj : j < r then if hi : i < m then g ⟨j, hj⟩ ⟨i, hi⟩ (ω ⟨j, hj⟩ ⟨i, hi⟩) else 1 else 1
 
+omit [MeasurableSpace E] in
 /-- At in-range indices the score is what it says: `g j i` of the `(j,i)` coordinate. -/
-theorem score_coe (g : Fin r → Fin m → ℝ → ℝ) (j : Fin r) (i : Fin m) (ω : RunSpace r m) :
+theorem score_coe (g : Fin r → Fin m → E → ℝ) (j : Fin r) (i : Fin m) (ω : RunSpace E r m) :
     score g (j : ℕ) (i : ℕ) ω = g j i (ω j i) := by
   rw [score, dif_pos j.isLt, dif_pos i.isLt]
 
 /-- **`hW_meas`**: every score is measurable, at every pair of natural indices. -/
-theorem measurable_score {g : Fin r → Fin m → ℝ → ℝ} (hg : ∀ j i, Measurable (g j i))
+theorem measurable_score {g : Fin r → Fin m → E → ℝ} (hg : ∀ j i, Measurable (g j i))
     (j i : ℕ) : Measurable (score g j i) := by
   by_cases hj : j < r
   · by_cases hi : i < m
     · have h : score g j i
-          = fun ω : RunSpace r m => g ⟨j, hj⟩ ⟨i, hi⟩ (ω ⟨j, hj⟩ ⟨i, hi⟩) := by
+          = fun ω : RunSpace E r m => g ⟨j, hj⟩ ⟨i, hi⟩ (ω ⟨j, hj⟩ ⟨i, hi⟩) := by
         funext ω; rw [score, dif_pos hj, dif_pos hi]
       rw [h]
       exact (hg _ _).comp ((measurable_pi_apply _).comp (measurable_pi_apply _))
-    · have h : score g j i = fun _ : RunSpace r m => (1 : ℝ) := by
+    · have h : score g j i = fun _ : RunSpace E r m => (1 : ℝ) := by
         funext ω; rw [score, dif_pos hj, dif_neg hi]
       rw [h]; exact measurable_const
-  · have h : score g j i = fun _ : RunSpace r m => (1 : ℝ) := by
+  · have h : score g j i = fun _ : RunSpace E r m => (1 : ℝ) := by
       funext ω; rw [score, dif_neg hj]
     rw [h]; exact measurable_const
 
 /-- **`hphase_indep`**: for each run index `j`, the `m` phase scores of run `j`
 are independent.
 
-Proof: on the factor `Fin m → ℝ` the scores of run `j` are independent by
+Proof: on the factor `Fin m → E` the scores of run `j` are independent by
 `ProbabilityTheory.iIndepFun_pi`; the projection `ω ↦ ω j` is measure preserving
 onto that factor (`MeasureTheory.measurePreserving_eval`), and
 `Arlib.Probability.iIndepFun_comp_measurePreserving` transports independence
 along it.  At an out-of-range `j` the family is constant, and
 `Arlib.Probability.iIndepFun_const` applies. -/
-theorem iIndepFun_score_phases (ν : Fin r → Fin m → Measure ℝ)
-    [∀ j i, IsProbabilityMeasure (ν j i)] {g : Fin r → Fin m → ℝ → ℝ}
+theorem iIndepFun_score_phases (ν : Fin r → Fin m → Measure E)
+    [∀ j i, IsProbabilityMeasure (ν j i)] {g : Fin r → Fin m → E → ℝ}
     (hg : ∀ j i, Measurable (g j i)) (j : ℕ) :
     iIndepFun (fun i : Fin m => score g j (i : ℕ)) (runMeasure ν) := by
   by_cases hj : j < r
   · have heq : (fun (i : Fin m) => score g j (i : ℕ))
-        = fun (i : Fin m) (ω : RunSpace r m) => g ⟨j, hj⟩ i (ω ⟨j, hj⟩ i) := by
+        = fun (i : Fin m) (ω : RunSpace E r m) => g ⟨j, hj⟩ i (ω ⟨j, hj⟩ i) := by
       funext i ω
       rw [score, dif_pos hj, dif_pos i.isLt]
     rw [heq]
@@ -377,7 +396,7 @@ theorem iIndepFun_score_phases (ν : Fin r → Fin m → Measure ℝ)
       (fun i => (hg _ i).comp (measurable_pi_apply i))
       (iIndepFun_pi fun i => (hg ⟨j, hj⟩ i).aemeasurable)
   · have heq : (fun (i : Fin m) => score g j (i : ℕ))
-        = fun (_ : Fin m) (_ : RunSpace r m) => (1 : ℝ) := by
+        = fun (_ : Fin m) (_ : RunSpace E r m) => (1 : ℝ) := by
       funext i ω; rw [score, dif_neg hj]
     rw [heq]
     exact iIndepFun_const _
@@ -389,19 +408,19 @@ This is the **grouping** step, and it is why the sample space is nested: run `j`
 is a function of the single outer coordinate `ω j`, so this is
 `ProbabilityTheory.iIndepFun_pi` with the whole product over phases absorbed into
 the coordinate function.  No block-independence lemma is needed. -/
-theorem iIndepFun_runs (ν : Fin r → Fin m → Measure ℝ)
-    [∀ j i, IsProbabilityMeasure (ν j i)] {g : Fin r → Fin m → ℝ → ℝ}
+theorem iIndepFun_runs (ν : Fin r → Fin m → Measure E)
+    [∀ j i, IsProbabilityMeasure (ν j i)] {g : Fin r → Fin m → E → ℝ}
     (hg : ∀ j i, Measurable (g j i)) (c : ℝ) :
-    iIndepFun (fun (j : Fin r) (ω : RunSpace r m) =>
+    iIndepFun (fun (j : Fin r) (ω : RunSpace E r m) =>
       c * ∏ i : Fin m, score g (j : ℕ) (i : ℕ) ω) (runMeasure ν) := by
-  have heq : (fun (j : Fin r) (ω : RunSpace r m) =>
+  have heq : (fun (j : Fin r) (ω : RunSpace E r m) =>
         c * ∏ i : Fin m, score g (j : ℕ) (i : ℕ) ω)
-      = fun (j : Fin r) (ω : RunSpace r m) => c * ∏ i : Fin m, g j i (ω j i) := by
+      = fun (j : Fin r) (ω : RunSpace E r m) => c * ∏ i : Fin m, g j i (ω j i) := by
     funext j ω
     exact congrArg (c * ·) (Finset.prod_congr rfl fun i _ => score_coe g j i ω)
   rw [heq]
   exact iIndepFun_pi (μ := fun j : Fin r => Measure.pi fun i => ν j i)
-    (X := fun (j : Fin r) (η : Fin m → ℝ) => c * ∏ i : Fin m, g j i (η i))
+    (X := fun (j : Fin r) (η : Fin m → E) => c * ∏ i : Fin m, g j i (η i))
     fun j => (measurable_const.mul (Finset.measurable_fun_prod _ fun i _ =>
       (hg j i).comp (measurable_pi_apply i))).aemeasurable
 
@@ -411,12 +430,12 @@ The integrability hypothesis is explicit and is a *uniform bound* on the abstrac
 scores: `|g j i x| ≤ B` with `1 ≤ B` (the `1` also covers the out-of-range value
 of `score`).  Then the product is bounded by `B ^ m`, and a bounded measurable
 function on a probability space is in every `Lᵖ`. -/
-theorem memLp_two_runProd (ν : Fin r → Fin m → Measure ℝ)
-    [∀ j i, IsProbabilityMeasure (ν j i)] {g : Fin r → Fin m → ℝ → ℝ}
+theorem memLp_two_runProd (ν : Fin r → Fin m → Measure E)
+    [∀ j i, IsProbabilityMeasure (ν j i)] {g : Fin r → Fin m → E → ℝ}
     (hg : ∀ j i, Measurable (g j i)) {B : ℝ} (hB : 1 ≤ B)
     (hgb : ∀ j i x, |g j i x| ≤ B) (j : ℕ) :
     MemLp (fun ω => ∏ i : Fin m, score g j (i : ℕ) ω) 2 (runMeasure ν) := by
-  have hsb : ∀ (j i : ℕ) (ω : RunSpace r m), |score g j i ω| ≤ B := by
+  have hsb : ∀ (j i : ℕ) (ω : RunSpace E r m), |score g j i ω| ≤ B := by
     intro j i ω
     rw [score]
     split
@@ -424,7 +443,7 @@ theorem memLp_two_runProd (ν : Fin r → Fin m → Measure ℝ)
       · exact hgb _ _ _
       · rw [abs_one]; exact hB
     · rw [abs_one]; exact hB
-  have hmeas : Measurable fun ω : RunSpace r m => ∏ i : Fin m, score g j (i : ℕ) ω :=
+  have hmeas : Measurable fun ω : RunSpace E r m => ∏ i : Fin m, score g j (i : ℕ) ω :=
     Finset.measurable_fun_prod _ fun i _ => measurable_score hg j (i : ℕ)
   refine MemLp.of_bound hmeas.aestronglyMeasurable (B ^ m) ?_
   filter_upwards with ω
@@ -433,17 +452,18 @@ theorem memLp_two_runProd (ν : Fin r → Fin m → Measure ℝ)
         Finset.prod_le_prod (fun i _ => abs_nonneg _) fun i _ => hsb _ _ _
     _ = B ^ m := by rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
 
+omit [MeasurableSpace E] in
 /-- **`hmed` and `hmed_meas`**: `medianSel` of the runs is a median of the runs,
 and is measurable in `ω`. -/
-theorem isMedian_medianSel_runs (g : Fin r → Fin m → ℝ → ℝ) (c : ℝ) (ω : RunSpace r m) :
+theorem isMedian_medianSel_runs (g : Fin r → Fin m → E → ℝ) (c : ℝ) (ω : RunSpace E r m) :
     Arlib.GaussianCooling.IsMedian
       (fun j : Fin r => c * ∏ i : Fin m, score g (j : ℕ) (i : ℕ) ω)
       (medianSel fun j : Fin r => c * ∏ i : Fin m, score g (j : ℕ) (i : ℕ) ω) :=
   medianSel_isMedian _
 
-theorem measurable_medianSel_runs {g : Fin r → Fin m → ℝ → ℝ}
+theorem measurable_medianSel_runs {g : Fin r → Fin m → E → ℝ}
     (hg : ∀ j i, Measurable (g j i)) (c : ℝ) :
-    Measurable fun ω : RunSpace r m =>
+    Measurable fun ω : RunSpace E r m =>
       medianSel fun j : Fin r => c * ∏ i : Fin m, score g (j : ℕ) (i : ℕ) ω :=
   measurable_medianSel fun j =>
     measurable_const.mul (Finset.measurable_fun_prod _ fun i _ =>
@@ -451,11 +471,14 @@ theorem measurable_medianSel_runs {g : Fin r → Fin m → ℝ → ℝ}
 
 /-! ## The universal space: countably many runs of countably many phases
 
-`RunSpace r m` fixes `r` and `m`.  A consumer whose repetition count `r` and
+`RunSpace E r m` fixes `r` and `m`.  A consumer whose repetition count `r` and
 phase count `m` depend on the problem instance needs **one** probability space
 serving every `(r, m)` at once, since the estimator interface fixes a single
-`Ω` and `μ` up front.  `NatRunSpace` is that space: one real coordinate per pair
-of naturals, with `MeasureTheory.Measure.infinitePi` as the product measure.
+`Ω` and `μ` up front.  `NatRunSpace E` is that space: one `E`-valued coordinate
+per pair of naturals, with `MeasureTheory.Measure.infinitePi` as the product
+measure.  `Measure.infinitePi` needs nothing of `E` beyond `MeasurableSpace E`
+(it is the Ionescu-Tulcea construction, which is valid for probability measures
+on arbitrary measurable spaces).
 
 Everything below is the same mathematics as above, and *strictly more usable*:
 `r` and `m` are now arguments of the theorems, not of the space.  Restriction of
@@ -463,23 +486,23 @@ an independent `ℕ`-indexed family to `Fin r` is `ProbabilityTheory.iIndepFun.p
 along `Fin.val`.  No junk values are needed either, so `natScore` is literally
 `g j i` of the `(j, i)` coordinate. -/
 
-/-- Sample space: one real coordinate per (run, phase) pair of natural numbers. -/
-abbrev NatRunSpace : Type := ℕ → ℕ → ℝ
+/-- Sample space: one `E`-valued coordinate per (run, phase) pair of naturals. -/
+abbrev NatRunSpace (E : Type*) := ℕ → ℕ → E
 
-/-- The countable product measure on `NatRunSpace`. -/
-noncomputable def natRunMeasure (ν : ℕ → ℕ → Measure ℝ) : Measure NatRunSpace :=
+/-- The countable product measure on `NatRunSpace E`. -/
+noncomputable def natRunMeasure (ν : ℕ → ℕ → Measure E) : Measure (NatRunSpace E) :=
   Measure.infinitePi fun j => Measure.infinitePi fun i => ν j i
 
-instance isProbabilityMeasure_natRunMeasure (ν : ℕ → ℕ → Measure ℝ)
+instance isProbabilityMeasure_natRunMeasure (ν : ℕ → ℕ → Measure E)
     [∀ j i, IsProbabilityMeasure (ν j i)] : IsProbabilityMeasure (natRunMeasure ν) := by
   rw [natRunMeasure]; infer_instance
 
 /-- The score of run `j`, phase `i`: `g j i` of the `(j, i)` coordinate. -/
-noncomputable def natScore (g : ℕ → ℕ → ℝ → ℝ) (j i : ℕ) (ω : NatRunSpace) : ℝ :=
+noncomputable def natScore (g : ℕ → ℕ → E → ℝ) (j i : ℕ) (ω : NatRunSpace E) : ℝ :=
   g j i (ω j i)
 
 /-- **`hW_meas`** on the universal space. -/
-theorem measurable_natScore {g : ℕ → ℕ → ℝ → ℝ} (hg : ∀ j i, Measurable (g j i)) (j i : ℕ) :
+theorem measurable_natScore {g : ℕ → ℕ → E → ℝ} (hg : ∀ j i, Measurable (g j i)) (j i : ℕ) :
     Measurable (natScore g j i) :=
   (hg j i).comp ((measurable_pi_apply i).comp (measurable_pi_apply j))
 
@@ -489,13 +512,13 @@ The `ℕ`-indexed phase family of run `j` is independent by
 `ProbabilityTheory.iIndepFun_infinitePi` transported along the measure-preserving
 projection `ω ↦ ω j`; restricting to `Fin m` is
 `ProbabilityTheory.iIndepFun.precomp` along the injection `Fin.val`. -/
-theorem iIndepFun_natScore_phases (ν : ℕ → ℕ → Measure ℝ)
-    [∀ j i, IsProbabilityMeasure (ν j i)] {g : ℕ → ℕ → ℝ → ℝ}
+theorem iIndepFun_natScore_phases (ν : ℕ → ℕ → Measure E)
+    [∀ j i, IsProbabilityMeasure (ν j i)] {g : ℕ → ℕ → E → ℝ}
     (hg : ∀ j i, Measurable (g j i)) (j m : ℕ) :
     iIndepFun (fun i : Fin m => natScore g j (i : ℕ)) (natRunMeasure ν) := by
-  have hall : iIndepFun (fun (i : ℕ) (ω : NatRunSpace) => g j i (ω j i)) (natRunMeasure ν) :=
-    iIndepFun_comp_measurePreserving (T := fun ω : NatRunSpace => ω j)
-      (f := fun (i : ℕ) (η : ℕ → ℝ) => g j i (η i))
+  have hall : iIndepFun (fun (i : ℕ) (ω : NatRunSpace E) => g j i (ω j i)) (natRunMeasure ν) :=
+    iIndepFun_comp_measurePreserving (T := fun ω : NatRunSpace E => ω j)
+      (f := fun (i : ℕ) (η : ℕ → E) => g j i (η i))
       (measurePreserving_eval_infinitePi (fun j => Measure.infinitePi fun i => ν j i) j)
       (fun i => (hg j i).comp (measurable_pi_apply i))
       (iIndepFun_infinitePi fun i => hg j i)
@@ -504,25 +527,25 @@ theorem iIndepFun_natScore_phases (ν : ℕ → ℕ → Measure ℝ)
 /-- **`hindep_runs`** on the universal space, for *every* repetition count `r` and
 phase count `m`.  Grouping again comes for free: run `j` is a function of the
 single outer coordinate `ω j`. -/
-theorem iIndepFun_natRuns (ν : ℕ → ℕ → Measure ℝ) [∀ j i, IsProbabilityMeasure (ν j i)]
-    {g : ℕ → ℕ → ℝ → ℝ} (hg : ∀ j i, Measurable (g j i)) (c : ℝ) (r m : ℕ) :
-    iIndepFun (fun (j : Fin r) (ω : NatRunSpace) =>
+theorem iIndepFun_natRuns (ν : ℕ → ℕ → Measure E) [∀ j i, IsProbabilityMeasure (ν j i)]
+    {g : ℕ → ℕ → E → ℝ} (hg : ∀ j i, Measurable (g j i)) (c : ℝ) (r m : ℕ) :
+    iIndepFun (fun (j : Fin r) (ω : NatRunSpace E) =>
       c * ∏ i : Fin m, natScore g (j : ℕ) (i : ℕ) ω) (natRunMeasure ν) := by
-  have hall : iIndepFun (fun (j : ℕ) (ω : NatRunSpace) =>
+  have hall : iIndepFun (fun (j : ℕ) (ω : NatRunSpace E) =>
       c * ∏ i : Fin m, natScore g j (i : ℕ) ω) (natRunMeasure ν) :=
     iIndepFun_infinitePi
-      (X := fun (j : ℕ) (η : ℕ → ℝ) => c * ∏ i : Fin m, g j (i : ℕ) (η (i : ℕ)))
+      (X := fun (j : ℕ) (η : ℕ → E) => c * ∏ i : Fin m, g j (i : ℕ) (η (i : ℕ)))
       fun j => measurable_const.mul (Finset.measurable_fun_prod _ fun i _ =>
         (hg j (i : ℕ)).comp (measurable_pi_apply (i : ℕ)))
   exact hall.precomp Fin.val_injective
 
 /-- **`hprodLp`** on the universal space.  Explicit hypothesis: a uniform bound
 `|g j i x| ≤ B` on the abstract scores. -/
-theorem memLp_two_natRunProd (ν : ℕ → ℕ → Measure ℝ) [∀ j i, IsProbabilityMeasure (ν j i)]
-    {g : ℕ → ℕ → ℝ → ℝ} (hg : ∀ j i, Measurable (g j i)) {B : ℝ}
+theorem memLp_two_natRunProd (ν : ℕ → ℕ → Measure E) [∀ j i, IsProbabilityMeasure (ν j i)]
+    {g : ℕ → ℕ → E → ℝ} (hg : ∀ j i, Measurable (g j i)) {B : ℝ}
     (hgb : ∀ j i x, |g j i x| ≤ B) (j m : ℕ) :
     MemLp (fun ω => ∏ i : Fin m, natScore g j (i : ℕ) ω) 2 (natRunMeasure ν) := by
-  have hmeas : Measurable fun ω : NatRunSpace => ∏ i : Fin m, natScore g j (i : ℕ) ω :=
+  have hmeas : Measurable fun ω : NatRunSpace E => ∏ i : Fin m, natScore g j (i : ℕ) ω :=
     Finset.measurable_fun_prod _ fun i _ => measurable_natScore hg j (i : ℕ)
   refine MemLp.of_bound hmeas.aestronglyMeasurable (B ^ m) ?_
   filter_upwards with ω
@@ -531,27 +554,28 @@ theorem memLp_two_natRunProd (ν : ℕ → ℕ → Measure ℝ) [∀ j i, IsProb
         Finset.prod_le_prod (fun i _ => abs_nonneg _) fun i _ => hgb _ _ _
     _ = B ^ m := by rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
 
+omit [MeasurableSpace E] in
 /-- **`hmed`** on the universal space. -/
-theorem isMedian_medianSel_natRuns (g : ℕ → ℕ → ℝ → ℝ) (c : ℝ) (r m : ℕ)
-    (ω : NatRunSpace) :
+theorem isMedian_medianSel_natRuns (g : ℕ → ℕ → E → ℝ) (c : ℝ) (r m : ℕ)
+    (ω : NatRunSpace E) :
     Arlib.GaussianCooling.IsMedian
       (fun j : Fin r => c * ∏ i : Fin m, natScore g (j : ℕ) (i : ℕ) ω)
       (medianSel fun j : Fin r => c * ∏ i : Fin m, natScore g (j : ℕ) (i : ℕ) ω) :=
   medianSel_isMedian _
 
 /-- **`hmed_meas`** on the universal space. -/
-theorem measurable_medianSel_natRuns {g : ℕ → ℕ → ℝ → ℝ} (hg : ∀ j i, Measurable (g j i))
+theorem measurable_medianSel_natRuns {g : ℕ → ℕ → E → ℝ} (hg : ∀ j i, Measurable (g j i))
     (c : ℝ) (r m : ℕ) :
-    Measurable fun ω : NatRunSpace =>
+    Measurable fun ω : NatRunSpace E =>
       medianSel fun j : Fin r => c * ∏ i : Fin m, natScore g (j : ℕ) (i : ℕ) ω :=
   measurable_medianSel fun j =>
     measurable_const.mul (Finset.measurable_fun_prod _ fun i _ =>
       measurable_natScore hg (j : ℕ) (i : ℕ))
 
 /-- The coordinate projection of the universal space is measure preserving. -/
-theorem measurePreserving_natCoord (ν : ℕ → ℕ → Measure ℝ)
+theorem measurePreserving_natCoord (ν : ℕ → ℕ → Measure E)
     [∀ j i, IsProbabilityMeasure (ν j i)] (j i : ℕ) :
-    MeasurePreserving (fun ω : NatRunSpace => ω j i) (natRunMeasure ν) (ν j i) :=
+    MeasurePreserving (fun ω : NatRunSpace E => ω j i) (natRunMeasure ν) (ν j i) :=
   (measurePreserving_eval_infinitePi (fun i => ν j i) i).comp
     (measurePreserving_eval_infinitePi (fun j => Measure.infinitePi fun i => ν j i) j)
 
@@ -636,7 +660,7 @@ theorem not_ae_const_score {r m : ℕ} {g : Fin r → Fin m → ℝ → ℝ}
     (hg : ∀ j i, Measurable (g j i)) (j : Fin r) (i : Fin m)
     (hgne : g j i 0 ≠ g j i 1) (c : ℝ) :
     ¬ (score g (j : ℕ) (i : ℕ)) =ᵐ[runMeasure fun _ _ => coin] (fun _ => c) := by
-  have h : (score g (j : ℕ) (i : ℕ)) = fun ω : RunSpace r m => g j i (ω j i) :=
+  have h : (score g (j : ℕ) (i : ℕ)) = fun ω : RunSpace ℝ r m => g j i (ω j i) :=
     funext fun ω => score_coe g j i ω
   rw [h]
   exact not_ae_const_of_coin_coord (measurePreserving_coord _ j i) (hg j i) hgne c
@@ -670,7 +694,7 @@ own fair coin. -/
 noncomputable def witG : Fin 2 → Fin 2 → ℝ → ℝ := fun _ _ => clamp01
 
 /-- The witness sample space measure: four independent fair coins. -/
-noncomputable def witMeasure : Measure (RunSpace 2 2) := runMeasure fun _ _ => coin
+noncomputable def witMeasure : Measure (RunSpace ℝ 2 2) := runMeasure fun _ _ => coin
 
 instance isProbabilityMeasure_witMeasure : IsProbabilityMeasure witMeasure := by
   rw [witMeasure]; infer_instance
@@ -686,7 +710,7 @@ theorem wit_phase_indep (j : ℕ) :
 
 /-- `hindep_runs` for the witness. -/
 theorem wit_runs_indep (c : ℝ) :
-    iIndepFun (fun (j : Fin 2) (ω : RunSpace 2 2) =>
+    iIndepFun (fun (j : Fin 2) (ω : RunSpace ℝ 2 2) =>
       c * ∏ i : Fin 2, score witG (j : ℕ) (i : ℕ) ω) witMeasure :=
   iIndepFun_runs _ (fun _ _ => measurable_clamp01) c
 
@@ -697,7 +721,7 @@ theorem wit_memLp (j : ℕ) :
     (fun _ _ x => abs_clamp01_le_one x) j
 
 /-- `hmed` for the witness. -/
-theorem wit_isMedian (c : ℝ) (ω : RunSpace 2 2) :
+theorem wit_isMedian (c : ℝ) (ω : RunSpace ℝ 2 2) :
     Arlib.GaussianCooling.IsMedian
       (fun j : Fin 2 => c * ∏ i : Fin 2, score witG (j : ℕ) (i : ℕ) ω)
       (medianSel fun j : Fin 2 => c * ∏ i : Fin 2, score witG (j : ℕ) (i : ℕ) ω) :=
@@ -705,7 +729,7 @@ theorem wit_isMedian (c : ℝ) (ω : RunSpace 2 2) :
 
 /-- `hmed_meas` for the witness. -/
 theorem wit_measurable_medianSel (c : ℝ) :
-    Measurable fun ω : RunSpace 2 2 =>
+    Measurable fun ω : RunSpace ℝ 2 2 =>
       medianSel fun j : Fin 2 => c * ∏ i : Fin 2, score witG (j : ℕ) (i : ℕ) ω :=
   measurable_medianSel_runs (fun _ _ => measurable_clamp01) c
 
@@ -730,7 +754,7 @@ should use: one space, every `(r, m)`. -/
 noncomputable def natWitG : ℕ → ℕ → ℝ → ℝ := fun _ _ => clamp01
 
 /-- The universal-space witness measure: countably many independent fair coins. -/
-noncomputable def natWitMeasure : Measure NatRunSpace := natRunMeasure fun _ _ => coin
+noncomputable def natWitMeasure : Measure (NatRunSpace ℝ) := natRunMeasure fun _ _ => coin
 
 instance isProbabilityMeasure_natWitMeasure : IsProbabilityMeasure natWitMeasure := by
   rw [natWitMeasure]; infer_instance
@@ -746,7 +770,7 @@ theorem natWit_phase_indep (j m : ℕ) :
 
 /-- `hindep_runs` for the universal witness, at every repetition and phase count. -/
 theorem natWit_runs_indep (c : ℝ) (r m : ℕ) :
-    iIndepFun (fun (j : Fin r) (ω : NatRunSpace) =>
+    iIndepFun (fun (j : Fin r) (ω : NatRunSpace ℝ) =>
       c * ∏ i : Fin m, natScore natWitG (j : ℕ) (i : ℕ) ω) natWitMeasure :=
   iIndepFun_natRuns _ (fun _ _ => measurable_clamp01) c r m
 
@@ -757,7 +781,7 @@ theorem natWit_memLp (j m : ℕ) :
     (fun _ _ x => abs_clamp01_le_one x) j m
 
 /-- `hmed` for the universal witness. -/
-theorem natWit_isMedian (c : ℝ) (r m : ℕ) (ω : NatRunSpace) :
+theorem natWit_isMedian (c : ℝ) (r m : ℕ) (ω : NatRunSpace ℝ) :
     Arlib.GaussianCooling.IsMedian
       (fun j : Fin r => c * ∏ i : Fin m, natScore natWitG (j : ℕ) (i : ℕ) ω)
       (medianSel fun j : Fin r => c * ∏ i : Fin m, natScore natWitG (j : ℕ) (i : ℕ) ω) :=
@@ -765,7 +789,7 @@ theorem natWit_isMedian (c : ℝ) (r m : ℕ) (ω : NatRunSpace) :
 
 /-- `hmed_meas` for the universal witness. -/
 theorem natWit_measurable_medianSel (c : ℝ) (r m : ℕ) :
-    Measurable fun ω : NatRunSpace =>
+    Measurable fun ω : NatRunSpace ℝ =>
       medianSel fun j : Fin r => c * ∏ i : Fin m, natScore natWitG (j : ℕ) (i : ℕ) ω :=
   measurable_medianSel_natRuns (fun _ _ => measurable_clamp01) c r m
 
@@ -778,6 +802,97 @@ theorem natWit_not_ae_const (j i : ℕ) (c : ℝ) :
   rw [clamp01_zero, clamp01_one]
   norm_num
 
+
+/-! ### A witness whose coordinate space is *not* `ℝ`
+
+The two witnesses above both take `E := ℝ`, so on their own they do not show that
+the generality in `E` is usable.  This one takes `E := Traj = ℕ → ℝ`, the space of
+a whole *trajectory* — the shape a sampler's per-phase randomness actually has —
+and re-derives all six plumbing facts plus non-degeneracy.
+
+The point of the section is negative: **nothing** had to be assumed about `Traj`
+beyond its `MeasurableSpace` instance.  In particular the trajectory measure
+`trajMeasure` is itself an `Measure.infinitePi`, so `trajWitMeasure` is a
+product of products of products, and every lemma above still applies verbatim. -/
+
+/-- A **trajectory**: one phase's randomness is an infinite sequence of reals, not
+a single real.  Deliberately not `ℝ`, and deliberately not a standard Borel space
+by assumption — only `MeasurableSpace` is used. -/
+abbrev Traj : Type := ℕ → ℝ
+
+/-- A trajectory of independent fair coins. -/
+noncomputable def trajMeasure : Measure Traj := Measure.infinitePi fun _ => coin
+
+instance isProbabilityMeasure_trajMeasure : IsProbabilityMeasure trajMeasure := by
+  rw [trajMeasure]; infer_instance
+
+/-- The trajectory score: clamp the trajectory's first step. -/
+noncomputable def trajG : ℕ → ℕ → Traj → ℝ := fun _ _ η => clamp01 (η 0)
+
+theorem measurable_trajG (j i : ℕ) : Measurable (trajG j i) :=
+  measurable_clamp01.comp (measurable_pi_apply 0)
+
+theorem abs_trajG_le_one (j i : ℕ) (η : Traj) : |trajG j i η| ≤ 1 :=
+  abs_clamp01_le_one _
+
+/-- The universal run space over **trajectory** coordinates. -/
+noncomputable def trajWitMeasure : Measure (NatRunSpace Traj) :=
+  natRunMeasure fun _ _ => trajMeasure
+
+instance isProbabilityMeasure_trajWitMeasure : IsProbabilityMeasure trajWitMeasure := by
+  rw [trajWitMeasure]; infer_instance
+
+/-- `hW_meas` over trajectory coordinates. -/
+theorem trajWit_measurable_score (j i : ℕ) : Measurable (natScore trajG j i) :=
+  measurable_natScore measurable_trajG j i
+
+/-- `hphase_indep` over trajectory coordinates, at every phase count. -/
+theorem trajWit_phase_indep (j m : ℕ) :
+    iIndepFun (fun i : Fin m => natScore trajG j (i : ℕ)) trajWitMeasure :=
+  iIndepFun_natScore_phases _ measurable_trajG j m
+
+/-- `hindep_runs` over trajectory coordinates, at every repetition and phase count. -/
+theorem trajWit_runs_indep (c : ℝ) (r m : ℕ) :
+    iIndepFun (fun (j : Fin r) (ω : NatRunSpace Traj) =>
+      c * ∏ i : Fin m, natScore trajG (j : ℕ) (i : ℕ) ω) trajWitMeasure :=
+  iIndepFun_natRuns _ measurable_trajG c r m
+
+/-- `hprodLp` over trajectory coordinates. -/
+theorem trajWit_memLp (j m : ℕ) :
+    MemLp (fun ω => ∏ i : Fin m, natScore trajG j (i : ℕ) ω) 2 trajWitMeasure :=
+  memLp_two_natRunProd _ measurable_trajG (fun j i η => abs_trajG_le_one j i η) j m
+
+/-- `hmed` over trajectory coordinates. -/
+theorem trajWit_isMedian (c : ℝ) (r m : ℕ) (ω : NatRunSpace Traj) :
+    Arlib.GaussianCooling.IsMedian
+      (fun j : Fin r => c * ∏ i : Fin m, natScore trajG (j : ℕ) (i : ℕ) ω)
+      (medianSel fun j : Fin r => c * ∏ i : Fin m, natScore trajG (j : ℕ) (i : ℕ) ω) :=
+  medianSel_isMedian _
+
+/-- `hmed_meas` over trajectory coordinates. -/
+theorem trajWit_measurable_medianSel (c : ℝ) (r m : ℕ) :
+    Measurable fun ω : NatRunSpace Traj =>
+      medianSel fun j : Fin r => c * ∏ i : Fin m, natScore trajG (j : ℕ) (i : ℕ) ω :=
+  measurable_medianSel_natRuns measurable_trajG c r m
+
+/-- The first step of the `(j, i)` trajectory is a fair coin: the composite of the
+`(j, i)` coordinate projection of `trajWitMeasure` with the `0`th coordinate
+projection of `trajMeasure`. -/
+theorem measurePreserving_trajStep (j i : ℕ) :
+    MeasurePreserving (fun ω : NatRunSpace Traj => ω j i 0) trajWitMeasure coin := by
+  rw [trajWitMeasure]
+  exact (measurePreserving_eval_infinitePi (fun _ => coin) 0).comp
+    (measurePreserving_natCoord (fun _ _ => trajMeasure) j i)
+
+/-- **The trajectory witness is genuinely random**: no score is a.e. constant.
+Non-vacuity at a coordinate space that is not `ℝ`. -/
+theorem trajWit_not_ae_const (j i : ℕ) (c : ℝ) :
+    ¬ (natScore trajG j i) =ᵐ[trajWitMeasure] (fun _ => c) := by
+  have h : natScore trajG j i = fun ω : NatRunSpace Traj => clamp01 (ω j i 0) := rfl
+  rw [h]
+  refine not_ae_const_of_coin_coord (measurePreserving_trajStep j i) measurable_clamp01 ?_ c
+  rw [clamp01_zero, clamp01_one]
+  norm_num
 
 /-! ## Axiom audit
 
@@ -847,5 +962,21 @@ axioms.  Anything else in the output (in particular `sorryAx`) means a hole. -/
 #print axioms Arlib.Probability.natWit_isMedian
 #print axioms Arlib.Probability.natWit_measurable_medianSel
 #print axioms Arlib.Probability.natWit_not_ae_const
+#print axioms Arlib.Probability.Traj
+#print axioms Arlib.Probability.trajMeasure
+#print axioms Arlib.Probability.isProbabilityMeasure_trajMeasure
+#print axioms Arlib.Probability.trajG
+#print axioms Arlib.Probability.measurable_trajG
+#print axioms Arlib.Probability.abs_trajG_le_one
+#print axioms Arlib.Probability.trajWitMeasure
+#print axioms Arlib.Probability.isProbabilityMeasure_trajWitMeasure
+#print axioms Arlib.Probability.trajWit_measurable_score
+#print axioms Arlib.Probability.trajWit_phase_indep
+#print axioms Arlib.Probability.trajWit_runs_indep
+#print axioms Arlib.Probability.trajWit_memLp
+#print axioms Arlib.Probability.trajWit_isMedian
+#print axioms Arlib.Probability.trajWit_measurable_medianSel
+#print axioms Arlib.Probability.measurePreserving_trajStep
+#print axioms Arlib.Probability.trajWit_not_ae_const
 
 end Arlib.Probability
