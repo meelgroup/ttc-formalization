@@ -79,23 +79,14 @@ section Construct
 
 variable {A X : Type*}
 
-/-- **The coverage test, classically.**  `alg:ttc` line 27's membership query
-`s ∈ P(cᵢ)`, as a `Bool`, via `Classical.propDecidable`.  Noncomputable — it is a
-*specification* of the test, not an implementation; `Ttc.coverOfRegion_eq_true` is
-the only thing the development ever asks of it. -/
-noncomputable def coverOfRegion (M : A → Set X) (x : X) (c : Cube A) : Bool :=
-  @decide (x ∈ region M c) (Classical.propDecidable _)
+/-! `Ttc.coverOfRegion` and `Ttc.memPtOfRegion` themselves are in
+`Model/Pseudocode`: `alg:ttc` line 27's membership query is a step of the
+algorithm, and `Ttc.ttcRun` builds its oracle bundle from it, so it has to be
+inside the audit surface.  What stays here is everything *about* them. -/
 
 @[simp] theorem coverOfRegion_eq_true (M : A → Set X) (x : X) (c : Cube A) :
     coverOfRegion M x c = true ↔ x ∈ region M c := by
   simp only [coverOfRegion, decide_eq_true_eq]
-
-/-- **The per-lattice-point form of the coverage test.**  `Ttc.trajOracles` needs
-the test indexed by the enumeration rather than by the point; this is that
-reindexing, by definition, so `Ttc.coverOfRegion_memPtOfRegion` is `rfl`. -/
-noncomputable def memPtOfRegion {n L : ℕ} (M : A → Set (Space n)) (ptE : Fin L → Space n)
-    (c : Cube A) (s : Fin L) : Bool :=
-  coverOfRegion M (ptE s) c
 
 variable {n L : ℕ}
 

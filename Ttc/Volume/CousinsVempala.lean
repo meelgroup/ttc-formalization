@@ -753,13 +753,15 @@ noncomputable def VolumeAlgorithm.cousinsVempala (n : ℕ) (Ω : Type)
 
 /-- **The same construction with the endpoint idealization removed.**
 
+**Not needed for `Arlib`'s cooling schedule — see the caveat at the end.**
+
 `Ttc.VolumeAlgorithm.cousinsVempala` asks for `chain K ε p (phases K ε p) = Vol(K)` on the
-nose. The actual last Gaussian of the cooling schedule is *not* `Vol(K)`: by
-`Ttc.CV.G_indicator_mem_relErr` it is `Vol(K)` up to a relative bias
+nose. For a schedule whose terminal phase is still a genuine Gaussian, the last entry is
+*not* `Vol(K)`: by `Ttc.CV.G_indicator_mem_relErr` it is `Vol(K)` up to a relative bias
 `η(s) = 1 − e^{−R²/(2s)}` on a body inside `R·Bₙ`, and that bias is strictly positive for
-every finite `s`. So the exact hypothesis is (presumably — the strict inequality
-`G(s) < Vol(K)` is not formalized here) not the one the algorithm can supply, and this
-construction takes the honest one instead:
+every finite `s`. So for such a schedule the exact hypothesis is (presumably — the strict
+inequality `G(s) < Vol(K)` is not formalized here) not the one the algorithm can supply,
+and this construction takes the honest one instead:
 
 * `hchain_end` becomes `chain K ε p (phases K ε p) ∈ relErr (endBias ε) Vol(K)`,
   which is `G_indicator_mem_relErr` with `endBias ε = 1 − e^{−R²/(2σ_m²)}`;
@@ -770,7 +772,19 @@ construction takes the honest one instead:
   driven below any target by flattening the last Gaussian (`s → ∞`);
 * `hbudget` is correspondingly stated at `innerAcc ε`.
 
-The remaining debt is unchanged and is still the sampler: `hphase_mean`. -/
+The remaining debt is unchanged and is still the sampler: `hphase_mean`.
+
+**Caveat — this variant is unnecessary for the schedule actually used.**
+`Arlib.GaussianCooling.coolWeight` sets the terminal weight to the *literal constant* `1`
+(`Chain.lean:144`), not to a Gaussian, and `Chain.lean:141-143` records that as a
+deliberate design choice made for precisely this reason. Consequently
+`Arlib.GaussianCooling.chain_end` (`Chain.lean:257`) gives
+`chain m σsq K m = Vol(K)` **exactly and with no side conditions whatsoever** — no
+convexity, no `volume K ≠ ⊤`, no radius bound `K ⊆ R·Bₙ`. So for that chain the exact
+`hchain_end` of `cousinsVempala` is simply available, and
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSchedule` (`Ttc/Volume/CVInstantiate.lean`) supplies
+it. This construction is retained for schedules that do end on a genuine Gaussian; it is
+not on the path to the volume oracle. -/
 noncomputable def VolumeAlgorithm.cousinsVempalaOfBiasedEnd (n : ℕ) (Ω : Type)
     [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (phases : Set (Space n) → ℝ → ℝ → ℕ)

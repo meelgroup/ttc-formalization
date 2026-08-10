@@ -261,8 +261,12 @@ making `alg:ttc` monadic, not moving a file.
 
 ### `Ttc.ttc_volume_estimate` — the headline (`Model/Theorem`)
 
-Statement closure (a theorem, so only its *type* is entered): **212** `Ttc` constants, of which
-**86** are defined outside `Ttc/Model/`, and **35** are forbidden. The forbidden ones fall into
+Statement closure (a theorem, so only its *type* is entered): **219** `Ttc` constants, of which
+**71** are defined outside `Ttc/Model/`, and **35** are forbidden.  (It was 212/86 before the
+accuracy conjunct was restated over `Ttc.ttcRun`; the fifteen that went away are
+`Ttc.ttcOracleBundle` and the `Exec/Api`, `Exec/Endgoal`, `Exec/Coverage`, `Exec/Inputs` and
+`Coupling/Family` constants it reached — the *statement* no longer mentions the bundle, only
+the proof does.) The forbidden ones fall into
 exactly four groups:
 
 | group (module) | count | why the *statement* names it |
@@ -304,12 +308,35 @@ So the gap is concentrated: **half** of it (`Exec/Api` 18 + `Sampler/Rates` 3 + 
 *constructed* oracles and the probability spaces they run on, which the statement names only
 because the theorem is stated at the constructed bundle rather than monadically.
 
-Contrast nfalean, where `#closure countNFAM` and `#modelClosure countNFAM` both pass. -/
+Contrast nfalean, where `#closure countNFAM` and `#modelClosure countNFAM` both pass.
+
+### `Ttc.ttcRun` — the algorithm with its oracle argument filled in
+
+`Ttc.ttcRun` (`Model/Pseudocode`) is `Ttc.ttcAlgOutput` at the bundle the run `(c, t)`
+itself supplies, and it is what the headline's accuracy conjunct is now stated over.
+Full closure: **150** `Ttc` constants, of which **0** are outside `Ttc/Model/`, so
+`#modelClosure Ttc.ttcRun` **passes** and is enabled below.  That is the machine-checked
+form of "the headline's accuracy conjunct names only `Model/` things": it fails the build
+the moment any part of the *constructed oracle bundle* drifts out of `Model/`, which is a
+much larger surface than `Ttc.ttcAlgOutput`'s.
+
+Getting there moved three groups of declarations into `Model/Pseudocode`, each keeping its
+name and its proof: the count-vector dictionary and the two oracle contracts
+(`Ttc.count_toMultiset`, `Ttc.toMultiset_le_of_count_le`, `Ttc.trajThin_le`,
+`Ttc.card_trajGen`, formerly `Coupling/Family`); the coverage test
+(`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`, formerly `Exec/Coverage`); and the lattice
+enumeration (`Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its three properties, formerly
+`Exec/Endgoal`).  `#closure Ttc.ttcRun` still fails, on the same monadic-versus-oracle gap
+as `Ttc.ttcAlgOutput` plus `Ttc.MonteCarlo`'s estimator — all of them defined in
+`Model/Pseudocode` itself.
+
+-/
 
 section Invocations
 
 -- #closure Ttc.ttcAlgOutput
 #modelClosure Ttc.ttcAlgOutput
+#modelClosure Ttc.ttcRun
 -- #closureOfType Ttc.ttc_volume_estimate
 -- #modelClosureOfType Ttc.ttc_volume_estimate
 

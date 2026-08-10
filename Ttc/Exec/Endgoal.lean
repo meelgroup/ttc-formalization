@@ -181,75 +181,23 @@ variable {A : Type*} {n : ℕ}
 
 /-! ## The enumeration of `Sol(F) ∩ 𝕃ⁿ`, as a total function of the inputs
 
-`Ttc.exists_lattice_enum_of_isBounded` (`Exec/Geometry`) produces the five binders
-`Lidx, ptE, ptE_inj, ptE_mem, ptE_onto` from `Bornology.IsBounded (sol M φ)`.  To
-*substitute* them into the capstone the enumeration has to be a term, not an
-existential, and the term must not carry a proof argument — otherwise the
-conclusion mentions a proof of boundedness and stops being readable.
+`Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its three properties are in
+`Model/Pseudocode`: `alg:ttc` line 43's `GenerateSamples` draws from
+`Sol(F) ∩ 𝕃ⁿ`, so the enumeration is a step of the algorithm, and `Ttc.ttcRun`
+builds its oracle bundle from it, which requires it inside the audit surface.
+`Ttc.latticeEnum` is a total function of `(M, φ, ρ)` alone, carrying no proof
+argument, and is **unconditionally injective**.
 
-`Ttc.latticeEnum` below is that term: a total function of `(M, φ, ρ)` alone,
-parallel to `Ttc.ttcParams`.  It is **unconditionally injective**, because when no
-enumeration exists the intersection is infinite, `Set.ncard` of an infinite set is
-`0`, and `Fin 0` is empty; the two substantive properties are the ones guarded by
-`Ttc.HasLatticeEnum`.
+What stays here is the *geometric* input: boundedness of `Sol(F)` is enough for the
+two substantive properties, via `Ttc.exists_lattice_enum_of_isBounded`
+(`Exec/Geometry`).
 -/
-
-/-- What the five binders `Lidx, ptE, ptE_inj, ptE_mem, ptE_onto` assert: the
-solution set's lattice points are enumerated bijectively by `Fin N`, at the paper's
-own `N = |Sol(F) ∩ 𝕃ⁿ|`. -/
-def HasLatticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) : Prop :=
-  ∃ ptE : Fin (latticeCount M φ ρ) → Space n, Function.Injective ptE ∧
-    (∀ s, ptE s ∈ sol M φ ∩ fineLattice n (latticeScale ρ)) ∧
-    (∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, ptE s = x)
 
 /-- **Boundedness of `Sol(F)` is enough** — `Ttc.exists_lattice_enum_of_isBounded`,
 renamed. -/
 theorem hasLatticeEnum_of_isBounded (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ)
     (hb : Bornology.IsBounded (sol M φ)) : HasLatticeEnum M φ ρ :=
   exists_lattice_enum_of_isBounded ρ hb
-
-/-- The total version: an enumeration exists *unconditionally*, injective always,
-and with the two membership properties whenever `Ttc.HasLatticeEnum` holds. -/
-private theorem exists_latticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
-    ∃ ptE : Fin (latticeCount M φ ρ) → Space n, Function.Injective ptE ∧
-      (HasLatticeEnum M φ ρ →
-        (∀ s, ptE s ∈ sol M φ ∩ fineLattice n (latticeScale ρ)) ∧
-        (∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, ptE s = x)) := by
-  by_cases h : HasLatticeEnum M φ ρ
-  · obtain ⟨ptE, hinj, hmem, honto⟩ := h
-    exact ⟨ptE, hinj, fun _ => ⟨hmem, honto⟩⟩
-  · have hinf : (sol M φ ∩ fineLattice n (latticeScale ρ)).Infinite := by
-      intro hfin
-      exact h (exists_lattice_enum_of_finite ρ hfin)
-    have hzero : latticeCount M φ ρ = 0 := hinf.ncard
-    haveI hempty : IsEmpty (Fin (latticeCount M φ ρ)) := by
-      rw [hzero]; infer_instance
-    refine ⟨fun s => isEmptyElim s, ?_, fun h' => absurd h' h⟩
-    intro a _ _
-    exact isEmptyElim a
-
-/-- **The enumeration of `Sol(F) ∩ 𝕃ⁿ`, as a function of the inputs alone.**
-Its index type is `Fin (latticeCount M φ ρ)`, i.e. the paper's `Fin N`. -/
-noncomputable def latticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
-    Fin (latticeCount M φ ρ) → Space n :=
-  (exists_latticeEnum M φ ρ).choose
-
-/-- `ptE_inj`, unconditionally. -/
-theorem latticeEnum_injective (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
-    Function.Injective (latticeEnum M φ ρ) :=
-  (exists_latticeEnum M φ ρ).choose_spec.1
-
-/-- `ptE_mem`. -/
-theorem latticeEnum_mem {M : A → Set (Space n)} {φ : BForm A} {ρ : ℤ}
-    (h : HasLatticeEnum M φ ρ) (s : Fin (latticeCount M φ ρ)) :
-    latticeEnum M φ ρ s ∈ sol M φ ∩ fineLattice n (latticeScale ρ) :=
-  ((exists_latticeEnum M φ ρ).choose_spec.2 h).1 s
-
-/-- `ptE_onto`. -/
-theorem latticeEnum_onto {M : A → Set (Space n)} {φ : BForm A} {ρ : ℤ}
-    (h : HasLatticeEnum M φ ρ) :
-    ∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, latticeEnum M φ ρ s = x :=
-  ((exists_latticeEnum M φ ρ).choose_spec.2 h).2
 
 /-- **The oracle bundle of `alg:ttc`, at the constructed enumeration.**
 

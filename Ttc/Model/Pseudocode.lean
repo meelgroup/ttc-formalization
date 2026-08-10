@@ -12,7 +12,9 @@ import Ttc.Model.ProblemSetting
 A line-by-line transcription of Algorithm 1, followed by a line-by-line
 transcription of the **four preprocessing steps** the verified algorithm applies
 before it, ending in `Ttc.ttcAlgOutput` — `TTC(F, ε, δ)`'s output as one term, over
-an oracle bundle. The structural invariants of the modelled execution are in
+an oracle bundle — and in `Ttc.ttcRun`, the same term with that bundle filled in
+from the run itself, which is what the headline is stated over and which takes **no
+oracle argument**. The structural invariants of the modelled execution are in
 `Invariants`, and every theorem about the preprocessing vocabulary stays in
 `Exec/` (`Exec/Scale`, `Exec/ScaleFactor`, `Exec/Inscribed`, `Exec/Cleanup`,
 `Exec/Prune`).
@@ -252,13 +254,15 @@ composite with the cleaning pass, `Ttc.preprocess`. Every *theorem* about them
 stays in `Exec/`; only the definitions moved.
 
 That the headline really measures these definitions is machine-checked. Its
-accuracy conjunct is stated about `Ttc.ttcAlgOutput` *directly*, so no bridge is
-needed to see what is measured; two `rfl` lemmas in `Exec/Api` connect that term to
-the run's own vocabulary:
+accuracy conjunct is stated about `Ttc.ttcRun` *directly*, so no bridge is needed to
+see what is measured; three `rfl` lemmas in `Exec/Api` connect that term to the
+run's own vocabulary:
 
-* `Ttc.ttcAlgOutput_eq_ttcEstimate` — `Ttc.ttcAlgOutput` at the constructed oracle
-  bundle **is** the run's estimate. That is lines A12–A13 at the bundle the
-  development builds.
+* `Ttc.ttcRun_eq_ttcAlgOutput` — `Ttc.ttcRun` **is** `Ttc.ttcAlgOutput` at the
+  constructed oracle bundle `Ttc.ttcOracleBundle`. This is the lemma that makes
+  `Ttc.ttcRun` the algorithm rather than a rename of it.
+* `Ttc.ttcRun_eq_ttcEstimate` — and it **is** the run's estimate. That is lines
+  A12–A13 at the bundle the development builds.
 * `Ttc.ttcInput_eq_preprocess` — the formula that run is on is this file's
   `Ttc.preprocess atoms φ`. That is lines A2–A6.
 
@@ -1224,5 +1228,329 @@ noncomputable def mcVol {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF
   if hi : i ∈ D then
     γ ^ n * MonteCarlo.est (roundBody (cen ⟨i, hi⟩) γ (region M i)) ε' δ' c
   else 0
+
+end Ttc
+
+/-! # `TTC(F, ε, δ)` on one run, with no oracle argument
+
+`Ttc.ttcAlgOutput` above takes the oracle bundle `O : Ttc.Oracles n (Cube A)` as an
+argument, because `alg:ttc` line 24's `Vol_ED` and line 43's `GenerateSamples` are
+printed as external calls.  `Ttc.ttcRun` below is the same algorithm with that
+argument **filled in** by the data the run itself supplies: the volume coins `c` and
+the sample trajectory `t`.  It takes no oracle, so the headline
+(`Model/Theorem`) does not have to name one.
+
+`Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) is the proof — by `rfl` — that this is the
+same number as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle … c t)`.  Without that lemma
+this definition would be a rename; with it, it is the *same term*, and the bundle is
+a fact about the proof rather than a name in the statement.
+
+## What had to come here for that to be possible
+
+Everything the bundle is built from, since the whole point is that
+`Ttc/Audit/ClosureCheck.lean`'s `#modelClosure Ttc.ttcRun` passes — every `Ttc`
+constant `Ttc.ttcRun` unfolds to is defined under `Ttc/Model/`.  Three groups moved
+into this file for that reason, each keeping its name and its proof:
+
+* the **count-vector dictionary** and the two oracle **contracts**
+  (`Ttc.count_toMultiset`, `Ttc.toMultiset_le_of_count_le`, `Ttc.trajThin_le`,
+  `Ttc.card_trajGen`), formerly `Coupling/Family` — they are theorems *about* the
+  read-offs already defined above, and the bundle's `thin_le` and `gen_card` fields
+  are exactly these two;
+* the **coverage test** (`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`), formerly
+  `Exec/Coverage` — `alg:ttc` line 27's membership query, classically;
+* the **lattice enumeration** (`Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its three
+  properties), formerly `Exec/Endgoal` — line 43's `GenerateSamples` draws from
+  `Sol(F) ∩ 𝕃ⁿ`, so the enumeration of that set is part of the algorithm, not of its
+  analysis.  `Ttc.hasLatticeEnum_of_finite` is the only substantive proof among them
+  and it is pure `Nat.card` bookkeeping; the *geometric* input — that boundedness of
+  `Sol(F)` makes the intersection finite — stays in `Exec/Geometry`, where it belongs,
+  and is not needed to *define* the enumeration.
+
+Nothing here asserts anything about the bundle: `Ttc.ttcRun`'s body is a closed term
+and every proof it contains is discharged in this file. -/
+
+namespace Ttc
+
+open MeasureTheory Set
+
+/-! ## The count-vector dictionary, and the two oracle contracts
+
+`Ttc.toMultiset` (above) turns a count vector into the run's `Multiset (Space n)`
+state.  These are the facts that make it a dictionary — that the multiplicities are
+the prescribed ones — and the two contracts `Ttc.Oracles` demands of any bundle. -/
+
+section Dictionary
+
+variable {L : ℕ}
+
+/-- The cardinality of `Ttc.toMultiset` is the total count. -/
+@[simp] theorem card_toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
+    Multiset.card (toMultiset pt k) = ∑ s, k s := by
+  rw [toMultiset, Multiset.card_sum]
+  exact Finset.sum_congr rfl fun s _ => Multiset.card_replicate _ _
+
+/-- **The multiplicities are the ones prescribed** — the point of the dictionary.
+Needs `pt` injective, so that distinct indices contribute to distinct points. -/
+theorem count_toMultiset {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
+    (k : Fin L → ℕ) (s : Fin L) :
+    Multiset.count (pt s) (toMultiset pt k) = k s := by
+  classical
+  rw [toMultiset, Multiset.count_sum']
+  rw [Finset.sum_eq_single s]
+  · rw [Multiset.count_replicate_self]
+  · intro t _ hts
+    rw [Multiset.count_replicate, if_neg (fun h => hts (hpt h))]
+  · intro h
+    exact absurd (Finset.mem_univ s) h
+
+/-- Points outside the enumeration do not occur. -/
+theorem count_toMultiset_of_notMem {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ)
+    {x : Space n} (hx : ∀ s, pt s ≠ x) :
+    Multiset.count x (toMultiset pt k) = 0 := by
+  classical
+  rw [toMultiset, Multiset.count_sum']
+  refine Finset.sum_eq_zero fun t _ => ?_
+  rw [Multiset.count_replicate, if_neg (hx t)]
+
+/-- **A count-bounded multiset is a sub-multiset** — the form `Ttc.Oracles.thin_le`
+needs, where the ambient multiset is arbitrary rather than another `toMultiset`. -/
+theorem toMultiset_le_of_count_le {n : ℕ} {pt : Fin L → Space n}
+    (hpt : Function.Injective pt) {k : Fin L → ℕ} {X : Multiset (Space n)}
+    (h : ∀ s, k s ≤ Multiset.count (pt s) X) :
+    toMultiset pt k ≤ X := by
+  classical
+  rw [Multiset.le_iff_count]
+  intro x
+  by_cases hx : ∃ s, pt s = x
+  · obtain ⟨s, rfl⟩ := hx
+    rw [count_toMultiset hpt]
+    exact h s
+  · simp only [not_exists] at hx
+    rw [count_toMultiset_of_notMem pt k hx]
+    exact Nat.zero_le _
+
+/-- **The `thin` contract**: `Ttc.trajThin` removes elements, it never invents them.
+This is `Ttc.Oracles.thin_le` for the bundle `Ttc.ttcRun` builds. -/
+theorem trajThin_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
+    (ωj : Fin L → ℕ) (X : Multiset (Space n)) : trajThin pt ωj X ≤ X :=
+  toMultiset_le_of_count_le hpt fun _ => min_le_right _ _
+
+/-- **The `gen` contract**: `Ttc.trajGen` returns exactly `N` points.  This is
+`Ttc.Oracles.gen_card` for the bundle `Ttc.ttcRun` builds. -/
+theorem card_trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) (ωj : Fin L → ℕ)
+    (N : ℕ) (pad : Space n) : Multiset.card (trajGen pt m ωj N pad) = N := by
+  classical
+  rw [trajGen]
+  by_cases h : Multiset.card (toMultiset pt fun s => if m s then ωj s else 0) = N
+  · simp only [h, if_pos]
+  · simp only [h, if_false]
+    exact Multiset.card_replicate _ _
+
+end Dictionary
+
+/-! ## Line 27: the coverage test
+
+`alg:ttc` line 27 asks `s ∈ P(cᵢ)`.  These are that query as a `Bool`, classically,
+and its reindexing along an enumeration of the lattice points.  Noncomputable — a
+*specification* of the test, not an implementation; `Ttc.coverOfRegion_eq_true`
+(`Exec/Coverage`) is the only thing the development ever asks of it. -/
+
+/-- **The coverage test, classically.**  `alg:ttc` line 27's membership query
+`s ∈ P(cᵢ)`, as a `Bool`, via `Classical.propDecidable`. -/
+noncomputable def coverOfRegion {A X : Type*} (M : A → Set X) (x : X) (c : Cube A) : Bool :=
+  @decide (x ∈ region M c) (Classical.propDecidable _)
+
+/-- **The per-lattice-point form of the coverage test** — the test indexed by the
+enumeration rather than by the point, by definition, so
+`Ttc.coverOfRegion_memPtOfRegion` (`Exec/Coverage`) is `rfl`. -/
+noncomputable def memPtOfRegion {A : Type*} {n L : ℕ} (M : A → Set (Space n))
+    (ptE : Fin L → Space n) (c : Cube A) (s : Fin L) : Bool :=
+  coverOfRegion M (ptE s) c
+
+/-! ## Line 43: the enumeration of `Sol(F) ∩ 𝕃ⁿ`
+
+`GenerateSamples` draws lattice points of a cube, so the algorithm needs an
+enumeration of `Sol(F) ∩ 𝕃ⁿ` indexed by `Fin |Sol(F) ∩ 𝕃ⁿ|` — the paper's `Fin N`.
+`Ttc.latticeEnum` is that enumeration as a **total function of `(M, φ, ρ)` alone**:
+no proof argument, so the algorithm's output does not mention a boundedness proof
+through it.
+
+It is **unconditionally injective**, which is what the `thin` contract needs; the two
+substantive properties (every enumerated point is a solution lattice point, and every
+solution lattice point is enumerated) are guarded by `Ttc.HasLatticeEnum`, and
+`Ttc.hasLatticeEnum_of_isBounded` (`Exec/Endgoal`) supplies that from boundedness of
+`Sol(F)`.  When no enumeration exists the intersection is infinite, `Set.ncard` of an
+infinite set is `0`, and `Fin 0` is empty — which is why injectivity is free. -/
+
+variable {A : Type*} {n : ℕ}
+
+/-- What an enumeration of `Sol(F) ∩ 𝕃ⁿ` is: a bijective listing by `Fin N`, at the
+paper's own `N = |Sol(F) ∩ 𝕃ⁿ|` (`Ttc.latticeCount`). -/
+def HasLatticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) : Prop :=
+  ∃ ptE : Fin (latticeCount M φ ρ) → Space n, Function.Injective ptE ∧
+    (∀ s, ptE s ∈ sol M φ ∩ fineLattice n (latticeScale ρ)) ∧
+    (∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, ptE s = x)
+
+/-- **Finiteness of `Sol(F) ∩ 𝕃ⁿ` is enough**: a finite set is equivalent to `Fin` of
+its `Set.ncard`, and that count is literally `Ttc.latticeCount`.  Pure `Nat.card`
+bookkeeping — the *geometric* fact that boundedness of `Sol(F)` gives finiteness is
+`Ttc.exists_lattice_enum_of_isBounded` (`Exec/Geometry`) and is not needed here. -/
+theorem hasLatticeEnum_of_finite {M : A → Set (Space n)} {φ : BForm A} (ρ : ℤ)
+    (hfin : (sol M φ ∩ fineLattice n (latticeScale ρ)).Finite) : HasLatticeEnum M φ ρ := by
+  have _ : Finite (sol M φ ∩ fineLattice n (latticeScale ρ) : Set (Space n)) := hfin.to_subtype
+  have hcard : Nat.card (sol M φ ∩ fineLattice n (latticeScale ρ) : Set (Space n))
+      = latticeCount M φ ρ := Nat.card_coe_set_eq _
+  obtain e := Finite.equivFinOfCardEq hcard
+  refine ⟨fun s => (e.symm s : Space n), fun a b hab => ?_, fun s => (e.symm s).property,
+    fun x hx => ⟨e ⟨x, hx⟩, ?_⟩⟩
+  · exact e.symm.injective (Subtype.ext hab)
+  · simp
+
+/-- The total version: an enumeration exists *unconditionally*, injective always, and
+with the two membership properties whenever `Ttc.HasLatticeEnum` holds. -/
+private theorem exists_latticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
+    ∃ ptE : Fin (latticeCount M φ ρ) → Space n, Function.Injective ptE ∧
+      (HasLatticeEnum M φ ρ →
+        (∀ s, ptE s ∈ sol M φ ∩ fineLattice n (latticeScale ρ)) ∧
+        (∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, ptE s = x)) := by
+  by_cases h : HasLatticeEnum M φ ρ
+  · obtain ⟨ptE, hinj, hmem, honto⟩ := h
+    exact ⟨ptE, hinj, fun _ => ⟨hmem, honto⟩⟩
+  · have hinf : (sol M φ ∩ fineLattice n (latticeScale ρ)).Infinite := by
+      intro hfin
+      exact h (hasLatticeEnum_of_finite ρ hfin)
+    have hzero : latticeCount M φ ρ = 0 := hinf.ncard
+    haveI hempty : IsEmpty (Fin (latticeCount M φ ρ)) := by
+      rw [hzero]; infer_instance
+    refine ⟨fun s => isEmptyElim s, ?_, fun h' => absurd h' h⟩
+    intro a _ _
+    exact isEmptyElim a
+
+/-- **The enumeration of `Sol(F) ∩ 𝕃ⁿ`, as a function of the inputs alone.**
+Its index type is `Fin (latticeCount M φ ρ)`, i.e. the paper's `Fin N`. -/
+noncomputable def latticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
+    Fin (latticeCount M φ ρ) → Space n :=
+  (exists_latticeEnum M φ ρ).choose
+
+/-- `ptE_inj`, unconditionally. -/
+theorem latticeEnum_injective (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
+    Function.Injective (latticeEnum M φ ρ) :=
+  (exists_latticeEnum M φ ρ).choose_spec.1
+
+/-- `ptE_mem`. -/
+theorem latticeEnum_mem {M : A → Set (Space n)} {φ : BForm A} {ρ : ℤ}
+    (h : HasLatticeEnum M φ ρ) (s : Fin (latticeCount M φ ρ)) :
+    latticeEnum M φ ρ s ∈ sol M φ ∩ fineLattice n (latticeScale ρ) :=
+  ((exists_latticeEnum M φ ρ).choose_spec.2 h).1 s
+
+/-- `ptE_onto`. -/
+theorem latticeEnum_onto {M : A → Set (Space n)} {φ : BForm A} {ρ : ℤ}
+    (h : HasLatticeEnum M φ ρ) :
+    ∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, latticeEnum M φ ρ s = x :=
+  ((exists_latticeEnum M φ ρ).choose_spec.2 h).2
+
+/-! ## The run's own data, and `TTC(F, ε, δ)` on one run
+
+Nine abbreviations, each a plain function of the algorithm's inputs, spelling out
+what lines A10–A13 and lines 17–20 compute; then `Ttc.ttcRun`, which is
+`Ttc.ttcAlgOutput` at the bundle those nine determine.
+
+`hbdd` is the same proof binder `Ttc.ttcAlgOutput` carries, and for the same reason
+(`Ttc.Params` bundles five proof fields); it is *derived*, not assumed —
+`Ttc.preprocess_bdd` (`Exec/Api`) proves it from `hφ` and `hpos` alone.  Everything
+else is data.
+
+The dilated atoms carry no second boundedness proof: `Ttc.inputParams_scaleAtoms`
+(`Exec/Rescaled`) holds by `rfl`, so the parameter block — and therefore the
+precision — may be read at the *original* atoms. -/
+
+section Run
+
+variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+  (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
+  (hbdd : Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ)))
+
+/-- **The parameter block** `alg:ttc` lines 17–20 computes, at the preprocessed
+formula: `Ttc.inputParams` at `Ttc.preprocess atoms φ`. -/
+noncomputable def algBlock : Params :=
+  inputParams atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
+
+/-- **Line A10.**  The dilation `q` the algorithm applies to its input. -/
+noncomputable def algScale : ℝ :=
+  runScale atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
+    (autoGamma atoms (preprocess atoms φ))
+
+/-- **Line A11.**  The dilated atoms: same normals, bounds scaled by `Ttc.algScale`. -/
+noncomputable def algAtoms : A → LinAtom n :=
+  scaleAtoms (algScale atoms φ ε δ hε0 hε1 hn hbdd) atoms
+
+/-- **Lines A9 + A11.**  The inscribed radius after the dilation, `q · γ̂`. -/
+noncomputable def algGamma : ℝ :=
+  algScale atoms φ ε δ hε0 hε1 hn hbdd * autoGamma atoms (preprocess atoms φ)
+
+/-- **`GetPrecision`'s output `ρ`** (line 17), at the dilated radius. -/
+noncomputable def algPrec : ℤ :=
+  runPrec atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
+    (algGamma atoms φ ε δ hε0 hε1 hn hbdd)
+
+/-- **`N = |Sol(F) ∩ 𝕃ⁿ|`** at that precision, for the dilated input — the index the
+run's sample coins range over. -/
+noncomputable def algIndex : ℕ :=
+  latticeCount (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd)) (preprocess atoms φ)
+    (algPrec atoms φ ε δ hε0 hε1 hn hbdd)
+
+/-- **The enumeration `GenerateSamples` draws from** — `Ttc.latticeEnum` at the
+dilated input and the computed precision. -/
+noncomputable def algEnum : Fin (algIndex atoms φ ε δ hε0 hε1 hn hbdd) → Space n :=
+  latticeEnum (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd)) (preprocess atoms φ)
+    (algPrec atoms φ ε δ hε0 hε1 hn hbdd)
+
+/-- **Lines A7–A8 + A11.**  The inscribed-ball centres, moved by the dilation. -/
+noncomputable def algCen : {c : Cube A // c ∈ toDNFd (preprocess atoms φ)} → Space n :=
+  fun i => algScale atoms φ ε δ hε0 hε1 hn hbdd • autoCen atoms (preprocess atoms φ) i
+
+/-- **Line 27's membership table**: the coverage test at each enumerated point. -/
+noncomputable def algMem : Cube A → Fin (algIndex atoms φ ε δ hε0 hε1 hn hbdd) → Bool :=
+  memPtOfRegion (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd))
+    (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
+
+/-- **`TTC(F, ε, δ)`'s output on one run `(c, t)`, with no oracle argument.**
+
+`Ttc.ttcAlgOutput` at the bundle the run itself supplies: `Vol_ED` (line 24) is the
+Monte-Carlo estimator `Ttc.mcVol` at the volume coins `c`, and lines 33/38/40/41/43's
+`thin`, `Pois` and `GenerateSamples` are the read-offs `Ttc.trajThin`,
+`Ttc.trajPois`, `Ttc.trajGen` of the sample trajectory `t`, padded by
+`Ttc.padRow`.  The bundle's two proof fields are `Ttc.trajThin_le` at
+`Ttc.latticeEnum_injective` and `Ttc.card_trajGen`; both are proved above.
+
+Nothing is assumed: this is a closed term in `(atoms, φ, ε, δ, c, t)` and a proof of
+`hbdd`.  `Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) proves — by `rfl` — that it is
+`Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle … c t)`, so this is not a second description
+of the algorithm but the same term with its oracle argument filled in. -/
+noncomputable def ttcRun (c : ℕ → Space n)
+    (t : ℕ → Fin (algIndex atoms φ ε δ hε0 hε1 hn hbdd) → ℕ) : ℝ :=
+  ttcAlgOutput atoms φ ε δ hε0 hε1 hn hbdd
+    { vol := mcVol (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd))
+        (toDNFd (preprocess atoms φ)) (algCen atoms φ ε δ hε0 hε1 hn hbdd)
+        (algGamma atoms φ ε δ hε0 hε1 hn hbdd)
+        (algBlock atoms φ ε δ hε0 hε1 hn hbdd).epsPrime
+        (algBlock atoms φ ε δ hε0 hε1 hn hbdd).deltaPrime c
+      covered := coverOfRegion (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd))
+      thin := fun _j₀ j' X => trajThin (algEnum atoms φ ε δ hε0 hε1 hn hbdd) (t j') X
+      thin_le := fun _j₀ j' X => trajThin_le (latticeEnum_injective _ _ _) (t j') X
+      pois := fun i j _lam => trajPois (algMem atoms φ ε δ hε0 hε1 hn hbdd i) (t j)
+      gen := fun i j N _ρ =>
+        trajGen (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
+          (algMem atoms φ ε δ hε0 hε1 hn hbdd i) (t j) N
+          (padRow (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
+            (algMem atoms φ ε δ hε0 hε1 hn hbdd i))
+      gen_card := fun i j N _ρ =>
+        card_trajGen (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
+          (algMem atoms φ ε δ hε0 hε1 hn hbdd i) (t j) N
+          (padRow (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
+            (algMem atoms φ ε δ hε0 hε1 hn hbdd i)) }
+
+end Run
 
 end Ttc

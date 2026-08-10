@@ -85,10 +85,11 @@ variable {A : Type*} {n : ℕ}
 /-! ## The constructed volume estimates
 
 `Ttc.mcVol` — `Vol_ED`'s output as a function of the volume oracle's coins — is **defined in
-[`Ttc/Volume/EstData.lean`](../Volume/EstData.lean)**, not here.  It used to be defined in
-this file; it moved so that `Ttc/Model/Pseudocode.lean` can reach it, `EstData` importing
-only `Model/ProblemSetting`.  The name and the term are unchanged, and everything *proved*
-about it is below. -/
+[`Ttc/Model/Pseudocode.lean`](../Model/Pseudocode.lean)**, not here.  It used to be defined
+in this file; it moved to the audit surface so that the algorithm's transcription can reach
+it without an oracle bundle.  (It spent one commit in an intermediate `Ttc/Volume/EstData.lean`,
+which no longer exists — `Model/` is four files by invariant.)  The name and the term are
+unchanged, and everything *proved* about it is below. -/
 
 /-- **`Ttc.ttc_volume`'s `volED_eq`, discharged.**  At every cube of the DNF the
 constructed estimate is `γ̂ⁿ` times what `Ttc.VolumeAlgorithm.monteCarlo` returns

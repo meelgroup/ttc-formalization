@@ -608,6 +608,50 @@ theorem ttcEstimate_eq_ttcOutput (c : ℕ → Space n)
           (ttcPrec atoms φ ε δ hε0 hε1 hn hφ hpos) (ttcInput atoms φ) t
         / (ttcScale atoms φ ε δ hε0 hε1 hn hφ hpos) ^ n := rfl
 
+/-! ## The oracle-free form of the algorithm's output
+
+`Ttc.ttcRun` (`Model/Pseudocode`) is `Ttc.ttcAlgOutput` with its oracle argument
+filled in from the run `(c, t)` itself, built inline from the read-offs
+`Ttc.trajThin`, `Ttc.trajPois`, `Ttc.trajGen`, `Ttc.padRow` and the Monte-Carlo
+volume estimator `Ttc.mcVol` — all of which are defined in `Model/Pseudocode`.
+
+The two lemmas below are what make that an honest definition rather than a rename:
+the index it is stated over *is* `Ttc.ttcIndex`, and the number it returns *is*
+`Ttc.ttcAlgOutput` at `Ttc.ttcOracleBundle`.  Both hold by `rfl`, so the two terms
+are not merely provably equal — they are the same term, and a divergence would be a
+build error rather than a silent drift. -/
+
+/-- **The `Model/`-side index is the run's index**, by `rfl`.  `Ttc.ttcIndex`
+(above) reads `Ttc.runCount` at the dilated atoms and the dilated boundedness proof;
+`Ttc.algIndex` (`Model/Pseudocode`) reads `Ttc.latticeCount` at the dilated atoms and
+`Ttc.runPrec` at the *original* boundedness proof, which is legitimate because
+`Ttc.inputParams_scaleAtoms` holds definitionally.  So `Ttc.ttcRun` needs no second
+boundedness binder. -/
+theorem algIndex_eq_ttcIndex :
+    algIndex atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
+      = ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos := rfl
+
+/-- **`Ttc.ttcRun` is `Ttc.ttcAlgOutput` at the constructed oracle bundle**, by
+`rfl`.
+
+This is the lemma the headline rests on: `Model/Theorem`'s accuracy conjunct is
+stated over `Ttc.ttcRun`, which names nothing outside `Model/`, and this identifies
+it with the oracle-bundle form the rest of the development proves things about.
+`Ttc.ttc_accuracy_single_measure` is transported through it by nothing at all — the
+two sides are definitionally equal, so the proof term is unchanged. -/
+theorem ttcRun_eq_ttcAlgOutput (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcRun atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos) c t
+      = ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
+          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) := rfl
+
+/-- **`Ttc.ttcRun` is the run's estimate**, by `rfl` — the oracle-free form of
+`Ttc.ttcAlgOutput_eq_ttcEstimate`. -/
+theorem ttcRun_eq_ttcEstimate (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) :
+    ttcRun atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos) c t
+      = ttcEstimate atoms φ ε δ hε0 hε1 hn hφ hpos c t := rfl
+
 end Measured
 
 end Ttc
@@ -638,3 +682,6 @@ end Ttc
 #print axioms Ttc.ttcNumCubes_def
 #print axioms Ttc.ttcAlgOutput_eq_ttcEstimate
 #print axioms Ttc.ttcEstimate_eq_ttcOutput
+#print axioms Ttc.algIndex_eq_ttcIndex
+#print axioms Ttc.ttcRun_eq_ttcAlgOutput
+#print axioms Ttc.ttcRun_eq_ttcEstimate

@@ -259,59 +259,16 @@ theorem map_trajLaw_eval {θ : Fin L → ℝ} (hθ : ∀ s, 0 ≤ θ s) (j : ℕ
 
 /-! ## Count vectors as multisets
 
-The run's state is a `Multiset (Space n)`; the family is a count vector. This is
-the dictionary between them, given an injective enumeration `pt` of the lattice
-points. `Ttc.toMultiset` — the definition itself now lives upstream, in
-`Model/Pseudocode`, so that the read-offs can be stated without `Ttc.Oracles` —
-builds the multiset with prescribed multiplicities, and `Ttc.count_toMultiset`
-says it has exactly those multiplicities, which is what lets the oracles of step 3
-*read* the family.
+The run's state is a `Multiset (Space n)`; the family is a count vector. The
+dictionary between them — `Ttc.toMultiset`, `Ttc.card_toMultiset`,
+`Ttc.count_toMultiset`, `Ttc.count_toMultiset_of_notMem` and
+`Ttc.toMultiset_le_of_count_le` — now lives upstream, in `Model/Pseudocode`,
+together with the read-offs it is about and the two oracle contracts
+`Ttc.trajThin_le` and `Ttc.card_trajGen` it proves. It had to: `Ttc.ttcRun`
+(`Model/Pseudocode`) builds the oracle bundle inline, so its `thin_le` and
+`gen_card` fields have to be provable inside the audit surface. Nothing about the
+statements changed; only the file they are in.
 -/
-
-@[simp] theorem card_toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
-    Multiset.card (toMultiset pt k) = ∑ s, k s := by
-  rw [toMultiset, Multiset.card_sum]
-  exact Finset.sum_congr rfl fun s _ => Multiset.card_replicate _ _
-
-/-- **The multiplicities are the ones prescribed** — the point of the dictionary.
-Needs `pt` injective, so that distinct indices contribute to distinct points. -/
-theorem count_toMultiset {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
-    (k : Fin L → ℕ) (s : Fin L) :
-    Multiset.count (pt s) (toMultiset pt k) = k s := by
-  classical
-  rw [toMultiset, Multiset.count_sum']
-  rw [Finset.sum_eq_single s]
-  · rw [Multiset.count_replicate_self]
-  · intro t _ hts
-    rw [Multiset.count_replicate, if_neg (fun h => hts (hpt h))]
-  · intro h
-    exact absurd (Finset.mem_univ s) h
-
-/-- Points outside the enumeration do not occur. -/
-theorem count_toMultiset_of_notMem {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ)
-    {x : Space n} (hx : ∀ s, pt s ≠ x) :
-    Multiset.count x (toMultiset pt k) = 0 := by
-  classical
-  rw [toMultiset, Multiset.count_sum']
-  refine Finset.sum_eq_zero fun t _ => ?_
-  rw [Multiset.count_replicate, if_neg (hx t)]
-
-/-- **A count-bounded multiset is a sub-multiset** — the form `Oracles.halve_le`
-needs, where the ambient multiset is arbitrary rather than another `toMultiset`. -/
-theorem toMultiset_le_of_count_le {n : ℕ} {pt : Fin L → Space n}
-    (hpt : Function.Injective pt) {k : Fin L → ℕ} {X : Multiset (Space n)}
-    (h : ∀ s, k s ≤ Multiset.count (pt s) X) :
-    toMultiset pt k ≤ X := by
-  classical
-  rw [Multiset.le_iff_count]
-  intro x
-  by_cases hx : ∃ s, pt s = x
-  · obtain ⟨s, rfl⟩ := hx
-    rw [count_toMultiset hpt]
-    exact h s
-  · simp only [not_exists] at hx
-    rw [count_toMultiset_of_notMem pt k hx]
-    exact Nat.zero_le _
 
 /-! ## The oracles that read the trajectory
 
@@ -341,24 +298,9 @@ noncomputable def padPoint {n : ℕ} {ι : Type*} (pt : Fin L → Space n) (mem 
 
 /-! ### The two contracts, stated on the read-offs alone
 
-These are exactly `Ttc.Oracles`' two proof fields with the bundle taken away. They
-are theorems, so they stay here, downstream of `Ttc.toMultiset_le_of_count_le`; the
-*values* they are about are upstream, in `Model/Pseudocode`. -/
-
-/-- The `thin` contract: `Ttc.trajThin` removes elements, it never invents them. -/
-theorem trajThin_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
-    (ωj : Fin L → ℕ) (X : Multiset (Space n)) : trajThin pt ωj X ≤ X :=
-  toMultiset_le_of_count_le hpt fun _ => min_le_right _ _
-
-/-- The `gen` contract: `Ttc.trajGen` returns exactly `N` points. -/
-theorem card_trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) (ωj : Fin L → ℕ)
-    (N : ℕ) (pad : Space n) : Multiset.card (trajGen pt m ωj N pad) = N := by
-  classical
-  rw [trajGen]
-  by_cases h : Multiset.card (toMultiset pt fun s => if m s then ωj s else 0) = N
-  · simp only [h, if_pos]
-  · simp only [h, if_false]
-    exact Multiset.card_replicate _ _
+`Ttc.trajThin_le` and `Ttc.card_trajGen` — exactly `Ttc.Oracles`' two proof fields
+with the bundle taken away — are in `Model/Pseudocode`, beside the read-offs they
+are about; `Ttc.ttcRun` needs them there. -/
 
 /-- **The oracle bundle that reads a trajectory.**
 
