@@ -85,26 +85,6 @@ variable {A : Type*} {n : ℕ}
 
 /-! ## Part 1.  A cube of the decomposition containing a given point -/
 
-/-- The choice principle behind `Ttc.cubeOf`: a *total* function of `x` that lands
-in the decomposition and covers `x` whenever anything in the decomposition does. -/
-private theorem exists_cubeOf (M : A → Set (Space n)) (D : DNF A) (x : Space n) :
-    ∃ c : Cube A, (∃ c' : Cube A, c' ∈ D ∧ x ∈ region M c') → (c ∈ D ∧ x ∈ region M c) := by
-  by_cases h : ∃ c' : Cube A, c' ∈ D ∧ x ∈ region M c'
-  · exact ⟨h.choose, fun _ => h.choose_spec⟩
-  · exact ⟨[], fun h' => absurd h' h⟩
-
-/-- **A cube of `D` containing `x`.**  Total in `x` — no proof argument — so that
-the rates built from it are a closed term; `Ttc.cubeOf_spec` is the only thing ever
-asked of it. -/
-noncomputable def cubeOf (M : A → Set (Space n)) (D : DNF A) (x : Space n) : Cube A :=
-  (exists_cubeOf M D x).choose
-
-/-- `Ttc.cubeOf` is a cube of `D` containing `x`, whenever there is one. -/
-theorem cubeOf_spec {M : A → Set (Space n)} {D : DNF A} {x : Space n}
-    (h : ∃ c' : Cube A, c' ∈ D ∧ x ∈ region M c') :
-    cubeOf M D x ∈ D ∧ x ∈ region M (cubeOf M D x) :=
-  (exists_cubeOf M D x).choose_spec h
-
 /-- Every point of `Sol(F)` is covered by a cube of any DNF abstraction — the
 existence hypothesis of `Ttc.cubeOf_spec`, from `thm:decomposition`. -/
 theorem exists_cube_mem_of_mem_sol {M : A → Set (Space n)} {D : DNF A} {φ : BForm A}
@@ -112,11 +92,6 @@ theorem exists_cube_mem_of_mem_sol {M : A → Set (Space n)} {D : DNF A} {φ : B
     ∃ c : Cube A, c ∈ D ∧ x ∈ region M c := by
   obtain ⟨c, hc, hxc⟩ := mem_iUnion₂.1 (sol_subset_iUnion_region hDNF hx)
   exact ⟨c, hc, hxc⟩
-
-/-- **The cube the enumerated point `s` is assigned to.** -/
-noncomputable def cubeAt (M : A → Set (Space n)) (φ : BForm A) (D : DNF A) (ρ : ℤ)
-    (s : Fin (latticeCount M φ ρ)) : Cube A :=
-  cubeOf M D (latticeEnum M φ ρ s)
 
 /-- `Ttc.cubeAt` is a cube of the decomposition, and it contains the enumerated
 point. -/
@@ -126,14 +101,6 @@ theorem cubeAt_spec {M : A → Set (Space n)} {φ : BForm A} {D : DNF A} {ρ : �
   cubeOf_spec (exists_cube_mem_of_mem_sol hDNF (latticeEnum_mem hle s).1)
 
 /-! ## Part 2.  The rates `θ`, and `theta_eq` -/
-
-/-- **The level-`0` rates of `alg:ttc`, constructed.**  The sampler's mass at the
-enumerated point, in the cube it was assigned to, times that cube's volume
-estimate. -/
-noncomputable def rates (M : A → Set (Space n)) (φ : BForm A) (D : DNF A) (ρ : ℤ)
-    (sampD : Cube A → Space n → ℝ) (vol : Cube A → ℝ) :
-    Fin (latticeCount M φ ρ) → ℝ :=
-  fun s => sampD (cubeAt M φ D ρ s) (latticeEnum M φ ρ s) * vol (cubeAt M φ D ρ s)
 
 /-- **`Ttc.ttc_volume`'s `theta_eq`, for the constructed rates.**  The witness is
 `Ttc.cubeAt`, and the equation is `rfl`. -/

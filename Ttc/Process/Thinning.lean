@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Process.PoissonLaws
+import Ttc.Model.Prelude
 import Mathlib.Probability.Distributions.Binomial
 
 /-!
@@ -117,9 +118,6 @@ Mathlib's `ProbabilityTheory.binomial` supplies the thinning kernel; matching it
 point masses to `Ttc.binHalfPMF` turns the series above into an identity of
 measures.
 -/
-
-/-- The fair coin, as a point of the unit interval. -/
-noncomputable def half : unitInterval := ⟨1 / 2, by constructor <;> norm_num⟩
 
 @[simp] theorem coe_half : ((half : unitInterval) : ℝ) = 1 / 2 := rfl
 

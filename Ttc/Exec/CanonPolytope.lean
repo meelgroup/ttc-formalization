@@ -111,29 +111,6 @@ variable {A : Type*} {n : ℕ}
 
 section System
 
-/-- **The facets of `D`, enumerated.**  `Ttc.instFiniteFacetIndex` makes
-`FacetIndex D` finite, so it is in bijection with `Fin (Nat.card (FacetIndex D))`.
-The enumeration is needed only because the sampler's row index `Jt` lives in
-`Type 0` while `FacetIndex D` lives in `A`'s universe; nothing below depends on
-*which* bijection is chosen, only that it is one. -/
-noncomputable def facetOf (D : DNF A) : Fin (Nat.card (FacetIndex D)) ≃ FacetIndex D :=
-  (Finite.equivFin (FacetIndex D)).symm
-
-open scoped Classical in
-/-- **The canonical normal vectors.**  Row `k` of cube `i`'s system is the coefficient
-vector of the atom under row `k`'s literal when that facet belongs to `i`, and the
-zero vector otherwise. -/
-noncomputable def canonAm (atoms : A → LinAtom n) (D : DNF A) (i : {c : Cube A // c ∈ D})
-    (k : Fin (Nat.card (FacetIndex D))) : Space n :=
-  if (facetOf D k).1 = i then WithLp.toLp 2 (atoms (facetOf D k).2.val.atom).coeff else 0
-
-open scoped Classical in
-/-- **The canonical offsets**, dilated by `s`: the atom's bound scaled by `s` on the
-rows belonging to cube `i`, and `0` elsewhere. -/
-noncomputable def canonBv (atoms : A → LinAtom n) (D : DNF A) (s : ℝ)
-    (i : {c : Cube A // c ∈ D}) (k : Fin (Nat.card (FacetIndex D))) : ℝ :=
-  if (facetOf D k).1 = i then s * (atoms (facetOf D k).2.val.atom).bound else 0
-
 variable {atoms : A → LinAtom n} {D : DNF A}
 
 theorem canonAm_self {i : {c : Cube A // c ∈ D}} {k : Fin (Nat.card (FacetIndex D))}
@@ -277,17 +254,6 @@ theorem canon_smul_region_subset_body (atoms : A → LinAtom n) {D : DNF A}
   (canon_body_eq_smul_region atoms hpos hs i).ge
 
 /-! ## 4. The facet bound and the diameter -/
-
-/-- **The canonical facet bound**: the exact facet count, so `hcard` holds with
-equality and no slack enters `Ttc.Params.gamma` or `Ttc.Params.thresh`. -/
-noncomputable def canonRfac (D : DNF A) : ℝ := (Nat.card (FacetIndex D) : ℝ)
-
-/-- **The canonical diameter bound**: the metric diameter of the dilated region
-itself.  Finite because `Bornology.IsBounded (sol M φ)` — already a binder of
-`Ttc.ttc_volume_endToEnd` — bounds every region. -/
-noncomputable def canonDm (M : A → Set (Space n)) (D : DNF A) (ρ : ℤ)
-    (i : {c : Cube A // c ∈ D}) : ℝ :=
-  Metric.diam (latticeScale ρ • region M i.val)
 
 /-- **The dilated region of a cube of a DNF of `φ` is bounded** whenever `Sol(φ)` is —
 which is exactly `Ttc.ttc_volume_endToEnd`'s own binder `hbdd`.  This is what makes

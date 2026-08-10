@@ -144,25 +144,6 @@ open scoped ENNReal
 
 /-! ## The chain and its step count -/
 
-/-- **The step count.**  `Arlib.MarkovChains.conductanceMixingTime` at the conductance
-floor that `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope` produces for a body of
-diameter `Dm` containing a ball of radius `γ`, walked with step `δ` from an `Mw`-warm
-start, to reach total-variation accuracy `eps`.
-
-Exponentially large in `n`; see the module docstring. -/
-noncomputable def mixSteps (n : ℕ) (γ Dm δ Mw eps : ℝ) : ℕ :=
-  Arlib.MarkovChains.conductanceMixingTime Mw
-    (min ((γ / (γ + Dm)) ^ n / 32)
-      ((1 / 2 : ℝ) ^ n / Dm * ((γ / (γ + Dm)) ^ n) ^ 2 * δ / (128 * (n : ℝ)))) eps
-
-/-- **The law of the lazy ball walk on `K` with step `δ` after `t` steps from `mu0`.**
-
-This is the sampler's output law.  It is an iterate of a Markov kernel — nothing about
-the target `Arlib.uniformOn volume K` appears in it. -/
-noncomputable def ballWalkLaw {n : ℕ} (K : Set (Space n)) (δ : ℝ) (mu0 : Measure (Space n))
-    (t : ℕ) : Measure (Space n) :=
-  Arlib.MarkovChains.iterate (Arlib.MarkovChains.lazy (Arlib.MarkovChains.ballWalk K δ)) mu0 t
-
 /-- `ballWalkLaw` is what it says it is: the `t`-th iterate of the lazy ball-walk kernel.
 Stated so that a reader can check the sampler is a chain and not the target. -/
 theorem ballWalkLaw_eq_iterate {n : ℕ} (K : Set (Space n)) (δ : ℝ) (mu0 : Measure (Space n))
@@ -241,23 +222,6 @@ theorem toReal_volume_inflated_pos {n : ℕ} {ι : Type*} {Am : ι → Space n} 
 `Ttc.KV97Sampler.sampD_eq` pins the discrete law to the rounding-then-rejection formula.
 Defining `sampD` by that formula turns the field from an assumption into a `rfl`. -/
 
-open scoped Classical in
-/-- **The sampler's discrete law**, defined by the formula `sampD_eq` demands: the mass at
-a fine-lattice point `x` of `P(c)` is the probability that randomized rounding of the
-continuous draw `law ⟨c,·⟩` lands on `10^ρ · x`, normalised by the same quantity summed
-over all integer points of the dilated polytope.
-
-Outside the cubes of `D` there is nothing to define and the value is `0`; the structure
-field constrains `sampD` only on `region M i.val ∩ fineLattice n (latticeScale ρ)` for
-`i.val ∈ D`. -/
-noncomputable def kv97SampD {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF A) (ρ : ℤ)
-    (law : {c : Cube A // c ∈ D} → Measure (Space n)) : Cube A → Space n → ℝ := fun c x =>
-  if hc : c ∈ D then
-    (∫ p, Arlib.Lattice.Rounding.prodTent (latticeScale ρ • x) p ∂(law ⟨c, hc⟩)) /
-      ∑ᶠ k : ((latticeScale ρ • region M c) ∩ intLattice n : Set (Space n)),
-        ∫ p, Arlib.Lattice.Rounding.prodTent (k : Space n) p ∂(law ⟨c, hc⟩)
-  else 0
-
 /-- On a cube of `D`, `Ttc.kv97SampD` is exactly the right-hand side of
 `Ttc.KV97Sampler.sampD_eq`. -/
 theorem kv97SampD_apply {A : Type*} {n : ℕ} (M : A → Set (Space n)) {D : DNF A} (ρ : ℤ)
@@ -271,24 +235,6 @@ theorem kv97SampD_apply {A : Type*} {n : ℕ} (M : A → Set (Space n)) {D : DNF
   rw [kv97SampD, dif_pos i.2]
 
 /-! ## The continuous law of the sampler -/
-
-/-- **The `contLaw` field**: for each cube `i`, the law of the lazy ball walk on the
-inflated dilated polytope `P'ᵢ`, run from the warm start `mu0 i` for `Ttc.mixSteps` steps at
-tolerance `ε'/(4·Vol(P'ᵢ))`.
-
-Note what is *absent* from the right-hand side: `Arlib.uniformOn`.  The law is produced by
-iterating a kernel, and the only thing that ties it to the uniform measure is the mixing
-theorem `Ttc.tvLe_ballWalkLaw_inflated`. -/
-noncomputable def kv97ContLaw {A : Type*} {n : ℕ} {D : DNF A} {Jt : Type}
-    (epsPrime r : ℝ)
-    (Am : {c : Cube A // c ∈ D} → Jt → Space n) (bv : {c : Cube A // c ∈ D} → Jt → ℝ)
-    (Dm γ δ Mw : {c : Cube A // c ∈ D} → ℝ)
-    (mu0 : {c : Cube A // c ∈ D} → Measure (Space n)) :
-    {c : Cube A // c ∈ D} → Measure (Space n) := fun i =>
-  ballWalkLaw (Arlib.KV97.inflated (Am i) (bv i) (Arlib.KV97.cOf epsPrime) r) (δ i) (mu0 i)
-    (mixSteps n (γ i) (Dm i) (δ i) (Mw i)
-      (epsPrime / (4 *
-        (volume (Arlib.KV97.inflated (Am i) (bv i) (Arlib.KV97.cOf epsPrime) r)).toReal)))
 
 /-- **`contLaw` is a chain iterate, spelled out.**  This is the anti-trap lemma: it exhibits
 the sampler's law as `iterate (lazy (ballWalk P'ᵢ δᵢ)) (mu0 i) t`, so that a reader can see

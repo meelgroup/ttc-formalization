@@ -278,6 +278,27 @@ noncomputable def run (ρ : ℤ) (cubes : List ι) : ℝ :=
   let final := cubes.foldl (step P O ρ) ⟨0, 0⟩
   (card final.X : ℝ) / final.p
 
+/-! ## The charging model, `thm:runtime`
+
+What the running-time half of the headline counts.  It is part of the audit surface
+because the theorem *bounds* it: `Ttc.ttc` returns a cost, so a referee must be able to
+read what that number is.  Everything proved about it — that it is bounded by the
+closed form `Ttc.ttcComplexity` — is in `Exec/Complexity` and `Runtime`. -/
+
+/-- **The cost of one iteration**, as `thm:runtime` accounts it: one `Vol_ED` call
+(`alg:ttc` line 24) plus one `GenerateSamples` draw per point returned (line 43).
+`N` is the surviving Poisson count `Nᵢ`. -/
+def stepCost (cVol cSample N : ℕ) : ℕ := cVol + cSample * N
+
+/-- **The cost of the whole run**: the per-iteration cost summed along the fold
+that `Ttc.run` performs, so the state — and hence each `Nᵢ` — is the one the
+algorithm actually reaches. -/
+noncomputable def runCost (cVol cSample : ℕ) (ρ : ℤ) (cubes : List ι) : ℕ :=
+  (cubes.foldl
+    (fun (acc : ℕ × SketchState n) i =>
+      (acc.1 + stepCost cVol cSample (stepPre P O acc.2 i).2, step P O ρ acc.2 i))
+    (0, ⟨0, 0⟩)).1
+
 /-! # The preprocessing, lines A1–A13
 
 Definitions only, exactly as above: what each step *is*. Everything proved about
@@ -518,15 +539,6 @@ variable {A : Type*}
 Both are subtypes cut out by membership in a `List`, hence finite; `Nat.card` of an
 infinite type is `0`, so the positivity lemmas below would be *false* without this.
 -/
-
-instance instFiniteCubeMem (D : DNF A) : Finite {c : Cube A // c ∈ D} :=
-  List.finite_toSet D |>.to_subtype
-
-instance instFiniteFacetIndex (D : DNF A) : Finite (FacetIndex D) := by
-  unfold FacetIndex
-  have : ∀ c : {c : Cube A // c ∈ D}, Finite {l : Lit A // l ∈ c.val} := fun c =>
-    (List.finite_toSet c.val).to_subtype
-  infer_instance
 
 /-- **The DNF has a cube ⟹ `1 ≤ m`.**  Reduces `Params`' `hm` to a statement about
 the input formula's decomposition. -/
@@ -1386,6 +1398,47 @@ theorem latticeEnum_injective (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ
     Function.Injective (latticeEnum M φ ρ) :=
   (exists_latticeEnum M φ ρ).choose_spec.1
 
+/-! ## Line 20: the level-`0` rates `θ`
+
+`alg:ttc` line 20 sets, for each enumerated lattice point `s`, the rate
+`θ(s) = sampD(c, s) · Vol_ED(P(c))` where `c` is the cube `s` is assigned to.  The
+assignment is `Ttc.cubeAt`: a *total* function of `s`, so the rates are a closed term.
+`Ttc.cubeOf_spec` (`Sampler/Rates`) — the only thing ever asked of it — says it is a
+cube of the decomposition containing the point, whenever one exists. -/
+
+/-- The choice principle behind `Ttc.cubeOf`: a *total* function of `x` that lands
+in the decomposition and covers `x` whenever anything in the decomposition does. -/
+private theorem exists_cubeOf (M : A → Set (Space n)) (D : DNF A) (x : Space n) :
+    ∃ c : Cube A, (∃ c' : Cube A, c' ∈ D ∧ x ∈ region M c') → (c ∈ D ∧ x ∈ region M c) := by
+  by_cases h : ∃ c' : Cube A, c' ∈ D ∧ x ∈ region M c'
+  · exact ⟨h.choose, fun _ => h.choose_spec⟩
+  · exact ⟨[], fun h' => absurd h' h⟩
+
+/-- **A cube of `D` containing `x`.**  Total in `x` — no proof argument — so that
+the rates built from it are a closed term; `Ttc.cubeOf_spec` is the only thing ever
+asked of it. -/
+noncomputable def cubeOf (M : A → Set (Space n)) (D : DNF A) (x : Space n) : Cube A :=
+  (exists_cubeOf M D x).choose
+
+/-- `Ttc.cubeOf` is a cube of `D` containing `x`, whenever there is one. -/
+theorem cubeOf_spec {M : A → Set (Space n)} {D : DNF A} {x : Space n}
+    (h : ∃ c' : Cube A, c' ∈ D ∧ x ∈ region M c') :
+    cubeOf M D x ∈ D ∧ x ∈ region M (cubeOf M D x) :=
+  (exists_cubeOf M D x).choose_spec h
+
+/-- **The cube the enumerated point `s` is assigned to.** -/
+noncomputable def cubeAt (M : A → Set (Space n)) (φ : BForm A) (D : DNF A) (ρ : ℤ)
+    (s : Fin (latticeCount M φ ρ)) : Cube A :=
+  cubeOf M D (latticeEnum M φ ρ s)
+
+/-- **The level-`0` rates of `alg:ttc` line 20.**  The sampler's mass at the
+enumerated point, in the cube it was assigned to, times that cube's volume
+estimate. -/
+noncomputable def rates (M : A → Set (Space n)) (φ : BForm A) (D : DNF A) (ρ : ℤ)
+    (sampD : Cube A → Space n → ℝ) (vol : Cube A → ℝ) :
+    Fin (latticeCount M φ ρ) → ℝ :=
+  fun s => sampD (cubeAt M φ D ρ s) (latticeEnum M φ ρ s) * vol (cubeAt M φ D ρ s)
+
 /-! ## The run's own data, and `TTC(F, ε, δ)` on one run
 
 Nine abbreviations, each a plain function of the algorithm's inputs, spelling out
@@ -1459,24 +1512,81 @@ Nothing is assumed, and nothing is a proof: this is a closed term in
 is `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle … c t)`, so this is not a second
 description of the algorithm but the same term with its oracle argument filled
 in. -/
+noncomputable def algOracles (c : ℕ → Space n)
+    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) : Oracles n (Cube A) where
+  vol := mcVol (atomSet (algAtoms atoms φ ε δ))
+    (toDNFd (preprocess atoms φ)) (algCen atoms φ ε δ)
+    (algGamma atoms φ ε δ)
+    (algBlock atoms φ ε δ).epsPrime
+    (algBlock atoms φ ε δ).deltaPrime c
+  covered := coverOfRegion (atomSet (algAtoms atoms φ ε δ))
+  thin := fun _j₀ j' X => trajThin (algEnum atoms φ ε δ) (t j') X
+  thin_le := fun _j₀ j' X => trajThin_le (latticeEnum_injective _ _ _) (t j') X
+  pois := fun i j _lam => trajPois (algMem atoms φ ε δ i) (t j)
+  gen := fun i j N _ρ =>
+    trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
+      (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i))
+  gen_card := fun i j N _ρ =>
+    card_trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
+      (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i))
+
+/-- **`TTC(F, ε, δ)`'s output on one run `(c, t)`, with no oracle argument.** -/
 noncomputable def ttcRun (c : ℕ → Space n)
     (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) : ℝ :=
-  ttcAlgOutput atoms φ ε δ
-    { vol := mcVol (atomSet (algAtoms atoms φ ε δ))
-        (toDNFd (preprocess atoms φ)) (algCen atoms φ ε δ)
-        (algGamma atoms φ ε δ)
-        (algBlock atoms φ ε δ).epsPrime
-        (algBlock atoms φ ε δ).deltaPrime c
-      covered := coverOfRegion (atomSet (algAtoms atoms φ ε δ))
-      thin := fun _j₀ j' X => trajThin (algEnum atoms φ ε δ) (t j') X
-      thin_le := fun _j₀ j' X => trajThin_le (latticeEnum_injective _ _ _) (t j') X
-      pois := fun i j _lam => trajPois (algMem atoms φ ε δ i) (t j)
-      gen := fun i j N _ρ =>
-        trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
-          (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i))
-      gen_card := fun i j N _ρ =>
-        card_trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
-          (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i)) }
+  ttcAlgOutput atoms φ ε δ (algOracles atoms φ ε δ c t)
+
+/-- **Line 20's rate vector `θ`, on the volume coins `c`** — the sampler's mass at
+each enumerated lattice point (`Ttc.e2eSampD` at the run's own geometry) times that
+point's cube's volume estimate (`Ttc.mcVol` at `c`).  `Ttc.trajLaw` of this is the
+law the sample coins `t` are drawn from. -/
+noncomputable def algRates (c : ℕ → Space n) : Fin (algIndex atoms φ ε δ) → ℝ :=
+  rates (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)
+    (toDNFd (preprocess atoms φ)) (algPrec atoms φ ε δ)
+    (e2eSampD (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
+      (algPrec atoms φ ε δ)
+      (algBlock atoms φ ε δ).epsPrime (canonRfac (toDNFd (preprocess atoms φ)))
+      (Jt := Fin (Nat.card (FacetIndex (toDNFd (preprocess atoms φ)))))
+      (canonAm (algAtoms atoms φ ε δ) (toDNFd (preprocess atoms φ)))
+      (canonBv (algAtoms atoms φ ε δ) (toDNFd (preprocess atoms φ))
+        (latticeScale (algPrec atoms φ ε δ)))
+      (algCen atoms φ ε δ) (algGamma atoms φ ε δ)
+      (canonDm (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
+        (algPrec atoms φ ε δ)))
+    (mcVol (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
+      (algCen atoms φ ε δ) (algGamma atoms φ ε δ)
+      (algBlock atoms φ ε δ).epsPrime (algBlock atoms φ ε δ).deltaPrime c)
+
+/-- **The charged cost of the run `(c, t)`** — `Ttc.runCost` folded over the
+preprocessed formula's cube list, at the per-call charges `cVol` (one `Vol_ED` call)
+and `cSample` (one generated sample). -/
+noncomputable def algCost (c : ℕ → Space n)
+    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) (cVol cSample : ℕ) : ℕ :=
+  runCost (algBlock atoms φ ε δ) (algOracles atoms φ ε δ c t) cVol cSample
+    (algPrec atoms φ ε δ) (toDNFd (preprocess atoms φ))
+
+/-! ## `TTC(F, ε, δ)` as one program: the law of `(estimate, cost)`
+
+`Ttc.ttc` is the whole algorithm, as a single measure on the pair
+`(estimate, cost)` — the `Measure` analogue of nfalean's
+`ApproxNFA.countNFAM : PMF (ℝ × ℕ)`.  It is a two-line monadic program:
+
+```
+c ← MonteCarlo.coins n                      -- the volume oracle's coins
+t ← trajLaw (algRates … c)                  -- the sample trajectory at those rates
+return (ttcRun … c t, algCost … c t)        -- the estimate and what it cost
+```
+
+written with `MeasureTheory.Measure.bind` and `MeasureTheory.Measure.map`, neither of
+which carries a measurability obligation: the definition is total and proof-free, and
+every measurability fact it needs to *behave* like the display above is proved
+downstream (`Ttc.ttc_eq_ttcPairLaw`, `Monadic/Program`).
+
+Returning the pair is what makes both halves of `Ttc.ttc_volume_estimate` — accuracy
+and running time — statements about *the same run*. -/
+noncomputable def ttc (cVol cSample : ℕ) : MeasureTheory.Measure (ℝ × ℕ) :=
+  (MonteCarlo.coins n).bind fun c =>
+    (trajLaw (algRates atoms φ ε δ c)).map fun t =>
+      (ttcRun atoms φ ε δ c t, algCost atoms φ ε δ c t cVol cSample)
 
 end Run
 

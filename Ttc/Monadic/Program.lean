@@ -341,6 +341,33 @@ theorem ttcPairLaw_def (cVol cSample : ℕ) :
       = (ttcLaw atoms φ ε δ).map
           (ttcPair atoms φ ε δ cVol cSample) := rfl
 
+/-- **`Model/Pseudocode`'s `Ttc.ttc` is the paired law.**
+
+`Ttc.ttc` is the algorithm as written in `Model/`: a `MeasureTheory.Measure.bind` of
+the volume coins with the `MeasureTheory.Measure.map` of the trajectory law along the
+read-off — a definition that carries no measurability obligation, which is why it can
+live in the audit surface.  This identifies it with the composition–product form
+`Ttc.ttcPairLaw` that the rest of the development reasons about, so `Ttc.ttc` is not a
+rename: every theorem below transfers to it verbatim.
+
+Three Mathlib steps and nothing else: `MeasureTheory.Measure.compProd_eq_comp_prod`
+turns `⊗ₘ` into a `bind`, `MeasureTheory.Measure.map_comp` pushes the read-off inside
+it, and `MeasureTheory.Measure.dirac_prod` evaluates the resulting kernel at a coin
+sequence.  The `Model/`-side names are definitionally the run's own
+(`Ttc.algRates_eq_ttcRates`, `Ttc.algCost_eq_ttcCost`, both `rfl`), so the last step is
+`rfl`. -/
+theorem ttc_eq_ttcPairLaw (cVol cSample : ℕ) :
+    ttc atoms φ ε δ cVol cSample = ttcPairLaw atoms φ ε δ cVol cSample := by
+  have hpair : Measurable (ttcPair atoms φ ε δ cVol cSample) :=
+    measurable_ttcPair atoms φ ε δ cVol cSample
+  rw [ttcPairLaw_def, ttcLaw_def, Measure.compProd_eq_comp_prod,
+    Measure.map_comp _ _ hpair]
+  refine congrArg (Measure.bind (MonteCarlo.coins n)) ?_
+  funext c
+  rw [Kernel.map_apply _ hpair, Kernel.prod_apply, Kernel.id_apply, Measure.dirac_prod,
+    Measure.map_map hpair measurable_prodMk_left]
+  rfl
+
 /-- **The paired law is a probability measure**, from `Ttc.instIsProbabilityMeasureTtcLaw`
 and the measurability of the read-off. -/
 instance instIsProbabilityMeasureTtcPairLaw (cVol cSample : ℕ) :

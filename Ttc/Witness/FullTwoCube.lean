@@ -172,11 +172,10 @@ Everything the run does to the input — pruning, cleaning, constructing the ins
 ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcLaw` and
 `Ttc.ttcEstimate` (`Ttc/Exec/Api.lean`).  Only the accuracy target `Ttc.volSol` is at
 the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
-noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    ENNReal :=
-  ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
-    {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ p.1 p.2
-        ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
+noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1)
+    (cVol cSample : ℕ) : ENNReal :=
+  ttc (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ cVol cSample
+    {r | r.1 ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
 
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
 the measure in `Ttc.ttc_volume_estimate`'s conclusion at
@@ -184,15 +183,16 @@ the measure in `Ttc.ttc_volume_estimate`'s conclusion at
 the measured quantity as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle …)`, which is
 `Ttc.ttcEstimate` by `rfl` (`Ttc.ttcAlgOutput_eq_ttcEstimate`) — and nothing else
 changes. -/
-theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    twoProbFull n hn ε δ hε0 hε1 =
-      ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
-        {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ p.1 p.2
-            ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))} := rfl
+theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1)
+    (cVol cSample : ℕ) :
+    twoProbFull n hn ε δ hε0 hε1 cVol cSample =
+      ttc (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ cVol cSample
+        {r | r.1 ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))} := rfl
 
 /-- The same quantity as a real number — the left-hand side of the guarantee. -/
-noncomputable def twoAccFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) : ℝ :=
-  (twoProbFull n hn ε δ hε0 hε1).toReal
+noncomputable def twoAccFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1)
+    (cVol cSample : ℕ) : ℝ :=
+  (twoProbFull n hn ε δ hε0 hε1 cVol cSample).toReal
 
 /-! ## The witness -/
 
@@ -216,10 +216,10 @@ equal.
 **Cost — exponential in `n`, paid twice, on a dilated body.**  See this module's
 docstring.  Unconditional correctness, not efficiency. -/
 theorem ttc_volume_estimate_two_cube_full (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
-    1 - δ ≤ twoAccFull n hn ε δ hε0 hε1 :=
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ) :
+    1 - δ ≤ twoAccFull n hn ε δ hε0 hε1 cVol cSample :=
   (ttc_volume_estimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn
-    twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1)).1
+    twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) cVol cSample).1
 
 /-- **`Ttc.ttc_volume_estimate` on a two-cube DNF at two structurally different
 parameter pairs, with the achieved bound a positive numeral.**
@@ -236,28 +236,28 @@ is the vacuous `0 ≤ (…).toReal`.  Both runs carry the exponential cost recor
 this module's docstring. -/
 theorem ttc_volume_estimate_two_cube_full_at (n : ℕ) (hn : 1 ≤ n)
     (hε₁ : (0 : ℝ) < 1/3) (hε₁' : (1/3 : ℝ) ≤ 1)
-    (hε₂ : (0 : ℝ) < 1/2) (hε₂' : (1/2 : ℝ) ≤ 1) :
-    ((0 : ℝ) < 1/10 ∧ (1/10 : ℝ) ≤ twoAccFull n hn (1/3) (9/10) hε₁ hε₁'
+    (hε₂ : (0 : ℝ) < 1/2) (hε₂' : (1/2 : ℝ) ≤ 1) (cVol cSample : ℕ) :
+    ((0 : ℝ) < 1/10 ∧ (1/10 : ℝ) ≤ twoAccFull n hn (1/3) (9/10) hε₁ hε₁' cVol cSample
       ∧ (4/5 : ℝ) < 9/10 ∧ (9/10 : ℝ) < 1)
-    ∧ ((0 : ℝ) < 3/4 ∧ (3/4 : ℝ) ≤ twoAccFull n hn (1/2) (1/4) hε₂ hε₂') := by
+    ∧ ((0 : ℝ) < 3/4 ∧ (3/4 : ℝ) ≤ twoAccFull n hn (1/2) (1/4) hε₂ hε₂' cVol cSample) := by
   refine ⟨⟨by norm_num, ?_, by norm_num, by norm_num⟩, ⟨by norm_num, ?_⟩⟩
   · have h := ttc_volume_estimate_two_cube_full n hn (1/3) (9/10) hε₁ hε₁'
-      (by norm_num) (by norm_num)
+      (by norm_num) (by norm_num) cVol cSample
     linarith
   · have h := ttc_volume_estimate_two_cube_full n hn (1/2) (1/4) hε₂ hε₂'
-      (by norm_num) (by norm_num)
+      (by norm_num) (by norm_num) cVol cSample
     linarith
 
 /-- **The bound is a genuine number, not `ENNReal.toReal ⊤ = 0`.**  A strictly
 positive lower bound on the `toReal` forces the measure itself to be nonzero and
 finite. -/
 theorem twoProbFull_pos_ne_top (n : ℕ) (hn : 1 ≤ n)
-    (hε0 : (0 : ℝ) < 1/3) (hε1 : (1/3 : ℝ) ≤ 1) :
-    0 < twoProbFull n hn (1/3) (9/10) hε0 hε1
-      ∧ twoProbFull n hn (1/3) (9/10) hε0 hε1 ≠ ⊤ := by
+    (hε0 : (0 : ℝ) < 1/3) (hε1 : (1/3 : ℝ) ≤ 1) (cVol cSample : ℕ) :
+    0 < twoProbFull n hn (1/3) (9/10) hε0 hε1 cVol cSample
+      ∧ twoProbFull n hn (1/3) (9/10) hε0 hε1 cVol cSample ≠ ⊤ := by
   have h := (ttc_volume_estimate_two_cube_full_at n hn hε0 hε1 (by norm_num)
-    (by norm_num)).1.2.1
-  have hpos : 0 < (twoProbFull n hn (1/3) (9/10) hε0 hε1).toReal :=
+    (by norm_num) cVol cSample).1.2.1
+  have hpos : 0 < (twoProbFull n hn (1/3) (9/10) hε0 hε1 cVol cSample).toReal :=
     lt_of_lt_of_le (by norm_num : (0:ℝ) < 1/10) h
   exact ⟨(ENNReal.toReal_pos_iff.1 hpos).1, (ENNReal.toReal_pos_iff.1 hpos).2.ne⟩
 

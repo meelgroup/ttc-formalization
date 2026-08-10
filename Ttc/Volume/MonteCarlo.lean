@@ -128,20 +128,8 @@ theorem volume_unitBall_ne_top : volume (Metric.ball (0 : Space n) 1) ≠ ⊤ :=
 theorem volume_unitBall_toReal_pos : 0 < (volume (Metric.ball (0 : Space n) 1)).toReal :=
   ENNReal.toReal_pos volume_unitBall_ne_zero volume_unitBall_ne_top
 
-/-- **One coin**: the uniform distribution on the unit ball of `Space n`. -/
-noncomputable def coinLaw (n : ℕ) : Measure (Space n) :=
-  Arlib.uniformOn volume (Metric.ball (0 : Space n) 1)
-
 instance instIsProbabilityMeasureCoinLaw : IsProbabilityMeasure (coinLaw n) :=
   Arlib.isProbabilityMeasure_uniformOn volume volume_unitBall_ne_zero volume_unitBall_ne_top
-
-/-- **All the coins**: a countable i.i.d. sequence of uniform draws from the unit ball.
-
-This is the `Ω`/`μ` of `Ttc.VolumeAlgorithm.monteCarlo`.  It is the infinite product
-measure `MeasureTheory.Measure.infinitePi`; independence of the coordinates is
-`ProbabilityTheory.iIndepFun_infinitePi`. -/
-noncomputable def coins (n : ℕ) : Measure (ℕ → Space n) :=
-  Measure.infinitePi (fun _ : ℕ => coinLaw n)
 
 instance instIsProbabilityMeasureCoins : IsProbabilityMeasure (coins n) := by
   unfold coins; infer_instance

@@ -129,18 +129,6 @@ with every level's marginal coming from `Ttc.chainLaw_eq_levelLaw` rather than
 from an independence argument about product coordinates.
 -/
 
-/-- **One thinning step, as a Markov kernel.** Each coordinate is thinned
-`Binomial(·, ½)`, independently across lattice points. -/
-noncomputable def thinKernel (L : ℕ) : Kernel (Fin L → ℕ) (Fin L → ℕ) where
-  toFun k := Measure.pi fun s => binomial (k s) half
-  measurable' := Measurable.of_discrete
-
-@[simp] theorem thinKernel_apply (L : ℕ) (k : Fin L → ℕ) :
-    thinKernel L k = Measure.pi fun s => binomial (k s) half := rfl
-
-instance isMarkovKernel_thinKernel (L : ℕ) : IsMarkovKernel (thinKernel L) :=
-  ⟨fun k => by rw [thinKernel_apply]; infer_instance⟩
-
 /-- **The chain step, in kernel form**: binding a product of Poissons through the
 thinning kernel halves every rate. This is `Ttc.pi_poisson_bind_binomial_half`
 read as a kernel composition, and it is the transition `Ttc.chainLaw` iterates. -/
@@ -159,20 +147,6 @@ is the object README finding 15 says the paper needs and never builds: every lev
 lives on the same sample point, so `Err(j)` is an unconditional event for every
 `j`, and the run can be identified with the family at its own stopping level.
 -/
-
-/-- The chain's kernel at step `n`: thin the state at time `n`. The history is
-available but only its last coordinate is read — the chain is Markov. -/
-noncomputable def chainKernel (L n : ℕ) :
-    Kernel ((_i : ↥(Finset.Iic n)) → (Fin L → ℕ)) (Fin L → ℕ) :=
-  Kernel.comap (thinKernel L) (fun h => h ⟨n, Finset.mem_Iic.2 le_rfl⟩) (measurable_pi_apply _)
-
-instance isMarkovKernel_chainKernel (L n : ℕ) : IsMarkovKernel (chainKernel L n) := by
-  rw [chainKernel]; infer_instance
-
-/-- **The coupled family, as one measure on trajectories.** Start from the
-level-`0` product of Poissons and thin forever. -/
-noncomputable def trajLaw (θ : Fin L → ℝ) : Measure (ℕ → (Fin L → ℕ)) :=
-  Kernel.trajMeasure (Measure.pi fun s => poissonMeasure (θ s).toNNReal) (chainKernel L)
 
 instance isProbabilityMeasure_trajLaw (θ : Fin L → ℝ) :
     IsProbabilityMeasure (trajLaw θ) := by

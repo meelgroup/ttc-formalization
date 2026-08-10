@@ -52,20 +52,6 @@ open Multiset
 
 variable {n : ℕ} {ι : Type*} (P : Params) (O : Oracles n ι)
 
-/-- **The cost of one iteration**, as `thm:runtime` accounts it: one `Vol_ED` call
-(`alg:ttc` line 24) plus one `GenerateSamples` draw per point returned (line 43).
-`N` is the surviving Poisson count `Nᵢ`. -/
-def stepCost (cVol cSample N : ℕ) : ℕ := cVol + cSample * N
-
-/-- **The cost of the whole run**: the per-iteration cost summed along the fold
-that `Ttc.run` performs, so the state — and hence each `Nᵢ` — is the one the
-algorithm actually reaches. -/
-noncomputable def runCost (cVol cSample : ℕ) (ρ : ℤ) (cubes : List ι) : ℕ :=
-  (cubes.foldl
-    (fun (acc : ℕ × SketchState n) i =>
-      (acc.1 + stepCost cVol cSample (stepPre P O acc.2 i).2, step P O ρ acc.2 i))
-    (0, ⟨0, 0⟩)).1
-
 /-- Every cube of the run's own fold satisfies `Ttc.AbsorbExits` — the hypothesis
 `thm:runtime` needs and does not state. Quantified over *all* states, which is
 what makes it usable under the fold without tracking which state each cube sees. -/

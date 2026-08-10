@@ -249,32 +249,6 @@ theorem ball_smul_subset_body_of_dilate {M : A → Set (Space n)} {D : DNF A} {�
   · show latticeScale ρ • (latticeScale ρ)⁻¹ • x = x
     rw [smul_smul, mul_inv_cancel₀ hs.ne', one_smul]
 
-/-- **The sampler's discrete law, at the geometry the capstone already carries.**
-
-Literally `Ttc.kv97SamplerOfBody`'s own `sampD` — the rounding-then-rejection law of
-the lazy ball walk on the inflated dilated body — with its inscribed ball taken to be
-the capstone's, dilated (`Ttc.ball_smul_subset_body_of_dilate`), and its ball-walk
-step taken equal to that dilated radius.  Nothing is asserted by this definition:
-`Ttc.e2eSampler` is the proof that a `Ttc.KV97Sampler` for it exists. -/
-noncomputable def e2eSampD (M : A → Set (Space n)) (D : DNF A) (ρ : ℤ)
-    (epsPrime rfac : ℝ) {Jt : Type}
-    (Am : {c : Cube A // c ∈ D} → Jt → Space n) (bv : {c : Cube A // c ∈ D} → Jt → ℝ)
-    (cen : {c : Cube A // c ∈ D} → Space n) (gammaHat : ℝ)
-    (Dm : {c : Cube A // c ∈ D} → ℝ) : Cube A → Space n → ℝ :=
-  kv97SampD M D ρ (kv97ContLaw epsPrime rfac Am bv
-    (fun i => (1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac /
-        (latticeScale ρ * gammaHat)) * Dm i)
-    (fun _ => latticeScale ρ * gammaHat
-      + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac)
-    (fun _ => latticeScale ρ * gammaHat)
-    (fun i => (volume (Arlib.KV97.inflated (Am i) (bv i) (Arlib.KV97.cOf epsPrime) rfac) /
-      volume (Metric.ball (latticeScale ρ • cen i)
-        (latticeScale ρ * gammaHat
-          + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac))).toReal)
-    (fun i => Arlib.uniformOn volume (Metric.ball (latticeScale ρ • cen i)
-      (latticeScale ρ * gammaHat
-        + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac))))
-
 /-- **A `Ttc.KV97Sampler` for `Ttc.e2eSampD`, assuming nothing about the sampler.**
 
 `Ttc.kv97SamplerOfBody` at the capstone's own geometry.  Its remaining inputs are

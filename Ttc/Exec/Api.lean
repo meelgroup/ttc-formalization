@@ -585,6 +585,19 @@ theorem ttcRun_eq_ttcAlgOutput (c : ℕ → Space n)
       = ttcAlgOutput atoms φ ε δ
           (ttcOracleBundle atoms φ ε δ c t) := rfl
 
+/-- **The `Model/`-side rate vector is the run's rate vector**, by `rfl`.
+`Ttc.algRates` (`Model/Pseudocode`) is `Ttc.ttcRates` with `Ttc.runRates` unfolded
+into the `Model/` vocabulary — the same term, so `Ttc.ttc` is the law of the same
+trajectory as `Ttc.ttcPairLaw`. -/
+theorem algRates_eq_ttcRates (c : ℕ → Space n) :
+    algRates atoms φ ε δ c = ttcRates atoms φ ε δ c := rfl
+
+/-- **The `Model/`-side charged cost is the run's charged cost**, by `rfl` — the
+oracle-free form of `Ttc.ttcCost`, on the bundle the run itself supplies. -/
+theorem algCost_eq_ttcCost (c : ℕ → Space n)
+    (t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) (cVol cSample : ℕ) :
+    algCost atoms φ ε δ c t cVol cSample = ttcCost atoms φ ε δ c t cVol cSample := rfl
+
 /-- **`Ttc.ttcRun` is the run's estimate**, by `rfl` — the oracle-free form of
 `Ttc.ttcAlgOutput_eq_ttcEstimate`. -/
 theorem ttcRun_eq_ttcEstimate (c : ℕ → Space n)

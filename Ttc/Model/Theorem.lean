@@ -30,18 +30,34 @@ atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
 and among them there is no interpretation, no parameter block, no converter, no
 oracle, no precision, no inscribed-ball data — and no boundedness hypothesis.
 
-## What the guarantee is stated over: one law, one point, both halves
+## What the guarantee is stated over: one object, one run, both halves
 
-    ttcLaw atoms φ ε δ hε0 hε1 hn hφ hpos
-      : Measure ((ℕ → Space n) × (ℕ → Fin (ttcIndex …) → ℕ))
+    ttc atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)
 
-— **the law of one run of `TTC(F, ε, δ)`**, defined and documented in `Monadic/Program`
-as the composition–product of the volume oracle's coin law with the coin-indexed
-trajectory kernel: draw the volume coins `c`, then draw the sample trajectory `t` from
-the coupled family at the rates *that* draw produced.  A point of its space is a whole
-run `p = (c, t)`, and **both conjuncts below speak about the same `p`** — the accuracy
-half about the output `Ttc.ttcRun … p.1 p.2`, the running-time half about the charged
-cost `Ttc.ttcCost … p.1 p.2`.
+— **`TTC(F, ε, δ)` itself**, defined in `Model/Pseudocode` as
+
+    (MonteCarlo.coins n).bind fun c =>
+      (trajLaw (algRates atoms φ ε δ c)).map fun t =>
+        (ttcRun atoms φ ε δ c t, algCost atoms φ ε δ c t cVol cSample)
+
+— draw the volume coins `c`, then the sample trajectory `t` at the rates *that* draw
+produced, and read off the pair `(estimate, cost)`.  **Both conjuncts below speak about
+the same `r`**: the accuracy half about `r.1`, the running-time half about `r.2`.  This
+mirrors `ApproxNFA.countNFAM A n ε δ : PMF (ℝ × ℕ)`.
+
+`Measure.bind`/`Measure.map` rather than `⊗ₘ`, deliberately: the `⊗ₘ` spelling would be
+definitionally equal to `Ttc.ttcPairLaw` but would drag `Ttc.ttcTrajKernel` and its
+measurability proof into `Model/`.  The price is that the bridge
+`Ttc.ttc_eq_ttcPairLaw` (`Monadic/Program`) is a three-step proof rather than `rfl` — and
+that bridge is what makes `ttc` an honest name for the run rather than a fresh definition
+nothing connects to the analysis.
+
+**Why `cVol` and `cSample`.**  `alg:ttc` line 24's `Vol_ED` and line 43's
+`GenerateSamples` are oracle calls whose per-call cost the paper never fixes, so
+`Ttc/Runtime.lean` leaves them parametric and the statement quantifies over them.
+nfalean has no such parameter because its cost model is entirely internal.  Fixing them
+would trade a claim about every charging convention for a claim about one arbitrary
+convention.
 
 **There is no iterated integral.**  Earlier versions of this statement carried
 `∫⁻ c, trajLaw (ttcRates … c) {t | …} ∂(MonteCarlo.coins n)` — outer over the volume
@@ -67,15 +83,49 @@ bind, and `Ttc.ttcLaw` is a probability measure.
 `Pr[p ← μ; E p]` below is `Monadic/MeasurePr`'s notation for `(μ {p | E p}).toReal` —
 Mathlib's measure at Mathlib's `setOf`, read as a real.  Nothing of ours is named by it.
 
-### Why the running-time half is `∀ p` and not `All[p ← ttcLaw; …]`
+### The running-time half: `All[…]`, and what it did and did not cost
 
-Deliberate, and it is the **stronger** statement.  nfalean writes its running-time half
-as `All[r ← countNFAM …; …]`, where `All` is `PMF.support p ⊆ {x | E x}`.  It is tempting
-to read that as "no exceptional outcome exists at all", i.e. as strictly stronger than
+Earlier versions of this statement wrote the running-time half as a pointwise
+`∀ p, … → ttcTerminates … → …`, because the `All[…]` form was **not provable**: off the
+absorption guard `Ttc.absorbLevel` degenerates (`Nat.sInf ∅ = 0`), the exit level defaults
+to the entry level, and the count handed to `GenerateSamples` ranges over all of
+`ℕ → Fin k → ℕ`, so no constant bounds it.  The plan of record was to interrupt-truncate
+the algorithm, as nfalean does.
+
+**That turned out to be unnecessary.**  `Ttc.trajLaw_ae_terminates` (`Process/Truncation`)
+shows the loops terminate `trajLaw`-almost surely: under `trajLaw θ` the level-`j` count
+vector is `⨂ₛ Pois(θₛ/2ʲ)`, and *both* summands of the guard are read off that vector, so
+at any level with `ω j = 0` the guard reads `Thresh < 0 + 0` — refuted by `0 ≤ Thresh`,
+whatever the cube, state, entry level or sample coins.  `Pr[ω j ≠ 0] ≤ Λ/2ʲ` is summable.
+One geometric series; no union bound over cubes and no Chernoff.
+`Ttc.ae_ttcLaw_ttcTerminates` transports it, and `Ttc.all_ttcPairLaw_cost_le` is the
+guard-free bound this conjunct is.
+
+The pointwise form is still **false** without truncation, and remains so; what changed is
+that the a.e. form no longer needs it.  The design for a truncated variant is recorded in
+`Process/Truncation` and deliberately not applied — with the warning that its sentinel
+would have to be `-1`, not `0`: `0` is a legitimate output of `Ttc.run`
+(`Findings/SmallBody`), and at `ε = 1` we have `0 ∈ relErr 1 V`, so a `0` sentinel would
+let interrupted runs count as *correct*.
+
+**What `All[…]` is here, precisely.**  nfalean's is `PMF.support p ⊆ {x | E x}`, which is
+tempting to read as "no exceptional outcome exists at all", i.e. strictly stronger than
 almost-everywhere.  **It is not**: for a `PMF`,
 `support p ⊆ {x | E x}` ⟺ `∀ x, ¬E x → p x = 0` ⟺ `p.toOuterMeasure {¬E} = 0`, so the
 support form and the a.e. form *coincide*.  A discrete law has no room for a
-large-but-null exceptional set.
+large-but-null exceptional set.  Ours is `∀ᵐ`, and by
+`Ttc.all_ttcPairLaw_iff_atoms` the same collapse holds for `Ttc.ttc` — it is a pushforward
+along a countably determined map, hence carried by a countable set.  So this conjunct is
+the exact analogue of nfalean's, not a weakening of it.
+
+**Two strictly stronger statements are kept**, since this one is not the sharpest in every
+direction: `Ttc.ttcPairLaw_cost_le_of_terminates` bounds the cost over
+`Set.range (Ttc.ttcPair …)` — every run the program can produce, no exceptional set at all
+— and `Ttc.all_ttcPairLaw_cost_le_of_terminates` carries the sharper `max`-shaped
+`Ttc.ttcThresh` instead of the sum below.  They are **incomparable** with this conjunct:
+they are sharper in the bound, weaker in the hypothesis.  The constant here is at most a
+factor 2 off on the threshold term (`max a b ≤ a + b`, both branches kept, both proved
+nonnegative), which is the price of dropping the guard.
 
 A support-based quantifier is in fact available to us: `AllS[x ← μ; E x]`
 (`Monadic/MeasurePr`) is `μ.support ⊆ {x | E x}` over Mathlib's topological
@@ -116,10 +166,12 @@ analogue of nfalean's shape.
 The accuracy conjunct says, in one term,
 
 ```
-Pr[ p ← ttcLaw …;
-    ttcRun atoms φ ε δ … p.1 p.2 ∈ relErr ε (volSol (atomSet atoms) φ) ]
+Pr[ r ← ttc atoms φ ε δ cVol cSample;
+    r.1 ∈ relErr ε (volSol (atomSet atoms) φ) ]
   ≥ 1 − δ
 ```
+
+and `r.1` is `Ttc.ttcRun … c t` at the run `ttc` drew.
 
 `Ttc.ttcRun` is **the algorithm on one run**, and it takes **no oracle argument**.
 `Model/Pseudocode` defines `Ttc.ttcAlgOutput` as `Ttc.run` — the fold of `alg:ttc`
@@ -245,24 +297,27 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) :
-    -- (accuracy) `alg:ttc`'s own output on the run `p`, with no oracle argument, is
-    -- within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
+    (hpos : 0 < volSol (atomSet atoms) φ)
+    (cVol cSample : ℕ) :
+    -- (accuracy) the estimate returned is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[p ← ttcLaw atoms φ ε δ;
-        ttcRun atoms φ ε δ p.1 p.2
-            ∈ relErr ε (volSol (atomSet atoms) φ)])
+      Pr[r ← ttc atoms φ ε δ cVol cSample;
+        r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    -- (running time) `alg:ttc`'s charged cost, on **every** run `p`, under
-    -- `Ttc.ttcTerminates` — pointwise, not almost everywhere
-    (∀ p : (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ),
-      ∀ cVol cSample thr : ℕ,
-      (thr : ℝ) = ttcThresh atoms φ ε δ →
-      ttcTerminates atoms φ ε δ p.1 p.2 →
-      ttcCost atoms φ ε δ p.1 p.2 cVol cSample
-        ≤ ttcNumCubes atoms φ * (cVol + cSample * thr)) :=
-  ⟨ttc_accuracy_single_measure atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1,
-    fun p => (ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos).2 p.1 p.2⟩
+    -- (running time) **every** run the algorithm can produce, with no exceptional set
+    -- and no termination hypothesis, is charged at most `m·(c_vol + c_samp·(Θ + 1))`
+    (All[r ← ttc atoms φ ε δ cVol cSample;
+      (r.2 : ℝ) ≤
+        ((toDNFd (preprocess atoms φ)).length : ℝ)
+          * ((cVol : ℝ) + (cSample : ℝ)
+              * (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
+                  + 15 * (Real.log (15 / (2 * δ))
+                      + Real.log ((toDNFd (preprocess atoms φ)).length))
+                  + 1))]) := by
+  rw [ttc_eq_ttcPairLaw]
+  refine ⟨ttc_accuracy_pairLaw atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample, ?_⟩
+  have h := all_ttcPairLaw_cost_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample
+  simpa only [ttcComplexity_def] using h
 
 #print axioms ttc_volume_estimate
 
