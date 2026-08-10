@@ -108,6 +108,13 @@ theorem p_foldl_step_le (P : Params) (O : Oracles n ι) (ρ : ℤ) (cubes : List
   exact pow_le_pow_of_le_one (by norm_num) (by norm_num)
     (level_le_foldl_step P O ρ cubes st)
 
+/-- The sampling rate of an explicitly built state: `p = 2^(−j)` by definition.
+Lived in `Model/Pseudocode` beside `Ttc.SketchState.p`; it is a `rfl` lemma about
+that definition rather than a step of the algorithm, and this is its only
+consumer. -/
+@[simp] theorem _root_.Ttc.SketchState.p_mk {n : ℕ} (X : Multiset (Space n)) (j : ℕ) :
+    (⟨X, j⟩ : SketchState n).p = (1 / 2 : ℝ) ^ j := rfl
+
 /-- **`p ≤ 1` along the whole run** (`alg:ttc` line 21 and lines 33, 40).  This is
 the fact that bounds every Poisson rate `t·p` by the cube volume `t`, and hence the
 sketch's total rate by `Vol(Sol F)`. -/

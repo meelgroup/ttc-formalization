@@ -102,7 +102,7 @@ theorem Ttc.TtcProb.volume_estimate {A : Type u_1} {n : ℕ} (T : Ttc.TtcProb A 
 `(1 ± ε)·Vol(F)`. Four things make that a claim rather than a shape:
 
 * **The measured thing is the algorithm — with three deviations, listed below.**
-  [`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean) is
+  [`Ttc.ttcOutput`](Ttc/TtcProb.lean) is
   [`Ttc.run`](Ttc/Model/Pseudocode.lean), the line-by-line transcription of
   `alg:ttc`, with the oracles drawn at `ω`. Read `Model/Pseudocode` against
   `sections/algo.tex`; the control flow is the whole algorithm and there is no
@@ -618,8 +618,8 @@ step) is §1g's first item.
 This is the boundary the four-file target is drawn around, and it is the thing to
 check first, because it is the one claim about `Model/` that a machine can settle.
 
-* **The algorithm's own data is `Model/Pseudocode`'s.** The transcription
-  `Ttc.ttcOutput`, the converter `Ttc.toDNFd`, the three preprocessing passes
+* **The algorithm's own data is `Model/Pseudocode`'s.** The transcriptions
+  `Ttc.run` / `Ttc.ttcAlgOutput` / `Ttc.ttcRun`, the converter `Ttc.toDNFd`, the three preprocessing passes
   `Ttc.pruneForm` / `Ttc.cleanForm` / `Ttc.preprocess`, the inscribed-ball
   construction `Ttc.ballData` / `Ttc.cenOf` / `Ttc.gammaOf`, the dilation factor
   `Ttc.scaleFactor`, and the parameter block `Ttc.ttcParams` / `Ttc.inputParams`
@@ -1133,10 +1133,13 @@ Each is a pure abbreviation carrying an identifying `rfl` lemma
   bound is `m · (C_vol + C_sample · Thresh)`.
 
 `Ttc.ttcEstimate_eq_ttcOutput` pins the measured quantity, by `rfl`, to
-`Model/Pseudocode`'s own [`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean) divided by
+[`Ttc.ttcOutput`](Ttc/TtcProb.lean) divided by
 `ttcScaleⁿ` — the two bridges back to the transcription are that lemma and
 `Ttc.ttcInput_eq_preprocess`, and they are what stop the wrapper vocabulary from
-being a second model.
+being a second model.  (`Ttc.ttcOutput` is the oracle-indexed random variable
+`run P (O ω) ρ (toDNF φ)`; its binders `Ω`, `O`, `toDNF` are `Ttc.TtcProb` fields of
+the same names, which is why it lives in `Ttc/TtcProb.lean` and not in `Model/`.
+Neither `Ttc.ttcAlgOutput` nor `Ttc.ttcRun` unfolds to it.)
 
 ### What is certified is `alg:ttc` plus three preprocessing steps
 
@@ -1212,6 +1215,162 @@ Non-vacuity: `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` (`Witness/FullTwoCu
 The audit is `AUDIT.md` §1e–§1g.
 
 `sorry`-free, axioms `[propext, Classical.choice, Quot.sound]`.
+
+### 1h-i. Four deviations from `algo.tex`
+
+These are the places where the Lean transcription in
+[`Model/Pseudocode`](Ttc/Model/Pseudocode.lean) does not say quite what the paper
+says.  They used to be recorded in that file's module docstring; they are here
+because they are audit commentary about the modelling, not a description of what the
+file defines.
+
+**(a) The `while` loops are exit levels, not iterations.**  Neither loop is written as
+a recursion.  `Ttc.haltLevel` and `Ttc.absorbLevel` are the **least level at or above
+the current one at which the loop's guard fails**, an `sInf` over `ℕ`, and the step
+jumps straight there.  This is what the loops compute when they terminate, and it
+needs no termination proof — which matters, because the second loop has none to give:
+it exits when repeated thinning brings `Nᵢ + |𝒳|` under `Thresh`, which happens only
+with high probability.  A fuelled recursion would have been the alternative, and it
+forces an iteration budget into the statement of the main theorem; this does not.
+
+**(b) An empty exit set exits immediately.**  When no level satisfies the exit
+condition — the run where the algorithm loops forever — the set that
+`Ttc.absorbLevel` takes an `sInf` over is empty, `Nat.sInf` returns `0` by convention,
+and the `max` with the entry level degenerates to "stay put".  Nothing depends on this
+corner: every consequence drawn from an exit level is of the form "every level
+strictly below it had the guard true" (`Ttc.lt_haltLevel`, `Ttc.lt_absorbLevel`,
+`Invariants`), which is vacuously true when the loop does not move.
+
+**(c) The thinning is a read-off at a level, not a repeated coin.**
+`Ttc.Oracles.thin j₀ j' X` is the sub-multiset of `X` that survives down to level
+`j'`, having entered the step at level `j₀` — one call, not `j' − j₀` of them.  This is
+what lets the loops be exit levels: the guard at a candidate level `j'` can be
+evaluated without running the loop to get there.  The only law assumed of it is
+`Ttc.Oracles.thin_le`: thinning **removes** copies, never invents them.  Note that
+`thin j₀ j₀` is a no-op on the states the run reaches, but is not assumed to be the
+identity outright — the concrete family in `Coupling/Family` realises it as a cap
+against the level-`j₀` counts, which is the identity exactly there.
+
+**(d) The randomised calls are told the cube and the level.**  `pois` takes `(i, j)`
+and `gen` takes `(i, j)`, where `algo.tex:38,41,43` pass neither.  The index is what
+names the draw: two calls with different `(i, j)` are different draws, which is what a
+distributional hypothesis needs in order to speak of independence.  The level in
+particular is needed because `lem:numlattice`'s `Err(j)` must be an event about a
+level-`j` process coupled to the run, and a level-blind sampler cannot realise that
+coupling — see README finding 15.
+
+### 1h-ii. Which of the four preprocessing steps are in the paper
+
+`Ttc.ttc_volume_estimate` does not measure a run of `alg:ttc` on the user's `F`.  It
+measures a run on an input that four steps have already rewritten, with the returned
+estimate divided by `qⁿ`.  `Model/Pseudocode` transcribes those four steps as lines
+A1–A13, in the same style as `alg:ttc` itself.  §1h above lists three of them from the
+`Exec/` side; this is the same list read off the transcription, with the fourth
+(cleaning) added.
+
+**Steps 1, 3 and 4 are not in the paper's `alg:ttc`.**  Step 2 is not printed there
+either, but unlike the other three it is not a change to the algorithm: it rewrites the
+input syntax and leaves the body alone.
+
+* **Step 1, the pruning (A2–A3), is not in `alg:ttc`.**  It changes `Sol(F)` — by a
+  **null set only**: the deleted cubes have convex regions with empty interior, so
+  `Ttc.sol_pruneForm_subset` is a genuine `⊆` and may in general be *strict* (an
+  isolated lower-dimensional piece sitting beside the surviving union is dropped),
+  while the **measure** is preserved exactly (`Ttc.volSol_pruneForm`).  The soundness
+  of the substitution rests on that volume equality, not on any claim about the set,
+  and it is legitimate solely because the headline's conclusion merely **measures**
+  `Ttc.sol`.  (`Ttc.degForm` is *not* an example of the strictness — its `thinCube`
+  region is the point `0` inside `fatCube`'s `[−1,1]`, so pruning leaves `Sol`
+  unchanged there.  It is the witness for something else: that pruning destroys
+  `Ttc.IsDNFOf`, `Ttc.not_isDNFOf_nondegenCubes_degForm`, because `IsDNFOf` is a
+  statement about Boolean valuations rather than about the solution set.)
+* **Step 2, the cleaning (A4–A6), does not change what the algorithm does.**
+  `Ttc.sol_cleanForm` is an **exact set equality**: a literal `0·x ≤ b` with `0 ≤ b`
+  denotes `Set.univ` and a cube containing one with `b < 0` denotes `∅`, so deleting
+  them is constant folding.  Not printed in `alg:ttc`, but nothing is lost or gained.
+* **Step 3, the ball construction (A7–A9), is not `alg:ttc`.**  `alg:prec` line 86
+  computes the *maximum* inscribed ball by an LP; `Ttc.ballData` picks *some* inscribed
+  ball, classically.  Non-maximality only inflates the precision `ρ = ⌈log₁₀(γ/γ̂)⌉`, so
+  the guarantee is untouched and only the run gets more expensive.
+* **Step 4, the dilation (A10–A13), is not in `alg:ttc` and changes what the algorithm
+  does.**  `alg:ttc` sets `p ← 1` and only ever halves it, so its sketch is
+  `Poisson(Λ)` with `Λ ≤ Vol(Sol F)`; on a body of volume `10⁻⁶` it draws `Pois(10⁻⁶)`
+  points and returns `0`.  **The printed algorithm is wrong there**
+  (`Ttc.Box.big_not_derivable`, README finding 20).  So the input is dilated by
+  `q = Ttc.scaleFactor` and the estimate divided by `qⁿ` — exact, because volume is
+  homogeneous of degree `n` (`Ttc.volSol_scaleAtoms`).
+
+### 1h-iii. The transcription is complete, and three `rfl`s say so
+
+Every line of `Model/Pseudocode`'s A1–A13 table is a definition of *that* file, with
+no exception — `Ttc.toDNFd`, the line-16 converter, included.  In particular
+`Ttc.atomSet`, `Ttc.nondegenCubes` and `Ttc.pruneForm` — which used to sit in
+`Exec/Inputs`, `Exec/Degenerate` and `Exec/Prune` — are there, and so is their
+composite with the cleaning pass, `Ttc.preprocess`.  Every *theorem* about them stays
+in `Exec/`; only the definitions moved.
+
+That the headline really measures these definitions is machine-checked.  Its accuracy
+conjunct is stated about `Ttc.ttcRun` *directly*, so no bridge is needed to see what
+is measured; three `rfl` lemmas in `Exec/Api` connect that term to the run's own
+vocabulary:
+
+* `Ttc.ttcRun_eq_ttcAlgOutput` — `Ttc.ttcRun` **is** `Ttc.ttcAlgOutput` at the
+  constructed oracle bundle `Ttc.ttcOracleBundle`.  This is the lemma that makes
+  `Ttc.ttcRun` the algorithm rather than a rename of it.
+* `Ttc.ttcRun_eq_ttcEstimate` — and it **is** the run's estimate.  That is lines
+  A12–A13 at the bundle the development builds.
+* `Ttc.ttcInput_eq_preprocess` — the formula that run is on is `Ttc.preprocess atoms
+  φ`.  That is lines A2–A6.
+
+So a reader who reads `Model/Prelude`, `Model/ProblemSetting`, `Model/Pseudocode` and
+`Model/Theorem`, and stops, has read the algorithm that is certified *and* the input it
+is certified on.  Nothing in the algorithm's statement is left in `Exec/`.
+
+**What this does not make true.**  The transcription being complete is a claim about
+*where the definitions live*, not a claim that the transcribed algorithm is the
+paper's.  The four honesty notes of §1h-ii stand unchanged.
+
+### 1h-iv. Why `Model/Pseudocode` carries proofs at all
+
+`Model/Pseudocode` is not proof-free, and a reader who expects a pure transcription
+should know why.  It carries 27 proofs (25 theorems and 2 instances), and they fall
+into four groups — every one of them is a fact without which something the file
+*defines* could not be written down, or a basic property of something it defines:
+
+1. **What a `Ttc.Params` cannot be built without** (12).  `Ttc.Params` bundles five
+   *proof* fields (`hε0 hε1 hn hm hr`), so the parameter block of `alg:ttc` lines 17–20
+   cannot be written down without proofs that the decomposition has a cube (`hm`) and a
+   facet (`hr`): `Ttc.instFiniteCubeMem`, `Ttc.instFiniteFacetIndex`,
+   `Ttc.one_le_card_cubes`, `Ttc.one_le_card_facets`, `Ttc.region_nil`,
+   `Ttc.not_isBounded_univ_space`, `Ttc.exists_lit_of_isBounded`,
+   `Ttc.one_le_card_cubes_of_ne_nil`, `Ttc.one_le_card_facets_of_isBounded`, together
+   with `Ttc.cubeForm_isPositive`, `Ttc.dnfForm_isPositive` and
+   `Ttc.preprocess_isPositive`, which supply `Ttc.inputParams`' `hφ`.
+2. **Basic properties of the converter the file defines** (4).  `Ttc.toDNFd` is
+   defined here (line A1) and `Ttc.inputParams` instantiates group 1 *at* it:
+   `Ttc.mem_toDNFd`, `Ttc.exists_mem_toDNF`, `Ttc.toDNFd_isDNFOf`,
+   `Ttc.toDNFd_ne_nil`.  They cannot sit in `Exec/Dedup`, which imports the file.
+3. **The totalisation's agreement lemmas** (3).  `Ttc.ttcParamsTotal_eq`,
+   `Ttc.ttcParamsTotal_eq_junk`, `Ttc.inputParamsTotal_eq_inputParams` — properties of
+   the total parameter block the file defines, and what makes every theorem stated
+   about `Ttc.ttcParams` transfer to the block the run reads.
+4. **What the run's own oracle bundle cannot be built without** (8).  This group is
+   the price of `#modelClosure Ttc.ttcRun` passing.  `Ttc.ttcRun` constructs an
+   `Ttc.Oracles` *inline*, and that structure has two **proof** fields, so the two
+   discharges `Ttc.trajThin_le` and `Ttc.card_trajGen` are literally part of the term;
+   the count-vector dictionary they rest on (`Ttc.count_toMultiset`,
+   `Ttc.count_toMultiset_of_notMem`, `Ttc.toMultiset_le_of_count_le`) comes with them.
+   Likewise `Ttc.latticeEnum` is `Classical.choose`n from `Ttc.exists_latticeEnum`, so
+   that theorem and its own lemma `Ttc.hasLatticeEnum_of_finite` are part of the
+   definition, and `Ttc.latticeEnum_injective` is the argument `thin_le` is applied to.
+
+Group 4 is the one to watch: it is the only group whose members are *not* about
+`alg:ttc` at all — they are multiset arithmetic and `Nat.card` bookkeeping — and it
+exists because the headline is stated at a *constructed* bundle rather than
+monadically.  The two guarded membership properties of the enumeration
+(`Ttc.latticeEnum_mem`, `Ttc.latticeEnum_onto`) and the cardinality lemma
+`Ttc.card_toMultiset` are **not** in this group and are correspondingly **not** in
+`Model/`: they live in `Exec/Endgoal` and `Coupling/Family`.
 
 ---
 

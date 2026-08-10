@@ -259,16 +259,24 @@ theorem map_trajLaw_eval {θ : Fin L → ℝ} (hθ : ∀ s, 0 ≤ θ s) (j : ℕ
 
 /-! ## Count vectors as multisets
 
-The run's state is a `Multiset (Space n)`; the family is a count vector. The
-dictionary between them — `Ttc.toMultiset`, `Ttc.card_toMultiset`,
-`Ttc.count_toMultiset`, `Ttc.count_toMultiset_of_notMem` and
-`Ttc.toMultiset_le_of_count_le` — now lives upstream, in `Model/Pseudocode`,
-together with the read-offs it is about and the two oracle contracts
-`Ttc.trajThin_le` and `Ttc.card_trajGen` it proves. It had to: `Ttc.ttcRun`
-(`Model/Pseudocode`) builds the oracle bundle inline, so its `thin_le` and
-`gen_card` fields have to be provable inside the audit surface. Nothing about the
-statements changed; only the file they are in.
+The run's state is a `Multiset (Space n)`; the family is a count vector. Most of
+the dictionary between them — `Ttc.toMultiset`, `Ttc.count_toMultiset`,
+`Ttc.count_toMultiset_of_notMem` and `Ttc.toMultiset_le_of_count_le` — lives
+upstream, in `Model/Pseudocode`, together with the read-offs it is about and the
+two oracle contracts `Ttc.trajThin_le` and `Ttc.card_trajGen` it proves. It had
+to: `Ttc.ttcRun` (`Model/Pseudocode`) builds the oracle bundle inline, so its
+`thin_le` and `gen_card` fields have to be provable inside the audit surface.
+Nothing about the statements changed; only the file they are in.
+
+`Ttc.card_toMultiset` is the exception: no contract needs it, so it stays here,
+where its consumers (`Coupling/Run`) are.
 -/
+
+/-- The cardinality of `Ttc.toMultiset` is the total count. -/
+@[simp] theorem card_toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
+    Multiset.card (toMultiset pt k) = ∑ s, k s := by
+  rw [toMultiset, Multiset.card_sum]
+  exact Finset.sum_congr rfl fun s _ => Multiset.card_replicate _ _
 
 /-! ## The oracles that read the trajectory
 

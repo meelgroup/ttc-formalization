@@ -195,15 +195,23 @@ live in `Ttc/Exec/Api.lean` (section `Measured`); `Model/Theorem.lean` holds the
 theorem and nothing else.  What remains here is the plumbing those definitions'
 bodies reach for.
 
-`Ttc.runPrec` and `Ttc.runCount` used to be here; they are steps of the algorithm
-(`GetPrecision`'s output, and the index the sample coins range over) with no proof
-content, so they are now in `Model/Pseudocode`. -/
+`Ttc.runPrec` used to be here; it is a step of the algorithm (`GetPrecision`'s
+output) with no proof content, so it is now in `Model/Pseudocode`.  `Ttc.runCount`
+came back: the index the *algorithm's* sample coins range over is `Ttc.algIndex`
+(`Model/Pseudocode`), and this is the free-`(φ, γ̂)` version the plumbing below
+quantifies over. -/
 
 section Measured
 
 variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
   (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
   (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
+
+/-- **`|Sol(F) ∩ 𝕃ⁿ|`** at the computed precision — the index the sample coins of
+the run on `φ` at inscribed radius `γ̂` range over.  `Ttc.algIndex`
+(`Model/Pseudocode`) is this at the algorithm's own `(φ, γ̂)`. -/
+noncomputable def runCount (gammaHat : ℝ) : ℕ :=
+  latticeCount (atomSet atoms) φ (runPrec atoms φ ε δ gammaHat)
 
 /-- **The oracle bundle `alg:ttc` reads**, as a closed term: `Vol_ED` is `Ttc.mcVol`
 at the volume coins `c`, the rest is `Ttc.coveredOracles` at the sample coins `t`.
@@ -218,7 +226,7 @@ noncomputable def runOracles (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
       (inputParamsTotal atoms φ ε δ).deltaPrime c) t
 
 /-- **What `TTC(F, ε, δ)` returns on the run `(c, t)`** — `Ttc.ttcOutput`
-(`Model/Pseudocode`) on the cube list `Ttc.toDNFd φ` at the computed precision. -/
+(`Ttc/TtcProb.lean`) on the cube list `Ttc.toDNFd φ` at the computed precision. -/
 noncomputable def ttcRunOutput (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
     (gammaHat : ℝ) (c : ℕ → Space n)
     (t : ℕ → Fin (runCount atoms φ ε δ gammaHat) → ℕ) : ℝ :=

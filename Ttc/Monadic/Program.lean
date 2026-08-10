@@ -4,6 +4,9 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Pair
+import Ttc.Process.Truncation
+import Ttc.Sampler.RatesNonneg
+import Ttc.Exec.Complexity
 
 /-!
 # `Monadic/Program`: `TTC`'s run, as one law on one space
@@ -75,16 +78,43 @@ all — `Ttc.map_apply_of_countablyDetermined` (`Monadic/Pair`) supplies what nf
 for free from `PMF.toOuterMeasure`.  `Ttc.ttc_accuracy_pairLaw` is the headline's
 accuracy conjunct restated over the pair law, with nothing lost.
 
-The runtime conjunct does **not** move across intact, and this file does not pretend
-otherwise.  Two obstructions, both real:
+The runtime conjunct moves across in **three** incomparable forms, and this file keeps
+all three rather than picking one:
 
-* the bound is guarded by `Ttc.ttcTerminates … p.1 p.2`, which is a property of the
-  *run* `p` and is not a function of the pair `(estimate, cost)`.  So the faithful
-  statement over the pair law is about the image of the terminating set,
-  `Ttc.ttcPairLaw_cost_le`, and the guard survives as that image;
-* "every run the program can produce" is `Set.range (Ttc.ttcPair …)` — the image of
-  the *whole* run space.  That is `Ttc.ttcPairLaw_cost_le_of_terminates`, the
-  headline-facing form, and it is the honest analogue of nfalean's `All[r ← …]`.
+* `Ttc.ttcPairLaw_cost_le` — the bound over the image of the terminating set.  The
+  guard `Ttc.ttcTerminates … p.1 p.2` is a property of the *run* `p` and is not a
+  function of the pair `(estimate, cost)`, so if it is to be kept at all it can only
+  survive as the set the image is taken over;
+* `Ttc.ttcPairLaw_cost_le_of_terminates` — the bound over
+  `Set.range (Ttc.ttcPair …)`, "every run the program can produce", under a *global*
+  termination hypothesis.  No exceptional outcome, null or otherwise; this is the
+  honest analogue of nfalean's `All[r ← …]` for a `PMF`, and
+  `Ttc.all_ttcPairLaw_cost_le_of_terminates` is its (strictly weaker) `∀ᵐ` shadow;
+* `Ttc.all_ttcPairLaw_cost_le` — **no guard at all**:
+  `All[r ← ttcPairLaw …; (r.2 : ℝ) ≤ ttcComplexity …]`, with every hypothesis about
+  the algorithm's *inputs* and none about its run.
+
+The last one is not a weakening of the first two, and neither of the first two is a
+weakening of it: they bound `r.2` by `m·(C_vol + C_sample·(Thresh + 1))` with
+`Ttc.ttcThresh` still a `max`, whereas `Ttc.ttcComplexity` (`Exec/Complexity`) replaces
+that `max` by the sum of its two branches, losing up to a factor of two on the threshold
+term.  Sharper bound with a guard, or looser bound with none.
+
+### How the guard was removed
+
+`Ttc.ae_ttcLaw_ttcTerminates` is the seam.  `Process/Truncation` proves
+`Ttc.Terminates` almost surely under `Ttc.trajLaw θ` for any `θ ≥ 0`;
+`Ttc.ttcRates_nonneg` (`Sampler/RatesNonneg`) supplies `θ ≥ 0` at the run's own rate
+vector **unconditionally**; and the lift through `Ttc.MonteCarlo.coins ⊗ₘ …` is done
+*without* `MeasureTheory.Measure.ae_compProd_of_ae_ae`, whose `MeasurableSet {x | p x}`
+hypothesis is unavailable here — `Ttc.ttcTerminates` quantifies over every
+`Ttc.SketchState n`, whose `X` field is an uncountable `Multiset (Space n)`, and no
+measurability of that event is known.  What replaces it is a **measurable null
+superset**: `Ttc.Vanish` (`Process/Truncation`) implies termination, so the
+non-terminating runs sit inside `Prod.snd ⁻¹' ⋂ Lb, (Vanish _ Lb)ᶜ`, which *is*
+measurable (`Ttc.measurableSet_vanish`) and null (`Ttc.trajLaw_iInter_compl_vanish`).
+`MeasureTheory.measure_mono_null` then does the rest, comparing outer measures, so the
+termination event itself is never required to be measurable.
 
 **The collapse, which is the opposite of the discrete intuition.**  One might expect a
 support-based quantifier to be stronger than `∀ᵐ`, as `PMF.support ⊆ {x | E x}` is often
@@ -98,15 +128,66 @@ exceptional set inside the range.  (That named hypothesis is where the collapse 
 without it the equivalence is false.)
 
 So dressing the runtime conjunct in a support-based quantifier buys **nothing** over
-`All[…]`, and both are strictly weaker than `Ttc.ttcPairLaw_cost_le_of_terminates`:
-`Ttc.all_ttcPairLaw_cost_le` derives the a.e. form from the range form, one way only.
-`Model/Theorem.lean`'s runtime conjunct therefore stays pointwise over runs.
+`All[…]`, and at the *same* right-hand side both are strictly weaker than
+`Ttc.ttcPairLaw_cost_le_of_terminates`:
+`Ttc.all_ttcPairLaw_cost_le_of_terminates` derives the a.e. form from the range form,
+one way only.  `Model/Theorem.lean`'s runtime conjunct therefore stays pointwise over
+runs, and keeps `Ttc.ttcThresh`'s `max`.
 -/
 
 namespace Ttc
 
 open MeasureTheory ProbabilityTheory
 open Ttc.Monadic
+
+/-! ## The measurable null set that carries the non-terminating runs
+
+`Ttc.ttcTerminates … p.1 p.2` quantifies over every `Ttc.SketchState n`, whose `X`
+field is an uncountable `Multiset (Space n)`, so `{p | ttcTerminates … p.1 p.2}` is
+**not** known to be measurable — and `MeasureTheory.Measure.ae_compProd_of_ae_ae`
+(and `…ae_compProd_iff`) both demand exactly that.  So the composition–product is
+not entered through them.
+
+What is used instead is that a `MeasureTheory.Measure` in Mathlib is an *outer*
+measure: `μ s` is defined for every `s`, and `MeasureTheory.measure_mono_null`
+needs no measurability of either set.  It therefore suffices to exhibit **one
+measurable null superset** of the non-terminating runs, and `Process/Truncation`
+already names it: `Ttc.Vanish L Lb` (the trajectory is empty from level `Lb` on)
+implies `Ttc.BudgetMet`, hence `Ttc.Terminates` (`Ttc.budgetMet_of_vanish`,
+`Ttc.terminates_of_budgetMet`), so
+
+```
+{p | ¬ ttcTerminates … p.1 p.2} ⊆ Prod.snd ⁻¹' ⋂ Lb, (Vanish L Lb)ᶜ
+```
+
+and the right-hand side *is* measurable — `Ttc.Vanish` is a countable intersection
+of preimages of `{0}` under coordinate evaluations.  Its `Ttc.trajLaw`-measure is
+`0` because it sits inside `(Vanish L Lb)ᶜ` for **every** `Lb`, and
+`Ttc.trajLaw_compl_vanish_le` bounds that by `2Λ/2^Lb → 0`.  Only then is
+`MeasureTheory.Measure.compProd_apply` applied — to the measurable superset. -/
+
+/-- **`Ttc.Vanish` is measurable**: `{ω | ∀ j ≥ Lb, ω j = 0}` is the countable
+intersection over `j ≥ Lb` of the preimages of `{0}` under `ω ↦ ω j`. -/
+theorem measurableSet_vanish (L Lb : ℕ) : MeasurableSet (Vanish L Lb) := by
+  have hset : Vanish L Lb
+      = ⋂ j : ℕ, ⋂ _ : Lb ≤ j, (fun ω : ℕ → Fin L → ℕ => ω j) ⁻¹' {0} := by
+    ext ω
+    simp [Vanish, Set.mem_iInter]
+  rw [hset]
+  exact MeasurableSet.iInter fun j => MeasurableSet.iInter fun _ =>
+    (measurable_pi_apply j) (MeasurableSet.singleton 0)
+
+/-- **The trajectories that vanish at no level form a null set.**
+
+`Ttc.trajLaw_compl_vanish_le` gives `trajLaw θ (Vanish L Lb)ᶜ ≤ 2Λ/2^Lb` for every
+`Lb`, and the intersection over `Lb` is inside each of them, so its measure is below
+a sequence tending to `0`.  The single hypothesis is the one
+`Process/Truncation` asks of `θ` throughout: `0 ≤ θ s`. -/
+theorem trajLaw_iInter_compl_vanish {L : ℕ} {θ : Fin L → ℝ} (hθ : ∀ s, 0 ≤ θ s) :
+    trajLaw θ (⋂ Lb : ℕ, (Vanish L Lb)ᶜ) = 0 := by
+  refine le_antisymm ?_ bot_le
+  refine ge_of_tendsto' (tendsto_geom_bound (∑ s, θ s)) fun Lb => ?_
+  exact le_trans (measure_mono (Set.iInter_subset _ Lb)) (trajLaw_compl_vanish_le hθ Lb)
 
 section Law
 
@@ -145,6 +226,72 @@ instance instIsProbabilityMeasureTtcLaw :
     IsProbabilityMeasure (ttcLaw atoms φ ε δ) := by
   rw [ttcLaw_def]
   infer_instance
+
+/-! ### Termination is `Ttc.ttcLaw`-almost sure
+
+`Process/Truncation` proves `Ttc.Terminates` almost surely under the *trajectory*
+law at a fixed nonnegative rate vector.  Here that is lifted through the
+composition–product, using the measurable null superset described above rather than
+`MeasureTheory.Measure.ae_compProd_of_ae_ae` (which would need the termination event
+itself measurable, and it is not known to be). -/
+
+/-- **The kernel at a coin sequence is the trajectory law at the rates that sequence
+produced**, by `rfl`. -/
+theorem ttcTrajKernel_apply (c : ℕ → Space n) :
+    ttcTrajKernel atoms φ ε δ c = trajLaw (ttcRates atoms φ ε δ c) := rfl
+
+include hε0 hε1 hn hφ hpos in
+/-- **The run's absorption loops terminate `Ttc.ttcLaw`-almost surely.**
+
+`Ttc.ttcTerminates` is the one run hypothesis `Ttc.ttcCost_le_ttcComplexity`
+(`Exec/Complexity`) still carries; this discharges it up to a null set of runs, over
+the *joint* law of the volume coins and the trajectory.
+
+Three ingredients, none of them new mathematics:
+
+* `Ttc.ttcRates_nonneg` (`Sampler/RatesNonneg`) — the rate vector is nonnegative,
+  **unconditionally**, so `Process/Truncation` applies at every coin sequence `c`;
+* `Ttc.ttcThresh_nonneg` (`Exec/Api`) — `0 ≤ Thresh`, which is where `hε0`, `hε1`,
+  `hn`, `hφ`, `hpos`, `hδ0` and `hδ1` are spent, and the only place they are;
+* the measurable null superset `Prod.snd ⁻¹' ⋂ Lb, (Vanish _ Lb)ᶜ`, which sidesteps
+  the (unknown) measurability of `{p | ttcTerminates … p.1 p.2}` entirely.
+
+Note what is **not** assumed: nothing about the volume coins, no good event, and no
+truncation of the algorithm. -/
+theorem ae_ttcLaw_ttcTerminates (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
+    ∀ᵐ p ∂(ttcLaw atoms φ ε δ), ttcTerminates atoms φ ε δ p.1 p.2 := by
+  have hT : 0 ≤ (ttcBlock atoms φ ε δ).thresh :=
+    ttcThresh_nonneg atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1
+  -- the measurable superset
+  have hNmeas : MeasurableSet
+      (Prod.snd ⁻¹' (⋂ Lb : ℕ, (Vanish (ttcIndex atoms φ ε δ) Lb)ᶜ) :
+        Set ((ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ))) :=
+    measurable_snd (MeasurableSet.iInter fun Lb => (measurableSet_vanish _ Lb).compl)
+  have hNnull : ttcLaw atoms φ ε δ
+      (Prod.snd ⁻¹' (⋂ Lb : ℕ, (Vanish (ttcIndex atoms φ ε δ) Lb)ᶜ)) = 0 := by
+    rw [ttcLaw_def, Measure.compProd_apply hNmeas]
+    have hslice : ∀ c : ℕ → Space n,
+        ttcTrajKernel atoms φ ε δ c
+            (Prod.mk c ⁻¹' (Prod.snd ⁻¹'
+              (⋂ Lb : ℕ, (Vanish (ttcIndex atoms φ ε δ) Lb)ᶜ))) = 0 := by
+      intro c
+      rw [show (Prod.mk c ⁻¹' (Prod.snd ⁻¹'
+            (⋂ Lb : ℕ, (Vanish (ttcIndex atoms φ ε δ) Lb)ᶜ)))
+          = ⋂ Lb : ℕ, (Vanish (ttcIndex atoms φ ε δ) Lb)ᶜ from rfl,
+        ttcTrajKernel_apply]
+      exact trajLaw_iInter_compl_vanish (ttcRates_nonneg atoms φ ε δ c)
+    simp only [hslice, lintegral_const, zero_mul]
+  refine MeasureTheory.ae_iff.2 (measure_mono_null ?_ hNnull)
+  intro p hp
+  simp only [Set.mem_preimage, Set.mem_iInter, Set.mem_compl_iff]
+  intro Lb hv
+  exact hp (terminates_of_budgetMet (P := ttcBlock atoms φ ε δ)
+    (O := ttcOracleBundle atoms φ ε δ p.1 p.2) (Lb := Lb)
+    (budgetMet_of_vanish
+      (latticeEnum_injective (atomSet (ttcAtoms atoms φ ε δ)) (ttcInput atoms φ)
+        (ttcPrec atoms φ ε δ))
+      (ttcBlock atoms φ ε δ) _ _ _ hT hv)
+    (toDNFd (ttcInput atoms φ)))
 
 /-! ## The paired law: one measure on `(estimate, cost)` -/
 
@@ -276,11 +423,11 @@ theorem ttcPairLaw_cost_le (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ
 include hε0 hε1 hn hφ hpos in
 /-- **Every outcome the program can produce meets the bound**, under global termination.
 
-This is the headline-facing form of the runtime half over the paired law, and it is
-**strictly stronger than both measure-theoretic quantifiers**:
+This is the headline-facing form of the runtime half over the paired law, and **at this
+right-hand side** it is strictly stronger than both measure-theoretic quantifiers:
 
 * stronger than `All[…]` (`∀ᵐ`), which permits a null exceptional set —
-  `Ttc.all_ttcPairLaw_cost_le` derives that form from this one;
+  `Ttc.all_ttcPairLaw_cost_le_of_terminates` derives that form from this one;
 * stronger than any support-based quantifier, because
   `Ttc.all_ttcPairLaw_iff_atoms` shows that for `Ttc.ttcPairLaw` the `PMF`-support notion
   ("`E` holds at every outcome of positive mass") is *equivalent* to `∀ᵐ`, hence also
@@ -289,7 +436,10 @@ This is the headline-facing form of the runtime half over the paired law, and it
 `Set.range (Ttc.ttcPair …)` is literally "every outcome the program can produce": the
 image of the *whole* run space, with no exceptional set, null or otherwise.  This is what
 nfalean's `All[r ← countNFAM …; …]` means for a `PMF`, and it is why
-`Model/Theorem.lean`'s runtime conjunct stays pointwise over runs. -/
+`Model/Theorem.lean`'s runtime conjunct stays pointwise over runs.
+
+It is **not** comparable with `Ttc.all_ttcPairLaw_cost_le`, which drops `hterm` entirely
+but at the looser right-hand side `Ttc.ttcComplexity`. -/
 theorem ttcPairLaw_cost_le_of_terminates (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ)
     (hterm : ∀ p : (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ),
       ttcTerminates atoms φ ε δ p.1 p.2) :
@@ -302,13 +452,19 @@ theorem ttcPairLaw_cost_le_of_terminates (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol
     cVol cSample (hterm p)
 
 include hε0 hε1 hn hφ hpos in
-/-- **The a.e. form, derived — and recorded as the weaker statement.**
+/-- **The a.e. form of the `max`-carrying bound, under global termination.**
 
 `Ttc.ttcPairLaw_cost_le_of_terminates` is the theorem; this is all that survives of it if
 one insists on writing the runtime conjunct with `Monadic/MeasurePr`'s `All[…]`.  It is a
-corollary, never a replacement: `Model/Theorem.lean`'s runtime conjunct is pointwise over
-runs precisely so that this weakening is not taken. -/
-theorem all_ttcPairLaw_cost_le (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ)
+corollary, never a replacement.
+
+It is kept beside the *unconditional* `Ttc.all_ttcPairLaw_cost_le` below because the two
+bounds are different: this one is `m·(C_vol + C_sample·(Thresh + 1))` with `Ttc.ttcThresh`
+still a `max` of its two branches — tighter by up to a factor of two on the threshold term
+than `Ttc.ttcComplexity`, which replaces that `max` by the sum
+(`Ttc.ttcThresh_le_sum`, `Exec/Complexity`).  Neither statement implies the other: this one
+has the sharper right-hand side, that one has no `hterm`. -/
+theorem all_ttcPairLaw_cost_le_of_terminates (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ)
     (hterm : ∀ p : (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ),
       ttcTerminates atoms φ ε δ p.1 p.2) :
     All[r ← ttcPairLaw atoms φ ε δ cVol cSample;
@@ -325,6 +481,47 @@ theorem all_ttcPairLaw_cost_le (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample :
     exact ttcPairLaw_cost_le_of_terminates atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1
       cVol cSample hterm _ ⟨p, rfl⟩
   rw [ttcPairLaw_apply, hempty, measure_empty]
+
+include hε0 hε1 hn hφ hpos in
+/-- **The running-time bound over the pair law, with no termination guard at all.**
+
+```
+All[r ← ttcPairLaw atoms φ ε δ cVol cSample; (r.2 : ℝ) ≤ ttcComplexity atoms φ ε δ cVol cSample]
+```
+
+Every hypothesis is about the *inputs* — the FPRAS parameter range `0 < ε ≤ 1`,
+`0 < δ ≤ 1`, the dimension `1 ≤ n`, the formula's shape `φ.IsPositive` and its
+nondegeneracy `0 < volSol …`.  **Nothing is assumed about the run**: the
+`Ttc.ttcTerminates` guard that `Ttc.ttcCost_le_ttcComplexity` (`Exec/Complexity`) carries
+— "the intended seam", in that module's words — is discharged here by
+`Ttc.ae_ttcLaw_ttcTerminates`, and it is discharged honestly, as a *null set of runs*
+rather than as an empty one.
+
+Two facts make the transfer free of measurability side conditions:
+
+* `Ttc.ttcPairLaw_apply` (`Monadic/Pair`'s `Ttc.map_apply_of_countablyDetermined`)
+  evaluates the pushforward at the — possibly non-measurable — violating set, with no
+  hypothesis;
+* `MeasureTheory.measure_mono_null` compares that set with the non-terminating runs as
+  *outer* measures, so the termination event never has to be measurable.
+
+The shape of the proof is the one the guarded version had — "the bad preimage is empty" —
+with `= ∅` replaced by `⊆ (a null set)`.  The guarded and `Set.range`-based forms
+(`Ttc.ttcPairLaw_cost_le`, `Ttc.ttcPairLaw_cost_le_of_terminates`,
+`Ttc.all_ttcPairLaw_cost_le_of_terminates`) are kept: they carry the sharper
+`Ttc.ttcThresh` right-hand side and admit no exceptional outcome at all, so neither they
+nor this statement subsumes the other. -/
+theorem all_ttcPairLaw_cost_le (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ) :
+    All[r ← ttcPairLaw atoms φ ε δ cVol cSample;
+      (r.2 : ℝ) ≤ ttcComplexity atoms φ ε δ cVol cSample] := by
+  refine MeasureTheory.ae_iff.2 ?_
+  rw [ttcPairLaw_apply]
+  refine measure_mono_null ?_
+    (MeasureTheory.ae_iff.1
+      (ae_ttcLaw_ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1))
+  intro p hp hterm
+  exact hp (ttcCost_le_ttcComplexity atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1
+    p.1 p.2 cVol cSample hterm)
 
 /-- **What the a.e. form is worth here: exactly the `PMF`-support notion — no more.**
 
@@ -366,8 +563,13 @@ end Law
 #print axioms PrR_ttcPairLaw
 #print axioms PrR_ttcPairLaw_fst
 #print axioms ttc_accuracy_pairLaw
+#print axioms measurableSet_vanish
+#print axioms trajLaw_iInter_compl_vanish
+#print axioms ttcTrajKernel_apply
+#print axioms ae_ttcLaw_ttcTerminates
 #print axioms ttcPairLaw_cost_le
 #print axioms ttcPairLaw_cost_le_of_terminates
+#print axioms all_ttcPairLaw_cost_le_of_terminates
 #print axioms all_ttcPairLaw_cost_le
 #print axioms all_ttcPairLaw_iff_atoms
 

@@ -181,17 +181,32 @@ variable {A : Type*} {n : ℕ}
 
 /-! ## The enumeration of `Sol(F) ∩ 𝕃ⁿ`, as a total function of the inputs
 
-`Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its three properties are in
+`Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its unconditional injectivity are in
 `Model/Pseudocode`: `alg:ttc` line 43's `GenerateSamples` draws from
 `Sol(F) ∩ 𝕃ⁿ`, so the enumeration is a step of the algorithm, and `Ttc.ttcRun`
 builds its oracle bundle from it, which requires it inside the audit surface.
 `Ttc.latticeEnum` is a total function of `(M, φ, ρ)` alone, carrying no proof
-argument, and is **unconditionally injective**.
+argument.
 
-What stays here is the *geometric* input: boundedness of `Sol(F)` is enough for the
-two substantive properties, via `Ttc.exists_lattice_enum_of_isBounded`
-(`Exec/Geometry`).
+What stays here is everything that is *about* the enumeration rather than part of
+it: the two guarded membership properties, read off `Ttc.exists_latticeEnum`'s
+`choose_spec`, and the *geometric* input that boundedness of `Sol(F)` is enough to
+guard them, via `Ttc.exists_lattice_enum_of_isBounded` (`Exec/Geometry`).
 -/
+
+/-- `ptE_mem`: every enumerated point is a solution lattice point, whenever an
+enumeration exists at all. -/
+theorem latticeEnum_mem {M : A → Set (Space n)} {φ : BForm A} {ρ : ℤ}
+    (h : HasLatticeEnum M φ ρ) (s : Fin (latticeCount M φ ρ)) :
+    latticeEnum M φ ρ s ∈ sol M φ ∩ fineLattice n (latticeScale ρ) :=
+  ((exists_latticeEnum M φ ρ).choose_spec.2 h).1 s
+
+/-- `ptE_onto`: every solution lattice point is enumerated, whenever an enumeration
+exists at all. -/
+theorem latticeEnum_onto {M : A → Set (Space n)} {φ : BForm A} {ρ : ℤ}
+    (h : HasLatticeEnum M φ ρ) :
+    ∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, latticeEnum M φ ρ s = x :=
+  ((exists_latticeEnum M φ ρ).choose_spec.2 h).2
 
 /-- **Boundedness of `Sol(F)` is enough** — `Ttc.exists_lattice_enum_of_isBounded`,
 renamed. -/

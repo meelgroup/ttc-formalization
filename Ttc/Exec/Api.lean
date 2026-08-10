@@ -537,7 +537,7 @@ theorem ttcAlgOutput_eq_ttcEstimate (c : ℕ → Space n)
         (ttcOracleBundle atoms φ ε δ c t)
       = ttcEstimate atoms φ ε δ c t := rfl
 
-/-- **The measured quantity is also `Model/Pseudocode`'s `Ttc.ttcOutput`, divided by
+/-- **The measured quantity is also `Ttc.ttcOutput` (`Ttc/TtcProb.lean`), divided by
 `qⁿ`** — lines A12–A13 of the preprocessing transcription, by `rfl`.  The
 oracle-bundle-free form of the bridge above. -/
 theorem ttcEstimate_eq_ttcOutput (c : ℕ → Space n)

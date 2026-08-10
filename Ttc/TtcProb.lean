@@ -46,6 +46,31 @@ namespace Ttc
 
 open MeasureTheory Pointwise
 
+/-- **`TTC(F, ε, δ)`'s output, as a random variable over an abstract sample space.**
+
+`Ttc.run` (`Model/Pseudocode`) — the transcription of `alg:ttc` lines 22–46 — with
+its oracle bundle drawn at the sample point `ω`, and with the cube list supplied by
+a line-16 converter applied to `φ`, `F`'s Boolean abstraction (line 15).  `P` is the
+parameter block of lines 17–20 and `ρ` is `GetPrecision`'s output (line 17).
+
+`toDNF` is a *parameter* rather than the fixed `Ttc.toDNF` of `Model/Prelude`
+because `TTC` runs an optimised circuit AllSAT, and `thm:runtime` is stated in
+terms of `m`, **that** procedure's cube count — pinning the converter would prove
+the guarantee for a different, generally exponentially larger `m`.  Correctness
+holds for any converter meeting `Ttc.IsDNFOf`, and `Ttc.toDNF_isDNFOf` shows at
+least one does, so the parameter is not an empty hypothesis.
+
+**Not part of the audit surface, and not the algorithm's own output.**  Its binders
+`Ω`, `O` and `toDNF` are exactly the `Ttc.TtcProb` fields of the same names, so it
+belongs with the hypothesis bundle it is measured against rather than with the
+pseudocode: `Ttc.ttcAlgOutput` and `Ttc.ttcRun` (`Model/Pseudocode`) are the
+algorithm at its *own* inputs and neither unfolds to this.  `Ttc.numlattice` is
+stated over it, and `Ttc.runCost` is what `thm:runtime` bounds over the same run. -/
+noncomputable def ttcOutput {A : Type*} {n : ℕ} {Ω : Type} (P : Params)
+    (O : Ω → Oracles n (Cube A)) (toDNF : BForm A → DNF A) (ρ : ℤ)
+    (φ : BForm A) (ω : Ω) : ℝ :=
+  run P (O ω) ρ (toDNF φ)
+
 /-- The problem instance, the run, and the assumptions.
 
 | Field | Paper | Status |

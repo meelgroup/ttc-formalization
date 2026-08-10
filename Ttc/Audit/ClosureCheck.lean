@@ -314,19 +314,31 @@ Contrast nfalean, where `#closure countNFAM` and `#modelClosure countNFAM` both 
 
 `Ttc.ttcRun` (`Model/Pseudocode`) is `Ttc.ttcAlgOutput` at the bundle the run `(c, t)`
 itself supplies, and it is what the headline's accuracy conjunct is now stated over.
-Full closure: **150** `Ttc` constants, of which **0** are outside `Ttc/Model/`, so
+Full closure: **156** `Ttc` constants, of which **0** are outside `Ttc/Model/`, so
 `#modelClosure Ttc.ttcRun` **passes** and is enabled below.  That is the machine-checked
 form of "the headline's accuracy conjunct names only `Model/` things": it fails the build
 the moment any part of the *constructed oracle bundle* drifts out of `Model/`, which is a
 much larger surface than `Ttc.ttcAlgOutput`'s.
+
+**The count is not comparable across `private`.**  It was 155 until
+`Ttc.exists_latticeEnum` (`Model/Pseudocode`) stopped being `private`, and that is a
+reporting change, not a drift: a private declaration's real name begins `_private`, not
+`Ttc`, so `closureAux`'s `(`Ttc).isPrefixOf` test skipped it even though `Ttc.latticeEnum`
+is `Classical.choose`n from it and it was always *in* the closure.  156 is the honest
+number.  Read the count as an alarm bell for the "outside `Ttc/Model/`" tally beside it,
+never as a size the file should be judged by.
 
 Getting there moved three groups of declarations into `Model/Pseudocode`, each keeping its
 name and its proof: the count-vector dictionary and the two oracle contracts
 (`Ttc.count_toMultiset`, `Ttc.toMultiset_le_of_count_le`, `Ttc.trajThin_le`,
 `Ttc.card_trajGen`, formerly `Coupling/Family`); the coverage test
 (`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`, formerly `Exec/Coverage`); and the lattice
-enumeration (`Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its three properties, formerly
-`Exec/Endgoal`).  `#closure Ttc.ttcRun` still fails, on the same monadic-versus-oracle gap
+enumeration (`Ttc.HasLatticeEnum`, `Ttc.exists_latticeEnum`, `Ttc.latticeEnum` and its
+unconditional injectivity, formerly `Exec/Endgoal`).  Only what the bundle is *built
+from* moved: the enumeration's two guarded properties `Ttc.latticeEnum_mem` and
+`Ttc.latticeEnum_onto` are back in `Exec/Endgoal`, and `Ttc.card_toMultiset` in
+`Coupling/Family`, because no field of the bundle needs either.
+`#closure Ttc.ttcRun` still fails, on the same monadic-versus-oracle gap
 as `Ttc.ttcAlgOutput` plus `Ttc.MonteCarlo`'s estimator — all of them defined in
 `Model/Pseudocode` itself.
 

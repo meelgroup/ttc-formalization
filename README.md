@@ -668,7 +668,7 @@ Ttc/
   Model/                    -- THE AUDIT SURFACE — read this and stop
     Prelude.lean            -- definitions only: ℝⁿ, formula syntax/semantics, the Params
                             --   block, volSol (= Vol(F)), relErr (= the (1±ε) interval)
-    Pseudocode.lean         -- alg:ttc line by line, and its output ttcOutput
+    Pseudocode.lean         -- alg:ttc line by line, and its output ttcAlgOutput
     ProblemSetting.lean     -- TtcProb (59 fields): the problem, the run, every
                             --   assumption; also VolumeAlgorithm (Vol_ED's contract)
                             --   and KV97Sampler (GenerateSamples' construction)
@@ -1435,11 +1435,11 @@ Anything you still doubt is a named lemma in one of the proof directories.
 | Surface module | Contains | Status |
 | --- | --- | --- |
 | [`Model/Prelude.lean`](Ttc/Model/Prelude.lean) | the vocabulary: `Ttc.Space n`, `BForm`/`Lit`/`Cube`/`DNF`, `sol`, `region`, `Ttc.toDNF`, the lattices, `normalisedCount`, and `Ttc.Params` (`η`, `ε'`, `δ'`, `Thresh`, `κ`, `γ`, and `precision` = `GetPrecision`) | definitions only. `volSol`/`relErr` are in `Model/ProblemSetting`; `roundBody` moved to `Volume/Oracle`, being that oracle's normalisation rather than the paper's vocabulary |
-| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `haltLevel`, `absorbLevel`, `step`, `run`, `ttcOutput` | modelled; see caveats |
+| [`Model/Pseudocode.lean`](Ttc/Model/Pseudocode.lean) | `SketchState`, `Oracles`, `dropCovered`, `haltLevel`, `absorbLevel`, `step`, `run`, `ttcAlgOutput`, `ttcRun` | modelled; see caveats |
 | [`Model/ProblemSetting.lean`](Ttc/Model/ProblemSetting.lean) | **the problem only**: `volSol` (= `Vol(F)`, what `alg:ttc` estimates) and `relErr` (the `(1±ε)` interval). 46 lines, no hypothesis bundle — the analogue of `nfalean/ApproxNFA/Model/ProblemSetting.lean` (53 lines) | what is estimated, and what "approximately" means |
 | [`Ttc/Volume/Oracle.lean`](Ttc/Volume/Oracle.lean) | `VolumeAlgorithm` (Cousins–Vempala Thm 1.1), `volGood` | `Vol_ED`'s interface — **another paper's** assumption bundle, so not part of this paper's problem setting |
 | [`Ttc/Sampler/Interface.lean`](Ttc/Sampler/Interface.lean) | `KV97Sampler` (**15** fields — 14 named plus the `[fintypeJ : Fintype J]` instance, which is what `Lean.getStructureFields` counts and what `AUDIT.md` §2 reports) | `GenerateSamples`' interface, likewise another paper's |
-| [`Ttc/TtcProb.lean`](Ttc/TtcProb.lean) | `TtcProb` (**59** fields — count re-checked with `Lean.getStructureFields`, which is authoritative; a hand count of the source undercounts) | the abstract interface: the complete list of assumptions |
+| [`Ttc/TtcProb.lean`](Ttc/TtcProb.lean) | `ttcOutput` (the run as a random variable over an abstract `Ω`), `TtcProb` (**59** fields — count re-checked with `Lean.getStructureFields`, which is authoritative; a hand count of the source undercounts) | the abstract interface: the complete list of assumptions |
 | [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) | [**`Ttc.ttc_volume_estimate`**](Ttc/Model/Theorem.lean): `thm:volumettc` over `TTC`'s own inputs `(atoms, φ, ε, δ)`, **12 explicit binders** — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hpos` — no volume hypothesis, no inscribed-ball data, no degeneracy hypothesis, no interpretation, no parameter block, no converter, **no oracle** (the bundle is the closed term `Ttc.runOracles`) and **no precision** (every occurrence is `P.precision gammaHat`, `GetPrecision`'s output) | the statement layer: one theorem, proof is one application of `Ttc.ttc_volume_cleanInput`. **It is the guarantee for the *amended* algorithm** — with the dilation line, on the cleaned formula, under a constructed (not maximal) ball. `AUDIT.md` §1g |
 | [`Ttc/Estimate.lean`](Ttc/Estimate.lean) | [**`TtcProb.volume_estimate`**](Ttc/Estimate.lean) (`Pr ≥ 1−δ`) and `TtcProb.runtime`, the bundle versions — their types name the *assumed* `T.O` and `T.ρ` | proved from the `TtcProb` fields. Moved out of `Model/Theorem` for that reason; still load-bearing (`Coupling/Product` consumes it) |
 | [`Exec/Statement.lean`](Ttc/Exec/Statement.lean) | `Ttc.ttc_volume_stmt`: `ttc_volume_final` with the converter pinned to `Ttc.toDNF`, 24 explicit binders; plus `Ttc.toDNF_length_gt_card_cubes`, which proves `hlen` is *not* derivable | a **sibling**, not a predecessor: it is the guarantee for the *undeduplicated* run, so `Ttc.ttc_volume_inputs` does not imply it |
@@ -1548,7 +1548,7 @@ reasons about — joined by a *proved* bridge saying they compute the same thing
 That bridge is what puts the operational model outside the trusted base.
 
 This development needs no such bridge, because it has only the transcription.
-[`Ttc.ttcOutput`](Ttc/Model/Pseudocode.lean) *is* `Ttc.run` on the cubes
+[`Ttc.ttcOutput`](Ttc/TtcProb.lean) *is* `Ttc.run` on the cubes
 `ToDNF` returns for the input formula, with the oracles drawn at a sample point —
 so it takes what `TTC(F, ε, δ)` takes, and the headline measures the algorithm
 directly:
@@ -1683,7 +1683,7 @@ enough that anchors were wrong more often than right. Every name below is
 | `γ` / `κ/γ ≤ η/(32mn)` | the shell bound's input | [`Params.gamma`](Ttc/Model/Prelude.lean), [`kappa_div_gamma_le`, `shell_factor_bound`](Ttc/Constants/Parameters.lean) | **proved** — see finding 2 |
 | `alg:ttc` line 16 (`ToDNF`) | circuit AllSAT | [`Ttc.toDNF`](Ttc/Model/Prelude.lean), [`toDNF_isDNFOf`, `toDNF_isPositive`](Ttc/Dnf.lean) | a **correct** converter is exhibited, so the `isDNF`/`isPositive` fields are satisfiable by a real procedure — but they remain fields, because `toDNF` is a parameter of `TtcProb` and the paper's AllSAT returns a different (smaller) DNF |
 | `alg:ttc` lines 22–46 (main loop) | the sketch loop itself | [`run`, `step`, `absorbLevel`, `haltLevel`](Ttc/Model/Pseudocode.lean) | modelled over an oracle bundle; both `while` loops as exit levels |
-| ↳ the output as a random variable | `run` on `ToDNF(F)`, oracles drawn at `ω` | [`ttcOutput`](Ttc/Model/Pseudocode.lean) | definition |
+| ↳ the output as a random variable | `run` on `ToDNF(F)`, oracles drawn at `ω` | [`ttcOutput`](Ttc/TtcProb.lean) | definition |
 | `thm:volumettc` | `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1−δ` | [`TtcProb.volume_estimate`](Ttc/Estimate.lean) | **proved** from the [`TtcProb`](Ttc/TtcProb.lean) fields |
 | `alg:prec` (`GetPrecision`) | `ρ ← ⌈log₁₀(γ/γ̂)⌉` ([`Params.precision`](Ttc/Model/Prelude.lean), used via `TtcProb.rho_eq`) | **load-bearing**: [`gamma_le_latticeScale_mul`](Ttc/Lattice/Assembled.lean) is what makes the *dilated* polytopes contain a ball of radius `γ`, which is what the shell bound needs; also [`ball_radius_scales`](Ttc/Lattice/Transport.lean), [`gamma_half_le`, `precision_increase_le_one`](Ttc/Findings/Repair.lean), [`gamma_scale_cost`](Ttc/Nonconv/Recentred.lean) | mathematical content **proved**; LP implementation not modelled |
 

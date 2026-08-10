@@ -46,11 +46,15 @@ Ttc/
   definitions, no assumption.**
 * `Ttc.Model.Pseudocode`     — `alg:ttc` and its preprocessing, transcribed line
   by line, ending in the algorithm's **output** `Ttc.ttcAlgOutput` over an oracle
-  bundle. Not proof-free: it carries about a dozen tactic proofs, all of them
-  either facts without which a `Ttc.Params` cannot be *written down* or basic
-  properties of the converter it defines. Its docstring says which, and states
-  the one divergence from the nfalean layout — that `Ttc.Params` bundles five
-  proof fields, so the algorithm here depends on proof terms.
+  bundle and in `Ttc.ttcRun`, the same term with that bundle filled in from the
+  run.  **The algorithm carries no proof binder**: `Ttc.Params` does bundle five
+  proof fields, but `Ttc.ttcParamsTotal` decides all five side conditions
+  classically, so `Ttc.ttcAlgOutput` and `Ttc.ttcRun` are closed functions of the
+  data.  Not proof-free, though: it carries 27 proofs, each either a fact without
+  which something the file *defines* cannot be written down — a `Ttc.Params`, or
+  the run's own oracle bundle, whose `Ttc.Oracles` structure has two proof fields
+  — or a basic property of something it defines.  `AUDIT.md` §1h-iv lists all 27
+  by group.
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
                               guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
                               at **eleven explicit binders**, with no interpretation,
@@ -75,10 +79,13 @@ Four files, and the count is an invariant rather than a description: `Model/` is
 what a referee reads to trust the *statement* and the *algorithm*, so anything
 that is neither belongs elsewhere. `Ttc/Model/Run.lean` — 12 abbreviations and 14
 `rfl` lemmas naming the run's quantities — was the fifth file for a while; its
-contents are now in `Ttc/Exec/Api.lean`, except the six that are steps of the
-algorithm (`Ttc.autoCen`, `Ttc.autoGamma`, `Ttc.runScale`, `Ttc.scaledAtoms`,
-`Ttc.runPrec`, `Ttc.runCount`), which went the other way, into
-`Model/Pseudocode`. `Ttc/Model/Endgoal.lean` sat here for a while and did not
+contents are now in `Ttc/Exec/Api.lean`, except the four that are steps of the
+algorithm (`Ttc.autoCen`, `Ttc.autoGamma`, `Ttc.runScale`, `Ttc.runPrec`), which
+went the other way, into `Model/Pseudocode`. (`Ttc.scaledAtoms` and
+`Ttc.runCount` went there too and have since come back to `Exec/Rescaled` and
+`Exec/Inputs`: they quantify over a free `φ` and `γ̂`, and the algorithm's own
+instances of them are `Ttc.algAtoms` and `Ttc.algIndex`.)
+`Ttc/Model/Endgoal.lean` sat here for a while and did not
 qualify — 33 declarations and 21 tactic proofs, including the lattice
 enumeration, the oracle bundle and a box-witness chain, against 0/0/0/1 for the
 four above. It now lives at `Ttc/Exec/Endgoal.lean`, where its consumers already

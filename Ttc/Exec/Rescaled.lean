@@ -88,6 +88,16 @@ variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
   (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
   (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
 
+/-- **Line A11, at an arbitrary `γ̂`.**  The input atoms dilated by
+`Ttc.runScale`: same normals, bounds scaled.
+
+The *algorithm's* dilated atoms are `Ttc.algAtoms` (`Model/Pseudocode`), which is
+this at `φ := Ttc.preprocess atoms φ` and `γ̂ := Ttc.autoGamma atoms (preprocess
+atoms φ)`.  This is the free-`(φ, γ̂)` version the rescaling argument of this file
+quantifies over, so it lives here rather than with the pseudocode. -/
+noncomputable def scaledAtoms (gammaHat : ℝ) : A → LinAtom n :=
+  scaleAtoms (runScale atoms φ ε δ gammaHat) atoms
+
 include hε0 hε1 hn hφ hbdd in
 /-- The dilation `Ttc.runScale` (`Model/Pseudocode`, line A10) is positive. -/
 theorem runScale_pos (gammaHat : ℝ) : 0 < runScale atoms φ ε δ gammaHat :=

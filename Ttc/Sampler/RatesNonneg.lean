@@ -2,6 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
+import Ttc.Exec.Api
 import Ttc.Exec.Inputs
 import Ttc.Exec.Inscribed
 import Ttc.Exec.ScaleFactor
@@ -52,15 +53,15 @@ the sign of the inscribed radius in `γ ^ n`, and that is free too
 by definition `Ttc.runScale … * Ttc.autoGamma …`.  So
 
 ```lean
-theorem ttcRates_nonneg … (s) : 0 ≤ ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c s :=
+theorem ttcRates_nonneg … (c) (s) : 0 ≤ ttcRates atoms φ ε δ c s :=
   runRates_nonneg _ _ _ _ _ (runScale_mul_autoGamma_nonneg atoms _ ε δ) c s
 ```
 
-is the whole specialisation.  It is **not** in this file because `Ttc/Exec/Api.lean`
-does not currently compile (it is mid-refactor), so this module cannot import it;
-`Ttc.runRates_nonneg` and `Ttc.runRates_nonneg_autoGamma` are the same fact stated
-one definitional layer down, and the specialisation is a one-liner once `Exec/Api`
-is green again.
+is the whole specialisation, and it is **Part 6** of this file
+(`Ttc.ttcRates_nonneg`).  It is **unconditional**: not one of `hε0`, `hε1`, `hn`,
+`hφ`, `hpos` is needed, and neither is anything about the run.  (After the `Exec/Api`
+proof-binder strip, `Ttc.ttcRates` is a `def` taking only `atoms φ ε δ c`, so those
+binders are not even in scope to be dropped.)
 -/
 
 namespace Ttc
@@ -233,6 +234,33 @@ theorem runRates_nonneg_autoGamma (atoms atoms' : A → LinAtom n) (φ ψ : BFor
       (runScale atoms' ψ ε δ (autoGamma atoms' ψ) * autoGamma atoms' ψ) c s :=
   runRates_nonneg atoms φ ε δ cen (runScale_mul_autoGamma_nonneg atoms' ψ ε δ) c s
 
+/-! ## Part 6.  The run's own rate vector, `Ttc.ttcRates`
+
+`Ttc.ttcRates` (`Exec/Api`) is `Ttc.runRates` at `Ttc.ttcAtoms`, `Ttc.ttcInput`,
+`Ttc.ttcCen` and `Ttc.ttcScaledRadius`, and `Ttc.ttcScaledRadius` is by definition
+`Ttc.runScale atoms (ttcInput atoms φ) ε δ (ttcRadius atoms φ) * ttcRadius atoms φ`
+with `Ttc.ttcRadius atoms φ = autoGamma atoms (ttcInput atoms φ)`.  So Part 5's
+`Ttc.runScale_mul_autoGamma_nonneg` is *exactly* the missing hypothesis of
+`Ttc.runRates_nonneg`, at `atoms' := atoms` and `ψ := Ttc.ttcInput atoms φ`. -/
+
+/-- **`0 ≤ θ s` at the run's rate vector, with no hypotheses at all.**
+
+This is the hypothesis `Ttc.trajLaw_ae_terminates` (`Process/Truncation`) asks of
+`θ`, at the vector `Ttc.ttcTrajKernel` (`Monadic/Kernel`) is the trajectory law of:
+`Ttc.ttcTrajKernel atoms φ ε δ c = trajLaw (ttcRates atoms φ ε δ c)` by `rfl`.
+
+**Unconditional.**  None of the FPRAS parameter range (`0 < ε ≤ 1`), the dimension
+(`1 ≤ n`), the input's shape (`φ.IsPositive`), the nondegeneracy
+(`0 < volSol …`) or anything about the volume coins `c` is used — in particular no
+`Ttc.mcGood` good event and no `eq:almostuniform`.  The two facts consumed are
+Part 4 (a product of two nonnegative factors) and Part 5 (the dilated inscribed
+radius is a product of a `max 1 _` with an infimum of radii). -/
+theorem ttcRates_nonneg (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (c : ℕ → Space n) (s : Fin (ttcIndex atoms φ ε δ)) :
+    0 ≤ ttcRates atoms φ ε δ c s :=
+  runRates_nonneg _ _ _ _ _
+    (runScale_mul_autoGamma_nonneg atoms (ttcInput atoms φ) ε δ) c s
+
 /-! ## Axiom profile
 
 Every declaration of this file, checked transitively (`CLAUDE.md` §4).  Expect
@@ -250,5 +278,6 @@ Every declaration of this file, checked transitively (`CLAUDE.md` §4).  Expect
 #print axioms autoGamma_nonneg
 #print axioms runScale_mul_autoGamma_nonneg
 #print axioms runRates_nonneg_autoGamma
+#print axioms ttcRates_nonneg
 
 end Ttc
