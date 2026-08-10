@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.ProblemSetting
+import Ttc.Volume.EstData
 
 /-!
 # `Volume/Oracle`: `Vol_ED`'s contract, stated as Cousins–Vempala Theorem 1.1
@@ -34,6 +34,11 @@ Everything *proved* about it — the rounding bridge that discharges Theorem 1.1
 former field recovered as a theorem — lives in `Ttc/Volume/Bridge.lean`, so that
 this file stays what it claims to be: declarations and assumptions, no proofs.
 
+`Ttc.roundBody`, the normalisation `Vol_ED` is called on, used to be defined here and now
+lives one file down in [`Ttc/Volume/EstData.lean`](EstData.lean), together with the rest of
+what the constructed oracle *computes* — so that `Model/Pseudocode` can reach those
+definitions without importing this structure. The name is unchanged.
+
 **Modelling notes.**
 
 *The second-moment hypothesis is omitted from `correct`.* Theorem 1.1 states
@@ -53,21 +58,6 @@ is where that discrepancy is discharged rather than hidden.
 namespace Ttc
 
 open MeasureTheory Pointwise
-
-/-- **The normalisation `Vol_ED` is called on.** `K` moved so that its inscribed
-ball becomes the unit ball at the origin: the image of `K` under
-`y ↦ γ⁻¹ · (y − c)`.
-
-Cousins–Vempala Theorem 1.1 (`Ttc.VolumeAlgorithm`, below) speaks only about
-bodies containing the unit ball, whereas `Ttc.TtcProb.ball_subset` supplies a ball
-of radius `γ̂` about a centre that is not the origin. This is the change of
-variable that closes the gap; that it does is *proved* in `Ttc/Volume/Bridge.lean`
-(`Ttc.VolumeAlgorithm.of_ball`), not assumed.
-
-Lives here rather than in `Model/Prelude` because it is this oracle's
-normalisation, not vocabulary of the paper's problem. -/
-noncomputable def roundBody {n : ℕ} (c : Space n) (γ : ℝ) (K : Set (Space n)) :
-    Set (Space n) := γ⁻¹ • ((-c) +ᵥ K)
 
 /-- **Cousins–Vempala, Theorem 1.1** (`vol3_journal.tex:144`), as the contract
 `Vol_ED` is called under.

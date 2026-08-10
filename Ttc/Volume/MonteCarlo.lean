@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.TtcProb
+import Ttc.Volume.EstData
 import Arlib.Convexity.GaussianCooling.Unblock
 import Arlib.Probability.UniformOn
 import Mathlib.Probability.Independence.InfinitePi
@@ -66,17 +67,36 @@ whatsoever, with no hypothesis.  Correctness survives because of
 it, so intersecting it back with the enclosing ball recovers `volume K` on the nose.  No
 almost-everywhere argument is needed; the identity is exact.
 
+## Where the definitions live
+
+The estimator's **definitions** — `rad`, `target`, `hitData`, `scale`, `nSamp`, `ind`,
+`score`, `est`, and `Ttc.mcVol` itself — are in
+[`Ttc/Volume/EstData.lean`](EstData.lean), which imports only `Model/ProblemSetting`.  This
+file holds every **theorem** about them, and the coin space they are averaged over.
+
+The split is not cosmetic: it is what keeps this development's own probability space out of
+the algorithm's definitional closure.  The sample count `nSamp` is defined from
+`Ttc.MonteCarlo.hitData`, the hitting probability written out in Lebesgue volume, rather
+than from `Ttc.MonteCarlo.hit`, which is `(coinLaw n (target K)).toReal`.  The two are equal
+whenever `K ⊆ Metric.ball 0 (rad K)` — `Ttc.MonteCarlo.hit_eq_hitData` — which is what
+`correct` establishes for itself, so nothing about the estimator changes; `coinLaw` and
+`coins` simply no longer appear in what `Ttc.mcVol` *unfolds to*.  Mathlib's Lebesgue
+`volume` does, irreducibly: `scale` is the enclosing ball's volume and `target` is a
+measurable hull.  See `EstData`'s docstring.
+
 ## Main declarations
 
 * `Ttc.MonteCarlo.coinLaw`, `Ttc.MonteCarlo.coins` — the uniform law on the unit ball and
   its countable i.i.d. power.
-* `Ttc.MonteCarlo.rad`, `Ttc.MonteCarlo.exists_ball_superset` — the enclosing radius.
-* `Ttc.MonteCarlo.target`, `Ttc.MonteCarlo.measurableSet_target` — the hull, pulled back
-  along the rescaling; measurable unconditionally.
+* `Ttc.MonteCarlo.exists_ball_superset` — the enclosing radius `Ttc.MonteCarlo.rad` exists.
+* `Ttc.MonteCarlo.measurableSet_target` — the hull `Ttc.MonteCarlo.target`, pulled back
+  along the rescaling, is measurable unconditionally.
 * `Ttc.MonteCarlo.volume_hull_inter_ball`, `Ttc.MonteCarlo.hit_eq`,
   `Ttc.MonteCarlo.scale_mul_hit` — the geometry: the hitting probability is
   `Vol K / Vol(ball 0 R)`, exactly.
-* `Ttc.MonteCarlo.est`, `Ttc.MonteCarlo.measurable_est` — the estimator.
+* `Ttc.MonteCarlo.hit_eq_hitData` — the sample count's arithmetic hitting probability is
+  the coin law's.
+* `Ttc.MonteCarlo.measurable_est` — the estimator `Ttc.MonteCarlo.est` is measurable.
 * `Ttc.MonteCarlo.integral_est`, `Ttc.MonteCarlo.variance_est` — unbiasedness and the
   Bernoulli variance.
 * `Ttc.MonteCarlo.correct` — Chebyshev, in the exact shape `VolumeAlgorithm.correct` wants.
@@ -133,11 +153,6 @@ volume — and `Arlib.Convexity.exists_closedBall_superset_of_convex` turns them
 radius.  `rad` picks one by choice, totally: it is defined (as `1`) even when no radius
 exists, so that `est` is a total function and `est_meas` needs no hypothesis. -/
 
-open scoped Classical in
-/-- A radius enclosing `K`, chosen classically; `1` if there is none. -/
-noncomputable def rad (K : Set (Space n)) : ℝ :=
-  if h : ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R then h.choose else 1
-
 theorem rad_pos (K : Set (Space n)) : 0 < rad K := by
   classical
   rw [rad]
@@ -171,10 +186,6 @@ subtlety in the module docstring: it is measurable for **every** `K` (so `est_me
 unconditional), and — once `K` really is enclosed by `ball 0 (rad K)` — its intersection
 with the unit ball has volume exactly `(rad K)⁻ⁿ · Vol K`. -/
 
-/-- The measurable hull of `K`, in unit-ball coordinates. -/
-noncomputable def target (K : Set (Space n)) : Set (Space n) :=
-  (fun x : Space n => rad K • x) ⁻¹' toMeasurable volume K
-
 /-- **Measurable, with no hypothesis on `K`.**  This is what makes
 `Ttc.VolumeAlgorithm.est_meas` provable: it is quantified over every `K`, and a convex set
 is only `NullMeasurableSet` in Mathlib v4.32, never `MeasurableSet`. -/
@@ -206,26 +217,13 @@ theorem volume_hull_inter_ball {K : Set (Space n)} {R : ℝ}
 /-- The hitting probability: the chance that one rescaled coin lands in `K`. -/
 noncomputable def hit (K : Set (Space n)) : ℝ := (coinLaw n (target K)).toReal
 
-/-- The volume of the enclosing ball, `Vol(ball 0 (rad K)) = (rad K)ⁿ · Vol(ball 0 1)`. -/
-noncomputable def scale (K : Set (Space n)) : ℝ :=
-  rad K ^ n * (volume (Metric.ball (0 : Space n) 1)).toReal
-
 theorem scale_pos (K : Set (Space n)) : 0 < scale K := by
   rw [scale]; exact mul_pos (rad_pow_pos K n) volume_unitBall_toReal_pos
-
-/-- The number of samples: `⌈(ε²·p·q)⁻¹⌉ + 1`, where `q` is the hitting probability.
-Noncomputable, and `Θ(R^n/(ε²p))` — exponential in `n`.  See the module docstring. -/
-noncomputable def nSamp (K : Set (Space n)) (ε pf : ℝ) : ℕ :=
-  ⌈(ε ^ 2 * pf * hit K)⁻¹⌉₊ + 1
 
 theorem nSamp_pos (K : Set (Space n)) (ε pf : ℝ) : 0 < nSamp K ε pf := Nat.succ_pos _
 
 theorem nSamp_cast_pos (K : Set (Space n)) (ε pf : ℝ) : (0 : ℝ) < (nSamp K ε pf : ℝ) := by
   exact_mod_cast nSamp_pos K ε pf
-
-/-- The indicator of `target K`, as a function of one coin. -/
-noncomputable def ind (K : Set (Space n)) : Space n → ℝ :=
-  Set.indicator (target K) (1 : Space n → ℝ)
 
 theorem measurable_ind (K : Set (Space n)) : Measurable (ind K) :=
   measurable_one.indicator (measurableSet_target K)
@@ -240,16 +238,8 @@ theorem norm_ind_le (K : Set (Space n)) (x : Space n) : ‖ind K x‖ ≤ 1 := b
   · rw [ind, Set.indicator_of_mem hx]; norm_num
   · rw [ind, Set.indicator_of_notMem hx]; norm_num
 
-/-- The `i`-th sample's score: `1` if the `i`-th rescaled coin lands in `K`, else `0`. -/
-noncomputable def score (K : Set (Space n)) (i : ℕ) : (ℕ → Space n) → ℝ :=
-  fun ω => ind K (ω i)
-
 theorem measurable_score (K : Set (Space n)) (i : ℕ) : Measurable (score K i) :=
   (measurable_ind K).comp (measurable_pi_apply i)
-
-/-- **The estimate.** `Vol(ball 0 (rad K)) · (#hits / N)`. -/
-noncomputable def est (K : Set (Space n)) (ε pf : ℝ) (ω : ℕ → Space n) : ℝ :=
-  scale K / (nSamp K ε pf : ℝ) * ∑ i ∈ Finset.range (nSamp K ε pf), score K i ω
 
 /-- **`est` is measurable for every `K` whatsoever** — no convexity, no measurability of
 `K`.  This is `Ttc.VolumeAlgorithm.est_meas`. -/
@@ -280,6 +270,19 @@ theorem hit_eq {K : Set (Space n)} (hsub : K ⊆ Metric.ball (0 : Space n) (rad 
       / (volume (Metric.ball (0 : Space n) 1)).toReal := by
   rw [hit, coinLaw_target, volume_target_inter_unitBall hsub, ENNReal.toReal_div,
     ENNReal.toReal_mul, ENNReal.toReal_ofReal (le_of_lt (inv_pos.mpr (rad_pow_pos K n)))]
+
+/-- **Data equals law.**  `Ttc.MonteCarlo.hitData`, the arithmetic hitting probability that
+`Ttc.MonteCarlo.nSamp` is *defined* from, is the coin law's own hitting probability
+`Ttc.MonteCarlo.hit` — whenever `K` is enclosed by `Metric.ball 0 (rad K)`, which is exactly
+the situation `Ttc.MonteCarlo.correct` establishes for itself
+(`Ttc.MonteCarlo.subset_ball_rad`).
+
+This lemma is the entire content of the data/law split described in
+`Ttc/Volume/EstData.lean`: the sample count is arithmetic in Lebesgue volume, the coin law
+`Ttc.MonteCarlo.coinLaw` enters only through theorems, and the estimator's *definition*
+therefore names no measure this development constructs. -/
+theorem hit_eq_hitData {K : Set (Space n)} (hsub : K ⊆ Metric.ball (0 : Space n) (rad K)) :
+    hit K = hitData K := hit_eq hsub
 
 /-- **The estimator is unbiased**, at the level of one sample: `scale · q = Vol K`. -/
 theorem scale_mul_hit {K : Set (Space n)} (hsub : K ⊆ Metric.ball (0 : Space n) (rad K)) :
@@ -405,7 +408,7 @@ theorem correct (K : Set (Space n)) (ε pf : ℝ) (hε : 0 < ε) (hp : 0 < pf) (
   -- the sample count really is large enough
   have hNbig : (ε ^ 2 * pf * hit K)⁻¹ ≤ (nSamp K ε pf : ℝ) := by
     have h1 : (ε ^ 2 * pf * hit K)⁻¹ ≤ (⌈(ε ^ 2 * pf * hit K)⁻¹⌉₊ : ℝ) := Nat.le_ceil _
-    rw [nSamp]
+    rw [nSamp, ← hit_eq_hitData hsub]
     push_cast
     linarith
   have hkey : (1 - hit K) / ((nSamp K ε pf : ℝ) * ε ^ 2 * hit K) ≤ pf := by
@@ -552,7 +555,9 @@ theorem monteCarlo_est_ne_volume {n : ℕ} (hn : n ≠ 0) :
 /-! ### Axiom audit
 
 Every declaration in this file is `sorry`-free and depends only on Lean's three standard
-axioms.  Re-check with `lake build Ttc.Volume.MonteCarlo`. -/
+axioms.  Re-check with `lake build Ttc.Volume.MonteCarlo`.  The definitions this file is
+*about* — `rad`, `target`, `hitData`, `scale`, `nSamp`, `ind`, `score`, `est` — are checked
+where they are defined, in `Ttc/Volume/EstData.lean`. -/
 
 #print axioms Ttc.MonteCarlo.volume_unitBall_ne_zero
 #print axioms Ttc.MonteCarlo.volume_unitBall_ne_top
@@ -561,33 +566,28 @@ axioms.  Re-check with `lake build Ttc.Volume.MonteCarlo`. -/
 #print axioms Ttc.MonteCarlo.instIsProbabilityMeasureCoinLaw
 #print axioms Ttc.MonteCarlo.coins
 #print axioms Ttc.MonteCarlo.instIsProbabilityMeasureCoins
-#print axioms Ttc.MonteCarlo.rad
 #print axioms Ttc.MonteCarlo.rad_pos
 #print axioms Ttc.MonteCarlo.rad_ne_zero
 #print axioms Ttc.MonteCarlo.rad_pow_pos
 #print axioms Ttc.MonteCarlo.subset_ball_rad
 #print axioms Ttc.MonteCarlo.exists_ball_superset
-#print axioms Ttc.MonteCarlo.target
 #print axioms Ttc.MonteCarlo.measurableSet_target
 #print axioms Ttc.MonteCarlo.target_inter_unitBall
 #print axioms Ttc.MonteCarlo.volume_hull_inter_ball
 #print axioms Ttc.MonteCarlo.hit
-#print axioms Ttc.MonteCarlo.scale
 #print axioms Ttc.MonteCarlo.scale_pos
-#print axioms Ttc.MonteCarlo.nSamp
 #print axioms Ttc.MonteCarlo.nSamp_pos
 #print axioms Ttc.MonteCarlo.nSamp_cast_pos
-#print axioms Ttc.MonteCarlo.ind
 #print axioms Ttc.MonteCarlo.measurable_ind
 #print axioms Ttc.MonteCarlo.ind_sq
 #print axioms Ttc.MonteCarlo.norm_ind_le
-#print axioms Ttc.MonteCarlo.score
 #print axioms Ttc.MonteCarlo.measurable_score
-#print axioms Ttc.MonteCarlo.est
 #print axioms Ttc.MonteCarlo.measurable_est
 #print axioms Ttc.MonteCarlo.coinLaw_target
 #print axioms Ttc.MonteCarlo.volume_target_inter_unitBall
 #print axioms Ttc.MonteCarlo.hit_eq
+#print axioms Ttc.MonteCarlo.hitData
+#print axioms Ttc.MonteCarlo.hit_eq_hitData
 #print axioms Ttc.MonteCarlo.scale_mul_hit
 #print axioms Ttc.MonteCarlo.hit_pos
 #print axioms Ttc.MonteCarlo.iIndepFun_score

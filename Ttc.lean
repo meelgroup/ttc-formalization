@@ -383,6 +383,7 @@ import Ttc.Coupling.Product
 import Ttc.Volume.Bridge
 import Ttc.Volume.VolSolCheck
 import Ttc.Volume.CousinsVempala
+import Ttc.Volume.CVInstantiate
 import Ttc.Volume.MonteCarlo
 
 -- The modelled loop, and what a run costs

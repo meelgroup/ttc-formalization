@@ -82,24 +82,13 @@ open MeasureTheory ProbabilityTheory Set
 
 variable {A : Type*} {n : ℕ}
 
-/-! ## The constructed volume estimates -/
+/-! ## The constructed volume estimates
 
-open scoped Classical in
-/-- **`Vol_ED`'s output, as a function of the volume oracle's coins.**
-
-`Ttc.ttc_volume` carries `vol : Cube A → ℝ` together with a binder `volED_eq`
-pinning it to `volAlg.est`.  With `volAlg` fixed to the *constructed* oracle
-`Ttc.VolumeAlgorithm.monteCarlo`, `vol` is no longer a free function: it is this
-term, and `volED_eq` becomes the theorem `Ttc.mcVol_eq`.
-
-Off the DNF the value is `0`; the algorithm never reads it (only `i ∈ D` is ever
-queried), and totality is what lets the definition avoid a proof argument. -/
-noncomputable def mcVol (M : A → Set (Space n)) (D : DNF A)
-    (cen : {c : Cube A // c ∈ D} → Space n) (γ ε' δ' : ℝ)
-    (c : ℕ → Space n) (i : Cube A) : ℝ :=
-  if hi : i ∈ D then
-    γ ^ n * MonteCarlo.est (roundBody (cen ⟨i, hi⟩) γ (region M i)) ε' δ' c
-  else 0
+`Ttc.mcVol` — `Vol_ED`'s output as a function of the volume oracle's coins — is **defined in
+[`Ttc/Volume/EstData.lean`](../Volume/EstData.lean)**, not here.  It used to be defined in
+this file; it moved so that `Ttc/Model/Pseudocode.lean` can reach it, `EstData` importing
+only `Model/ProblemSetting`.  The name and the term are unchanged, and everything *proved*
+about it is below. -/
 
 /-- **`Ttc.ttc_volume`'s `volED_eq`, discharged.**  At every cube of the DNF the
 constructed estimate is `γ̂ⁿ` times what `Ttc.VolumeAlgorithm.monteCarlo` returns
