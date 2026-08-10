@@ -536,10 +536,12 @@ Removing binders removed **no** cost and **no** scope limitation. In particular:
 [`Ttc.ttc_volume_estimate`](Ttc/Model/Theorem.lean) is what an auditor who reads
 only `Model/` reads. It is the **one declaration** in
 [`Model/Theorem.lean`](Ttc/Model/Theorem.lean) — no `def`, no auxiliary lemma —
-and its proof is a bare application of `Ttc.ttc_volume_api`
-([`Exec/Api`](Ttc/Exec/Api.lean)) with no rewriting, which is the structural check
-that the names in the statement name what they claim to: a wrong abbreviation
-would be a build error, not a silent divergence.
+and its proof is a pair of bare applications with no rewriting
+(`Ttc.ttc_accuracy_single_measure`, [`Monadic/EventMeasurable`](Ttc/Monadic/EventMeasurable.lean),
+and the second component of `Ttc.ttc_volume_api`, [`Exec/Api`](Ttc/Exec/Api.lean),
+read at `p.1`/`p.2`), which is the structural check that the names in the statement
+name what they claim to: a wrong abbreviation would be a build error, not a silent
+divergence.
 
 It takes **11 explicit binders** (13 raw, the extra two being the implicit ambient
 `{A}` and `{n}`), and its type contains no `Ttc.TtcProb`, no `Ttc.VolumeAlgorithm`
@@ -562,16 +564,28 @@ the three *preprocessing passes* (dilation, pruning, cleanup) as what the headli
 certifies `alg:ttc` **plus**, with the constructed ball alongside them. Read both
 before quoting this statement.
 
-**Two conjuncts, not one.** The accuracy conjunct is
-`1 − δ ≤ (∫⁻ c, trajLaw … {t | …} ∂(MonteCarlo.coins n)).toReal` — a bound over the
-**joint** law of the volume coins `c` and the sample coins `t`, with the measured
-quantity `Model/Pseudocode`'s own `Ttc.ttcOutput` on the preprocessed input,
-divided by the dilation factor to the `n`, and the target the **user's own**
-`volSol (atomSet atoms) φ`. The running-time conjunct bounds `alg:ttc`'s *charged*
-cost by `m · (C_vol + C_sample · Thresh)` **conditional on the run terminating**;
-it is not a termination proof and not a polynomial-time claim (`thm:runtime`
-remains out of scope, and both oracle routes are exponential in `n` — §1c caveat
-2).
+**Two conjuncts, not one — and both about the same run.** Both are stated over a
+single law on a single space,
+[`Ttc.ttcLaw`](Ttc/Monadic/Program.lean) `: Measure ((ℕ → Space n) × (ℕ → Fin (ttcIndex …) → ℕ))`,
+the composition–product of the volume coins with the coin-indexed trajectory
+kernel; a point `p = (c, t)` is a whole run. **There is no iterated integral.** The
+accuracy conjunct is `1 − δ ≤ Pr[p ← ttcLaw …; ⟨output at p⟩ ∈ relErr ε (volSol …)]`
+— the measured quantity is `Model/Pseudocode`'s own `Ttc.ttcAlgOutput` on the
+preprocessed input, divided by the dilation factor to the `n`, and the target is the
+**user's own** `volSol (atomSet atoms) φ`. Folding the earlier
+`∫⁻ c, trajLaw … {t | …} ∂(MonteCarlo.coins n)` into that one measure is
+[`Ttc.lintegral_good_event_eq_compProd`](Ttc/Monadic/EventMeasurable.lean), which
+needs the good event measurable **jointly** in `c` and `t`. `Ttc.ttcLaw` is a
+`MeasureTheory.Measure`, not a `PMF` (nfalean's `ApproxNFA.countNFAM` is one):
+`Ttc.MonteCarlo.coins` is atomless on an uncountable space, so no `PMF` has it as
+its outer measure — see [`Monadic/MeasurePr`](Ttc/Monadic/MeasurePr.lean).
+
+The running-time conjunct bounds `alg:ttc`'s *charged* cost by
+`m · (C_vol + C_sample · Thresh)` **conditional on the run terminating**, at
+**every** point `p` — a plain `∀ p`, deliberately *not* the a.e. `All[p ← ttcLaw; …]`,
+because our `All` is `∀ᵐ` and the pointwise bound is strictly stronger. It is not a
+termination proof and not a polynomial-time claim (`thm:runtime` remains out of
+scope, and both oracle routes are exponential in `n` — §1c caveat 2).
 
 The first nine binders (`atoms … hn`) are exactly `ApproxNFA.approxNFA_countNFA`'s
 (the nfalean template) binder list; they are the inputs and the parameter range and

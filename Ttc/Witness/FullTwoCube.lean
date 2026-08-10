@@ -85,13 +85,14 @@ and only the accuracy *target* `Ttc.volSol` is at the user's original
 `Ttc.volSol_pruneForm`, `Ttc.volSol_cleanForm`).
 
 None of that is spelled out below, because `Ttc/Exec/Api.lean` names it:
-`Ttc.ttcRates` and `Ttc.ttcEstimate` take exactly `atoms φ ε δ hε0 hε1 hn hφ hpos`
-and compose the preprocessing, the ball and the dilation internally.  So
-`Ttc.TwoCube.twoProbFull` is a five-line abbreviation for the integral in the
-headline's conclusion; it asserts nothing, and `Ttc.TwoCube.twoProbFull_def` writes
-it out by `rfl`.
+`Ttc.ttcLaw` (`Monadic/Program`) and `Ttc.ttcEstimate` take exactly
+`atoms φ ε δ hε0 hε1 hn hφ hpos` and compose the preprocessing, the ball and the
+dilation internally.  So `Ttc.TwoCube.twoProbFull` is a five-line abbreviation for the
+**single measure** in the headline's conclusion — the run law of the good event, no
+iterated integral; it asserts nothing, and `Ttc.TwoCube.twoProbFull_def` writes it out
+by `rfl`.
 
-`Ttc.ttc_volume_estimate` states that integral over `Model/Pseudocode`'s
+`Ttc.ttc_volume_estimate` states that measure over `Model/Pseudocode`'s
 `Ttc.ttcAlgOutput`, at the constructed bundle `Ttc.ttcOracleBundle`, rather than over
 `Ttc.ttcEstimate`; the two are the same term (`Ttc.ttcAlgOutput_eq_ttcEstimate`, by
 `rfl`), which is why the applications below need no rewriting.
@@ -106,7 +107,7 @@ different runs; nothing here is computed, simplified, or claimed to relate to th
 | --- | --- |
 | `Ttc.TwoCube.interior_region_nonempty_two_d` | both regions are full-dimensional |
 | `Ttc.TwoCube.twoVolPos` | `hpos`: `0 < Vol(Sol F)`, from the line above |
-| `Ttc.TwoCube.twoProbFull_def` | the named probability **is** `Ttc.ttc_volume_estimate`'s integral, here |
+| `Ttc.TwoCube.twoProbFull_def` | the named probability **is** `Ttc.ttc_volume_estimate`'s measure, here |
 | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` | `Ttc.ttc_volume_estimate` itself, at every `(ε, δ) ∈ (0,1]²` |
 | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full_at` | the same at `(1/3, 9/10)` and `(1/2, 1/4)`, bounds `1/10` and `3/4`, both proved positive |
 | `Ttc.TwoCube.twoProbFull_pos_ne_top` | the bound is a real number, not `ENNReal.toReal ⊤ = 0` |
@@ -163,42 +164,41 @@ theorem twoVolPos (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 :
 /-! ## The run, named -/
 
 /-- **The probability `Ttc.ttc_volume_estimate` bounds on this witness.**  A pure
-abbreviation for the integral in the headline's conclusion, asserting nothing
-(`Ttc.TwoCube.twoProbFull_def`).
+abbreviation for the measure in the headline's conclusion, asserting nothing
+(`Ttc.TwoCube.twoProbFull_def`): the run law `Ttc.ttcLaw` (`Monadic/Program`) of the
+good event, at a point `p = (volume coins, sample trajectory)`.
 
 Everything the run does to the input — pruning, cleaning, constructing the inscribed
-ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcRates` and
+ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcLaw` and
 `Ttc.ttcEstimate` (`Ttc/Exec/Api.lean`).  Only the accuracy target `Ttc.volSol` is at
 the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ENNReal :=
-  ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-        twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) c)
-      {t | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-            twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) c t
-          ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
-    ∂(MonteCarlo.coins n)
+  ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+      twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1)
+    {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+          twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) p.1 p.2
+        ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
 
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
-the integral in `Ttc.ttc_volume_estimate`'s conclusion at
+the measure in `Ttc.ttc_volume_estimate`'s conclusion at
 `atoms := Ttc.TwoCube.atomsT …` and `φ := Ttc.TwoCube.twoForm n` — the headline writes
-the integrand as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle …)`, which is
+the measured quantity as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle …)`, which is
 `Ttc.ttcEstimate` by `rfl` (`Ttc.ttcAlgOutput_eq_ttcEstimate`) — and nothing else
 changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     twoProbFull n hn ε δ hε0 hε1 =
-      ∫⁻ c, trajLaw (ttcRates (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-            twoForm_isPositive
-            (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-              (isBounded_sol_T n hn ε δ hε0 hε1)
-              (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) c)
-          {t | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-                twoForm_isPositive
-                (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                  (isBounded_sol_T n hn ε δ hε0 hε1)
-                  (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) c t
-              ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
-        ∂(MonteCarlo.coins n) := rfl
+      ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+          twoForm_isPositive
+          (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
+            (isBounded_sol_T n hn ε δ hε0 hε1)
+            (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
+        {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
+              twoForm_isPositive
+              (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
+                (isBounded_sol_T n hn ε δ hε0 hε1)
+                (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) p.1 p.2
+            ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))} := rfl
 
 /-- The same quantity as a real number — the left-hand side of the guarantee. -/
 noncomputable def twoAccFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) : ℝ :=

@@ -56,8 +56,11 @@ Ttc/
                               at **eleven explicit binders**, with no interpretation,
                               no parameter block, no converter, no oracle argument
                               and no precision argument (the precision is
-                              `GetPrecision`'s output `P.precision gammaHat`).  Its
-                              accuracy conjunct is stated directly about
+                              `GetPrecision`'s output `P.precision gammaHat`).  Both
+                              conjuncts are stated over **one law on one space**,
+                              `Ttc.ttcLaw` (`Monadic/Program`), at one run
+                              `p = (volume coins, trajectory)` — no iterated
+                              integral — the accuracy one directly about
                               `Ttc.ttcAlgOutput`, `Model/Pseudocode`'s transcription
                               of the algorithm, at the constructed bundle
                               `Ttc.ttcOracleBundle`.  The
@@ -284,8 +287,10 @@ reads exactly these four files and stops.
                            content is here, and why" enumerates them and the
                            divergence from nfalean that forces them.
 * `Model/Theorem`        — the headline `Ttc.ttc_volume_estimate`: one theorem,
-                           no proof to work through (it is one application of
-                           `Ttc.ttc_volume_api`), stated over `TTC`'s own inputs.
+                           no proof to work through (accuracy is
+                           `Ttc.ttc_accuracy_single_measure`, running time the second
+                           component of `Ttc.ttc_volume_api`), stated over `TTC`'s
+                           own inputs and over one run of one law, `Ttc.ttcLaw`.
                            **No oracle and no precision are among them**: the
                            oracle bundle is the closed term `Ttc.ttcOracleBundle`
                            and every precision is `P.precision gammaHat`, i.e.
@@ -441,6 +446,7 @@ import Ttc.Findings.SmallBody
 import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Kernel
 import Ttc.Monadic.EventMeasurable
+import Ttc.Monadic.Program
 import Ttc.Audit.ClosureCheck
 import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
