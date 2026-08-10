@@ -293,13 +293,13 @@ theorem gen_mem_trajOracles {pt : Fin L → Space n} (hpt : Function.Injective p
     ∀ x ∈ (trajOracles hpt vol covered mem ω).gen i j N r, x ∈ T i := by
   classical
   intro x hx
-  simp only [trajOracles] at hx
+  simp only [trajOracles, trajGen] at hx
   split at hx
   · obtain ⟨s, hs, hpos⟩ := mem_toMultiset hx
     by_cases hm : mem i s = true
     · rw [← hs]; exact hmem i s hm
     · simp [hm] at hpos
-  · rw [Multiset.eq_of_mem_replicate hx, padPoint, dif_pos hne]
+  · rw [Multiset.eq_of_mem_replicate hx, padPoint, padRow, dif_pos hne]
     exact hmem i _ hne.choose_spec
 
 /-! ## The halving trigger

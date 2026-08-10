@@ -31,7 +31,7 @@ Ttc/
   Nonconv/       lem:nonconv                                   (6)
   Lattice/       thm:decomposition and lem:lattice             (4)
   Process/       lem:process, lem:chernoff, the level process  (6)
-  Coupling/      the run realises the family; lem:numlattice   (5)
+  Coupling/      the run realises the family; lem:numlattice   (6)
   Witness/       non-vacuity: the box [0,c]ⁿ                    (3)
   Capstone       the two chains combined                       (1)
   Findings/      off the path: findings about the paper        (2)
@@ -148,8 +148,12 @@ Ttc/TtcProb → Ttc/Access`, and `Model/ProblemSetting` imports nothing but
 
 * `Ttc.Invariants` — the structural facts about the modelled loop: the
   exit levels, and what `𝒳` can contain.
+* `Ttc.Coupling.Readoff` — the *values* `thin`, `pois` and `gen` read off a
+  trajectory, defined without reference to `Ttc.Oracles`, so that a run which
+  reads the trajectory directly needs no bundle.
 * `Ttc.Coupling.Family` — the coupled level family, its law, and the oracle
-  bundle that reads a trajectory.
+  bundle that reads a trajectory: the read-offs of `Coupling/Readoff` packaged
+  with the two *contracts* `thin_le` and `gen_card`.
 * `Ttc.Coupling.Run` — the run **is** the family, pathwise; the halving
   triggers; `lem:numlattice`'s bound proved for the coupled run.
 * `Ttc.Coupling.Transfer`, `Ttc.Coupling.NumLattice` — that bound
@@ -425,6 +429,7 @@ import Ttc.Process.SketchProcess
 import Ttc.Process.Sketch
 
 -- the coupling, and lem:numlattice
+import Ttc.Coupling.Readoff
 import Ttc.Coupling.Family
 import Ttc.Coupling.Run
 import Ttc.Coupling.Transfer

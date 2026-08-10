@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Process.SketchProcess
+import Ttc.Coupling.Readoff
 import Ttc.Model.Pseudocode
 
 /-!
@@ -261,15 +262,12 @@ theorem map_trajLaw_eval {θ : Fin L → ℝ} (hθ : ∀ s, 0 ≤ θ s) (j : ℕ
 
 The run's state is a `Multiset (Space n)`; the family is a count vector. This is
 the dictionary between them, given an injective enumeration `pt` of the lattice
-points. `Ttc.toMultiset` builds the multiset with prescribed multiplicities, and
-`Ttc.count_toMultiset` says it has exactly those multiplicities — which is what
-lets the oracles of step 3 *read* the family.
+points. `Ttc.toMultiset` — the definition itself now lives upstream, in
+`Coupling/Readoff`, so that the read-offs can be stated without `Ttc.Oracles` —
+builds the multiset with prescribed multiplicities, and `Ttc.count_toMultiset`
+says it has exactly those multiplicities, which is what lets the oracles of step 3
+*read* the family.
 -/
-
-/-- The multiset holding `k s` copies of the lattice point `pt s`. -/
-noncomputable def toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
-    Multiset (Space n) :=
-  ∑ s, Multiset.replicate (k s) (pt s)
 
 @[simp] theorem card_toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
     Multiset.card (toMultiset pt k) = ∑ s, k s := by
@@ -340,32 +338,75 @@ holds; see `Ttc.padPoint`.
 never-taken filler branch. -/
 noncomputable def padPoint {n : ℕ} {ι : Type*} (pt : Fin L → Space n) (mem : ι → Fin L → Bool)
     (i : ι) : Space n :=
-  open Classical in
-  if h : ∃ s, mem i s = true then pt h.choose else 0
+  padRow pt (mem i)
 
-/-- **The oracle bundle that reads a trajectory.** -/
+/-! ### The two contracts, stated on the read-offs alone
+
+These are exactly `Ttc.Oracles`' two proof fields with the bundle taken away. They
+are theorems, so they stay here, downstream of `Ttc.toMultiset_le_of_count_le`; the
+*values* they are about are upstream, in `Coupling/Readoff`. -/
+
+/-- The `thin` contract: `Ttc.trajThin` removes elements, it never invents them. -/
+theorem trajThin_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
+    (ωj : Fin L → ℕ) (X : Multiset (Space n)) : trajThin pt ωj X ≤ X :=
+  toMultiset_le_of_count_le hpt fun _ => min_le_right _ _
+
+/-- The `gen` contract: `Ttc.trajGen` returns exactly `N` points. -/
+theorem card_trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) (ωj : Fin L → ℕ)
+    (N : ℕ) (pad : Space n) : Multiset.card (trajGen pt m ωj N pad) = N := by
+  classical
+  rw [trajGen]
+  by_cases h : Multiset.card (toMultiset pt fun s => if m s then ωj s else 0) = N
+  · simp only [h, if_pos]
+  · simp only [h, if_false]
+    exact Multiset.card_replicate _ _
+
+/-- **The oracle bundle that reads a trajectory.**
+
+The three random *values* are the read-offs of `Coupling/Readoff`, which are stated
+without reference to `Ttc.Oracles`; what this definition adds is the two
+**contracts** — `thin_le` and `gen_card` — which are proofs, and are the reason the
+bundle as a whole cannot sit upstream of `Ttc.toMultiset_le_of_count_le`. See
+`Ttc.thin_trajOracles`, `Ttc.pois_trajOracles` and `Ttc.gen_trajOracles` below for
+the (definitional) agreement. -/
 noncomputable def trajOracles {n : ℕ} {ι : Type*} {pt : Fin L → Space n}
     (hpt : Function.Injective pt)
     (vol : ι → ℝ) (covered : Space n → ι → Bool) (mem : ι → Fin L → Bool)
     (ω : ℕ → (Fin L → ℕ)) : Oracles n ι where
   vol := vol
   covered := covered
-  thin := fun _j₀ j' X =>
-    toMultiset pt fun s => min (ω j' s) (Multiset.count (pt s) X)
-  thin_le := fun _j₀ _j' X =>
-    toMultiset_le_of_count_le hpt fun s => min_le_right _ _
-  pois := fun i j _lam => ∑ s ∈ Finset.univ.filter fun s => mem i s = true, ω j s
-  gen := fun i j N _ρ =>
-    open Classical in
-    if Multiset.card (toMultiset pt fun s => if mem i s then ω j s else 0) = N then
-      toMultiset pt fun s => if mem i s then ω j s else 0
-    else Multiset.replicate N (padPoint pt mem i)
-  gen_card := by
-    intro i j N _ρ
-    classical
-    by_cases h : Multiset.card (toMultiset pt fun s => if mem i s then ω j s else 0) = N
-    · simp only [h, if_pos]
-    · simp only [h, if_false]
-      exact Multiset.card_replicate _ _
+  thin := fun _j₀ j' X => trajThin pt (ω j') X
+  thin_le := fun _j₀ j' X => trajThin_le hpt (ω j') X
+  pois := fun i j _lam => trajPois (mem i) (ω j)
+  gen := fun i j N _ρ => trajGen pt (mem i) (ω j) N (padPoint pt mem i)
+  gen_card := fun i j N _ρ => card_trajGen pt (mem i) (ω j) N (padPoint pt mem i)
+
+/-! ### The read-offs are the bundle's fields
+
+Definitional in every case, so `Coupling/Readoff` is not a second description of the
+same arithmetic — it is where that arithmetic is *defined*, and `Ttc.trajOracles` is
+where it is packaged with its two contracts. -/
+
+/-- `Ttc.trajOracles`' `thin` **is** `Ttc.trajThin` at the target level. The entry
+level `j₀` is not read. -/
+theorem thin_trajOracles {n : ℕ} {ι : Type*} {pt : Fin L → Space n}
+    (hpt : Function.Injective pt) (vol : ι → ℝ) (covered : Space n → ι → Bool)
+    (mem : ι → Fin L → Bool) (ω : ℕ → (Fin L → ℕ)) (j₀ j' : ℕ) (X : Multiset (Space n)) :
+    (trajOracles hpt vol covered mem ω).thin j₀ j' X = trajThin pt (ω j') X := rfl
+
+/-- `Ttc.trajOracles`' `pois` **is** `Ttc.trajPois` at the cube's membership row and
+the level's count vector. The rate is not read. -/
+theorem pois_trajOracles {n : ℕ} {ι : Type*} {pt : Fin L → Space n}
+    (hpt : Function.Injective pt) (vol : ι → ℝ) (covered : Space n → ι → Bool)
+    (mem : ι → Fin L → Bool) (ω : ℕ → (Fin L → ℕ)) (i : ι) (j : ℕ) (lam : ℝ) :
+    (trajOracles hpt vol covered mem ω).pois i j lam = trajPois (mem i) (ω j) := rfl
+
+/-- `Ttc.trajOracles`' `gen` **is** `Ttc.trajGen`, padded from `Ttc.padPoint`. The
+precision `ρ` is not read. -/
+theorem gen_trajOracles {n : ℕ} {ι : Type*} {pt : Fin L → Space n}
+    (hpt : Function.Injective pt) (vol : ι → ℝ) (covered : Space n → ι → Bool)
+    (mem : ι → Fin L → Bool) (ω : ℕ → (Fin L → ℕ)) (i : ι) (j N : ℕ) (ρ : ℤ) :
+    (trajOracles hpt vol covered mem ω).gen i j N ρ
+      = trajGen pt (mem i) (ω j) N (padPoint pt mem i) := rfl
 
 end Ttc
