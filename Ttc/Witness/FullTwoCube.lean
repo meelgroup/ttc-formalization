@@ -174,10 +174,8 @@ ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcLaw` a
 the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     ENNReal :=
-  ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-      twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1)
-    {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-          twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) p.1 p.2
+  ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
+    {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ p.1 p.2
         ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
 
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
@@ -188,16 +186,8 @@ the measured quantity as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle …)`, which
 changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
     twoProbFull n hn ε δ hε0 hε1 =
-      ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-          twoForm_isPositive
-          (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-            (isBounded_sol_T n hn ε δ hε0 hε1)
-            (interior_region_nonempty_two_d n hn ε δ hε0 hε1))
-        {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-              twoForm_isPositive
-              (volSol_pos_of_interior (atomsT n hn ε δ hε0 hε1) twoForm_isPositive
-                (isBounded_sol_T n hn ε δ hε0 hε1)
-                (interior_region_nonempty_two_d n hn ε δ hε0 hε1)) p.1 p.2
+      ttcLaw (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
+        {p | ttcEstimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ p.1 p.2
             ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))} := rfl
 
 /-- The same quantity as a real number — the left-hand side of the guarantee. -/

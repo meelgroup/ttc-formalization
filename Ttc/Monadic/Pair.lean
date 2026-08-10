@@ -150,21 +150,21 @@ feeding the halting loop) and the sample coins only one level at a time
 (`Ttc.countablyDetermined_ttcAlgOutput_joint`). -/
 theorem countablyDetermined_ttcCost_joint (cVol cSample : ℕ) :
     CountablyDetermined fun p : (ℕ → Space n)
-        × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) =>
-      ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2 cVol cSample := by
+        × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) =>
+      ttcCost atoms φ ε δ p.1 p.2 cVol cSample := by
   refine countablyDetermined_runCost
-    (Ω := (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ))
+    (Ω := (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ))
     (latticeEnum_injective _ _ _) _ _ _ _ _ _ _ _ _ ?_ ?_
   · exact fun k => (countablyDetermined_apply
-      (Y := Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) k).precomp measurable_snd
+      (Y := Fin (ttcIndex atoms φ ε δ) → ℕ) k).precomp measurable_snd
   · exact fun i => (measurable_mcVol _ _ _ _ _ _ i).comp measurable_fst
 
 /-- **`TTC`'s charged cost is a measurable function of the run.** -/
 theorem measurable_ttcCost_joint (cVol cSample : ℕ) :
     Measurable fun p : (ℕ → Space n)
-        × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) =>
-      ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2 cVol cSample :=
-  (countablyDetermined_ttcCost_joint atoms φ ε δ hε0 hε1 hn hφ hpos cVol cSample).measurable
+        × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) =>
+      ttcCost atoms φ ε δ p.1 p.2 cVol cSample :=
+  (countablyDetermined_ttcCost_joint atoms φ ε δ cVol cSample).measurable
 
 end TtcCost
 

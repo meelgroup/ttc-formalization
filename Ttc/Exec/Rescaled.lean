@@ -88,39 +88,43 @@ variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
   (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
   (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
 
+include hε0 hε1 hn hφ hbdd in
 /-- The dilation `Ttc.runScale` (`Model/Pseudocode`, line A10) is positive. -/
-theorem runScale_pos (gammaHat : ℝ) : 0 < runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat :=
+theorem runScale_pos (gammaHat : ℝ) : 0 < runScale atoms φ ε δ gammaHat :=
   scaleFactor_pos _ _ _
 
+include hε0 hε1 hn hφ hbdd in
 /-- `Sol` of the dilated formula is bounded, since `Sol(F)` is. -/
 theorem scaledBdd (gammaHat : ℝ) :
-    Bornology.IsBounded (sol (atomSet (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)) φ) :=
+    Bornology.IsBounded (sol (atomSet (scaledAtoms atoms φ ε δ gammaHat)) φ) :=
   isBounded_sol_scaleAtoms (runScale_pos atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) hbdd
 
+include hε0 hε1 hn hφ hbdd in
 /-- **The parameter block is unchanged by the dilation** — it is computed from
 `(toDNFd φ, n, ε, δ)`, and none of those moves.  This is what makes `Ttc.runScale`
 well-defined rather than circular. -/
 theorem inputParams_scaleAtoms (gammaHat : ℝ) :
-    inputParams (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ hε0 hε1 hn hφ
-        (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-      = inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd := rfl
+    inputParamsTotal (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+      = inputParamsTotal atoms φ ε δ := rfl
 
+include hε0 hε1 hn hφ hbdd in
 /-- `Vol` of the dilated solution set, in terms of the original. -/
 theorem volSol_scaledAtoms (gammaHat : ℝ) :
-    volSol (atomSet (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)) φ
-      = (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) ^ n * volSol (atomSet atoms) φ :=
+    volSol (atomSet (scaledAtoms atoms φ ε δ gammaHat)) φ
+      = (runScale atoms φ ε δ gammaHat) ^ n * volSol (atomSet atoms) φ :=
   volSol_scaleAtoms (runScale_pos atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) atoms φ
 
+include hε0 hε1 hn hφ hbdd in
 /-- **The dilated body clears the threshold.**  `Vol(c·Sol F) = cⁿ·Vol(Sol F) ≥
 (c·γ̂)ⁿ·Vₙ ≥ Thresh`, the middle step by the inscribed ball and the last by
 `Ttc.thresh_le_scaled_ball_volume`.  This is `hvol`, discharged. -/
 theorem hvol_scaled {gammaHat : ℝ} (hgammaHat : 0 < gammaHat)
     (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
     (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val) :
-    (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 4
-      ≤ volSol (atomSet (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)) φ := by
-  set P := inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd with hP
-  set c := runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat with hc
+    (inputParamsTotal atoms φ ε δ).thresh / 4
+      ≤ volSol (atomSet (scaledAtoms atoms φ ε δ gammaHat)) φ := by
+  set P := inputParamsTotal atoms φ ε δ with hP
+  set c := runScale atoms φ ε δ gammaHat with hc
   have hcpos : 0 < c := runScale_pos atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat
   obtain ⟨cu, hcu⟩ := List.exists_mem_of_ne_nil _ (toDNFd_ne_nil hφ)
   -- the original body already contains a ball of radius `γ̂`
@@ -129,22 +133,23 @@ theorem hvol_scaled {gammaHat : ℝ} (hgammaHat : 0 < gammaHat)
   -- so the dilated body contains one of radius `c·γ̂`, whose volume clears `Thresh`
   have hthr : P.thresh ≤ (c * gammaHat) ^ n * unitBallVol n :=
     thresh_le_scaled_ball_volume n hn P hgammaHat
-  have hscale : volSol (atomSet (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)) φ
+  have hscale : volSol (atomSet (scaledAtoms atoms φ ε δ gammaHat)) φ
       = c ^ n * volSol (atomSet atoms) φ := volSol_scaleAtoms hcpos atoms φ
   have hcn : (0 : ℝ) < c ^ n := pow_pos hcpos n
   have hchain : P.thresh
-      ≤ volSol (atomSet (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)) φ := by
+      ≤ volSol (atomSet (scaledAtoms atoms φ ε δ gammaHat)) φ := by
     rw [hscale]
     calc P.thresh ≤ (c * gammaHat) ^ n * unitBallVol n := hthr
       _ = c ^ n * (gammaHat ^ n * unitBallVol n) := by rw [mul_pow]; ring
       _ ≤ c ^ n * volSol (atomSet atoms) φ := by
           exact mul_le_mul_of_nonneg_left hball (le_of_lt hcn)
-  have hnonneg : 0 ≤ volSol (atomSet (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)) φ :=
+  have hnonneg : 0 ≤ volSol (atomSet (scaledAtoms atoms φ ε δ gammaHat)) φ :=
     ENNReal.toReal_nonneg
   linarith
 
 /-! ## The headline, with no volume hypothesis -/
 
+include hε0 hε1 hn hφ hbdd in
 /-- **`thm:volumettc` for `alg:ttc` plus a dilation step — no condition on `Vol(F)`.**
 
 `TTC` is run on the formula dilated by `c = Ttc.runScale …`, whose inscribed ball has
@@ -165,49 +170,43 @@ theorem ttc_volume_rescaled
     (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val) :
     (1 - δ ≤
       (∫⁻ c, trajLaw
-            (runRates (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
-              hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-              (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat • cen i)
-              (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat) c)
-          {t | ttcRunOutput (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
-                hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-                (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat • cen i)
-                (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat) c t
-              / (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) ^ n
+            (runRates (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+              (fun i => runScale atoms φ ε δ gammaHat • cen i)
+              (runScale atoms φ ε δ gammaHat * gammaHat) c)
+          {t | ttcRunOutput (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+                (fun i => runScale atoms φ ε δ gammaHat • cen i)
+                (runScale atoms φ ε δ gammaHat * gammaHat) c t
+              / (runScale atoms φ ε δ gammaHat) ^ n
             ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧
     (∀ (c : ℕ → Space n)
-        (t : ℕ → Fin (runCount (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
-          hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-          (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat)) → ℕ)
+        (t : ℕ → Fin (runCount (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+          (runScale atoms φ ε δ gammaHat * gammaHat)) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
-      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-            (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat • cen i)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat) c t) (toDNFd φ) →
-      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-            (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat • cen i)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat) c t)
-          cVol cSample (runPrec (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat)) (toDNFd φ)
+      (thr : ℝ) = (inputParamsTotal atoms φ ε δ).thresh →
+      Terminates (inputParamsTotal atoms φ ε δ)
+          (runOracles (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+            (fun i => runScale atoms φ ε δ gammaHat • cen i)
+            (runScale atoms φ ε δ gammaHat * gammaHat) c t) (toDNFd φ) →
+      runCost (inputParamsTotal atoms φ ε δ)
+          (runOracles (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+            (fun i => runScale atoms φ ε δ gammaHat • cen i)
+            (runScale atoms φ ε δ gammaHat * gammaHat) c t)
+          cVol cSample (runPrec (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
+            (runScale atoms φ ε δ gammaHat * gammaHat)) (toDNFd φ)
         ≤ (toDNFd φ).length * (cVol + cSample * thr)) := by
-  have hcpos : 0 < runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat :=
+  have hcpos : 0 < runScale atoms φ ε δ gammaHat :=
     runScale_pos atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat
   obtain ⟨hacc, hcost⟩ := ttc_volume_vol
-    (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ ε δ
+    (scaledAtoms atoms φ ε δ gammaHat) φ ε δ
     hε0 hε1 hδ0 hδ1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-    hcoeff (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat • cen i)
-    (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat * gammaHat) (mul_pos hcpos hgammaHat)
+    hcoeff (fun i => runScale atoms φ ε δ gammaHat • cen i)
+    (runScale atoms φ ε δ gammaHat * gammaHat) (mul_pos hcpos hgammaHat)
     (ball_subset_scaleAtoms hcpos ball_subset)
     (hvol_scaled atoms φ ε δ hε0 hε1 hn hφ hbdd hgammaHat cen ball_subset)
   refine ⟨?_, hcost⟩
-  rw [volSol_scaledAtoms] at hacc
+  rw [volSol_scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat] at hacc
   simp only [mem_relErr_div (pow_pos hcpos n)] at hacc
   exact hacc
 
@@ -221,6 +220,7 @@ empty-interior region gets radius `0`, and `Metric.ball _ 0 = ∅`).  Only posit
 needs an input condition, and it is the readable one: every cube's region has
 nonempty interior. -/
 
+include hε0 hε1 hn hφ hbdd in
 /-- **`thm:volumettc` at 13 binders: no oracle, no precision, no parameter block, no
 volume hypothesis and no inscribed-ball data.**
 
@@ -246,48 +246,42 @@ theorem ttc_volume_full
       (interior (region (atomSet atoms) i.val)).Nonempty) :
     (1 - δ ≤
       (∫⁻ c, trajLaw
-            (runRates (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-              hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-              (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+            (runRates (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+              (fun i => runScale atoms φ ε δ (autoGamma atoms φ)
                 • autoCen atoms φ i)
-              (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+              (runScale atoms φ ε δ (autoGamma atoms φ)
                 * autoGamma atoms φ) c)
-          {t | ttcRunOutput (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-                hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-                (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+          {t | ttcRunOutput (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+                (fun i => runScale atoms φ ε δ (autoGamma atoms φ)
                   • autoCen atoms φ i)
-                (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+                (runScale atoms φ ε δ (autoGamma atoms φ)
                   * autoGamma atoms φ) c t
-              / (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) ^ n
+              / (runScale atoms φ ε δ (autoGamma atoms φ)) ^ n
             ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧
     (∀ (c : ℕ → Space n)
-        (t : ℕ → Fin (runCount (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-          φ ε δ hε0 hε1 hn hφ
-          (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-          (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+        (t : ℕ → Fin (runCount (scaledAtoms atoms φ ε δ (autoGamma atoms φ))
+          φ ε δ
+          (runScale atoms φ ε δ (autoGamma atoms φ)
             * autoGamma atoms φ)) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
-      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-            (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+      (thr : ℝ) = (inputParamsTotal atoms φ ε δ).thresh →
+      Terminates (inputParamsTotal atoms φ ε δ)
+          (runOracles (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+            (fun i => runScale atoms φ ε δ (autoGamma atoms φ)
               • autoCen atoms φ i)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+            (runScale atoms φ ε δ (autoGamma atoms φ)
               * autoGamma atoms φ) c t) (toDNFd φ) →
-      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-            (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+      runCost (inputParamsTotal atoms φ ε δ)
+          (runOracles (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+            (fun i => runScale atoms φ ε δ (autoGamma atoms φ)
               • autoCen atoms φ i)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+            (runScale atoms φ ε δ (autoGamma atoms φ)
               * autoGamma atoms φ) c t)
           cVol cSample
-          (runPrec (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+          (runPrec (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+            (runScale atoms φ ε δ (autoGamma atoms φ)
               * autoGamma atoms φ)) (toDNFd φ)
         ≤ (toDNFd φ).length * (cVol + cSample * thr)) :=
   ttc_volume_rescaled atoms φ ε δ hε0 hε1 hn hφ hbdd hδ0 hδ1 hcoeff
@@ -295,6 +289,7 @@ theorem ttc_volume_full
     (gammaOf_pos_of_interior (atomSet atoms) (toDNFd_ne_nil hφ) hint)
     (ball_subset_cenOf (atomSet atoms) (toDNFd φ))
 
+include hε0 hε1 hn hφ hbdd in
 /-- **`thm:runtime` for the same run** — `alg:ttc`'s charged cost
 `m · (C_vol + C_sample · Thresh)`, under `Ttc.Terminates`, on the dilated instance.
 The second conjunct of `Ttc.ttc_volume_rescaled` at the constructed ball. -/
@@ -304,31 +299,27 @@ theorem ttc_volume_full_cost
     (hint : ∀ i : {c : Cube A // c ∈ toDNFd φ},
       (interior (region (atomSet atoms) i.val)).Nonempty) :
     ∀ (c : ℕ → Space n)
-        (t : ℕ → Fin (runCount (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-          φ ε δ hε0 hε1 hn hφ
-          (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-          (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+        (t : ℕ → Fin (runCount (scaledAtoms atoms φ ε δ (autoGamma atoms φ))
+          φ ε δ
+          (runScale atoms φ ε δ (autoGamma atoms φ)
             * autoGamma atoms φ)) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
-      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-            (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+      (thr : ℝ) = (inputParamsTotal atoms φ ε δ).thresh →
+      Terminates (inputParamsTotal atoms φ ε δ)
+          (runOracles (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+            (fun i => runScale atoms φ ε δ (autoGamma atoms φ)
               • autoCen atoms φ i)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+            (runScale atoms φ ε δ (autoGamma atoms φ)
               * autoGamma atoms φ) c t) (toDNFd φ) →
-      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-            (fun i => runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+      runCost (inputParamsTotal atoms φ ε δ)
+          (runOracles (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+            (fun i => runScale atoms φ ε δ (autoGamma atoms φ)
               • autoCen atoms φ i)
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+            (runScale atoms φ ε δ (autoGamma atoms φ)
               * autoGamma atoms φ) c t)
           cVol cSample
-          (runPrec (scaledAtoms atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)) φ ε δ
-            hε0 hε1 hn hφ (scaledBdd atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ))
-            (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd (autoGamma atoms φ)
+          (runPrec (scaledAtoms atoms φ ε δ (autoGamma atoms φ)) φ ε δ
+            (runScale atoms φ ε δ (autoGamma atoms φ)
               * autoGamma atoms φ)) (toDNFd φ)
         ≤ (toDNFd φ).length * (cVol + cSample * thr) :=
   (ttc_volume_full atoms φ ε δ hε0 hε1 hn hφ hbdd hδ0 hδ1 hcoeff hint).2

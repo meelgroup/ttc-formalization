@@ -115,70 +115,71 @@ theorem ttc_volume_inputs
     (cen : {c : Cube A // c ∈ toDNFd φ} → Space n) (gammaHat : ℝ) (hgammaHat : 0 < gammaHat)
     (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val)
     (big : ∀ c ∈ mcGood (atomSet atoms) (toDNFd φ) cen gammaHat
-        (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-        (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime,
-      (1 - (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime)
-          * (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 8
+        (inputParamsTotal atoms φ ε δ).epsPrime
+        (inputParamsTotal atoms φ ε δ).deltaPrime,
+      (1 - (inputParamsTotal atoms φ ε δ).epsPrime)
+          * (inputParamsTotal atoms φ ε δ).thresh / 8
         ≤ ∑ s, rates (atomSet atoms) φ (toDNFd φ)
-            ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
+            ((inputParamsTotal atoms φ ε δ).precision gammaHat)
             (e2eSampD (atomSet atoms) (toDNFd φ)
-              ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime (canonRfac (toDNFd φ))
+              ((inputParamsTotal atoms φ ε δ).precision gammaHat)
+              (inputParamsTotal atoms φ ε δ).epsPrime (canonRfac (toDNFd φ))
               (Jt := Fin (Nat.card (FacetIndex (toDNFd φ)))) (canonAm atoms (toDNFd φ))
               (canonBv atoms (toDNFd φ)
-                (latticeScale ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)))
+                (latticeScale ((inputParamsTotal atoms φ ε δ).precision gammaHat)))
               cen gammaHat (canonDm (atomSet atoms) (toDNFd φ)
-                ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)))
+                ((inputParamsTotal atoms φ ε δ).precision gammaHat)))
             (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c) s) :
+              (inputParamsTotal atoms φ ε δ).epsPrime
+              (inputParamsTotal atoms φ ε δ).deltaPrime c) s) :
     (1 - δ ≤
       (∫⁻ c, trajLaw (rates (atomSet atoms) φ (toDNFd φ)
-            ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
+            ((inputParamsTotal atoms φ ε δ).precision gammaHat)
             (e2eSampD (atomSet atoms) (toDNFd φ)
-              ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime (canonRfac (toDNFd φ))
+              ((inputParamsTotal atoms φ ε δ).precision gammaHat)
+              (inputParamsTotal atoms φ ε δ).epsPrime (canonRfac (toDNFd φ))
               (Jt := Fin (Nat.card (FacetIndex (toDNFd φ)))) (canonAm atoms (toDNFd φ))
               (canonBv atoms (toDNFd φ)
-                (latticeScale ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)))
+                (latticeScale ((inputParamsTotal atoms φ ε δ).precision gammaHat)))
               cen gammaHat (canonDm (atomSet atoms) (toDNFd φ)
-                ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)))
+                ((inputParamsTotal atoms φ ε δ).precision gammaHat)))
             (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c))
+              (inputParamsTotal atoms φ ε δ).epsPrime
+              (inputParamsTotal atoms φ ε δ).deltaPrime c))
           {t : ℕ → Fin (latticeCount (atomSet atoms) φ
-              ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)) → ℕ |
-            ttcOutput (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
+              ((inputParamsTotal atoms φ ε δ).precision gammaHat)) → ℕ |
+            ttcOutput (inputParamsTotal atoms φ ε δ)
                 (coveredOracles (atomSet atoms) φ
-                  ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
+                  ((inputParamsTotal atoms φ ε δ).precision gammaHat)
                   (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-                    (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-                    (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c))
-                toDNFd ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat) φ t
+                    (inputParamsTotal atoms φ ε δ).epsPrime
+                    (inputParamsTotal atoms φ ε δ).deltaPrime c))
+                toDNFd ((inputParamsTotal atoms φ ε δ).precision gammaHat) φ t
               ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧
     (∀ (c : ℕ → Space n)
         (t : ℕ → Fin (latticeCount (atomSet atoms) φ
-          ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)) → ℕ)
+          ((inputParamsTotal atoms φ ε δ).precision gammaHat)) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
-      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
+      (thr : ℝ) = (inputParamsTotal atoms φ ε δ).thresh →
+      Terminates (inputParamsTotal atoms φ ε δ)
           (coveredOracles (atomSet atoms) φ
-            ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
+            ((inputParamsTotal atoms φ ε δ).precision gammaHat)
             (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c) t) (toDNFd φ) →
-      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
+              (inputParamsTotal atoms φ ε δ).epsPrime
+              (inputParamsTotal atoms φ ε δ).deltaPrime c) t) (toDNFd φ) →
+      runCost (inputParamsTotal atoms φ ε δ)
           (coveredOracles (atomSet atoms) φ
-            ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
+            ((inputParamsTotal atoms φ ε δ).precision gammaHat)
             (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-              (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c) t)
-          cVol cSample ((inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat)
+              (inputParamsTotal atoms φ ε δ).epsPrime
+              (inputParamsTotal atoms φ ε δ).deltaPrime c) t)
+          cVol cSample ((inputParamsTotal atoms φ ε δ).precision gammaHat)
           (toDNFd φ)
-        ≤ (toDNFd φ).length * (cVol + cSample * thr)) :=
-  ttc_volume_final atoms φ ε δ hε0 hε1 hδ0 hδ1 hn (atomSet atoms) rfl toDNFd
+        ≤ (toDNFd φ).length * (cVol + cSample * thr)) := by
+  rw [inputParamsTotal_eq_inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd] at big ⊢
+  exact ttc_volume_final atoms φ ε δ hε0 hε1 hδ0 hδ1 hn (atomSet atoms) rfl toDNFd
     (toDNFd_isDNFOf φ) (toDNFd_isPositive hφ)
     (one_le_card_cubes_of_ne_nil (toDNFd_ne_nil hφ))
     (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
@@ -209,41 +210,41 @@ at the volume coins `c`, the rest is `Ttc.coveredOracles` at the sample coins `t
 Nothing here is a hypothesis. -/
 noncomputable def runOracles (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
     (gammaHat : ℝ) (c : ℕ → Space n)
-    (t : ℕ → Fin (runCount atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) → ℕ) :
+    (t : ℕ → Fin (runCount atoms φ ε δ gammaHat) → ℕ) :
     Oracles n (Cube A) :=
-  coveredOracles (atomSet atoms) φ (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
+  coveredOracles (atomSet atoms) φ (runPrec atoms φ ε δ gammaHat)
     (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c) t
+      (inputParamsTotal atoms φ ε δ).epsPrime
+      (inputParamsTotal atoms φ ε δ).deltaPrime c) t
 
 /-- **What `TTC(F, ε, δ)` returns on the run `(c, t)`** — `Ttc.ttcOutput`
 (`Model/Pseudocode`) on the cube list `Ttc.toDNFd φ` at the computed precision. -/
 noncomputable def ttcRunOutput (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
     (gammaHat : ℝ) (c : ℕ → Space n)
-    (t : ℕ → Fin (runCount atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) → ℕ) : ℝ :=
-  ttcOutput (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-    (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c) toDNFd
-    (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) φ t
+    (t : ℕ → Fin (runCount atoms φ ε δ gammaHat) → ℕ) : ℝ :=
+  ttcOutput (inputParamsTotal atoms φ ε δ)
+    (runOracles atoms φ ε δ cen gammaHat c) toDNFd
+    (runPrec atoms φ ε δ gammaHat) φ t
 
 /-- **The level-`0` rates `θ`** (`alg:ttc` line 20): the sampler's mass at each
 enumerated lattice point times that point's cube's volume estimate.  `Ttc.trajLaw`
 of this is the law the sample coins are drawn from. -/
 noncomputable def runRates (cen : {c : Cube A // c ∈ toDNFd φ} → Space n)
     (gammaHat : ℝ) (c : ℕ → Space n) :
-    Fin (runCount atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) → ℝ :=
+    Fin (runCount atoms φ ε δ gammaHat) → ℝ :=
   rates (atomSet atoms) φ (toDNFd φ)
-    (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
+    (runPrec atoms φ ε δ gammaHat)
     (e2eSampD (atomSet atoms) (toDNFd φ)
-      (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
-      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime (canonRfac (toDNFd φ))
+      (runPrec atoms φ ε δ gammaHat)
+      (inputParamsTotal atoms φ ε δ).epsPrime (canonRfac (toDNFd φ))
       (Jt := Fin (Nat.card (FacetIndex (toDNFd φ)))) (canonAm atoms (toDNFd φ))
       (canonBv atoms (toDNFd φ)
-        (latticeScale (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)))
+        (latticeScale (runPrec atoms φ ε δ gammaHat)))
       cen gammaHat (canonDm (atomSet atoms) (toDNFd φ)
-        (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)))
+        (runPrec atoms φ ε δ gammaHat)))
     (mcVol (atomSet atoms) (toDNFd φ) cen gammaHat
-      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).epsPrime
-      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).deltaPrime c)
+      (inputParamsTotal atoms φ ε δ).epsPrime
+      (inputParamsTotal atoms φ ε δ).deltaPrime c)
 
 
 /-! ## The regime condition, replaced by a condition on the input
@@ -278,30 +279,31 @@ theorem ttc_volume_vol
     (hcoeff : ∀ j : FacetIndex (toDNFd φ), (atoms j.2.val.atom).coeff ≠ 0)
     (cen : {c : Cube A // c ∈ toDNFd φ} → Space n) (gammaHat : ℝ) (hgammaHat : 0 < gammaHat)
     (ball_subset : ∀ i, Metric.ball (cen i) gammaHat ⊆ region (atomSet atoms) i.val)
-    (hvol : (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh / 4
+    (hvol : (inputParamsTotal atoms φ ε δ).thresh / 4
       ≤ volSol (atomSet atoms) φ) :
     (1 - δ ≤
-      (∫⁻ c, trajLaw (runRates atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c)
-            {t | ttcRunOutput atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t
+      (∫⁻ c, trajLaw (runRates atoms φ ε δ cen gammaHat c)
+            {t | ttcRunOutput atoms φ ε δ cen gammaHat c t
               ∈ relErr ε (volSol (atomSet atoms) φ)}
           ∂(MonteCarlo.coins n)).toReal)
     ∧
-    (∀ (c : ℕ → Space n) (t : ℕ → Fin (runCount atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) → ℕ)
+    (∀ (c : ℕ → Space n) (t : ℕ → Fin (runCount atoms φ ε δ gammaHat) → ℕ)
         (cVol cSample thr : ℕ),
-      (thr : ℝ) = (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).thresh →
-      Terminates (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t) (toDNFd φ) →
-      runCost (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd)
-          (runOracles atoms φ ε δ hε0 hε1 hn hφ hbdd cen gammaHat c t)
-          cVol cSample (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) (toDNFd φ)
-        ≤ (toDNFd φ).length * (cVol + cSample * thr)) :=
-  ttc_volume_inputs atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff
-    cen gammaHat hgammaHat ball_subset
-    (fun c hc => big_of_volume atoms (toDNFd_isDNFOf φ) (toDNFd_isPositive hφ)
-      (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd) rfl le_rfl
-      (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
-      le_rfl (normal_ne_zero_of_coeff_ne_zero hcoeff) hbdd cen hgammaHat ball_subset
-      rfl hvol hc)
+      (thr : ℝ) = (inputParamsTotal atoms φ ε δ).thresh →
+      Terminates (inputParamsTotal atoms φ ε δ)
+          (runOracles atoms φ ε δ cen gammaHat c t) (toDNFd φ) →
+      runCost (inputParamsTotal atoms φ ε δ)
+          (runOracles atoms φ ε δ cen gammaHat c t)
+          cVol cSample (runPrec atoms φ ε δ gammaHat) (toDNFd φ)
+        ≤ (toDNFd φ).length * (cVol + cSample * thr)) := by
+  refine ttc_volume_inputs atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hcoeff
+    cen gammaHat hgammaHat ball_subset ?_
+  rw [inputParamsTotal_eq_inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd] at hvol ⊢
+  exact fun c hc => big_of_volume atoms (toDNFd_isDNFOf φ) (toDNFd_isPositive hφ)
+    (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd) rfl le_rfl
+    (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
+    le_rfl (normal_ne_zero_of_coeff_ne_zero hcoeff) hbdd cen hgammaHat ball_subset
+    rfl hvol hc
 
 end Measured
 

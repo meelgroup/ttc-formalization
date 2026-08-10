@@ -105,7 +105,7 @@ variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
 oracle's coins.**  `Ttc.ttcRates` is `Ttc.rates` at the constructed volume estimate
 `Ttc.mcVol`, whose only coin dependence is `Ttc.MonteCarlo.est`. -/
 theorem measurable_ttcRates :
-    Measurable fun c : ℕ → Space n => ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c :=
+    Measurable fun c : ℕ → Space n => ttcRates atoms φ ε δ c :=
   measurable_rates_of_measurable_vol _ _ _ _ _ _ fun i => measurable_mcVol _ _ _ _ _ _ i
 
 end Rates
@@ -206,32 +206,32 @@ laws the headline integrates is a measurable family — equivalently, a kernel f
 the volume oracle's coin space to the trajectory space. -/
 theorem measurable_trajLaw_ttcRates :
     Measurable fun c : ℕ → Space n =>
-      trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c) :=
-  measurable_trajLaw.comp (measurable_ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos)
+      trajLaw (ttcRates atoms φ ε δ c) :=
+  measurable_trajLaw.comp (measurable_ttcRates atoms φ ε δ)
 
 /-- **The coin-indexed family as an honest kernel.**  This is `Ttc.trajLaw ∘ ttcRates`
 packaged as `ProbabilityTheory.Kernel`; it is a Markov kernel because each
 `Ttc.trajLaw θ` is a probability measure. -/
 noncomputable def ttcTrajKernel :
     Kernel (ℕ → Space n)
-      (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) where
-  toFun c := trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)
-  measurable' := measurable_trajLaw_ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos
+      (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) where
+  toFun c := trajLaw (ttcRates atoms φ ε δ c)
+  measurable' := measurable_trajLaw_ttcRates atoms φ ε δ
 
 instance isMarkovKernel_ttcTrajKernel :
-    IsMarkovKernel (ttcTrajKernel atoms φ ε δ hε0 hε1 hn hφ hpos) :=
+    IsMarkovKernel (ttcTrajKernel atoms φ ε δ) :=
   ⟨fun _ => isProbabilityMeasure_trajLaw _⟩
 
 /-- **The payoff.**  The headline's iterated integral is a single measure applied to
 the event: the `Measure.bind` of the coins with the coin-indexed trajectory law. -/
 theorem lintegral_trajLaw_ttcRates_eq_bind
-    {S : Set (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)}
+    {S : Set (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ)}
     (hS : MeasurableSet S) :
-    (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c) S ∂(MonteCarlo.coins n))
+    (∫⁻ c, trajLaw (ttcRates atoms φ ε δ c) S ∂(MonteCarlo.coins n))
       = ((MonteCarlo.coins n).bind
-          fun c => trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)) S :=
+          fun c => trajLaw (ttcRates atoms φ ε δ c)) S :=
   (Measure.bind_apply hS
-    (measurable_trajLaw_ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos).aemeasurable).symm
+    (measurable_trajLaw_ttcRates atoms φ ε δ).aemeasurable).symm
 
 end Payoff
 

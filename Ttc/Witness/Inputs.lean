@@ -115,10 +115,11 @@ theorem ttcParams_congr {A : Type*} {D D' : DNF A} (h : D = D') (n : ℕ) (ε δ
 
 /-- **The parameter block `Ttc.ttc_volume_inputs` computes is the witness's own.** -/
 theorem inputParams_eq (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    inputParams (atomsT n hn ε (4 * δ / 5) hε0 hε1) (twoForm n) ε δ hε0 hε1 hn
-        twoForm_isPositive (isBounded_sol_T n hn ε (4 * δ / 5) hε0 hε1)
+    inputParamsTotal (atomsT n hn ε (4 * δ / 5) hε0 hε1) (twoForm n) ε δ
       = parT n hn ε (4 * δ / 5) hε0 hε1 :=
-  ttcParams_congr (toDNFd_twoForm n hn) n ε (4 * δ / 5) hε0 hε1 hn _ _ _ _
+  (inputParamsTotal_eq_inputParams _ _ _ _ hε0 hε1 hn twoForm_isPositive
+        (isBounded_sol_T n hn ε (4 * δ / 5) hε0 hε1)).trans
+    (ttcParams_congr (toDNFd_twoForm n hn) n ε (4 * δ / 5) hε0 hε1 hn _ _ _ _)
 
 open scoped Classical in
 /-- **The two ball centres, as a function of the cube list.**  The body of

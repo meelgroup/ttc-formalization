@@ -34,7 +34,9 @@ dozen tactic proofs, and they are of exactly two kinds — no others:
    `Ttc.exists_lit_of_isBounded`, `Ttc.one_le_card_cubes_of_ne_nil`,
    `Ttc.one_le_card_facets_of_isBounded`. Likewise `Ttc.dnfForm_isPositive` and
    `Ttc.preprocess_isPositive`, which supply `Ttc.inputParams`' `hφ` for the
-   formula the algorithm is handed.
+   formula the algorithm is handed, together with `Ttc.junkParams`,
+   `Ttc.ttcParamsTotal` and `Ttc.inputParamsTotal`, which are what let the *run*
+   read that block while carrying none of those proofs.
 2. **The basic properties of this file's own converter** `Ttc.toDNFd` (line A1),
    which `Ttc.inputParams` instantiates the two facts above *at*:
    `Ttc.mem_toDNFd`, `Ttc.exists_mem_toDNF`, `Ttc.toDNFd_isDNFOf`,
@@ -46,28 +48,32 @@ lives. A referee reading `Model/` for the *statement* may skip every proof here;
 none of them is load-bearing for what the theorem says, only for what can be
 written down.
 
-## The divergence from the reference layout
+## The algorithm carries no proof binder
 
 The reference for this layout is
 `nfalean/ApproxNFA/Model/`, whose theorem is stated about `countNFAExec A n ε δ` —
-the algorithm applied to its **inputs alone**. This file cannot do that, and the
-reason is item 1 above.
+the algorithm applied to its **inputs alone**. This file now does the same:
+`Ttc.ttcAlgOutput atoms φ ε δ O` and `Ttc.ttcRun atoms φ ε δ c t` take no proof,
+and neither do `Ttc.runScale`, `Ttc.runPrec`, `Ttc.runCount`, or the nine
+read-offs `Ttc.algBlock … Ttc.algMem` of the run section.
 
-`Ttc.inputParams`, and through it `Ttc.runScale`, `Ttc.runPrec`, `Ttc.runCount`
-and `Ttc.ttcAlgOutput`, carry *proof* binders: `hε0`, `hε1`, `hn`, the input's
-positivity, and a proof that the preprocessed formula's solution set is bounded.
-**So the algorithm in `Model/` depends on proof terms**, and `Ttc.ttcAlgOutput`
-cannot be applied to `(atoms, φ, ε, δ)` alone. nfalean deliberately avoids this —
-its parameter block is data only, which is exactly what lets its theorem write
-`countNFAExec A n ε δ` and name nothing else.
+`Ttc.Params` still bundles five proof fields alongside its five data fields, so
+`Ttc.ttcParams` and `Ttc.inputParams` still cannot be *written down* without
+proofs. What removes them from the algorithm is not an unbundling but a
+totalisation: all five side conditions (`0 < ε`, `ε ≤ 1`, `1 ≤ n`, `1 ≤ m`,
+`1 ≤ r`) are propositions about the *data*, so `Ttc.ttcParamsTotal` and
+`Ttc.inputParamsTotal` **decide** them classically and fall back on
+`Ttc.junkParams` when they fail. The run reads the total block, and
+`Ttc.ttcParamsTotal_eq` / `Ttc.inputParamsTotal_eq_inputParams` say that wherever
+the headline's hypotheses hold it *is* the block `Ttc.inputParams` builds — so
+every theorem stated about the latter transfers verbatim, by proof irrelevance,
+and nothing about the junk branch is claimed.
 
-The cause is `Ttc.Params` bundling five proof fields alongside its five data
-fields. Unbundling them — carrying `ε δ n m r` as data and passing the five facts
-to the theorems that need them — is a **~101-site refactor** across the
-development, and it is **not undertaken here**. The visible cost is one name in
-`Ttc.ttc_volume_estimate`'s type that is a proof rather than a quantity,
-`Ttc.preprocess_bdd` (`Exec/Api`); it is *derived* from `hφ` and `hpos`
-(`Exec/BddFromPos`), never assumed.
+The visible gain is that `Ttc.ttc_volume_estimate`'s type names no proof term:
+`Ttc.preprocess_bdd` (`Exec/Api`) used to appear in it and no longer does. The
+boundedness fact is still *proved*, and still spent — inside proofs, such as
+`Ttc.ttcBlock_eq` (`Exec/Api`) and `Ttc.inputParamsTotal_preprocess`
+(`Exec/BddPrep`) — but the statement no longer mentions it.
 
 **This file imports no `Exec/` file.** `Ttc.toDNFd`, the deduplicated line-16
 converter that `Ttc.pruneForm` and `Ttc.cleanForm` are defined over, used to live
@@ -832,6 +838,94 @@ noncomputable def inputParams {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A)
     (one_le_card_cubes_of_ne_nil (toDNFd_ne_nil hφ))
     (one_le_card_facets_of_isBounded hn (toDNFd_isDNFOf φ) hbdd (toDNFd_ne_nil hφ))
 
+/-! ## The block as a **total** function of the data
+
+`Ttc.Params` bundles five *proof* fields (`hε0 hε1 hn hm hr`), so `Ttc.ttcParams`
+and `Ttc.inputParams` cannot be *written down* without proofs — and that, and
+nothing else, is what forced proof binders onto `Ttc.ttcAlgOutput` and
+`Ttc.ttcRun`.  All five side conditions are propositions about the *data* alone,
+so they can be **decided** classically rather than supplied, giving the block as a
+function of `(atoms, φ, ε, δ)` only.  That is what the run below uses, and it is
+why the run carries no proof binder.
+
+The junk branch is inhabited because `Params`' proof fields constrain only its own
+stored scalars (`0 < ε`, `ε ≤ 1`, `1 ≤ n`, `1 ≤ m`, `1 ≤ r`), never the formula:
+`⟨1,1,1,1,1⟩` is a `Params`.  Nothing is claimed about it — `Ttc.ttcParamsTotal_eq`
+says the branch is not taken wherever the headline's hypotheses hold, and every
+theorem stated about `Ttc.ttcParams` transfers verbatim through it (proof
+irrelevance makes its right-hand side independent of *which* proofs are supplied).
+-/
+
+/-- **A `Ttc.Params` at constant data** — the value `Ttc.ttcParamsTotal` falls back
+on when the side conditions fail.
+
+Every field is a stored scalar and every proof field is `le_refl` or `one_pos`, so
+this is unconditionally a `Params`.  It asserts nothing: no lemma relates any of
+its fields to a formula. -/
+noncomputable def junkParams : Params where
+  ε := 1
+  δ := 1
+  n := 1
+  m := 1
+  r := 1
+  hε0 := one_pos
+  hε1 := le_refl 1
+  hn := le_refl 1
+  hm := le_refl 1
+  hr := le_refl 1
+
+open scoped Classical in
+/-- **The parameter block of `alg:ttc` lines 17–20, as a total function of the
+data.**  On the branch where the five side conditions hold this is literally
+`Ttc.ttcParams` (`Ttc.ttcParamsTotal_eq`); on the other branch it is
+`Ttc.junkParams`, about which nothing is claimed. -/
+noncomputable def ttcParamsTotal (D : DNF A) (n : ℕ) (ε δ : ℝ) : Params :=
+  if h : 0 < ε ∧ ε ≤ 1 ∧ 1 ≤ n ∧ 1 ≤ Nat.card {c : Cube A // c ∈ D} ∧
+      1 ≤ Nat.card (FacetIndex D) then
+    ttcParams D n ε δ h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
+  else junkParams
+
+/-- **The agreement lemma — the whole point.**  Where the five side conditions hold,
+the total block *is* `Ttc.ttcParams` at the very same arguments.  The proofs
+`hε0 … hr` occur on the right and not on the left, and by proof irrelevance the
+right-hand side does not depend on which proofs they are; so every theorem stated
+about `Ttc.ttcParams` transfers verbatim. -/
+theorem ttcParamsTotal_eq (D : DNF A) (n : ℕ) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
+    (hm : 1 ≤ Nat.card {c : Cube A // c ∈ D}) (hr : 1 ≤ Nat.card (FacetIndex D)) :
+    ttcParamsTotal D n ε δ = ttcParams D n ε δ hε0 hε1 hn hm hr := by
+  rw [ttcParamsTotal, dif_pos ⟨hε0, hε1, hn, hm, hr⟩]
+
+/-- **The junk branch, named.**  Stated so that the fallback is visible as a
+statement rather than only as a branch of the `dite`: if any side condition fails
+the block is the default value, and in particular nothing about the formula can be
+read off it. -/
+theorem ttcParamsTotal_eq_junk (D : DNF A) (n : ℕ) (ε δ : ℝ)
+    (h : ¬ (0 < ε ∧ ε ≤ 1 ∧ 1 ≤ n ∧ 1 ≤ Nat.card {c : Cube A // c ∈ D} ∧
+      1 ≤ Nat.card (FacetIndex D))) :
+    ttcParamsTotal D n ε δ = junkParams := by
+  rw [ttcParamsTotal, dif_neg h]
+
+/-- **`Ttc.inputParams` as a total function of the data** — the block the run
+actually reads.
+
+`Ttc.inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd` is `Ttc.ttcParams (toDNFd φ) n ε
+(4δ/5)` with `hm` and `hr` derived from `hφ` and `hbdd`; its *data* never mentions
+`atoms`, which enters only through those two derivations.  The `atoms` binder is
+kept so that this is a drop-in replacement at the call sites. -/
+noncomputable def inputParamsTotal {n : ℕ} (_atoms : A → LinAtom n) (φ : BForm A)
+    (ε δ : ℝ) : Params :=
+  ttcParamsTotal (toDNFd φ) n ε (4 * δ / 5)
+
+/-- **The agreement lemma at the algorithm's inputs.**  Under the four hypotheses
+the headline already carries — three plain inequalities and boundedness — the total
+block is `Ttc.inputParams`. -/
+theorem inputParamsTotal_eq_inputParams {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A)
+    (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
+    (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ)) :
+    inputParamsTotal atoms φ ε δ = inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd :=
+  ttcParamsTotal_eq _ _ _ _ hε0 hε1 hn _ _
+
 end ParamBlock
 
 /-! # The algorithm's output, lines A7–A13 completed
@@ -897,30 +991,28 @@ noncomputable def autoGamma {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) :
 section Wrappers
 
 variable {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
-  (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-  (hbdd : Bornology.IsBounded (sol (atomSet atoms) φ))
 
 /-- **Line A10.**  The dilation `q` the algorithm applies to its input, at the
 parameter block the inputs determine.  `≥ 1` always (`Ttc.runScale_pos`,
 `Exec/Rescaled`), and computable from `γ̂` and `n` alone — **no knowledge of
 `Vol(F)`**. -/
 noncomputable def runScale (gammaHat : ℝ) : ℝ :=
-  scaleFactor n (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd) gammaHat
+  scaleFactor n (inputParamsTotal atoms φ ε δ) gammaHat
 
 /-- **Line A11.**  The dilated input: same normals, bounds scaled by
 `Ttc.runScale`. -/
 noncomputable def scaledAtoms (gammaHat : ℝ) : A → LinAtom n :=
-  scaleAtoms (runScale atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat) atoms
+  scaleAtoms (runScale atoms φ ε δ gammaHat) atoms
 
 /-- **`GetPrecision`'s output** (`alg:ttc` line 17): `ρ ← ⌈log₁₀(γ/γ̂)⌉`, computed
 from the parameter block and the inscribed radius. -/
 noncomputable def runPrec (gammaHat : ℝ) : ℤ :=
-  (inputParams atoms φ ε δ hε0 hε1 hn hφ hbdd).precision gammaHat
+  (inputParamsTotal atoms φ ε δ).precision gammaHat
 
 /-- **`|Sol(F) ∩ 𝕃ⁿ|`** at that precision — the index the run's sample coins range
 over. -/
 noncomputable def runCount (gammaHat : ℝ) : ℕ :=
-  latticeCount (atomSet atoms) φ (runPrec atoms φ ε δ hε0 hε1 hn hφ hbdd gammaHat)
+  latticeCount (atomSet atoms) φ (runPrec atoms φ ε δ gammaHat)
 
 end Wrappers
 
@@ -928,7 +1020,7 @@ end Wrappers
 
 /-- **`TTC(F, ε, δ)`'s output**, as `alg:ttc` computes it: the fold of lines 22–46
 (`Ttc.run`) over the preprocessed formula's cubes `Ttc.toDNFd (Ttc.preprocess atoms φ)`,
-at the computed parameter block `Ttc.inputParams` (lines 17–20) and the computed
+at the computed parameter block `Ttc.inputParamsTotal` (lines 17–20) and the computed
 precision `Ttc.runPrec` (line 17, at the *dilated* radius `q·γ̂`), with the estimate
 divided by `qⁿ` to bring it back to the original scale (line A13).
 
@@ -940,25 +1032,20 @@ and the constructed sampler, and `Ttc.ttcAlgOutput_eq_ttcEstimate` (`Exec/Api`,
 by `rfl`) identifies this term at that bundle with the quantity the headline
 bounds.
 
-**Why a proof binder.**  `hbdd` is not decoration: `Ttc.Params` bundles five proof
-fields, so `Ttc.inputParams` cannot be applied without a proof that the
-preprocessed formula's solution set is bounded (that is what supplies `Params.hr`,
-`1 ≤ r`).  See this module's docstring, "The divergence from the reference
-layout".  It is *derived*, not assumed — `Ttc.preprocess_bdd` (`Exec/Api`) proves
-it from `hφ` and `hpos` alone. -/
+**No proof binder.**  The block is `Ttc.inputParamsTotal`, a function of
+`(atoms, φ, ε, δ)` alone, so this term is a closed function of the algorithm's
+*data* — nothing here is a proof and nothing here is assumed.  Wherever the
+headline's hypotheses hold the block is the one `Ttc.inputParams` builds
+(`Ttc.inputParamsTotal_eq_inputParams`), so every theorem about the latter
+transfers. -/
 noncomputable def ttcAlgOutput {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
-    (hbdd : Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ)))
     (O : Oracles n (Cube A)) : ℝ :=
-  run (inputParams atoms (preprocess atoms φ) ε δ hε0 hε1 hn
-        (preprocess_isPositive atoms φ) hbdd) O
-      (runPrec atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
-        (runScale atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ)
-            hbdd (autoGamma atoms (preprocess atoms φ))
+  run (inputParamsTotal atoms (preprocess atoms φ) ε δ) O
+      (runPrec atoms (preprocess atoms φ) ε δ
+        (runScale atoms (preprocess atoms φ) ε δ (autoGamma atoms (preprocess atoms φ))
           * autoGamma atoms (preprocess atoms φ)))
       (toDNFd (preprocess atoms φ))
-    / (runScale atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ)
-        hbdd (autoGamma atoms (preprocess atoms φ))) ^ n
+    / (runScale atoms (preprocess atoms φ) ε δ (autoGamma atoms (preprocess atoms φ))) ^ n
 
 end Algorithm
 
@@ -1456,10 +1543,9 @@ Nine abbreviations, each a plain function of the algorithm's inputs, spelling ou
 what lines A10–A13 and lines 17–20 compute; then `Ttc.ttcRun`, which is
 `Ttc.ttcAlgOutput` at the bundle those nine determine.
 
-`hbdd` is the same proof binder `Ttc.ttcAlgOutput` carries, and for the same reason
-(`Ttc.Params` bundles five proof fields); it is *derived*, not assumed —
-`Ttc.preprocess_bdd` (`Exec/Api`) proves it from `hφ` and `hpos` alone.  Everything
-else is data.
+Nothing here is a proof binder: the parameter block is `Ttc.inputParamsTotal`, a
+total function of the data, so all nine — and `Ttc.ttcRun` itself — are closed
+functions of `(atoms, φ, ε, δ)` and the two coin sequences.
 
 The dilated atoms carry no second boundedness proof: `Ttc.inputParams_scaleAtoms`
 (`Exec/Rescaled`) holds by `rfl`, so the parameter block — and therefore the
@@ -1468,52 +1554,47 @@ precision — may be read at the *original* atoms. -/
 section Run
 
 variable (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
-  (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
-  (hbdd : Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ)))
 
 /-- **The parameter block** `alg:ttc` lines 17–20 computes, at the preprocessed
-formula: `Ttc.inputParams` at `Ttc.preprocess atoms φ`. -/
+formula: `Ttc.inputParamsTotal` at `Ttc.preprocess atoms φ`. -/
 noncomputable def algBlock : Params :=
-  inputParams atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
+  inputParamsTotal atoms (preprocess atoms φ) ε δ
 
 /-- **Line A10.**  The dilation `q` the algorithm applies to its input. -/
 noncomputable def algScale : ℝ :=
-  runScale atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
-    (autoGamma atoms (preprocess atoms φ))
+  runScale atoms (preprocess atoms φ) ε δ (autoGamma atoms (preprocess atoms φ))
 
 /-- **Line A11.**  The dilated atoms: same normals, bounds scaled by `Ttc.algScale`. -/
 noncomputable def algAtoms : A → LinAtom n :=
-  scaleAtoms (algScale atoms φ ε δ hε0 hε1 hn hbdd) atoms
+  scaleAtoms (algScale atoms φ ε δ) atoms
 
 /-- **Lines A9 + A11.**  The inscribed radius after the dilation, `q · γ̂`. -/
 noncomputable def algGamma : ℝ :=
-  algScale atoms φ ε δ hε0 hε1 hn hbdd * autoGamma atoms (preprocess atoms φ)
+  algScale atoms φ ε δ * autoGamma atoms (preprocess atoms φ)
 
 /-- **`GetPrecision`'s output `ρ`** (line 17), at the dilated radius. -/
 noncomputable def algPrec : ℤ :=
-  runPrec atoms (preprocess atoms φ) ε δ hε0 hε1 hn (preprocess_isPositive atoms φ) hbdd
-    (algGamma atoms φ ε δ hε0 hε1 hn hbdd)
+  runPrec atoms (preprocess atoms φ) ε δ (algGamma atoms φ ε δ)
 
 /-- **`N = |Sol(F) ∩ 𝕃ⁿ|`** at that precision, for the dilated input — the index the
 run's sample coins range over. -/
 noncomputable def algIndex : ℕ :=
-  latticeCount (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd)) (preprocess atoms φ)
-    (algPrec atoms φ ε δ hε0 hε1 hn hbdd)
+  latticeCount (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)
+    (algPrec atoms φ ε δ)
 
 /-- **The enumeration `GenerateSamples` draws from** — `Ttc.latticeEnum` at the
 dilated input and the computed precision. -/
-noncomputable def algEnum : Fin (algIndex atoms φ ε δ hε0 hε1 hn hbdd) → Space n :=
-  latticeEnum (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd)) (preprocess atoms φ)
-    (algPrec atoms φ ε δ hε0 hε1 hn hbdd)
+noncomputable def algEnum : Fin (algIndex atoms φ ε δ) → Space n :=
+  latticeEnum (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)
+    (algPrec atoms φ ε δ)
 
 /-- **Lines A7–A8 + A11.**  The inscribed-ball centres, moved by the dilation. -/
 noncomputable def algCen : {c : Cube A // c ∈ toDNFd (preprocess atoms φ)} → Space n :=
-  fun i => algScale atoms φ ε δ hε0 hε1 hn hbdd • autoCen atoms (preprocess atoms φ) i
+  fun i => algScale atoms φ ε δ • autoCen atoms (preprocess atoms φ) i
 
 /-- **Line 27's membership table**: the coverage test at each enumerated point. -/
-noncomputable def algMem : Cube A → Fin (algIndex atoms φ ε δ hε0 hε1 hn hbdd) → Bool :=
-  memPtOfRegion (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd))
-    (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
+noncomputable def algMem : Cube A → Fin (algIndex atoms φ ε δ) → Bool :=
+  memPtOfRegion (atomSet (algAtoms atoms φ ε δ)) (algEnum atoms φ ε δ)
 
 /-- **`TTC(F, ε, δ)`'s output on one run `(c, t)`, with no oracle argument.**
 
@@ -1524,32 +1605,29 @@ Monte-Carlo estimator `Ttc.mcVol` at the volume coins `c`, and lines 33/38/40/41
 `Ttc.padRow`.  The bundle's two proof fields are `Ttc.trajThin_le` at
 `Ttc.latticeEnum_injective` and `Ttc.card_trajGen`; both are proved above.
 
-Nothing is assumed: this is a closed term in `(atoms, φ, ε, δ, c, t)` and a proof of
-`hbdd`.  `Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) proves — by `rfl` — that it is
-`Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle … c t)`, so this is not a second description
-of the algorithm but the same term with its oracle argument filled in. -/
+Nothing is assumed, and nothing is a proof: this is a closed term in
+`(atoms, φ, ε, δ, c, t)`.  `Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) proves that it
+is `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle … c t)`, so this is not a second
+description of the algorithm but the same term with its oracle argument filled
+in. -/
 noncomputable def ttcRun (c : ℕ → Space n)
-    (t : ℕ → Fin (algIndex atoms φ ε δ hε0 hε1 hn hbdd) → ℕ) : ℝ :=
-  ttcAlgOutput atoms φ ε δ hε0 hε1 hn hbdd
-    { vol := mcVol (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd))
-        (toDNFd (preprocess atoms φ)) (algCen atoms φ ε δ hε0 hε1 hn hbdd)
-        (algGamma atoms φ ε δ hε0 hε1 hn hbdd)
-        (algBlock atoms φ ε δ hε0 hε1 hn hbdd).epsPrime
-        (algBlock atoms φ ε δ hε0 hε1 hn hbdd).deltaPrime c
-      covered := coverOfRegion (atomSet (algAtoms atoms φ ε δ hε0 hε1 hn hbdd))
-      thin := fun _j₀ j' X => trajThin (algEnum atoms φ ε δ hε0 hε1 hn hbdd) (t j') X
+    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) : ℝ :=
+  ttcAlgOutput atoms φ ε δ
+    { vol := mcVol (atomSet (algAtoms atoms φ ε δ))
+        (toDNFd (preprocess atoms φ)) (algCen atoms φ ε δ)
+        (algGamma atoms φ ε δ)
+        (algBlock atoms φ ε δ).epsPrime
+        (algBlock atoms φ ε δ).deltaPrime c
+      covered := coverOfRegion (atomSet (algAtoms atoms φ ε δ))
+      thin := fun _j₀ j' X => trajThin (algEnum atoms φ ε δ) (t j') X
       thin_le := fun _j₀ j' X => trajThin_le (latticeEnum_injective _ _ _) (t j') X
-      pois := fun i j _lam => trajPois (algMem atoms φ ε δ hε0 hε1 hn hbdd i) (t j)
+      pois := fun i j _lam => trajPois (algMem atoms φ ε δ i) (t j)
       gen := fun i j N _ρ =>
-        trajGen (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
-          (algMem atoms φ ε δ hε0 hε1 hn hbdd i) (t j) N
-          (padRow (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
-            (algMem atoms φ ε δ hε0 hε1 hn hbdd i))
+        trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
+          (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i))
       gen_card := fun i j N _ρ =>
-        card_trajGen (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
-          (algMem atoms φ ε δ hε0 hε1 hn hbdd i) (t j) N
-          (padRow (algEnum atoms φ ε δ hε0 hε1 hn hbdd)
-            (algMem atoms φ ε δ hε0 hε1 hn hbdd i)) }
+        card_trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
+          (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i)) }
 
 end Run
 

@@ -125,7 +125,7 @@ Pr[ p ← ttcLaw …;
 `Model/Pseudocode` defines `Ttc.ttcAlgOutput` as `Ttc.run` — the fold of `alg:ttc`
 lines 22–46 — over the preprocessed formula's cubes
 `Ttc.toDNFd (Ttc.preprocess atoms φ)`, at the computed parameter block
-`Ttc.inputParams` (lines 17–20) and the computed precision `Ttc.runPrec` (line 17),
+`Ttc.inputParamsTotal` (lines 17–20) and the computed precision `Ttc.runPrec` (line 17),
 with the estimate divided by `qⁿ` for the dilation `q = Ttc.runScale` (lines
 A10–A13); its last argument is the **oracle bundle**, because `alg:ttc` line 24's
 `Vol_ED` and line 43's `GenerateSamples` are calls into one — exactly as the paper
@@ -157,9 +157,12 @@ type names, outside `Model/`, only
 
 ```
 ttcLaw  ttcIndex
-preprocess_bdd
 ttcTerminates  ttcCost  ttcThresh  ttcNumCubes
 ```
+
+**No proof term is named.**  Every name above is a quantity, applied to
+`(atoms, φ, ε, δ)` and nothing else; the theorem's ten binders appear only as its
+own hypotheses, never inside the terms it measures.
 
 The first line is **the run and its law**: the law of a single run of the algorithm
 and the index the sample coins range over.  The **oracle bundle is gone** from the
@@ -174,12 +177,13 @@ and `GenerateSamples` as oracle calls, so the *construction* that discharges the
 proof content, not statement content.  The last line is the runtime conjunct's four
 folded names, each with its `rfl` lemma in `Exec/Api`.
 
-`Ttc.preprocess_bdd` is the odd one out, and it is a **proof term**, not a quantity:
-`Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ))`, derived from `hφ`
-and `hpos` alone (`Exec/BddFromPos`).  It appears because `Ttc.Params` bundles five
-*proof* fields, so `Ttc.inputParams` — and hence `Ttc.ttcAlgOutput` — cannot be
-applied without it.  `Model/Pseudocode`'s docstring, "The divergence from the
-reference layout", states this plainly and says what removing it would cost.
+`Ttc.preprocess_bdd` used to be named here, and it was a **proof term** rather than a
+quantity: `Ttc.Params` bundles five *proof* fields, so `Ttc.inputParams` — and hence
+`Ttc.ttcAlgOutput` — could not be applied without a boundedness proof.  It is gone.
+`Ttc.inputParamsTotal` (`Model/Pseudocode`) decides the five side conditions
+classically instead of taking them, so the block, the run, and every quantity above
+are functions of the data alone; `Ttc.inputParamsTotal_eq_inputParams` shows the
+block is unchanged wherever this theorem's own hypotheses hold.
 
 The property is machine-checkable in one `run_cmd`: walk
 `Ttc.ttc_volume_estimate`'s type past its binders, collect
@@ -245,17 +249,17 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     -- (accuracy) `alg:ttc`'s own output on the run `p`, with no oracle argument, is
     -- within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[p ← ttcLaw atoms φ ε δ hε0 hε1 hn hφ hpos;
-        ttcRun atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos) p.1 p.2
+      Pr[p ← ttcLaw atoms φ ε δ;
+        ttcRun atoms φ ε δ p.1 p.2
             ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) `alg:ttc`'s charged cost, on **every** run `p`, under
     -- `Ttc.ttcTerminates` — pointwise, not almost everywhere
-    (∀ p : (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ),
+    (∀ p : (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ),
       ∀ cVol cSample thr : ℕ,
-      (thr : ℝ) = ttcThresh atoms φ ε δ hε0 hε1 hn hφ hpos →
-      ttcTerminates atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2 →
-      ttcCost atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2 cVol cSample
+      (thr : ℝ) = ttcThresh atoms φ ε δ →
+      ttcTerminates atoms φ ε δ p.1 p.2 →
+      ttcCost atoms φ ε δ p.1 p.2 cVol cSample
         ≤ ttcNumCubes atoms φ * (cVol + cSample * thr)) :=
   ⟨ttc_accuracy_single_measure atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1,
     fun p => (ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos).2 p.1 p.2⟩

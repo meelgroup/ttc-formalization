@@ -512,32 +512,32 @@ of the volume coins `c`.  `Ttc.ttcOracleBundle` is a `Ttc.trajOracles` bundle at
 the Monte-Carlo volume estimate — a *constant* function of `t` — so this is
 `Ttc.countablyDetermined_run_div`. -/
 theorem countablyDetermined_ttcAlgOutput (c : ℕ → Space n) :
-    CountablyDetermined fun t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ =>
-      ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-        (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) := by
+    CountablyDetermined fun t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ =>
+      ttcAlgOutput atoms φ ε δ
+        (ttcOracleBundle atoms φ ε δ c t) := by
   refine countablyDetermined_run_div
-    (Ω := ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ)
+    (Ω := ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ)
     (latticeEnum_injective _ _ _) _ _ _ _ _ _ _ _ ?_ ?_
   · exact fun k => countablyDetermined_apply
-      (Y := Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) k
+      (Y := Fin (ttcIndex atoms φ ε δ) → ℕ) k
   · exact fun _ => measurable_const
 
 /-- **The algorithm's output is a measurable function of the sample coins**, at
 every value of the volume coins `c`. -/
 theorem measurable_ttcAlgOutput_of_traj (c : ℕ → Space n) :
-    Measurable fun t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ =>
-      ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-        (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t) :=
-  (countablyDetermined_ttcAlgOutput atoms φ ε δ hε0 hε1 hn hφ hpos c).measurable
+    Measurable fun t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ =>
+      ttcAlgOutput atoms φ ε δ
+        (ttcOracleBundle atoms φ ε δ c t) :=
+  (countablyDetermined_ttcAlgOutput atoms φ ε δ c).measurable
 
 /-- **The headline's own event is measurable**, at every value of the volume coins
 `c`.  This is `Ttc.ttc_volume_estimate`'s accuracy conjunct's event, verbatim. -/
 theorem measurableSet_good_event (c : ℕ → Space n) :
-    MeasurableSet {t : ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ |
-      ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t)
+    MeasurableSet {t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ |
+      ttcAlgOutput atoms φ ε δ
+          (ttcOracleBundle atoms φ ε δ c t)
         ∈ relErr ε (volSol (atomSet atoms) φ)} :=
-  (countablyDetermined_ttcAlgOutput atoms φ ε δ hε0 hε1 hn hφ hpos c).measurableSet_preimage _
+  (countablyDetermined_ttcAlgOutput atoms φ ε δ c).measurableSet_preimage _
 
 /-! ### Jointly in both coin sequences
 
@@ -553,25 +553,25 @@ level, which `Ttc.countablyDetermined_haltLevel` handles from
 /-- **`TTC`'s output is countably determined in both coin sequences at once.** -/
 theorem countablyDetermined_ttcAlgOutput_joint :
     CountablyDetermined fun p : (ℕ → Space n)
-        × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) =>
-      ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-        (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2) := by
+        × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) =>
+      ttcAlgOutput atoms φ ε δ
+        (ttcOracleBundle atoms φ ε δ p.1 p.2) := by
   refine countablyDetermined_run_div
-    (Ω := (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ))
+    (Ω := (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ))
     (latticeEnum_injective _ _ _) _ _ _ _ _ _ _ _ ?_ ?_
   · exact fun k => (countablyDetermined_apply
-      (Y := Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) k).precomp measurable_snd
+      (Y := Fin (ttcIndex atoms φ ε δ) → ℕ) k).precomp measurable_snd
   · exact fun i => (measurable_mcVol _ _ _ _ _ _ i).comp measurable_fst
 
 /-- **The headline's own event is measurable jointly in the volume coins and the
 trajectory.** -/
 theorem measurableSet_good_event_joint :
     MeasurableSet {p : (ℕ → Space n)
-        × (ℕ → Fin (ttcIndex atoms φ ε δ hε0 hε1 hn hφ hpos) → ℕ) |
-      ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-          (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2)
+        × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) |
+      ttcAlgOutput atoms φ ε δ
+          (ttcOracleBundle atoms φ ε δ p.1 p.2)
         ∈ relErr ε (volSol (atomSet atoms) φ)} :=
-  (countablyDetermined_ttcAlgOutput_joint atoms φ ε δ hε0 hε1 hn hφ hpos).measurableSet_preimage _
+  (countablyDetermined_ttcAlgOutput_joint atoms φ ε δ).measurableSet_preimage _
 
 /-- **The payoff: the headline's accuracy conjunct is one measure of one event.**
 
@@ -581,18 +581,19 @@ of the coin law with `Ttc.ttcTrajKernel`, applied to the *joint* good event.  No
 hypothesis: the measurability the rewrite needs is
 `Ttc.measurableSet_good_event_joint`. -/
 theorem lintegral_good_event_eq_compProd :
-    (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)
-        {t | ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-                (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t)
+    (∫⁻ c, trajLaw (ttcRates atoms φ ε δ c)
+        {t | ttcAlgOutput atoms φ ε δ
+                (ttcOracleBundle atoms φ ε δ c t)
               ∈ relErr ε (volSol (atomSet atoms) φ)} ∂(MonteCarlo.coins n))
-      = (MonteCarlo.coins n ⊗ₘ ttcTrajKernel atoms φ ε δ hε0 hε1 hn hφ hpos)
-          {p | ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-                  (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2)
+      = (MonteCarlo.coins n ⊗ₘ ttcTrajKernel atoms φ ε δ)
+          {p | ttcAlgOutput atoms φ ε δ
+                  (ttcOracleBundle atoms φ ε δ p.1 p.2)
                 ∈ relErr ε (volSol (atomSet atoms) φ)} := by
   exact (Measure.compProd_apply (μ := MonteCarlo.coins n)
-    (κ := ttcTrajKernel atoms φ ε δ hε0 hε1 hn hφ hpos)
-    (measurableSet_good_event_joint atoms φ ε δ hε0 hε1 hn hφ hpos)).symm
+    (κ := ttcTrajKernel atoms φ ε δ)
+    (measurableSet_good_event_joint atoms φ ε δ)).symm
 
+include hε0 hε1 hn hφ hpos in
 /-- **The headline's accuracy conjunct, over a single program.**
 
 `Ttc.ttc_volume_estimate`'s accuracy half (equivalently `Ttc.ttc_volume_api`'s),
@@ -601,17 +602,17 @@ volume coins with the coin-indexed trajectory kernel — applied to one event of
 space.  Nothing is assumed: the rewrite is
 `Ttc.lintegral_good_event_eq_compProd`. -/
 theorem ttc_accuracy_single_measure (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
-    1 - δ ≤ ((MonteCarlo.coins n ⊗ₘ ttcTrajKernel atoms φ ε δ hε0 hε1 hn hφ hpos)
-        {p | ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-                (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos p.1 p.2)
+    1 - δ ≤ ((MonteCarlo.coins n ⊗ₘ ttcTrajKernel atoms φ ε δ)
+        {p | ttcAlgOutput atoms φ ε δ
+                (ttcOracleBundle atoms φ ε δ p.1 p.2)
               ∈ relErr ε (volSol (atomSet atoms) φ)}).toReal := by
   have h : 1 - δ ≤
-      (∫⁻ c, trajLaw (ttcRates atoms φ ε δ hε0 hε1 hn hφ hpos c)
-          {t | ttcAlgOutput atoms φ ε δ hε0 hε1 hn (preprocess_bdd atoms φ hφ hpos)
-                  (ttcOracleBundle atoms φ ε δ hε0 hε1 hn hφ hpos c t)
+      (∫⁻ c, trajLaw (ttcRates atoms φ ε δ c)
+          {t | ttcAlgOutput atoms φ ε δ
+                  (ttcOracleBundle atoms φ ε δ c t)
                 ∈ relErr ε (volSol (atomSet atoms) φ)} ∂(MonteCarlo.coins n)).toReal :=
     (ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos).1
-  rwa [lintegral_good_event_eq_compProd] at h
+  rwa [lintegral_good_event_eq_compProd atoms φ ε δ] at h
 
 end Headline
 

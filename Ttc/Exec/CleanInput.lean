@@ -156,115 +156,67 @@ theorem ttc_volume_cleanInput
     (1 - δ ≤
       (∫⁻ c, trajLaw
             (runRates
-              (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+              (scaledAtoms atoms (cleanForm atoms φ) ε δ
                 (autoGamma atoms (cleanForm atoms φ)))
-              (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-              (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-                (autoGamma atoms (cleanForm atoms φ)))
+              (cleanForm atoms φ) ε δ
               (fun i =>
-                runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                      (isPositive_cleanForm atoms φ)
-                      (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                   • autoCen atoms (cleanForm atoms φ) i)
-              (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm atoms φ)
-                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+              (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                   * autoGamma atoms (cleanForm atoms φ)) c)
           {t | ttcRunOutput
-                (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                (scaledAtoms atoms (cleanForm atoms φ) ε δ
                   (autoGamma atoms (cleanForm atoms φ)))
-                (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-                (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-                  (autoGamma atoms (cleanForm atoms φ)))
+                (cleanForm atoms φ) ε δ
                 (fun i =>
-                  runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                        (isPositive_cleanForm atoms φ)
-                        (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                  runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                     • autoCen atoms (cleanForm atoms φ) i)
-                (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                      (isPositive_cleanForm atoms φ)
-                      (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+                (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                     * autoGamma atoms (cleanForm atoms φ)) c t
               /
-                (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+                (runScale atoms (cleanForm atoms φ) ε δ
                   (autoGamma atoms (cleanForm atoms φ))) ^ n
             ∈ relErr ε (volSol (atomSet atoms) φ)}
         ∂(MonteCarlo.coins n)).toReal)
     ∧
     (∀ (c : ℕ → Space n)
         (t : ℕ → Fin (runCount
-          (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+          (scaledAtoms atoms (cleanForm atoms φ) ε δ
             (autoGamma atoms (cleanForm atoms φ)))
-          (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-          (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-            (autoGamma atoms (cleanForm atoms φ)))
-          (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                (isPositive_cleanForm atoms φ)
-                (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+          (cleanForm atoms φ) ε δ
+          (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
               * autoGamma atoms (cleanForm atoms φ))) → ℕ)
         (cVol cSample thr : ℕ),
       (thr : ℝ) =
-        (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-          (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)).thresh →
+        (inputParamsTotal atoms (cleanForm atoms φ) ε δ).thresh →
       Terminates
-          (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint))
+          (inputParamsTotal atoms (cleanForm atoms φ) ε δ)
           (runOracles
-            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ
               (autoGamma atoms (cleanForm atoms φ)))
-            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ
             (fun i =>
-              runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm atoms φ)
-                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+              runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 • autoCen atoms (cleanForm atoms φ) i)
-            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ)
-                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+            (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 * autoGamma atoms (cleanForm atoms φ)) c t) (toDNFd (cleanForm atoms φ)) →
       runCost
-          (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint))
+          (inputParamsTotal atoms (cleanForm atoms φ) ε δ)
           (runOracles
-            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ
               (autoGamma atoms (cleanForm atoms φ)))
-            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ
             (fun i =>
-              runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm atoms φ)
-                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+              runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 • autoCen atoms (cleanForm atoms φ) i)
-            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ)
-                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+            (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 * autoGamma atoms (cleanForm atoms φ)) c t)
           cVol cSample
           (runPrec
-            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ
               (autoGamma atoms (cleanForm atoms φ)))
-            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-              (autoGamma atoms (cleanForm atoms φ)))
-            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ)
-                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+            (cleanForm atoms φ) ε δ
+            (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 * autoGamma atoms (cleanForm atoms φ))) (toDNFd (cleanForm atoms φ))
         ≤ (toDNFd (cleanForm atoms φ)).length * (cVol + cSample * thr)) := by
   have hne : cleanDNF atoms (toDNFd φ) ≠ [] := cleanDNF_ne_nil_of_interior atoms hφ hint
@@ -284,73 +236,42 @@ theorem ttc_volume_cleanInput_cost
       (interior (region (atomSet atoms) i.val)).Nonempty) :
     ∀ (c : ℕ → Space n)
         (t : ℕ → Fin (runCount
-          (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+          (scaledAtoms atoms (cleanForm atoms φ) ε δ
             (autoGamma atoms (cleanForm atoms φ)))
-          (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-          (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-            (autoGamma atoms (cleanForm atoms φ)))
-          (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                (isPositive_cleanForm atoms φ)
-                (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+          (cleanForm atoms φ) ε δ
+          (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
               * autoGamma atoms (cleanForm atoms φ))) → ℕ)
         (cVol cSample thr : ℕ),
       (thr : ℝ) =
-        (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-          (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)).thresh →
+        (inputParamsTotal atoms (cleanForm atoms φ) ε δ).thresh →
       Terminates
-          (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint))
+          (inputParamsTotal atoms (cleanForm atoms φ) ε δ)
           (runOracles
-            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ
               (autoGamma atoms (cleanForm atoms φ)))
-            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ
             (fun i =>
-              runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm atoms φ)
-                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+              runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 • autoCen atoms (cleanForm atoms φ) i)
-            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ)
-                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+            (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 * autoGamma atoms (cleanForm atoms φ)) c t) (toDNFd (cleanForm atoms φ)) →
       runCost
-          (inputParams atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-            (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint))
+          (inputParamsTotal atoms (cleanForm atoms φ) ε δ)
           (runOracles
-            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ
               (autoGamma atoms (cleanForm atoms φ)))
-            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-              (autoGamma atoms (cleanForm atoms φ)))
+            (cleanForm atoms φ) ε δ
             (fun i =>
-              runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                    (isPositive_cleanForm atoms φ)
-                    (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+              runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 • autoCen atoms (cleanForm atoms φ) i)
-            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ)
-                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+            (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 * autoGamma atoms (cleanForm atoms φ)) c t)
           cVol cSample
           (runPrec
-            (scaledAtoms atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
+            (scaledAtoms atoms (cleanForm atoms φ) ε δ
               (autoGamma atoms (cleanForm atoms φ)))
-            (cleanForm atoms φ) ε δ hε0 hε1 hn (isPositive_cleanForm atoms φ)
-            (scaledBdd atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-              (isPositive_cleanForm atoms φ) (cleanBdd atoms hφ hbdd hint)
-              (autoGamma atoms (cleanForm atoms φ)))
-            (runScale atoms (cleanForm atoms φ) ε δ hε0 hε1 hn
-                  (isPositive_cleanForm atoms φ)
-                  (cleanBdd atoms hφ hbdd hint) (autoGamma atoms (cleanForm atoms φ))
+            (cleanForm atoms φ) ε δ
+            (runScale atoms (cleanForm atoms φ) ε δ (autoGamma atoms (cleanForm atoms φ))
                 * autoGamma atoms (cleanForm atoms φ))) (toDNFd (cleanForm atoms φ))
         ≤ (toDNFd (cleanForm atoms φ)).length * (cVol + cSample * thr) :=
   (ttc_volume_cleanInput atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hbdd hint).2
