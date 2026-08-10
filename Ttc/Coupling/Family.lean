@@ -3,7 +3,6 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Process.SketchProcess
-import Ttc.Coupling.Readoff
 import Ttc.Model.Pseudocode
 
 /-!
@@ -263,7 +262,7 @@ theorem map_trajLaw_eval {θ : Fin L → ℝ} (hθ : ∀ s, 0 ≤ θ s) (j : ℕ
 The run's state is a `Multiset (Space n)`; the family is a count vector. This is
 the dictionary between them, given an injective enumeration `pt` of the lattice
 points. `Ttc.toMultiset` — the definition itself now lives upstream, in
-`Coupling/Readoff`, so that the read-offs can be stated without `Ttc.Oracles` —
+`Model/Pseudocode`, so that the read-offs can be stated without `Ttc.Oracles` —
 builds the multiset with prescribed multiplicities, and `Ttc.count_toMultiset`
 says it has exactly those multiplicities, which is what lets the oracles of step 3
 *read* the family.
@@ -344,7 +343,7 @@ noncomputable def padPoint {n : ℕ} {ι : Type*} (pt : Fin L → Space n) (mem 
 
 These are exactly `Ttc.Oracles`' two proof fields with the bundle taken away. They
 are theorems, so they stay here, downstream of `Ttc.toMultiset_le_of_count_le`; the
-*values* they are about are upstream, in `Coupling/Readoff`. -/
+*values* they are about are upstream, in `Model/Pseudocode`. -/
 
 /-- The `thin` contract: `Ttc.trajThin` removes elements, it never invents them. -/
 theorem trajThin_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
@@ -363,7 +362,7 @@ theorem card_trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) (ω
 
 /-- **The oracle bundle that reads a trajectory.**
 
-The three random *values* are the read-offs of `Coupling/Readoff`, which are stated
+The three random *values* are the read-offs of `Model/Pseudocode`, which are stated
 without reference to `Ttc.Oracles`; what this definition adds is the two
 **contracts** — `thin_le` and `gen_card` — which are proofs, and are the reason the
 bundle as a whole cannot sit upstream of `Ttc.toMultiset_le_of_count_le`. See
@@ -383,7 +382,7 @@ noncomputable def trajOracles {n : ℕ} {ι : Type*} {pt : Fin L → Space n}
 
 /-! ### The read-offs are the bundle's fields
 
-Definitional in every case, so `Coupling/Readoff` is not a second description of the
+Definitional in every case, so `Model/Pseudocode` is not a second description of the
 same arithmetic — it is where that arithmetic is *defined*, and `Ttc.trajOracles` is
 where it is packaged with its two contracts. -/
 

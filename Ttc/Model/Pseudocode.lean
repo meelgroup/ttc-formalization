@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Dnf
 import Ttc.Lattice.Decomposition
+import Ttc.Model.ProblemSetting
 
 /-!
 # `Model/Pseudocode`: `alg:ttc`, **and the preprocessing that precedes it**
@@ -956,5 +957,272 @@ noncomputable def ttcAlgOutput {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A
         hbdd (autoGamma atoms (preprocess atoms φ))) ^ n
 
 end Algorithm
+
+end Ttc
+
+/-! # The trajectory read-offs
+
+`Ttc.trajOracles` (`Coupling/Family`) is an `Ttc.Oracles` bundle whose four random
+fields are *read off* a trajectory `ω : ℕ → Fin L → ℕ` of the coupled level family.
+Two of its six fields — `thin_le` and `gen_card` — are **contracts**: proof
+obligations, discharged in `Coupling/Family` by `Ttc.toMultiset_le_of_count_le` and
+`Multiset.card_replicate`. The other four are **values**: plain arithmetic on `ω`.
+
+This section holds the values, and nothing else. It is deliberately positioned
+*upstream* of `Ttc.Oracles`: it needs nothing beyond `Model/Prelude` (for
+`Ttc.Space`), and a `Ttc.run` that reads the trajectory directly needs no oracle
+bundle and hence no contract.
+
+Nothing here is a `Prop`, and nothing here is assumed: every declaration is a
+definition whose body is the arithmetic the paper's pseudocode performs. The facts
+*about* these definitions — that `Ttc.trajThin` produces a sub-multiset, that
+`Ttc.trajGen` produces exactly `N` points — stay with the theorems that prove them,
+in `Coupling/Family`, and are what `Ttc.trajOracles`' two contract fields are built
+from.
+
+## Why the read-offs take a *row*, not a table
+
+`trajPois` takes the membership row `mem i : Fin L → Bool` and the level slice
+`ω j : Fin L → ℕ`, not the table `mem` and the trajectory `ω` with indices `i`, `j`.
+That is the honest granularity: the value depends on the table only at the cube
+being processed and on the trajectory only at the level being read, which is
+precisely what `Ttc.trajOracles_pois_congr` and `Ttc.trajOracles_gen_congr`
+(`Monadic/EventMeasurable`) and the congruence lemmas of `Exec/Coverage` say. Taking
+rows makes those facts visible in the signature instead of provable from it.
+
+These definitions live here, rather than in `Coupling/`, because they are part of
+the audit surface: `Ttc/Audit/ClosureCheck.lean` requires the algorithm's output to
+be defined entirely under `Ttc/Model/`, and a `Ttc.run` that reads a trajectory
+directly reaches them. -/
+
+namespace Ttc
+
+variable {L : ℕ}
+
+/-! ## Count vectors as multisets
+
+The run's state is a `Multiset (Space n)`; the family is a count vector. This is the
+dictionary between them, given an injective enumeration `pt` of the lattice points.
+`Ttc.toMultiset` builds the multiset with prescribed multiplicities; that it *has*
+those multiplicities (`Ttc.count_toMultiset`) is a theorem, and lives with the other
+theorems in `Coupling/Family`. -/
+
+/-- The multiset holding `k s` copies of the lattice point `pt s`. -/
+noncomputable def toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
+    Multiset (Space n) :=
+  ∑ s, Multiset.replicate (k s) (pt s)
+
+/-! ## The four read-offs
+
+`vol` and `covered` are read off nothing — `Ttc.trajOracles` returns the functions it
+was handed — so they need no definition here. The three that read `ω` do. -/
+
+/-- **`thin`, read off the trajectory** (`alg:ttc` lines 33, 40): what survives of
+`X` at a level whose count vector is `ωj`.
+
+Capped at what `X` actually holds, so that the sub-multiset contract
+(`Ttc.Oracles.thin_le`, discharged in `Coupling/Family`) holds for *every* multiset
+and not only for the ones the run produces. On the states the run does reach the
+multiplicities *are* the level's counts, so the `min` is inert — see `Coupling/Run`. -/
+noncomputable def trajThin {n : ℕ} (pt : Fin L → Space n) (ωj : Fin L → ℕ)
+    (X : Multiset (Space n)) : Multiset (Space n) :=
+  toMultiset pt fun s => min (ωj s) (Multiset.count (pt s) X)
+
+/-- **`Pois(λ)`, read off the trajectory** (`alg:ttc` lines 38, 41): the family's
+total over the cube whose membership row is `m`, at a level whose count vector is
+`ωj`. The rate `λ` is not read — the trajectory already carries it. -/
+def trajPois (m : Fin L → Bool) (ωj : Fin L → ℕ) : ℕ :=
+  ∑ s ∈ Finset.univ.filter fun s => m s = true, ωj s
+
+/-- **`GenerateSamples`, read off the trajectory** (`alg:ttc` line 43): the family
+restricted to the cube whose membership row is `m`, at a level whose count vector is
+`ωj`.
+
+`gen` must return exactly `N` points for **every** `N` (`Ttc.Oracles.gen_card`,
+discharged in `Coupling/Family`), but the family's size is whatever `pois` returned.
+So this falls back to `N` copies of `pad` when the two disagree — a branch the run
+never takes, since it always passes the `N` that `trajPois` produced. The caller
+supplies `pad` from the cube's own lattice points where it has any
+(`Ttc.padPoint`), so that the membership contract still holds. -/
+noncomputable def trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool)
+    (ωj : Fin L → ℕ) (N : ℕ) (pad : Space n) : Multiset (Space n) :=
+  open Classical in
+  if Multiset.card (toMultiset pt fun s => if m s then ωj s else 0) = N then
+    toMultiset pt fun s => if m s then ωj s else 0
+  else Multiset.replicate N pad
+
+/-- A lattice point of the cube whose membership row is `m`, if it has one. Used only
+as `Ttc.trajGen`'s `pad`, i.e. only on the branch the run never takes.
+`Ttc.padPoint` (`Coupling/Family`) is this at the row `mem i`. -/
+noncomputable def padRow {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) : Space n :=
+  open Classical in
+  if h : ∃ s, m s = true then pt h.choose else 0
+
+end Ttc
+
+/-! # What `Vol_ED` **computes**, with no probability space of ours
+
+This section holds the *data* half of the constructed volume oracle: the definitions
+`Ttc.mcVol` unfolds to, and nothing else.  Every theorem about them — measurability,
+unbiasedness, the Bernoulli variance, Chebyshev — stays in `Ttc/Volume/MonteCarlo.lean`,
+which imports this file.
+
+## Why the split exists
+
+`Ttc.mcVol` is the number `alg:ttc` line 24 reads.  For `Ttc.run` to *call* it rather than
+receive it as an oracle field, the definitions below must be reachable from
+`Ttc/Model/Pseudocode.lean`, which is the audit surface.  They are, because they are
+*here*: `Ttc/Audit/ClosureCheck.lean` requires the algorithm's output to be defined
+entirely under `Ttc/Model/`, so the data half of the estimator lives in `Model/`
+rather than in `Volume/`.
+
+## Data versus law: what had to move, and what did not
+
+The obstruction was `Ttc.MonteCarlo.nSamp`, the sample count.  It is `⌈(ε²·p·q)⁻¹⌉ + 1`
+where `q` is the hitting probability, and `q` used to be *defined* as
+`(Ttc.MonteCarlo.coinLaw n (target K)).toReal` — a measure this development constructs
+(`Arlib.uniformOn` on the unit ball).  Defining the sample count that way would have put
+our own probability space inside the algorithm's definitional closure.
+
+It does not have to be.  The hitting probability has a closed form in Lebesgue volume
+alone — `Ttc.MonteCarlo.hitData` below — and the two agree exactly whenever `K` really is
+enclosed by `Metric.ball 0 (rad K)`, which is `Ttc.MonteCarlo.hit_eq_hitData`
+(`Volume/MonteCarlo.lean`), the hypothesis `Ttc.MonteCarlo.correct` establishes for itself.
+So `nSamp` is defined from `hitData`, the coin law appears only in the *theorems*, and the
+definitional closure of `Ttc.mcVol` contains **no measure constructed by this development**.
+
+**What could not be separated, and is not claimed to be.**  `MeasureTheory.volume` — that
+is, Mathlib's Lebesgue measure on `ℝⁿ` — stays in the closure, in three places, and each is
+genuinely needed at definition time:
+
+* `Ttc.MonteCarlo.scale`, the constant the returned estimate is multiplied by, is the volume
+  of the enclosing ball;
+* `Ttc.MonteCarlo.target` tests the coins against `MeasureTheory.toMeasurable volume K`
+  rather than `K`, which is what makes `est_meas` hold for *every* `K`
+  (see `Volume/MonteCarlo.lean`'s docstring);
+* `Ttc.MonteCarlo.hitData` is a ratio of two Lebesgue volumes.
+
+A volume estimator whose output does not mention volume would be a different object.  What
+the split buys is precisely that the measure in the closure is *Mathlib's*, not one of ours
+— which is the distinction `Ttc/Audit/ClosureCheck.lean` draws.
+
+## Contents
+
+`Ttc.roundBody`, and then, in `Ttc.MonteCarlo`: `rad`, `target`, `hitData`, `scale`,
+`nSamp`, `ind`, `score`, `est`; finally `Ttc.mcVol`. -/
+
+namespace Ttc
+
+open MeasureTheory Pointwise
+
+/-- **The normalisation `Vol_ED` is called on.** `K` moved so that its inscribed
+ball becomes the unit ball at the origin: the image of `K` under
+`y ↦ γ⁻¹ · (y − c)`.
+
+Cousins–Vempala Theorem 1.1 (`Ttc.VolumeAlgorithm`, `Volume/Oracle`) speaks only about
+bodies containing the unit ball, whereas `Ttc.TtcProb.ball_subset` supplies a ball
+of radius `γ̂` about a centre that is not the origin. This is the change of
+variable that closes the gap; that it does is *proved* in `Ttc/Volume/Bridge.lean`
+(`Ttc.VolumeAlgorithm.of_ball`), not assumed.
+
+Lives here rather than in `Model/Prelude` because it is this oracle's
+normalisation, not vocabulary of the paper's problem — and here rather than in
+`Volume/Oracle` because `Ttc.mcVol` is built from it and this file is the audit
+surface. -/
+noncomputable def roundBody {n : ℕ} (c : Space n) (γ : ℝ) (K : Set (Space n)) :
+    Set (Space n) := γ⁻¹ • ((-c) +ᵥ K)
+
+end Ttc
+
+namespace Ttc.MonteCarlo
+
+open MeasureTheory
+
+variable {n : ℕ}
+
+/-! ## The enclosing radius
+
+`Ttc.MonteCarlo.correct` hands over exactly three facts about `K` — convex, contains the
+unit ball, finite volume — and `Arlib.Convexity.exists_closedBall_superset_of_convex` turns
+them into a radius (`Ttc.MonteCarlo.exists_ball_superset`).  `rad` picks one by choice,
+totally: it is defined (as `1`) even when no radius exists, so that `est` is a total
+function and `est_meas` needs no hypothesis. -/
+
+open scoped Classical in
+/-- A radius enclosing `K`, chosen classically; `1` if there is none. -/
+noncomputable def rad (K : Set (Space n)) : ℝ :=
+  if h : ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R then h.choose else 1
+
+/-! ## The target set
+
+`target K` is the set the *coins* are tested against: the measurable hull of `K`, pulled
+back along `x ↦ rad K • x`.  It is measurable for **every** `K`
+(`Ttc.MonteCarlo.measurableSet_target`), which is what makes
+`Ttc.VolumeAlgorithm.est_meas` — quantified over all `K`, measurable or not — provable. -/
+
+/-- The measurable hull of `K`, in unit-ball coordinates. -/
+noncomputable def target (K : Set (Space n)) : Set (Space n) :=
+  (fun x : Space n => rad K • x) ⁻¹' toMeasurable volume K
+
+/-! ## The estimator -/
+
+/-- **The hitting probability, as arithmetic**: `Vol K / Vol(ball 0 (rad K))`, written out
+in Lebesgue volume alone.
+
+This is the *data* form of the chance that one rescaled coin lands in `K`.  The *law* form
+is `Ttc.MonteCarlo.hit`, `(coinLaw n (target K)).toReal`, and the two are equal exactly
+when `K ⊆ Metric.ball 0 (rad K)` — `Ttc.MonteCarlo.hit_eq_hitData`, proved in
+`Volume/MonteCarlo.lean`, where the enclosure hypothesis is available.
+
+Only this form is used to *define* the sample count, so that the coin law stays out of the
+algorithm's definitional closure; see this section's docstring. -/
+noncomputable def hitData (K : Set (Space n)) : ℝ :=
+  (rad K ^ n)⁻¹ * (volume K).toReal / (volume (Metric.ball (0 : Space n) 1)).toReal
+
+/-- The volume of the enclosing ball, `Vol(ball 0 (rad K)) = (rad K)ⁿ · Vol(ball 0 1)`. -/
+noncomputable def scale (K : Set (Space n)) : ℝ :=
+  rad K ^ n * (volume (Metric.ball (0 : Space n) 1)).toReal
+
+/-- The number of samples: `⌈(ε²·p·q)⁻¹⌉ + 1`, where `q = Ttc.MonteCarlo.hitData K` is the
+hitting probability in its arithmetic form.  Noncomputable, and `Θ(Rⁿ/(ε²p))` — exponential
+in `n`.  See the module docstring of `Ttc/Volume/MonteCarlo.lean`. -/
+noncomputable def nSamp (K : Set (Space n)) (ε pf : ℝ) : ℕ :=
+  ⌈(ε ^ 2 * pf * hitData K)⁻¹⌉₊ + 1
+
+/-- The indicator of `target K`, as a function of one coin. -/
+noncomputable def ind (K : Set (Space n)) : Space n → ℝ :=
+  Set.indicator (target K) (1 : Space n → ℝ)
+
+/-- The `i`-th sample's score: `1` if the `i`-th rescaled coin lands in `K`, else `0`. -/
+noncomputable def score (K : Set (Space n)) (i : ℕ) : (ℕ → Space n) → ℝ :=
+  fun ω => ind K (ω i)
+
+/-- **The estimate.** `Vol(ball 0 (rad K)) · (#hits / N)`. -/
+noncomputable def est (K : Set (Space n)) (ε pf : ℝ) (ω : ℕ → Space n) : ℝ :=
+  scale K / (nSamp K ε pf : ℝ) * ∑ i ∈ Finset.range (nSamp K ε pf), score K i ω
+
+end Ttc.MonteCarlo
+
+namespace Ttc
+
+open scoped Classical in
+/-- **`Vol_ED`'s output, as a function of the volume oracle's coins.**
+
+`Ttc.ttc_volume` carries `vol : Cube A → ℝ` together with a binder `volED_eq`
+pinning it to `volAlg.est`.  With `volAlg` fixed to the *constructed* oracle
+`Ttc.VolumeAlgorithm.monteCarlo`, `vol` is no longer a free function: it is this
+term, and `volED_eq` becomes the theorem `Ttc.mcVol_eq` (`Exec/VolDischarge`).
+
+Off the DNF the value is `0`; the algorithm never reads it (only `i ∈ D` is ever
+queried), and totality is what lets the definition avoid a proof argument.
+
+Defined here rather than in `Exec/VolDischarge` so that it lies inside the audit
+surface `Ttc/Audit/ClosureCheck.lean` checks. -/
+noncomputable def mcVol {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF A)
+    (cen : {c : Cube A // c ∈ D} → Space n) (γ ε' δ' : ℝ)
+    (c : ℕ → Space n) (i : Cube A) : ℝ :=
+  if hi : i ∈ D then
+    γ ^ n * MonteCarlo.est (roundBody (cen ⟨i, hi⟩) γ (region M i)) ε' δ' c
+  else 0
 
 end Ttc

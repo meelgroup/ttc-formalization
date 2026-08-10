@@ -3,7 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.TtcProb
-import Ttc.Volume.EstData
+import Ttc.Model.Pseudocode
 import Arlib.Convexity.GaussianCooling.Unblock
 import Arlib.Probability.UniformOn
 import Mathlib.Probability.Independence.InfinitePi
@@ -71,7 +71,7 @@ almost-everywhere argument is needed; the identity is exact.
 
 The estimator's **definitions** — `rad`, `target`, `hitData`, `scale`, `nSamp`, `ind`,
 `score`, `est`, and `Ttc.mcVol` itself — are in
-[`Ttc/Volume/EstData.lean`](EstData.lean), which imports only `Model/ProblemSetting`.  This
+[`Ttc/Model/Pseudocode.lean`](../Model/Pseudocode.lean), the audit surface.  This
 file holds every **theorem** about them, and the coin space they are averaged over.
 
 The split is not cosmetic: it is what keeps this development's own probability space out of
@@ -82,7 +82,7 @@ whenever `K ⊆ Metric.ball 0 (rad K)` — `Ttc.MonteCarlo.hit_eq_hitData` — w
 `correct` establishes for itself, so nothing about the estimator changes; `coinLaw` and
 `coins` simply no longer appear in what `Ttc.mcVol` *unfolds to*.  Mathlib's Lebesgue
 `volume` does, irreducibly: `scale` is the enclosing ball's volume and `target` is a
-measurable hull.  See `EstData`'s docstring.
+measurable hull.  See `Model/Pseudocode`'s docstring.
 
 ## Main declarations
 
@@ -278,7 +278,7 @@ the situation `Ttc.MonteCarlo.correct` establishes for itself
 (`Ttc.MonteCarlo.subset_ball_rad`).
 
 This lemma is the entire content of the data/law split described in
-`Ttc/Volume/EstData.lean`: the sample count is arithmetic in Lebesgue volume, the coin law
+`Ttc/Model/Pseudocode.lean`: the sample count is arithmetic in Lebesgue volume, the coin law
 `Ttc.MonteCarlo.coinLaw` enters only through theorems, and the estimator's *definition*
 therefore names no measure this development constructs. -/
 theorem hit_eq_hitData {K : Set (Space n)} (hsub : K ⊆ Metric.ball (0 : Space n) (rad K)) :
@@ -557,7 +557,7 @@ theorem monteCarlo_est_ne_volume {n : ℕ} (hn : n ≠ 0) :
 Every declaration in this file is `sorry`-free and depends only on Lean's three standard
 axioms.  Re-check with `lake build Ttc.Volume.MonteCarlo`.  The definitions this file is
 *about* — `rad`, `target`, `hitData`, `scale`, `nSamp`, `ind`, `score`, `est` — are checked
-where they are defined, in `Ttc/Volume/EstData.lean`. -/
+where they are defined, in `Ttc/Model/Pseudocode.lean`. -/
 
 #print axioms Ttc.MonteCarlo.volume_unitBall_ne_zero
 #print axioms Ttc.MonteCarlo.volume_unitBall_ne_top

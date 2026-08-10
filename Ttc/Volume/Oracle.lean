@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Volume.EstData
+import Ttc.Model.Pseudocode
 
 /-!
 # `Volume/Oracle`: `Vol_ED`'s contract, stated as Cousins–Vempala Theorem 1.1
@@ -35,7 +35,7 @@ former field recovered as a theorem — lives in `Ttc/Volume/Bridge.lean`, so th
 this file stays what it claims to be: declarations and assumptions, no proofs.
 
 `Ttc.roundBody`, the normalisation `Vol_ED` is called on, used to be defined here and now
-lives one file down in [`Ttc/Volume/EstData.lean`](EstData.lean), together with the rest of
+lives in [`Ttc/Model/Pseudocode.lean`](../Model/Pseudocode.lean), together with the rest of
 what the constructed oracle *computes* — so that `Model/Pseudocode` can reach those
 definitions without importing this structure. The name is unchanged.
 
