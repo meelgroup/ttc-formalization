@@ -181,10 +181,11 @@ theorem toDNF_isPositive {φ : BForm A} (h : φ.IsPositive) :
 The shape the non-vacuity witness needs: a conjunction of positive atoms converts
 to the single cube holding exactly those atoms. `BForm.tt` is what lets such a
 conjunction be written without a tautology seed, and hence stay positive.
--/
 
-/-- A conjunction of atoms, as a formula. -/
-def conj (L : List A) : BForm A := L.foldr (fun a φ => .and (.atom a) φ) .tt
+`Ttc.conj` itself is defined in `Model/Prelude`, because `Ttc.cubeForm` (lines A3
+and A6 of `Model/Pseudocode`) folds it and so it is part of the algorithm's own
+vocabulary; everything proved *about* it stays here.
+-/
 
 /-- **`ToDNF` of a conjunction of atoms is the one cube holding them.** -/
 theorem toDNF_conj (L : List A) :

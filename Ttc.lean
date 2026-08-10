@@ -438,6 +438,9 @@ import Ttc.Findings.Repair
 import Ttc.Findings.Independence
 import Ttc.Findings.OpenHalfspace
 import Ttc.Findings.SmallBody
+import Ttc.Monadic.MeasurePr
+import Ttc.Monadic.Kernel
+import Ttc.Audit.ClosureCheck
 import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
 import Ttc.Sampler.Bridge

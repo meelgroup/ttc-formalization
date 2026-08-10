@@ -8,10 +8,23 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 /-!
-# `Model/Prelude`: vocabulary
+# `Model/Prelude`: the vocabulary of the audit surface
 
-Every non-Mathlib symbol the rest of `Model/` uses in a definition. Definitions
-only — no algorithm, no assumptions, no proofs beyond `rfl`.
+Every symbol the two transcription files (`Model/ProblemSetting.lean`,
+`Model/Pseudocode.lean`) use in a *definition*, and which is **not** a Mathlib
+symbol, is defined here. So a referee reading `Model/` never has to leave it to
+find out what a name means: the ambient space (`Space`), the formula syntax
+(`LinAtom`, `BForm`, `Lit`, `Cube`, `DNF`) and everything it unfolds to
+(`BForm.holds` → `Lit.holds` → `Cube.holds` → `DNF.holds`), the circuit-AllSAT
+call of `alg:ttc` line 16 (`toDNF` → `dnfAux` → `DNF.cross`), the semantics over
+the reals (`induced`, `sol` = `Sol(F)`, `region` = `P(c)`), the positivity
+conditions and the facet index `lem:nonconv` is stated over (`BForm.IsPositive`,
+`DNF.IsPositive`, `FacetIndex`), the lattices the count is taken over
+(`fineLattice`, `latticeScale`, `latticeCount`, `normalisedCount`), and the
+closed-form parameter block (`Params`, `alg:ttc` lines 17–20 and `alg:prec`
+line 86).
+
+Definitions only — no algorithm, no assumptions, no proofs beyond `rfl`.
 
 Modelling notes: atoms are abstract (an index type `A` plus an interpretation
 `M`), so the Boolean-abstraction property is definitional (`mem_sol_iff`). A
@@ -23,15 +36,17 @@ namespace Ttc
 
 open scoped Pointwise
 
-/-- `ℝⁿ` with the Euclidean (`ℓ₂`) norm and Lebesgue measure. The `ℓ₂` norm
+/-! ## The ambient space -/
+
+/-- **`ℝⁿ`** with the Euclidean (`ℓ₂`) norm and Lebesgue measure. The `ℓ₂` norm
 matters: the paper's inscribed-ball hypotheses are about `ℓ₂`-balls. -/
 abbrev Space (n : ℕ) := EuclideanSpace ℝ (Fin n)
 
+/-! ## The formula syntax `F_bool` -/
+
 variable {A X : Type*} {n : ℕ}
 
-/-! ## Formulas -/
-
-/-- One row `A_ij x ≤ b_ij` of the paper's constraint matrices. -/
+/-- **One row `A_ij x ≤ b_ij`** of the paper's constraint matrices. -/
 structure LinAtom (n : ℕ) where
   /-- The coefficient vector. -/
   coeff : Fin n → ℝ
@@ -42,7 +57,7 @@ structure LinAtom (n : ℕ) where
 def LinAtom.halfspace (a : LinAtom n) : Set (Space n) :=
   {x | ∑ i, a.coeff i * x i ≤ a.bound}
 
-/-- The paper's `F_bool`: a Boolean combination of atom indices. -/
+/-- **The paper's `F_bool`**: a Boolean combination of atom indices. -/
 inductive BForm (A : Type*) where
   /-- The empty conjunction. -/
   | tt : BForm A
@@ -75,6 +90,12 @@ def BForm.IsPositive : BForm A → Prop
   | .neg _ => False
   | .and φ ψ => φ.IsPositive ∧ ψ.IsPositive
   | .or φ ψ => φ.IsPositive ∧ ψ.IsPositive
+
+/-- **A conjunction of atoms, as a formula** — the shape lines A3 and A6 read a
+cube back as (`Ttc.cubeForm`, `Model/Pseudocode`), and the shape the non-vacuity
+witness needs. `BForm.tt` is what lets such a conjunction be written without a
+tautology seed, and hence stay positive (`Ttc.isPositive_conj`, `Ttc/Dnf.lean`). -/
+def conj (L : List A) : BForm A := L.foldr (fun a φ => .and (.atom a) φ) .tt
 
 /-- An atom index with a polarity. -/
 structure Lit (A : Type*) where
@@ -132,21 +153,21 @@ def dnfAux : BForm A → Bool → DNF A
 `Ttc.toDNF_isDNFOf` proves it correct, so nothing about the DNF is assumed. -/
 def toDNF (φ : BForm A) : DNF A := dnfAux φ true
 
-/-! ## Semantics over the reals -/
+/-! ## The semantics over the reals: `Sol(F)` and `P(c)` -/
 
 variable (M : A → Set X)
 
 /-- The Boolean assignment a point induces on atoms. -/
 def induced (x : X) : A → Prop := fun a => x ∈ M a
 
-/-- The paper's `Sol(F)`. -/
+/-- **The paper's `Sol(F)`.** -/
 def sol (φ : BForm A) : Set X := {x | φ.holds (induced M x)}
 
 /-- The set a literal denotes. -/
 def litSet (l : Lit A) : Set X :=
   cond l.pos (M l.atom) (M l.atom)ᶜ
 
-/-- The paper's `P(c)`: the region a cube carves out. -/
+/-- **The paper's `P(c)`**: the region a cube carves out. -/
 def region (c : Cube A) : Set X := {x | c.holds (induced M x)}
 
 variable {M}
@@ -177,7 +198,7 @@ def DNF.IsPositive (D : DNF A) : Prop := ∀ c ∈ D, Cube.IsPositive c
 /-- Facets of a DNF: one per literal of each of its cubes. -/
 abbrev FacetIndex (D : DNF A) := Σ c : {c : Cube A // c ∈ D}, {l : Lit A // l ∈ c.val}
 
-/-! ## The lattices
+/-! ## The lattices `ℤⁿ` and `𝕃ⁿ`, and the count `L`
 
 The algorithm counts points of `𝕃ⁿ = 10^(−ρ)·ℤⁿ`; `lem:lattice` transports that
 count to `ℤⁿ` by dilating. Both lattices, the dilation `10^ρ`, and the normalised
@@ -185,10 +206,10 @@ count `L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` are defined here, so that the prob
 statement can *be* about a lattice count rather than about a bare real.
 -/
 
-/-- The integer lattice inside `ℝⁿ`. -/
+/-- **The integer lattice `ℤⁿ`** inside `ℝⁿ`. -/
 def intLattice (n : ℕ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = (k : ℝ)}
 
-/-- The refined lattice `𝕃ⁿ = c⁻¹ · ℤⁿ`; the algorithm uses `c = 10^ρ`. -/
+/-- **The refined lattice `𝕃ⁿ = c⁻¹ · ℤⁿ`**; the algorithm uses `c = 10^ρ`. -/
 def fineLattice (n : ℕ) (c : ℝ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ)}
 
 @[simp]
@@ -199,7 +220,7 @@ theorem mem_intLattice {x : Space n} : x ∈ intLattice n ↔ ∀ i, ∃ k : ℤ
 theorem mem_fineLattice {c : ℝ} {x : Space n} :
     x ∈ fineLattice n c ↔ ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ) := Iff.rfl
 
-/-- The dilation `10^ρ` carrying `𝕃ⁿ = 10^(−ρ)·ℤⁿ` onto `ℤⁿ`. -/
+/-- **The dilation `10^ρ`** carrying `𝕃ⁿ = 10^(−ρ)·ℤⁿ` onto `ℤⁿ`. -/
 noncomputable def latticeScale (ρ : ℤ) : ℝ := (10 : ℝ) ^ ρ
 
 /-- **`|Sol(F) ∩ 𝕃ⁿ|`** — the lattice-point count the algorithm's estimate
@@ -213,14 +234,14 @@ noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)
     (ρ : ℤ) : ℝ :=
   (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
 
-/-! ## The parameter block
+/-! ## The parameter block `alg:ttc` lines 17–20, `alg:prec` line 86
 
-The five scalars `alg:ttc` (lines 17–20) and `alg:prec` (line 86) compute before
-the main loop. What each is chosen to satisfy is proved in `Constants/Parameters`.
+The scalars the algorithm computes for itself before the main loop. What each is
+chosen to satisfy is proved in `Constants/Parameters`.
 -/
 
-/-- Inputs to the algorithm: `n` the dimension, `m` the number of cubes, `r` the
-total facet count. -/
+/-- **The inputs and standing assumptions of `TTC`**: `n` the dimension, `m` the
+number of cubes, `r` the total facet count. -/
 structure Params where
   /-- The requested multiplicative accuracy. -/
   ε : ℝ
@@ -247,10 +268,13 @@ namespace Params
 
 variable (P : Params)
 
-/-- `η ← ε/8` (`alg:ttc` line 17). -/
+/-- `η ← ε/8` (`alg:ttc` line 17) — the slack the two geometric constants below
+are budgeted against: `η` is what `Ttc.Params.kappa` and `Ttc.Params.gamma` are
+written in terms of. -/
 noncomputable def eta : ℝ := P.ε / 8
 
-/-- `ε' ← ε/12` (`alg:ttc` line 18). -/
+/-- `ε' ← ε/12` (`alg:ttc` line 18) — the per-call accuracy handed to `Vol_ED`
+(`alg:ttc` line 24), one call per polytope. -/
 noncomputable def epsPrime : ℝ := P.ε / 12
 
 /-- `δ' ← δ/(4m)` (`alg:ttc` line 18): the per-call failure probability handed to
