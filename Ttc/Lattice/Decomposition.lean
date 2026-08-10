@@ -3,13 +3,22 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Mathlib.Analysis.Convex.Basic
-import Ttc.Model.Prelude
+import Ttc.Dnf
 
 /-!
 # `thm:decomposition` and the convexity of a cube's region
 
-The proof content behind `Model/ProblemSetting`. Two groups:
+The proof content behind `Model/ProblemSetting`. Three groups:
 
+* **The semantic vocabulary `Model/Prelude` does not need.** `Model/Prelude` is
+  held to the measured keep-set of `Ttc.ttc` and of the *statement* of
+  `Ttc.ttc_volume_estimate`; these five names are outside it, and they are
+  reproduced here unchanged in name, type and docstring. They are the set a
+  literal denotes (`Ttc.litSet`), the four definitional-membership rewrites
+  (`Ttc.mem_sol_iff`, `Ttc.mem_region_iff`, `Ttc.mem_intLattice`,
+  `Ttc.mem_fineLattice` — all `Iff.rfl`, all `@[simp]`), and the normalised
+  lattice count `L` (`Ttc.normalisedCount`). This file is where they land because
+  it is the most upstream module every consumer of them already sees.
 * **The two inclusions of `thm:decomposition`** — soundness `P(cᵢ) ⊆ Sol(F)`
   (`Ttc.region_subset_sol`) and completeness `Sol(F) ⊆ ⋃ᵢ P(cᵢ)`
   (`Ttc.sol_subset_iUnion_region`). The paper keeps that split, and so do we;
@@ -26,6 +35,40 @@ namespace Ttc
 open Set
 
 variable {A X : Type*} {n : ℕ} {M : A → Set X} {φ : BForm A} {D : DNF A}
+
+section Vocabulary
+
+variable (M)
+
+/-- The set a literal denotes. -/
+def litSet (l : Lit A) : Set X :=
+  cond l.pos (M l.atom) (M l.atom)ᶜ
+
+variable {M}
+
+/-- The Boolean-abstraction property, definitionally. -/
+@[simp]
+theorem mem_sol_iff {φ : BForm A} {x : X} :
+    x ∈ sol M φ ↔ φ.holds (induced M x) := Iff.rfl
+
+@[simp]
+theorem mem_region_iff {c : Cube A} {x : X} :
+    x ∈ region M c ↔ ∀ l ∈ c, l.holds (induced M x) := Iff.rfl
+
+@[simp]
+theorem mem_intLattice {x : Space n} : x ∈ intLattice n ↔ ∀ i, ∃ k : ℤ, x i = (k : ℝ) :=
+  Iff.rfl
+
+@[simp]
+theorem mem_fineLattice {c : ℝ} {x : Space n} :
+    x ∈ fineLattice n c ↔ ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ) := Iff.rfl
+
+/-- **`L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`** — the paper's normalised lattice count. -/
+noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
+    (ρ : ℤ) : ℝ :=
+  (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
+
+end Vocabulary
 
 /-! ## Regions as intersections -/
 

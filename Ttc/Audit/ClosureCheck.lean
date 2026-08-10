@@ -263,13 +263,13 @@ making `alg:ttc` monadic, not moving a file.
 
 ### `Ttc.ttc_volume_estimate` — the headline (`Model/Theorem`)
 
-Statement closure (a theorem, so only its *type* is entered): **219** `Ttc` constants, of which
-**71** are defined outside `Ttc/Model/`, and **35** are forbidden.  (It was 212/86 before the
-accuracy conjunct was restated over `Ttc.ttcRun`; the fifteen that went away are
-`Ttc.ttcOracleBundle` and the `Exec/Api`, `Exec/Endgoal`, `Exec/Coverage`, `Exec/Inputs` and
-`Coupling/Family` constants it reached — the *statement* no longer mentions the bundle, only
-the proof does.) The forbidden ones fall into
-exactly four groups:
+Statement closure (a theorem, so only its *type* is entered): **201** `Ttc` constants, of
+which **0** are defined outside `Ttc/Model/`, and 25 are matched by `forbidden` — all of
+them, now, *inside* `Model/`.  This is checked, not asserted: `#modelClosureOfType
+Ttc.ttc_volume_estimate` is enabled at the foot of this file and fails the build on drift.
+
+The table below is the historical record of the four groups that *used* to be outside, kept
+because it documents what had to move and why.  It no longer describes the current state:
 
 | group (module) | count | why the *statement* names it |
 | --- | --- | --- |
@@ -397,11 +397,20 @@ measure, so it names them.  What the list no longer detects is a filing problem 
 ### Knock-on: `Ttc.ttc_volume_estimate`'s statement
 
 Unchanged as a statement, but its closure improved as a side effect of the moves:
-**229** `Ttc` constants (was 219), of which **30** are outside `Ttc/Model/` (was 71)
-and **25** are forbidden (was 35, and all 25 are now defined *inside* `Model/`).  The
-41 that came inside are the `Volume/MonteCarlo`, `Coupling/Family`,
-`Sampler/Construct`, `Process/Thinning`, `Exec/CanonPolytope` and `Exec/EndToEnd`
-groups listed in the table above.
+**201** `Ttc` constants, of which **0** are outside `Ttc/Model/`, and the 25 that
+`forbidden` still matches by name are every one of them *defined inside* `Model/`.
+(The trajectory was 212/86 → 219/71 → 229/30 → 201/0; earlier revisions of this
+paragraph quoted the intermediate figures and were left stale by later moves.  It
+is measured, so re-run rather than trust the prose.)
+
+That is why `#modelClosureOfType Ttc.ttc_volume_estimate` is **enabled** below: the
+headline's *type* — not merely the algorithm — now names nothing defined outside
+the four `Model/` files, and the build fails if that ever stops being true.
+
+`#closureOfType` stays disabled, and by construction rather than by filing: it
+forbids a statement naming this development's probability spaces, and
+`Ttc.ttc` **is** a measure, so the statement names them.  Every constant it flags
+is under `Model/`.
 -/
 
 section Invocations
@@ -411,6 +420,6 @@ section Invocations
 #modelClosure Ttc.ttcRun
 #modelClosure Ttc.ttc
 -- #closureOfType Ttc.ttc_volume_estimate
--- #modelClosureOfType Ttc.ttc_volume_estimate
+#modelClosureOfType Ttc.ttc_volume_estimate
 
 end Invocations

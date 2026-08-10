@@ -26,11 +26,23 @@ find out what a name means: the ambient space (`Space`), the formula syntax
 (`BForm.holds` → `Lit.holds` → `Cube.holds` → `DNF.holds`), the circuit-AllSAT
 call of `alg:ttc` line 16 (`toDNF` → `dnfAux` → `DNF.cross`), the semantics over
 the reals (`induced`, `sol` = `Sol(F)`, `region` = `P(c)`), the positivity
-conditions and the facet index `lem:nonconv` is stated over (`BForm.IsPositive`,
-`DNF.IsPositive`, `FacetIndex`), the lattices the count is taken over
-(`fineLattice`, `latticeScale`, `latticeCount`, `normalisedCount`), and the
-closed-form parameter block (`Params`, `alg:ttc` lines 17–20 and `alg:prec`
-line 86).
+condition the headline is stated under and the facet index `lem:nonconv` is stated
+over (`BForm.IsPositive`, `FacetIndex`), the lattices the count is taken over
+(`fineLattice`, `latticeScale`, `latticeCount`), and the closed-form parameter
+block (`Params`, `alg:ttc` lines 17–20 and `alg:prec` line 86).
+
+**The file is held to a measured keep-set, not to a topic**: the union of the
+definitional closures of `Ttc.ttc` and of the *statement* of
+`Ttc.ttc_volume_estimate`, as `Ttc/Audit/ClosureCheck.lean` measures them, plus
+the four things those closures cannot see but the build needs — two instances
+(`instFiniteCubeMem`, `isMarkovKernel_thinKernel`) feeding proof terms, and two
+predicates `Model/Pseudocode` names in statements of its own (`DNF.holds`,
+`IsDNFOf`).  Ten declarations fell outside it and were evicted downstream,
+keeping name, type and docstring: `litSet`, `mem_sol_iff`, `mem_region_iff`,
+`mem_intLattice`, `mem_fineLattice` and `normalisedCount` to
+`Lattice/Decomposition`; `Cube.IsPositive` and `DNF.IsPositive` to `Ttc/Dnf.lean`,
+beside `toDNF_isPositive`; `Params.kappa` to `Constants/Parameters`, beside the
+inequality it is chosen to satisfy; `thinKernel_apply` to `Process/Thinning`.
 
 Since `Ttc.ttc` (`Model/Pseudocode`) is a *law*, the vocabulary also includes the
 ambient random objects the algorithm's two coin sequences are governed by — the
@@ -42,16 +54,17 @@ runs on (`mixSteps`, `ballWalkLaw`, `kv97SampD`, `kv97ContLaw`, `e2eSampD`, `fac
 are what its randomness *is*, which is why they are filed here rather than with the
 pseudocode.  See the "The probability vocabulary" section below.
 
-Definitions only — no algorithm, no assumptions.  The three exceptions are the two
+Definitions only — no algorithm, no assumptions.  The exceptions are the two
 finiteness instances (`instFiniteCubeMem`, `instFiniteFacetIndex`, which `facetOf`
-needs to enumerate the facets) and the Markov-kernel instances the Ionescu–Tulcea
-construction of `trajLaw` takes as instance arguments; everything else proved about
-the objects below lives outside `Model/`.
+needs to enumerate the facets) and the two Markov-kernel instances the Ionescu–
+Tulcea construction of `trajLaw` takes as instance arguments; no other statement
+about the objects below is made here, and no `@[simp]` lemma at all.
 
 Modelling notes: atoms are abstract (an index type `A` plus an interpretation
-`M`), so the Boolean-abstraction property is definitional (`mem_sol_iff`). A
-negated atom denotes an *open* half-space, so a cube's region is convex but in
-general not closed — see the README, finding 5.
+`M`), so the Boolean-abstraction property is definitional — `x ∈ sol M φ` *is*
+`φ.holds (induced M x)`, which is why `Ttc.mem_sol_iff` (`Lattice/Decomposition`)
+is `Iff.rfl`. A negated atom denotes an *open* half-space, so a cube's region is
+convex but in general not closed — see the README, finding 5.
 -/
 
 namespace Ttc
@@ -91,7 +104,6 @@ inductive BForm (A : Type*) where
   | and : BForm A → BForm A → BForm A
   /-- Disjunction. -/
   | or : BForm A → BForm A → BForm A
-  deriving Repr
 
 /-- Satisfaction under a `Prop`-valued assignment. -/
 def BForm.holds (v : A → Prop) : BForm A → Prop
@@ -185,37 +197,18 @@ def induced (x : X) : A → Prop := fun a => x ∈ M a
 /-- **The paper's `Sol(F)`.** -/
 def sol (φ : BForm A) : Set X := {x | φ.holds (induced M x)}
 
-/-- The set a literal denotes. -/
-def litSet (l : Lit A) : Set X :=
-  cond l.pos (M l.atom) (M l.atom)ᶜ
-
 /-- **The paper's `P(c)`**: the region a cube carves out. -/
 def region (c : Cube A) : Set X := {x | c.holds (induced M x)}
 
 variable {M}
 
-/-- The Boolean-abstraction property, definitionally. -/
-@[simp]
-theorem mem_sol_iff {φ : BForm A} {x : X} :
-    x ∈ sol M φ ↔ φ.holds (induced M x) := Iff.rfl
-
-@[simp]
-theorem mem_region_iff {c : Cube A} {x : X} :
-    x ∈ region M c ↔ ∀ l ∈ c, l.holds (induced M x) := Iff.rfl
-
-/-! ## Positive DNFs, and the facets they present
+/-! ## The facets a DNF presents
 
 A negated atom denotes an **open** half-space, which is not an intersection of
 closed ones, so `lem:nonconv`'s geometry is available only for DNFs all of whose
-literals are positive (README, finding 5). `Ttc.FacetIndex D` names the facets of
-such a DNF: one per literal of each cube.
+literals are positive (`Ttc.DNF.IsPositive`, `Ttc/Dnf.lean`; README, finding 5).
+`Ttc.FacetIndex D` names the facets of such a DNF: one per literal of each cube.
 -/
-
-/-- A cube is **positive** when none of its literals is negated. -/
-def Cube.IsPositive (c : Cube A) : Prop := ∀ l ∈ c, l.pos = true
-
-/-- A DNF is **positive** when all of its cubes are. -/
-def DNF.IsPositive (D : DNF A) : Prop := ∀ c ∈ D, Cube.IsPositive c
 
 /-- Facets of a DNF: one per literal of each of its cubes. -/
 abbrev FacetIndex (D : DNF A) := Σ c : {c : Cube A // c ∈ D}, {l : Lit A // l ∈ c.val}
@@ -236,9 +229,12 @@ instance instFiniteFacetIndex (D : DNF A) : Finite (FacetIndex D) := by
 /-! ## The lattices `ℤⁿ` and `𝕃ⁿ`, and the count `L`
 
 The algorithm counts points of `𝕃ⁿ = 10^(−ρ)·ℤⁿ`; `lem:lattice` transports that
-count to `ℤⁿ` by dilating. Both lattices, the dilation `10^ρ`, and the normalised
-count `L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` are defined here, so that the problem
-statement can *be* about a lattice count rather than about a bare real.
+count to `ℤⁿ` by dilating. Both lattices, the dilation `10^ρ` and the count
+`|Sol(F) ∩ 𝕃ⁿ|` are defined here, so that the problem statement can *be* about a
+lattice count rather than about a bare real.  Its normalisation
+`L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)` (`Ttc.normalisedCount`) is not named by the
+algorithm or by the headline, and lives in `Lattice/Decomposition` with the two
+membership rewrites.
 -/
 
 /-- **The integer lattice `ℤⁿ`** inside `ℝⁿ`. -/
@@ -246,14 +242,6 @@ def intLattice (n : ℕ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = (k : 
 
 /-- **The refined lattice `𝕃ⁿ = c⁻¹ · ℤⁿ`**; the algorithm uses `c = 10^ρ`. -/
 def fineLattice (n : ℕ) (c : ℝ) : Set (Space n) := {x | ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ)}
-
-@[simp]
-theorem mem_intLattice {x : Space n} : x ∈ intLattice n ↔ ∀ i, ∃ k : ℤ, x i = (k : ℝ) :=
-  Iff.rfl
-
-@[simp]
-theorem mem_fineLattice {c : ℝ} {x : Space n} :
-    x ∈ fineLattice n c ↔ ∀ i, ∃ k : ℤ, x i = c⁻¹ * (k : ℝ) := Iff.rfl
 
 /-- **The dilation `10^ρ`** carrying `𝕃ⁿ = 10^(−ρ)·ℤⁿ` onto `ℤⁿ`. -/
 noncomputable def latticeScale (ρ : ℤ) : ℝ := (10 : ℝ) ^ ρ
@@ -263,11 +251,6 @@ targets, of the *actual* solution set. -/
 noncomputable def latticeCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
     (ρ : ℤ) : ℕ :=
   ((sol M φ) ∩ fineLattice n (latticeScale ρ)).ncard
-
-/-- **`L = |Sol(F) ∩ 𝕃ⁿ| / 10^(ρ·n)`** — the paper's normalised lattice count. -/
-noncomputable def normalisedCount {A : Type*} {n : ℕ} (M : A → Set (Space n)) (φ : BForm A)
-    (ρ : ℤ) : ℝ :=
-  (latticeCount M φ ρ : ℝ) / (latticeScale ρ) ^ n
 
 /-! ## The parameter block `alg:ttc` lines 17–20, `alg:prec` line 86
 
@@ -329,14 +312,10 @@ noncomputable def thresh : ℝ :=
   max (24 * Real.log (24 / P.δ) / ((1 - P.epsPrime) * P.epsPrime ^ 2))
       (15 * (Real.log (6 / P.δ) + Real.log P.m))
 
-/-- `κ = √(2 log(8/η)) + √(2 log r)`, the facet displacement of `lem:nonconv`.
-The `8/η` (not `4/η`) is the `θ = η/2` repair; see the README, finding 1. -/
-noncomputable def kappa : ℝ :=
-  Real.sqrt (2 * Real.log (8 / P.eta)) + Real.sqrt (2 * Real.log P.r)
-
 /-- `γ = (64 m n / η)·√(log(8r/η))`, the inscribed radius `GetPrecision` targets
 (`alg:prec` line 86). The `m` allows the `Pᵢ` different ball centres; the `8r/η`
-must match `κ` or `kappa_div_gamma_le` fails. See the README, finding 2. -/
+must match `κ` (`Ttc.Params.kappa`, `Constants/Parameters`) or
+`Ttc.Params.kappa_div_gamma_le` fails. See the README, finding 2. -/
 noncomputable def gamma : ℝ :=
   (64 * P.m * P.n / P.eta) * Real.sqrt (Real.log (8 * P.r / P.eta))
 
@@ -403,11 +382,10 @@ noncomputable def thinKernel (L : ℕ) : Kernel (Fin L → ℕ) (Fin L → ℕ) 
   toFun k := Measure.pi fun s => binomial (k s) half
   measurable' := Measurable.of_discrete
 
-@[simp] theorem thinKernel_apply (L : ℕ) (k : Fin L → ℕ) :
-    thinKernel L k = Measure.pi fun s => binomial (k s) half := rfl
-
 instance isMarkovKernel_thinKernel (L : ℕ) : IsMarkovKernel (thinKernel L) :=
-  ⟨fun k => by rw [thinKernel_apply]; infer_instance⟩
+  ⟨fun k => by
+    show IsProbabilityMeasure (Measure.pi fun s => binomial (k s) half)
+    infer_instance⟩
 
 /-- The chain's kernel at step `n`: thin the state at time `n`. The history is
 available but only its last coordinate is read — the chain is Markov. -/

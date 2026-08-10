@@ -50,11 +50,17 @@ Ttc/
   run.  **The algorithm carries no proof binder**: `Ttc.Params` does bundle five
   proof fields, but `Ttc.ttcParamsTotal` decides all five side conditions
   classically, so `Ttc.ttcAlgOutput` and `Ttc.ttcRun` are closed functions of the
-  data.  Not proof-free, though: it carries 27 proofs, each either a fact without
-  which something the file *defines* cannot be written down — a `Ttc.Params`, or
-  the run's own oracle bundle, whose `Ttc.Oracles` structure has two proof fields
-  — or a basic property of something it defines.  `AUDIT.md` §1h-iv lists all 27
-  by group.
+  data.  Not proof-free, though: it carries **10** theorems and no instance, every
+  one of them a fact without which something the file *defines* cannot be written
+  down — the run's own oracle bundle, whose `Ttc.Oracles` structure has two proof
+  fields, or a `Classical.choose` the file then names.  They are invisible to
+  `#modelClosure` (`closureAux` does not walk a theorem's value) but load-bearing
+  for elaboration, which is why they cannot move downstream.  `AUDIT.md` §1h-iv
+  lists them by group.
+
+  Its whole import closure of ours is **one file**, `Model/ProblemSetting`, so the
+  audit surface is `Prelude → ProblemSetting → Pseudocode → Theorem` and nothing
+  else.
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
                               guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
                               at **eleven explicit binders**, with no interpretation,

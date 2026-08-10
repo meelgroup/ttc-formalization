@@ -298,4 +298,13 @@ when the halvings fall relative to the insertions.
 Both sides reduce, by the two lemmas above, to the same product of Poissons.
 -/
 
+/-! ## The one-step thinning kernel, unfolded
+
+`Ttc.thinKernel` (`Model/Prelude`) is part of the vocabulary — it is what the
+algorithm's sample coins *are*, and it is in the definitional closure of
+`Ttc.ttc`. Its defining equation is not: nothing the headline says needs it, so
+the rewrite lives here, with the rest of the thinning theory. -/
+@[simp] theorem thinKernel_apply (L : ℕ) (k : Fin L → ℕ) :
+    thinKernel L k = Measure.pi fun s => binomial (k s) half := rfl
+
 end Ttc

@@ -1333,9 +1333,20 @@ paper's.  The four honesty notes of §1h-ii stand unchanged.
 ### 1h-iv. Why `Model/Pseudocode` carries proofs at all
 
 `Model/Pseudocode` is not proof-free, and a reader who expects a pure transcription
-should know why.  It carries 27 proofs (25 theorems and 2 instances), and they fall
-into four groups — every one of them is a fact without which something the file
-*defines* could not be written down, or a basic property of something it defines:
+should know why.  It carries **10 theorems and no instance** — down from 27 once the
+file was stripped to the measured closure of `Ttc.ttc` — and every one is a fact
+without which something the file *defines* could not be written down.
+
+The reason they cannot simply be moved out is worth stating, because it is not
+obvious: `closureAux` never walks a **theorem's** value (`ConstantInfo.value?` is
+`none` for theorems in Lean 4.32), so **no theorem appears in any closure report**.
+These ten are therefore invisible to `#modelClosure` while still being required for
+the file to *elaborate* — they feed the anonymous `_proof_` constants of
+`Ttc.algOracles`, `Ttc.latticeEnum` and `Ttc.cubeOf`.  Pushing one downstream produces
+an elaboration error, not a closure error.
+
+The groups below are the historical four; groups 1 and 2 have since been evicted to
+`Ttc/Exec/Params.lean` and `Ttc/Exec/Dedup.lean`, and what remains is groups 3–4:
 
 1. **What a `Ttc.Params` cannot be built without** (12).  `Ttc.Params` bundles five
    *proof* fields (`hε0 hε1 hn hm hr`), so the parameter block of `alg:ttc` lines 17–20

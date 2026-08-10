@@ -43,6 +43,23 @@ namespace Ttc
 
 variable {A : Type*}
 
+/-! ## Positive cubes and positive DNFs
+
+A negated atom denotes an **open** half-space, which is not an intersection of
+closed ones, so `lem:nonconv`'s geometry is available only for DNFs all of whose
+literals are positive (README, finding 5).  The two predicates were in
+`Model/Prelude` while they were thought of as vocabulary; they are not in the
+definitional closure of `Ttc.ttc` nor in the statement of
+`Ttc.ttc_volume_estimate` — which is stated under `Ttc.BForm.IsPositive`, a
+condition on the **input formula** — so they live here, next to
+`Ttc.toDNF_isPositive`, the theorem that carries the first to the second. -/
+
+/-- A cube is **positive** when none of its literals is negated. -/
+def Cube.IsPositive (c : Cube A) : Prop := ∀ l ∈ c, l.pos = true
+
+/-- A DNF is **positive** when all of its cubes are. -/
+def DNF.IsPositive (D : DNF A) : Prop := ∀ c ∈ D, Cube.IsPositive c
+
 /-! ## `cross` -/
 
 @[simp] theorem DNF.holds_cross (v : A → Prop) (D E : DNF A) :

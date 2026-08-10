@@ -58,6 +58,19 @@ theorem log_pos : 0 < Real.log (8 * P.r / P.eta) := by
   have : 0 < Real.log 8 := Real.log_pos (by norm_num)
   rw [P.log_split]; linarith [P.log_r_nonneg]
 
+/-- `κ = √(2 log(8/η)) + √(2 log r)`, the facet displacement of `lem:nonconv`.
+The `8/η` (not `4/η`) is the `θ = η/2` repair; see the README, finding 1.
+
+This is the one member of the parameter block `alg:ttc` does **not** compute: it
+is `lem:nonconv`'s constant, it appears in no line of the pseudocode, and it is
+outside the definitional closure of both `Ttc.ttc` and the statement of
+`Ttc.ttc_volume_estimate`.  It therefore sits here, with the inequality it is
+chosen to satisfy, rather than in `Model/Prelude` with the five parameters the
+algorithm really does compute.  It reaches `Ttc.Params.gamma` only through
+`Ttc.Params.kappa_div_gamma_le` below. -/
+noncomputable def kappa : ℝ :=
+  Real.sqrt (2 * Real.log (8 / P.eta)) + Real.sqrt (2 * Real.log P.r)
+
 /-- **`κ ≤ 2√(log(8r/η))`.** The quantitative content of `√u + √v ≤ √(2(u+v))`. -/
 theorem kappa_le : P.kappa ≤ 2 * Real.sqrt (Real.log (8 * P.r / P.eta)) := by
   rw [kappa, P.log_split]
