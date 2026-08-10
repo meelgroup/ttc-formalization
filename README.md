@@ -643,10 +643,14 @@ checks, and both are clean.
 
 ## Module map
 
-A small **audit surface** (`Ttc/Model/`'s four files, plus `Volume/VolSolCheck`)
-plus the proofs it rests on, one directory per object of the paper it discharges.
-To check *what is claimed* you read only `Model/`, and this is now machine-checked
-for the headline: `#modelClosureOfType Ttc.ttc_volume_estimate`
+A small **audit surface** — `Ttc/Model/`'s four files **and `Ttc/Probability/`'s
+four**, plus `Volume/VolSolCheck` — and the proofs it rests on, one directory per
+object of the paper it discharges.  The surface is two directories because the
+headline is a statement about a `Measure`, so the ambient randomness is part of
+what its type unfolds to wherever it is filed; `Ttc/Probability/` is held to
+definitions only (11 `def`s and 2 instances, no `Prop`, no hypothesis bundle) in
+exchange for being admitted.  To check *what is claimed* you read those two, and
+this is machine-checked for the headline: `#modelClosureOfType Ttc.ttc_volume_estimate`
 ([`Ttc/Audit/ClosureCheck.lean`](Ttc/Audit/ClosureCheck.lean)) fails the build if
 any constant the statement unfolds to is defined outside `Model/`. **What that cost
 is the thing to know**: the names carrying the strongest assumptions —

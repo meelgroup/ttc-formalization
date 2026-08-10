@@ -305,8 +305,12 @@ precisely because the build does not.
 ## The audit surface (`Model/`)
 
 `Model/` is kept deliberately small: a referee who wants to trust the *statement*
-reads the four files listed above and stops. Two things make that more than a
-filing convention.
+reads the four files listed above — **and the four short definition-only files of
+`Ttc/Probability/`** — and stops. The surface is two directories, not one, because
+`Ttc.ttc` is a `Measure`: the ambient randomness is in what the headline's type
+unfolds to no matter where it is filed. `Ttc/Probability/` is bounded in exchange:
+definitions only, no `Prop`, no hypothesis bundle, nothing assumed. Two things make
+this more than a filing convention.
 
 **It is machine-checked, for the statement.** `Ttc/Audit/ClosureCheck.lean`
 defines `#modelClosure`/`#modelClosureOfType`, which walk a declaration's

@@ -13,7 +13,9 @@ the name. Every name on this page was checked to exist in the compiled
 environment; §5 has the probe that re-checks them all in one pass.
 
 The vocabulary, the pseudocode and the problem statement are in
-[`Ttc/Model/`](Ttc/Model/) — **four files**:
+[`Ttc/Model/`](Ttc/Model/) — **four files** (the audit surface also includes
+[`Ttc/Probability/`](Ttc/Probability/)'s four definition-only files, since the
+headline is a statement about a `Measure`; see §1b):
 [`Prelude`](Ttc/Model/Prelude.lean) (the vocabulary),
 [`ProblemSetting`](Ttc/Model/ProblemSetting.lean) (what `Vol(F)` is and what
 `(1 ± ε)·b` means), [`Pseudocode`](Ttc/Model/Pseudocode.lean) (`alg:ttc` and the
