@@ -210,6 +210,13 @@ changed is that they are now *stated in Lean* rather than absent, and the parts 
 | §4.5 Sampling theorems (`:1003–1053`) | ~50 | `thm:sampling`, `thm:gauss-sampling` | needs §4.1–4.4 — **now stated** as `UniformSampler`/`GaussianSampler` |
 | §5.2 Main theorem (`:1316–1611`) | ~295 | telescoping `W₁…W_m`, accuracy, median boost | needs §5.1 + §4 — **median boost and `lem:exp-bd`/`lem:fn-indep` now proved**; `lem:accuracy` still needs `lem:delta-ind` from §4 |
 
+**The "Blocker" column names libraries, and most of them now exist** — in `Arlib/`,
+not in Mathlib. Isoperimetry, conductance, Cheeger and conductance ⇒ mixing are all
+proved (§3's third column). What is *not* closed is the quantitative content that
+makes Theorem 1.1 worth having: every constant in the `Arlib` stack is exponential
+in `n`, so the blocker for these rows has moved from "no library" to "no polynomial
+constant".
+
 The §5.2 proof ends at `:1588–1604`: the product estimator, a `4/5` success
 probability, an `O(1)`-restart argument converting *expected* ball-walk steps
 into a fixed count, `lem:accuracy`, and finally *"boost this probability of
@@ -219,33 +226,54 @@ of it exists in Lean.
 
 ## 3. Mathlib v4.32 gap analysis
 
-Checked against `.lake/packages/mathlib` at `v4.32.0`:
+Checked against `.lake/packages/mathlib` at `v4.32.0`. **Read the second column
+together with the third**: this table was written when "not in Mathlib" and "not
+available to us" were the same statement, and they no longer are — most of these
+have since been built in `Arlib/`. What the "no"s now measure is upstreaming debt,
+not a blocker.
 
-| Needed | In Mathlib? |
-|---|---|
-| Prékopa–Leindler | **no** — zero hits |
-| Brunn–Minkowski | **no** — the only hit is a bibliography line, `Analysis/Convex/Intrinsic.lean:40` |
-| Logconcavity (as a defined notion) | **no** |
-| Isoperimetric inequality | **no** in Mathlib — but *proved here*, unconditionally, in `Arlib/Convexity/IsoBall.lean` (`κ = 2⁻ⁿ/D` for every bounded convex body). See §0(i) for the exponential-constant caveat |
-| Conductance | **no** |
-| Mixing time / convergence rate | **no** |
-| Total variation distance (as a probability-measure API) | **no** — only signed-measure Jordan decomposition. *Now supplied by the submodule's `TV.lean`, proved; roadmap step 2 below is done, modulo the data-processing inequality* |
-| Markov kernels, invariance, irreducibility | yes — `Probability/Kernel/{Defs,Invariance,Irreducible}.lean` |
-| Ergodic theory (qualitative) | yes — `Dynamics/Ergodic/` |
+| Needed | In Mathlib? | In `Arlib/`? |
+|---|---|---|
+| Prékopa–Leindler | **no** — zero hits | **yes, proved.** 1-D `prekopa_leindler_one_dim` (`Convexity/PrekopaLeindler.lean`) and `ℝⁿ` `prekopa_leindler_pi` (`Convexity/PrekopaLeindlerN.lean`) |
+| Brunn–Minkowski | **no** — the only hit is a bibliography line, `Analysis/Convex/Intrinsic.lean:40` | **yes, proved** in sharp form — `brunn_minkowski_sharp` (`Convexity/BrunnSharp.lean`) |
+| Logconcavity (as a defined notion) | **no** | **yes** — `LogConcaveOn`/`IsLogConcave` with closure properties (`Convexity/LogConcave.lean`) |
+| Isoperimetric inequality | **no** | **yes, proved** unconditionally in `Convexity/IsoBall.lean` (`κ = 2⁻ⁿ/D` for every bounded convex body). See §0(i) for the exponential-constant caveat |
+| Conductance | **no** | **yes** — defined, with the Metropolis filter, ball walk and speedy walk as genuine Markov kernels (`MarkovChains/Continuous/Conductance.lean`) |
+| Cheeger's inequality | **no** | **yes, both directions**, including the hard one — `cheeger` (`MarkovChains/Continuous/Cheeger.lean`), via the co-area formula, `L¹` isoperimetry and medians, none of which Mathlib has |
+| Mixing time / convergence rate | **no** | **yes** — conductance ⇒ geometric `L²` decay ⇒ TV mixing (`MarkovChains/Continuous/MixingFromConductance.lean`, `L2Mixing.lean`), composed end to end in `ConvexBodyMixing.lean`. This is what discharges the sampler's `law_tv` in `Ttc` |
+| `ZLogconcaveHypothesis` | n/a | **for the case that matters, yes** — false for general logconcave `f` (machine-checked counterexample), **true** for convex-body indicators: `zLogconcaveHypothesis_indicator` (`Convexity/GaussianCooling/ZLogconcave.lean`). See §0(ii) |
+| Total variation distance (as a probability-measure API) | **no** — only signed-measure Jordan decomposition | **yes, proved** — `Probability/TV.lean`; roadmap step 2 below is done, modulo the data-processing inequality |
+| Markov kernels, invariance, irreducibility | yes — `Probability/Kernel/{Defs,Invariance,Irreducible}.lean` | — |
+| Ergodic theory (qualitative) | yes — `Dynamics/Ergodic/` | — |
+
+**None of this makes Theorem 1.1 closer to formalized.** Every "yes" above is a
+*correctness* ingredient, and each carries an exponential constant (§0(i), §0(2));
+the `O*(n³)` complexity that is Cousins–Vempala's actual content is untouched.
 
 ## 2a. The interface layers (added after the table above)
 
-| File | Proved | Assumed |
+> **This table is superseded and kept only for the lesson in its "Assumed"
+> column.** Every predicate it names — `IsoInput`, `OneDimIso`,
+> `MixingFromConductance`, `SpeedyConductance`, `BallWalkMixing`,
+> `UniformSampler`, `GaussianSampler` — has since been **deleted**, not
+> discharged: `grep` finds no declaration of any of them anywhere in `Arlib/`.
+> They were replaced by theorems with the same content and no hypothesis, which is
+> what §3's third column now records. `Arlib/Convexity/Isoperimetry.lean` says so
+> in its own docstring: "Deliberately **absent**: any `def IsoInput …` /
+> `def OneDimIso …` predicate whose name …".
+
+| File | Proved | Assumed (at the time of writing; now none of these exist) |
 |---|---|---|
-| `Isoperimetry.lean` | logconcavity closure, `π_h`, `d_f`, set distance, scale-invariance, and `separated_speedy`/`iso_speedy` — the specialization §4 consumes | `IsoInput` (`thm:iso`), `OneDimIso` (`lem:1d-iso`) — **both assume their own conclusion; superseded by `Arlib/Convexity/IsoBall.lean`, which assumes nothing.** See §0(i) |
+| `Isoperimetry.lean` | logconcavity closure, `π_h`, `d_f`, set distance, scale-invariance, and `separated_speedy`/`iso_speedy` — the specialization §4 consumes | `IsoInput` (`thm:iso`), `OneDimIso` (`lem:1d-iso`) — **both assumed their own conclusion; superseded by `Arlib/Convexity/IsoBall.lean`, which assumes nothing.** See §0(i) |
 | `TV.lean` | **everything** — a total-variation API for probability measures (symmetry, triangle, `≤ 1`, `tv = 0 ↔ equal`, the chain bound), warmness and its propagation | nothing |
 | `Conductance.lean` | conductance; the Metropolis filter, ball walk and speedy walk as genuine Markov kernels | `MixingFromConductance`, `SpeedyConductance`, `BallWalkMixing`, `UniformSampler`, `GaussianSampler` |
 | `GaussianCooling/MedianBoost.lean` and `GaussianCooling/Chernoff.lean` | `lem:exp-bd`, `lem:fn-indep`, and the median boost — at the **`O(log 1/p)`** rate, via Hoeffding (`Chernoff.lean`) | nothing |
 
-Two caveats an auditor should not skip:
+Two caveats an auditor should not skip — the first is **why the whole
+assume-a-theorem-as-a-predicate approach was abandoned**, and it generalizes:
 
-* **`IsoInput`'s non-vacuity witnesses are all degenerate** (`d ≤ 0`, an empty part, or
-  `f ≡ 0`). The predicate is inhabited, but nothing shows it holds where its conclusion has
+* **`IsoInput`'s non-vacuity witnesses were all degenerate** (`d ≤ 0`, an empty part, or
+  `f ≡ 0`). The predicate was inhabited, but nothing showed it held where its conclusion has
   content. Same status as `LocalizationInput` — that is the honest limit of assuming a
   theorem as a predicate, and it means "not vacuous" is weaker than it sounds.
 * ~~**The median boost runs at the Chebyshev rate**, `O(1/p)`, where the paper claims
@@ -270,14 +298,18 @@ Two caveats an auditor should not skip:
      (`integral_prod_eq_prod_integral'`, `integral_prod_sq`, `prod_sq_div_le`,
      `prod_sq_div_le_exp`).
 
-So §4 is not "apply a Mathlib theorem." It is **build the library first**:
-continuous-state-space Markov chain theory with quantitative convergence, which
-does not exist in Mathlib in any form. §3 likewise needs convex-geometry
-foundations (Prékopa–Leindler at minimum) that are absent.
+So §4 was never "apply a Mathlib theorem." It was **build the library first**:
+continuous-state-space Markov chain theory with quantitative convergence, and
+convex-geometry foundations (Prékopa–Leindler at minimum), none of which exists in
+Mathlib in any form. **That library has since largely been built** — see §3's
+third column — so the sentence to carry forward is not "these are absent" but
+"these are ours to maintain, and none of them is upstream."
 
-Note that Prékopa–Leindler's absence also means `ZLogconcave` — one of the
-submodule's two remaining assumed inputs — cannot be discharged today either, as its own
-README already states.
+`ZLogconcave` in particular is no longer blocked by Prékopa–Leindler's absence:
+Prékopa–Leindler is proved (1-D and `ℝⁿ`), and for the case the volume algorithm
+actually needs — the indicator of a convex body — `zLogconcaveHypothesis_indicator`
+proves the hypothesis outright. It remains **false** for general logconcave `f`,
+with a machine-checked counterexample; see §0(ii).
 
 ## 4. Effort
 

@@ -234,13 +234,14 @@ theorem map_trajLaw_eval {θ : Fin L → ℝ} (hθ : ∀ s, 0 ≤ θ s) (j : ℕ
 /-! ## Count vectors as multisets
 
 The run's state is a `Multiset (Space n)`; the family is a count vector. Most of
-the dictionary between them — `Ttc.toMultiset`, `Ttc.count_toMultiset`,
-`Ttc.count_toMultiset_of_notMem` and `Ttc.toMultiset_le_of_count_le` — lives
-upstream, in `Model/Pseudocode`, together with the read-offs it is about and the
-two oracle contracts `Ttc.trajThin_le` and `Ttc.card_trajGen` it proves. It had
-to: `Ttc.ttcRun` (`Model/Pseudocode`) builds the oracle bundle inline, so its
-`thin_le` and `gen_card` fields have to be provable inside the audit surface.
-Nothing about the statements changed; only the file they are in.
+the dictionary between them lives upstream. `Ttc.toMultiset` itself, and the two
+oracle contracts `Ttc.trajThin_le` and `Ttc.card_trajGen` it is there to prove, are
+in `Model/Pseudocode`: `Ttc.algOracles` (`Model/Pseudocode`) builds the oracle
+bundle, so its `thin_le` and `gen_card` fields have to be provable inside the audit
+surface. The three lemmas those contracts rest on — `Ttc.count_toMultiset`,
+`Ttc.count_toMultiset_of_notMem` and `Ttc.toMultiset_le_of_count_le` — went one step
+further out, to `Ttc/ModelSupport.lean`, where they are stated generically at the
+sum `Ttc.toMultiset` unfolds to; every use of them is by unfolding that definition.
 
 `Ttc.card_toMultiset` is the exception: no contract needs it, so it stays here,
 where its consumers (`Coupling/Run`) are.
@@ -289,7 +290,7 @@ are about; `Ttc.ttcRun` needs them there. -/
 The three random *values* are the read-offs of `Model/Pseudocode`, which are stated
 without reference to `Ttc.Oracles`; what this definition adds is the two
 **contracts** — `thin_le` and `gen_card` — which are proofs, and are the reason the
-bundle as a whole cannot sit upstream of `Ttc.toMultiset_le_of_count_le`. See
+bundle as a whole cannot sit upstream of `Ttc.trajThin_le`. See
 `Ttc.thin_trajOracles`, `Ttc.pois_trajOracles` and `Ttc.gen_trajOracles` below for
 the (definitional) agreement. -/
 noncomputable def trajOracles {n : ℕ} {ι : Type*} {pt : Fin L → Space n}

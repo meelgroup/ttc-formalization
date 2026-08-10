@@ -2,7 +2,8 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Model.ProblemSetting
+import Ttc.ModelSupport
+import Ttc.Probability
 
 /-!
 # `Model/Pseudocode`: `alg:ttc`, **and the preprocessing that precedes it**
@@ -20,34 +21,51 @@ oracle argument**. The structural invariants of the modelled execution are in
 ## What proof content is here, and why
 
 This file **is not proof-free**, and it used to claim it was. What it now carries is
-the smallest set of proofs that leaves it able to elaborate at all: **ten
+the smallest set of proofs that leaves it able to elaborate at all: **six
 theorems**, one of them `private`, and no instances. Every one of them is a fact
-without which some *definition of this file* cannot be written down. Two groups:
+about something *this file defines*, without which some *other* definition of this
+file cannot be written down. Two groups:
 
-1. **What the run's own oracle bundle cannot be built without** (7).
+1. **What the run's own oracle bundle cannot be built without** (3).
    `Ttc.algOracles` constructs an `Ttc.Oracles` and that structure has two *proof*
-   fields, so `Ttc.trajThin_le` and `Ttc.card_trajGen` — and the count-vector
-   dictionary they rest on (`Ttc.count_toMultiset`,
-   `Ttc.count_toMultiset_of_notMem`, `Ttc.toMultiset_le_of_count_le`) and
+   fields, so `Ttc.trajThin_le` and `Ttc.card_trajGen` — and
    `Ttc.latticeEnum_injective`, which `thin_le` is applied at — are literally part
    of the term.
 2. **What a `Classical.choose` cannot be taken without** (3). `Ttc.latticeEnum` is
-   `choose`n from `Ttc.exists_latticeEnum` (which needs
-   `Ttc.hasLatticeEnum_of_finite`), and `Ttc.cubeOf` from the `private`
+   `choose`n from `Ttc.exists_latticeEnum`, and `Ttc.cubeOf` from the `private`
    `Ttc.exists_cubeOf`; `Ttc.cubeOf_spec` is that choice's `choose_spec`, and stays
    only because exporting the `private` theorem it reads would put a *new* name in
-   the audit surface to remove an old one.
+   the audit surface to remove an old one — and, unlike every other theorem here,
+   a name that `#modelClosure` would then *see*, since `Ttc.cubeOf` unfolds to a
+   `Classical.choose` of it.
 
-Group 1 is the one that is not about `alg:ttc` at all: it is multiset arithmetic
-and `Nat.card` bookkeeping, and it is here only because the headline is stated at
-a *constructed* bundle.
+`Ttc.exists_latticeEnum` is the one theorem here that `#modelClosure` already sees,
+for the same reason: `Ttc.latticeEnum` is `Classical.choose` of it, and a `def`'s
+body *is* walked. It cannot leave `Model/` at all.
 
-**Everything that could leave has left.** None of these ten is reachable by
-`Ttc/Audit/ClosureCheck.lean`'s `closureAux` — it does not walk a theorem's value —
-so none of them is visible in `#modelClosure Ttc.ttc`; they are here because the
-file does not *elaborate* without them, and that failure is the check. What was
-here and is not any more, all of it evicted downstream with names, statements and
-proofs unchanged:
+**Everything that could leave has left.** Of the six, none but
+`Ttc.exists_latticeEnum` is reachable by `Ttc/Audit/ClosureCheck.lean`'s
+`closureAux` — it does not walk a theorem's value, and `Ttc.algOracles`' two proof
+fields are lifted into anonymous `Ttc.algOracles._proof_1/_2`, which are themselves
+theorems — so the rest are invisible in `#modelClosure Ttc.ttc`; they are here
+because the file does not *elaborate* without them, and that failure is the check.
+What kept them here is not the audit but their **statements**: each of the five
+mentions a definition of this file (`Ttc.trajThin`, `Ttc.trajGen`,
+`Ttc.latticeEnum`, `Ttc.cubeOf`, `Ttc.HasLatticeEnum`), and those definitions are
+in the measured closure, so they cannot move out of `Model/` either.
+
+What was here and is not any more:
+
+* `ModelSupport` — the four facts whose statements mention nothing of this file, so
+  that nothing kept them: the count-vector dictionary `Ttc.count_toMultiset`,
+  `Ttc.count_toMultiset_of_notMem`, `Ttc.toMultiset_le_of_count_le` (stated there at
+  the sum `Ttc.toMultiset` *is*, generic in the carrier type, so every use here is
+  by unfolding a definition), and `Ttc.exists_finEnum_of_finite`, which is what
+  `Ttc.hasLatticeEnum_of_finite` was once `Ttc.HasLatticeEnum` is not mentioned.
+  `Ttc/ModelSupport.lean` is the one file outside `Model/` that this file imports,
+  and its docstring states what that costs.
+
+and, evicted downstream earlier, with names, statements and proofs unchanged:
 
 * `Exec/Params` — the five side conditions a `Ttc.Params` needs (`hm`, `hr`) and
   what they rest on: `Ttc.one_le_card_cubes`, `Ttc.one_le_card_facets`,
@@ -772,9 +790,11 @@ variable {L : ℕ}
 The run's state is a `Multiset (Space n)`; the family is a count vector. This is the
 dictionary between them, given an injective enumeration `pt` of the lattice points.
 `Ttc.toMultiset` builds the multiset with prescribed multiplicities; that it *has*
-those multiplicities (`Ttc.count_toMultiset`) is a theorem, and is below, with the
-two oracle contracts it is there to prove.  Its cardinality lemma
-`Ttc.card_toMultiset`, which no contract needs, is in `Coupling/Family`. -/
+those multiplicities (`Ttc.count_toMultiset`) is a theorem, and is in `ModelSupport`
+— stated at the sum this definition unfolds to, so that it mentions nothing of this
+file — together with the rest of the dictionary.  The two oracle contracts it is
+there to prove are below.  Its cardinality lemma `Ttc.card_toMultiset`, which no
+contract needs, is in `Coupling/Family`. -/
 
 /-- The multiset holding `k s` copies of the lattice point `pt s`. -/
 noncomputable def toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
@@ -1017,19 +1037,20 @@ Everything the bundle is built from, since the whole point is that
 constant `Ttc.ttcRun` unfolds to is defined under `Ttc/Model/`.  Three groups moved
 into this file for that reason, each keeping its name and its proof:
 
-* the **count-vector dictionary** and the two oracle **contracts**
-  (`Ttc.count_toMultiset`, `Ttc.toMultiset_le_of_count_le`, `Ttc.trajThin_le`,
-  `Ttc.card_trajGen`), formerly `Coupling/Family` — they are theorems *about* the
-  read-offs already defined above, and the bundle's `thin_le` and `gen_card` fields
-  are exactly these two;
+* the two oracle **contracts** (`Ttc.trajThin_le`, `Ttc.card_trajGen`), formerly
+  `Coupling/Family` — they are theorems *about* the read-offs already defined above,
+  and the bundle's `thin_le` and `gen_card` fields are exactly these two.  The
+  count-vector dictionary they are proved from came with them and has since gone on
+  to `ModelSupport`, where it is stated without mentioning `Ttc.toMultiset`;
 * the **coverage test** (`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`), formerly
   `Exec/Coverage` — `alg:ttc` line 27's membership query, classically;
 * the **lattice enumeration** (`Ttc.HasLatticeEnum`, `Ttc.exists_latticeEnum`,
   `Ttc.latticeEnum` and its unconditional injectivity), formerly `Exec/Endgoal` —
   line 43's `GenerateSamples` draws from `Sol(F) ∩ 𝕃ⁿ`, so the enumeration of that
   set is part of the algorithm, not of its analysis, and `Ttc.latticeEnum` is
-  `choose`n from `Ttc.exists_latticeEnum`, which is why that theorem and its lemma
-  `Ttc.hasLatticeEnum_of_finite` had to come too.  Its two *guarded* properties
+  `choose`n from `Ttc.exists_latticeEnum`, which is why that theorem had to come too
+  — and, being reached through a `def`'s body, is the one theorem here that
+  `#modelClosure` actually sees.  Its two *guarded* properties
   (`Ttc.latticeEnum_mem`, `Ttc.latticeEnum_onto`) did not: nothing here needs them,
   and they are back in `Exec/Endgoal` with the *geometric* input — that boundedness
   of `Sol(F)` makes the intersection finite — which `Exec/Geometry` supplies and
@@ -1042,55 +1063,19 @@ namespace Ttc
 
 open MeasureTheory Set
 
-/-! ## The count-vector dictionary, and the two oracle contracts
+/-! ## The two oracle contracts
 
 `Ttc.toMultiset` (above) turns a count vector into the run's `Multiset (Space n)`
-state.  These are the facts that make it a dictionary — that the multiplicities are
-the prescribed ones — and the two contracts `Ttc.Oracles` demands of any bundle. -/
+state.  The facts that make it a dictionary — that the multiplicities are the
+prescribed ones — are `Ttc.count_toMultiset`, `Ttc.count_toMultiset_of_notMem` and
+`Ttc.toMultiset_le_of_count_le` (`ModelSupport`), stated there at the sum
+`Ttc.toMultiset` is and so mentioning nothing of this file.  What is here is the two
+contracts `Ttc.Oracles` demands of any bundle, which mention `Ttc.trajThin` and
+`Ttc.trajGen` and therefore cannot be stated anywhere else. -/
 
 section Dictionary
 
 variable {L : ℕ}
-
-/-- **The multiplicities are the ones prescribed** — the point of the dictionary.
-Needs `pt` injective, so that distinct indices contribute to distinct points. -/
-theorem count_toMultiset {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
-    (k : Fin L → ℕ) (s : Fin L) :
-    Multiset.count (pt s) (toMultiset pt k) = k s := by
-  classical
-  rw [toMultiset, Multiset.count_sum']
-  rw [Finset.sum_eq_single s]
-  · rw [Multiset.count_replicate_self]
-  · intro t _ hts
-    rw [Multiset.count_replicate, if_neg (fun h => hts (hpt h))]
-  · intro h
-    exact absurd (Finset.mem_univ s) h
-
-/-- Points outside the enumeration do not occur. -/
-theorem count_toMultiset_of_notMem {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ)
-    {x : Space n} (hx : ∀ s, pt s ≠ x) :
-    Multiset.count x (toMultiset pt k) = 0 := by
-  classical
-  rw [toMultiset, Multiset.count_sum']
-  refine Finset.sum_eq_zero fun t _ => ?_
-  rw [Multiset.count_replicate, if_neg (hx t)]
-
-/-- **A count-bounded multiset is a sub-multiset** — the form `Ttc.Oracles.thin_le`
-needs, where the ambient multiset is arbitrary rather than another `toMultiset`. -/
-theorem toMultiset_le_of_count_le {n : ℕ} {pt : Fin L → Space n}
-    (hpt : Function.Injective pt) {k : Fin L → ℕ} {X : Multiset (Space n)}
-    (h : ∀ s, k s ≤ Multiset.count (pt s) X) :
-    toMultiset pt k ≤ X := by
-  classical
-  rw [Multiset.le_iff_count]
-  intro x
-  by_cases hx : ∃ s, pt s = x
-  · obtain ⟨s, rfl⟩ := hx
-    rw [count_toMultiset hpt]
-    exact h s
-  · simp only [not_exists] at hx
-    rw [count_toMultiset_of_notMem pt k hx]
-    exact Nat.zero_le _
 
 /-- **The `thin` contract**: `Ttc.trajThin` removes elements, it never invents them.
 This is `Ttc.Oracles.thin_le` for the bundle `Ttc.ttcRun` builds. -/
@@ -1145,7 +1130,14 @@ guarded by `Ttc.HasLatticeEnum` and are read off `Ttc.exists_latticeEnum`'s
 `choose_spec` in `Exec/Endgoal` (`Ttc.latticeEnum_mem`, `Ttc.latticeEnum_onto`), where
 `Ttc.hasLatticeEnum_of_isBounded` also supplies the guard from boundedness of `Sol(F)`.
 When no enumeration exists the intersection is infinite, `Set.ncard` of an infinite set
-is `0`, and `Fin 0` is empty — which is why injectivity is free. -/
+is `0`, and `Fin 0` is empty — which is why injectivity is free.
+
+That the guard follows from *finiteness* is `Ttc.exists_finEnum_of_finite`
+(`ModelSupport`): pure `Nat.card` bookkeeping, mentioning neither
+`Ttc.HasLatticeEnum` nor `Ttc.latticeCount`, since the latter is by definition the
+`Set.ncard` the enumeration is indexed by.  The *geometric* fact that boundedness of
+`Sol(F)` gives finiteness is `Ttc.exists_lattice_enum_of_isBounded`
+(`Exec/Geometry`) and is not needed here. -/
 
 variable {A : Type*} {n : ℕ}
 
@@ -1155,21 +1147,6 @@ def HasLatticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) : Prop :=
   ∃ ptE : Fin (latticeCount M φ ρ) → Space n, Function.Injective ptE ∧
     (∀ s, ptE s ∈ sol M φ ∩ fineLattice n (latticeScale ρ)) ∧
     (∀ x ∈ sol M φ ∩ fineLattice n (latticeScale ρ), ∃ s, ptE s = x)
-
-/-- **Finiteness of `Sol(F) ∩ 𝕃ⁿ` is enough**: a finite set is equivalent to `Fin` of
-its `Set.ncard`, and that count is literally `Ttc.latticeCount`.  Pure `Nat.card`
-bookkeeping — the *geometric* fact that boundedness of `Sol(F)` gives finiteness is
-`Ttc.exists_lattice_enum_of_isBounded` (`Exec/Geometry`) and is not needed here. -/
-theorem hasLatticeEnum_of_finite {M : A → Set (Space n)} {φ : BForm A} (ρ : ℤ)
-    (hfin : (sol M φ ∩ fineLattice n (latticeScale ρ)).Finite) : HasLatticeEnum M φ ρ := by
-  have _ : Finite (sol M φ ∩ fineLattice n (latticeScale ρ) : Set (Space n)) := hfin.to_subtype
-  have hcard : Nat.card (sol M φ ∩ fineLattice n (latticeScale ρ) : Set (Space n))
-      = latticeCount M φ ρ := Nat.card_coe_set_eq _
-  obtain e := Finite.equivFinOfCardEq hcard
-  refine ⟨fun s => (e.symm s : Space n), fun a b hab => ?_, fun s => (e.symm s).property,
-    fun x hx => ⟨e ⟨x, hx⟩, ?_⟩⟩
-  · exact e.symm.injective (Subtype.ext hab)
-  · simp
 
 /-- The total version: an enumeration exists *unconditionally*, injective always, and
 with the two membership properties whenever `Ttc.HasLatticeEnum` holds.  This is what
@@ -1186,7 +1163,7 @@ theorem exists_latticeEnum (M : A → Set (Space n)) (φ : BForm A) (ρ : ℤ) :
     exact ⟨ptE, hinj, fun _ => ⟨hmem, honto⟩⟩
   · have hinf : (sol M φ ∩ fineLattice n (latticeScale ρ)).Infinite := by
       intro hfin
-      exact h (hasLatticeEnum_of_finite ρ hfin)
+      exact h (exists_finEnum_of_finite hfin)
     have hzero : latticeCount M φ ρ = 0 := hinf.ncard
     haveI hempty : IsEmpty (Fin (latticeCount M φ ρ)) := by
       rw [hzero]; infer_instance

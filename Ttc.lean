@@ -20,22 +20,27 @@ content, one directory per object of the paper it discharges:
 ```
 Ttc/
   Model/         the statement — read this and stop            (4 files)
-  TtcProb        the abstract interface: every assumption      (1)
-  Exec/          the oracle-free capstone, and its plumbing   (10)
-  Sampler/       GenerateSamples, interface and construction   (5)
-  Volume/        Vol_ED, interface and construction            (5)
-  Access         derived accessors on Ttc.TtcProb              (1)
-  Invariants     structural facts about the modelled loop      (1)
-  Constants/     what ε', κ, γ are chosen to satisfy           (2)
-  Rounding/      claim:cl, over the rounding that realises it (11)
-  Nonconv/       lem:nonconv                                   (6)
-  Lattice/       thm:decomposition and lem:lattice             (4)
-  Process/       lem:process, lem:chernoff, the level process  (6)
-  Coupling/      the run realises the family; lem:numlattice   (5)
-  Witness/       non-vacuity: the box [0,c]ⁿ                    (3)
-  Capstone       the two chains combined                       (1)
-  Findings/      off the path: findings about the paper        (2)
+  Exec/          the oracle-free capstones, and their plumbing (32)
+  Rounding/      claim:cl, over the rounding that realises it  (11)
+  Witness/       non-vacuity: the box, and the two-cube DNF     (8)
+  Process/       lem:process, lem:chernoff, the level process   (7)
+  Nonconv/       lem:nonconv                                    (6)
+  Sampler/       GenerateSamples, interface and construction     (6)
+  Volume/        Vol_ED, interface and construction              (6)
+  Coupling/      the run realises the family; lem:numlattice     (5)
+  Findings/      off the path: findings about the paper          (5)
+  Monadic/       the run as one law on one space                 (5)
+  Lattice/       thm:decomposition and lem:lattice               (4)
+  Constants/     what ε', κ, γ are chosen to satisfy             (2)
+  Audit/         the machine-checked audit-surface probes         (1)
+  TtcProb, Access, Estimate, Invariants, Runtime, Dnf, Capstone,
+  ModelSupport                                                    (8)
 ```
+
+**Recount rather than quote.** These counts have drifted repeatedly and are a
+snapshot (`find Ttc -name '*.lean' | sed 's|/[^/]*$||' | sort | uniq -c`, 109
+files at the commit this paragraph was written). Only the `Model/` count is an
+invariant; the rest are description.
 
 ### `Model/` — the statement
 
@@ -50,30 +55,50 @@ Ttc/
   run.  **The algorithm carries no proof binder**: `Ttc.Params` does bundle five
   proof fields, but `Ttc.ttcParamsTotal` decides all five side conditions
   classically, so `Ttc.ttcAlgOutput` and `Ttc.ttcRun` are closed functions of the
-  data.  Not proof-free, though: it carries **10** theorems and no instance, every
-  one of them a fact without which something the file *defines* cannot be written
-  down — the run's own oracle bundle, whose `Ttc.Oracles` structure has two proof
-  fields, or a `Classical.choose` the file then names.  They are invisible to
-  `#modelClosure` (`closureAux` does not walk a theorem's value) but load-bearing
-  for elaboration, which is why they cannot move downstream.  `AUDIT.md` §1h-iv
-  lists them by group.
+  data.  Not proof-free, though.  The criterion, which is stable in a way a count
+  is not: a theorem stays here exactly when something the file *defines* cannot be
+  written down without it — the run's own oracle bundle, whose `Ttc.Oracles`
+  structure has two proof fields, or a `Classical.choose` the file then names.
+  Such theorems are mostly invisible to `#modelClosure` (`closureAux` does not walk
+  a theorem's value; the exception is `Ttc.exists_latticeEnum`, which a `def`'s body
+  names) but load-bearing for elaboration, which is why they cannot move
+  downstream.  What keeps the rest of them here is their *statements*: each mentions
+  a definition of the file, and those definitions are in the measured closure.  The
+  four whose statements survived losing that vocabulary — the count-vector
+  dictionary and the `Set.ncard` enumeration lemma — are in `Ttc/ModelSupport.lean`,
+  which `Model/Pseudocode` imports and whose docstring states what that import
+  costs.  Everything else has been pushed out, and the residue is small and
+  still shrinking — 6 theorems and no instance when this was last measured, down
+  from 27; count it with
+  `grep -cE '^(private )?theorem ' Ttc/Model/Pseudocode.lean` rather than quoting
+  this sentence.  `AUDIT.md` §1h-iv lists them by group.
 
-  Its whole import closure of ours is **one file**, `Model/ProblemSetting`, so the
-  audit surface is `Prelude → ProblemSetting → Pseudocode → Theorem` and nothing
-  else.
+  **`Model/` is not a closed system, and no claim here should be read as saying
+  so.**  `Model/Theorem` imports `Monadic/MeasurePr` and `Monadic/Program`, hence
+  transitively the development, for the `Pr[…]`/`All[…]` notation it is stated in
+  and for the bridge lemma its proof applies; `Model/Prelude` imports `Arlib`; and
+  the exact set of files `Model/Pseudocode` pulls in has been re-cut more than once
+  in a day.  Read the import lines, not this docstring.  What *is* machine-checked,
+  and is the stronger claim anyway because it is about the **statement** rather
+  than about imports: every `Ttc` constant the headline's type transitively unfolds
+  to is defined under `Ttc/Model/` (see "the audit surface" below).
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
                               guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
-                              at **eleven explicit binders**, with no interpretation,
+                              at **eleven binders** — `atoms φ ε δ hε0 hε1 hδ0 hδ1
+                              hn hφ hpos`, the count every docstring here uses —
+                              plus the two per-call cost constants `cVol cSample`,
+                              so 13 explicit and 15 raw. Say which convention you
+                              are quoting. No interpretation,
                               no parameter block, no converter, no oracle argument
                               and no precision argument (the precision is
                               `GetPrecision`'s output `P.precision gammaHat`).  Both
-                              conjuncts are stated over **one law on one space**,
-                              `Ttc.ttcLaw` (`Monadic/Program`), at one run
-                              `p = (volume coins, trajectory)` — no iterated
-                              integral — the accuracy one directly about
-                              `Ttc.ttcAlgOutput`, `Model/Pseudocode`'s transcription
-                              of the algorithm, at the constructed bundle
-                              `Ttc.ttcOracleBundle`.  The
+                              conjuncts are stated over **one law on one space** —
+                              `Ttc.ttc` (`Model/Pseudocode`), the algorithm's own
+                              law on runs `p = (volume coins, trajectory)`, with no
+                              iterated integral — the accuracy one about the pair's
+                              first component, which is `Model/Pseudocode`'s
+                              transcription `Ttc.ttcRun` of `alg:ttc` at the
+                              bundle the run itself supplies.  The
                               bundle version `Ttc.TtcProb.volume_estimate`, whose
                               type names the *assumed* `T.O` and `T.ρ`, is
                               `Ttc.Estimate`.  Which lemma discharged which former
@@ -83,19 +108,9 @@ Ttc/
 
 Four files, and the count is an invariant rather than a description: `Model/` is
 what a referee reads to trust the *statement* and the *algorithm*, so anything
-that is neither belongs elsewhere. `Ttc/Model/Run.lean` — 12 abbreviations and 14
-`rfl` lemmas naming the run's quantities — was the fifth file for a while; its
-contents are now in `Ttc/Exec/Api.lean`, except the four that are steps of the
-algorithm (`Ttc.autoCen`, `Ttc.autoGamma`, `Ttc.runScale`, `Ttc.runPrec`), which
-went the other way, into `Model/Pseudocode`. (`Ttc.scaledAtoms` and
-`Ttc.runCount` went there too and have since come back to `Exec/Rescaled` and
-`Exec/Inputs`: they quantify over a free `φ` and `γ̂`, and the algorithm's own
-instances of them are `Ttc.algAtoms` and `Ttc.algIndex`.)
-`Ttc/Model/Endgoal.lean` sat here for a while and did not
-qualify — 33 declarations and 21 tactic proofs, including the lattice
-enumeration, the oracle bundle and a box-witness chain, against 0/0/0/1 for the
-four above. It now lives at `Ttc/Exec/Endgoal.lean`, where its consumers already
-were.
+that is neither belongs elsewhere. The test that has settled every borderline case
+is declaration mix, not subject matter — a file carrying tactic proofs and a
+witness chain fails it however relevant its contents are.
 
 `Model/ProblemSetting` is held to a sharper form of the same rule, modelled on
 `nfalean/ApproxNFA/Model/ProblemSetting.lean`: it states the **problem** — the
@@ -103,7 +118,7 @@ quantity the algorithm estimates and what "approximately" means — and carries 
 hypothesis bundle at all. Everything that used to sit there has moved out,
 unchanged in name, type and docstring:
 
-* `structure Ttc.TtcProb` → **`Ttc/TtcProb.lean`**. Fifty fields of hypotheses.
+* `structure Ttc.TtcProb` → **`Ttc/TtcProb.lean`**. 59 fields of hypotheses.
   It is the *abstract interface* (`CLAUDE.md` §1's layer 1), not the problem, so
   it is no longer in the audit surface; `Model/Theorem` quantifies over it.
 * `Ttc.VolumeAlgorithm` and `Ttc.volGood` → `Ttc.Volume.Oracle`. Cousins–Vempala
@@ -213,11 +228,7 @@ Ttc/TtcProb → Ttc/Access`, and `Model/ProblemSetting` imports nothing but
   described body *is* the dilated region — and `hcard` holds with equality, so no
   slack enters `Ttc.Params.gamma` or `Ttc.Params.thresh`. It also carries the
   non-vacuity chain for its own capstone, ending in
-  `Ttc.Box.exists_two_ttc_volume_endToEnd_canon_instances`. (A second, independent
-  derivation of the same elimination once lived in `Exec/CanonicalPolytope`; it was
-  checked against this one — equal everywhere except that this file's crux holds
-  for *every* `s > 0` rather than only at `s = latticeScale ρ` — and then deleted,
-  its witness chain ported here.)
+  `Ttc.Box.exists_two_ttc_volume_endToEnd_canon_instances`.
 * `Ttc.Exec.Budget` — `Ttc.ttc_volume_endToEnd_delta`: the `δ`-repricing that
   turns `1 − δ − δ/4` into a clean `1 − δ`, by running at internal `δ₀ = 4δ/5`.
 * `Ttc.Exec.Final` — **`Ttc.ttc_volume_final`**, the strongest result in the
@@ -267,9 +278,20 @@ deliberately and out of the audit surface.
   decimal digit of precision (README finding 2).
 * `Ttc.Findings.CubeLattice` — the paper's own per-polytope phrasing of
   `lem:lattice`, recovered from the global one proved here.
+* `Ttc.Findings.Independence` — `hφ` and `hbdd` are logically independent, in both
+  directions. This is why neither could be dropped in favour of the other while
+  `hbdd` was still a binder; `hbdd` has since been *derived*, not weakened.
+* `Ttc.Findings.OpenHalfspace` — what `hφ` is actually buying, and what removing it
+  would cost: the negated-atom trade is exact for the volume and **not** for the
+  lattice count or for boundedness (README finding 5).
+* `Ttc.Findings.SmallBody` — on a body too small for the printed algorithm, the run
+  returns `0`; the machine-checked half of the `hvol` story (§1g's dilation round).
 
-Every other module is on the path, checked mechanically against the import graph
-rather than by eye; the recipe is in `README.md`.
+`Findings/` is not the whole of what sits off the headline's import closure — the
+audit companions, the two undischarged Cousins–Vempala files, the sibling
+statements and `Audit/ClosureCheck` itself are off it too, each for a stated
+reason. `README.md` carries the mechanical check and the annotated list; run it
+rather than assuming this section is exhaustive.
 
 **A hazard worth stating, because a green build does not reveal it.** The `Ttc`
 lake library declares no `globs`: it is built by walking the imports of this
@@ -282,36 +304,45 @@ precisely because the build does not.
 
 ## The audit surface (`Model/`)
 
-`Model/` is kept deliberately small. A referee who wants to trust the *statement*
-reads exactly these four files and stops.
+`Model/` is kept deliberately small: a referee who wants to trust the *statement*
+reads the four files listed above and stops. Two things make that more than a
+filing convention.
 
-* `Model/Prelude`        — the vocabulary: the ambient space `ℝⁿ`, formula syntax
-                           and semantics, `sol` (= `Sol(F)`), the lattice, and the
-                           parameter block `Params`.
-* `Model/ProblemSetting` — the **problem**: `volSol` (= `Vol(F)`, the quantity
-                           `alg:ttc` estimates) and `relErr` (= the `(1±ε)`
-                           interval it must land in). Two definitions and no
-                           assumption; it imports only `Model/Prelude`. That
-                           `volSol` is the volume of the right set is checked, for
-                           that symbol alone, in `Volume/VolSolCheck`.
-* `Model/Pseudocode`     — `alg:ttc`, transcribed line by line from `algo.tex`
-                           over an oracle bundle, its four preprocessing steps
-                           `A1`–`A13`, and the algorithm's output
-                           `Ttc.ttcAlgOutput` as a function of that bundle. It
-                           does carry proofs — the docstring's "What proof
-                           content is here, and why" enumerates them and the
-                           divergence from nfalean that forces them.
-* `Model/Theorem`        — the headline `Ttc.ttc_volume_estimate`: one theorem,
-                           no proof to work through (accuracy is
-                           `Ttc.ttc_accuracy_single_measure`, running time the second
-                           component of `Ttc.ttc_volume_api`), stated over `TTC`'s
-                           own inputs and over one run of one law, `Ttc.ttcLaw`.
-                           **No oracle and no precision are among them**: the
-                           oracle bundle is the closed term `Ttc.ttcOracleBundle`
-                           and every precision is `P.precision gammaHat`, i.e.
-                           `GetPrecision`, `alg:ttc` line 17.  It imports
-                           `Exec/Api`, which is downstream of the whole
-                           development.
+**It is machine-checked, for the statement.** `Ttc/Audit/ClosureCheck.lean`
+defines `#modelClosure`/`#modelClosureOfType`, which walk a declaration's
+definitional closure — through `def` bodies, through theorem *types* only — and
+**throw** if any `Ttc` constant in it is defined outside `Ttc/Model/`. Four
+invocations are live at the foot of that file, so a definition drifting out of
+`Model/` fails `lake build`: `Ttc.ttcAlgOutput`, `Ttc.ttcRun`, `Ttc.ttc`, and the
+headline's own type, `#modelClosureOfType Ttc.ttc_volume_estimate`. That last is
+the reader-facing one — open `Model/`, and every constant the headline *means* is
+defined in front of you. Sizes are reported by the non-failing `#closureReport`
+variants; treat them as an alarm bell for the "outside `Model/`" tally beside
+them, never as a size the files should be judged by.
+
+**What it does not check.** Two things, and both matter:
+
+* *Imports are not the closure.* `Model/Theorem` imports `Monadic/MeasurePr` and
+  `Monadic/Program`, and so transitively the development, for the `Pr[…]`/`All[…]`
+  notation the statement is written in and for the bridge lemma its proof applies.
+  Notation is not a constant, which is why the closure is clean while the import
+  graph is not.
+* *Theorem values are invisible.* `closureAux` never walks a theorem's value
+  (`ConstantInfo.value?` is `none` for theorems), so no proof term is in any
+  closure report. That is the right notion for auditing a *statement* — a proof
+  may use the product measure space; a statement that *names* it means something
+  else — but it does mean the reports say nothing about what the proofs use.
+
+`#closure`/`#closureOfType`, the stricter checks that forbid the statement naming
+this development's own probability spaces, stay disabled — by construction rather
+than by filing. `Ttc.ttc` **is** a measure, so its statement names measures; every
+constant those checks flag is nonetheless defined under `Model/`.
+
+Two per-file points not implied by the above: that `volSol` is the volume of the
+right set is checked, for that symbol alone, in `Volume/VolSolCheck`; and
+`Model/Theorem` binds **no oracle and no precision** — the bundle the run reads is
+the closed term `Ttc.algOracles` (`Model/Pseudocode`) and every precision is
+`P.precision gammaHat`, i.e. `GetPrecision`, `alg:ttc` line 17.
 
 **The assumptions are not in `Model/`.** `Ttc.ttc_volume_estimate` quantifies
 over inputs, not over a bundle; what it rests on *through the proof* are the 59
@@ -350,6 +381,7 @@ time (`thm:runtime`) is out of scope throughout.
 -- The audit surface (statement layer)
 import Ttc.Model.Prelude
 import Ttc.Model.ProblemSetting
+import Ttc.ModelSupport
 import Ttc.Model.Pseudocode
 import Ttc.Volume.Oracle
 import Ttc.Sampler.Interface

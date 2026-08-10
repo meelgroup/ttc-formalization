@@ -19,12 +19,21 @@ space), and nothing from `Ttc.Coupling` or `Ttc.Process`.
 business. The point of the check is whether *this* development has to construct a probability
 space of its own in order to *state* its theorem.)
 
-**2. `Model/` is the whole audit surface** (`#modelClosure`, `#modelClosureOfType`). Every
-`Ttc` constant the declaration transitively unfolds to is *defined in a file under
-`Ttc/Model/`*. This is the check that backs the reader-facing promise made in `Ttc.lean`:
-open `Model/` — four files — and every constant the headline mentions is defined in front of
-you. It is strictly stronger than check 1, and it fails the build the moment a definition the
-statement depends on drifts out of `Model/`, which is exactly the regression worth catching.
+**2. `Model/` and `Probability/` are the whole audit surface** (`#modelClosure`,
+`#modelClosureOfType`). Every `Ttc` constant the declaration transitively unfolds to is
+*defined in a file under `Ttc/Model/` or under `Ttc/Probability/`*. This is the check that
+backs the reader-facing promise made in `Ttc.lean`: open those two directories — four files
+of model plus four short definition-only files of probability vocabulary — and every constant
+the headline mentions is defined in front of you. It is strictly stronger than check 1, and
+it fails the build the moment a definition the statement depends on drifts out of them, which
+is exactly the regression worth catching.
+
+The surface was one directory until the probability vocabulary was moved out of
+`Model/Prelude` into `Ttc/Probability/`. **Why it is two, and what bounds the second one,
+is argued at "The audit surface" below — read that before quoting this check**; the short
+version is that `Ttc.ttc` is a `Measure`, so the ambient randomness is part of what the
+headline's type unfolds to no matter where it is filed, and `Ttc/Probability/` is held to
+definitions-only in exchange for being admitted.
 
 ## What "closure" means here, precisely
 
@@ -46,12 +55,20 @@ types they inhabit, as they should be.
 ## Status in this repo
 
 `#modelClosure` **passes** on the three algorithm-side declarations — `Ttc.ttcAlgOutput`,
-`Ttc.ttcRun` and `Ttc.ttc` — and those three invocations are enabled at the bottom of this
-file, so a definition drifting out of `Model/` fails `lake build`. `#closure` still fails on
-all three, on the monadic-versus-oracle gap and on the probability vocabulary; **every
-constant it names is now defined inside `Model/`**, so the two checks disagree by
-construction rather than by filing (see the measurement section below). The two
-`Ttc.ttc_volume_estimate` invocations remain commented out.
+`Ttc.ttcRun` and `Ttc.ttc` — and `#modelClosureOfType` on the headline's statement; all four
+invocations are enabled at the bottom of this file, so a definition drifting out of
+`Ttc/Model/` **or** `Ttc/Probability/` fails `lake build`. `#closure` still fails on the
+three algorithm-side ones, on the monadic-versus-oracle gap and on the probability
+vocabulary; **every constant it names is defined inside the surface**, so the two checks
+disagree by construction rather than by filing (see the measurement section below). The two
+`Ttc.ttc_volume_estimate` `#closure` invocations remain commented out.
+
+`Ttc.Audit.forbidden` and `Ttc.Audit.forbiddenModules` were **not** touched by the move to
+`Ttc/Probability/`, deliberately: the eleven definitions kept their existing full names, so
+`` `Ttc.trajLaw `` and `` `Ttc.MonteCarlo `` still match exactly what they matched before,
+and check 1 measures exactly what it used to. Renaming them into a `Ttc.Probability.*`
+namespace would have made those two entries silently dead, which is the sort of quiet
+weakening this file exists to prevent.
 -/
 
 open Lean Elab Command
@@ -151,33 +168,79 @@ elab "#closureOfType " id:ident : command => do
   else
     throwError m!"FORBIDDEN in the statement of {n}: {bad}"
 
-/-! ## The audit surface is exactly `Model/` -/
+/-! ## The audit surface: `Ttc/Model/` **and** `Ttc/Probability/`
+
+### Why it is two directories and not one
+
+`Ttc.ttc_volume_estimate` is a statement about `Ttc.ttc`, and `Ttc.ttc` is a
+`MeasureTheory.Measure (ℝ × ℕ)` — a *law*, not a number. So the ambient probability
+vocabulary is unavoidably part of what the headline's **type** unfolds to: the volume
+oracle's coin space, the ½-thinning kernel and the trajectory law it generates, and the
+sampler's two laws are named by the statement whether or not they are named by the paper's
+pseudocode. A one-directory surface therefore forces a false choice — either
+`Model/Pseudocode.lean` stops being pseudocode, or the vocabulary is filed with the
+pseudocode it is not a step of.
+
+`Ttc/Probability/` is that vocabulary, and the check below admits it **deliberately**, not
+by accident: `Ttc.Audit.auditSurface` names both directories and every message the four
+commands print says both. A check that silently widens its own allowed set is worthless;
+this one widens it with the reason written down, and the widening is bounded by the rule
+in the next paragraph.
+
+### What keeps this honest rather than a dodge
+
+`Ttc/Probability/` contains **vocabulary only** — as of this writing eleven `def`s
+(`Ttc.MonteCarlo.coinLaw`, `Ttc.MonteCarlo.coins`; `Ttc.half`, `Ttc.thinKernel`,
+`Ttc.chainKernel`, `Ttc.trajLaw`; `Ttc.mixSteps`, `Ttc.ballWalkLaw`; `Ttc.kv97SampD`,
+`Ttc.kv97ContLaw`, `Ttc.e2eSampD`) and two `instance`s
+(`Ttc.isMarkovKernel_thinKernel`, `Ttc.isMarkovKernel_chainKernel`, which are the Markov
+arguments Ionescu–Tulcea's `Kernel.trajMeasure` takes). **No `Prop`, no hypothesis bundle,
+no `@[simp]` lemma, nothing assumed, and nothing that asserts anything about `TTC`.**
+Every property of these objects — that the kernels are Markov, that the walk mixes, that
+the estimator is unbiased, that the loops terminate almost surely — is proved *outside*
+the surface (`Process/Thinning`, `Process/Truncation`, `Coupling/Family`,
+`Sampler/Construct`, `Volume/MonteCarlo`), and none of it is needed to read the statement.
+`Ttc/Probability.lean`'s docstring restates that rule for anyone adding a file there.
+
+An auditor's reading list is therefore five files rather than four: `Model/Prelude`,
+`Model/ProblemSetting`, `Model/Pseudocode`, `Model/Theorem`, and `Ttc/Probability/` (four
+short definition-only files, three of which import Mathlib and `Arlib` alone). The
+convex-geometry data the sampler is applied at — `Ttc.facetOf`, `Ttc.canonAm`,
+`Ttc.canonBv`, `Ttc.canonDm`, `Ttc.canonRfac` — is *not* probability and stays in
+`Model/Prelude`.
+-/
 
 namespace Ttc.Audit
 
-/-- Constants in `cls` that are **not** defined in a file under `Ttc/Model/`, paired with the
-module that does define them. -/
-def outsideModel (env : Environment) (cls : NameSet) : List (Name × Name) :=
+/-- **The audit surface, as directories.** A constant is inside it when the module that
+defines it lies under one of these. See the section docstring above for why there are two
+and what `Ttc/Probability/` is allowed to contain; extending this list is a change to what
+the reader-facing promise *means* and must be argued for there, not here. -/
+def auditSurface : List Name := [`Ttc.Model, `Ttc.Probability]
+
+/-- Constants in `cls` that are **not** defined in a file under one of
+`Ttc.Audit.auditSurface`, paired with the module that does define them. -/
+def outsideSurface (env : Environment) (cls : NameSet) : List (Name × Name) :=
   cls.toList.filterMap fun c =>
     match env.getModuleFor? c with
-    | some mod => if (`Ttc.Model).isPrefixOf mod then none else some (c, mod)
+    | some mod => if auditSurface.any (fun d => d.isPrefixOf mod) then none else some (c, mod)
     | none => some (c, `«unknown»)
 
 end Ttc.Audit
 
 open Ttc.Audit in
 /-- **The reader-facing audit check.** Every `Ttc` constant in the definitional closure of
-`id` is defined under `Ttc/Model/`. Fails the build otherwise, naming the stray constants and
-the modules they escaped to. -/
+`id` is defined under `Ttc/Model/` or `Ttc/Probability/`. Fails the build otherwise, naming
+the stray constants and the modules they escaped to. -/
 elab "#modelClosure " id:ident : command => do
   let env ← getEnv
   let n ← liftCoreM <| Lean.realizeGlobalConstNoOverload id
   let some _ := env.find? n | throwError "not found"
   let cls := (closureAux env {} [n] {}).erase n
-  match outsideModel env cls with
-  | [] => logInfo m!"OK — closure of {n} is defined entirely under Ttc/Model/ \
-      ({cls.toList.length} Ttc constants)"
-  | bad => throwError m!"OUTSIDE Model/ in closure of {n}: {bad}"
+  match outsideSurface env cls with
+  | [] => logInfo m!"OK — closure of {n} is defined entirely under Ttc/Model/ or \
+      Ttc/Probability/ ({cls.toList.length} Ttc constants)"
+  | bad => throwError m!"OUTSIDE Model/ and Probability/ in closure of {n}: {bad}"
 
 open Ttc.Audit in
 /-- The same, seeded from a **theorem's** type, so the statement — not the proof — is what
@@ -187,10 +250,10 @@ elab "#modelClosureOfType " id:ident : command => do
   let n ← liftCoreM <| Lean.realizeGlobalConstNoOverload id
   let some ci := env.find? n | throwError "not found"
   let cls := closureAux env {} ci.type.getUsedConstants.toList {}
-  match outsideModel env cls with
-  | [] => logInfo m!"OK — the STATEMENT of {n} is defined entirely under Ttc/Model/ \
-      ({cls.toList.length} Ttc constants)"
-  | bad => throwError m!"OUTSIDE Model/ in the statement of {n}: {bad}"
+  match outsideSurface env cls with
+  | [] => logInfo m!"OK — the STATEMENT of {n} is defined entirely under Ttc/Model/ or \
+      Ttc/Probability/ ({cls.toList.length} Ttc constants)"
+  | bad => throwError m!"OUTSIDE Model/ and Probability/ in the statement of {n}: {bad}"
 
 /-! ## Reporting variants that do not fail the build
 
@@ -201,7 +264,7 @@ only `logInfo`. They are what the measurements in the next section were taken wi
 namespace Ttc.Audit
 
 /-- A one-line size report for a declaration's closure: how many `Ttc` constants, how many of
-them are outside `Model/`, and which forbidden ones it hits. Never fails. -/
+them are outside the audit surface, and which forbidden ones it hits. Never fails. -/
 def reportOn (env : Environment) (n : Name) (fromTypeOnly : Bool) : MessageData :=
   match env.find? n with
   | none => m!"{n}: not found"
@@ -209,9 +272,9 @@ def reportOn (env : Environment) (n : Name) (fromTypeOnly : Bool) : MessageData 
     let cls :=
       if fromTypeOnly then closureAux env {} ci.type.getUsedConstants.toList {}
       else (closureAux env {} [n] {}).erase n
-    let outside := outsideModel env cls
+    let outside := outsideSurface env cls
     m!"{n}{if fromTypeOnly then " (statement)" else ""}: \
-      {cls.toList.length} Ttc constants, {outside.length} outside Model/, \
+      {cls.toList.length} Ttc constants, {outside.length} outside Model/ and Probability/, \
       forbidden hits: {forbiddenIn env cls}"
 
 end Ttc.Audit
@@ -333,7 +396,10 @@ never as a size the file should be judged by.
 Getting there moved three groups of declarations into `Model/Pseudocode`, each keeping its
 name and its proof: the count-vector dictionary and the two oracle contracts
 (`Ttc.count_toMultiset`, `Ttc.toMultiset_le_of_count_le`, `Ttc.trajThin_le`,
-`Ttc.card_trajGen`, formerly `Coupling/Family`); the coverage test
+`Ttc.card_trajGen`, formerly `Coupling/Family`) — of which the dictionary has since gone
+on to `Ttc/ModelSupport.lean`, restated at the sum `Ttc.toMultiset` unfolds to, which
+changes none of these counts because no theorem outside a `def`'s body is in a closure;
+the coverage test
 (`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`, formerly `Exec/Coverage`); and the lattice
 enumeration (`Ttc.HasLatticeEnum`, `Ttc.exists_latticeEnum`, `Ttc.latticeEnum` and its
 unconditional injectivity, formerly `Exec/Endgoal`).  Only what the bundle is *built

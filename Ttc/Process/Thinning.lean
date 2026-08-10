@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Process.PoissonLaws
 import Ttc.Model.Prelude
+import Ttc.Probability.Trajectory
 import Mathlib.Probability.Distributions.Binomial
 
 /-!

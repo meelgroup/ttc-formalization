@@ -6,14 +6,6 @@ import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
-import Mathlib.Probability.Distributions.Binomial
-import Mathlib.Probability.Distributions.Poisson.Basic
-import Mathlib.Probability.Kernel.IonescuTulcea.Traj
-import Mathlib.Probability.Independence.InfinitePi
-import Arlib.Probability.UniformOn
-import Arlib.MarkovChains.Continuous.ConvexBodyMixing
-import Arlib.Lattice.KV97.InflateGeom
-import Arlib.Lattice.Rounding.ProdKernel
 
 /-!
 # `Model/Prelude`: the vocabulary of the audit surface
@@ -33,32 +25,37 @@ block (`Params`, `alg:ttc` lines 17–20 and `alg:prec` line 86).
 
 **The file is held to a measured keep-set, not to a topic**: the union of the
 definitional closures of `Ttc.ttc` and of the *statement* of
-`Ttc.ttc_volume_estimate`, as `Ttc/Audit/ClosureCheck.lean` measures them, plus
-the four things those closures cannot see but the build needs — two instances
-(`instFiniteCubeMem`, `isMarkovKernel_thinKernel`) feeding proof terms, and two
-predicates `Model/Pseudocode` names in statements of its own (`DNF.holds`,
-`IsDNFOf`).  Ten declarations fell outside it and were evicted downstream,
-keeping name, type and docstring: `litSet`, `mem_sol_iff`, `mem_region_iff`,
-`mem_intLattice`, `mem_fineLattice` and `normalisedCount` to
+`Ttc.ttc_volume_estimate`, as `Ttc/Audit/ClosureCheck.lean` measures them, minus
+what has moved to `Ttc/Probability/` (below), plus the three things those closures
+cannot see but the build needs — one instance (`instFiniteCubeMem`) feeding proof
+terms, and two predicates `Model/Pseudocode` names in statements of its own
+(`DNF.holds`, `IsDNFOf`).  Ten declarations fell outside it and were evicted
+downstream, keeping name, type and docstring: `litSet`, `mem_sol_iff`,
+`mem_region_iff`, `mem_intLattice`, `mem_fineLattice` and `normalisedCount` to
 `Lattice/Decomposition`; `Cube.IsPositive` and `DNF.IsPositive` to `Ttc/Dnf.lean`,
 beside `toDNF_isPositive`; `Params.kappa` to `Constants/Parameters`, beside the
 inequality it is chosen to satisfy; `thinKernel_apply` to `Process/Thinning`.
 
-Since `Ttc.ttc` (`Model/Pseudocode`) is a *law*, the vocabulary also includes the
-ambient random objects the algorithm's two coin sequences are governed by — the
-volume oracle's coin space (`MonteCarlo.coinLaw`, `MonteCarlo.coins`), the ½-thinning
-and the coupled trajectory law it generates (`half`, `thinKernel`, `chainKernel`,
-`trajLaw`), and `GenerateSamples`' sampler with the canonical linear description it
-runs on (`mixSteps`, `ballWalkLaw`, `kv97SampD`, `kv97ContLaw`, `e2eSampD`, `facetOf`,
-`canonAm`, `canonBv`, `canonDm`, `canonRfac`).  These are not steps of `alg:ttc`; they
-are what its randomness *is*, which is why they are filed here rather than with the
-pseudocode.  See the "The probability vocabulary" section below.
+**The probability vocabulary is no longer here.**  Since `Ttc.ttc`
+(`Model/Pseudocode`) is a *law*, the audit surface includes the ambient random
+objects the algorithm's two coin sequences are governed by — the volume oracle's
+coin space (`MonteCarlo.coinLaw`, `MonteCarlo.coins`), the ½-thinning and the
+coupled trajectory law it generates (`half`, `thinKernel`, `chainKernel`,
+`trajLaw`), and `GenerateSamples`' two laws with the step count they are run for
+(`mixSteps`, `ballWalkLaw`, `kv97SampD`, `kv97ContLaw`, `e2eSampD`).  Those eleven
+definitions and the two Markov-kernel instances that travel with them are in
+**`Ttc/Probability/`**, under their existing names; `Ttc/Audit/ClosureCheck.lean`
+audits `Ttc/Model/` together with that directory, and says why.
+
+What stayed is the *geometry* the sampler is applied at — `facetOf`, `canonAm`,
+`canonBv`, `canonDm`, `canonRfac`, the last section of this file.  It is convex
+geometry read off the formula, with no randomness in it, and it is built from
+`region`, `latticeScale` and `FacetIndex`, which are here.
 
 Definitions only — no algorithm, no assumptions.  The exceptions are the two
 finiteness instances (`instFiniteCubeMem`, `instFiniteFacetIndex`, which `facetOf`
-needs to enumerate the facets) and the two Markov-kernel instances the Ionescu–
-Tulcea construction of `trajLaw` takes as instance arguments; no other statement
-about the objects below is made here, and no `@[simp]` lemma at all.
+needs to enumerate the facets); no other statement about the objects below is made
+here, and no `@[simp]` lemma at all.
 
 Modelling notes: atoms are abstract (an index type `A` plus an interpretation
 `M`), so the Boolean-abstraction property is definitional — `x ∈ sol M φ` *is*
@@ -327,158 +324,34 @@ noncomputable def precision (gammaHat : ℝ) : ℤ := ⌈Real.logb 10 (P.gamma /
 
 end Params
 
-/-! # The probability vocabulary
+/-! # The probability vocabulary has left this file
 
-The ambient random objects `alg:ttc` draws from.  None of these is a *step* of the
-algorithm — they are the measures the algorithm's two coin sequences are governed by,
-and the sampler whose mass function the level-`0` rates are read off.  They live here,
-with the rest of the vocabulary, so that `Model/Pseudocode.lean` stays pseudocode.
+Since `Ttc.ttc` (`Model/Pseudocode`) is a *law*, the audit surface includes the ambient
+random objects the algorithm's two coin sequences are governed by.  They are no longer
+defined here: they are in **`Ttc/Probability/`**, four files that between them hold
+`MonteCarlo.coinLaw`/`MonteCarlo.coins`, `half`/`thinKernel`/`chainKernel`/`trajLaw` with
+the two Markov-kernel instances Ionescu–Tulcea takes as instance arguments, and
+`mixSteps`/`ballWalkLaw`/`kv97SampD`/`kv97ContLaw`/`e2eSampD`.  Every name is unchanged,
+so nothing that used them had to change.
 
-Definitions only.  Every property of these objects — that the kernels are Markov, that
-the walk mixes, that the estimator is unbiased — is proved outside `Model/`
-(`Coupling/Family`, `Sampler/Construct`, `Volume/MonteCarlo`, `Process/Thinning`), and
-none of it is needed to read the statement.
--/
+`Ttc/Audit/ClosureCheck.lean` audits `Ttc/Model/` **together with** `Ttc/Probability/`
+for exactly this reason, and says so; read its docstring for what that costs and what
+keeps it honest.
 
-section Probability
+What did **not** go is the block below.  The `(Am, bv)` system, the facet count and the
+diameter are the *geometry* the sampler is applied at — convex geometry read off the
+formula, no randomness anywhere in it — so it stays here, with `region`, `latticeScale`
+and `FacetIndex`, which is what it is built from.
 
-open MeasureTheory ProbabilityTheory
+## The canonical linear description of the dilated cubes
 
-/-! ## The volume oracle's coin space
+Plain geometry read off the formula — no choice is made beyond the enumeration of the
+facet index. -/
 
-`Vol_ED` (`alg:ttc` line 24) is a Monte-Carlo estimator; its randomness is a countable
-i.i.d. sequence of uniform draws from the unit ball. -/
+section CanonicalPolytope
 
-namespace MonteCarlo
+open MeasureTheory
 
-/-- **One coin**: the uniform distribution on the unit ball of `Space n`. -/
-noncomputable def coinLaw (n : ℕ) : Measure (Space n) :=
-  Arlib.uniformOn volume (Metric.ball (0 : Space n) 1)
-
-/-- **All the coins**: a countable i.i.d. sequence of uniform draws from the unit ball.
-
-This is the `Ω`/`μ` of `Ttc.VolumeAlgorithm.monteCarlo`.  It is the infinite product
-measure `MeasureTheory.Measure.infinitePi`; independence of the coordinates is
-`ProbabilityTheory.iIndepFun_infinitePi`. -/
-noncomputable def coins (n : ℕ) : Measure (ℕ → Space n) :=
-  Measure.infinitePi (fun _ : ℕ => coinLaw n)
-
-end MonteCarlo
-
-/-! ## The ½-thinning and the coupled trajectory law
-
-`alg:ttc`'s sample coins are a trajectory of the coupled level family: a level-`0`
-vector of independent Poisson counts, thinned by a fair coin at every level.  Ionescu–
-Tulcea (`ProbabilityTheory.Kernel.trajMeasure`) turns the one-step thinning kernel into
-the law of the *whole* trajectory on one space, which is what makes every level's event
-unconditional. -/
-
-/-- The thinning probability `½`, as an element of `unitInterval`. -/
-noncomputable def half : unitInterval := ⟨1 / 2, by constructor <;> norm_num⟩
-
-/-- **One thinning step, as a Markov kernel.** Each coordinate is thinned
-`Binomial(·, ½)`, independently across lattice points. -/
-noncomputable def thinKernel (L : ℕ) : Kernel (Fin L → ℕ) (Fin L → ℕ) where
-  toFun k := Measure.pi fun s => binomial (k s) half
-  measurable' := Measurable.of_discrete
-
-instance isMarkovKernel_thinKernel (L : ℕ) : IsMarkovKernel (thinKernel L) :=
-  ⟨fun k => by
-    show IsProbabilityMeasure (Measure.pi fun s => binomial (k s) half)
-    infer_instance⟩
-
-/-- The chain's kernel at step `n`: thin the state at time `n`. The history is
-available but only its last coordinate is read — the chain is Markov. -/
-noncomputable def chainKernel (L n : ℕ) :
-    Kernel ((_i : ↥(Finset.Iic n)) → (Fin L → ℕ)) (Fin L → ℕ) :=
-  Kernel.comap (thinKernel L) (fun h => h ⟨n, Finset.mem_Iic.2 le_rfl⟩) (measurable_pi_apply _)
-
-instance isMarkovKernel_chainKernel (L n : ℕ) : IsMarkovKernel (chainKernel L n) := by
-  rw [chainKernel]; infer_instance
-
-/-- **The coupled family, as one measure on trajectories.** Start from the
-level-`0` product of Poissons and thin forever. -/
-noncomputable def trajLaw {L : ℕ} (θ : Fin L → ℝ) : Measure (ℕ → (Fin L → ℕ)) :=
-  Kernel.trajMeasure (Measure.pi fun s => poissonMeasure (θ s).toNNReal) (chainKernel L)
-
-/-! ## `GenerateSamples`' sampler
-
-The lazy ball walk on the Kannan–Vempala inflated polytope, and the randomized-rounding
-rejection law its discrete output has.  Nothing here mentions the target measure: the
-sampler is an iterate of a Markov kernel, and only `Ttc.tvLe_ballWalkLaw_inflated`
-(`Sampler/Construct`) ties it to the uniform distribution. -/
-
-/-- **The step count.**  `Arlib.MarkovChains.conductanceMixingTime` at the conductance
-floor that `Arlib.MarkovChains.mixesWithin_lazy_ballWalk_polytope` produces for a body of
-diameter `Dm` containing a ball of radius `γ`, walked with step `δ` from an `Mw`-warm
-start, to reach total-variation accuracy `eps`. -/
-noncomputable def mixSteps (n : ℕ) (γ Dm δ Mw eps : ℝ) : ℕ :=
-  Arlib.MarkovChains.conductanceMixingTime Mw
-    (min ((γ / (γ + Dm)) ^ n / 32)
-      ((1 / 2 : ℝ) ^ n / Dm * ((γ / (γ + Dm)) ^ n) ^ 2 * δ / (128 * (n : ℝ)))) eps
-
-/-- **The law of the lazy ball walk on `K` with step `δ` after `t` steps from `mu0`.**
-
-This is the sampler's output law.  It is an iterate of a Markov kernel — nothing about
-the target `Arlib.uniformOn volume K` appears in it. -/
-noncomputable def ballWalkLaw {n : ℕ} (K : Set (Space n)) (δ : ℝ) (mu0 : Measure (Space n))
-    (t : ℕ) : Measure (Space n) :=
-  Arlib.MarkovChains.iterate (Arlib.MarkovChains.lazy (Arlib.MarkovChains.ballWalk K δ)) mu0 t
-
-open scoped Classical in
-/-- **The sampler's discrete law**: the mass at a fine-lattice point `x` of `P(c)` is the
-probability that randomized rounding of the continuous draw `law ⟨c,·⟩` lands on
-`10^ρ · x`, normalised by the same quantity summed over all integer points of the dilated
-polytope.  Outside the cubes of `D` there is nothing to define and the value is `0`. -/
-noncomputable def kv97SampD {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF A) (ρ : ℤ)
-    (law : {c : Cube A // c ∈ D} → Measure (Space n)) : Cube A → Space n → ℝ := fun c x =>
-  if hc : c ∈ D then
-    (∫ p, Arlib.Lattice.Rounding.prodTent (latticeScale ρ • x) p ∂(law ⟨c, hc⟩)) /
-      ∑ᶠ k : ((latticeScale ρ • region M c) ∩ intLattice n : Set (Space n)),
-        ∫ p, Arlib.Lattice.Rounding.prodTent (k : Space n) p ∂(law ⟨c, hc⟩)
-  else 0
-
-/-- **The sampler's continuous law**: for each cube `i`, the law of the lazy ball walk on
-the inflated dilated polytope `P'ᵢ`, run from the warm start `mu0 i` for `Ttc.mixSteps`
-steps at tolerance `ε'/(4·Vol(P'ᵢ))`. -/
-noncomputable def kv97ContLaw {A : Type*} {n : ℕ} {D : DNF A} {Jt : Type}
-    (epsPrime r : ℝ)
-    (Am : {c : Cube A // c ∈ D} → Jt → Space n) (bv : {c : Cube A // c ∈ D} → Jt → ℝ)
-    (Dm γ δ Mw : {c : Cube A // c ∈ D} → ℝ)
-    (mu0 : {c : Cube A // c ∈ D} → Measure (Space n)) :
-    {c : Cube A // c ∈ D} → Measure (Space n) := fun i =>
-  ballWalkLaw (Arlib.KV97.inflated (Am i) (bv i) (Arlib.KV97.cOf epsPrime) r) (δ i) (mu0 i)
-    (mixSteps n (γ i) (Dm i) (δ i) (Mw i)
-      (epsPrime / (4 *
-        (volume (Arlib.KV97.inflated (Am i) (bv i) (Arlib.KV97.cOf epsPrime) r)).toReal)))
-
-/-- **The sampler's discrete law, at the geometry the run already carries** — the
-rounding-then-rejection law of the lazy ball walk on the inflated dilated body, with its
-inscribed ball the run's own dilated ball and its ball-walk step equal to that radius. -/
-noncomputable def e2eSampD {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF A) (ρ : ℤ)
-    (epsPrime rfac : ℝ) {Jt : Type}
-    (Am : {c : Cube A // c ∈ D} → Jt → Space n) (bv : {c : Cube A // c ∈ D} → Jt → ℝ)
-    (cen : {c : Cube A // c ∈ D} → Space n) (gammaHat : ℝ)
-    (Dm : {c : Cube A // c ∈ D} → ℝ) : Cube A → Space n → ℝ :=
-  kv97SampD M D ρ (kv97ContLaw epsPrime rfac Am bv
-    (fun i => (1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac /
-        (latticeScale ρ * gammaHat)) * Dm i)
-    (fun _ => latticeScale ρ * gammaHat
-      + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac)
-    (fun _ => latticeScale ρ * gammaHat)
-    (fun i => (volume (Arlib.KV97.inflated (Am i) (bv i) (Arlib.KV97.cOf epsPrime) rfac) /
-      volume (Metric.ball (latticeScale ρ • cen i)
-        (latticeScale ρ * gammaHat
-          + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac))).toReal)
-    (fun i => Arlib.uniformOn volume (Metric.ball (latticeScale ρ • cen i)
-      (latticeScale ρ * gammaHat
-        + Arlib.KV97.kappaOf (Arlib.KV97.cOf epsPrime) rfac))))
-
-/-! ## The canonical linear description of the dilated cubes
-
-The `(Am, bv)` system, the facet count and the diameter the sampler above is applied
-at.  Plain geometry read off the formula — no choice is made beyond the enumeration of
-the facet index. -/
 
 /-- **The facets of `D`, enumerated.**  `Ttc.instFiniteFacetIndex` makes `FacetIndex D`
 finite, so it is in bijection with `Fin (Nat.card (FacetIndex D))`.  The enumeration is
@@ -513,6 +386,6 @@ noncomputable def canonDm {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : D
     (i : {c : Cube A // c ∈ D}) : ℝ :=
   Metric.diam (latticeScale ρ • region M i.val)
 
-end Probability
+end CanonicalPolytope
 
 end Ttc

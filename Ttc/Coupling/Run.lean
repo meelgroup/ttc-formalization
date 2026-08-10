@@ -44,7 +44,8 @@ theorem count_of_coupledAt {pt : Fin L → Space n} (hpt : Function.Injective pt
     {ω : ℕ → (Fin L → ℕ)} {seen : Fin L → Bool} {st : SketchState n}
     (h : CoupledAt pt ω seen st) (s : Fin L) :
     count (pt s) st.X = if seen s then ω st.level s else 0 := by
-  rw [h, count_toMultiset hpt]
+  rw [h]
+  exact count_toMultiset hpt (fun s => if seen s then ω st.level s else 0) s
 
 /-- A nested trajectory is antitone in the level. -/
 theorem traj_antitone {ω : ℕ → (Fin L → ℕ)} (hnest : ∀ j s, ω (j + 1) s ≤ ω j s)

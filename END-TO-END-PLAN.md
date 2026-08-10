@@ -64,12 +64,26 @@ track.
 | 4 — ball-walk mixing stack | **THE ROUTE OF RECORD IS DEAD — see below.** Proved: 1-D and ℝⁿ Prékopa–Leindler, Brunn–Minkowski, Prékopa/Borell, log-concave marginals and convolutions, Brunn's theorem, conductance ⟹ explicit mixing time, the ball walk as a genuine reversible Markov kernel, and Cheeger's inequality in **both** directions. **Cheeger's hard direction is now proved** — `Arlib.MarkovChains.sq_conductance_div_two_le_spectralGap` (`Cheeger.lean:1584`), packaged with the easy direction as `Arlib.MarkovChains.cheeger` (`:1593`); the row above claiming otherwise was stale. Isoperimetry is proved at the **weak** constant for the uniform measure *and* for the Gaussian-restricted measure (`GaussianCooling/Unblock.lean:597` `exists_uniformOn_gaussian_iso_of_convex`, in the exact shape `conductance_ballWalk_ge` consumes); the **sharp** constant remains open, and is what the paper's `O*(n³)` needs. **The single unproved object on the critical path is a Markov kernel stationary for the Gaussian-restricted density `∝ 1_K·e^{−‖x‖²/(2s)}`** — the Metropolis filter of the paper's Figure 2 is not built anywhere (`BallWalk.lean:24`, `Unblock.lean:80`); the two chains that exist are stationary for `uniformOn volume K` and `ellProb`. |
 | 5 — discharge volume oracle | **CV §5.1 ported in full** (`Arlib/Convexity/GaussianCooling/Variance.lean`, 63 declarations, Brascamp–Lieb a genuine port). **`ZLogconcaveHypothesis` is now DISCHARGED** for `f = c·1_K` with `K` convex and measurable (`Arlib/Convexity/GaussianCooling/ZLogconcave.lean`), giving unconditional `fixed_var_bound_indicator` / `fixed_var_bound_ratio_indicator` — which is the instance a volume oracle for a convex body actually needs. **But it is FALSE for general log-concave `f`**: at `n = 1`, `f x = e^{-x}`, `log z` is strictly convex for `A < 2/3` and the hypothesis fails by a factor ≈ 1.93. The obstruction is structural — the proof needs `(A,y) ↦ f(y/A)` jointly log-concave, and a 0-homogeneous convex function is constant — so up to a constant factor, indicators of convex sets are *exactly* the `f` that work. `Variance.lean:1287`'s docstring must not be read as claiming the general case. One assumed input remains: `LocalizationHypothesis`. `Estimator` runs at `O(log 1/p)`; the roadmap's `O(1/p)` caveat is withdrawn. |
 
-**No oracle is fully discharged**, but the sampling oracle is materially reduced:
-`samp_unif` moved from *field* to *theorem*, and the whole discrete `(1 ± ε')`
-claim — rounding loss, rejection loss, escape tail, union bound over facets — is
-now proved rather than assumed. `volAlg`, `volCoins_good` and `gen_mem` are still
-fields. `Ttc.TtcProb.volume_estimate`'s axiom profile is unchanged while resting on
-strictly more proof.
+**Both oracles are now discharged, by construction, and the plan above predates
+that.** `Ttc.VolumeAlgorithm.monteCarlo` (`Ttc/Volume/MonteCarlo.lean`) is a
+`VolumeAlgorithm n` with no hypotheses, and `Ttc.kv97SamplerOfBody`
+(`Ttc/Sampler/Construct.lean`) is a `KV97Sampler` whose `law_tv` field is a
+*theorem*, proved from the ball walk's mixing time. `Ttc.ttc_volume_final`
+(`Ttc/Exec/Final.lean`) binds **no oracle of any kind**. What is left of this
+section's account is the two things that did *not* change:
+
+* `volAlg`, `volCoins_good` and `gen_mem` are still **fields of `Ttc.TtcProb`** —
+  the bundle-level theorem still quantifies over them; it is the input-level
+  capstones that construct them away.
+* **Both constructions are exponential in `n`** (Monte-Carlo sample count, ball-walk
+  step count). "Discharged" means unconditional, not efficient; `thm:runtime` is
+  out of scope throughout. Quoting the first half without the second overstates the
+  result.
+
+The sampling-oracle reduction recorded above still holds and is what made this
+possible: `samp_unif` moved from *field* to *theorem*, and the whole discrete
+`(1 ± ε')` claim — rounding loss, rejection loss, escape tail, union bound over
+facets — is proved rather than assumed.
 
 > **Honest caveat on the exchange.** `samp_unif` (a quantitative `(1±ε')` bound on
 > a *discrete* law) was traded for `density_au` (a quantitative `(1±ε'/4)` bound on
@@ -120,8 +134,8 @@ or re-deriving Thm 2 for an additive error, which §4b argues is impossible).
 
 ## Context
 
-`kr-25-ssm/lean` (the `Ttc` library, ~10.8k lines, `sorry`-free, axioms
-`[propext, Classical.choice, Quot.sound]`) proves `thm:volumettc`:
+`kr-25-ssm/lean` (the `Ttc` library, ~32k lines across 109 files, `sorry`-free,
+axioms `[propext, Classical.choice, Quot.sound]`) proves `thm:volumettc`:
 
 ```lean
 theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
@@ -129,19 +143,23 @@ theorem Ttc.TtcProb.volume_estimate (T : TtcProb A n) :
                         ∈ relErr T.ε (volSol T.M T.φ)}).toReal
 ```
 
-Everything *quantitative* is derived. What is still **assumed** is a description
-of the two external oracles, carried as fields of `Ttc.TtcProb`
-(`Ttc/Model/ProblemSetting.lean`):
+Everything *quantitative* is derived. What this theorem still **assumes** is a
+description of the two external oracles, carried as fields of `Ttc.TtcProb` (since
+moved out of `Model/`, to `Ttc/TtcProb.lean`):
 
-| Oracle | `alg:ttc` | Assumed as | Where |
-|---|---|---|---|
-| `GenerateSamples(P(cᵢ), Nᵢ, ρ, ε', δ')` | line 43 | `theta_lo`/`theta_hi` (the `(1±ε')` factor of `eq:almostuniform`) + `gen_mem` | `ProblemSetting.lean:172,174,133` |
-| `Vol_ED(P(cᵢ), ε', δ')` | line 24 | `volAlg : VolumeAlgorithm n` (Cousins–Vempala Thm 1.1) + `volCoins_good` | `ProblemSetting.lean:207,235` |
+| Oracle | `alg:ttc` | Assumed as |
+|---|---|---|
+| `GenerateSamples(P(cᵢ), Nᵢ, ρ, ε', δ')` | line 43 | `sampler : KV97Sampler …` + `gen_mem` (`theta_lo`/`theta_hi` are now theorems) |
+| `Vol_ED(P(cᵢ), ε', δ')` | line 24 | `volAlg : VolumeAlgorithm n` (Cousins–Vempala Thm 1.1) + `volCoins_good` |
 
-The goal is to **remove those assumptions** — sampling oracle first, then volume
-oracle — so the headline rests only on Mathlib. Both reduce to the *same*
-missing object: a continuous almost-uniform sampler on a convex body. So one
-stack discharges both.
+The goal was to **remove those assumptions** — sampling oracle first, then volume
+oracle — so the headline rests only on Mathlib. Both reduce to the *same* missing
+object: a continuous almost-uniform sampler on a convex body, so one stack
+discharges both. **That goal has been met at the input level** (see the STATUS
+note above): the capstone chain ending in `Ttc.ttc_volume_final` constructs both
+oracles and binds neither. The bundle-level `Ttc.TtcProb.volume_estimate` still
+quantifies over them, which is why the table above is still the right reading of
+*this* theorem.
 
 A second, smaller goal: `AUDIT.md:9` claims `Ttc/Model/` is **four files**, while
 `Model/` held five. **Done** — see the status table.
@@ -389,11 +407,21 @@ dependency-walk probe in `AUDIT.md` §5 reports the new theorems as reached.
 
 ## Phase 4 — The ball-walk mixing stack (the long pole)
 
+> **Read this phase as the plan it was, not as outstanding work.** Its correctness
+> content has landed: Prékopa–Leindler (1-D and `ℝⁿ`), Brunn–Minkowski, logconcavity,
+> the isoperimetric inequality, conductance, Cheeger in **both** directions, and
+> conductance ⇒ TV mixing are all proved in `Arlib/` — `CV-ROADMAP.md` §3's third
+> column is the current inventory, and every `IsoInput`/`MixingFromConductance`-style
+> assumed predicate named below has been **deleted**, not merely discharged. What did
+> *not* land is the constant: everything runs at `κ = 2⁻ⁿ/D`, so the stack is
+> exponential in `n`. The file list below is kept because it is the decomposition that
+> worked.
+
 This is what removes the last hypothesis of Phase 3 **and** discharges
-`VolumeAlgorithm`. `CV-ROADMAP.md` §3 documents that Mathlib v4.32 has *none* of
-it: no Prékopa–Leindler, no Brunn–Minkowski, no logconcavity, no isoperimetric
-inequality, no conductance, no mixing time, no continuous-state quantitative
-convergence. Budget accordingly; this phase is measured in months, not days.
+`VolumeAlgorithm`. Mathlib v4.32 has *none* of it: no Prékopa–Leindler, no
+Brunn–Minkowski, no logconcavity, no isoperimetric inequality, no conductance, no
+mixing time, no continuous-state quantitative convergence. Budget accordingly; this
+phase is measured in months, not days.
 
 `Arlib/Convexity/`
 * `LogConcave.lean` — logconcave functions/measures, closure properties. Port
