@@ -537,6 +537,29 @@ theorem normalised_volume_slice_le (hm : m ≠ 0) {C : Set (Fin (m + 1) → ℝ)
   rw [div_le_iff₀ hVpos]
   linarith
 
+/-- **A bounded measurable function supported in `[0,1]` is integrable.**
+
+This is the shape in which the localisation profiles come out: nonnegative, bounded above by
+`2^(m+1)` (`Arlib.normalised_volume_slice_le`, `Arlib.rescaledProfile_le`), and vanishing off the
+unit slab.  It is stated separately because it is needed at both origins of the existential `W` —
+`Arlib.exists_needleIntegral_eq_zero_and_pos` and
+`Arlib.exists_needleIntegral_eq_zero_and_pos_shrinkingSlab`.
+
+Integrability is not decorative: a Bochner integral of a *non*-integrable nonnegative function is
+`0`, not `+∞`, so any downstream monotone comparison of needle masses is false without it. -/
+theorem integrable_of_forall_notMem_Icc {W : ℝ → ℝ} {B : ℝ} (hWm : Measurable W)
+    (hW0 : ∀ t, 0 ≤ W t) (hWB : ∀ t, W t ≤ B)
+    (hWsupp : ∀ t : ℝ, t ∉ Icc (0 : ℝ) 1 → W t = 0) :
+    Integrable W := by
+  have hdom : Integrable (Set.indicator (Icc (0 : ℝ) 1) (fun _ => B)) := by
+    rw [integrable_indicator_iff measurableSet_Icc]
+    exact integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+  refine hdom.mono' hWm.aestronglyMeasurable (Filter.Eventually.of_forall fun t => ?_)
+  by_cases ht : t ∈ Icc (0 : ℝ) 1
+  · rw [Set.indicator_of_mem ht, Real.norm_eq_abs, abs_of_nonneg (hW0 t)]
+    exact hWB t
+  · rw [Set.indicator_of_notMem ht, hWsupp t ht, norm_zero]
+
 /-- **(G2a) and (G2b) together: selection with the uniform bound discharged.**
 
 Same as `Arlib.exists_subseq_tendsto_normalised_slice_profile`, but with no `B` hypothesis: the
@@ -689,6 +712,7 @@ end Arlib
 #print axioms Arlib.exists_subseq_tendsto_of_concaveOn_Ioo
 #print axioms Arlib.exists_subseq_tendsto_normalised_slice_profile
 #print axioms Arlib.normalised_volume_slice_le
+#print axioms Arlib.integrable_of_forall_notMem_Icc
 #print axioms Arlib.exists_subseq_tendsto_normalised_slice_profile'
 #print axioms Arlib.exists_subseq_tendsto_average_setIntegral
 #print axioms Arlib.exists_subseq_tendsto_average_setIntegral'

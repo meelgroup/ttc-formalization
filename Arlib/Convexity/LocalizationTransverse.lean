@@ -202,6 +202,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact (hm : m ≠ 0)
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (a + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (a + t • v) := by
@@ -224,6 +225,7 @@ with nondegenerate bodies.  The limit profile that comes out is nonzero, since i
 positive. -/
 theorem exists_needleIntegral_eq_zero_and_pos_of_compact_box (hm : m ≠ 0) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       0 < ∫ t : ℝ, W t * (1 : ℝ) := by
   classical
@@ -291,12 +293,13 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_box (hm : m ≠ 0) :
     by_cases hi : i = 0
     · simp [hi, hφ, hv]
     · simp [hi, hv, hzero i hi, hφ]
-  obtain ⟨W, hW0, hWc, hW₁, hW₂⟩ := exists_needleIntegral_eq_zero_and_pos_of_compact hm hφv hDconv
+  obtain ⟨W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ :=
+    exists_needleIntegral_eq_zero_and_pos_of_compact hm hφv hDconv
     hDcomp hDmono hDpos hslab hspan haxis (g₁ := fun _ => (0 : ℝ)) (g₂ := fun _ => (1 : ℝ))
     continuous_const continuous_const (M := 1) (fun _ => by norm_num) (fun _ => by norm_num)
     (fun k => integral_zero _ _) (ε := 1) one_pos
     (fun k => by rw [setIntegral_const, smul_eq_mul, mul_one, measureReal_def, one_mul])
-  exact ⟨W, hW0, hWc, hW₂⟩
+  exact ⟨W, hW0, hWsupp, hWint, hWc, hW₂⟩
 
 end Combined
 

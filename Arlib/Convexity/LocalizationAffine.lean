@@ -269,7 +269,18 @@ The uniform bound `hB` and the pointwise profile convergence `hlim` of
 `Arlib.needleIntegral_eq_zero_and_ge` are supplied by `Arlib.normalised_volume_slice_le` and
 `Arlib.exists_subseq_tendsto_normalised_slice_profile'` once the bodies are convex, slice-finite
 and span the slab; the profile `W` becomes existentially quantified, which is exactly the shape
-the Localization Lemma asserts. -/
+the Localization Lemma asserts.
+
+Two further properties of the constructed profile are stated, because every downstream consumer
+needs them and the existential would otherwise discard them:
+
+* **support** — `W t = 0` off `[0,1]`, because each normalised slice profile vanishes there
+  (the bodies lie in the slab) and `W` is their pointwise limit;
+* **integrability** — `W` is measurable (a pointwise limit of the measurable profiles
+  `Arlib.measurable_volume_slice_toReal`), nonnegative, bounded by `2^(m+1)`
+  (`Arlib.normalised_volume_slice_le`) and supported in `[0,1]`, so
+  `Arlib.integrable_of_forall_notMem_Icc` applies.  This is not decorative: a Bochner integral
+  of a non-integrable nonnegative function is `0`, not `+∞`. -/
 theorem exists_needleIntegral_eq_zero_and_pos (hm : m ≠ 0)
     {C : ℕ → Set (Fin (m + 1) → ℝ)} (hconv : ∀ k, Convex ℝ (C k))
     (hCm : ∀ k, MeasurableSet (C k)) (hCfin : ∀ k, volume (C k) ≠ ⊤)
@@ -285,6 +296,7 @@ theorem exists_needleIntegral_eq_zero_and_pos (hm : m ≠ 0)
     (hzero : ∀ k, (∫ x in C k, g₁ x) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (C k)).toReal ≤ ∫ x in C k, g₂ x) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (Fin.cons t (0 : Fin m → ℝ))) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (Fin.cons t (0 : Fin m → ℝ)) := by
@@ -292,8 +304,31 @@ theorem exists_needleIntegral_eq_zero_and_pos (hm : m ≠ 0)
     hCpos hsfin hslab hspan
   have hVpos : ∀ k, (0 : ℝ) < (volume (C k)).toReal := fun k =>
     ENNReal.toReal_pos (hCpos k).ne' (hCfin k)
-  refine ⟨W, fun t => ge_of_tendsto' (hW t)
-      (fun k => div_nonneg ENNReal.toReal_nonneg (hVpos (ψ k)).le),
+  have hW0 : ∀ t, 0 ≤ W t := fun t => ge_of_tendsto' (hW t)
+    (fun k => div_nonneg ENNReal.toReal_nonneg (hVpos (ψ k)).le)
+  -- the profiles vanish off the slab, hence so does their pointwise limit
+  have hWsupp : ∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0 := by
+    intro t ht
+    have hconst : (fun k => (volume (slice (C (ψ k)) t)).toReal / (volume (C (ψ k))).toReal)
+        = fun _ : ℕ => (0 : ℝ) := by
+      funext k
+      have hempty : slice (C (ψ k)) t = ∅ :=
+        Set.eq_empty_of_forall_notMem fun y hy => ht (by simpa using hslab (ψ k) _ hy)
+      rw [hempty, measure_empty, ENNReal.toReal_zero, zero_div]
+    have h := hW t
+    rw [hconst] at h
+    exact tendsto_nhds_unique h tendsto_const_nhds
+  -- `W` is measurable as a pointwise limit of measurable profiles
+  have hWm : Measurable W := by
+    refine measurable_of_tendsto_metrizable' atTop
+      (f := fun k t => (volume (slice (C (ψ k)) t)).toReal / (volume (C (ψ k))).toReal)
+      (fun k => (measurable_volume_slice_toReal (hCm (ψ k))).div_const _) ?_
+    exact tendsto_pi_nhds.mpr hW
+  have hWB : ∀ t, W t ≤ (2 : ℝ) ^ (m + 1) := fun t =>
+    le_of_tendsto (hW t) (Filter.Eventually.of_forall fun k =>
+      normalised_volume_slice_le hm (hconv (ψ k)) (hCm (ψ k)) (hCfin (ψ k)) (hCpos (ψ k))
+        (hsfin (ψ k)) (hslab (ψ k)) (hspan (ψ k)) t)
+  refine ⟨W, hW0, hWsupp, integrable_of_forall_notMem_Icc hWm hW0 hWB hWsupp,
     concaveOn_limit_normalised_slice_profile hm hconv hCm hCfin hCpos hsfin hspan hψ hW,
     needleIntegral_eq_zero_and_ge (C := fun k => C (ψ k)) (fun k => hCm (ψ k))
     (fun k => hCfin (ψ k)) (fun k => hCpos (ψ k)) (fun k => hslab (ψ k)) hg₁m hg₂m hM₁ hM₂
@@ -342,6 +377,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_affine (hm : m ≠ 0)
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (a + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (a + t • v) := by
@@ -366,7 +402,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_affine (hm : m ≠ 0)
       = |(LinearMap.det (L : (Fin (m + 1) → ℝ) →ₗ[ℝ] (Fin (m + 1) → ℝ)))⁻¹|
         * (volume (D k)).toReal := by
     intro k; rw [hvol k, ENNReal.toReal_mul, ENNReal.toReal_ofReal hdpos.le]
-  obtain ⟨W, hW0, hWc, hW₁, hW₂⟩ := exists_needleIntegral_eq_zero_and_pos hm
+  obtain ⟨W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ := exists_needleIntegral_eq_zero_and_pos hm
     (C := fun k => (fun x => a + L x) ⁻¹' D k)
     (g₁ := fun x => g₁ (a + L x)) (g₂ := fun x => g₂ (a + L x))
     (fun k => convex_preimage_affine a L (hDconv k)) (fun k => hAm (hDm k))
@@ -398,7 +434,8 @@ theorem exists_needleIntegral_eq_zero_and_pos_affine (hm : m ≠ 0)
     (fun k => by
       rw [setIntegral_comp_affine volume a L (hDm k) hg₂m, smul_eq_mul, hvolR k]
       nlinarith [mul_le_mul_of_nonneg_left (hge k) hdpos.le])
-  exact ⟨W, hW0, hWc, by simpa only [hAcons] using hW₁, by simpa only [hAcons] using hW₂⟩
+  exact ⟨W, hW0, hWsupp, hWint, hWc, by simpa only [hAcons] using hW₁,
+    by simpa only [hAcons] using hW₂⟩
 
 end GeneralPosition
 

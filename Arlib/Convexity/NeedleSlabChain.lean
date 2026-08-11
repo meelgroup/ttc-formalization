@@ -256,7 +256,14 @@ is left to ask of the chain is exactly what a localisation chain provides —
 consequence of the chain (see the module docstring).
 
 No hypothesis relates the height range of `D k` to that of `D 0`: the chain may shrink in every
-direction, including along the needle. -/
+direction, including along the needle.
+
+The profile is delivered **supported in `[0,1]` and integrable**, not merely nonnegative and
+concave-to-the-`1/m`: both come from the origin
+`Arlib.exists_needleIntegral_eq_zero_and_pos_shrinkingSlab` and are threaded through unchanged,
+since every step of the transport reuses the *same* `W`.  Consumers need both — a Bochner integral
+of a non-integrable nonnegative function is `0`, not `+∞`, so a monotone comparison of needle
+masses is false without integrability, and `∫ t : ℝ` is not `∫ t in [α,β]` without the support. -/
 theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain (hm : m ≠ 0)
     {D : ℕ → Set (Fin (m + 1) → ℝ)} (hDcomp : ∀ k, IsCompact (D k))
     (hDconv : ∀ k, Convex ℝ (D k)) (hDmono : ∀ k, D (k + 1) ⊆ D k)
@@ -267,6 +274,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain (hm : m ≠ 0)
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ (b v : Fin (m + 1) → ℝ) (W : ℝ → ℝ), (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (b + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (b + t • v) := by
@@ -276,10 +284,10 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain (hm : m ≠ 0)
   obtain ⟨a, φ, haS, hone, hIle⟩ := exists_unitHeight_functional hIcomp hp hq hpq
   obtain ⟨l, u, hl0, hu1, hslab, hspan, hl, hu⟩ :=
     exists_slab_of_compact_chain hDcomp hDconv hDmono haS hone hIle
-  obtain ⟨b, v, W, -, hW0, hWc, hW₁, hW₂⟩ :=
+  obtain ⟨b, v, W, -, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ :=
     exists_needleIntegral_eq_zero_and_pos_of_collinear_shrinkingSlab hm hDconv hDcomp hDmono
       hDpos hl0 hu1 hslab hspan hl hu hcol hg₁ hg₂ hM₁ hM₂ hzero hεpos hge
-  exact ⟨b, v, W, hW0, hWc, hW₁, hW₂⟩
+  exact ⟨b, v, W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩
 
 end Composition
 

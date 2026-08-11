@@ -487,6 +487,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean (hm : m
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ (b v : EuclideanSpace ℝ (Fin (m + 1))) (W : ℝ → ℝ), (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (b + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (b + t • v) := by
@@ -523,11 +524,11 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean (hm : m
     intro k
     rw [hvol k, hF, setIntegral_preimage_toLp g₂ (D k)]
     exact hge k
-  obtain ⟨b, v, W, hW0, hWc, hW₁, hW₂⟩ :=
+  obtain ⟨b, v, W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ :=
     exists_needleIntegral_eq_zero_and_pos_of_compact_chain hm hFcomp hFconv hFmono hFpos hFcol
       (hmemF p hp) (hmemF q hq) hpq' hcont₁ hcont₂ (fun x => hM₁ _) (fun x => hM₂ _)
       hzeroF hεpos hgeF
-  refine ⟨WithLp.toLp 2 b, WithLp.toLp 2 v, W, hW0, hWc, ?_, ?_⟩
+  refine ⟨WithLp.toLp 2 b, WithLp.toLp 2 v, W, hW0, hWsupp, hWint, hWc, ?_, ?_⟩
   · rw [← hW₁]
     refine integral_congr_ae (Filter.Eventually.of_forall fun t => ?_)
     congr 2
@@ -558,6 +559,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean_of_sep 
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y)
     (hsep : ∀ x, g₁ x = 0 → g₂ x < ε) :
     ∃ (b v : EuclideanSpace ℝ (Fin (m + 1))) (W : ℝ → ℝ), (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (b + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (b + t • v) := by
@@ -884,6 +886,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean_of_sep_
       (∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) ∧
       (∀ x, g₁ x = 0 → g₂ x < ε) ∧
       ∃ (b v : EuclideanSpace ℝ (Fin (m + 1))) (W : ℝ → ℝ), (∀ t, 0 ≤ W t) ∧
+        (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
         ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
         (∫ t : ℝ, W t * g₁ (b + t • v)) = 0 ∧
         0 < ∫ t : ℝ, W t * g₂ (b + t • v) := by

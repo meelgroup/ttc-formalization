@@ -92,6 +92,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_affine_shrinkingSlab (hm : m ≠ 0
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (a + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (a + t • v) := by
@@ -118,7 +119,8 @@ theorem exists_needleIntegral_eq_zero_and_pos_affine_shrinkingSlab (hm : m ≠ 0
       = |(LinearMap.det (L : (Fin (m + 1) → ℝ) →ₗ[ℝ] (Fin (m + 1) → ℝ)))⁻¹|
         * (volume (D k)).toReal := by
     intro k; rw [hvol k, ENNReal.toReal_mul, ENNReal.toReal_ofReal hdpos.le]
-  obtain ⟨W, hW0, hWc, hW₁, hW₂⟩ := exists_needleIntegral_eq_zero_and_pos_shrinkingSlab hm
+  obtain ⟨W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ :=
+    exists_needleIntegral_eq_zero_and_pos_shrinkingSlab hm
     (C := fun k => (fun x => a + L x) ⁻¹' D k)
     (g₁ := fun x => g₁ (a + L x)) (g₂ := fun x => g₂ (a + L x))
     (fun k => convex_preimage_affine a L (hDconv k)) (fun k => hAm (hDm k))
@@ -151,7 +153,8 @@ theorem exists_needleIntegral_eq_zero_and_pos_affine_shrinkingSlab (hm : m ≠ 0
     (fun k => by
       rw [setIntegral_comp_affine volume a L (hDm k) hg₂.measurable, smul_eq_mul, hvolR k]
       nlinarith [mul_le_mul_of_nonneg_left (hge k) hdpos.le])
-  exact ⟨W, hW0, hWc, by simpa only [hAcons] using hW₁, by simpa only [hAcons] using hW₂⟩
+  exact ⟨W, hW0, hWsupp, hWint, hWc, by simpa only [hAcons] using hW₁,
+    by simpa only [hAcons] using hW₂⟩
 
 end GeneralPosition
 
@@ -182,6 +185,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_compact_shrinkingSlab (hm : m �
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (a + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (a + t • v) := by
@@ -221,6 +225,7 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_collinear_shrinkingSlab (hm : m
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ (b v : Fin (m + 1) → ℝ) (W : ℝ → ℝ), φ v = 1 ∧ (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (b + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (b + t • v) := by
@@ -232,14 +237,15 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_collinear_shrinkingSlab (hm : m
   obtain ⟨b, v, hb, hφv, haxis⟩ := exists_axis_of_collinear hDcomp hDmono hspan01 hcol
   have hshift : ∀ y : Fin (m + 1) → ℝ, φ (y - b) = φ (y - a) := by
     intro y; rw [map_sub, map_sub, hb]
-  obtain ⟨W, hW0, hWc, hW₁, hW₂⟩ := exists_needleIntegral_eq_zero_and_pos_of_compact_shrinkingSlab
+  obtain ⟨W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ :=
+    exists_needleIntegral_eq_zero_and_pos_of_compact_shrinkingSlab
     hm hφv hDconv hDcomp hDmono hDpos hlu
     (fun k y hy => by rw [hshift]; exact hslab k y hy)
     (fun k t ht => by
       obtain ⟨y, hy, hyt⟩ := hspan k t ht
       exact ⟨y, hy, by rw [hshift]; exact hyt⟩)
     hl hu haxis hg₁ hg₂ hM₁ hM₂ hzero hεpos hge
-  exact ⟨b, v, W, hφv, hW0, hWc, hW₁, hW₂⟩
+  exact ⟨b, v, W, hφv, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩
 
 end Compact
 
@@ -272,6 +278,7 @@ The profile that comes out is nonzero, since its integral is positive. -/
 theorem exists_needleIntegral_eq_zero_and_pos_shrinking_box (hm : m ≠ 0) :
     ∃ (b v : Fin (m + 1) → ℝ) (W : ℝ → ℝ),
       (LinearMap.proj (0 : Fin (m + 1)) : (Fin (m + 1) → ℝ) →ₗ[ℝ] ℝ) v = 1 ∧ (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       0 < ∫ t : ℝ, W t * (1 : ℝ) := by
   classical
@@ -362,14 +369,14 @@ theorem exists_needleIntegral_eq_zero_and_pos_shrinking_box (hm : m ≠ 0) :
     by_cases hi : i = 0
     · subst hi; simp
     · simp [hi, hzeroCoord y hy i hi]
-  obtain ⟨b, v, W, hφv, hW0, hWc, -, hW₂⟩ :=
+  obtain ⟨b, v, W, hφv, hW0, hWsupp, hWint, hWc, -, hW₂⟩ :=
     exists_needleIntegral_eq_zero_and_pos_of_collinear_shrinkingSlab hm (a := 0) (φ := φ)
       hDconv hDcomp hDmono hDpos hl0 hu1 hslab hspan hl hu hcol
       (g₁ := fun _ => (0 : ℝ)) (g₂ := fun _ => (1 : ℝ)) continuous_const continuous_const
       (M := 1) (fun _ => by norm_num) (fun _ => by norm_num)
       (fun k => integral_zero _ _) (ε := 1) one_pos
       (fun k => by rw [setIntegral_const, smul_eq_mul, mul_one, measureReal_def, one_mul])
-  exact ⟨b, v, W, hφv, hW0, hWc, hW₂⟩
+  exact ⟨b, v, W, hφv, hW0, hWsupp, hWint, hWc, hW₂⟩
 
 end ShrinkingBox
 

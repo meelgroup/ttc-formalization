@@ -453,7 +453,14 @@ theorem tendsto_average_setIntegral_of_rescaledProfile
 
 `Arlib.exists_needleIntegral_eq_zero_and_pos` with the fixed unit slab replaced by the moving
 slabs `[l k, u k]`, subject only to `l k → 0` and `u k → 1`.  The two conclusions are unchanged,
-and `W` still comes out nonnegative with a **concave** `1/m`-th power on `(0,1)`.
+and `W` still comes out nonnegative with a **concave** `1/m`-th power on `(0,1)`, **supported in
+`[0,1]`** and **integrable**.
+
+Support and integrability are stated because every downstream consumer needs them: each rescaled
+profile vanishes off `[0,1]` (`Arlib.rescaledProfile_eq_zero_of_notMem`) and is bounded by
+`2^(m+1)` (`Arlib.rescaledProfile_le`), both properties pass to the pointwise limit, and the limit
+is measurable by `Arlib.measurable_rescaledProfile`, so
+`Arlib.integrable_of_forall_notMem_Icc` applies.
 
 Both invariants pass to the limit for the same reasons as before: the `g₁`-averages are
 *identically* `0`, so no limit theorem can degrade the equality, and the `g₂`-averages are
@@ -475,10 +482,11 @@ theorem exists_needleIntegral_eq_zero_and_pos_shrinkingSlab (hm : m ≠ 0)
     (hzero : ∀ k, (∫ x in C k, g₁ x) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (C k)).toReal ≤ ∫ x in C k, g₂ x) :
     ∃ W : ℝ → ℝ, (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (Fin.cons t (0 : Fin m → ℝ))) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (Fin.cons t (0 : Fin m → ℝ)) := by
-  obtain ⟨ψ, hψ, W, hW0, hWc, hWlim, -⟩ := exists_subseq_tendsto_rescaledProfile hm hconv hCm
+  obtain ⟨ψ, hψ, W, hW0, hWc, hWlim, hWB⟩ := exists_subseq_tendsto_rescaledProfile hm hconv hCm
     hCfin hCpos hsfin hlu hslab hspan
   have hVpos : ∀ k, 0 < (volume (C k)).toReal := fun k =>
     ENNReal.toReal_pos (hCpos k).ne' (hCfin k)
@@ -496,7 +504,21 @@ theorem exists_needleIntegral_eq_zero_and_pos_shrinkingSlab (hm : m ≠ 0)
       (fun k s => rescaledProfile_le hm (hconv (ψ k)) (hCm (ψ k)) (hCfin (ψ k)) (hCpos (ψ k))
         (hsfin (ψ k)) (hlu (ψ k)) (hslab (ψ k)) (hspan (ψ k)) s)
       hWlim
-  refine ⟨W, hW0, hWc, ?_, ?_⟩
+  -- the rescaled profiles vanish off `[0,1]`, hence so does their pointwise limit
+  have hWsupp : ∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0 := by
+    intro t ht
+    have hconst : (fun k => rescaledProfile (C (ψ k)) (l (ψ k)) (u (ψ k)) t)
+        = fun _ : ℕ => (0 : ℝ) :=
+      funext fun k => rescaledProfile_eq_zero_of_notMem (hlu (ψ k)) (hslab (ψ k)) ht
+    have h := hWlim t
+    rw [hconst] at h
+    exact tendsto_nhds_unique h tendsto_const_nhds
+  have hWm : Measurable W := by
+    refine measurable_of_tendsto_metrizable' atTop
+      (f := fun k => rescaledProfile (C (ψ k)) (l (ψ k)) (u (ψ k)))
+      (fun k => measurable_rescaledProfile (hCm (ψ k)) _ _) ?_
+    exact tendsto_pi_nhds.mpr hWlim
+  refine ⟨W, hW0, hWsupp, integrable_of_forall_notMem_Icc hWm hW0 hWB hWsupp, hWc, ?_, ?_⟩
   · refine tendsto_nhds_unique (hpass hg₁ hM₁ hδ₁) ?_
     have hconst : (fun k => (∫ x in C (ψ k), g₁ x) / (volume (C (ψ k))).toReal)
         = fun _ : ℕ => (0 : ℝ) := by

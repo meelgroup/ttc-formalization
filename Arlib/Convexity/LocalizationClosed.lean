@@ -372,7 +372,11 @@ existence is Cantor's intersection theorem (`Arlib.exists_mem_iInter_height`).
 
 The bodies are still asked to lie in (`hslab`) and span (`hspan`) the slab
 `{y | φ (y - a) ∈ [0,1]}`; see the module docstring for why that pair, and not closedness or
-positioning, is what still separates this from the Localization Lemma in general position. -/
+positioning, is what still separates this from the Localization Lemma in general position.
+
+As at the origin `Arlib.exists_needleIntegral_eq_zero_and_pos`, the profile is delivered
+**supported in `[0,1]` and integrable**; the transport reuses the same `W`, so both properties
+pass through verbatim. -/
 theorem exists_needleIntegral_eq_zero_and_pos_of_collinear (hm : m ≠ 0)
     {a : Fin (m + 1) → ℝ} {φ : (Fin (m + 1) → ℝ) →ₗ[ℝ] ℝ}
     {D : ℕ → Set (Fin (m + 1) → ℝ)} (hDconv : ∀ k, Convex ℝ (D k))
@@ -386,19 +390,21 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_collinear (hm : m ≠ 0)
     (hzero : ∀ k, (∫ y in D k, g₁ y) = 0)
     {ε : ℝ} (hεpos : 0 < ε) (hge : ∀ k, ε * (volume (D k)).toReal ≤ ∫ y in D k, g₂ y) :
     ∃ (b v : Fin (m + 1) → ℝ) (W : ℝ → ℝ), φ v = 1 ∧ (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       (∫ t : ℝ, W t * g₁ (b + t • v)) = 0 ∧
       0 < ∫ t : ℝ, W t * g₂ (b + t • v) := by
   obtain ⟨b, v, hb, hφv, haxis⟩ := exists_axis_of_collinear hDcomp hDmono hspan hcol
   have hshift : ∀ y : Fin (m + 1) → ℝ, φ (y - b) = φ (y - a) := by
     intro y; rw [map_sub, map_sub, hb]
-  obtain ⟨W, hW0, hWc, hW₁, hW₂⟩ := exists_needleIntegral_eq_zero_and_pos_of_compact hm hφv
+  obtain ⟨W, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩ :=
+    exists_needleIntegral_eq_zero_and_pos_of_compact hm hφv
     hDconv hDcomp hDmono hDpos (fun k y hy => by rw [hshift]; exact hslab k y hy)
     (fun k t ht => by
       obtain ⟨y, hy, hyt⟩ := hspan k t ht
       exact ⟨y, hy, by rw [hshift]; exact hyt⟩)
     haxis hg₁ hg₂ hM₁ hM₂ hzero hεpos hge
-  exact ⟨b, v, W, hφv, hW0, hWc, hW₁, hW₂⟩
+  exact ⟨b, v, W, hφv, hW0, hWsupp, hWint, hWc, hW₁, hW₂⟩
 
 /-- **Non-vacuity of `Arlib.exists_needleIntegral_eq_zero_and_pos_of_collinear`.**
 
@@ -414,6 +420,7 @@ renamed. -/
 theorem exists_needleIntegral_eq_zero_and_pos_of_collinear_box (hm : m ≠ 0) :
     ∃ (b v : Fin (m + 1) → ℝ) (W : ℝ → ℝ),
       (LinearMap.proj (0 : Fin (m + 1)) : (Fin (m + 1) → ℝ) →ₗ[ℝ] ℝ) v = 1 ∧ (∀ t, 0 ≤ W t) ∧
+      (∀ t : ℝ, t ∉ Set.Icc (0 : ℝ) 1 → W t = 0) ∧ Integrable W ∧
       ConcaveOn ℝ (Ioo (0 : ℝ) 1) (fun t => W t ^ (1 / (m : ℝ))) ∧
       0 < ∫ t : ℝ, W t * (1 : ℝ) := by
   classical
@@ -482,13 +489,13 @@ theorem exists_needleIntegral_eq_zero_and_pos_of_collinear_box (hm : m ≠ 0) :
       by_cases hi : i = 0
       · simp [hi]
       · simp [hi, hzero i hi]
-  obtain ⟨b, v, W, hφv, hW0, hWc, -, hW₂⟩ :=
+  obtain ⟨b, v, W, hφv, hW0, hWsupp, hWint, hWc, -, hW₂⟩ :=
     exists_needleIntegral_eq_zero_and_pos_of_collinear hm hDconv hDcomp hDmono hDpos hslab hspan
       hcol (g₁ := fun _ => (0 : ℝ)) (g₂ := fun _ => (1 : ℝ)) continuous_const continuous_const
       (M := 1) (fun _ => by norm_num) (fun _ => by norm_num) (fun k => integral_zero _ _)
       (ε := 1) one_pos
       (fun k => by rw [setIntegral_const, smul_eq_mul, mul_one, measureReal_def, one_mul])
-  exact ⟨b, v, W, hφv, hW0, hWc, hW₂⟩
+  exact ⟨b, v, W, hφv, hW0, hWsupp, hWint, hWc, hW₂⟩
 
 end Collinear
 
