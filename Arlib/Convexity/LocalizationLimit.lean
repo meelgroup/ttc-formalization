@@ -76,8 +76,7 @@ So (G2) has **two** residual pieces, neither proved nor assumed here.
 
 *(i) The weak-convergence statement.*  `lim (1/vol Cₖ) ∫_{Cₖ} f = ∫₀¹ G(t)^m f(a + t(b-a)) dt`
 for lower semicontinuous integrable `f`, where `G` is the concave limit profile supplied by
-`Arlib.concaveOn_limit_slice_profile`.  This is where lower semicontinuity of `g` and `h`
-(rather than mere measurability) is actually consumed.
+`Arlib.concaveOn_limit_slice_profile`.
 
 *(ii) The concave-to-affine reduction.*  Stated exactly:
 
@@ -86,13 +85,39 @@ for lower semicontinuous integrable `f`, where `G` is the concave limit profile 
 > `∫₀¹ G(t)^m h(a + t(b-a)) dt > 0`, produce `a', b' ∈ ℝⁿ` and `p, q ≥ 0` with
 > `∫₀¹ ((1-t)p + tq)^m g(a' + t(b'-a')) dt > 0` and likewise for `h`.
 
-In the literature the affine form of the Localization Lemma is reached by a further reduction of
-this kind on top of the limit body; formalising it is exactly what remains.  Note that the naive
-route — subdivide the segment until `G` is nearly affine — does not obviously work, because `g`
-and `h` are *signed*, so one may not shrink the segment to a point.
+> **⚠ CORRECTION (see `Arlib.Convexity.NeedleProfile`).**  This section used to continue: "In
+> the literature the affine form of the Localization Lemma is reached by a further reduction of
+> this kind on top of the limit body; formalising it is exactly what remains."  That overstated
+> the case: **piece (ii) is not load-bearing for anything in this repository, and dropping it
+> costs nothing downstream.**
+>
+> Every one-dimensional consumer of a needle here takes as its input the *log-concavity* of the
+> needle density — that is the stated contract of `Arlib.logConcaveOn_needleDensity` and of
+> `Arlib.IsLogConcave.comp_needleMap` — and affineness of `ℓ` is used only as a route to that
+> log-concavity, through `Arlib.logConcaveOn_needleWeight`.  But a nonnegative concave function
+> is log-concave (`Arlib.logConcaveOn_of_concaveOn`), hence so is any nonnegative power of one.
+> `Arlib.logConcaveOn_concaveNeedleDensity` proves that `t ↦ G t ^ k · f(a + t·v)` is
+> log-concave on `[0,1]` for **any** nonnegative concave `G`, and
+> `Arlib.logConcaveOn_needleDensity_of_concaveNeedle` recovers the affine case from it.  So the
+> *concave* form of the Localization Lemma feeds every consumer exactly as the affine form does.
+>
+> `Arlib.exists_convex_slice_profile_not_affine` below is **still true and still worth having**:
+> it correctly refutes the claim that sharp Brunn–Minkowski identifies the limit profile as a
+> power of an affine function.  It simply refutes a step that this development does not need.
+>
+> Piece (i), the weak-convergence statement, **is now proved** — see
+> `Arlib.abs_setIntegral_sub_slice_profile_le` and
+> `Arlib.tendsto_average_setIntegral_of_profile` in `Arlib.Convexity.NeedleProfile`, together
+> with the Fubini and measurability infrastructure there.  It is proved in coordinates in which
+> the needle is the first coordinate axis, and it consumes a *modulus-of-continuity* hypothesis
+> on `f` rather than lower semicontinuity, so two hypotheses of it remain undischarged (a Helly
+> selection for the profiles, and a uniform bound on them) plus an affine change of coordinates.
+> Those three items, listed exactly in that file's module docstring, are the whole of what is
+> left of (G2).
 
-In particular **(G2) is not closed**, and **(G1) (the Borsuk–Ulam / two-measure ham-sandwich
-hyperplane) is untouched**, so the Localization Lemma remains unproved and unassumed.
+In particular **(G2) is not closed** — but it is materially smaller than the list above
+suggests — and **(G1) (the Borsuk–Ulam / two-measure ham-sandwich hyperplane) is untouched**, so
+the Localization Lemma remains unproved and unassumed.
 
 ## Honesty note
 

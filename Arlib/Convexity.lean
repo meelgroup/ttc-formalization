@@ -15,6 +15,7 @@ import Arlib.Convexity.CrossRatio
 import Arlib.Convexity.StepLength
 import Arlib.Convexity.HitAndRunStep
 import Arlib.Convexity.LocalizationLimit
+import Arlib.Convexity.NeedleProfile
 import Arlib.Convexity.DyerFrieze
 import Arlib.Convexity.IsoBall
 import Arlib.Convexity.NeedleLimit
