@@ -778,7 +778,13 @@ With all three error budgets at most `1/4` and `κ/γ ≤ 1/n`,
     Pr[rnd p ∈ P]  ≥  (3/4)(3/4) / ((5/4)·e)  =  9/(20e)  ≈  0.165546.
 
 So the rejection loop accepts with probability bounded below by an absolute
-constant and the expected number of draws is `O(1)`.  The paper's `1/8` follows
+constant.  **This is a one-round probability, not a bound on the number of draws.**
+The paper reads off `E[draws] = O(1)` from it; that step is *not* formalised here
+and would need a round count defined as a random variable plus the mean of a
+geometric law — which Mathlib does not provide (`Probability/Distributions/
+Geometric.lean` has `geometricMeasure` and its integral, but no mean lemma).  No
+round count, random variable or expectation exists anywhere in this development.
+The paper's `1/8` follows
 (`Arlib.KV97.acceptance_ge_one_eighth`) but is not sharp — see the module
 docstring.  Nonnegativity of `ε` and `E` is not needed: making them negative only
 enlarges `(1−ε)(1−E)`. -/
