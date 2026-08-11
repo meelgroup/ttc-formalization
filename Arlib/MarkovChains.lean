@@ -29,6 +29,8 @@ import Arlib.MarkovChains.Continuous.WarmStart
 import Arlib.MarkovChains.Continuous.WarmStartGeneral
 import Arlib.MarkovChains.Continuous.NonStationary
 import Arlib.MarkovChains.Continuous.SpeedyOverlap
+import Arlib.MarkovChains.Continuous.StarPolar
+import Arlib.MarkovChains.Continuous.HitAndRunMixing
 
 /-!
 # Arlib.MarkovChains

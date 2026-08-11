@@ -49,6 +49,11 @@ import Arlib.Convexity.GaussianCooling.PhaseMean
 import Arlib.Convexity.GaussianCooling.PhaseVar
 import Arlib.Convexity.GaussianCooling.PhaseSchedule
 import Arlib.Convexity.GaussianCooling.TerminalPhase
+import Arlib.Convexity.LogisticIso
+import Arlib.Convexity.KLS97Lemma38
+import Arlib.Convexity.SharpIsoperimetryConcave
+import Arlib.Convexity.LocalizationLSC
+import Arlib.Convexity.LocalizationTransport
 
 /-!
 # Arlib.Convexity
