@@ -945,9 +945,39 @@ Arlib/
     LocalizationLimit.lean  -- Blaschke selection for convex
                             --   bodies, concavity survives Hausdorff limits, and a
                             --   CONVERSE to Brunn showing the limit profile need not be
-                            --   affine. The Localization Lemma stays unproved+unassumed.
+                            --   affine (exists_convex_slice_profile_not_affine).
                             --   (Now imported by Arlib/Convexity.lean, so `import Arlib`
                             --   does reach it; earlier this page said otherwise)
+    -- ---- the localization stack proper.  Read LocalizationAssembly's docstring
+    -- ---- first: it lists what is closed (A,B,D,E) and what is open (C,F).
+    LocalizationAssembly.lean  -- the assembly point and the honest residue list
+    NeedleProfile.lean         -- the needle weight and its concave profile
+    NeedleLimit.lean           -- the limit passage; le_diam_of_sign_separated
+    ConcaveSelection.lean      -- Arzela-Ascoli for concave profiles on (0,1)
+    SignedCut.lean, PositionalCut.lean, TransverseCut.lean
+    LocalizationAffine.lean    -- (G2c) the affine/general-position form
+    LocalizationTransverse.lean-- (G2a) transverse modulus; the compact form
+    LocalizationClosed.lean    -- (D) CLOSED: the cut chain is compact, convex, of
+                            --   positive volume, with a collinear intersection
+    NeedleSlab.lean            -- (E) CLOSED: each body spans its OWN slab [l k, u k]
+                            --   with l -> 0, u -> 1.  Rescales the PROFILE, not the
+                            --   body (rescaledProfile), so the constant is
+                            --   slab-independent (le_two_pow_of_concaveOn_rpow)
+    NeedleSlabAffine.lean      -- (E) in general position + the acid-test witness:
+                            --   boxes shrinking in EVERY direction, which the old
+                            --   fixed-slab form provably cannot accept
+    NeedleSlabChain.lean       -- the slab hypotheses DERIVED from compactness plus
+                            --   two distinct points in the limit; the composition
+    -- ---- what the localization stack is FOR: Cousins-Vempala thm:iso
+    SharpIsoperimetry.lean     -- gaussianRestricted_isoperimetry at exactly d/sigma.
+                            --   FOUR residual binders: hloc, hcombinatorial,
+                            --   h1d1, h1d2.  None is an axiom; all are hypotheses
+    OneDimIsoperimetry.lean    -- the 1-D four-integral inequality (CV's (1d-1)) for
+                            --   AFFINE profiles, and Hensley's cube_le_sq_mul_moment
+    ConcaveProfileIso.lean     -- the concave-profile bridge
+    IntervalReduction.lean     -- hcombinatorial's UNMIXED half, plus the ninth paper
+                            --   finding: separation does NOT un-interleave
+                            --   (hside_not_implied)
     Isoperimetry.lean       -- log-concave measures, set distance, scale invariance;
                             --   the isoperimetric inequality itself is NOT proved
     DyerFrieze.lean         -- IN FLIGHT (now imported by Arlib/Convexity.lean):
@@ -960,6 +990,18 @@ Arlib/
                             --   so closing the loop needs the Localization Lemma.
                             --   Build it by name before trusting any of this
     GaussianCooling/
+      PhaseSchedule.lean    -- the general-alpha cooling schedule: coolPhases n L kappa
+                            --   = ceil(8(n+1)L^2/kappa), coolRate = sqrt(kappa/(2m(n+1))).
+                            --   Both halves proved: coolRate_meets_budget (the per-phase
+                            --   factor is <= 1 + kappa/m) and coolSchedule_total_cooling
+                            --   (the total cooling is >= e^L).  ALSO the negative result
+                            --   geomSchedule_total_cooling_lt: a budget-meeting FIXED-rate
+                            --   schedule cools by less than 11/10 — i.e. not at all
+      TerminalPhase.lean    -- the terminal phase's second moment.  coolLaw_sq_moment_le_
+                            --   terminal bounds it by e^{R^2/(2 sigma^2)} times the square
+                            --   of the mean, radius-only.  ALSO the ninth-family finding
+                            --   terminal_sq_moment_unbounded: the UNCONDITIONAL bound the
+                            --   paper states is false
       Estimator.lean        -- lem:exp-bd, lem:fn-indep, the product estimator, and the
                             --   median boost at the O(log 1/p) rate
       Variance.lean         -- Cousins–Vempala §5.1 ported in full: the moment identities,
@@ -975,6 +1017,15 @@ Arlib/
   MarkovChains.lean         -- area root
   MarkovChains/Continuous/
     Conductance.lean        -- flow, reversibility, conductance, + a non-vacuity witness
+    MetropolisConductance.lean -- the Metropolis-filtered Gaussian walk's conductance,
+                            --   proved unconditionally — but the constant is
+                            --   EXPONENTIALLY small, which is the honest baseline the
+                            --   isoperimetric route has to beat
+    SpeedyConductanceSharp.lean -- CV's thm:speedyconductance, conductance_speedyGaussian_ge
+                            --   at delta*log 2/(640 sigma sqrt n) — POLYNOMIAL, from two
+                            --   content hypotheses hiso and hoverlap.  Records the fifth
+                            --   paper finding: the paper's 1/20 thresholds must be 1/40,
+                            --   its contradiction never closes as printed
     Warmness.lean           -- step/iterate, warmness propagation, TV data processing
     MixingFromConductance.lean -- mixing time from geometric decay; Dirichlet form
     BallWalk.lean           -- the ball walk as a Markov kernel, reversible w.r.t. the

@@ -5,6 +5,7 @@ Authors: Uddalok Sarkar
 -/
 import Arlib.Convexity.OneDimIsoperimetry
 import Arlib.Convexity.NeedleProfile
+import Arlib.Convexity.BrascampLieb1D
 
 /-!
 # `(1d-2)` for a *concave* needle profile
@@ -55,6 +56,8 @@ inequality, which is insensitive to zeros (`0 ^ c = 0` for `c > 0` and `0 ^ 0 = 
 * `Arlib.oneDim_isoperimetry_gaussianFactor` — **the form `Arlib.gaussianRestricted_isoperimetry`
   wants for its `h1d2` binder**, with the honest constant `1/(2√3)` in place of the paper's
   `ln 2` (see below).
+* `Arlib.oneDim_isoperimetry_gaussianFactor_unconditional` — **the same with no residual
+  binder**, the point `c` and the variance bound supplied by `Arlib.brascampLieb_oneDim`.
 * `Arlib.oneDim_isoperimetry_gaussian_concaveProfile` — `(1d-2)` for a concave profile
   against a Gaussian, the two halves combined.
 * `Arlib.concaveOn_one_sub_sq`, `Arlib.one_sub_sq_not_affine`,
@@ -94,21 +97,21 @@ docstring already anticipates the substitution: `h1d2` reinstantiated with `1/(2
 `ln 2`, and the separation hypothesis's metric branch with `2√3·d` for `d/ln 2`.  The proof
 of `Arlib.gaussianRestricted_isoperimetry` is insensitive to the value.
 
-*One extra binder: the second moment.*  `Arlib.oneDim_isoperimetry_gaussianFactor` carries a
-hypothesis `h1d2` does not — `∫_α^β (t − c)² F·γ ≤ σ² ∫_α^β F·γ` for some `c ∈ [α,β]`.  This
-is **not** an additional assumption on the mathematics: it is a *theorem* about the data
-`h1d2` already quantifies over.  The measure with density `F·γ` on `[α,β]` has density
-`exp(−V)` with `V = (t − t₀)²/(2σ²) − log F + (0/∞ on [α,β])`, whose second derivative is at
-least `1/σ²` because `−log F` is convex; Brascamp–Lieb then bounds its variance by `σ²`.
-That is exactly the step Cousins–Vempala cite at `vol3_journal.tex:506`.  It is a binder here
-only because **this repository does not contain that form of Brascamp–Lieb**: the one it does
-contain, `Arlib.brascampLieb` (`Arlib/Convexity/GaussianCooling/Variance.lean:693`), is the
-needle-specific special case `J₂J₀ − J₁² ≤ (σ²/x)J₀²` for the exponential family `s(x,·)`
-with *no* log-concave factor, and does not apply to a general `F`.  Discharging `hvar` is
-therefore a separate, self-contained task — proving one-dimensional Brascamp–Lieb for
-`log-concave × Gaussian` — after which
-`Arlib.oneDim_isoperimetry_gaussianFactor` becomes `h1d2` verbatim, at the constant
-`1/(2√3)`.  Until then it is stated honestly with the hypothesis visible.
+*One extra binder: the second moment — since closed.*
+`Arlib.oneDim_isoperimetry_gaussianFactor` carries a hypothesis `h1d2` does not —
+`∫_α^β (t − c)² F·γ ≤ σ² ∫_α^β F·γ` for some `c ∈ [α,β]`.  That is not an additional
+assumption on the mathematics but a *theorem* about the data `h1d2` already quantifies over,
+and it is exactly the step Cousins–Vempala cite at `vol3_journal.tex:506`.  It was a binder
+only because the repository's `Arlib.brascampLieb`
+(`Arlib/Convexity/GaussianCooling/Variance.lean:693`) is the needle-specific special case
+`J₂J₀ − J₁² ≤ (σ²/x)J₀²` for the exponential family `s(x,·)`, with no log-concave factor.
+
+`Arlib.brascampLieb_oneDim` (`Arlib/Convexity/BrascampLieb1D.lean`) now proves the general
+form, so `Arlib.oneDim_isoperimetry_gaussianFactor_unconditional` below is `h1d2` **verbatim
+at the constant `1/(2√3)`**, with no residual binder.  Its `c` is the barycentre — the
+optimal choice, since `c ↦ ∫ (t − c)² w` is minimised there — so nothing is lost.  The only
+remaining mismatch with the printed `h1d2` is the constant, item (b)'s first paragraph, which
+the proof of `Arlib.gaussianRestricted_isoperimetry` is insensitive to.
 
 ## No rate claim
 
@@ -608,6 +611,36 @@ theorem oneDim_isoperimetry_gaussian_concaveProfile_witness :
 
 end Witness
 
+/-! ### `(1d-2)` with no residual binder
+
+`oneDim_isoperimetry_gaussianFactor` above carries two hypotheses — a point `c` and the
+variance bound at `c` — that Cousins–Vempala obtain from Brascamp–Lieb
+(`vol3_journal.tex:407`).  `Arlib.brascampLieb_oneDim` proves exactly that, so the two
+compose into a statement whose hypotheses are all about the *data*: `σ > 0`, the interval
+order, nonnegativity, log-concavity, and integrability. -/
+
+/-- **`(1d-2)` for a log-concave `F` against a Gaussian, with no residual binder.**
+`Arlib.brascampLieb_oneDim` supplies the point `c` and the variance bound that
+`oneDim_isoperimetry_gaussianFactor` asks for; `c` is the barycentre, which is the optimal
+choice, so nothing is lost by discharging it this way.
+
+The constant is `1/(2√3)/σ`, and the `σ` in the denominator is the one
+`Arlib.gaussianRestricted_isoperimetry`'s `d/σ` needs.  Cousins–Vempala state
+Brascamp–Lieb for the *standard* Gaussian and read off "variance ≤ 1" only inside their
+`σ = 1` reduction; the intrinsic general-`σ` form is `σ²`, which is what is proved here. -/
+theorem oneDim_isoperimetry_gaussianFactor_unconditional {σ : ℝ} (hσ : 0 < σ) (F : ℝ → ℝ)
+    (t₀ α β u v : ℝ) (hau : α ≤ u) (huv : u ≤ v) (hvβ : v ≤ β)
+    (hF0 : ∀ t ∈ Set.Icc α β, 0 ≤ F t) (hFc : LogConcaveOn (Set.Icc α β) F)
+    (hint : IntervalIntegrable
+      (fun t => F t * Real.exp (-(t - t₀) ^ 2 / (2 * σ ^ 2))) volume α β) :
+    1 / (2 * Real.sqrt 3) / σ * (v - u) *
+        ((∫ t in α..u, F t * Real.exp (-(t - t₀) ^ 2 / (2 * σ ^ 2))) *
+          (∫ t in v..β, F t * Real.exp (-(t - t₀) ^ 2 / (2 * σ ^ 2))))
+      ≤ (∫ t in α..β, F t * Real.exp (-(t - t₀) ^ 2 / (2 * σ ^ 2))) *
+          (∫ t in u..v, F t * Real.exp (-(t - t₀) ^ 2 / (2 * σ ^ 2))) := by
+  obtain ⟨c, hc, hvar⟩ := brascampLieb_oneDim hσ (hau.trans (huv.trans hvβ)) hF0 hFc hint
+  exact oneDim_isoperimetry_gaussianFactor hσ F t₀ α β u v hau huv hvβ hF0 hFc hint hc hvar
+
 end Arlib
 
 /-! ### Axiom audit
@@ -626,3 +659,4 @@ Every declaration above must depend on exactly `[propext, Classical.choice, Quot
 #print axioms Arlib.one_sub_sq_not_affine
 #print axioms Arlib.oneDim_isoperimetry_concaveProfile_witness
 #print axioms Arlib.oneDim_isoperimetry_gaussian_concaveProfile_witness
+#print axioms Arlib.oneDim_isoperimetry_gaussianFactor_unconditional

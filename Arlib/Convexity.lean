@@ -5,6 +5,7 @@ Released under Apache 2.0 license.
 import Arlib.Convexity.Polytope
 import Arlib.Convexity.LogConcave
 import Arlib.Convexity.PrekopaLeindler
+import Arlib.Convexity.BrascampLieb1D
 import Arlib.Convexity.PrekopaLeindlerN
 import Arlib.Convexity.IntervalReduction
 import Arlib.Convexity.Isoperimetry

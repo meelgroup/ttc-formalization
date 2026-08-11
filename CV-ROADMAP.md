@@ -29,6 +29,102 @@ a future formalization plugs in without touching the rest of `Ttc`.
 
 ---
 
+## 0′. Status, 2026-08-11 — supersedes §0 on the CV side
+
+§0 below is still correct about `Ttc`: the volume oracle is discharged by
+hit-and-miss Monte Carlo, the capstone does not wait on Cousins–Vempala, and the
+price is **exponential in `n`**. What §0 says about *this* file's subject —
+"`Ttc/Volume/CousinsVempala.lean` is exactly where it was" — is no longer true.
+Here is the state, and it is deliberately unflattering.
+
+### The headline is unchanged, and will stay unchanged until two things happen
+
+`cVol = O(n⁴)` **cannot** be substituted into `Ttc/Model/Theorem.lean`. Two
+independent things block it, and closing either alone changes nothing:
+
+1. **`thm:iso`'s four inputs.** `Arlib/Convexity/SharpIsoperimetry.lean` proves
+   `gaussianRestricted_isoperimetry` at exactly `d/σ` — the sharp constant — from
+   four residual binders `hloc`, `hcombinatorial`, `h1d1`, `h1d2`. They are
+   hypotheses, never axioms, and the file is axiom-clean; but a theorem with four
+   open binders proves nothing about any algorithm.
+2. **`Ttc/Model/Pseudocode.lean` instantiates `Vol_ED` as `Ttc.mcVol`.** Even a
+   finished CV would have to be swapped in there. Substituting `O(n⁴)` today
+   would assert what the formalisation currently *refutes*.
+
+### The critical path, and where each link stands
+
+`thm:iso` (tex:467) ← Localization + `hcombinatorial` (tex:497) + (1d-1)
+(tex:498) + (1d-2) (tex:501) → `thm:speedyconductance` (tex:624) → `thm:volume`.
+
+| Link | State |
+|---|---|
+| `thm:speedyconductance` | **proved** from `hiso`+`hoverlap` (`SpeedyConductanceSharp.lean`), polynomial constant `δ log 2/(640 σ √n)` |
+| Localization (A),(B) | proved — `LocalizationAffine`, `LocalizationTransverse` |
+| Localization (D) chain closedness | **closed** — `LocalizationClosed.lean` |
+| Localization (E) slab rigidity | **closed** — `NeedleSlab{,Affine,Chain}.lean` |
+| Localization (C) lower semicontinuity | open; the general-position form asks for *bounded continuous* integrands |
+| Localization (F) transport + nondegeneracy | open, both as explicit hypotheses |
+| `hcombinatorial` unmixed half | **closed** — `IntervalReduction.lean` |
+| `hcombinatorial` interleaved half | open — needs logistic-measure isoperimetry |
+| (1d-1) | proved for **affine** profiles (`OneDimIsoperimetry.lean`); open for concave |
+| (1d-2) | restated concave-compatibly; verbatim form needs 1-D Brascamp–Lieb |
+| `hoverlap` at separation `δ/√n` | open — the missing `√n` between polynomial and exponential conductance |
+
+The concave-vs-affine gap is the structural one. The localization stack delivers
+`W` with `W^(1/m)` **concave** (`W = ℓ^m`, `ℓ` concave), while `hloc` as stated —
+following the paper — asks for an **affine** profile `(c₀ + c₁t)^(n−1)`. The
+upgrade is not available: `Arlib.exists_convex_slice_profile_not_affine`
+(`LocalizationLimit.lean`) refutes it. So `hloc` must be restated in concave form
+and (1d-1) reproved there; that is the one place affineness still bites.
+
+### Nine findings against the Cousins–Vempala paper
+
+Five are statements **false as printed**, not imprecision.
+
+1. **(1d-2) is false as literally printed** without the variance-1 normalisation.
+   Counterexample `w ≡ 1` on `[0,L]`, false for `L ≥ 13`.
+2. **`thm:iso`'s density branch is missing a `σ`** — a dimensional error.
+3. **tex:497's interval claim is false by counterexample.** "By a standard
+   combinatorial argument we can assume the `Zᵢ` are intervals" is not a
+   reduction; the *inequality* holds for general measurable partitions, but the
+   `Zᵢ` may not be taken to be intervals.
+4. **tex:497 stays false even after the missing separation hypothesis is
+   restored** — `Arlib.hside_not_implied` (`IntervalReduction.lean`) exhibits
+   machine-checked data satisfying every hypothesis with `Z₁` on **both** sides
+   of `Z₂`: `D ≡ 1` on `[0,1]`, `Z₁ = [0.1,0.4] ∪ [0.6,0.9]`, `Z₂ = (0.45,0.5)`,
+   `c = 5/22`.
+5. **`thm:speedyconductance`'s `1/20` thresholds must be `1/40`** — the paper's
+   contradiction never closes as printed.
+6. tex:660's `π(S₁)` should be `π(S)`.
+7. `lem:starting-gauss`'s `e²` should be `e^{1/2}` — a sharpening, in the
+   paper's favour.
+8. A units/dimensional clash in (1d-2).
+9. **The terminal-phase second-moment bound is false unconditionally** —
+   `Arlib.terminal_sq_moment_unbounded` (`TerminalPhase.lean`). It is true under
+   flatness (`coolLaw_sq_moment_le_terminal`), which is what the construction now
+   assumes.
+
+### And a finding against the *schedule*, not the paper
+
+`Arlib.geomSchedule_total_cooling_lt` (`PhaseSchedule.lean`): a fixed-rate
+`α = 1/n` schedule that meets the per-phase variance budget cools by a factor
+**less than `11/10`** — i.e. it does not anneal at all. Consequently
+`Ttc.CV.cold_start_mem_relErr_of_fixedRate_fields` shows the fixed-rate
+construction's *first telescope factor alone* already estimates `Vol K` to within
+`11/(5n)`. The general-`α` schedule (`coolPhases`/`coolRate`) does anneal
+(`Ttc.CV.cool_schedule_anneals`, total cooling `≥ e^L`), but annealing is not
+free: enlarging `m` to buy cooling tightens the per-phase budget `κ/m` by the
+same factor, and the crossover against `11/(5n)` sits at
+`e^{2L} ≳ 17.6·L²/κ²` — essentially dimension-free
+(`Ttc.CV.cold_start_exponent_ge_of_coolRate`).
+
+**No running-time claim is made anywhere in the CV development.** A polynomial
+phase count is not a polynomial algorithm; the per-phase sampling cost is
+untouched, and `hTV` — the sampler — remains the only mathematical debt of
+`Ttc/Volume/CousinsVempala.lean`'s constructions.
+
+---
+
 ## 0. Status, 2026-08-08 — read this before the sections below
 
 **Read (0) first: this roadmap is no longer on the critical path.**
