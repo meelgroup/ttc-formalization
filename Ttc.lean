@@ -443,6 +443,7 @@ import Ttc.Volume.MonteCarlo
 import Ttc.Invariants
 import Ttc.Runtime
 import Ttc.CostModel
+import Ttc.Exec.CostedBackend
 import Ttc.Exec.SampleBound
 import Ttc.Exec.InflateBound
 import Ttc.Exec.SampleDischarge
@@ -516,7 +517,9 @@ import Ttc.Audit.ClosureCheck
 import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
 import Ttc.Sampler.Bridge
+import Ttc.Sampler.HitAndRunTheorem11
 import Ttc.Sampler.Rates
 import Ttc.Sampler.Construct
 import Ttc.Sampler.RatesNonneg
 import Ttc.Rounding.ArlibBridge
+import Ttc.Volume.CVTheorem11

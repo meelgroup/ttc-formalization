@@ -28,6 +28,7 @@ import Arlib.MarkovChains.Continuous.ConvexBodyMixing
 import Arlib.MarkovChains.Continuous.WarmStart
 import Arlib.MarkovChains.Continuous.WarmStartGeneral
 import Arlib.MarkovChains.Continuous.NonStationary
+import Arlib.MarkovChains.Continuous.SpeedyOverlap
 
 /-!
 # Arlib.MarkovChains
