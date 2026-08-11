@@ -66,21 +66,24 @@ named `Prop`** for it: a named predicate would be indistinguishable, to a reader
 file, from something that has been established.  Anything downstream of Lemma 3.4 inherits the
 hypothesis and must keep carrying it.
 
-## What is *not* in this file
+## Lemma 3.2 lives next door
 
-**Lemma 3.2** (`F(x) ≥ s_α(x)/32` for `α ≥ 63/64`, with `F` the median hit-and-run step length)
-is *not* formalised here.  Two obstructions, both real:
+**Lemma 3.2** (`F(x) ≥ s_α(x)/32` for `α ≥ 63/64`, with `F` the median hit-and-run step
+length) is proved in `Arlib/Convexity/HitAndRunStep.lean`, as
+`Arlib.stepRadius_le_medianStep`.  It is not here because `F` is defined by the hit-and-run
+kernel of `Arlib/MarkovChains/Continuous/HitAndRun.lean`, which this file does not import.
 
-1. `F(x)` is defined by the hit-and-run step distribution, which lives in
-   `Arlib/MarkovChains/Continuous/HitAndRun.lean`, not here.
-2. The paper's proof needs the radial (polar-coordinate) decomposition of Lebesgue measure to
-   convert a *sphere*-measure fraction `p` of bad directions into the *volume* bound
-   `vol((x+sB) \ K) ≥ p·vol(sB) − vol((s/2)B)`.  Mathlib v4.32 has the polar decomposition
-   (`MeasureTheory.Measure.toSphere`) but none of the convexity-plus-cap API the argument uses.
+Two things worth knowing from that file:
 
-There is also a genuine gap in the paper's constants at this point: the displayed bound
-`p ≤ 1 − α + 2^{-n} ≤ 1/32` with `α ≥ 63/64` needs `2^{-n} ≤ 1/64`, i.e. `n ≥ 6`, which the
-paper does not state.
+* The paper's displayed intermediate bound `p ≤ 1 − α + 2^{-n} ≤ 1/32` needs `2^{-n} ≤ 1/64`,
+  i.e. `n ≥ 6`, which the paper does not state — so the *printed proof* has a gap for
+  `n ≤ 5`.  **Lemma 3.2 itself is nevertheless true for every `n ≥ 1`**, and is proved there
+  with no dimension hypothesis: the gap is an artefact of weakening the cone volume
+  `p·(vol(sB) − vol((s/2)B))` to `p·vol(sB) − vol((s/2)B)`.
+* `Arlib.theta_mul_stepRadius_le` below is exactly the concavity step §4 of the paper uses,
+  and the §4 chain `s(x) ≤ (|x−p|/|u−p|)·s(u) ≤ 32(|q−p|/|u−p|)·F(u)` runs with `≤`
+  throughout, so Lemma 3.2 is applied there in the correct direction.  (An earlier reading
+  of a lossy text extraction of §4 suspected otherwise; it was mistaken.)
 
 ## Design notes
 
