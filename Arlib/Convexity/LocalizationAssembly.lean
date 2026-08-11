@@ -179,12 +179,38 @@ and `Arlib.Convexity.LocalizationTransverse`)*:
   altogether: `Arlib.exists_unitHeight_functional` and `Arlib.exists_slab_of_compact_chain`
   derive them from compactness plus two distinct points in the limit.
 
+*(closed, with a boundary)*:
+
+* **(C) Lower semicontinuity.**  ~~The thin-tube comparison consumes a modulus-of-continuity
+  hypothesis, not lower semicontinuity.~~  **Closed** in
+  `Arlib/Convexity/LocalizationLSC.lean`: `Arlib.exists_needle_of_lowerSemicontinuous` runs
+  with `g₂` bounded *lower semicontinuous* (`g₁` still continuous), by inf-convolution
+  Lipschitz minorants (`Arlib.lipschitzMinorant`).  That is the case CV needs —
+  `g₂ = (d/σ)·A·1_{S₂}h − 1_{S₃}h` is lsc for `S₂` open and `S₃` closed, stated in CV's own
+  shape as `Arlib.exists_needle_smul_indicator_sub_indicator`.
+
+  **The boundary is not an unfinished proof.**  Merely *measurable* `S₁` is unreachable by
+  this route, for two independent reasons.  (1) A needle is a **null set**, so two integrands
+  agreeing off a null set have arbitrarily different needle integrals, while a measurable set
+  is only pinned down up to null sets — no approximation good "in measure" can control a
+  needle integral.  (2) Even for `S₁` *open* the **equality** `∫ W·g₁∘γ = 0` does not
+  transfer: it is monotone in neither direction, and the needle depends on the function fed
+  in, so the re-centring slack cannot be driven to `0` at a fixed needle.  For `S` a fat
+  Cantor set every continuous minorant of `1_S` has nonpositive integral.  Hence
+  `Arlib.exists_needle_of_lowerSemicontinuous_pair` degrades the equality to
+  `−η·∫W ≤ ∫ W·g₁∘γ`; the `η` is the honest price.
+
+  Chain-level is *forced* to fail, recorded so nobody retries it: the invariant
+  `ε·vol(D k) ≤ ∫_{D k} g₂` for every `k` needs uniform convergence — true for continuous
+  `g₂` by Dini, false for lsc.  The result is at the `∫_K` level.
+
+  Consumers should note that `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain`
+  does not state `Integrable W`, which the monotone transfer needs (a Bochner integral of a
+  non-integrable nonnegative function is `0`, not `+∞`).  Its `W` *is* bounded with support
+  in `[0,1]` (`Arlib.normalised_volume_slice_le`), so exposing it is routine but not done.
+
 *(genuinely open)*:
 
-* **(C) Lower semicontinuity.**  The thin-tube comparison consumes a modulus-of-continuity
-  hypothesis, not lower semicontinuity; the Lovász–Simonovits statement for merely lower
-  semicontinuous integrable data needs an approximation step that is not carried out.  In the
-  general-position form the integrands are asked to be *bounded continuous*.
 * **(F) Two residues of (E)'s composition**, both explicit hypotheses rather than hidden
   assumptions.  The limit body must contain two distinct points — a chain collapsing to a point
   gives a degenerate needle, for which a profile on `(0,1)` is the wrong shape;
