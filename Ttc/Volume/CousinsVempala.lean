@@ -5,6 +5,10 @@ Released under Apache 2.0 license.
 import Ttc.Volume.Bridge
 import Arlib.Convexity.GaussianCooling.Estimator
 import Arlib.Convexity.GaussianCooling.ZLogconcave
+import Arlib.Convexity.GaussianCooling.PhaseMean
+import Arlib.Convexity.GaussianCooling.PhaseVar
+import Arlib.Convexity.GaussianCooling.Unblock
+import Mathlib.Analysis.Convex.Measure
 
 /-!
 # `Volume/CousinsVempala`: §5.2 assembled, and what the volume oracle still owes
@@ -29,6 +33,15 @@ proved anywhere in this development: without it there is no mixing bound for the
 walk, hence no sampler, hence no way to know that the average of the per-phase scores has
 the mean `G(σᵢ₊₁²)/G(σᵢ²)` that the telescope needs. Nothing here declares that gap
 closed; it is visible in the type of the construction.
+
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` **moves the boundary**: it takes an explicit
+enclosing radius and a *total-variation* guarantee for the phase sample, and derives
+`hphase_mean` and `hphase_var` from them rather than assuming them. That converts the two
+sampler hypotheses into one hypothesis about the sampler's mixing — which is still the open
+problem — and makes the quantitative price visible: the tolerable TV error carries the
+factor `e^{−R²/σᵢ²}`. **It is a reduction, not an algorithm**, and nothing in this file
+bounds any running time or implies a polynomial one; the conductance constants available in
+this repository are exponentially small in `n`.
 
 What *is* proved here, unconditionally:
 
@@ -102,6 +115,36 @@ What *is* proved here, unconditionally:
   and the rest (`hreps`, `hbudget`, measurability, `hmed`, `hindep_runs`,
   `hphase_prodLp`) are scheduling and admissibility guards.
 
+* `Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` — the same construction with
+  `hphase_mean` weakened from an equality to a two-sided relative bound, which is the only
+  shape a sampled score can have. Witness: `cousinsVempalaApproxMeanWitness`.
+* `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` — **`hphase_mean` and `hphase_var` derived,
+  not assumed.** New inputs: an explicit radius (`Ttc.CV.cvRadius` supplies one from
+  `cousinsVempala`'s own hypotheses) and a `TVLe` guarantee between the law of the phase
+  sample and `Arlib.GaussianCooling.coolLaw`. It also derives `hchain_pos`, `hchain_end`
+  and `hW_meas`, by running the whole pipeline on the *open* body `interior K` — a convex
+  set need not be Borel measurable, and `Ttc.CV.volume_interior_eq` is what makes the
+  substitution free.
+
+## The sampler-side lemmas added for that
+
+* `Ttc.CV.run_relErr_four_fifths_approxMean` — one run, with approximately unbiased phases.
+* `Ttc.CV.volume_interior_eq` — `Vol(interior K) = Vol(K)` for convex `K`, from
+  `Convex.addHaar_frontier`. The reason no `MeasurableSet K` hypothesis is needed.
+* `Ttc.CV.cvRadius`, `Ttc.CV.subset_closedBall_cvRadius` — the enclosing radius, from
+  convexity + inscribed unit ball + finite volume alone.
+* `Ttc.CV.integral_map_mem_relErr_of_tvLe`, `Ttc.CV.sampledPhase_mean_mem_relErr` — the TV
+  transport of the phase mean, through the sampling map.
+* `Ttc.CV.tv_slacks_satisfiable`, `Ttc.CV.tv_slack_threshold_pos`,
+  `Ttc.CV.exists_pos_tvErr` — the satisfiability check: both slack conditions are upper
+  bounds on one positive quantity, so a **strictly positive** TV error meets both.
+* `Ttc.CV.hvar_exact_of_fixedRate` — the exact-law second moment at an interior phase of
+  the fixed-rate schedule, from `Arlib.GaussianCooling.coolLaw_sq_moment_le`. Its docstring
+  records the two things it does *not* cover: the terminal phase, and the fact that meeting
+  the variance budget at rate `1/n` caps the schedule's total cooling below `11/10`
+  (`Arlib.GaussianCooling.geomSchedule_total_cooling_lt`) — so the fixed-rate schedule
+  cannot anneal, and the general-`α` replacement is not constructed anywhere here.
+
 ## Two honesty notes
 
 **Non-vacuity IS established for both hypothesis bundles** (`CLAUDE.md` §11).
@@ -118,12 +161,27 @@ the paper's Gaussian schedule satisfies the bundle: they are degenerate schedule
 estimator they produce is `Ttc.VolumeAlgorithm.exact` in disguise
 (`cousinsVempalaWitness_est`).
 
-**One approximation is still idealized to an equality: `hphase_mean`.** It asks for an
-*exactly* unbiased phase estimator, whereas the real algorithm's sampler is only nearly
-uniform; relaxing it needs the total-variation bookkeeping of `Arlib.Probability.TV`, and
-is not done. The *other* idealization, the exact endpoint `hchain_end`, has been removed:
-see `Ttc.CV.G_indicator_mem_relErr` and
+**`hphase_mean`'s equality idealization has been removed — twice over.**
+`Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` replaces it by the two-sided relative
+bound `∫ W ∈ (1 ± phaseBias)·(chain(i+1)/chain i)`, at the per-phase budget
+`2·m·phaseBias ≤ meanBias ε` (`Arlib.GaussianCooling.phaseBias_le`), and carries its own
+non-vacuity witness with a *strictly positive* bias
+(`Ttc.VolumeAlgorithm.cousinsVempalaApproxMeanWitness`).
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` then *derives* that bound from a
+total-variation guarantee on the sampler. The *other* idealization, the exact endpoint
+`hchain_end`, has been removed too: see `Ttc.CV.G_indicator_mem_relErr` and
 `Ttc.VolumeAlgorithm.cousinsVempalaOfBiasedEnd`.
+
+**`cousinsVempalaOfSampler` has no non-vacuity witness, and cannot have a degenerate one.**
+Its `hTV` hypothesis, at the TV error its own slack conditions force, *is* the statement
+that an exponentially accurate sampler for the Gaussian phase law exists; a one-point or
+otherwise degenerate instantiation cannot satisfy it (a `TVLe … 1` bound is free but fails
+the slack conditions, since the chain ratio itself is at most `e^{R²/(2σᵢ²)}`). What *is*
+machine-checked is that the bundle's arithmetic side is consistent:
+`Ttc.CV.exists_pos_tvErr` exhibits a **strictly positive** TV error meeting both slack
+conditions at the real radius, the real variance and the real chain ratio. The residual
+hypothesis is therefore the sampler itself and nothing else — which is the honest state of
+this development, and is flagged rather than papered over.
 
 **No `Prop` introduced here assumes its conclusion.** The two `def`s are constructions of
 `Ttc.VolumeAlgorithm`, and every hypothesis they take is a statement about the *inputs*
@@ -136,6 +194,7 @@ is `median_boost`.
 namespace Ttc
 
 open MeasureTheory Set ProbabilityTheory Arlib.GaussianCooling
+open scoped ENNReal
 
 namespace CV
 
@@ -608,6 +667,288 @@ theorem gaussianCooling_accuracy_biasedEnd [IsProbabilityMeasure μ] {n m r : �
       hbudget hchain_end le_rfl
   exact median_relErr_ge hr hrunmeas hrun_indep hmed hgood hδ hrδ
 
+/-! ## §5.2 with an *approximately unbiased* phase estimator
+
+The remaining idealization of `run_relErr_four_fifths` is `hmean`: it asks for
+`∫ W i dμ = A (i+1)/A i` **exactly**. No sampler supplies that — a chain run for finitely
+many steps is at positive total-variation distance from its target, so its score's mean is
+off by a corresponding amount.
+
+`Arlib.GaussianCooling.integral_prod_mem_relErr_of_budget` is the replacement: per-phase
+relative bias `η` with `2mη ≤ τ ≤ 1` gives the telescoped product a relative bias `τ`
+around `A m / A 0`. Composing that with the Chebyshev step through `relErr_trans` is the
+only work below; the arithmetic budget is `ε + τ + ε·τ ≤ ε₀`. -/
+
+/-- **One run, with approximately unbiased phase estimators.** Each phase's score is only
+required to have mean within a relative `η` of the chain ratio `A(i+1)/A(i)`, with the
+per-phase budget `2mη ≤ τ` and `τ < 1`. The run's output is then `ε₀`-accurate for `A m`
+with probability `4/5`, for any `ε₀ ≥ ε + τ + ε·τ`.
+
+Taking `η = τ = 0` and `ε₀ = ε` recovers `run_relErr_four_fifths`. -/
+theorem run_relErr_four_fifths_approxMean [IsProbabilityMeasure μ] {m : ℕ}
+    {W : Fin m → Ω → ℝ} {A : ℕ → ℝ} {κ ε ε₀ η τ : ℝ}
+    (hm : 0 < m) (hκ : 0 ≤ κ) (hε : 0 < ε) (hη : 0 ≤ η) (hτ0 : 0 ≤ τ) (hτ1 : τ < 1)
+    (hmeanBudget : 2 * (m : ℝ) * η ≤ τ)
+    (hindep : iIndepFun W μ)
+    (hmeas : ∀ i, AEStronglyMeasurable (W i) μ)
+    (hprod : MemLp (fun ω => ∏ i, W i ω) 2 μ)
+    (hApos : ∀ i, 0 < A i)
+    (hmean : ∀ i : Fin m, ∫ ω, W i ω ∂μ ∈ relErr η (A ((i : ℕ) + 1) / A (i : ℕ)))
+    (hvar : ∀ i, ∫ ω, (W i ω) ^ 2 ∂μ ≤ (1 + κ / m) * (∫ ω, W i ω ∂μ) ^ 2)
+    (hbudget : Real.exp κ - 1 ≤ ε ^ 2 / 5)
+    (hcompose : ε + τ + ε * τ ≤ ε₀) :
+    4 / 5 ≤ μ.real {ω | A 0 * ∏ i, W i ω ∈ relErr ε₀ (A m)} := by
+  have hR : 0 < A m / A 0 := div_pos (hApos m) (hApos 0)
+  have hmeanProd : ∫ ω, ∏ i, W i ω ∂μ ∈ relErr τ (A m / A 0) :=
+    integral_prod_mem_relErr_of_budget hm hη hτ1.le hmeanBudget hindep hmeas hApos hmean
+  have hpos : 0 < ∫ ω, ∏ i, W i ω ∂μ := integral_prod_pos hτ1 hR hmeanProd
+  have hmain := prod_relErr_ge hκ hε hindep hmeas hprod hvar hpos
+  have hstep : (Real.exp κ - 1) / ε ^ 2 ≤ 1 / 5 := by
+    rw [div_le_div_iff₀ (by positivity) (by norm_num)]
+    linarith
+  have hsub : {ω | (∏ i, W i ω) ∈ relErr ε (∫ ω, ∏ i, W i ω ∂μ)}
+      ⊆ {ω | A 0 * ∏ i, W i ω ∈ relErr ε₀ (A m)} := by
+    intro ω hω
+    have h2 : (∏ i, W i ω) ∈ relErr ε₀ (A m / A 0) :=
+      relErr_mono hcompose hR.le (relErr_trans hε.le hτ0 hR.le hω hmeanProd)
+    have h3 := (mem_relErr_smul (ε := ε₀) (b := A m / A 0) (y := ∏ i, W i ω) (hApos 0)).mpr h2
+    rwa [mul_comm (A 0), div_mul_cancel₀ _ (hApos 0).ne'] at h3
+  have := measureReal_mono (μ := μ) hsub
+  linarith [hmain, this]
+
+/-! ## The radius, the measurable core, and the sampler's guarantee
+
+Three ingredients are needed before the two sampler hypotheses of `cousinsVempala` can be
+*derived* rather than assumed.
+
+**A radius.** `Ttc.VolumeAlgorithm.correct` quantifies over every convex `K` with
+`ball 0 1 ⊆ K` and `volume K ≠ ⊤`, and exposes no enclosing radius. One is needed: the
+phase score `Arlib.GaussianCooling.coolRatio` is `e^{‖x‖²/2·(1/σᵢ² − 1/σᵢ₊₁²)}`, which is
+*unbounded on an unbounded body*, and every total-variation transport needs a bound `B` on
+the observable. `Arlib.Convexity.exists_closedBall_superset_of_convex` supplies one from
+exactly `cousinsVempala`'s own hypotheses, and `cvRadius` names it.
+
+**A measurable core.** A convex set need *not* be Borel measurable: the union of an open
+ball with an arbitrary subset of its bounding sphere is convex, and such a subset need not
+be Borel. So a hypothesis `∀ K, Convex ℝ K → … → MeasurableSet K` would be **false**, and a
+construction carrying it would be vacuous. `interior K` is the fix: it is open (hence
+measurable), convex, contains the unit ball whenever `K` does, and has the *same volume* as
+`K` because a convex set's frontier is Haar-null (`Convex.addHaar_frontier`). Everything
+below runs on `interior K` and reports about `volume K`; `volume_interior_eq` is the bridge.
+
+**The sampler's guarantee.** A `TVLe` bound between the law of the phase sample and the
+exact phase law `Arlib.GaussianCooling.coolLaw`. This is an *input*: nothing here asserts
+that any ball walk achieves it. -/
+
+section Sampler
+
+variable {n : ℕ}
+
+/-- **A convex set has the volume of its interior.** The frontier of a convex set is
+Haar-null (`Convex.addHaar_frontier`) and `closure K ⊆ interior K ∪ frontier K`, so the
+three sets `interior K ⊆ K ⊆ closure K` all have the same volume.
+
+This is what lets the whole Gaussian-cooling pipeline run on the open — hence *measurable*
+— body `interior K` while still reporting about `volume K`. Without it one would need
+`MeasurableSet K`, which does not follow from convexity. -/
+theorem volume_interior_eq {K : Set (Space n)} (hK : Convex ℝ K) :
+    volume (interior K) = volume K := by
+  refine le_antisymm (measure_mono interior_subset) ?_
+  have hsub : closure K ⊆ interior K ∪ frontier K := by
+    intro x hx
+    by_cases h : x ∈ interior K
+    · exact Or.inl h
+    · exact Or.inr ⟨hx, h⟩
+  have h2 : volume (closure K) ≤ volume (interior K) + volume (frontier K) :=
+    le_trans (measure_mono hsub) (measure_union_le _ _)
+  rw [Convex.addHaar_frontier volume hK, add_zero] at h2
+  exact le_trans (measure_mono subset_closure) h2
+
+/-- `interior K` inherits everything the cooling chain needs. -/
+theorem volume_interior_ne_top {K : Set (Space n)} (hfin : volume K ≠ ⊤) :
+    volume (interior K) ≠ ⊤ :=
+  ne_of_lt (lt_of_le_of_lt (measure_mono interior_subset) (lt_top_iff_ne_top.mpr hfin))
+
+theorem ball_subset_interior {K : Set (Space n)}
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) :
+    Metric.ball (0 : Space n) 1 ⊆ interior K :=
+  interior_maximal hball Metric.isOpen_ball
+
+/-- **The enclosing radius `cousinsVempala` does not carry**, in closed form:
+`max 1 (2·Vol(K)/Vol(B(0,½)))`. For a convex body containing the unit ball and of finite
+volume this really does enclose `K` (`subset_closedBall_cvRadius`, which is
+`Arlib.Convexity.norm_le_of_mem_of_convex`: an unbounded convex set containing a ball has
+infinite volume). It is `≥ 1 > 0` for *every* set, with no hypotheses.
+
+It is exponentially bad in the dimension in the worst case — `Vol(B(0,½)) = 2⁻ⁿ Vol(B₁)` —
+and that is the honest size of the radius the transport's bound `B = e^{R²/(2σᵢ²)}` is
+computed from. -/
+noncomputable def cvRadius (K : Set (Space n)) : ℝ :=
+  max 1 (2 * (volume K).toReal
+    / (volume (Metric.ball (0 : Space n) (1 / 2))).toReal)
+
+theorem one_le_cvRadius (K : Set (Space n)) : 1 ≤ cvRadius K := le_max_left _ _
+
+theorem cvRadius_pos (K : Set (Space n)) : 0 < cvRadius K :=
+  lt_of_lt_of_le one_pos (one_le_cvRadius K)
+
+/-- **The radius hypothesis is satisfiable**, from `cousinsVempala`'s own hypotheses on `K`
+and nothing else. -/
+theorem subset_closedBall_cvRadius {K : Set (Space n)} (hK : Convex ℝ K)
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤) :
+    K ⊆ Metric.closedBall (0 : Space n) (cvRadius K) := fun x hx => by
+  rw [mem_closedBall_zero_iff]
+  exact le_trans (Arlib.Convexity.norm_le_of_mem_of_convex hK hball hfin hx)
+    (le_max_right _ _)
+
+/-- **The sampler's guarantee, transported to a relative bias on a phase mean.** If the law
+of the sample `X` is within total variation `e` of the intended law `ν`, the score `f` takes
+values in `[0, B]`, and `∫ f dν = r`, then the *realised* mean `∫ f(X) dμ` is within a
+relative `η` of `r` as soon as `B·e ≤ η·r`.
+
+This is `Arlib.GaussianCooling.integral_mem_Icc_of_tvLe` pushed through the sampling map,
+and it is the exact shape `run_relErr_four_fifths_approxMean`'s `hmean` consumes
+(`relErr η r` *is* the interval `Icc ((1−η)r) ((1+η)r)`). -/
+theorem integral_map_mem_relErr_of_tvLe {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    [IsProbabilityMeasure μ] {ν : Measure (Space n)} [IsProbabilityMeasure ν]
+    {X : Ω → Space n} (hX : Measurable X) {e : ℝ≥0∞} (hTV : Arlib.TVLe (μ.map X) ν e)
+    (he : e ≠ ⊤) {f : Space n → ℝ} (hf : Measurable f) {B r η : ℝ} (hB : 0 < B)
+    (hf0 : ∀ x, 0 ≤ f x) (hfB : ∀ x, f x ≤ B) (hr : ∫ x, f x ∂ν = r)
+    (hslack : B * e.toReal ≤ η * r) :
+    ∫ ω, f (X ω) ∂μ ∈ relErr η r := by
+  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  have hmap : ∫ x, f x ∂(μ.map X) = ∫ ω, f (X ω) ∂μ :=
+    integral_map hX.aemeasurable hf.aestronglyMeasurable
+  have h := integral_mem_Icc_of_tvLe hTV he hf hB hf0 hfB hr hslack
+  rwa [hmap] at h
+
+/-- **`hphase_mean`, derived.** With `B = e^{R²/(2σᵢ²)}` the bound on the phase score on a
+body inside `R·Bₙ` (`Arlib.GaussianCooling.phaseScore_le`) and the exact-law mean identity
+`E_π(W) = chain(i+1)/chain(i)` (`Arlib.GaussianCooling.integral_phaseScore_coolLaw`), a
+sampler within total variation `e` of the phase law has phase mean within a relative `η` of
+the chain ratio, provided `e^{R²/(2σᵢ²)}·e ≤ η·chain(i+1)/chain(i)`.
+
+The chain ratio on the right is a *positive* explicit quantity (`chain_pos`), so the
+condition is satisfiable at every positive `η` by a small enough `e`; see
+`Ttc.CV.tv_slacks_satisfiable`. -/
+theorem sampledPhase_mean_mem_relErr {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    [IsProbabilityMeasure μ] {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    {K : Set (Space n)} (hKm : MeasurableSet K)
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R : ℝ} (hKR : K ⊆ Metric.closedBall (0 : Space n) R) {i : ℕ}
+    {X : Ω → Space n} (hX : Measurable X)
+    {e : ℝ≥0∞} (hTV : Arlib.TVLe (μ.map X) (coolLaw m σsq K i) e) (he : e ≠ ⊤) {η : ℝ}
+    (hslack : Real.exp (R ^ 2 / (2 * σsq i)) * e.toReal
+        ≤ η * (chain m σsq K (i + 1) / chain m σsq K i)) :
+    ∫ ω, phaseScore m σsq K i (X ω) ∂μ
+      ∈ relErr η (chain m σsq K (i + 1) / chain m σsq K i) := by
+  haveI := coolLaw_isProbabilityMeasure (m := m) hσ hball hfin i
+  exact integral_map_mem_relErr_of_tvLe hX hTV he (measurable_phaseScore hKm i)
+    (Real.exp_pos _) (phaseScore_nonneg m σsq K i) (phaseScore_le hσ hKR i)
+    (integral_phaseScore_coolLaw hKm (chain_pos hσ hball hfin i)) hslack
+
+/-- **The two slack conditions are simultaneously satisfiable, at a strictly positive TV
+error.** This is the non-vacuity check for the pair (radius, sampler guarantee): the mean
+condition `B·e ≤ η·r` and the variance condition `e·B²·(1 + 2(C+s)) ≤ s·r²` are *both*
+upper bounds on the single quantity `e`, with strictly positive right-hand sides whenever
+the radius, the variance, the chain ratio `r`, the per-phase bias `η` and the variance
+slack `s` are positive. So every `e` below the (positive) minimum of the two thresholds
+meets both, and the bundle is not vacuous.
+
+`B = e^{R²/(2σ)}` is written out so that the dependence on the radius is visible: the
+threshold degrades like `e^{−R²/σ}`, which is what "the tolerable TV error is
+`ε ≲ s·E(W)²·e^{−R²/σᵢ²}`" means quantitatively. -/
+theorem tv_slacks_satisfiable {R σ r η s C e : ℝ} (hr : 0 < r) (hη : 0 < η) (hs : 0 < s)
+    (hC : 0 ≤ C) (he0 : 0 ≤ e)
+    (hmean : e ≤ η * r / Real.exp (R ^ 2 / (2 * σ)))
+    (hvar : e ≤ s * r ^ 2 / (Real.exp (R ^ 2 / (2 * σ)) ^ 2 * (1 + 2 * (C + s)))) :
+    Real.exp (R ^ 2 / (2 * σ)) * e ≤ η * r ∧
+      e * (Real.exp (R ^ 2 / (2 * σ)) ^ 2 * (1 + 2 * (C + s))) ≤ s * r ^ 2 := by
+  have hB : (0 : ℝ) < Real.exp (R ^ 2 / (2 * σ)) := Real.exp_pos _
+  have hD : (0 : ℝ) < Real.exp (R ^ 2 / (2 * σ)) ^ 2 * (1 + 2 * (C + s)) := by positivity
+  constructor
+  · rw [mul_comm]
+    exact (le_div_iff₀ hB).1 hmean
+  · exact (le_div_iff₀ hD).1 hvar
+
+/-- **The thresholds in `tv_slacks_satisfiable` are strictly positive**, so a strictly
+positive `e` meeting both exists. (Together with `tv_slacks_satisfiable` this is the
+statement that the radius hypothesis and the sampler hypothesis can hold *at the same
+time*.) -/
+theorem tv_slack_threshold_pos {R σ r η s C : ℝ} (hr : 0 < r) (hη : 0 < η) (hs : 0 < s)
+    (hC : 0 ≤ C) :
+    0 < min (η * r / Real.exp (R ^ 2 / (2 * σ)))
+      (s * r ^ 2 / (Real.exp (R ^ 2 / (2 * σ)) ^ 2 * (1 + 2 * (C + s)))) := by
+  have hB : (0 : ℝ) < Real.exp (R ^ 2 / (2 * σ)) := Real.exp_pos _
+  refine lt_min (by positivity) ?_
+  have : (0 : ℝ) < Real.exp (R ^ 2 / (2 * σ)) ^ 2 * (1 + 2 * (C + s)) := by positivity
+  positivity
+
+/-- **The satisfiability check for (radius) + (sampler guarantee), at the real parameters.**
+
+For a positive schedule, a body containing the unit ball and of finite volume, a positive
+per-phase mean bias `η` and a positive variance slack `s`, there is a **strictly positive**
+total-variation error `e` meeting *both* slack conditions of
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` at phase `i` — with the actual radius `R`,
+the actual variance `σᵢ²` and the actual chain ratio, not with idealized stand-ins.
+
+So the two new inputs are **simultaneously satisfiable**, and the construction's slack
+conditions do not silently force `e = 0`. What they *do* force is a genuinely small `e`:
+the threshold carries the factor `e^{−R²/(2σᵢ²)}` (mean side) and `e^{−R²/σᵢ²}` (variance
+side), so the sampler must be exponentially accurate in `R²/σᵢ²`. That is a real cost, and
+it is the reason the radius had to become an explicit parameter. -/
+theorem exists_pos_tvErr {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    {K : Set (Space n)} (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R η s C : ℝ} (hη : 0 < η) (hs : 0 < s) (hC : 0 ≤ C) (i : ℕ) :
+    ∃ e : ℝ, 0 < e ∧
+      Real.exp (R ^ 2 / (2 * σsq i)) * e
+          ≤ η * (chain m σsq K (i + 1) / chain m σsq K i) ∧
+      e * (Real.exp (R ^ 2 / (2 * σsq i)) ^ 2 * (1 + 2 * (C + s)))
+          ≤ s * (chain m σsq K (i + 1) / chain m σsq K i) ^ 2 := by
+  have hr : 0 < chain m σsq K (i + 1) / chain m σsq K i :=
+    div_pos (chain_pos hσ hball hfin (i + 1)) (chain_pos hσ hball hfin i)
+  refine ⟨min (η * (chain m σsq K (i + 1) / chain m σsq K i)
+        / Real.exp (R ^ 2 / (2 * σsq i)))
+      (s * (chain m σsq K (i + 1) / chain m σsq K i) ^ 2
+        / (Real.exp (R ^ 2 / (2 * σsq i)) ^ 2 * (1 + 2 * (C + s)))),
+    tv_slack_threshold_pos hr hη hs hC, ?_, ?_⟩
+  · exact (tv_slacks_satisfiable hr hη hs hC
+      (tv_slack_threshold_pos hr hη hs hC).le (min_le_left _ _) (min_le_right _ _)).1
+  · exact (tv_slacks_satisfiable hr hη hs hC
+      (tv_slack_threshold_pos hr hη hs hC).le (min_le_left _ _) (min_le_right _ _)).2
+
+/-- **`hvar_exact` is a theorem at an interior phase of the fixed-rate schedule**, on the
+measurable core `interior K`. This is `Arlib.GaussianCooling.coolLaw_sq_moment_le`, whose
+`ZLogconcaveHypothesis` input is discharged for the indicator of a convex set, so nothing
+is assumed here.
+
+**But it is only available where it is available.** Two restrictions, both real:
+
+* `hi : i + 1 < m` — the *terminal* phase (`i + 1 = m`) is not covered. There the phase
+  weight is the constant `1` and `coolRatio` is `e^{+‖x‖²/(2σᵢ²)}`; no second-moment bound
+  for it is proved anywhere in this development.
+* the constant is `1 + 2/n`, and
+  `Arlib.GaussianCooling.cousinsVempalaOfSampler`'s `hvarSum` then demands
+  `2m ≤ n·varBudget ε`, which by
+  `Arlib.GaussianCooling.geomSchedule_total_cooling_lt` forces the schedule's total cooling
+  factor `(1 + 1/n)^m` below `11/10`. A schedule meeting the variance budget at this rate
+  therefore **cannot anneal**. Replacing the fixed rate `α = 1/n` by a general `α` is the
+  open piece; it is not constructed here, and no claim about running time follows from
+  anything in this file. -/
+theorem hvar_exact_of_fixedRate {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    {K : Set (Space n)} (hK : Convex ℝ K)
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤) {i : ℕ}
+    (hi : i + 1 < m) (hn : 3 ≤ n) (hrate : σsq (i + 1) = σsq i * (1 + 1 / (n : ℝ))) :
+    ∫ x, phaseScore m σsq (interior K) i x ^ 2
+        ∂(coolLaw m σsq (interior K) i)
+      ≤ (1 + 2 / (n : ℝ))
+        * (∫ x, phaseScore m σsq (interior K) i x
+            ∂(coolLaw m σsq (interior K) i)) ^ 2 :=
+  coolLaw_sq_moment_le hσ hK.interior isOpen_interior.measurableSet
+    (ball_subset_interior hball) (volume_interior_ne_top hfin) hi hn hrate
+
+end Sampler
+
 end CV
 
 /-! ## Building a `Ttc.VolumeAlgorithm`
@@ -851,6 +1192,297 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfBiasedEnd (n : ℕ) (Ω : Type
         (hbudget ε hε)
         (hchain_end K ε p hε hp hp1 hconv hball hfin)
         (hcompose ε hε))
+
+/-- **The construction with `hphase_mean` weakened to a relative bound.**
+
+Identical to `Ttc.VolumeAlgorithm.cousinsVempala` except that the per-phase score is only
+required to have mean *within a relative `phaseBias K ε p`* of the chain ratio, rather than
+equal to it. That is the honest shape: an equality is unattainable for a sampled score, and
+`Ttc.CV.run_relErr_four_fifths_approxMean` is the run bound that tolerates the bias.
+
+The price is bookkeeping, all of it explicit:
+
+* `hphaseBudget` — the per-phase budget `2·m·phaseBias ≤ meanBias ε`, i.e. the per-phase
+  bias must be `Θ(τ/m)`, not `Θ(τ)`. This is `Arlib.GaussianCooling.phaseBias_le`, and the
+  `m` is not cosmetic: the per-phase errors multiply.
+* `hcompose` — the accuracy split `innerAcc ε + meanBias ε + innerAcc ε · meanBias ε ≤ ε`
+  (`Ttc.CV.relErr_trans`), satisfiable for every `ε > 0` by e.g. `innerAcc ε = ε/2`,
+  `meanBias ε = ε/4`, which asks each phase for `phaseBias ≤ ε/(8m)`.
+* `hbudget` is stated at the *inner* accuracy `innerAcc ε`.
+
+`hphase_var` is still an argument here; `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler`
+discharges both it and `hphase_mean`. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfApproxMean (n : ℕ) (Ω : Type)
+    [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (phases : Set (Space n) → ℝ → ℝ → ℕ)
+    (reps : ℝ → ℝ → ℕ)
+    (varBudget : ℝ → ℝ)
+    (innerAcc : ℝ → ℝ)
+    (meanBias : ℝ → ℝ)
+    (phaseBias : Set (Space n) → ℝ → ℝ → ℝ)
+    (chain : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    (W : Set (Space n) → ℝ → ℝ → ℕ → ℕ → Ω → ℝ)
+    (med : Set (Space n) → ℝ → ℝ → Ω → ℝ)
+    -- the schedule
+    (hreps_pos : ∀ ε p, 0 < p → p < 1 → 0 < reps ε p)
+    (hreps : ∀ ε p, 0 < p → p < 1 →
+      Real.log (1 / p) / (2 * (4 / 5 - 1 / 2) ^ 2) ≤ (reps ε p : ℝ))
+    (hbudget0 : ∀ ε, 0 < ε → 0 ≤ varBudget ε)
+    (hinner_pos : ∀ ε, 0 < ε → 0 < innerAcc ε)
+    (hbias_nonneg : ∀ K ε p, 0 < ε → 0 ≤ phaseBias K ε p)
+    (hmean_nonneg : ∀ ε, 0 < ε → 0 ≤ meanBias ε)
+    (hmean_lt_one : ∀ ε, 0 < ε → meanBias ε < 1)
+    (hphases_pos : ∀ K ε p, 0 < ε → 0 < phases K ε p)
+    (hphaseBudget : ∀ K ε p, 0 < ε →
+      2 * (phases K ε p : ℝ) * phaseBias K ε p ≤ meanBias ε)
+    (hcompose : ∀ ε, 0 < ε → innerAcc ε + meanBias ε + innerAcc ε * meanBias ε ≤ ε)
+    (hbudget : ∀ ε, 0 < ε → Real.exp (varBudget ε) - 1 ≤ (innerAcc ε) ^ 2 / 5)
+    -- admissibility
+    (hW_meas : ∀ K ε p j i, Measurable (W K ε p j i))
+    (hmed_meas : ∀ K ε p, Measurable (med K ε p))
+    (hmed : ∀ K ε p ω, IsMedian (fun j : Fin (reps ε p) =>
+      chain K ε p 0 * ∏ i : Fin (phases K ε p), W K ε p (j : ℕ) (i : ℕ) ω) (med K ε p ω))
+    (hindep_runs : ∀ K ε p, iIndepFun (fun (j : Fin (reps ε p)) (ω : Ω) =>
+      chain K ε p 0 * ∏ i : Fin (phases K ε p), W K ε p (j : ℕ) (i : ℕ) ω) μ)
+    (hprodLp : ∀ K ε p j,
+      MemLp (fun ω => ∏ i : Fin (phases K ε p), W K ε p j (i : ℕ) ω) 2 μ)
+    -- the cooling chain and the per-phase ratio estimators
+    (hchain_pos : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i, 0 < chain K ε p i)
+    (hchain_end : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ →
+      chain K ε p (phases K ε p) = (volume K).toReal)
+    (hphase_indep : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j,
+      iIndepFun (fun i : Fin (phases K ε p) => W K ε p j (i : ℕ)) μ)
+    -- ★ the only mathematical change: an interval, not an equality
+    (hphase_mean : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ ω, W K ε p j (i : ℕ) ω ∂μ ∈
+        relErr (phaseBias K ε p) (chain K ε p ((i : ℕ) + 1) / chain K ε p (i : ℕ)))
+    (hphase_var : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ ω, (W K ε p j (i : ℕ) ω) ^ 2 ∂μ
+        ≤ (1 + varBudget ε / (phases K ε p : ℝ)) * (∫ ω, W K ε p j (i : ℕ) ω ∂μ) ^ 2) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.ofRuns n Ω μ reps
+    (fun K ε p j ω => chain K ε p 0 * ∏ i : Fin (phases K ε p), W K ε p j (i : ℕ) ω)
+    med hreps_pos hreps
+    (fun K ε p j =>
+      measurable_const.mul (Finset.measurable_prod _ fun i _ => hW_meas K ε p j (i : ℕ)))
+    hmed_meas hmed hindep_runs
+    (fun K ε p hε hp hp1 hconv hball hfin j => by
+      have h := CV.run_relErr_four_fifths_approxMean (μ := μ)
+        (W := fun i : Fin (phases K ε p) => W K ε p (j : ℕ) (i : ℕ))
+        (A := chain K ε p) (κ := varBudget ε) (ε := innerAcc ε) (ε₀ := ε)
+        (η := phaseBias K ε p) (τ := meanBias ε)
+        (hphases_pos K ε p hε) (hbudget0 ε hε) (hinner_pos ε hε) (hbias_nonneg K ε p hε)
+        (hmean_nonneg ε hε) (hmean_lt_one ε hε) (hphaseBudget K ε p hε)
+        (hphase_indep K ε p hε hp hp1 hconv hball hfin (j : ℕ))
+        (fun i => (hW_meas K ε p (j : ℕ) (i : ℕ)).aestronglyMeasurable)
+        (hprodLp K ε p (j : ℕ))
+        (hchain_pos K ε p hε hp hp1 hconv hball hfin)
+        (hphase_mean K ε p hε hp hp1 hconv hball hfin (j : ℕ))
+        (hphase_var K ε p hε hp hp1 hconv hball hfin (j : ℕ))
+        (hbudget ε hε) (hcompose ε hε)
+      rwa [hchain_end K ε p hε hp hp1 hconv hball hfin] at h)
+
+/-- **§5.2 driven by a sampler: `hphase_mean` and `hphase_var` are no longer arguments.**
+
+This is `Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` with the cooling chain, the phase
+score, the per-phase mean bound and the per-phase second-moment bound all **supplied**,
+from three inputs that the previous constructions did not have:
+
+1. **an explicit radius** `radius K`, with `0 < radius K` and (under `cousinsVempala`'s own
+   hypotheses on `K`) `K ⊆ radius K · Bₙ`. It is unavoidable: the phase score
+   `Arlib.GaussianCooling.coolRatio` is unbounded on an unbounded body, so the
+   total-variation transport has no bound `B` to rescale by. `Ttc.CV.cvRadius` /
+   `Ttc.CV.subset_closedBall_cvRadius` supply one from `cousinsVempala`'s hypotheses alone,
+   so this input costs nothing in generality;
+2. **a sampler** `X K ε p j i : Ω → ℝⁿ` with the guarantee `hTV` that the law of the phase
+   sample is within total variation `tvErr K ε p` of the *exact* phase law
+   `Arlib.GaussianCooling.coolLaw`. Nothing here proves any chain achieves such a bound —
+   `hTV` is an input, and producing it is the ball-walk mixing problem;
+3. **the exact-law second moment** `hvar_exact`, `E_π(W²) ≤ varConst ε · E_π(W)²`. For an
+   interior phase of the fixed-rate schedule this is a *theorem*,
+   `Arlib.GaussianCooling.coolLaw_sq_moment_le` with `varConst = 1 + 2/n` — see the
+   obstruction note below.
+
+**The body is `interior K`, not `K`.** A convex set need not be Borel measurable (an open
+ball together with an arbitrary subset of its bounding sphere is convex), so a hypothesis
+`∀ K, Convex ℝ K → … → MeasurableSet K` would be *false* and any construction carrying it
+would be vacuous. `interior K` is open, convex, contains the unit ball whenever `K` does,
+and has the same volume (`Ttc.CV.volume_interior_eq`, from `Convex.addHaar_frontier`), so
+the whole pipeline runs on it and still reports about `volume K`.
+
+**What is derived here** (was an argument of `cousinsVempala`): `hchain_pos`
+(`Arlib.GaussianCooling.chain_pos`), `hchain_end` (`chain_end` plus `volume_interior_eq`),
+`hW_meas` (`measurable_phaseScore`), `hphase_mean` (`Ttc.CV.sampledPhase_mean_mem_relErr`)
+and `hphase_var` (`Arlib.GaussianCooling.sq_moment_le_of_tvLe_map`).
+
+**What is still an argument.** The scheduling data and its budgets; the independence and
+`L²` guards (`hphase_indep`, `hindep_runs`, `hprodLp`, `hmed`, `hmed_meas`); the two slack
+conditions `hslack_mean`, `hslack_var` relating `tvErr` to the radius; and `hvar_exact`.
+
+**Satisfiability of (1) and (2) together.** Both slack conditions are upper bounds on the
+single number `(tvErr K ε p).toReal`, with strictly positive right-hand sides whenever the
+chain ratio, `phaseBias` and `varSlack` are positive — see `Ttc.CV.tv_slacks_satisfiable`
+and `Ttc.CV.tv_slack_threshold_pos`. So they are simultaneously satisfiable, at a
+*strictly positive* TV error; the threshold degrades like `e^{−R²/σᵢ²}`.
+
+**The obstruction, and what this does NOT claim.** `hvar_exact` at the fixed cooling rate
+`σᵢ₊₁² = σᵢ²(1 + 1/n)` holds with `varConst = 1 + 2/n`
+(`Arlib.GaussianCooling.coolLaw_sq_moment_le`), but only at *interior* phases, and
+`hvarSum` then forces `2m ≤ n·varBudget ε`, which by
+`Arlib.GaussianCooling.geomSchedule_total_cooling_lt` makes the schedule's **total** cooling
+factor `(1 + 1/n)^m < 11/10` — it cannot anneal. A schedule that does anneal needs the
+general-`α` variance bound, which is not constructed anywhere in this development. So this
+construction is a *reduction* of the volume oracle to a sampler and a schedule, not a
+volume oracle; and nothing here bounds any running time. The conductance constants
+available in this repository are exponentially small in `n`
+(`Arlib/Convexity/GaussianCooling/Unblock.lean`), so no polynomial-time claim is implied
+by anything above. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfSampler (n : ℕ) (Ω : Type)
+    [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    -- the schedule data
+    (phases : Set (Space n) → ℝ → ℝ → ℕ)
+    (reps : ℝ → ℝ → ℕ)
+    (varBudget : ℝ → ℝ)
+    (innerAcc : ℝ → ℝ)
+    (meanBias : ℝ → ℝ)
+    (varConst : ℝ → ℝ)
+    (phaseBias : Set (Space n) → ℝ → ℝ → ℝ)
+    (varSlack : Set (Space n) → ℝ → ℝ → ℝ)
+    (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    -- ★ (1) the explicit radius
+    (radius : Set (Space n) → ℝ)
+    -- ★ (2) the sampler and its total-variation error
+    (tvErr : Set (Space n) → ℝ → ℝ → ℝ≥0∞)
+    (X : Set (Space n) → ℝ → ℝ → ℕ → ℕ → Ω → Space n)
+    (med : Set (Space n) → ℝ → ℝ → Ω → ℝ)
+    -- the schedule's budgets
+    (hreps_pos : ∀ ε p, 0 < p → p < 1 → 0 < reps ε p)
+    (hreps : ∀ ε p, 0 < p → p < 1 →
+      Real.log (1 / p) / (2 * (4 / 5 - 1 / 2) ^ 2) ≤ (reps ε p : ℝ))
+    (hbudget0 : ∀ ε, 0 < ε → 0 ≤ varBudget ε)
+    (hinner_pos : ∀ ε, 0 < ε → 0 < innerAcc ε)
+    (hbias_nonneg : ∀ K ε p, 0 < ε → 0 ≤ phaseBias K ε p)
+    (hmean_nonneg : ∀ ε, 0 < ε → 0 ≤ meanBias ε)
+    (hmean_lt_one : ∀ ε, 0 < ε → meanBias ε < 1)
+    (hphases_pos : ∀ K ε p, 0 < ε → 0 < phases K ε p)
+    (hphaseBudget : ∀ K ε p, 0 < ε →
+      2 * (phases K ε p : ℝ) * phaseBias K ε p ≤ meanBias ε)
+    (hcompose : ∀ ε, 0 < ε → innerAcc ε + meanBias ε + innerAcc ε * meanBias ε ≤ ε)
+    (hbudget : ∀ ε, 0 < ε → Real.exp (varBudget ε) - 1 ≤ (innerAcc ε) ^ 2 / 5)
+    (hsigma : ∀ K ε p j, 0 < σsq K ε p j)
+    -- ★ (1) the radius hypotheses
+    (hradius_pos : ∀ K, 0 < radius K)
+    (hradius : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ →
+      K ⊆ Metric.closedBall (0 : Space n) (radius K))
+    -- ★ (2) the sampler hypotheses
+    (hX_meas : ∀ K ε p j i, Measurable (X K ε p j i))
+    (htvErr_ne_top : ∀ K ε p, tvErr K ε p ≠ ⊤)
+    (hTV : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j i,
+      Arlib.TVLe (μ.map (X K ε p j i))
+        (coolLaw (phases K ε p) (σsq K ε p) (interior K) i) (tvErr K ε p))
+    -- the slack the radius and the TV error must leave: the mean side
+    (hslack_mean : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      Real.exp (radius K ^ 2 / (2 * σsq K ε p i)) * (tvErr K ε p).toReal
+        ≤ phaseBias K ε p * (chain (phases K ε p) (σsq K ε p) (interior K) (i + 1)
+            / chain (phases K ε p) (σsq K ε p) (interior K) i))
+    -- the exact-law second moment, and the room left above it
+    (hvarConst_nonneg : ∀ ε, 0 < ε → 0 ≤ varConst ε)
+    (hvarSlack_nonneg : ∀ K ε p, 0 < ε → 0 ≤ varSlack K ε p)
+    (hvarSum : ∀ K ε p, 0 < ε →
+      varConst ε + varSlack K ε p = 1 + varBudget ε / (phases K ε p : ℝ))
+    (hvar_exact : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      ∫ x, phaseScore (phases K ε p) (σsq K ε p) (interior K) i x ^ 2
+          ∂(coolLaw (phases K ε p) (σsq K ε p) (interior K) i)
+        ≤ varConst ε * (∫ x, phaseScore (phases K ε p) (σsq K ε p) (interior K) i x
+            ∂(coolLaw (phases K ε p) (σsq K ε p) (interior K) i)) ^ 2)
+    -- the slack the radius and the TV error must leave: the variance side
+    (hslack_var : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      (tvErr K ε p).toReal * (Real.exp (radius K ^ 2 / (2 * σsq K ε p i)) ^ 2
+          * (1 + 2 * (1 + varBudget ε / (phases K ε p : ℝ))))
+        ≤ varSlack K ε p * (chain (phases K ε p) (σsq K ε p) (interior K) (i + 1)
+            / chain (phases K ε p) (σsq K ε p) (interior K) i) ^ 2)
+    -- admissibility
+    (hmed_meas : ∀ K ε p, Measurable (med K ε p))
+    (hmed : ∀ K ε p ω, IsMedian (fun j : Fin (reps ε p) =>
+      chain (phases K ε p) (σsq K ε p) (interior K) 0 *
+        ∏ i : Fin (phases K ε p),
+          phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+            (X K ε p (j : ℕ) (i : ℕ) ω)) (med K ε p ω))
+    (hindep_runs : ∀ K ε p, iIndepFun (fun (j : Fin (reps ε p)) (ω : Ω) =>
+      chain (phases K ε p) (σsq K ε p) (interior K) 0 *
+        ∏ i : Fin (phases K ε p),
+          phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+            (X K ε p (j : ℕ) (i : ℕ) ω)) μ)
+    (hprodLp : ∀ K ε p j, MemLp (fun ω => ∏ i : Fin (phases K ε p),
+      phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+        (X K ε p j (i : ℕ) ω)) 2 μ)
+    (hphase_indep : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j,
+      iIndepFun (fun i : Fin (phases K ε p) => fun ω =>
+        phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+          (X K ε p j (i : ℕ) ω)) μ) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfApproxMean n Ω μ phases reps varBudget innerAcc meanBias
+    phaseBias
+    (fun K ε p => chain (phases K ε p) (σsq K ε p) (interior K))
+    (fun K ε p j i ω =>
+      phaseScore (phases K ε p) (σsq K ε p) (interior K) i (X K ε p j i ω))
+    med
+    hreps_pos hreps hbudget0 hinner_pos hbias_nonneg hmean_nonneg hmean_lt_one hphases_pos
+    hphaseBudget hcompose hbudget
+    -- `hW_meas`: the phase score is measurable on the *open* body `interior K`
+    (fun K ε p j i =>
+      (measurable_phaseScore isOpen_interior.measurableSet i).comp (hX_meas K ε p j i))
+    hmed_meas hmed hindep_runs hprodLp
+    -- `hchain_pos`
+    (fun K ε p _ _ _ _ hball hfin i =>
+      chain_pos (hsigma K ε p) (CV.ball_subset_interior hball)
+        (CV.volume_interior_ne_top hfin) i)
+    -- `hchain_end`
+    (fun K ε p _ _ _ hconv _ _ => by
+      rw [chain_end, CV.volume_interior_eq hconv])
+    hphase_indep
+    -- ★ `hphase_mean`, DERIVED from the sampler's TV guarantee
+    (fun K ε p hε hp hp1 hconv hball hfin j i =>
+      CV.sampledPhase_mean_mem_relErr (hsigma K ε p) isOpen_interior.measurableSet
+        (CV.ball_subset_interior hball) (CV.volume_interior_ne_top hfin)
+        (interior_subset.trans (hradius K ε p hε hp hp1 hconv hball hfin))
+        (hX_meas K ε p j (i : ℕ))
+        (hTV K ε p hε hp hp1 hconv hball hfin j (i : ℕ)) (htvErr_ne_top K ε p)
+        (hslack_mean K ε p hε hp hp1 hconv hball hfin (i : ℕ)))
+    -- ★ `hphase_var`, DERIVED from the sampler's TV guarantee and `hvar_exact`
+    (fun K ε p hε hp hp1 hconv hball hfin j i => by
+      have hKm : MeasurableSet (interior K) := isOpen_interior.measurableSet
+      have hball' := CV.ball_subset_interior hball
+      have hfin' := CV.volume_interior_ne_top hfin
+      have hchain := chain_pos (m := phases K ε p) (hsigma K ε p) hball' hfin' (i : ℕ)
+      haveI := coolLaw_isProbabilityMeasure (m := phases K ε p) (hsigma K ε p) hball' hfin'
+        (i : ℕ)
+      have hmeanEq := integral_phaseScore_coolLaw (m := phases K ε p)
+        (σsq := σsq K ε p) hKm hchain
+      have hsl := hslack_var K ε p hε hp hp1 hconv hball hfin (i : ℕ)
+      rw [← hvarSum K ε p hε, ← hmeanEq] at hsl
+      have hmain := sq_moment_le_of_tvLe_map (C := varConst ε) (s := varSlack K ε p)
+        (hX_meas K ε p j (i : ℕ)) (hTV K ε p hε hp hp1 hconv hball hfin j (i : ℕ))
+        (htvErr_ne_top K ε p)
+        (Real.exp_pos (radius K ^ 2 / (2 * σsq K ε p (i : ℕ))))
+        (measurable_phaseScore hKm (i : ℕ))
+        (phaseScore_nonneg (phases K ε p) (σsq K ε p) (interior K) (i : ℕ))
+        (phaseScore_le (hsigma K ε p)
+          (interior_subset.trans (hradius K ε p hε hp hp1 hconv hball hfin)) (i : ℕ))
+        (hvarConst_nonneg ε hε) (hvarSlack_nonneg K ε p hε)
+        (hvar_exact K ε p hε hp hp1 hconv hball hfin (i : ℕ)) hsl
+      rwa [hvarSum K ε p hε] at hmain)
 
 /-! ## Non-vacuity of the construction's hypothesis bundle (`CLAUDE.md` §11)
 
@@ -1111,6 +1743,63 @@ theorem witVarBudget_le_inner (ε : ℝ) (hε : 0 < ε) :
   simp only [witVarBudget, Real.exp_zero, sub_self, witInnerAcc]
   positivity
 
+/-! ### The extra hypotheses of the approximate-mean construction
+
+`Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` splits the requested accuracy `ε` between
+the inner (Chebyshev) accuracy and the *mean bias* of the telescoped product, and then
+splits that mean bias across the phases. The witness reuses the endpoint split
+`innerAcc ε = ε/2`, `meanBias ε = ε/(2+ε)` — `Ttc.CV.witEndBias` does double duty as the
+mean bias, `Ttc.CV.witCompose` is the same equality — and takes the per-phase bias to be
+`meanBias/(2m) = ε/(2(2+ε))`, which meets `hphaseBudget` with equality. Both are
+**strictly positive**, so the witness exercises the approximate branch rather than
+collapsing it to the exact one. -/
+
+/-- The witness's per-phase mean bias: `meanBias/(2m) = ε/(2(2+ε))` at `m = 1`. Strictly
+positive whenever `ε` is. -/
+noncomputable def witPhaseBias {n : ℕ} : Set (Space n) → ℝ → ℝ → ℝ :=
+  fun _ ε _ => ε / (2 * (2 + ε))
+
+/-- `hphases_pos`. -/
+theorem witPhases_pos {n : ℕ} (K : Set (Space n)) (ε p : ℝ) : 0 < witPhases K ε p := by
+  simp [witPhases]
+
+/-- `hbias_nonneg`; in fact `0 < witPhaseBias K ε p`. -/
+theorem witPhaseBias_pos {n : ℕ} (K : Set (Space n)) (ε p : ℝ) (hε : 0 < ε) :
+    0 < witPhaseBias K ε p := by
+  simp only [witPhaseBias]
+  exact div_pos hε (by linarith)
+
+/-- `hmean_lt_one`: `ε/(2+ε) < 1`. -/
+theorem witEndBias_lt_one (ε : ℝ) (hε : 0 < ε) : witEndBias ε < 1 := by
+  simp only [witEndBias]
+  rw [div_lt_one (by linarith)]
+  linarith
+
+/-- `hphaseBudget`: `2·m·(ε/(2(2+ε))) = ε/(2+ε)` at `m = 1`, so the per-phase budget is met
+with equality. -/
+theorem witPhaseBudget {n : ℕ} (K : Set (Space n)) (ε p : ℝ) (hε : 0 < ε) :
+    2 * (witPhases K ε p : ℝ) * witPhaseBias K ε p ≤ witEndBias ε := by
+  have h2 : (2 : ℝ) + ε ≠ 0 := by positivity
+  have key : 2 * (witPhases K ε p : ℝ) * witPhaseBias K ε p = witEndBias ε := by
+    simp only [witPhases, witPhaseBias, witEndBias, Nat.cast_one]
+    field_simp
+  exact key.le
+
+/-- `hphase_mean`, in relative-error form: the exact score `1/2` is in particular within a
+relative `witPhaseBias K ε p` of the chain ratio. -/
+theorem witPhase_mean_mem {n : ℕ} {K : Set (Space n)} (ε p : ℝ) (hε : 0 < ε)
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤) (j : ℕ)
+    (i : Fin (witPhases K ε p)) :
+    ∫ ω, witW K ε p j (i : ℕ) ω ∂(Measure.dirac ())
+      ∈ relErr (witPhaseBias K ε p)
+          (witChain K ε p ((i : ℕ) + 1) / witChain K ε p (i : ℕ)) := by
+  have hb : 0 < witChain K ε p ((i : ℕ) + 1) / witChain K ε p (i : ℕ) :=
+    div_pos (witChain_pos ε p hball hfin _) (witChain_pos ε p hball hfin _)
+  have hη : 0 ≤ witPhaseBias K ε p := (witPhaseBias_pos K ε p hε).le
+  rw [witPhase_mean ε p hball hfin j i]
+  simp only [relErr, Set.mem_Icc]
+  constructor <;> nlinarith
+
 /-- `hchain_end`, in relative-error form: an exact endpoint is in particular a biased one. -/
 theorem witChain_end_mem {n : ℕ} (K : Set (Space n)) (ε p : ℝ) (hε : 0 < ε) :
     witChain K ε p (witPhases K ε p) ∈ relErr (witEndBias ε) (volume K).toReal := by
@@ -1186,6 +1875,47 @@ noncomputable def VolumeAlgorithm.cousinsVempalaBiasedWitness (n : ℕ) : Volume
     (fun K ε p _ _ _ _ hball hfin => CV.witPhase_mean ε p hball hfin)
     (fun K ε p _ _ _ _ _ _ => CV.witPhase_var K ε p)
 
+/-- **The non-vacuity witness for `Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean`**
+(`CLAUDE.md` §11). Every argument is instantiated and every hypothesis proved, with a
+**strictly positive** per-phase mean bias `ε/(2(2+ε))` and mean bias `ε/(2+ε)`, so the
+approximate-mean branch is genuinely exercised.
+
+As with `cousinsVempalaWitness`, this certifies that the bundle is *consistent*, not that
+the paper's Gaussian schedule satisfies it: the schedule is degenerate (one phase, a
+deterministic score, a chain that is a multiple of `Vol(K)`) and the resulting algorithm is
+`Ttc.VolumeAlgorithm.exact` in disguise. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaApproxMeanWitness (n : ℕ) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfApproxMean n Unit (Measure.dirac ())
+    CV.witPhases CV.witReps CV.witVarBudget CV.witInnerAcc CV.witEndBias CV.witPhaseBias
+    CV.witChain CV.witW CV.witMed
+    (fun ε p _ _ => CV.witReps_pos ε p)
+    (fun ε p _ _ => CV.witReps_ge ε p)
+    (fun ε _ => CV.witVarBudget_nonneg ε)
+    CV.witInnerAcc_pos
+    (fun K ε p hε => (CV.witPhaseBias_pos K ε p hε).le)
+    (fun ε hε => (CV.witEndBias_pos ε hε).le)
+    CV.witEndBias_lt_one
+    (fun K ε p _ => CV.witPhases_pos K ε p)
+    CV.witPhaseBudget
+    CV.witCompose
+    CV.witVarBudget_le_inner
+    CV.witW_meas
+    CV.witMed_meas
+    CV.witMed_isMedian
+    CV.witIndep_runs
+    CV.witProdLp
+    (fun K ε p _ _ _ _ hball hfin => CV.witChain_pos ε p hball hfin)
+    (fun K ε p _ _ _ _ _ _ => CV.witChain_end K ε p)
+    (fun K ε p _ _ _ _ _ _ => CV.witPhase_indep K ε p)
+    (fun K ε p hε _ _ _ hball hfin => CV.witPhase_mean_mem ε p hε hball hfin)
+    (fun K ε p _ _ _ _ _ _ => CV.witPhase_var K ε p)
+
+/-- The approximate-mean witness's estimate is `Vol(K)` on the nose. -/
+theorem VolumeAlgorithm.cousinsVempalaApproxMeanWitness_est (n : ℕ) (K : Set (Space n))
+    (ε p : ℝ) (ω : (cousinsVempalaApproxMeanWitness n).Ω) :
+    (cousinsVempalaApproxMeanWitness n).est K ε p ω = (volume K).toReal := rfl
+
 /-! ## Axiom audit for §5.2 -/
 
 #print axioms CV.mem_relErr_iff
@@ -1205,13 +1935,34 @@ noncomputable def VolumeAlgorithm.cousinsVempalaBiasedWitness (n : ℕ) : Volume
 #print axioms CV.G_indicator_mem_relErr
 #print axioms CV.run_relErr_four_fifths_biasedEnd
 #print axioms CV.gaussianCooling_accuracy_biasedEnd
+#print axioms CV.run_relErr_four_fifths_approxMean
+#print axioms CV.volume_interior_eq
+#print axioms CV.volume_interior_ne_top
+#print axioms CV.ball_subset_interior
+#print axioms CV.cvRadius_pos
+#print axioms CV.subset_closedBall_cvRadius
+#print axioms CV.integral_map_mem_relErr_of_tvLe
+#print axioms CV.sampledPhase_mean_mem_relErr
+#print axioms CV.tv_slacks_satisfiable
+#print axioms CV.tv_slack_threshold_pos
+#print axioms CV.exists_pos_tvErr
+#print axioms CV.hvar_exact_of_fixedRate
 #print axioms CV.iIndepFun_of_subsingleton
 #print axioms CV.toReal_volume_pos
 #print axioms VolumeAlgorithm.ofRuns
 #print axioms VolumeAlgorithm.cousinsVempala
 #print axioms VolumeAlgorithm.cousinsVempalaOfBiasedEnd
+#print axioms VolumeAlgorithm.cousinsVempalaOfApproxMean
+#print axioms VolumeAlgorithm.cousinsVempalaOfSampler
 #print axioms VolumeAlgorithm.cousinsVempalaWitness
 #print axioms VolumeAlgorithm.cousinsVempalaWitness_est
 #print axioms VolumeAlgorithm.cousinsVempalaBiasedWitness
+#print axioms CV.witPhases_pos
+#print axioms CV.witPhaseBias_pos
+#print axioms CV.witEndBias_lt_one
+#print axioms CV.witPhaseBudget
+#print axioms CV.witPhase_mean_mem
+#print axioms VolumeAlgorithm.cousinsVempalaApproxMeanWitness
+#print axioms VolumeAlgorithm.cousinsVempalaApproxMeanWitness_est
 
 end Ttc
