@@ -37,6 +37,7 @@ import Arlib.Convexity.GaussianCooling.Unblock
 import Arlib.Convexity.GaussianCooling.PhaseMean
 import Arlib.Convexity.GaussianCooling.PhaseVar
 import Arlib.Convexity.GaussianCooling.PhaseSchedule
+import Arlib.Convexity.GaussianCooling.TerminalPhase
 
 /-!
 # Arlib.Convexity
