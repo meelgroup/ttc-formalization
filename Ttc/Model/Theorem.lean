@@ -14,11 +14,19 @@ through — the accuracy half is `Ttc.ttc_accuracy_single_measure` (`Monadic/Eve
 and the running-time half is the second component of `Ttc.ttc_volume_api` (`Exec/Api`),
 read at `p.1` and `p.2`.
 
-Audit path — `Model/`, then stop, **four files**: `Model/Prelude` (the vocabulary),
+Audit path — `Model/`'s **four files**: `Model/Prelude` (the vocabulary),
 `Model/ProblemSetting` (what `Vol(F)` is and what `(1 ± ε)` means),
 `Model/Pseudocode` (`alg:ttc` and its preprocessing, transcribed line by line, ending
-in the algorithm's output `Ttc.ttcAlgOutput` and its oracle-free form `Ttc.ttcRun`),
-this file.
+in the algorithm's output `Ttc.ttcAlgOutput`, its oracle-free form `Ttc.ttcRun`, and the
+law `Ttc.ttc` of the pair `(estimate, cost)`), this file — **and `Ttc/Probability/`'s
+four**, which hold the ambient random objects the two coin sequences are governed by.
+
+The surface is two directories rather than one because `Ttc.ttc` is a `Measure`: the
+ambient randomness is part of what this theorem's type unfolds to wherever it is filed.
+`Ttc/Probability/` is bounded in exchange — definitions only (eleven `def`s and two
+Markov-kernel instances, no `Prop`, no hypothesis bundle, nothing assumed) — and
+`Ttc/Audit/ClosureCheck.lean` checks both directories together, fails the build on
+drift, and says why.
 
 `TTC` takes three inputs, so three inputs is what this statement takes: the formula
 `F = (atoms, φ)`, the accuracy `ε`, the confidence `δ`.  **Eleven binders**
@@ -154,12 +162,22 @@ silent — gives `∀ᵐ r, E r ↔ ∀ r, ttcPairLaw {r} ≠ 0 → E r`, instan
 `Ttc.all_ttcPairLaw_iff_atoms`.  So a support-style quantifier over the pair law buys
 nothing over `All[…]` either.
 
-The cost bound we can actually prove holds at *every* point of the space, null or not.
-Writing it as `All[…]` or `AllS[…]` would throw that away to look more like nfalean.  So
-it is a plain `∀ p`, and it is strictly stronger than all of them.  The measure-side
-counterpart, for the paired law, is `Ttc.ttcPairLaw_cost_le_of_terminates`, stated over
-`Set.range (Ttc.ttcPair …)` — "every run the program can produce" — which is the honest
-analogue of nfalean's shape.
+**So which does the conjunct below use?  `All[…]`.**  An earlier version of this
+statement — and of this paragraph — used a pointwise `∀ p` guarded by
+`Ttc.ttcTerminates`, on the reasoning that the guarded pointwise form is strictly
+stronger than any of the three quantifiers above.  That reasoning was sound but is now
+beside the point: once `Ttc.ae_ttcLaw_ttcTerminates` made the guard discharageable, the
+`All[…]` form became available **with no termination hypothesis at all**, and an
+unconditional a.e. bound is not comparable to a conditional pointwise one.
+
+Two strictly sharper statements are kept for readers who want them, and they are
+**incomparable** with the conjunct below — sharper in the bound, weaker in the
+hypothesis: `Ttc.ttcPairLaw_cost_le_of_terminates`, over `Set.range (Ttc.ttcPair …)`
+("every run the program can produce", no exceptional set whatever), and
+`Ttc.all_ttcPairLaw_cost_le_of_terminates`, which carries the `max`-shaped
+`Ttc.ttcThresh` rather than the sum spelled out below.  The constant here is at most a
+factor 2 off on the threshold term — `max a b ≤ a + b`, both branches kept and both
+proved nonnegative — and that factor is exactly what dropping the guard cost.
 
 ## What is measured: `Model/Pseudocode`'s own `Ttc.ttcRun`
 
@@ -196,25 +214,35 @@ Nothing about that bundle is assumed: it is a closed term, and
 it unfolds to is defined under `Ttc/Model/`.  The target is the **user's own**
 `Vol(F)`, at the original `φ`: neither preprocessing pass moves it.
 
-The runtime conjunct is stated in the folded vocabulary of `Exec/Api` —
-`Ttc.ttcTerminates`, `Ttc.ttcCost`, `Ttc.ttcNumCubes`, `Ttc.ttcThresh` — each of
-which unfolds by `rfl` to the corresponding term of `Runtime.lean`
-(`Ttc.ttcTerminates_def`, `Ttc.ttcCost_def`, `Ttc.ttcNumCubes_def`,
-`Ttc.ttcThresh_def`).
+The runtime conjunct names no `Exec/Api` vocabulary at all.  Earlier versions were
+stated in the folded terms `Ttc.ttcTerminates`, `Ttc.ttcCost`, `Ttc.ttcNumCubes` and
+`Ttc.ttcThresh`; the bound is now **explicit arithmetic** in `ε`, `δ` and
+`m = |Ttc.toDNFd (Ttc.preprocess atoms φ)|`, following
+`ApproxNFA.approxNFA_countNFA`, which writes its `49924·n·(n+1)·m³·log(…)` out for the
+same reason.  `Ttc.ttcComplexity` (`Exec/Complexity`) is the same expression under a
+name, and `Ttc.ttcCost_le_ttcComplexity` is where it is proved; neither is named here.
 
 ## What the statement names
 
-This file is *one declaration* — no `def`, no auxiliary lemma — and the theorem's
-type names, outside `Model/`, only
+This file is *one declaration* — no `def`, no auxiliary lemma — and the theorem's type
+names **nothing defined outside the audit surface**.  That is not a claim about filing:
+`#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) walks the type's
+transitive definitional closure and fails the build unless every `Ttc` constant in it is
+defined under `Ttc/Model/` or `Ttc/Probability/`.  The declarations the type mentions
+directly are
 
 ```
-ttcLaw  ttcIndex
-ttcTerminates  ttcCost  ttcThresh  ttcNumCubes
+ttc   relErr   volSol   atomSet   toDNFd   preprocess
 ```
+
+all in `Model/`, plus Mathlib's `Real.log` and the numerals.
 
 **No proof term is named.**  Every name above is a quantity, applied to
-`(atoms, φ, ε, δ)` and nothing else; the theorem's ten binders appear only as its
-own hypotheses, never inside the terms it measures.
+`(atoms, φ, ε, δ)` — and, for `Ttc.ttc`, the charging convention `(cVol, cSample)` —
+and nothing else; the theorem's hypotheses appear only as its own binders, never inside
+the terms it measures.  `Ttc.preprocess_bdd`, a proof term earlier versions applied
+inside the accuracy conjunct, is gone: `Ttc.ttcParamsTotal` decides the five side
+conditions classically, so the algorithm is a closed function of the data.
 
 The first line is **the run and its law**: the law of a single run of the algorithm
 and the index the sample coins range over.  The **oracle bundle is gone** from the
@@ -283,11 +311,15 @@ rates that draw produced.  No iterated integral.
   precision, rescaled by `1/qⁿ`, with `Vol_ED` and `GenerateSamples` read off the run
   itself rather than taken as an oracle argument — and the target is the **user's own**
   `Vol(F)`.
-* **Running time.**  For **every** point `p` of the run space — not merely almost every
-  one; see the module docstring on why this is deliberately `∀ p` and not `All[…]` —
-  `alg:ttc`'s charged cost `Ttc.ttcCost` (one `Vol_ED` call plus one `GenerateSamples`
-  draw per returned point) is at most `Ttc.ttcNumCubes · (C_vol + C_sample · Ttc.ttcThresh)`,
-  that is `m · (C_vol + C_sample · Thresh)`, under `Ttc.ttcTerminates`.
+* **Running time.**  Almost every run — `All[…]`, i.e. `∀ᵐ`, and with **no termination
+  hypothesis**: the absorption loops halt `Ttc.ttc`-almost surely
+  (`Ttc.ae_ttcLaw_ttcTerminates`), so the guard earlier versions carried is discharged
+  rather than assumed.  `alg:ttc`'s charged cost (one `Vol_ED` call plus one
+  `GenerateSamples` draw per returned point) is at most
+  `m · (C_vol + C_sample · (Θ + 1))`, written out as explicit arithmetic in `ε`, `δ` and
+  `m = |toDNFd (preprocess atoms φ)|` so that the conjunct names nothing this file's
+  reader cannot find.  See the module docstring for which quantifier this is and what it
+  is not.
 
 Eleven binders, all conditions on the input; only `hφ` and `hpos` are shape
 hypotheses.  `AUDIT.md` §1h has the three preprocessing steps, what is known about
@@ -304,8 +336,9 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
       Pr[r ← ttc atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    -- (running time) **every** run the algorithm can produce, with no exceptional set
-    -- and no termination hypothesis, is charged at most `m·(c_vol + c_samp·(Θ + 1))`
+    -- (running time) **almost every** run — `All[…]` is `∀ᵐ`, so a null exceptional set
+    -- is permitted — and, unlike earlier versions, under **no termination hypothesis**:
+    -- charged at most `m·(c_vol + c_samp·(Θ + 1))`
     (All[r ← ttc atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ)
