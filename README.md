@@ -30,6 +30,42 @@ constructed (`Ttc.e2eSampler`, [`Exec/EndToEnd`](Ttc/Exec/EndToEnd.lean), a lazy
 ball walk over `Ttc.kv97ContLaw`) with its one quantitative field `law_tv`
 **proved** rather than assumed.
 
+**Since 2026-08-11 there are also *conditional* polynomial-cost paths for both
+oracles, alongside — never replacing — the two unconditional ones above.** They
+exist because the exponential cost of the constructed oracles is the development's
+main practical limitation; they do not remove it, they relocate it into hypotheses.
+Read them as reductions, not as algorithms:
+
+* **Volume** — [`Ttc.ttc_accuracy_cousinsVempala`](Ttc/Exec/CVBackend.lean), the
+  pipeline with the oracle supplied by Cousins–Vempala (arXiv:1409.6011) through
+  `VolumeAlgorithm.cousinsVempalaOfRuns`, which discharges twelve of fourteen CV
+  hypotheses from `Arlib`. The two that remain, `hphase_mean` and `hphase_var`, are
+  where the development actually stops.
+* **Sampling** — [`Ttc.kv97SamplerOfHitAndRun`](Ttc/Sampler/ConstructHitAndRun.lean),
+  a `KV97Sampler` whose `law_tv` comes from Lovász–Vempala *Hit-and-Run from a
+  Corner* Theorem 1.1 at a step count **polynomial in `n`** rather than `2^Θ(n)`.
+
+**The honest reading of both.** The generalisation underneath the volume one is
+definitional, not a parallel copy — `Ttc.volOfAlg_monteCarlo`,
+`Ttc.volGoodOf_monteCarlo` and `Ttc.Box.bxTtcProbAlg_eq` are all `rfl`. But the
+sampler one is a genuine **regression in what is proved**: the ball walk's `law_tv`
+is a theorem, while this one rests on an assumed `HitAndRunTheorem11Input` — that
+structure *is* LV Theorem 1.1, and it is inhabited nowhere in this development.
+Neither path may be quoted as establishing `O*(n³)`: `VolumeAlgorithm` has no
+complexity field, and `Ttc/Volume/CVEstimator.lean`'s own sample count,
+`Θ(n·L⁴·log(1/p)/κ³)`, is worse than the paper's.
+
+**One of the two source papers is wrong, and it matters here.** Lovász–Vempala
+Theorem 2.1 is **false as stated** — its hypothesis constrains the density only on
+chords through cross pairs while its conclusion integrates over the whole body, and
+for `n ≥ 2` those chords can miss a positive-measure set. Any theorem carrying the
+*unrepaired* hypothesis is therefore **vacuous** for `n ≥ 2`. The repair is cheap
+and is the paper's own §4 side condition. That finding, the fact that the paper's
+printed `10¹⁰` step constant is short by a factor `≈ 2×10⁵` (corrected in
+`Ttc.hitAndRunTheorem11Threshold`), and three others are catalogued in
+[`CV-ROADMAP.md`](CV-ROADMAP.md) §0″; the audit consequences are in
+[`AUDIT.md`](AUDIT.md) §0.
+
 **The clean `1 − δ` is a repricing, not a strengthening.** This is the single
 easiest thing on this page to state misleadingly, so it is stated here rather than
 in a footnote. `hP` reads
