@@ -12,6 +12,7 @@ import Arlib.Convexity.LocalizationLemma
 import Arlib.Convexity.BrunnSharp
 import Arlib.Convexity.KLS97
 import Arlib.Convexity.CrossRatio
+import Arlib.Convexity.CrossRatioOneDim
 import Arlib.Convexity.StepLength
 import Arlib.Convexity.HitAndRunStep
 import Arlib.Convexity.LocalizationLimit
