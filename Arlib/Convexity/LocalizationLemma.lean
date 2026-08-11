@@ -393,6 +393,42 @@ def halfSpace (L : E →L[ℝ] ℝ) (s : ℝ) (side : Bool) : Set E :=
 theorem isLinear_clm (L : E →L[ℝ] ℝ) : IsLinearMap ℝ (L : E → ℝ) :=
   ⟨fun x y => L.map_add x y, fun c x => L.map_smul c x⟩
 
+/-- The closed side `{L ≤ s}` of a cut is closed. -/
+theorem isClosed_halfSpace_true (L : E →L[ℝ] ℝ) (s : ℝ) : IsClosed (halfSpace L s true) := by
+  rw [halfSpace_true]
+  exact isClosed_le L.continuous continuous_const
+
+@[simp] theorem closure_halfSpace_true (L : E →L[ℝ] ℝ) (s : ℝ) :
+    closure (halfSpace L s true) = halfSpace L s true :=
+  (isClosed_halfSpace_true L s).closure_eq
+
+/-- **The closure of the *open* side of a cut is again a closed side of a cut** — namely the
+closed side of the *opposite* functional, `{x | s ≤ L x} = halfSpace (-L) (-s) true`.
+
+This is what lets a construction that cuts with `Arlib.halfSpace` — whose `false` side is open, so
+that the two sides partition the space exactly — be closed up after the fact without leaving the
+class of sets the construction talks about: every closure of a cut body is again contained in a
+*closed* half-space of the same family, with `L` replaced by `-L` and `s` by `-s`.  For the pencil
+of `Arlib.Convexity.LocalizationAssembly` the sign flip is a half-turn of the angle
+(`Arlib.pencilFun_add_pi`), so the family of cuts is literally preserved. -/
+theorem closure_halfSpace_false_subset (L : E →L[ℝ] ℝ) (s : ℝ) :
+    closure (halfSpace L s false) ⊆ halfSpace (-L) (-s) true := by
+  refine closure_minimal (fun x hx => ?_) (isClosed_halfSpace_true (-L) (-s))
+  rw [halfSpace_false, mem_setOf_eq] at hx
+  simp only [halfSpace_true, mem_setOf_eq, ContinuousLinearMap.neg_apply]
+  linarith
+
+/-- **Closing up a cut, uniformly in the side.**  The closure of either side of the cut
+`(L, s)` is contained in the closed half-space `{L' ≤ s'}` for `(L', s')` equal to `(L, s)` or to
+`(-L, -s)`.  The `true` side is already closed; the `false` side is handled by
+`Arlib.closure_halfSpace_false_subset`. -/
+theorem exists_closure_halfSpace_subset (L : E →L[ℝ] ℝ) (s : ℝ) (side : Bool) :
+    ∃ (L' : E →L[ℝ] ℝ) (s' : ℝ), ((L' = L ∧ s' = s) ∨ (L' = -L ∧ s' = -s)) ∧
+      closure (halfSpace L s side) ⊆ halfSpace L' s' true := by
+  cases side
+  · exact ⟨-L, -s, Or.inr ⟨rfl, rfl⟩, closure_halfSpace_false_subset L s⟩
+  · exact ⟨L, s, Or.inl ⟨rfl, rfl⟩, (closure_halfSpace_true L s).subset⟩
+
 /-- Both halfspaces are convex. -/
 theorem convex_halfSpace (L : E →L[ℝ] ℝ) (s : ℝ) (side : Bool) :
     Convex ℝ (halfSpace L s side) := by
@@ -774,6 +810,10 @@ in this file. -/
 #print axioms localization_dim_one
 #print axioms convex_halfSpace
 #print axioms measurableSet_halfSpace
+#print axioms isClosed_halfSpace_true
+#print axioms closure_halfSpace_true
+#print axioms closure_halfSpace_false_subset
+#print axioms exists_closure_halfSpace_subset
 #print axioms halfSpace_false_eq_compl
 #print axioms measure_hyperplane_eq_zero
 #print axioms norm_indicator_le_abs

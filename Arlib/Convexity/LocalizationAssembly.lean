@@ -126,10 +126,12 @@ and `Arlib.Convexity.LocalizationTransverse`)*:
   is eventually inside any open neighbourhood of its intersection (finite-intersection property),
   and the neighbourhood `{y | |g y − g (axis y)| < ε}` is open because `g` and the axis map are
   continuous.  The explicit moduli `δ k = sSup {|g y − g (axis y)| : y ∈ C k}` then tend to `0`.
-  What this needs of the chain, and what is **still missing**, is only that its bodies be
-  *closed*: `Arlib.exists_flat_cut_chain` cuts with `Arlib.halfSpace`, one of whose two sides is
-  open, so `Arlib.exists_flat_cut_chain_collinear` delivers convex bodies of positive volume with
-  a collinear intersection but no closedness.  Nothing else about (A) is open.
+  What it needs of the chain — that its bodies be *closed* — is supplied by
+  `Arlib.exists_flat_cut_chain_collinear_compact` (`Arlib.Convexity.LocalizationClosed`), which
+  closes each body of `Arlib.exists_flat_cut_chain` up: the frontier of a convex set is
+  Haar-null, so no mass moves, and a half-turn of the pencil turns the closure of the open side
+  of a cut into the closed side of another cut through the same flat.  Nothing about (A) is
+  open.
 * **(B) (G2c), the affine change of coordinates**, is now
   `Arlib.exists_needleIntegral_eq_zero_and_pos_affine`: for an arbitrary needle `t ↦ a + t • v`
   and an arbitrary height functional `φ` normalised by `φ v = 1`, the two conclusions of the
@@ -148,21 +150,33 @@ and `Arlib.Convexity.LocalizationTransverse`)*:
   concave form of Corollary 2.4 that §"The profile is concave, and that is deliberate" above
   argues is the right target.
 
+* **(D) Closedness of the chain, and its positioning — closed.**
+  `Arlib.exists_flat_cut_chain_collinear_compact` delivers the chain with **compact** convex
+  bodies of positive volume (and `Arlib.exists_flat_cut_chain_collinear_compact_ge` with the
+  quantitative `ε · vol ≤ ∫ g₂`); `Arlib.exists_axis_of_collinear` positions the collinear limit
+  body along an explicit axis, so `Arlib.exists_needleIntegral_eq_zero_and_pos_of_collinear`
+  states the needle conclusions with `haxis` replaced by `Collinear ℝ (⋂ k, D k)` — exactly what
+  the chain produces.  `Arlib.halfSpace` is unchanged.
+
 *(genuinely open)*:
 
 * **(C) Lower semicontinuity.**  The thin-tube comparison consumes a modulus-of-continuity
   hypothesis, not lower semicontinuity; the Lovász–Simonovits statement for merely lower
   semicontinuous integrable data needs an approximation step that is not carried out.  In the
   general-position form the integrands are asked to be *bounded continuous*.
-* **(D) Closedness of the chain, and its positioning.**  To feed
-  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact` from
-  `Arlib.exists_flat_cut_chain_collinear` one needs the chain's bodies to be compact, and one
-  needs the collinear set `⋂ m, C m` presented as a subset of a *positioned* axis
-  `{y | y = a + φ (y − a) • v}` together with `hspan` (each body meets every height of the slab)
-  and `hslab` (each body lies inside it).  Rescaling the segment `[a,b]` to unit height and
-  choosing `φ` is elementary; making the cut sides closed is a change to
-  `Arlib.exists_flat_cut_chain` itself.  This is now the single remaining obstruction between
-  this file and the Localization Lemma in general position.
+* **(E) The slab rigidity of `hslab`/`hspan` — genuinely open.**
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact` asks every body to lie in *and* span
+  the slab `{y | φ (y − a) ∈ [0,1]}`, which forces `φ '' (D k − a) = [0,1]` at every stage and
+  (`Arlib.exists_mem_iInter_height`) in the limit: the needle must realise the full height of
+  `D 0`.  A localisation chain shrinks in *every* direction, so no nonzero `φ` has constant
+  range along it — normalising the limit segment to unit height gives `hspan` free and breaks
+  `hslab`, normalising `D 0` gives `hslab` free and breaks `hspan`, which is why the box witness
+  uses extent-constant boxes.  Relaxing this — letting the `k`-th slab shrink to the needle's
+  slab — is a change to the limit passage of `Arlib.Convexity.NeedleLimit`, **not** to the
+  chain, and is now the single remaining obstruction between this file and the Localization
+  Lemma in general position.  Secondary and purely technical: the chain lives in
+  `EuclideanSpace ℝ (Fin n)` and the needle theorems in `Fin (m+1) → ℝ`, so a measure-preserving
+  transport between them is still missing.
 
 ## Provenance caveat
 

@@ -13,6 +13,7 @@ import Arlib.Convexity.BrunnSharp
 import Arlib.Convexity.KLS97
 import Arlib.Convexity.KLS97Sharp
 import Arlib.Convexity.OneDimIsoperimetry
+import Arlib.Convexity.ConcaveProfileIso
 import Arlib.Convexity.SharpIsoperimetry
 import Arlib.Convexity.CrossRatio
 import Arlib.Convexity.CrossRatioOneDim
@@ -24,6 +25,7 @@ import Arlib.Convexity.NeedleProfile
 import Arlib.Convexity.LocalizationAssembly
 import Arlib.Convexity.LocalizationAffine
 import Arlib.Convexity.LocalizationTransverse
+import Arlib.Convexity.LocalizationClosed
 import Arlib.Convexity.ConcaveSelection
 import Arlib.Convexity.SignedCut
 import Arlib.Convexity.DyerFrieze
