@@ -100,6 +100,90 @@ read before quoting the statement.
 
 ---
 
+## 0. The oracle-replacement work (2026-08-11) — read this before §1 if you came for it
+
+A large body of work landed on 2026-08-11 aimed at **replacing both oracles**: the
+volume oracle by Cousins–Vempala Theorem 1.1 (arXiv:1409.6011), and the sample
+oracle by Lovász–Vempala Theorem 1.1 (*Hit-and-Run from a Corner*). If you are
+auditing that, the four human-only checks for it are here; §§1–5 below still
+describe the **existing, unconditional** TTC capstones, which are untouched.
+
+**The single most important thing to understand: nothing was replaced
+destructively.** Both original paths remain, and both remain the unconditional
+ones:
+
+| Oracle | Original path — still present, still unconditional | New path — conditional |
+| --- | --- | --- |
+| Volume | `Ttc.mcVol`, `Ttc.VolumeAlgorithm.monteCarlo` — correct, **exponential in `n`** | `Ttc.VolumeAlgorithm.cousinsVempalaOfBiasedEnd`, `Ttc/Volume/CVEstimator.lean` |
+| Sample | `Ttc.kv97SamplerOfBallWalk` — `law_tv` is a **theorem** (`mixesWithin_lazy_ballWalk_polytope`), step count `2^Θ(n)·log(…)` | `Ttc.kv97SamplerOfHitAndRun` — `law_tv` from an **assumed** `HitAndRunTheorem11Input` |
+
+So the honest one-line summary is: **the replacements exist as conditional entry
+points alongside retained unconditional ones**, not as substitutions. A green
+build over the new path certifies the *reduction*, not the algorithm.
+
+**What is genuinely assumed, and who owns it.** In descending order of depth:
+
+* **`hLS` / `hLSs`** — Lovász–Simonovits 1993 Corollary 1.5 (conductance → TV).
+  Binders of `Arlib/MarkovChains/Continuous/HitAndRunMixing.lean`. **This is the
+  one binder owned by nobody**: genuinely absent from this repository, needing
+  Cheeger plus spectral-gap→TV, as `MixingFromConductance.lean` already explains at
+  length. Everything on the sampler side rests on it.
+* **`hIso`** — Lovász–Vempala Theorem 2.1. **Known FALSE as stated**; see below.
+* **`hloc`** — the Localization Lemma at the shape `thm:iso` needs.
+  `Arlib.hloc_of_localization` reduces it to the localization stack; residuals are
+  that stack's (C) continuity requirement and (F) `v ≠ 0`.
+* **`hsampler`** of `Ttc/Volume/CVEstimator.lean` — the CV phase ratios. Note the
+  unclosed seam: `HitAndRunTheorem11Input.at_steps` yields `TVLe` to
+  `Arlib.uniformOn`, **not** to `coolLaw`; uniform→Gaussian is CV §4's
+  speedy/Metropolis machinery and is not attempted.
+
+**Non-vacuity — where it is weaker than you would like (check 4).** Three of the
+new bundles have witnesses that are *inhabited but forced*, and each says so:
+
+* `Ttc/Volume/CVEstimator.lean`'s witness scores are deterministic, so `hsampler`
+  holds at `η = 0` — satisfiability, not a certificate about the paper's phases.
+* `Ttc.exists_hitAndRun_binders_box` takes `H : HitAndRunTheorem11Input` as a
+  hypothesis and **does not construct one**. It cannot: that structure *is* LV
+  Theorem 1.1.
+* `Arlib/Convexity/HlocFromLocalization.lean`'s witness is vacuous in `hLoc` — and
+  this one is the interesting case, because the agent **proved the vacuity is
+  forced**. `Arlib.hloc_antecedent_false_of_isoperimetry` shows `hloc`'s antecedent
+  is the exact negation of `thm:iso`'s conclusion, so a "genuinely satisfied
+  antecedent" witness **cannot exist**. That is a machine-checked impossibility
+  result, and it is the only way to beat the existing witness rather than
+  hand-tune it.
+
+**Costs, quoted here so they need not be reassembled from three files (check 5).**
+
+* `Ttc/Volume/CVEstimator.lean` needs `Θ(n·L⁴·log(1/p)/κ³)` samples — **worse than
+  the paper's**. It establishes *accuracy*; it must **never** be quoted as
+  establishing `O*(n³)`.
+* The `(1d-2)` discharge holds at `1/(2√3) ≈ 0.289`, not CV's `ln 2 ≈ 0.693`, so
+  the separation threshold grows by `2√3·ln 2 ≈ 2.401`.
+* `Arlib/MarkovChains/Continuous/StarPolar.lean` proves KLS 3.5 at the paper's
+  constant `1/(e+1)` but at separation `δ/n`, **not** `δ/√n`, giving conductance
+  `Ω(δ/(σn))` against `Ω(δ/(σ√n))` — a `√n` loss, and not a
+  constant-sharpening issue.
+* The hit-and-run step count is polynomial in `n`, but `R²/r²` is unbounded for a
+  general body; well-roundedness is *assumed* via binders, not achieved.
+
+**The paper errors this work found** are collected in
+[`CV-ROADMAP.md`](CV-ROADMAP.md) §0″. The one with audit consequences:
+**LV Theorem 2.1 is false as stated** (its hypothesis constrains `h` only on
+cross-pair chords while its conclusion integrates over all of `K`; for `n ≥ 2` the
+chords can miss a positive-measure set). Consequence: any theorem still carrying
+the *unrepaired* `hIso` is **vacuous** at `K = [0,4]²` and generically for `n ≥ 2`
+— a green build over an empty guarantee. The repair is to add
+`∀ x ∈ K, h x ≤ 1/3`, which the paper's own §4 application verifies.
+
+**Two of this page's sibling docstrings were refuted** and are corrected in place:
+the "`hIso` needs Borsuk–Ulam" claim in `HitAndRunConductance.lean`, and the
+"Mathlib does not support polar decomposition" claim in `SpeedyOverlap.lean`
+(Mathlib has it, *and this repo already wrapped it*). Treat confident-sounding
+docstrings in this development as claims to re-check, not as findings.
+
+---
+
 ## 1. Is the capstone about the real object?
 
 Read only the **type** of one declaration — everything before the `:=`.
