@@ -7,6 +7,7 @@ import Arlib.Convexity.GaussianCooling.Estimator
 import Arlib.Convexity.GaussianCooling.ZLogconcave
 import Arlib.Convexity.GaussianCooling.PhaseMean
 import Arlib.Convexity.GaussianCooling.PhaseVar
+import Arlib.Convexity.GaussianCooling.TerminalPhase
 import Arlib.Convexity.GaussianCooling.Unblock
 import Mathlib.Analysis.Convex.Measure
 
@@ -125,6 +126,13 @@ What *is* proved here, unconditionally:
   and `hW_meas`, by running the whole pipeline on the *open* body `interior K` — a convex
   set need not be Borel measurable, and `Ttc.CV.volume_interior_eq` is what makes the
   substitution free.
+* `Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate` — **`hvar_exact` derived too.** The
+  same construction with the exact-law second moment supplied at *every* phase by
+  `Ttc.CV.hvar_exact_of_fixedRate_all`, at `varConst = 1 + 2/n`. It costs the fixed rate
+  (`hrate`), `3 ≤ n`, and the terminal flatness inequality (`hflat`); it costs **no new
+  radius** — `cousinsVempalaOfSampler`'s own `radius` parameter, composed with
+  `interior_subset`, is exactly the enclosure the terminal bound needs. After it, `hTV` —
+  the sampler — is the only mathematical debt left in the bundle.
 
 ## The sampler-side lemmas added for that
 
@@ -144,6 +152,22 @@ What *is* proved here, unconditionally:
   the variance budget at rate `1/n` caps the schedule's total cooling below `11/10`
   (`Arlib.GaussianCooling.geomSchedule_total_cooling_lt`) — so the fixed-rate schedule
   cannot anneal, and the general-`α` replacement is not constructed anywhere here.
+* `Ttc.CV.hvar_exact_of_fixedRate_all` — **the same at *every* phase**, interior and
+  terminal, from `Arlib.GaussianCooling.coolLaw_sq_moment_le_all`. The terminal phase costs
+  a radius and the flatness inequality `R² ≤ 2σⱼ² log(1 + 2/n)`, and neither is optional:
+  `Arlib.GaussianCooling.terminal_sq_moment_unbounded` proves that on `K = B₁` — which
+  satisfies every hypothesis the interior theorem places on the body — no constant depending
+  on `n` alone bounds the terminal ratio. `Ttc.CV.flat_of_sigmaSq_ge` (the condition holds
+  once `σⱼ² ≥ nR²/2`), `Ttc.CV.flat_of_fixedRate_terminal` (it need only be checked at
+  `j = m − 1`) and `Ttc.CV.one_div_le_log_one_add_two_div` are the supporting arithmetic.
+* `Ttc.CV.flat_slacks_satisfiable` — the numeric consistency check: at `ε = 1`, `m = 2`,
+  `n ≥ 100`, `innerAcc = 1/2`, `meanBias = 1/3`, `phaseBias = 1/12`,
+  `varBudget = log(21/20)` and `σⱼ² = (nR²/2 + 1)(1 + 1/n)ʲ`, the flatness condition holds
+  at every index *simultaneously* with `hcompose`, `hphaseBudget`, `hbudget`, a strictly
+  positive `varSlack`, and both slack conditions at a strictly positive TV error. `hflat`
+  pushes the variance up, which makes both slack thresholds larger — the conditions pull the
+  same way. The dimension threshold `n ≥ 82` visible there comes from `hvarSum`+`hbudget`
+  (`2m ≤ n·varBudget`), not from `hflat`.
 
 ## Two honesty notes
 
@@ -947,6 +971,210 @@ theorem hvar_exact_of_fixedRate {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 <
   coolLaw_sq_moment_le hσ hK.interior isOpen_interior.measurableSet
     (ball_subset_interior hball) (volume_interior_ne_top hfin) hi hn hrate
 
+/-! ### The flatness condition, and when it holds
+
+`Arlib.GaussianCooling.coolLaw_sq_moment_le_all` asks for
+`R² ≤ 2σⱼ² log(1 + 2/n)` at the terminal indices. Two elementary facts make that
+checkable: it propagates forward along the fixed rate (so only `j = m − 1` matters), and
+it follows from the explicit variance lower bound `σⱼ² ≥ n R²/2`. -/
+
+/-- `e^x ≤ 1/(1 − x)` for `x < 1`, from `1 + y ≤ e^y` at `y = −x`. -/
+theorem exp_le_inv_one_sub {x : ℝ} (hx : x < 1) : Real.exp x ≤ (1 - x)⁻¹ := by
+  have h1 : (0:ℝ) < 1 - x := by linarith
+  have hE : (0:ℝ) < Real.exp x := Real.exp_pos x
+  have h2 : 1 - x ≤ (Real.exp x)⁻¹ := by
+    have h := Real.add_one_le_exp (-x)
+    rw [Real.exp_neg] at h
+    linarith
+  have h3 : (1 - x) * Real.exp x ≤ (Real.exp x)⁻¹ * Real.exp x :=
+    mul_le_mul_of_nonneg_right h2 hE.le
+  rw [inv_mul_cancel₀ hE.ne'] at h3
+  rw [inv_eq_one_div, le_div_iff₀ h1]
+  linarith
+
+/-- **`log(1 + 2/n) ≥ 1/n` for `n ≥ 2`.** Equivalently `e^{1/n} ≤ 1 + 2/n`, which follows
+from `e^x ≤ 1/(1−x)` and `(1 + 2/n)(1 − 1/n) = 1 + 1/n − 2/n² ≥ 1`. This is the only
+quantitative fact needed to turn the flatness condition into a variance lower bound. -/
+theorem one_div_le_log_one_add_two_div {n : ℕ} (hn : 2 ≤ n) :
+    1 / (n : ℝ) ≤ Real.log (1 + 2 / (n : ℝ)) := by
+  have hN : (2:ℝ) ≤ (n:ℝ) := by exact_mod_cast hn
+  have hN0 : (0:ℝ) < (n:ℝ) := by linarith
+  have ht0 : (0:ℝ) < 1 / (n:ℝ) := by positivity
+  have ht2 : 1 / (n:ℝ) ≤ 1/2 := by
+    rw [div_le_div_iff₀ hN0 (by norm_num)]; linarith
+  have hsplit : 2 / (n:ℝ) = 2 * (1 / (n:ℝ)) := by ring
+  rw [hsplit]
+  have hpos : (0:ℝ) < 1 + 2 * (1 / (n:ℝ)) := by linarith
+  rw [Real.le_log_iff_exp_le hpos]
+  refine (exp_le_inv_one_sub (by linarith : 1 / (n:ℝ) < 1)).trans ?_
+  rw [inv_eq_one_div, div_le_iff₀ (by linarith : (0:ℝ) < 1 - 1 / (n:ℝ))]
+  nlinarith
+
+/-- **The flatness condition from a variance lower bound.** `σ ≥ n R²/2` gives
+`R² ≤ 2σ log(1 + 2/n)`, for every dimension `n ≥ 2`. So the terminal phase is covered as
+soon as the schedule's last variance is `Ω(n R²)` — which is the honest price recorded in
+`Arlib/Convexity/GaussianCooling/TerminalPhase.lean` (`σᵢ² ≳ nR²/4`; the constant here is
+`1/2` rather than `1/4` because `log(1 + 2/n)` is bounded below by `1/n`, not `2/n`). -/
+theorem flat_of_sigmaSq_ge {n : ℕ} (hn : 2 ≤ n) {R σ : ℝ} (h : (n : ℝ) * R ^ 2 / 2 ≤ σ) :
+    R ^ 2 ≤ 2 * σ * Real.log (1 + 2 / (n : ℝ)) := by
+  have hN : (2:ℝ) ≤ (n:ℝ) := by exact_mod_cast hn
+  have hN0 : (0:ℝ) < (n:ℝ) := by linarith
+  have hlog := one_div_le_log_one_add_two_div hn
+  have hσ0 : (0:ℝ) ≤ σ := le_trans (by positivity) h
+  have hR : R ^ 2 ≤ 2 * σ * (1 / (n:ℝ)) := by
+    rw [mul_one_div, le_div_iff₀ hN0]
+    nlinarith
+  nlinarith
+
+/-- **The flatness condition only has to be checked at the last index.** Along the
+fixed-rate schedule the variance is nondecreasing, so
+`Arlib.GaussianCooling.flat_of_fixedRate_of_le` propagates `hflat` from `j = m − 1` to
+every terminal index. -/
+theorem flat_of_fixedRate_terminal {m : ℕ} {σsq : ℕ → ℝ} {R : ℝ} (hσ : ∀ j, 0 < σsq j)
+    (hn : 0 < n) (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hlast : R ^ 2 ≤ 2 * σsq (m - 1) * Real.log (1 + 2 / (n : ℝ))) :
+    ∀ j, m ≤ j + 1 → R ^ 2 ≤ 2 * σsq j * Real.log (1 + 2 / (n : ℝ)) := fun _ hj =>
+  flat_of_fixedRate_of_le hσ hn hrate (by omega) hlast
+
+/-- **`hvar_exact` at *every* phase of the fixed-rate schedule**, on the measurable core
+`interior K` — the `∀ i` successor of `hvar_exact_of_fixedRate`.
+
+This is `Arlib.GaussianCooling.coolLaw_sq_moment_le_all`: interior phases (`i + 1 < m`) are
+the Brascamp–Lieb/logconcavity bound `coolLaw_sq_moment_le`, terminal phases (`m ≤ i + 1`)
+are the elementary bounded-observable bound `coolLaw_sq_moment_le_terminal_flat`. The
+constant is the same `1 + 2/n` in both regimes, so the two glue into the single `∀ i`
+statement `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler`'s `hvar_exact` field asks for.
+
+**The price of the terminal phase is two new inputs, and neither can be dropped.**
+
+* a radius `hKR : interior K ⊆ R·Bₙ`. At the terminal step the next phase weight is the
+  constant `1`, so the score is `e^{+‖x‖²/(2σᵢ²)}` — a *growing* Gaussian weight — and the
+  only thing that bounds it is the diameter of the body.
+* the flatness inequality `hflat : R² ≤ 2σⱼ² log(1 + 2/n)` at the terminal indices, i.e.
+  `e^{R²/(2σⱼ²)} ≤ 1 + 2/n`. By `Arlib.GaussianCooling.flat_of_fixedRate_of_le` it need
+  only be checked at `j = m − 1` (see `flat_of_fixedRate_terminal` below), and by
+  `flat_of_sigmaSq_ge` it holds as soon as `σⱼ² ≥ n R²/2`.
+
+**Not an artefact of the proof.** `Arlib.GaussianCooling.terminal_sq_moment_unbounded`
+proves that *no* constant depending on `n` alone works at a terminal phase: on `K = B₁`
+— convex, measurable, containing the unit ball, of finite volume, i.e. satisfying every
+hypothesis `coolLaw_sq_moment_le` places on `K` — and for every proposed `C` there is a
+variance at which `E(W²) > C·E(W)²`. So the unconditional `∀ i` form of this statement is
+**false**, and the radius/flatness pair is the minimum that repairs it.
+
+The other restriction recorded on `hvar_exact_of_fixedRate` is untouched: meeting the
+variance budget at rate `1/n` still caps the schedule's total cooling below `11/10`
+(`Arlib.GaussianCooling.geomSchedule_total_cooling_lt`), so the fixed-rate schedule cannot
+anneal, no general-`α` replacement is constructed here, and no running-time claim follows
+from anything below. -/
+theorem hvar_exact_of_fixedRate_all {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    {K : Set (Space n)} (hK : Convex ℝ K)
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R : ℝ} (hKR : interior K ⊆ Metric.closedBall (0 : Space n) R) (hn : 3 ≤ n)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hflat : ∀ j, m ≤ j + 1 → R ^ 2 ≤ 2 * σsq j * Real.log (1 + 2 / (n : ℝ)))
+    (i : ℕ) :
+    ∫ x, phaseScore m σsq (interior K) i x ^ 2
+        ∂(coolLaw m σsq (interior K) i)
+      ≤ (1 + 2 / (n : ℝ))
+        * (∫ x, phaseScore m σsq (interior K) i x
+            ∂(coolLaw m σsq (interior K) i)) ^ 2 :=
+  coolLaw_sq_moment_le_all hσ hK.interior isOpen_interior.measurableSet
+    (ball_subset_interior hball) (volume_interior_ne_top hfin) hKR hn hrate hflat i
+
+/-- **The flatness condition does not conflict with the slack conditions or the budgets —
+checked at real parameters.**
+
+`hflat` forces the schedule's variance *up* (`σⱼ² ≥ n R²/2`), and the two slack conditions
+of `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` carry the factors `e^{−R²/(2σᵢ²)}` and
+`e^{−R²/σᵢ²}`, which increase with `σᵢ²`. So the new hypothesis and the old ones pull in the
+*same* direction; there is no tension to resolve. This theorem checks that concretely, at
+
+  `ε = 1`, `m = 2` phases, `innerAcc = 1/2`, `meanBias = 1/3`, `phaseBias = 1/12`,
+  `varBudget = log(21/20)`, `n ≥ 100`, `σⱼ² = (n·R²/2 + 1)(1 + 1/n)ʲ`, `R = cvRadius K`,
+
+with everything else the construction demands verified simultaneously:
+
+* `hflat` at **every** index (not just the terminal ones), via `flat_of_sigmaSq_ge`;
+* `hbudget`: `e^{log(21/20)} − 1 = 1/20 = (1/2)²/5`, with equality;
+* `hcompose`: `1/2 + 1/3 + (1/2)(1/3) = 1 = ε`, with equality;
+* `hphaseBudget`: `2·2·(1/12) = 1/3 = meanBias`, with equality;
+* `hvarSum` with a **strictly positive** `varSlack = log(21/20)/2 − 2/n`. This is where the
+  dimension bound comes from: `varSlack > 0` needs `n > 4/log(21/20) = 81.99…`, so `n ≥ 82`
+  is the true threshold and `n ≥ 100` is the round number at which the rational bound
+  `log(21/20) > 1/25` (from `e^{1/25} ≤ 25/24 < 21/20`) suffices;
+* both slack conditions, at a strictly positive TV error (`exists_pos_tvErr`).
+
+**Two honest caveats.** (i) The TV error is produced per phase index, exactly as
+`exists_pos_tvErr` supplies it; the construction wants a single `tvErr K ε p` valid for all
+`i`, and closing that quantifier is a pre-existing gap of `exists_pos_tvErr`, untouched by
+`hflat`. (ii) The dimension bound `n ≥ 82` here is the *variance-budget* constraint
+`2m ≤ n·varBudget ε` that `hvarSum` and `hbudget` already imposed — `hflat` contributes no
+constraint on `n`, `m` or `ε` at all, only a lower bound on the variances, which the
+schedule is free to meet. Meeting it does make the *first* Gaussian nearly flat, so the
+cold start is no longer a cheaply computable integral; that is a statement about the
+schedule's usefulness, not about consistency, and no running-time claim is made anywhere. -/
+theorem flat_slacks_satisfiable (hn : 100 ≤ n) {K : Set (Space n)}
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤) :
+    ∃ (σsq : ℕ → ℝ) (varSlack : ℝ),
+      (∀ j, 0 < σsq j) ∧
+      (∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ))) ∧
+      (∀ j, cvRadius K ^ 2 ≤ 2 * σsq j * Real.log (1 + 2 / (n : ℝ))) ∧
+      Real.exp (Real.log (21 / 20)) - 1 = (1 / 2 : ℝ) ^ 2 / 5 ∧
+      (1 / 2 : ℝ) + 1 / 3 + 1 / 2 * (1 / 3) ≤ 1 ∧
+      2 * (2 : ℝ) * (1 / 12) ≤ 1 / 3 ∧
+      0 < varSlack ∧
+      1 + 2 / (n : ℝ) + varSlack = 1 + Real.log (21 / 20) / 2 ∧
+      ∀ i : ℕ, ∃ e : ℝ, 0 < e ∧
+        Real.exp (cvRadius K ^ 2 / (2 * σsq i)) * e
+            ≤ (1 / 12 : ℝ)
+              * (chain 2 σsq (interior K) (i + 1) / chain 2 σsq (interior K) i) ∧
+        e * (Real.exp (cvRadius K ^ 2 / (2 * σsq i)) ^ 2
+              * (1 + 2 * (1 + Real.log (21 / 20) / 2)))
+            ≤ varSlack
+              * (chain 2 σsq (interior K) (i + 1) / chain 2 σsq (interior K) i) ^ 2 := by
+  have hN : (100 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hN0 : (0 : ℝ) < (n : ℝ) := by linarith
+  have hn2 : 2 ≤ n := by omega
+  -- the schedule: the fixed rate started just above the flatness threshold `n R²/2`
+  have hq0 : (0 : ℝ) < 1 + 1 / (n : ℝ) := by positivity
+  have hq1 : (1 : ℝ) ≤ 1 + 1 / (n : ℝ) := by
+    have : (0 : ℝ) < 1 / (n : ℝ) := by positivity
+    linarith
+  set c : ℝ := (n : ℝ) * cvRadius K ^ 2 / 2 + 1 with hc
+  have hc0 : (0 : ℝ) < c := by
+    have : (0 : ℝ) ≤ (n : ℝ) * cvRadius K ^ 2 / 2 := by positivity
+    rw [hc]; linarith
+  have hσpos : ∀ j, (0 : ℝ) < c * (1 + 1 / (n : ℝ)) ^ j := fun j =>
+    mul_pos hc0 (pow_pos hq0 j)
+  -- `varSlack > 0`, from `log(21/20) > 1/25 ≥ 4/n`
+  have hlog : (1 : ℝ) / 25 < Real.log (21 / 20) := by
+    have h1 : Real.exp ((1 : ℝ) / 25) < 21 / 20 :=
+      lt_of_le_of_lt (exp_le_inv_one_sub (by norm_num)) (by norm_num)
+    rw [← Real.exp_log (show (0 : ℝ) < 21 / 20 by norm_num)] at h1
+    exact Real.exp_lt_exp.mp h1
+  have h4n : 4 / (n : ℝ) ≤ 1 / 25 := by
+    rw [div_le_div_iff₀ hN0 (by norm_num)]; linarith
+  have h2n : 2 * (2 / (n : ℝ)) = 4 / (n : ℝ) := by ring
+  have hslack_pos : (0 : ℝ) < Real.log (21 / 20) / 2 - 2 / (n : ℝ) := by linarith
+  refine ⟨fun j => c * (1 + 1 / (n : ℝ)) ^ j, Real.log (21 / 20) / 2 - 2 / (n : ℝ),
+    hσpos, fun j => by simp only [pow_succ]; ring, fun j => ?_, ?_, by norm_num, by norm_num,
+    hslack_pos, by ring, fun i => ?_⟩
+  · refine flat_of_sigmaSq_ge hn2 ?_
+    have hp : (1 : ℝ) ≤ (1 + 1 / (n : ℝ)) ^ j := one_le_pow₀ hq1
+    nlinarith [hc0]
+  · rw [Real.exp_log (show (0 : ℝ) < 21 / 20 by norm_num)]; norm_num
+  · obtain ⟨e, he0, hmean, hvar⟩ :=
+      exists_pos_tvErr (m := 2) (σsq := fun j => c * (1 + 1 / (n : ℝ)) ^ j) hσpos
+        (ball_subset_interior hball) (volume_interior_ne_top hfin)
+        (R := cvRadius K) (η := 1 / 12)
+        (s := Real.log (21 / 20) / 2 - 2 / (n : ℝ)) (C := 1 + 2 / (n : ℝ))
+        (by norm_num) hslack_pos (by positivity) i
+    have hCs : 1 + 2 / (n : ℝ) + (Real.log (21 / 20) / 2 - 2 / (n : ℝ))
+        = 1 + Real.log (21 / 20) / 2 := by ring
+    rw [hCs] at hvar
+    exact ⟨e, he0, hmean, hvar⟩
+
 end Sampler
 
 end CV
@@ -1484,6 +1712,150 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfSampler (n : ℕ) (Ω : Type)
         (hvar_exact K ε p hε hp hp1 hconv hball hfin (i : ℕ)) hsl
       rwa [hvarSum K ε p hε] at hmain)
 
+/-- **§5.2 driven by a sampler, with `hvar_exact` discharged at *every* phase.**
+
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` derives `hphase_mean` and `hphase_var` from a
+sampler, but still takes the *exact-law* second moment `hvar_exact` as an argument, because
+`Arlib.GaussianCooling.coolLaw_sq_moment_le` covers only the interior phases `i + 1 < m`.
+This construction removes that argument: `hvar_exact` is supplied by
+`Ttc.CV.hvar_exact_of_fixedRate_all` (i.e. `Arlib.GaussianCooling.coolLaw_sq_moment_le_all`)
+for **all** `i`, at the fixed cooling rate and with `varConst = 1 + 2/n`.
+
+**What it costs — three new arguments, and no new radius.**
+
+* `hn : 3 ≤ n` and `hrate : σⱼ₊₁² = σⱼ²(1 + 1/n)` — the hypotheses the interior bound
+  already had, now demanded of the schedule globally rather than phase by phase;
+* `hflat` — the flatness inequality `R² ≤ 2σⱼ² log(1 + 2/n)` at the terminal indices
+  `m ≤ j + 1`. It is checked at `j = m − 1` only (`Ttc.CV.flat_of_fixedRate_terminal`) and
+  holds as soon as `σⱼ² ≥ n·R²/2` (`Ttc.CV.flat_of_sigmaSq_ge`).
+* **the radius is the one already there.** `cousinsVempalaOfSampler` carries
+  `radius : Set (Space n) → ℝ` with `hradius : K ⊆ radius K · Bₙ` for the two slack
+  conditions, and `interior K ⊆ K` gives the terminal bound exactly the enclosure it needs
+  (`interior_subset.trans (hradius …)`). No second radius parameter is introduced.
+
+**The flatness hypothesis cannot be dropped.** `Arlib.GaussianCooling.terminal_sq_moment_unbounded`
+proves that at a terminal phase no constant depending on `n` alone can work: on `K = B₁`,
+which satisfies *every* hypothesis the interior theorem places on the body, the ratio
+`E(W²)/E(W)²` exceeds any prescribed `C` at a small enough variance. So this construction
+is the strongest `∀ i` form available, not a weakening of one that could be stated without
+`R`.
+
+**Everything else is unchanged**, including what is *not* claimed. `hTV` — the sampler — is
+still an input and is still the open problem; there is still no non-vacuity witness for this
+bundle, for the reason recorded on `cousinsVempalaOfSampler` (a degenerate instantiation
+provably fails `hslack_mean`); and the variance budget still forces `2m ≤ n·varBudget ε`,
+hence a total cooling factor below `11/10`
+(`Arlib.GaussianCooling.geomSchedule_total_cooling_lt`), so the schedule cannot anneal and
+**no running-time claim of any kind follows**. The conductance constants in this repository
+are exponentially small in `n`.
+
+**Arithmetic consistency of the new hypothesis with the old ones** is machine-checked by
+`Ttc.CV.flat_slacks_satisfiable`: at `ε = 1`, `m = 2` phases, `innerAcc = 1/2`,
+`meanBias = 1/3`, `phaseBias = 1/12`, `varBudget = log(21/20)` and any `n ≥ 100`, the
+schedule `σⱼ² = (n·R²/2 + 1)(1 + 1/n)ʲ` satisfies `hflat` at every index while
+`hcompose`, `hphaseBudget`, `hbudget` and `hvarSum` hold with `varSlack > 0` and both slack
+conditions are met at a strictly positive TV error. `hflat` pushes the variance *up*, which
+makes `e^{R²/(2σᵢ²)}` smaller and both slack thresholds *larger*: the new condition and the
+old ones pull in the same direction. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate (n : ℕ) (Ω : Type)
+    [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    -- the schedule data
+    (phases : Set (Space n) → ℝ → ℝ → ℕ)
+    (reps : ℝ → ℝ → ℕ)
+    (varBudget : ℝ → ℝ)
+    (innerAcc : ℝ → ℝ)
+    (meanBias : ℝ → ℝ)
+    (phaseBias : Set (Space n) → ℝ → ℝ → ℝ)
+    (varSlack : Set (Space n) → ℝ → ℝ → ℝ)
+    (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    (radius : Set (Space n) → ℝ)
+    (tvErr : Set (Space n) → ℝ → ℝ → ℝ≥0∞)
+    (X : Set (Space n) → ℝ → ℝ → ℕ → ℕ → Ω → Space n)
+    (med : Set (Space n) → ℝ → ℝ → Ω → ℝ)
+    -- the schedule's budgets
+    (hreps_pos : ∀ ε p, 0 < p → p < 1 → 0 < reps ε p)
+    (hreps : ∀ ε p, 0 < p → p < 1 →
+      Real.log (1 / p) / (2 * (4 / 5 - 1 / 2) ^ 2) ≤ (reps ε p : ℝ))
+    (hbudget0 : ∀ ε, 0 < ε → 0 ≤ varBudget ε)
+    (hinner_pos : ∀ ε, 0 < ε → 0 < innerAcc ε)
+    (hbias_nonneg : ∀ K ε p, 0 < ε → 0 ≤ phaseBias K ε p)
+    (hmean_nonneg : ∀ ε, 0 < ε → 0 ≤ meanBias ε)
+    (hmean_lt_one : ∀ ε, 0 < ε → meanBias ε < 1)
+    (hphases_pos : ∀ K ε p, 0 < ε → 0 < phases K ε p)
+    (hphaseBudget : ∀ K ε p, 0 < ε →
+      2 * (phases K ε p : ℝ) * phaseBias K ε p ≤ meanBias ε)
+    (hcompose : ∀ ε, 0 < ε → innerAcc ε + meanBias ε + innerAcc ε * meanBias ε ≤ ε)
+    (hbudget : ∀ ε, 0 < ε → Real.exp (varBudget ε) - 1 ≤ (innerAcc ε) ^ 2 / 5)
+    (hsigma : ∀ K ε p j, 0 < σsq K ε p j)
+    -- ★ the fixed cooling rate and the dimension bound the variance bound needs
+    (hn : 3 ≤ n)
+    (hrate : ∀ K ε p j, σsq K ε p (j + 1) = σsq K ε p j * (1 + 1 / (n : ℝ)))
+    -- ★ the flatness condition at the terminal indices — see `Ttc.CV.flat_of_sigmaSq_ge`
+    (hflat : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → ∀ j, phases K ε p ≤ j + 1 →
+      radius K ^ 2 ≤ 2 * σsq K ε p j * Real.log (1 + 2 / (n : ℝ)))
+    -- the radius hypotheses
+    (hradius_pos : ∀ K, 0 < radius K)
+    (hradius : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ →
+      K ⊆ Metric.closedBall (0 : Space n) (radius K))
+    -- the sampler hypotheses
+    (hX_meas : ∀ K ε p j i, Measurable (X K ε p j i))
+    (htvErr_ne_top : ∀ K ε p, tvErr K ε p ≠ ⊤)
+    (hTV : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j i,
+      Arlib.TVLe (μ.map (X K ε p j i))
+        (coolLaw (phases K ε p) (σsq K ε p) (interior K) i) (tvErr K ε p))
+    (hslack_mean : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      Real.exp (radius K ^ 2 / (2 * σsq K ε p i)) * (tvErr K ε p).toReal
+        ≤ phaseBias K ε p * (chain (phases K ε p) (σsq K ε p) (interior K) (i + 1)
+            / chain (phases K ε p) (σsq K ε p) (interior K) i))
+    -- the room left above the exact-law second moment `1 + 2/n`
+    (hvarSlack_nonneg : ∀ K ε p, 0 < ε → 0 ≤ varSlack K ε p)
+    (hvarSum : ∀ K ε p, 0 < ε →
+      (1 + 2 / (n : ℝ)) + varSlack K ε p = 1 + varBudget ε / (phases K ε p : ℝ))
+    (hslack_var : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      (tvErr K ε p).toReal * (Real.exp (radius K ^ 2 / (2 * σsq K ε p i)) ^ 2
+          * (1 + 2 * (1 + varBudget ε / (phases K ε p : ℝ))))
+        ≤ varSlack K ε p * (chain (phases K ε p) (σsq K ε p) (interior K) (i + 1)
+            / chain (phases K ε p) (σsq K ε p) (interior K) i) ^ 2)
+    -- admissibility
+    (hmed_meas : ∀ K ε p, Measurable (med K ε p))
+    (hmed : ∀ K ε p ω, IsMedian (fun j : Fin (reps ε p) =>
+      chain (phases K ε p) (σsq K ε p) (interior K) 0 *
+        ∏ i : Fin (phases K ε p),
+          phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+            (X K ε p (j : ℕ) (i : ℕ) ω)) (med K ε p ω))
+    (hindep_runs : ∀ K ε p, iIndepFun (fun (j : Fin (reps ε p)) (ω : Ω) =>
+      chain (phases K ε p) (σsq K ε p) (interior K) 0 *
+        ∏ i : Fin (phases K ε p),
+          phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+            (X K ε p (j : ℕ) (i : ℕ) ω)) μ)
+    (hprodLp : ∀ K ε p j, MemLp (fun ω => ∏ i : Fin (phases K ε p),
+      phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+        (X K ε p j (i : ℕ) ω)) 2 μ)
+    (hphase_indep : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j,
+      iIndepFun (fun i : Fin (phases K ε p) => fun ω =>
+        phaseScore (phases K ε p) (σsq K ε p) (interior K) (i : ℕ)
+          (X K ε p j (i : ℕ) ω)) μ) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfSampler n Ω μ phases reps varBudget innerAcc meanBias
+    (fun _ => 1 + 2 / (n : ℝ)) phaseBias varSlack σsq radius tvErr X med
+    hreps_pos hreps hbudget0 hinner_pos hbias_nonneg hmean_nonneg hmean_lt_one hphases_pos
+    hphaseBudget hcompose hbudget hsigma hradius_pos hradius hX_meas htvErr_ne_top hTV
+    hslack_mean
+    -- `hvarConst_nonneg`
+    (fun _ _ => by positivity)
+    hvarSlack_nonneg hvarSum
+    -- ★ `hvar_exact`, DERIVED at every phase — interior *and* terminal
+    (fun K ε p hε hp hp1 hconv hball hfin i =>
+      CV.hvar_exact_of_fixedRate_all (hsigma K ε p) hconv hball hfin
+        (interior_subset.trans (hradius K ε p hε hp hp1 hconv hball hfin)) hn
+        (hrate K ε p) (hflat K ε p hε) i)
+    hslack_var hmed_meas hmed hindep_runs hprodLp hphase_indep
+
 /-! ## Non-vacuity of the construction's hypothesis bundle (`CLAUDE.md` §11)
 
 `Ttc.VolumeAlgorithm.cousinsVempala` takes fourteen hypotheses. A construction whose
@@ -1947,6 +2319,13 @@ theorem VolumeAlgorithm.cousinsVempalaApproxMeanWitness_est (n : ℕ) (K : Set (
 #print axioms CV.tv_slack_threshold_pos
 #print axioms CV.exists_pos_tvErr
 #print axioms CV.hvar_exact_of_fixedRate
+#print axioms CV.exp_le_inv_one_sub
+#print axioms CV.one_div_le_log_one_add_two_div
+#print axioms CV.flat_of_sigmaSq_ge
+#print axioms CV.flat_of_fixedRate_terminal
+#print axioms CV.hvar_exact_of_fixedRate_all
+#print axioms CV.flat_slacks_satisfiable
+#print axioms VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate
 #print axioms CV.iIndepFun_of_subsingleton
 #print axioms CV.toReal_volume_pos
 #print axioms VolumeAlgorithm.ofRuns
