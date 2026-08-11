@@ -42,11 +42,22 @@ Here is the state, and it is deliberately unflattering.
 `cVol = O(n⁴)` **cannot** be substituted into `Ttc/Model/Theorem.lean`. Two
 independent things block it, and closing either alone changes nothing:
 
-1. **`thm:iso`'s four inputs.** `Arlib/Convexity/SharpIsoperimetry.lean` proves
-   `gaussianRestricted_isoperimetry` at exactly `d/σ` — the sharp constant — from
-   four residual binders `hloc`, `hcombinatorial`, `h1d1`, `h1d2`. They are
-   hypotheses, never axioms, and the file is axiom-clean; but a theorem with four
-   open binders proves nothing about any algorithm.
+1. **`thm:iso`'s inputs — now one, not four.**
+   `Arlib/Convexity/SharpIsoperimetry.lean` proves `gaussianRestricted_isoperimetry`
+   at exactly `d/σ` — the sharp constant — from four residual binders `hloc`,
+   `hcombinatorial`, `h1d1`, `h1d2`. Three of those are now discharged outright, and
+   `Arlib.gaussianRestricted_isoperimetry_concave`
+   (`Arlib/Convexity/SharpIsoperimetryConcave.lean`) carries **`hloc` alone**.
+   They were always hypotheses, never axioms, and every file involved is axiom-clean;
+   but a theorem with an open binder still proves nothing about any algorithm, so the
+   headline does not move until `hloc` closes.
+
+   The cost of the third discharge belongs with the statement: `(1d-2)` is available
+   at `1/(2√3) ≈ 0.289`, not the paper's `ln 2 ≈ 0.693`, so the metric branch of the
+   separation hypothesis reads `2√3·d ≤ ‖u−v‖` rather than `d/ln 2 ≤ ‖u−v‖` — a
+   threshold larger by `2√3·ln 2 ≈ 2.401`. The conclusion `d/σ` is unchanged. When
+   `thm:iso` is eventually wired into `conductance_speedyGaussian_ge`'s `hiso`, that
+   factor propagates into the conductance constant and must be quoted there too.
 2. **`Ttc/Model/Pseudocode.lean` instantiates `Vol_ED` as `Ttc.mcVol`.** Even a
    finished CV would have to be swapped in there. Substituting `O(n⁴)` today
    would assert what the formalisation currently *refutes*.
@@ -65,17 +76,37 @@ independent things block it, and closing either alone changes nothing:
 | Localization (C) lower semicontinuity | open; the general-position form asks for *bounded continuous* integrands |
 | Localization (F) transport + nondegeneracy | open, both as explicit hypotheses |
 | `hcombinatorial` unmixed half | **closed** — `IntervalReduction.lean` |
-| `hcombinatorial` interleaved half | open — needs logistic-measure isoperimetry |
-| (1d-1) | proved for **affine** profiles (`OneDimIsoperimetry.lean`); open for concave |
-| (1d-2) | restated concave-compatibly; verbatim form needs 1-D Brascamp–Lieb |
-| `hoverlap` at separation `δ/√n` | open — the missing `√n` between polynomial and exponential conductance |
+| `hcombinatorial` interleaved half | **closed** — `Arlib.oneDim_partition` (`LogisticIso.lean`), for arbitrary measurable partitions, no side condition |
+| (1d-1) | **closed for concave profiles** — `Arlib.kls38_concave` (`KLS97Lemma38.lean`), at the paper's `4√n`; `kls38_affine` recovers the printed form |
+| (1d-2) | **closed**, at `1/(2√3)` rather than the paper's `ln 2` — `Arlib.oneDim_isoperimetry_gaussianFactor_unconditional`, on `Arlib.brascampLieb_oneDim` |
+| `hoverlap` at separation `δ/√n` | **the `√n` is closed unconditionally** — `ell_le_speedyWalk_add_speedyWalk_compl_sqrt` (`SpeedyOverlap.lean`); `cor:overlap` itself still needs KLS95 Lemma 3.5, see below |
 
-The concave-vs-affine gap is the structural one. The localization stack delivers
-`W` with `W^(1/m)` **concave** (`W = ℓ^m`, `ℓ` concave), while `hloc` as stated —
-following the paper — asks for an **affine** profile `(c₀ + c₁t)^(n−1)`. The
-upgrade is not available: `Arlib.exists_convex_slice_profile_not_affine`
-(`LocalizationLimit.lean`) refutes it. So `hloc` must be restated in concave form
-and (1d-1) reproved there; that is the one place affineness still bites.
+The concave-vs-affine gap was the structural one, and it is now **resolved by
+restatement rather than by upgrade**. The localization stack delivers `W` with
+`W^(1/m)` **concave** (`W = ℓ^m`, `ℓ` concave), while `hloc` as stated — following
+the paper — asks for an **affine** profile `(c₀ + c₁t)^(n−1)`. The upgrade is not
+available: `Arlib.exists_convex_slice_profile_not_affine` (`LocalizationLimit.lean`)
+refutes it. So `hloc` was restated in concave form and (1d-1) reproved there —
+`Arlib.kls38_concave` uses concavity only, and
+`Arlib.gaussianRestricted_isoperimetry_concave`'s `hloc` binder asks for
+`ConcaveOn ℝ (Set.Icc α β) l` in place of the affine witness. Affineness no longer
+bites anywhere on the critical path.
+
+**What now separates `hloc` from the localization output** is shape, not
+mathematics — three deltas, all inside the binder:
+
+* localization gives `ConcaveOn ℝ (Set.Ioo 0 1) (W ^ (1/m))`, `hloc` wants it on a
+  closed `Set.Icc α β` (an endpoint extension; the endpoints are null, so no integral
+  moves);
+* localization's axis `b + t•v` is normalised by `φ v = 1`, while `hloc` needs
+  arclength `‖e‖ = 1` — forced downstream, because it is what makes the needle's
+  Gaussian carry the *same* `σ` as the ambient one (`Arlib.gaussian_needleMap`);
+* localization states full-line integrals, `hloc` interval and set integrals.
+
+None of these is a mathematical obstruction. The genuine residuals remain
+localization's own **(C)** and **(F)**, and (C) bites here specifically because
+`g₁ = 1_{S₁}h − A·h` is built from an **indicator of a measurable set**, hence is
+not continuous — which is exactly the hypothesis (C) is about.
 
 ### Nine findings against the Cousins–Vempala paper
 
