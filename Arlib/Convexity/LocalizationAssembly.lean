@@ -107,32 +107,62 @@ and `ℓ` is delivered concave, not affine.
 `Arlib.lt_setIntegral_of_perturbed`.  Measurability, finiteness and positivity of the volumes:
 `Arlib.exists_flat_cut_chain` plus `Arlib.interior_nonempty_of_setIntegral_pos`.
 
-*(pending concurrent work — the residual items (G2a), (G2b) of `Arlib.Convexity.NeedleProfile`,
-being proved by another agent as this file is written)* — `hB`, the uniform bound on the
-normalised slice profiles, and `hlim`, their pointwise convergence to `W` (a Helly selection for
-uniformly bounded concave functions).  They are threaded here verbatim in the shape
-`Arlib.tendsto_average_setIntegral_of_profile` states them, so the real lemmas can be wired in
-without touching the statement.
+*(proved — (G2a), (G2b) of `Arlib.Convexity.NeedleProfile`, in
+`Arlib.Convexity.ConcaveSelection`)* — `hB`, the uniform bound on the normalised slice profiles
+(`Arlib.normalised_volume_slice_le`, at constant `2^(m+1)`), and `hlim`, their pointwise
+convergence to `W` along a subsequence (`Arlib.exists_subseq_tendsto_normalised_slice_profile'`,
+Arzelà–Ascoli on the *profiles*, not Blaschke on the *bodies*).  Both are packaged into
+`Arlib.needleIntegral_eq_zero_and_ge` by `Arlib.exists_needleIntegral_eq_zero_and_pos`
+(`Arlib.Convexity.LocalizationAffine`), which quantifies `W` existentially and asks instead only
+that the bodies be convex, slice-finite and spanning.
 
-*(genuinely open — nobody is working on these, and they are what stops the assembly from
-closing)*:
+*(proved — the two items formerly listed here as open, in `Arlib.Convexity.LocalizationAffine`
+and `Arlib.Convexity.LocalizationTransverse`)*:
 
-* **(A) The transverse-thinness bridge.**  `hδ₁`, `hδ₂` with `δ k → 0` ask that `g₁, g₂` vary by
-  `o(1)` between a point of `C k` and the point of the needle axis at the same height.  What is
-  proved here is that `⋂ m, C m` is *collinear*; what is missing is (i) that the nested bodies
-  converge to it in Hausdorff distance — true for nested compacts, but the chain's bodies are
-  not shown to be closed — and (ii) that Hausdorff convergence to a segment plus uniform
-  continuity of the integrand yields `δ k → 0`.  Both are routine but neither is formalised.
-  **This is the precise point at which the assembly stops.**
-* **(B) (G2c), the affine change of coordinates.**  `Arlib.needleIntegral_eq_zero_and_ge` is
-  stated with the needle along the first coordinate axis of `ℝ^(m+1)` and the bodies inside the
-  unit slab, because that is how `Arlib.Convexity.NeedleProfile` states its limit passage, while
-  the chain of this file lives in `EuclideanSpace ℝ (Fin n)` with an arbitrary limiting segment.
-  Transporting one to the other is a routine `Measure.addHaar` computation under an affine
-  equivalence, not carried out anywhere.
+* **(A) The transverse-thinness bridge**, formerly "the precise point at which the assembly
+  stops", is now `Arlib.exists_tendsto_transverse_modulus` /
+  `Arlib.exists_tendsto_transverse_modulus_pair`.  Hausdorff convergence is *not* what it uses:
+  `Arlib.eventually_subset_of_antitone_isCompact` shows a decreasing sequence of **compact** sets
+  is eventually inside any open neighbourhood of its intersection (finite-intersection property),
+  and the neighbourhood `{y | |g y − g (axis y)| < ε}` is open because `g` and the axis map are
+  continuous.  The explicit moduli `δ k = sSup {|g y − g (axis y)| : y ∈ C k}` then tend to `0`.
+  What this needs of the chain, and what is **still missing**, is only that its bodies be
+  *closed*: `Arlib.exists_flat_cut_chain` cuts with `Arlib.halfSpace`, one of whose two sides is
+  open, so `Arlib.exists_flat_cut_chain_collinear` delivers convex bodies of positive volume with
+  a collinear intersection but no closedness.  Nothing else about (A) is open.
+* **(B) (G2c), the affine change of coordinates**, is now
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_affine`: for an arbitrary needle `t ↦ a + t • v`
+  and an arbitrary height functional `φ` normalised by `φ v = 1`, the two conclusions of the
+  equality form hold for bodies of the slab `{y | φ (y − a) ∈ [0,1]}`.  The frame is
+  `Arlib.exists_linearEquiv_frame` (a linear automorphism carrying the first axis to `ℝ ∙ v` and
+  reading the height back off as `φ`, built from a basis of `ker φ`), and the transport is
+  `Arlib.map_affine_addHaar`, `Arlib.addHaar_preimage_affine`, `Arlib.setIntegral_comp_affine`.
+  The Jacobian is a single positive constant and cancels from both conclusions, so the
+  factorisation of the determinant into "first-coordinate scaling times transverse determinant"
+  that `Arlib.Convexity.NeedleProfile` anticipated is **not** needed: the profile hypotheses are
+  discharged in the frame, before the transport.
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact` combines (A) and (B), and
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_box` is its non-vacuity witness.
+  All three deliver `W` nonnegative with `W ^ (1/m)` concave on `(0,1)`
+  (`Arlib.concaveOn_limit_normalised_slice_profile`), i.e. `W = ℓ^m` for a concave `ℓ` — the
+  concave form of Corollary 2.4 that §"The profile is concave, and that is deliberate" above
+  argues is the right target.
+
+*(genuinely open)*:
+
 * **(C) Lower semicontinuity.**  The thin-tube comparison consumes a modulus-of-continuity
   hypothesis, not lower semicontinuity; the Lovász–Simonovits statement for merely lower
-  semicontinuous integrable data needs an approximation step that is not carried out.
+  semicontinuous integrable data needs an approximation step that is not carried out.  In the
+  general-position form the integrands are asked to be *bounded continuous*.
+* **(D) Closedness of the chain, and its positioning.**  To feed
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact` from
+  `Arlib.exists_flat_cut_chain_collinear` one needs the chain's bodies to be compact, and one
+  needs the collinear set `⋂ m, C m` presented as a subset of a *positioned* axis
+  `{y | y = a + φ (y − a) • v}` together with `hspan` (each body meets every height of the slab)
+  and `hslab` (each body lies inside it).  Rescaling the segment `[a,b]` to unit height and
+  choosing `φ` is elementary; making the cut sides closed is a change to
+  `Arlib.exists_flat_cut_chain` itself.  This is now the single remaining obstruction between
+  this file and the Localization Lemma in general position.
 
 ## Provenance caveat
 
