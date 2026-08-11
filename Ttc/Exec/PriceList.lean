@@ -52,30 +52,45 @@ hit-and-miss estimator's rejection factor: sampling uniformly from a ball of rad
 to hit a body of inradius `1` needs `Θ(Rⁿ)` draws, and no rearrangement avoids it.  The
 price is `Θ((diam/γ)ⁿ / (ε'²·δ'))`.
 
-## The sampler: **no** uniform closed form, and this is the finding
+## The sampler: uniform too, in `Exec/SamplePrice`
+
+This section used to read "**no** uniform closed form, and this is the finding".  **That is
+no longer true and the claim is withdrawn.**
 
 `Ttc.mixStepsBound n γ Dmᵢ dl Mwᵢ epsᵢ` is increasing in `Dmᵢ` and in `Mwᵢ` and
 decreasing in `epsᵢ`, so a uniform bound needs an upper bound on `Ttc.ttcSampDiam … i` and
-on `Ttc.ttcSampWarm … i` and a lower bound on `Ttc.ttcSampTol … i`.  The last two are
+on `Ttc.ttcSampWarm … i` and a lower bound — note the direction — on `Ttc.ttcSampTol … i`.
+The last two are
 
 ```
 Mwᵢ   = Vol(P'ᵢ) / Vol(B(10^ρ·cᵢ, γ))          epsᵢ = ε' / (4 · Vol(P'ᵢ))
 ```
 
 with `P'ᵢ = Arlib.KV97.inflated …` the Kannan–Vempala inflated dilated polytope of cube
-`i`.  **This paragraph is superseded — both are now proved.**  `Ttc/Exec/InflateBound.lean`
-supplies the uniform upper bound on `Vol(P'ᵢ)`, reducing to `volSol` itself, and
+`i`, and all three are now supplied: `Ttc/Exec/InflateBound.lean` §2–§3 bounds `Vol(P'ᵢ)`
+uniformly — reducing to the user's own `volSol` — and derives the three cube-free values,
 `Ttc/Exec/SampleDischarge.lean` discharges all sixteen side conditions of
-`Ttc.mixCost_le_mixSteps` and `Ttc.mixCost_le_ceil_mixStepsBound` at the run's own data.
+`Ttc.mixCost_le_mixSteps` and `Ttc.mixCost_le_ceil_mixStepsBound` at the run's own data,
+and `Ttc/Exec/SamplePrice.lean` assembles the natural-valued price
+`Ttc.ttcSampPrice = ⌈Ttc.ttcSampStepsPrice⌉₊` with its domination lemma
+`Ttc.ttcSampleSteps_le_ttcSampPrice` — the exact analogue of
+`Ttc.ttcVolCoins_le_ttcVolPrice` below, under the same five conditions on the input.
 
-Two corrections to what this paragraph used to say, both worth keeping because they were
+It is filed one directory-level later purely for import order: `Exec/InflateBound` imports
+*this* file, so `Ttc.ttcSampStepsPrice` does not exist yet here.  Logically the two prices
+are one list.
+
+Two corrections to what this section used to say, both worth keeping because they were
 wrong in instructive ways.  `hD` was **never** the obstruction: it is a *diameter* bound,
 not a volume one, and it is discharged outright by `Ttc.dist_le_ttcSampDiam`.  And the
 hypothesis with real content, `heps1`, needs a *lower* bound on `Vol(P'ᵢ)` — the opposite
-direction from the one this paragraph asked for.
+direction from the one this section used to ask for.
 
-`Ttc.ttcCoinAndStepCharge_le_volPrice` below is therefore stated in the honest mixed
-shape — the volume half uniform and closed, the sampler half still a sum over cubes.
+`Ttc.ttcCoinAndStepCharge_le_volPrice` below is therefore **not** the last word: it is the
+mixed shape — the volume half uniform and closed, the sampler half still a sum over cubes —
+and it is kept only because it is the weaker statement.
+`Ttc.ttcCoinAndStepCharge_le_prices` (`Exec/SamplePrice`) is the same bound with **both**
+halves uniform, `charge ≤ m · (ttcVolPrice + ttcSampPrice · ⌈Thresh⌉₊)`, and supersedes it.
 
 ## What a number here does and does not mean
 
@@ -87,6 +102,7 @@ concrete numeral where a parameter was:
   applies to it (`Ttc/CostModel.lean` §4);
 * the **`while` loops of `alg:ttc` lines 32–42 are uncharged** (`Runtime`, "Two honest
   gaps");
+* **per-step arithmetic is free**;
 * `Ttc.mixSteps` **does not occur in `Ttc.ttcRun`'s definitional closure** — it enters
   through `Ttc.ttcRates`, the *law*, while `GenerateSamples` is the read-off
   `Ttc.trajGen`.  So `cSample` prices the chain the sampler's law is defined by, not steps
