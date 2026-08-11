@@ -7,6 +7,7 @@ import Arlib.Convexity.GaussianCooling.Estimator
 import Arlib.Convexity.GaussianCooling.ZLogconcave
 import Arlib.Convexity.GaussianCooling.PhaseMean
 import Arlib.Convexity.GaussianCooling.PhaseVar
+import Arlib.Convexity.GaussianCooling.PhaseSchedule
 import Arlib.Convexity.GaussianCooling.TerminalPhase
 import Arlib.Convexity.GaussianCooling.Unblock
 import Mathlib.Analysis.Convex.Measure
@@ -132,7 +133,46 @@ What *is* proved here, unconditionally:
   (`hrate`), `3 ≤ n`, and the terminal flatness inequality (`hflat`); it costs **no new
   radius** — `cousinsVempalaOfSampler`'s own `radius` parameter, composed with
   `interior_subset`, is exactly the enclosure the terminal bound needs. After it, `hTV` —
-  the sampler — is the only mathematical debt left in the bundle.
+  the sampler — is the only mathematical debt left in the bundle. **But the schedule it
+  admits does no cooling at all** — see the finding below.
+* `Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerCooling` — **the same on the general-`α`
+  schedule of `Arlib/Convexity/GaussianCooling/PhaseSchedule.lean`**, which provably
+  anneals. The phase count and rate are determined by the required cooling `e^L` and the
+  budget slice `κ`: `m = coolPhases n L κ`, `α = coolRate n L κ`; `varConst = 1 + κ/m`,
+  `varSlack = (varBudget ε − κ)/m > 0` when `κ < varBudget ε`; flatness is at the matching
+  constant `log(1 + κ/m)`; and `3 ≤ n` is no longer needed. `hTV` is still the only
+  mathematical debt.
+
+## THE FINDING: the fixed-rate construction's cold start already is the answer
+
+`Ttc.CV.chain_zero_mem_relErr_of_flat` (and `Ttc.CV.cold_start_mem_relErr_of_flat`, stated
+on `interior K` so its target is `Vol(K)` itself):
+
+  under `hflat` and `2m ≤ n·varBudget ε`, `chain m σsq K 0 ∈ (1 ± 11/(5n))·Vol(K)`.
+
+Three elementary steps, all machine-checked: `hflat` at `j = m − 1` with
+`log(1 + 2/n) ≤ 2/n` forces `σ_{m−1}² ≥ nR²/4` (`Ttc.CV.sigmaSq_ge_of_flat`); `hvarSum`
+with `varSlack ≥ 0` plus `hbudget` force `2m ≤ n·varBudget ε`, hence
+`(1 + 1/n)^m < 11/10` (`Arlib.GaussianCooling.geomSchedule_total_cooling_lt`); so
+`σ₀² > 5nR²/22` (`Ttc.CV.sigmaSq_zero_gt_of_flat_of_meet`) and the phase-`0` Gaussian is
+within `e^{−11/(5n)}` of `1` on all of `K`.
+
+So `Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate` is consistent
+(`Ttc.CV.flat_slacks_satisfiable`) and non-vacuous, but the telescope it drives has nothing
+left to telescope: its first factor alone estimates `Vol(K)` to relative error `O(1/n)`. It
+is the observation "a Gaussian of variance `Ω(nR²)` is flat on `R·Bₙ`" wearing an
+algorithm's clothes.
+
+**The general-`α` schedule escapes this, at a price that is quantified rather than hidden.**
+`Ttc.CV.cool_schedule_anneals` proves `e^L·σ₀² ≤ σ_m²` — no `11/10` cap —, and
+`Ttc.CV.cool_flat_slacks_satisfiable` proves `hflat`, the annealing and both slack
+conditions hold *simultaneously* at a strictly positive TV error, so the crux question of
+joint satisfiability answers **yes**. But the flatness threshold now scales with the phase
+count, and `Ttc.CV.cold_start_exponent_ge_of_coolRate` shows the cold-start exponent is
+`log(1 + κ/m)·(1+α)^{m−1} ≈ κ²e^{2L}/(8(n+1)L²)`, which beats the fixed rate's `11/(5n)`
+ceiling only once `e^{2L} ≳ 17.6·L²/κ²` — a dimension-free crossover at `L ≈ 7.2` for
+`κ = log(21/20)/2`. Below it, the general schedule is exactly as empty as the fixed one.
+**Nothing here bounds any running time**, in either direction.
 
 ## The sampler-side lemmas added for that
 
@@ -168,6 +208,28 @@ What *is* proved here, unconditionally:
   pushes the variance up, which makes both slack thresholds larger — the conditions pull the
   same way. The dimension threshold `n ≥ 82` visible there comes from `hvarSum`+`hbudget`
   (`2m ≤ n·varBudget`), not from `hflat`.
+* `Ttc.CV.log_one_add_two_div_le`, `Ttc.CV.sigmaSq_ge_of_flat`, `Ttc.CV.sigmaSq_eq_pow`,
+  `Ttc.CV.sigmaSq_zero_gt_of_flat_of_meet`, `Ttc.CV.coolWeight_zero_ge_of_flat` — the
+  arithmetic behind the finding above.
+* `Ttc.CV.varBudget_param_le`, `Ttc.CV.meet_of_fixedRate_fields`,
+  `Ttc.CV.cold_start_mem_relErr_of_fixedRate_fields` — the finding stated over
+  `cousinsVempalaOfSamplerFixedRate`'s *own fields* (`hvarSum`, `hvarSlack_nonneg`,
+  `hbudget`, `hcompose`, `hrate`, `hflat`), with nothing assumed beyond them.
+* `Ttc.CV.sigmaSq_mono_of_rate`, `Ttc.CV.flat_of_rate_of_le` — the general-rate successors
+  of `Arlib.GaussianCooling.sigmaSq_mono_of_fixedRate` / `flat_of_fixedRate_of_le`: `hflat`
+  need only be checked at `j = m − 1` on any geometric schedule.
+* `Ttc.CV.hvar_exact_of_coolRate_all` — the exact-law second moment at **every** phase of
+  the annealing schedule, constant `1 + κ/m`. Interior phases are
+  `Arlib.GaussianCooling.coolLaw_sq_moment_le_budget`; terminal phases go through
+  `Arlib.GaussianCooling.coolLaw_sq_moment_le_terminal` (constant `e^{R²/(2σᵢ²)}`, needing
+  only a radius) plus flatness at the matching constant. No `3 ≤ n`.
+* `Ttc.CV.cool_flat_slacks_satisfiable`, `Ttc.CV.cool_budgets_at_numbers` — the
+  satisfiability check for the annealing construction: a schedule meeting `hflat` at every
+  index, cooling by `e^L`, with `varSlack = (V − κ)/m > 0` and both slack conditions at a
+  strictly positive TV error; and the arithmetic budgets at `ε = 1`, `innerAcc = 1/2`,
+  `meanBias = 1/3`, `varBudget = log(21/20)`, `κ = log(21/20)/2`, `phaseBias = 1/(6m)`.
+  **There is no lower bound on `n` here**: the `n ≥ 82` of the fixed-rate check came from
+  the constant `1 + 2/n`, which no longer appears.
 
 ## Two honesty notes
 
@@ -1175,6 +1237,541 @@ theorem flat_slacks_satisfiable (hn : 100 ≤ n) {K : Set (Space n)}
     rw [hCs] at hvar
     exact ⟨e, he0, hmean, hvar⟩
 
+/-! ### What the fixed-rate construction is actually worth
+
+`flat_slacks_satisfiable` shows the fixed-rate bundle is *consistent*. This subsection
+shows what that consistency costs, and it is the sharpest statement available about
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate`: **the schedule it admits does no
+cooling, and its cold start already is the answer.** Three elementary steps:
+
+1. `hflat` at `j = m − 1`, with `log(1 + 2/n) ≤ 2/n`, forces `σ_{m−1}² ≥ n R²/4`
+   (`sigmaSq_ge_of_flat`);
+2. `hvarSum` (through `varSlack ≥ 0`) and `hbudget` force `2m ≤ n·varBudget ε`, hence
+   `(1 + 1/n)^m < 11/10` — that is `Arlib.GaussianCooling.geomSchedule_total_cooling_lt`,
+   already proved;
+3. therefore `σ₀² = σ_{m−1}²/(1 + 1/n)^{m−1} > 5nR²/22`, so on `K ⊆ R·Bₙ` the phase-`0`
+   Gaussian weight is at least `e^{−11/(5n)}` pointwise and the cold endpoint of the chain
+   is within relative error `11/(5n)` of `Vol(K)` (`chain_zero_mem_relErr_of_flat`).
+
+The telescope has nothing left to telescope: its *starting* value is already an
+`O(1/n)`-accurate estimate of the quantity it is trying to compute. This is a statement
+about the fixed rate only; the general-`α` schedule of
+`Arlib/Convexity/GaussianCooling/PhaseSchedule.lean` escapes it, and
+`cold_start_exponent_ge_of_coolRate` below is its quantitative counterpart. -/
+
+/-- `log(1 + 2/n) ≤ 2/n`, from `log x ≤ x − 1`. The companion of
+`one_div_le_log_one_add_two_div` in the other direction, and the only quantitative input to
+`sigmaSq_ge_of_flat`. -/
+theorem log_one_add_two_div_le {n : ℕ} (hn : 0 < n) :
+    Real.log (1 + 2 / (n : ℝ)) ≤ 2 / (n : ℝ) := by
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hx : (0 : ℝ) < 1 + 2 / (n : ℝ) := by positivity
+  linarith [Real.log_le_sub_one_of_pos hx]
+
+/-- **The converse of `flat_of_sigmaSq_ge`: `hflat` *forces* a large variance.**
+`R² ≤ 2σ log(1 + 2/n)` and `σ > 0` give `σ ≥ n R²/4`. Together with `flat_of_sigmaSq_ge`
+(`σ ≥ nR²/2 ⟹ hflat`) this pins the flatness condition to `σ = Θ(nR²)`, so nothing about
+the constant `4` is an artefact. -/
+theorem sigmaSq_ge_of_flat {n : ℕ} (hn : 0 < n) {R σ : ℝ} (hσ : 0 < σ)
+    (hflat : R ^ 2 ≤ 2 * σ * Real.log (1 + 2 / (n : ℝ))) :
+    (n : ℝ) * R ^ 2 / 4 ≤ σ := by
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hlog := log_one_add_two_div_le hn
+  have h : R ^ 2 ≤ 2 * σ * (2 / (n : ℝ)) := hflat.trans (by nlinarith)
+  have h4 : 2 * σ * (2 / (n : ℝ)) = 4 * σ / (n : ℝ) := by ring
+  rw [h4, le_div_iff₀ hN] at h
+  rw [div_le_iff₀ (by norm_num : (0:ℝ) < 4)]
+  nlinarith
+
+/-- A geometric rate integrates to a power: `hrate` determines the whole schedule from
+`σ₀²`. -/
+theorem sigmaSq_eq_pow {σsq : ℕ → ℝ} {α : ℝ}
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + α)) (j : ℕ) :
+    σsq j = σsq 0 * (1 + α) ^ j := by
+  induction j with
+  | zero => simp
+  | succ k ih => rw [hrate k, ih]; ring
+
+/-- **Step 3: the fixed-rate flat schedule starts hot.** Under
+`hflat` at `j = m − 1` and the budget relation `2m ≤ n·varBudget ε` that `hvarSum` and
+`hbudget` impose, the *initial* variance already satisfies `σ₀² > 5nR²/22`. So the phase-`0`
+Gaussian barely varies over `K ⊆ R·Bₙ`. -/
+theorem sigmaSq_zero_gt_of_flat_of_meet {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    (hn : 0 < n) {R : ℝ}
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hflat : R ^ 2 ≤ 2 * σsq (m - 1) * Real.log (1 + 2 / (n : ℝ)))
+    {ε : ℝ} (hε0 : 0 ≤ ε) (hε1 : ε ≤ 1)
+    (hmeet : 2 * (m : ℝ) ≤ (n : ℝ) * varBudget ε) :
+    5 * (n : ℝ) * R ^ 2 / 22 < σsq 0 := by
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hq1 : (1 : ℝ) ≤ 1 + 1 / (n : ℝ) := by
+    have : (0 : ℝ) < 1 / (n : ℝ) := by positivity
+    linarith
+  have hcool : (1 + 1 / (n : ℝ)) ^ m < 11 / 10 :=
+    geomSchedule_total_cooling_lt hn hε1 hε0 hmeet
+  have hmono : (1 + 1 / (n : ℝ)) ^ (m - 1) ≤ (1 + 1 / (n : ℝ)) ^ m :=
+    pow_le_pow_right₀ hq1 (Nat.sub_le m 1)
+  have hbig := sigmaSq_ge_of_flat hn (hσ (m - 1)) hflat
+  rw [sigmaSq_eq_pow hrate (m - 1)] at hbig
+  nlinarith [hσ 0, pow_nonneg (by linarith : (0:ℝ) ≤ 1 + 1 / (n:ℝ)) (m - 1)]
+
+/-- **The finding, in its pointwise form.** Under the fixed rate, `hflat` and the variance
+budget, the phase-`0` cooling weight is within `e^{−11/(5n)}` of `1` everywhere on
+`K ⊆ R·Bₙ`. -/
+theorem coolWeight_zero_ge_of_flat {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    (hn : 0 < n) (hm : 0 < m) {K : Set (Space n)} {R : ℝ}
+    (hKR : K ⊆ Metric.closedBall (0 : Space n) R)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hflat : R ^ 2 ≤ 2 * σsq (m - 1) * Real.log (1 + 2 / (n : ℝ)))
+    {ε : ℝ} (hε0 : 0 ≤ ε) (hε1 : ε ≤ 1)
+    (hmeet : 2 * (m : ℝ) ≤ (n : ℝ) * varBudget ε)
+    {x : Space n} (hx : x ∈ K) :
+    Real.exp (-(11 / (5 * (n : ℝ)))) ≤ coolWeight m σsq 0 x := by
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have h0 := sigmaSq_zero_gt_of_flat_of_meet hσ hn hrate hflat hε0 hε1 hmeet
+  have hxR : ‖x‖ ≤ R := mem_closedBall_zero_iff.1 (hKR hx)
+  have hxR2 : ‖x‖ ^ 2 ≤ R ^ 2 := by nlinarith [norm_nonneg x]
+  rw [coolWeight_of_lt hm]
+  refine Real.exp_le_exp.2 ?_
+  have h2s : (0 : ℝ) < 2 * σsq 0 := by linarith [hσ 0]
+  have hquot : ‖x‖ ^ 2 / (2 * σsq 0) ≤ 11 / (5 * (n : ℝ)) := by
+    rw [div_le_div_iff₀ h2s (by positivity)]
+    nlinarith [mul_le_mul_of_nonneg_left hxR2 hN.le]
+  have hrw : -(‖x‖ ^ 2) / (2 * σsq 0) = -(‖x‖ ^ 2 / (2 * σsq 0)) := neg_div _ _
+  rw [hrw]
+  linarith
+
+/-- **THE FINDING (Part 1): the cold start of the fixed-rate construction already is the
+volume, to relative error `11/(5n)`.**
+
+For a positive schedule at the fixed rate `σⱼ₊₁² = σⱼ²(1 + 1/n)`, a measurable body
+`B₁ ⊆ K ⊆ R·Bₙ` of finite volume, the flatness condition `hflat` at `j = m − 1` (the
+construction's `hflat` field instantiated at that index — and by `flat_of_fixedRate_terminal`
+that single index is also all it needs), and the budget relation `2m ≤ n·varBudget ε` (which its
+`hvarSum` + `hbudget` + `hcompose` fields force, by
+`Arlib.GaussianCooling.fixedRate_meets_budget_iff`):
+
+  `chain m σsq K 0 ∈ (1 ± 11/(5n))·Vol(K)`.
+
+**What this means.** The Cousins–Vempala telescope computes `Vol(K)` as
+`chain 0 · ∏ᵢ (chain (i+1)/chain i)`, and the whole apparatus — sampler, phases, median
+boost — exists to estimate the product. This theorem says that under the hypotheses the
+fixed-rate construction actually carries, the *first factor alone* is already an
+`O(1/n)`-accurate estimate of the answer, so the product it multiplies by is `1 ± O(1/n)`.
+The construction is consistent (`flat_slacks_satisfiable`) and it is not vacuous, but it
+anneals nothing: it is the observation "a Gaussian of variance `Ω(nR²)` is flat on `R·Bₙ`"
+dressed as an algorithm.
+
+**This is a statement about the fixed rate, not about Gaussian cooling.** The general-`α`
+schedule of `Arlib/Convexity/GaussianCooling/PhaseSchedule.lean` cools by `e^L` and is not
+subject to step 2; `cold_start_exponent_ge_of_coolRate` gives its (non-degenerate)
+counterpart. No running-time claim of any kind is made here, in either direction. -/
+theorem chain_zero_mem_relErr_of_flat {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    (hn : 0 < n) (hm : 0 < m) {K : Set (Space n)} (hKm : MeasurableSet K)
+    (hfin : volume K ≠ ⊤) {R : ℝ} (hKR : K ⊆ Metric.closedBall (0 : Space n) R)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hflat : R ^ 2 ≤ 2 * σsq (m - 1) * Real.log (1 + 2 / (n : ℝ)))
+    {ε : ℝ} (hε0 : 0 ≤ ε) (hε1 : ε ≤ 1)
+    (hmeet : 2 * (m : ℝ) ≤ (n : ℝ) * varBudget ε) :
+    chain m σsq K 0 ∈ relErr (11 / (5 * (n : ℝ))) (volume K).toReal := by
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hvol : (0 : ℝ) ≤ (volume K).toReal := ENNReal.toReal_nonneg
+  have hlow : Real.exp (-(11 / (5 * (n : ℝ)))) * (volume K).toReal ≤ chain m σsq K 0 := by
+    have h1 : ∫ _x in K, Real.exp (-(11 / (5 * (n : ℝ)))) ≤ ∫ x in K, coolWeight m σsq 0 x :=
+      setIntegral_mono_on (integrableOn_const' hfin _)
+        (integrableOn_coolWeight (hσ 0) hfin) hKm
+        (fun x hx => coolWeight_zero_ge_of_flat hσ hn hm hKR hrate hflat hε0 hε1 hmeet hx)
+    have h3 : ∫ _x in K, Real.exp (-(11 / (5 * (n : ℝ))))
+        = Real.exp (-(11 / (5 * (n : ℝ)))) * (volume K).toReal := by
+      rw [setIntegral_const, smul_eq_mul, measureReal_def]; ring
+    rw [chain_def]
+    linarith [h3.le, h3.ge]
+  have hhigh : chain m σsq K 0 ≤ (volume K).toReal := chain_le_volume (hσ 0) hfin
+  have hexp : (1 : ℝ) - 11 / (5 * (n : ℝ)) ≤ Real.exp (-(11 / (5 * (n : ℝ)))) := by
+    linarith [Real.add_one_le_exp (-(11 / (5 * (n : ℝ))))]
+  have hslack : (0 : ℝ) ≤ 11 / (5 * (n : ℝ)) := by positivity
+  refine ⟨?_, ?_⟩
+  · nlinarith [mul_le_mul_of_nonneg_right hexp hvol]
+  · nlinarith
+
+/-- **The finding, on the object the construction actually runs on.**
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate` runs the whole telescope on
+`interior K` (a convex set need not be Borel, so `MeasurableSet K` is unavailable and
+would be a vacuity trap). `interior K` is open, hence measurable, and has the same volume
+as `K` (`volume_interior_eq`), so the cold-start estimate is an estimate of `Vol(K)`
+itself. -/
+theorem cold_start_mem_relErr_of_flat {m : ℕ} {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    (hn : 0 < n) (hm : 0 < m) {K : Set (Space n)} (hK : Convex ℝ K)
+    (hfin : volume K ≠ ⊤) {R : ℝ}
+    (hKR : interior K ⊆ Metric.closedBall (0 : Space n) R)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hflat : R ^ 2 ≤ 2 * σsq (m - 1) * Real.log (1 + 2 / (n : ℝ)))
+    {ε : ℝ} (hε0 : 0 ≤ ε) (hε1 : ε ≤ 1)
+    (hmeet : 2 * (m : ℝ) ≤ (n : ℝ) * varBudget ε) :
+    chain m σsq (interior K) 0 ∈ relErr (11 / (5 * (n : ℝ))) (volume K).toReal := by
+  have h := chain_zero_mem_relErr_of_flat hσ hn hm isOpen_interior.measurableSet
+    (volume_interior_ne_top hfin) hKR hrate hflat hε0 hε1 hmeet
+  rwa [volume_interior_eq hK] at h
+
+/-- **The construction's budget parameter is inside the canonical `varBudget`.**
+`cousinsVempalaOfSamplerFixedRate` carries `varBudget` as *data* constrained by
+`hbudget : e^{V} − 1 ≤ innerAcc²/5` and `hcompose : innerAcc + meanBias + innerAcc·meanBias
+≤ ε`. Since `meanBias ≥ 0` and `innerAcc > 0` force `innerAcc ≤ ε`, this gives
+`V ≤ log(1 + ε²/5) = varBudget ε`. -/
+theorem varBudget_param_le {V innerAcc meanBias ε : ℝ} (hinner : 0 < innerAcc)
+    (hmean : 0 ≤ meanBias)
+    (hcompose : innerAcc + meanBias + innerAcc * meanBias ≤ ε)
+    (hbudget : Real.exp V - 1 ≤ innerAcc ^ 2 / 5) :
+    V ≤ varBudget ε := by
+  have hprod : 0 ≤ innerAcc * meanBias := mul_nonneg hinner.le hmean
+  have hle : innerAcc ≤ ε := by linarith
+  refine Real.exp_le_exp.1 ?_
+  rw [exp_varBudget]
+  nlinarith
+
+/-- **Step 2, derived from `cousinsVempalaOfSamplerFixedRate`'s own fields.**
+`hvarSum` (with `hvarSlack_nonneg`), `hbudget` and `hcompose` together force
+`2m ≤ n·varBudget ε`, i.e. exactly the hypothesis
+`Arlib.GaussianCooling.geomSchedule_total_cooling_lt` consumes. Nothing extra is assumed:
+this is the construction's arithmetic, read off. -/
+theorem meet_of_fixedRate_fields {m : ℕ} {V varSlack innerAcc meanBias ε : ℝ}
+    (hn : 0 < n) (hm : 0 < m) (hinner : 0 < innerAcc) (hmean : 0 ≤ meanBias)
+    (hslack : 0 ≤ varSlack)
+    (hvarSum : (1 + 2 / (n : ℝ)) + varSlack = 1 + V / (m : ℝ))
+    (hcompose : innerAcc + meanBias + innerAcc * meanBias ≤ ε)
+    (hbudget : Real.exp V - 1 ≤ innerAcc ^ 2 / 5) :
+    2 * (m : ℝ) ≤ (n : ℝ) * varBudget ε := by
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have h2 := (fixedRate_meets_budget_iff hn hm V).1 (by linarith)
+  have h3 := varBudget_param_le hinner hmean hcompose hbudget
+  nlinarith
+
+/-- **THE FINDING, assembled from `cousinsVempalaOfSamplerFixedRate`'s own fields.**
+
+Given exactly what that construction is handed — a positive schedule at the fixed rate, the
+radius, the flatness condition at `j = m − 1`, `hvarSum` with a nonnegative `varSlack`,
+`hbudget` and `hcompose` — its cold endpoint already estimates `Vol(K)` to relative error
+`11/(5n)`:
+
+  `chain m σsq (interior K) 0 ∈ (1 ± 11/(5n))·Vol(K)`.
+
+No hypothesis here is stronger than a field of the construction; `varBudget` is its own
+data, not the canonical one (`varBudget_param_le` bridges them). This is the honest
+statement of what the fixed-rate construction is worth. -/
+theorem cold_start_mem_relErr_of_fixedRate_fields {m : ℕ} {σsq : ℕ → ℝ}
+    {V varSlack innerAcc meanBias ε R : ℝ} (hσ : ∀ j, 0 < σsq j) (hn : 0 < n) (hm : 0 < m)
+    {K : Set (Space n)} (hK : Convex ℝ K) (hfin : volume K ≠ ⊤)
+    (hKR : interior K ⊆ Metric.closedBall (0 : Space n) R)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + 1 / (n : ℝ)))
+    (hflat : R ^ 2 ≤ 2 * σsq (m - 1) * Real.log (1 + 2 / (n : ℝ)))
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hinner : 0 < innerAcc) (hmean : 0 ≤ meanBias)
+    (hslack : 0 ≤ varSlack)
+    (hvarSum : (1 + 2 / (n : ℝ)) + varSlack = 1 + V / (m : ℝ))
+    (hcompose : innerAcc + meanBias + innerAcc * meanBias ≤ ε)
+    (hbudget : Real.exp V - 1 ≤ innerAcc ^ 2 / 5) :
+    chain m σsq (interior K) 0 ∈ relErr (11 / (5 * (n : ℝ))) (volume K).toReal :=
+  cold_start_mem_relErr_of_flat hσ hn hm hK hfin hKR hrate hflat hε0.le hε1
+    (meet_of_fixedRate_fields hn hm hinner hmean hslack hvarSum hcompose hbudget)
+
+/-! ### Part 2: the general-`α` schedule, which does anneal
+
+`Arlib/Convexity/GaussianCooling/PhaseSchedule.lean` replaces the fixed rate `α = 1/n` by
+
+  `m = coolPhases n L κ = ⌈8(n+1)L²/κ⌉`,   `α = coolRate n L κ = √(κ/(2m(n+1)))`,
+
+and proves both halves at once: `coolRate_meets_budget` — the per-phase factor
+`(1-α²)^{-(n+1)}` is at most `1 + κ/m` — and `coolSchedule_total_cooling` — the total
+cooling factor is at least `e^L`. Step 2 of Part 1 therefore does not apply: the budget is
+met *by construction*, not by shrinking `m`.
+
+What has to be redone here is the **terminal** phase. `coolLaw_sq_moment_le_terminal_flat`
+is hard-wired to the constant `1 + 2/n`; at the cooling rate the interior constant is
+`1 + κ/m` instead, so the flatness condition must be re-stated at that constant:
+
+  `R² ≤ 2σⱼ² · log(1 + κ/m)`   instead of   `R² ≤ 2σⱼ² · log(1 + 2/n)`.
+
+The route is `coolLaw_sq_moment_le_terminal`, which is hypothesis-free apart from the
+radius and delivers the constant `e^{R²/(2σᵢ²)}`.
+
+**Is that jointly satisfiable with the slack conditions?**  Yes, and there is no tension:
+`hflat` is a *lower* bound on the variances, the two slack thresholds carry `e^{−R²/(2σᵢ²)}`
+and `e^{−R²/σᵢ²}` and therefore *increase* with the variance, and nothing in
+`cousinsVempalaOfSampler` bounds any `σᵢ²` from above. `cool_flat_slacks_satisfiable`
+checks this at explicit numbers.
+
+**What the general schedule does cost, honestly.** The flatness threshold is now
+`σ_{m−1}² ≥ R²/(2 log(1 + κ/m)) ≈ R²m/(2κ) ≈ 4(n+1)L²R²/κ²` — it grows with the phase
+count, exactly cancelling part of the cooling. On the tightest admissible schedule the
+cold-start exponent is
+
+  `R²/(2σ₀²) = log(1 + κ/m)·(1 + α)^{m−1} ≈ κ²·e^{2L}/(8(n+1)L²)`,
+
+since `m·α = 2L` at `m = 8(n+1)L²/κ`. `cold_start_exponent_ge_of_coolRate` proves the
+weaker but unconditional `≥ log(1 + κ/m)·e^L/(1 + α)`. Either way, it beats Part 1's
+ceiling of `11/(5n)` only once
+
+  `e^{2L} ≳ 88(n+1)L²/(5nκ²) ≈ 17.6·L²/κ²`,
+
+which is essentially **dimension-free**. At `κ = log(21/20)/2 ≈ 0.0244` the crossover is
+`L ≈ 7.2` for `n = 100` and `L ≈ 7.3` for `n = 1000`; in Cousins–Vempala's own regime
+`e^L ≈ nR²` that is `R ≳ 3.7` at `n = 100`. Below the crossover the general schedule
+inherits Part 1's degeneracy in full. **No running-time claim is made or implied**; the
+per-phase sampling cost is untouched and this repository's conductance constants are
+exponentially small in `n`. -/
+
+/-- Along any geometric schedule with a nonnegative rate the variance is nondecreasing. -/
+theorem sigmaSq_mono_of_rate {σsq : ℕ → ℝ} {α : ℝ} (hσ : ∀ j, 0 < σsq j) (hα : 0 ≤ α)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + α)) {j k : ℕ} (hjk : j ≤ k) :
+    σsq j ≤ σsq k := by
+  rw [sigmaSq_eq_pow hrate j, sigmaSq_eq_pow hrate k]
+  exact mul_le_mul_of_nonneg_left
+    (pow_le_pow_right₀ (by linarith) hjk) (hσ 0).le
+
+/-- **Flatness propagates forward along any geometric schedule**, at any constant `c ≥ 0`.
+The general-rate successor of `Arlib.GaussianCooling.flat_of_fixedRate_of_le`; it is what
+lets `hflat` be checked at the single index `j = m − 1`. -/
+theorem flat_of_rate_of_le {σsq : ℕ → ℝ} {α c R : ℝ} (hσ : ∀ j, 0 < σsq j) (hα : 0 ≤ α)
+    (hc : 0 ≤ c) (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + α)) {j k : ℕ} (hjk : j ≤ k)
+    (hflat : R ^ 2 ≤ 2 * σsq j * c) :
+    R ^ 2 ≤ 2 * σsq k * c := by
+  have := sigmaSq_mono_of_rate hσ hα hrate hjk
+  nlinarith
+
+/-- **`hvar_exact` at *every* phase of the annealing schedule**, on `interior K`.
+
+The general-`α` counterpart of `hvar_exact_of_fixedRate_all`, with three differences, all
+of them improvements or forced:
+
+* the constant is `1 + κ/m` — the algorithm's own per-phase allowance — rather than
+  `1 + 2/n`, so `hvarSum` no longer forces `2m ≤ nκ` and the schedule is free to anneal;
+* **no `3 ≤ n`**: `Arlib.GaussianCooling.coolLaw_sq_moment_le_rate` needs no dimension
+  bound, since it consumes `G_mul_G_le_indicator` directly rather than the fixed-rate
+  specialisation;
+* the flatness condition is at the *matching* constant, `R² ≤ 2σⱼ² log(1 + κ/m)`. Terminal
+  phases go through `Arlib.GaussianCooling.coolLaw_sq_moment_le_terminal`, which needs only
+  the radius.
+
+`Arlib.GaussianCooling.terminal_sq_moment_unbounded` still applies: no constant depending
+on `n` alone works at a terminal phase, so the radius/flatness pair cannot be dropped. -/
+theorem hvar_exact_of_coolRate_all {L κ : ℝ} (hL : 1 ≤ L) (hκ0 : 0 < κ) (hκ1 : κ ≤ 1)
+    {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    {K : Set (Space n)} (hK : Convex ℝ K)
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R : ℝ} (hKR : interior K ⊆ Metric.closedBall (0 : Space n) R)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + coolRate n L κ))
+    (hflat : ∀ j, coolPhases n L κ ≤ j + 1 →
+      R ^ 2 ≤ 2 * σsq j * Real.log (1 + κ / (coolPhases n L κ : ℝ)))
+    (i : ℕ) :
+    ∫ x, phaseScore (coolPhases n L κ) σsq (interior K) i x ^ 2
+        ∂(coolLaw (coolPhases n L κ) σsq (interior K) i)
+      ≤ (1 + κ / (coolPhases n L κ : ℝ))
+        * (∫ x, phaseScore (coolPhases n L κ) σsq (interior K) i x
+            ∂(coolLaw (coolPhases n L κ) σsq (interior K) i)) ^ 2 := by
+  have hm0 : (0 : ℝ) < (coolPhases n L κ : ℝ) := by
+    have := one_le_coolPhases (n := n) hL hκ0; linarith
+  have hC : (0 : ℝ) < 1 + κ / (coolPhases n L κ : ℝ) := by positivity
+  rcases lt_or_ge (i + 1) (coolPhases n L κ) with h | h
+  · exact coolLaw_sq_moment_le_budget hL hκ0 hκ1 hσ hK.interior
+      isOpen_interior.measurableSet (ball_subset_interior hball)
+      (volume_interior_ne_top hfin) h (hrate i)
+  · refine (coolLaw_sq_moment_le_terminal hσ isOpen_interior.measurableSet
+      (ball_subset_interior hball) (volume_interior_ne_top hfin) hKR h).trans ?_
+    refine mul_le_mul_of_nonneg_right ?_ (sq_nonneg _)
+    rw [← Real.exp_log hC]
+    refine Real.exp_le_exp.2 ?_
+    rw [div_le_iff₀ (by linarith [hσ i] : (0 : ℝ) < 2 * σsq i)]
+    linarith [hflat i h]
+
+/-- **The schedule of `cousinsVempalaOfSamplerCooling` really anneals.** Its total cooling
+factor is at least `e^L`:
+
+  `e^L · σ₀² ≤ σ_m²`,   `m = coolPhases n L κ`.
+
+This is the exact negation of the fixed-rate situation: `geomSchedule_total_cooling_lt`
+caps a budget-meeting fixed-rate schedule at `(1 + 1/n)^m < 11/10`, and `L` here is
+unbounded. -/
+theorem cool_schedule_anneals {L κ : ℝ} (hL : 1 ≤ L) (hκ0 : 0 < κ) (hκ1 : κ ≤ 1)
+    {σsq : ℕ → ℝ} (hσ0 : 0 < σsq 0)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + coolRate n L κ)) :
+    Real.exp L * σsq 0 ≤ σsq (coolPhases n L κ) := by
+  rw [sigmaSq_eq_pow hrate (coolPhases n L κ)]
+  nlinarith [coolSchedule_total_cooling (n := n) hL hκ0 hκ1]
+
+/-- **The cold-start exponent under real cooling — the quantitative counterpart of
+`chain_zero_mem_relErr_of_flat`.**
+
+Take the schedule that meets the flatness condition *exactly* at the last index (the
+cheapest admissible one; any larger schedule is flatter still). Then
+
+  `R²/(2σ₀²) = log(1 + κ/m)·(1+α)^{m−1} ≥ log(1 + κ/m)·e^L/(1+α)`.
+
+Contrast Part 1, where the same quantity is at most `11/(5n)` no matter what. Here it grows
+with the cooling factor, so the cold start is genuinely cold — **but only once that factor
+is large enough to beat the `log(1 + κ/m) ≈ κ/m ≈ κ²/(8(n+1)L²)` that the enlarged phase
+count costs.** Taking `m·α = 2L` (its value at `m = 8(n+1)L²/κ`) the true exponent is
+`≈ κ²e^{2L}/(8(n+1)L²)`, so the crossover against Part 1's `11/(5n)` is
+
+  `e^{2L} ≳ 88(n+1)L²/(5nκ²) ≈ 17.6·L²/κ²`   — essentially dimension-free,
+
+i.e. `L ≈ 7.2` at `κ = log(21/20)/2`, `n = 100`, and `L ≈ 7.3` at `n = 1000`. Below the
+crossover the general-`α` schedule is as degenerate as the fixed-rate one. No running-time
+claim follows either way. -/
+theorem cold_start_exponent_ge_of_coolRate {L κ R : ℝ} (hL : 1 ≤ L) (hκ0 : 0 < κ)
+    (hκ1 : κ ≤ 1) {σsq : ℕ → ℝ} (hσ : ∀ j, 0 < σsq j)
+    (hrate : ∀ j, σsq (j + 1) = σsq j * (1 + coolRate n L κ))
+    (htight : R ^ 2 = 2 * σsq (coolPhases n L κ - 1)
+      * Real.log (1 + κ / (coolPhases n L κ : ℝ))) :
+    Real.log (1 + κ / (coolPhases n L κ : ℝ)) * Real.exp L / (1 + coolRate n L κ)
+      ≤ R ^ 2 / (2 * σsq 0) := by
+  set m := coolPhases n L κ with hmdef
+  set α := coolRate n L κ with hαdef
+  have hm1 : 1 ≤ m := by have := eight_le_coolPhases (n := n) hL hκ0 hκ1; omega
+  have hm0 : (0 : ℝ) < (m : ℝ) := by
+    have : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm1
+    linarith
+  have hα0 : 0 ≤ α := coolRate_nonneg n L κ
+  have hp : (0 : ℝ) < 1 + α := by linarith
+  have hlog : 0 ≤ Real.log (1 + κ / (m : ℝ)) :=
+    Real.log_nonneg (by have : (0 : ℝ) ≤ κ / (m : ℝ) := by positivity
+                        linarith)
+  have hpow : (1 + α) ^ (m - 1) * (1 + α) = (1 + α) ^ m := by
+    rw [← pow_succ]; congr 1; omega
+  have hcool : Real.exp L ≤ (1 + α) ^ m := coolSchedule_total_cooling hL hκ0 hκ1
+  have hs0 := hσ 0
+  have hsig : σsq (m - 1) = σsq 0 * (1 + α) ^ (m - 1) := sigmaSq_eq_pow hrate (m - 1)
+  have hrw : R ^ 2 / (2 * σsq 0) = Real.log (1 + κ / (m : ℝ)) * (1 + α) ^ (m - 1) := by
+    rw [htight, hsig]; field_simp
+  rw [hrw, div_le_iff₀ hp]
+  calc Real.log (1 + κ / (m : ℝ)) * Real.exp L
+      ≤ Real.log (1 + κ / (m : ℝ)) * (1 + α) ^ m :=
+        mul_le_mul_of_nonneg_left hcool hlog
+    _ = Real.log (1 + κ / (m : ℝ)) * (1 + α) ^ (m - 1) * (1 + α) := by rw [← hpow]; ring
+
+/-- **THE ANSWER TO PART 2's CRUX: `hflat` and the two slack conditions ARE jointly
+satisfiable under real cooling, with a strictly positive TV error.**
+
+For any cooling requirement `L ≥ 1`, any schedule budget `0 < κ ≤ 1` strictly inside the
+algorithm's total budget `V` (`κ < V`), and any body containing the unit ball and of finite
+volume, there is a schedule `σsq` at the rate `coolRate n L κ` for which **all** of
+
+* `hsigma` — positivity;
+* `hrate` — the cooling rate `coolRate n L κ`;
+* `hflat` at *every* index, at the matching constant `log(1 + κ/m)`;
+* **the schedule still cools by `e^L`** (`cool_schedule_anneals`);
+* a strictly positive variance slack `(V − κ)/m`;
+* both slack conditions of `cousinsVempalaOfSamplerCooling`, at a strictly positive TV error
+
+hold simultaneously.
+
+**Why there is no tension, contrary to what the shape of the hypotheses suggests.** `hflat`
+is a lower bound on the variances, and the construction places **no upper bound on any
+`σᵢ²`** — the two slack thresholds carry `e^{−R²/(2σᵢ²)}` and `e^{−R²/σᵢ²}` and therefore
+*grow* as the variances grow. The whole schedule may be scaled up freely, so the flatness
+condition costs nothing in consistency. What it costs is *content*: see
+`cold_start_exponent_ge_of_coolRate`.
+
+**The one honest gap, inherited unchanged from `exists_pos_tvErr`:** the TV error is
+produced per phase index, while `cousinsVempalaOfSamplerCooling` wants a single
+`tvErr K ε p` valid for all `i`. That quantifier swap is a pre-existing gap of
+`exists_pos_tvErr` and is untouched here. -/
+theorem cool_flat_slacks_satisfiable {L κ V : ℝ} (hL : 1 ≤ L) (hκ0 : 0 < κ) (hκ1 : κ ≤ 1)
+    (hκV : κ < V) {K : Set (Space n)}
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤) :
+    ∃ σsq : ℕ → ℝ,
+      (∀ j, 0 < σsq j) ∧
+      (∀ j, σsq (j + 1) = σsq j * (1 + coolRate n L κ)) ∧
+      (∀ j, cvRadius K ^ 2
+        ≤ 2 * σsq j * Real.log (1 + κ / (coolPhases n L κ : ℝ))) ∧
+      Real.exp L * σsq 0 ≤ σsq (coolPhases n L κ) ∧
+      0 < (V - κ) / (coolPhases n L κ : ℝ) ∧
+      ∀ i : ℕ, ∃ e : ℝ, 0 < e ∧
+        Real.exp (cvRadius K ^ 2 / (2 * σsq i)) * e
+            ≤ 1 / (6 * (coolPhases n L κ : ℝ))
+              * (chain (coolPhases n L κ) σsq (interior K) (i + 1)
+                  / chain (coolPhases n L κ) σsq (interior K) i) ∧
+        e * (Real.exp (cvRadius K ^ 2 / (2 * σsq i)) ^ 2
+              * (1 + 2 * (1 + V / (coolPhases n L κ : ℝ))))
+            ≤ (V - κ) / (coolPhases n L κ : ℝ)
+              * (chain (coolPhases n L κ) σsq (interior K) (i + 1)
+                  / chain (coolPhases n L κ) σsq (interior K) i) ^ 2 := by
+  have hm1 : (1 : ℝ) ≤ (coolPhases n L κ : ℝ) := one_le_coolPhases hL hκ0
+  have hm0 : (0 : ℝ) < (coolPhases n L κ : ℝ) := by linarith
+  have hα0 : 0 ≤ coolRate n L κ := coolRate_nonneg n L κ
+  have hq1 : (1 : ℝ) ≤ 1 + coolRate n L κ := by linarith
+  have hlog : (0 : ℝ) < Real.log (1 + κ / (coolPhases n L κ : ℝ)) := by
+    refine Real.log_pos ?_
+    have : (0 : ℝ) < κ / (coolPhases n L κ : ℝ) := by positivity
+    linarith
+  set c : ℝ := cvRadius K ^ 2 / (2 * Real.log (1 + κ / (coolPhases n L κ : ℝ))) + 1 with hc
+  have hc0 : (0 : ℝ) < c := by
+    have : (0 : ℝ) ≤ cvRadius K ^ 2 / (2 * Real.log (1 + κ / (coolPhases n L κ : ℝ))) := by
+      positivity
+    rw [hc]; linarith
+  have hσpos : ∀ j, (0 : ℝ) < c * (1 + coolRate n L κ) ^ j := fun j =>
+    mul_pos hc0 (pow_pos (by linarith) j)
+  have hslack0 : (0 : ℝ) < (V - κ) / (coolPhases n L κ : ℝ) := by
+    apply div_pos (by linarith) hm0
+  have halg : ∀ l : ℝ, l ≠ 0 →
+      2 * (cvRadius K ^ 2 / (2 * l) + 1) * l = cvRadius K ^ 2 + 2 * l := by
+    intro l hl; field_simp
+  have hflat0 : cvRadius K ^ 2
+      ≤ 2 * c * Real.log (1 + κ / (coolPhases n L κ : ℝ)) := by
+    rw [hc, halg _ hlog.ne']; linarith
+  refine ⟨fun j => c * (1 + coolRate n L κ) ^ j, hσpos,
+    fun j => by simp only [pow_succ]; ring, fun j => ?_, ?_, hslack0, fun i => ?_⟩
+  · have hp : (1 : ℝ) ≤ (1 + coolRate n L κ) ^ j := one_le_pow₀ hq1
+    nlinarith
+  · have h := coolSchedule_total_cooling (n := n) hL hκ0 hκ1
+    show Real.exp L * (c * (1 + coolRate n L κ) ^ 0)
+      ≤ c * (1 + coolRate n L κ) ^ coolPhases n L κ
+    rw [pow_zero, mul_one]
+    nlinarith
+  · obtain ⟨e, he0, hmean, hvar⟩ :=
+      exists_pos_tvErr (m := coolPhases n L κ)
+        (σsq := fun j => c * (1 + coolRate n L κ) ^ j) hσpos
+        (ball_subset_interior hball) (volume_interior_ne_top hfin)
+        (R := cvRadius K) (η := 1 / (6 * (coolPhases n L κ : ℝ)))
+        (s := (V - κ) / (coolPhases n L κ : ℝ))
+        (C := 1 + κ / (coolPhases n L κ : ℝ))
+        (by positivity) hslack0 (by positivity) i
+    have hCs : (1 : ℝ) + κ / (coolPhases n L κ : ℝ) + (V - κ) / (coolPhases n L κ : ℝ)
+        = 1 + V / (coolPhases n L κ : ℝ) := by field_simp; ring
+    rw [hCs] at hvar
+    exact ⟨e, he0, hmean, hvar⟩
+
+/-- **The remaining budgets of `cousinsVempalaOfSamplerCooling`, at explicit numbers.**
+At `ε = 1`, `innerAcc = 1/2`, `meanBias = 1/3`, `varBudget = log(21/20)`,
+`schedBudget = log(21/20)/2` and `phaseBias = 1/(6m)`, the three arithmetic side conditions
+`hbudget`, `hcompose` and `hphaseBudget` hold — the first two with equality — and the
+schedule guards `0 < κ ≤ 1` and `κ < varBudget` hold, so `cool_flat_slacks_satisfiable`
+applies. Unlike the fixed-rate `flat_slacks_satisfiable`, **there is no lower bound on `n`**:
+the `n ≥ 82` there came from `varSlack = varBudget/2 − 2/n > 0`, i.e. from the fixed-rate
+constant `1 + 2/n`, which no longer appears. -/
+theorem cool_budgets_at_numbers (n : ℕ) {L : ℝ} (hL : 1 ≤ L) :
+    (0 : ℝ) < Real.log (21 / 20) / 2 ∧
+    Real.log (21 / 20) / 2 ≤ 1 ∧
+    Real.log (21 / 20) / 2 < Real.log (21 / 20) ∧
+    Real.exp (Real.log (21 / 20)) - 1 = (1 / 2 : ℝ) ^ 2 / 5 ∧
+    (1 / 2 : ℝ) + 1 / 3 + 1 / 2 * (1 / 3) ≤ 1 ∧
+    2 * (coolPhases n L (Real.log (21 / 20) / 2) : ℝ)
+        * (1 / (6 * (coolPhases n L (Real.log (21 / 20) / 2) : ℝ))) ≤ 1 / 3 := by
+  have hlow : (1 : ℝ) / 25 < Real.log (21 / 20) := by
+    have h1 : Real.exp ((1 : ℝ) / 25) < 21 / 20 :=
+      lt_of_le_of_lt (exp_le_inv_one_sub (by norm_num)) (by norm_num)
+    rw [← Real.exp_log (show (0 : ℝ) < 21 / 20 by norm_num)] at h1
+    exact Real.exp_lt_exp.mp h1
+  have hhigh : Real.log (21 / 20) ≤ 1 / 20 := by
+    have := Real.log_le_sub_one_of_pos (show (0 : ℝ) < 21 / 20 by norm_num)
+    linarith
+  have hκ0 : (0 : ℝ) < Real.log (21 / 20) / 2 := by linarith
+  have hm1 : (1 : ℝ) ≤ (coolPhases n L (Real.log (21 / 20) / 2) : ℝ) :=
+    one_le_coolPhases hL hκ0
+  refine ⟨hκ0, by linarith, by linarith, ?_, by norm_num, ?_⟩
+  · rw [Real.exp_log (show (0 : ℝ) < 21 / 20 by norm_num)]; norm_num
+  · have hm0 : (0 : ℝ) < (coolPhases n L (Real.log (21 / 20) / 2) : ℝ) := by linarith
+    field_simp
+    norm_num
+
 end Sampler
 
 end CV
@@ -1756,7 +2353,15 @@ schedule `σⱼ² = (n·R²/2 + 1)(1 + 1/n)ʲ` satisfies `hflat` at every index 
 `hcompose`, `hphaseBudget`, `hbudget` and `hvarSum` hold with `varSlack > 0` and both slack
 conditions are met at a strictly positive TV error. `hflat` pushes the variance *up*, which
 makes `e^{R²/(2σᵢ²)}` smaller and both slack thresholds *larger*: the new condition and the
-old ones pull in the same direction. -/
+old ones pull in the same direction.
+
+**⚠ And the schedule those hypotheses admit does no cooling, so this construction estimates
+nothing.** `Ttc.CV.chain_zero_mem_relErr_of_flat` proves that under exactly the hypotheses
+listed above — `hflat`, `hrate`, and the `2m ≤ n·varBudget ε` that `hvarSum` + `hbudget`
+force — the *cold endpoint alone* already satisfies
+`chain m σsq K 0 ∈ (1 ± 11/(5n))·Vol(K)`. The telescope this construction drives has nothing
+left to telescope. `Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerCooling` is the version on a
+schedule that provably anneals. -/
 noncomputable def VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate (n : ℕ) (Ω : Type)
     [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     -- the schedule data
@@ -1853,6 +2458,173 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate (n : ℕ) (Ω
     (fun K ε p hε hp hp1 hconv hball hfin i =>
       CV.hvar_exact_of_fixedRate_all (hsigma K ε p) hconv hball hfin
         (interior_subset.trans (hradius K ε p hε hp hp1 hconv hball hfin)) hn
+        (hrate K ε p) (hflat K ε p hε) i)
+    hslack_var hmed_meas hmed hindep_runs hprodLp hphase_indep
+
+/-- **§5.2 driven by a sampler, on a schedule that actually anneals.**
+
+The general-`α` counterpart of `Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate`. The
+phase count and the cooling rate are no longer free data: they are
+
+  `m = coolPhases n L κ = ⌈8(n+1)L²/κ⌉`,   `α = coolRate n L κ = √(κ/(2m(n+1)))`
+
+(`Arlib/Convexity/GaussianCooling/PhaseSchedule.lean`), where `L` is the *logarithm of the
+required total cooling factor* (for Cousins–Vempala `e^L ≈ nR²`) and `κ = schedBudget ε` is
+the slice of the algorithm's relative-variance budget spent on the schedule.
+
+**What changes relative to the fixed rate.**
+
+* `varConst ε = 1 + κ/m` instead of `1 + 2/n`, supplied by
+  `Arlib.GaussianCooling.coolRate_meets_budget`. So `hvarSum` no longer forces
+  `2m ≤ n·varBudget ε`, and `Arlib.GaussianCooling.geomSchedule_total_cooling_lt` — which
+  capped the fixed-rate schedule's total cooling below `11/10` — does not apply.
+  `Ttc.CV.cool_schedule_anneals` proves the positive statement instead: the schedule cools
+  by a factor at least `e^L`.
+* `varSlack = (varBudget ε − κ)/m`, so a **strictly positive** slack (hence a strictly
+  positive admissible TV error) is available exactly when `κ < varBudget ε`. Spending only
+  half the budget on the schedule, `κ = varBudget ε / 2`, leaves
+  `varSlack = varBudget ε/(2m) > 0`.
+* `hflat` is at the *matching* constant, `R² ≤ 2σⱼ² log(1 + κ/m)`, and terminal phases go
+  through `Arlib.GaussianCooling.coolLaw_sq_moment_le_terminal`, which assumes only the
+  radius. See `Ttc.CV.hvar_exact_of_coolRate_all`.
+* **`3 ≤ n` is gone.** The general-rate second-moment bound needs no dimension bound.
+
+**`hflat` and the two slack conditions are jointly satisfiable** —
+`Ttc.CV.cool_flat_slacks_satisfiable` checks it at explicit numbers, with a strictly
+positive TV error. There is no tension: `hflat` is a *lower* bound on the variances, both
+slack thresholds carry `e^{−R²/(2σᵢ²)}` and `e^{−R²/σᵢ²}` and so grow with the variance,
+and nothing in `cousinsVempalaOfSampler` bounds any `σᵢ²` from above.
+
+**What it costs, stated honestly.** The flatness threshold scales with the phase count:
+`σ_{m−1}² ≥ R²/(2 log(1 + κ/m)) ≈ 4(n+1)L²R²/κ²`, which cancels part of the `e^{2L}` the
+schedule gains. So `Ttc.CV.chain_zero_mem_relErr_of_flat`'s degeneracy — the cold start
+already being the answer — is escaped only once `e^{2L} ≳ 17.6·L²/κ²` (a dimension-free
+condition; `L ≈ 7.2` at `κ = log(21/20)/2`, `n = 100`). Below that the general schedule is
+as empty of content as the fixed one. `Ttc.CV.cold_start_exponent_ge_of_coolRate` is the
+quantitative form.
+
+**Unchanged: `hTV` is still the whole mathematical debt.** Nothing here produces a sampler,
+and **no running-time claim of any kind follows**. The per-phase cost is untouched and this
+repository's conductance constants are exponentially small in `n`
+(`Arlib/Convexity/GaussianCooling/Unblock.lean`). A polynomial phase count is not a
+polynomial algorithm. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfSamplerCooling (n : ℕ) (Ω : Type)
+    [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    -- ★ the cooling requirement `e^L` and the budget slice the schedule may spend
+    (L : ℝ) (schedBudget : ℝ → ℝ)
+    -- the remaining schedule data — the phase count and the rate are now determined
+    (reps : ℝ → ℝ → ℕ)
+    (varBudget : ℝ → ℝ)
+    (innerAcc : ℝ → ℝ)
+    (meanBias : ℝ → ℝ)
+    (phaseBias : Set (Space n) → ℝ → ℝ → ℝ)
+    (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    (radius : Set (Space n) → ℝ)
+    (tvErr : Set (Space n) → ℝ → ℝ → ℝ≥0∞)
+    (X : Set (Space n) → ℝ → ℝ → ℕ → ℕ → Ω → Space n)
+    (med : Set (Space n) → ℝ → ℝ → Ω → ℝ)
+    -- ★ the schedule's guards: `1 ≤ L`, `0 < κ ≤ 1`, and `κ` inside the algorithm's budget
+    (hL : 1 ≤ L)
+    (hsched_pos : ∀ ε, 0 < ε → 0 < schedBudget ε)
+    (hsched_le_one : ∀ ε, 0 < ε → schedBudget ε ≤ 1)
+    (hsched_le : ∀ ε, 0 < ε → schedBudget ε ≤ varBudget ε)
+    -- the schedule's budgets
+    (hreps_pos : ∀ ε p, 0 < p → p < 1 → 0 < reps ε p)
+    (hreps : ∀ ε p, 0 < p → p < 1 →
+      Real.log (1 / p) / (2 * (4 / 5 - 1 / 2) ^ 2) ≤ (reps ε p : ℝ))
+    (hbudget0 : ∀ ε, 0 < ε → 0 ≤ varBudget ε)
+    (hinner_pos : ∀ ε, 0 < ε → 0 < innerAcc ε)
+    (hbias_nonneg : ∀ K ε p, 0 < ε → 0 ≤ phaseBias K ε p)
+    (hmean_nonneg : ∀ ε, 0 < ε → 0 ≤ meanBias ε)
+    (hmean_lt_one : ∀ ε, 0 < ε → meanBias ε < 1)
+    (hphaseBudget : ∀ K ε p, 0 < ε →
+      2 * (coolPhases n L (schedBudget ε) : ℝ) * phaseBias K ε p ≤ meanBias ε)
+    (hcompose : ∀ ε, 0 < ε → innerAcc ε + meanBias ε + innerAcc ε * meanBias ε ≤ ε)
+    (hbudget : ∀ ε, 0 < ε → Real.exp (varBudget ε) - 1 ≤ (innerAcc ε) ^ 2 / 5)
+    (hsigma : ∀ K ε p j, 0 < σsq K ε p j)
+    -- ★ the cooling rate the schedule must follow
+    (hrate : ∀ K ε p j,
+      σsq K ε p (j + 1) = σsq K ε p j * (1 + coolRate n L (schedBudget ε)))
+    -- ★ flatness at the terminal indices, at the *matching* constant `1 + κ/m`
+    (hflat : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε →
+      ∀ j, coolPhases n L (schedBudget ε) ≤ j + 1 →
+      radius K ^ 2 ≤ 2 * σsq K ε p j
+        * Real.log (1 + schedBudget ε / (coolPhases n L (schedBudget ε) : ℝ)))
+    -- the radius hypotheses
+    (hradius_pos : ∀ K, 0 < radius K)
+    (hradius : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ →
+      K ⊆ Metric.closedBall (0 : Space n) (radius K))
+    -- the sampler hypotheses
+    (hX_meas : ∀ K ε p j i, Measurable (X K ε p j i))
+    (htvErr_ne_top : ∀ K ε p, tvErr K ε p ≠ ⊤)
+    (hTV : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j i,
+      Arlib.TVLe (μ.map (X K ε p j i))
+        (coolLaw (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) i) (tvErr K ε p))
+    (hslack_mean : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      Real.exp (radius K ^ 2 / (2 * σsq K ε p i)) * (tvErr K ε p).toReal
+        ≤ phaseBias K ε p
+          * (chain (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) (i + 1)
+              / chain (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) i))
+    (hslack_var : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ i,
+      (tvErr K ε p).toReal * (Real.exp (radius K ^ 2 / (2 * σsq K ε p i)) ^ 2
+          * (1 + 2 * (1 + varBudget ε / (coolPhases n L (schedBudget ε) : ℝ))))
+        ≤ (varBudget ε - schedBudget ε) / (coolPhases n L (schedBudget ε) : ℝ)
+          * (chain (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) (i + 1)
+              / chain (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) i) ^ 2)
+    -- admissibility
+    (hmed_meas : ∀ K ε p, Measurable (med K ε p))
+    (hmed : ∀ K ε p ω, IsMedian (fun j : Fin (reps ε p) =>
+      chain (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) 0 *
+        ∏ i : Fin (coolPhases n L (schedBudget ε)),
+          phaseScore (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) (i : ℕ)
+            (X K ε p (j : ℕ) (i : ℕ) ω)) (med K ε p ω))
+    (hindep_runs : ∀ K ε p, iIndepFun (fun (j : Fin (reps ε p)) (ω : Ω) =>
+      chain (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) 0 *
+        ∏ i : Fin (coolPhases n L (schedBudget ε)),
+          phaseScore (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) (i : ℕ)
+            (X K ε p (j : ℕ) (i : ℕ) ω)) μ)
+    (hprodLp : ∀ K ε p j, MemLp (fun ω => ∏ i : Fin (coolPhases n L (schedBudget ε)),
+      phaseScore (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) (i : ℕ)
+        (X K ε p j (i : ℕ) ω)) 2 μ)
+    (hphase_indep : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j,
+      iIndepFun (fun i : Fin (coolPhases n L (schedBudget ε)) => fun ω =>
+        phaseScore (coolPhases n L (schedBudget ε)) (σsq K ε p) (interior K) (i : ℕ)
+          (X K ε p j (i : ℕ) ω)) μ) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfSampler n Ω μ
+    (fun _ ε _ => coolPhases n L (schedBudget ε)) reps varBudget innerAcc meanBias
+    (fun ε => 1 + schedBudget ε / (coolPhases n L (schedBudget ε) : ℝ)) phaseBias
+    (fun _ ε _ => (varBudget ε - schedBudget ε) / (coolPhases n L (schedBudget ε) : ℝ))
+    σsq radius tvErr X med
+    hreps_pos hreps hbudget0 hinner_pos hbias_nonneg hmean_nonneg hmean_lt_one
+    -- `hphases_pos`: the schedule always has at least `8` phases
+    (fun _ ε _ hε => coolPhases_pos hL (hsched_pos ε hε))
+    hphaseBudget hcompose hbudget hsigma hradius_pos hradius hX_meas htvErr_ne_top hTV
+    hslack_mean
+    -- `hvarConst_nonneg`
+    (fun ε hε => by
+      have h1 : (0 : ℝ) ≤ schedBudget ε / (coolPhases n L (schedBudget ε) : ℝ) :=
+        div_nonneg (hsched_pos ε hε).le (Nat.cast_nonneg _)
+      linarith)
+    -- `hvarSlack_nonneg`
+    (fun _ ε _ hε =>
+      div_nonneg (by linarith [hsched_le ε hε]) (Nat.cast_nonneg _))
+    -- `hvarSum`: `(1 + κ/m) + (V − κ)/m = 1 + V/m`, exactly
+    (fun _ ε _ hε => by
+      have hm0 : (0 : ℝ) < (coolPhases n L (schedBudget ε) : ℝ) := by
+        have := one_le_coolPhases (n := n) hL (hsched_pos ε hε); linarith
+      field_simp
+      ring)
+    -- ★ `hvar_exact`, DERIVED at every phase — interior *and* terminal
+    (fun K ε p hε hp hp1 hconv hball hfin i =>
+      CV.hvar_exact_of_coolRate_all hL (hsched_pos ε hε) (hsched_le_one ε hε)
+        (hsigma K ε p) hconv hball hfin
+        (interior_subset.trans (hradius K ε p hε hp hp1 hconv hball hfin))
         (hrate K ε p) (hflat K ε p hε) i)
     hslack_var hmed_meas hmed hindep_runs hprodLp hphase_indep
 
@@ -2325,6 +3097,24 @@ theorem VolumeAlgorithm.cousinsVempalaApproxMeanWitness_est (n : ℕ) (K : Set (
 #print axioms CV.flat_of_fixedRate_terminal
 #print axioms CV.hvar_exact_of_fixedRate_all
 #print axioms CV.flat_slacks_satisfiable
+#print axioms CV.log_one_add_two_div_le
+#print axioms CV.sigmaSq_ge_of_flat
+#print axioms CV.sigmaSq_eq_pow
+#print axioms CV.sigmaSq_zero_gt_of_flat_of_meet
+#print axioms CV.coolWeight_zero_ge_of_flat
+#print axioms CV.chain_zero_mem_relErr_of_flat
+#print axioms CV.cold_start_mem_relErr_of_flat
+#print axioms CV.varBudget_param_le
+#print axioms CV.meet_of_fixedRate_fields
+#print axioms CV.cold_start_mem_relErr_of_fixedRate_fields
+#print axioms CV.sigmaSq_mono_of_rate
+#print axioms CV.flat_of_rate_of_le
+#print axioms CV.hvar_exact_of_coolRate_all
+#print axioms CV.cool_schedule_anneals
+#print axioms CV.cold_start_exponent_ge_of_coolRate
+#print axioms CV.cool_flat_slacks_satisfiable
+#print axioms CV.cool_budgets_at_numbers
+#print axioms VolumeAlgorithm.cousinsVempalaOfSamplerCooling
 #print axioms VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate
 #print axioms CV.iIndepFun_of_subsingleton
 #print axioms CV.toReal_volume_pos

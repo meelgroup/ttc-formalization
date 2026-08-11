@@ -158,25 +158,41 @@ and `Arlib.Convexity.LocalizationTransverse`)*:
   states the needle conclusions with `haxis` replaced by `Collinear ℝ (⋂ k, D k)` — exactly what
   the chain produces.  `Arlib.halfSpace` is unchanged.
 
+* **(E) The slab rigidity of `hslab`/`hspan` — closed.**
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact` asks every body to lie in *and* span
+  one fixed slab, which forces `φ '' (D k − a) = [0,1]` at every stage and
+  (`Arlib.exists_mem_iInter_height`) in the limit; a localisation chain shrinks in *every*
+  direction, so no nonzero `φ` has constant range along it.  `Arlib.Convexity.NeedleSlab`
+  removes the rigidity: the `k`-th body lies in and spans its **own** slab `[l k, u k]`, with
+  `l k ≤ 0 ≤ 1 ≤ u k`, `l k → 0`, `u k → 1`.  The mechanism is a rescaling of the *profile*
+  rather than the body — `Arlib.rescaledProfile` puts every stage's profile on `[0,1]`, so the
+  Arzelà–Ascoli selection of `Arlib.Convexity.ConcaveSelection` applies verbatim, with the
+  slab-independent uniform bound supplied by `Arlib.le_two_pow_of_concaveOn_rpow` (a
+  one-dimensional restatement of `Arlib.normalised_volume_slice_le` with the geometry stripped
+  out).  The needle point then moves with `k`, and continuity of the integrands absorbs it in
+  the same dominated-convergence step (`Arlib.tendsto_average_setIntegral_of_rescaledProfile`).
+  `Arlib.Convexity.NeedleSlabAffine` carries this to general position, and
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_shrinking_box` is the acid test: the boxes
+  `[−1/(k+1), 1+1/(k+1)] × [−1/(k+1), 1/(k+1)]^m` shrink in *every* direction including along
+  the needle, which the fixed-slab form provably cannot accept.  In
+  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain` the slab hypotheses are gone
+  altogether: `Arlib.exists_unitHeight_functional` and `Arlib.exists_slab_of_compact_chain`
+  derive them from compactness plus two distinct points in the limit.
+
 *(genuinely open)*:
 
 * **(C) Lower semicontinuity.**  The thin-tube comparison consumes a modulus-of-continuity
   hypothesis, not lower semicontinuity; the Lovász–Simonovits statement for merely lower
   semicontinuous integrable data needs an approximation step that is not carried out.  In the
   general-position form the integrands are asked to be *bounded continuous*.
-* **(E) The slab rigidity of `hslab`/`hspan` — genuinely open.**
-  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact` asks every body to lie in *and* span
-  the slab `{y | φ (y − a) ∈ [0,1]}`, which forces `φ '' (D k − a) = [0,1]` at every stage and
-  (`Arlib.exists_mem_iInter_height`) in the limit: the needle must realise the full height of
-  `D 0`.  A localisation chain shrinks in *every* direction, so no nonzero `φ` has constant
-  range along it — normalising the limit segment to unit height gives `hspan` free and breaks
-  `hslab`, normalising `D 0` gives `hslab` free and breaks `hspan`, which is why the box witness
-  uses extent-constant boxes.  Relaxing this — letting the `k`-th slab shrink to the needle's
-  slab — is a change to the limit passage of `Arlib.Convexity.NeedleLimit`, **not** to the
-  chain, and is now the single remaining obstruction between this file and the Localization
-  Lemma in general position.  Secondary and purely technical: the chain lives in
-  `EuclideanSpace ℝ (Fin n)` and the needle theorems in `Fin (m+1) → ℝ`, so a measure-preserving
-  transport between them is still missing.
+* **(F) Two residues of (E)'s composition**, both explicit hypotheses rather than hidden
+  assumptions.  The limit body must contain two distinct points — a chain collapsing to a point
+  gives a degenerate needle, for which a profile on `(0,1)` is the wrong shape;
+  `Arlib.le_diam_of_sign_separated` supplies it when the positive parts of `g₁`, `g₂` are
+  slab-separated, but that is a condition on the data.  And the chain lives in
+  `EuclideanSpace ℝ (Fin n)` while the needle theorems live in `Fin (m+1) → ℝ`, so a
+  measure-preserving transport between them is still missing
+  (`EuclideanSpace.volume_preserving_measurableEquiv` should make it routine).
 
 ## Provenance caveat
 

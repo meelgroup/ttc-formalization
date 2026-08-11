@@ -122,6 +122,22 @@ Only after that would the weak-convergence statement of `Arlib.Convexity.Localiz
 (item (i) there) and the renormalised profile from `Arlib.concaveOn_limit_slice_profile` come
 into play.
 
+## Where the limit passage now lives
+
+The "renormalised limit" this file argues is the only admissible one is carried out in
+`Arlib.Convexity.NeedleProfile` (fixed unit slab) and, for a chain whose slab **shrinks** to the
+needle's, in `Arlib.Convexity.NeedleSlab`:
+`Arlib.tendsto_average_setIntegral_of_rescaledProfile` is the same limit passage with the `k`-th
+body allowed to occupy its own slab `[l k, u k]`, subject only to `l k → 0` and `u k → 1`.  That
+is what removes the rigidity recorded as item (E) of `Arlib.Convexity.LocalizationAssembly` — a
+localisation chain shrinks in *every* direction, so it cannot keep a constant height range, and
+the fixed-slab form asks it to.  `Arlib.Convexity.NeedleSlabAffine` carries that to general
+position and `Arlib.Convexity.NeedleSlabChain` shows every decreasing chain of compact convex
+bodies with a nondegenerate intersection satisfies the relaxed hypotheses.
+
+Nothing in this file changed; the transverse-thinness target it identifies above is exactly what
+those files consume.
+
 ## Honesty note
 
 This file contains **no** `def`/`structure`/`class`/`Prop` asserting the Localization Lemma, the

@@ -27,6 +27,9 @@ import Arlib.Convexity.LocalizationAssembly
 import Arlib.Convexity.LocalizationAffine
 import Arlib.Convexity.LocalizationTransverse
 import Arlib.Convexity.LocalizationClosed
+import Arlib.Convexity.NeedleSlab
+import Arlib.Convexity.NeedleSlabAffine
+import Arlib.Convexity.NeedleSlabChain
 import Arlib.Convexity.ConcaveSelection
 import Arlib.Convexity.SignedCut
 import Arlib.Convexity.DyerFrieze
