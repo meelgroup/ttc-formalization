@@ -326,17 +326,19 @@ end Params
 
 /-! # The probability vocabulary has left this file
 
-Since `Ttc.ttc` (`Model/Pseudocode`) is a *law*, the audit surface includes the ambient
-random objects the algorithm's two coin sequences are governed by.  They are no longer
-defined here: they are in **`Ttc/Probability/`**, four files that between them hold
-`MonteCarlo.coinLaw`/`MonteCarlo.coins`, `half`/`thinKernel`/`chainKernel`/`trajLaw` with
-the two Markov-kernel instances Ionescu–Tulcea takes as instance arguments, and
-`mixSteps`/`ballWalkLaw`/`kv97SampD`/`kv97ContLaw`/`e2eSampD`.  Every name is unchanged,
-so nothing that used them had to change.
+See the module docstring above.  It is in `Ttc/Probability/`, under unchanged names.
 
-`Ttc/Audit/ClosureCheck.lean` audits `Ttc/Model/` **together with** `Ttc/Probability/`
-for exactly this reason, and says so; read its docstring for what that costs and what
-keeps it honest.
+**What measure theory remains here, and why it cannot go.**  One Mathlib import,
+`MeasureTheory.Measure.Haar.InnerProductSpace`, and no declaration of ours that uses it.
+It is load-bearing all the same: it supplies the `MeasureSpace (Ttc.Space n)` instance
+that `Model/ProblemSetting`'s `Ttc.volSol` needs for `MeasureTheory.volume`, and
+`ProblemSetting` imports this file and nothing else.  Removing it here fails with
+`Unknown identifier MeasureTheory.volume` at `ProblemSetting:50`; the fix would be to
+move the import into `ProblemSetting`, which is frozen.  So the residue is one import
+line, serving the *problem statement* rather than the vocabulary — `Vol(F)` is a Lebesgue
+volume, so measure theory cannot leave the audit surface entirely without the headline
+ceasing to mean what it means.  (An `open MeasureTheory` in the geometry section below
+was vestigial and has been removed.)
 
 What did **not** go is the block below.  The `(Am, bv)` system, the facet count and the
 diameter are the *geometry* the sampler is applied at — convex geometry read off the
@@ -349,8 +351,6 @@ Plain geometry read off the formula — no choice is made beyond the enumeration
 facet index. -/
 
 section CanonicalPolytope
-
-open MeasureTheory
 
 
 /-- **The facets of `D`, enumerated.**  `Ttc.instFiniteFacetIndex` makes `FacetIndex D`
