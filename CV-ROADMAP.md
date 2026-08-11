@@ -29,6 +29,70 @@ a future formalization plugs in without touching the rest of `Ttc`.
 
 ---
 
+## 0″. Paper errors found by the formalization, 2026-08-11
+
+`CLAUDE.md` §5: wherever Lean forced a hypothesis the source does not state, that
+is a signal of a gap. This session produced five, across **both** target papers.
+Each is machine-checked or carries an explicit counterexample; each is recorded
+at its declaration, not only here.
+
+**Lovász–Vempala, *Hit-and-Run from a Corner*:**
+
+1. **Theorem 2.1 is FALSE as stated.** *(the big one)* Its hypothesis constrains
+   `h` only on chords through **cross pairs**, while its conclusion integrates `h`
+   over all of `K`. For `n ≥ 2` that union of chords can miss a positive-measure
+   set. Counterexample at `n = 2`, `K = [0,1]²`, `S₁ = [0,1/8]²`,
+   `S₂ = [7/8,1]×[0,1/8]`: every cross-chord point has `x₁ ≤ 7/24 < 1/3`, so
+   `N = K ∩ {x₁ > 1/3}` (measure `2/3`) meets no cross chord, and `h = M·1_N`
+   satisfies every hypothesis for all `M ≥ 0` while the conclusion fails for
+   `M > 96`. Geometric core proved as `Arlib.chord_le_of_corner_boxes`;
+   full formalization of the refutation is in progress.
+   *Where the paper breaks:* §2 bounds `M_ab ≤ 1/3` from the hypothesis at a cross
+   pair **on the needle**; localization forces the needle to meet `S₁`, but nothing
+   forces it to meet `S₂`, and on such a needle there is no cross pair.
+   *Consequence:* `Arlib.MarkovChains.conductance_hitAndRun_ge`'s guarantee is
+   **empty** at `K = [0,4]²` and generically for `n ≥ 2`.
+   *The repair costs nothing:* add the global `∀ x ∈ K, h x ≤ 1/3` — exactly what
+   the paper's own §4 application verifies ("Clearly `h(x) ≤ 1/3`").
+
+2. **The `10¹⁰` step-count constant does not follow from the paper's own
+   Theorem 4.2.** Thm 4.2 gives `Φ ≥ 1/(2²⁴nD)` at inradius 1; scaling by `r` with
+   `D ≤ 2R` gives `Φ ≥ r/(2²⁵nR)`; LS93 Cor 1.5 then needs
+   `m ≳ 2⁵¹·n²(R²/r²)·ln(…)`, and `2⁵¹ ≈ 2.25×10¹⁵` — a factor `≈ 2×10⁵` above
+   `10¹⁰`. §5 writes only "`C n²R²/r² ln(M/ε)`, `C` a constant", so the gap is
+   invisible in the text. **The theorem is true with a larger constant.** The
+   proved shape is `Arlib.MarkovChains.lvThreshold = 2⁵⁶n²(R²/r²)log(8M/ε²)`.
+
+3. **§5 applies LS93 Cor 1.5 to *non-lazy* hit-and-run** with no laziness or
+   spectral hypothesis. Counterexample: the swap kernel `P x = δ(¬x)` on `Bool` is
+   reversible with conductance exactly `1` and `δ_true` is 2-warm, yet
+   `d_TV = 1/2` forever while `√2·2^{-t} → 0` — failing already at `t = 2`.
+
+4. **Cor 1.5 in `s`-conductance form is false on spaces with atoms** (scope error
+   in reference [11]); harmless for hit-and-run, which is atomless, but it made a
+   first draft of our own `s`-conductance theorem vacuous until repaired.
+
+**Cousins–Vempala:** the `(1d-2)` constant is provable at `1/(2√3) ≈ 0.289`, not
+the paper's `ln 2 ≈ 0.693`, so the separation threshold grows by
+`2√3·ln 2 ≈ 2.401`; see §0′.
+
+**And two of this repository's own docstrings were refuted:**
+
+* `HitAndRunConductance.lean:39–60` called `hIso` "the genuine open gap" needing
+  **Borsuk–Ulam**. Stale: `Arlib.exists_flat_cut_zero_pos` already takes arbitrary
+  *signed* integrands, and the equality form bisects `g₁` alone by one-parameter
+  IVT. The real residuals were (C) and (F) — both closed this session.
+* `SpeedyOverlap.lean` said polar decomposition about an interior point is
+  something "Mathlib does not support today". False twice over: Mathlib has it,
+  **and this repo already wraps it** at an arbitrary centre
+  (`Arlib.MarkovChains.lintegral_polar_at`, `HitAndRun.lean:479`). It was also
+  unnecessary — KLS 3.5 needs only `n`-homogeneity.
+* Separately, `LocalizationAssembly.lean:195` pointed at
+  `EuclideanSpace.volume_preserving_measurableEquiv`, **which does not exist** in
+  this Mathlib.
+
+---
+
 ## 0′. Status, 2026-08-11 — supersedes §0 on the CV side
 
 §0 below is still correct about `Ttc`: the volume oracle is discharged by
