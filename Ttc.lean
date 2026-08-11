@@ -445,6 +445,7 @@ import Ttc.Runtime
 import Ttc.CostModel
 import Ttc.Exec.CostedBackend
 import Ttc.Exec.CVBackend
+import Ttc.Exec.SamplerCost
 import Ttc.Exec.SampleBound
 import Ttc.Exec.InflateBound
 import Ttc.Exec.SampleDischarge
