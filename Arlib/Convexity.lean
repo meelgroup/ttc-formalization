@@ -55,6 +55,8 @@ import Arlib.Convexity.SharpIsoperimetryConcave
 import Arlib.Convexity.LocalizationLSC
 import Arlib.Convexity.LocalizationTransport
 import Arlib.Convexity.HlocFromLocalization
+import Arlib.Convexity.LovaszVempalaIso
+import Arlib.Convexity.LovaszVempalaIsoFalse
 
 /-!
 # Arlib.Convexity
