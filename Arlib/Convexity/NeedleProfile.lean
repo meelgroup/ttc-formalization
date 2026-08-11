@@ -75,28 +75,42 @@ that comes out is *exactly* of the form a downstream one-dimensional lemma accep
 
 ## 3. What (G2) still needs, stated exactly
 
-Two inline `∀`-hypotheses of `Arlib.tendsto_average_setIntegral_of_profile` are not discharged
-anywhere, and one reduction is not formalised.  These are the whole of what is left of (G2).
+**(G2a) and (G2b) are now proved**, in `Arlib.Convexity.ConcaveSelection`.  Only (G2c) is
+left of (G2).  The two paragraphs below are kept because their *content* is still accurate —
+what changed is that each is now a theorem rather than a hypothesis.
 
 **(G2a) Pointwise convergence of the normalised profiles (a Helly selection).**  Given convex
 bodies `C k` in the unit slab, extract a subsequence along which
 `t ↦ vol (slice (C k) t)/vol (C k)` converges pointwise.  By `Arlib.brunn_slice_concaveOn` the
 `1/m`-th powers of these profiles are concave, so this is Helly selection for a uniformly
 bounded sequence of concave functions on `[0,1]` — a diagonal argument on `ℚ ∩ [0,1]` plus the
-local Lipschitz bound of a concave function.  Mathlib `v4.32` has no Helly selection theorem.
+local Lipschitz bound of a concave function.  **Mathlib `v4.32` has no Helly selection theorem
+— that remains true**, and every `helly` in Mathlib is the *convex-geometry* Helly theorem
+(`Analysis/Convex/Radon.lean`); its Arzelà–Ascoli is compactness-of-closure only, never a
+sequence statement (`Topology/UniformSpace/Ascoli.lean`, whose own TODO says so).  So it is
+proved by hand in `Arlib.exists_subseq_tendsto_normalised_slice_profile`, as Arzelà–Ascoli on
+the *profiles* rather than Blaschke selection on the *bodies*.  That theorem needs two
+hypotheses beyond the list here — `hsfin` (each slice has finite volume, required by
+`brunn_slice_concaveOn`) and `hspan` (the bodies span the slab) — both recorded there.
 
 **(G2b) A uniform bound `B` on the normalised profiles.**  This is elementary and is the one
 place convexity would enter the limit passage: if `u ≥ 0` is concave on `[0,1]` with maximum at
 `t₀`, then `u ≥ u(t₀)/2` on a subinterval of length `≥ 1/4`, so `∫₀¹ u^m ≥ u(t₀)^m/(4·2^m)`;
-with `∫₀¹ u^m = 1` (`Arlib.integral_volume_slice`) this gives `B = 4·2^m`.  It is not proved
-here only because `ConcaveOn` alone does not give measurability of `u`, so the statement has to
-be threaded through the (measurable) slice profile rather than stated for abstract concave
-functions.
+with `∫₀¹ u^m = 1` (`Arlib.integral_volume_slice`) this gives a bound.  **Proved** as
+`Arlib.normalised_volume_slice_le`, at the better constant **`2^(m+1)`** — and the prediction
+in this paragraph was right about the obstruction: `ConcaveOn` alone does not give
+measurability of `u`, so it is threaded through the measurable slice profile.  The anticipated
+case split on which side of `1/2` the maximum falls turned out to be unnecessary.
 
 **(G2c) The affine change of coordinates.**  Everything above is stated with the needle along
 the first coordinate axis and the slab `{x | x 0 ∈ [0,1]}`.  Transporting a general segment
-`[a,b] ⊆ ℝⁿ` to that position is a routine affine change of variables (`Measure.addHaar` under
-an affine equivalence), not formalised here.
+`[a,b] ⊆ ℝⁿ` to that position is **not** the routine change of variables this paragraph once
+claimed.  It needs `Measure.addHaar_preimage_linearMap` for `volume` on `Fin n → ℝ` *and* a
+compatible statement for the `(n−1)`-dimensional **slice** volumes — a factorisation of the
+determinant into first-coordinate scaling times transverse determinant, so that Fubini in the
+rotated frame lines up with `Arlib.setIntegral_eq_integral_slice`.  The transverse factor
+cancels in the *normalised* profile, but that cancellation still has to be proved.  A separate
+development, not a small finish.
 
 Note also that the thin-tube comparison consumes a **modulus-of-continuity** hypothesis on `f`
 (the inline `hδ`), not lower semicontinuity.  For a continuous `f` on a compact tube it is
@@ -107,8 +121,8 @@ integrable `f` needs an extra approximation step that is **not** carried out her
 
 This file contains **no** `def`, `structure`, `class` or named `Prop` at all — only theorems
 proved outright.  Nothing below asserts the Localization Lemma, Blaschke selection, Helly
-selection, or a profile-convergence property; the two undischarged ingredients (G2a) and (G2b)
-appear only as inline `∀`-hypotheses of
+selection, or a profile-convergence property; the one undischarged ingredient (G2c)
+appears only as inline `∀`-hypotheses of
 `Arlib.tendsto_average_setIntegral_of_profile`, and the non-vacuity witness
 `Arlib.tendsto_average_setIntegral_of_profile_unitCube` shows they can be met.
 -/
@@ -356,9 +370,16 @@ Then the normalised integrals of `f` over `C k` converge to the needle integral
 `Arlib.concaveOn_limit_slice_profile` supplies the extra information that `W ^ (1/m)` is
 concave whenever it is a limit of *convex* bodies' profiles; nothing here needs convexity.
 
-Both hypotheses on the profiles are inline `∀`-hypotheses, not a named `Prop`: extracting a
-pointwise-convergent subsequence of the profiles is a Helly-selection statement that is **not**
-proved in this repository (see the module docstring). -/
+Both hypotheses on the profiles are inline `∀`-hypotheses, not a named `Prop` — and both are
+now **discharged**: see `Arlib.exists_subseq_tendsto_average_setIntegral'`, which is this
+theorem with the profile hypotheses removed.
+
+Worth noting why the endpoints cause no trouble, since they are the classical difficulty for
+concave functions: this theorem consumes `hlim` **only** through
+`tendsto_integral_of_dominated_convergence`, so it needs pointwise convergence plus a uniform
+bound and never continuity or uniform convergence of the limit `W`.  The limit may well be
+discontinuous at `0` and `1`; nothing here cares.  (And `0`, `1` are rational, so the
+diagonal extraction over `ℚ` pins them for free.) -/
 theorem tendsto_average_setIntegral_of_profile
     {C : ℕ → Set (Fin (m + 1) → ℝ)} (hCm : ∀ k, MeasurableSet (C k))
     (hCfin : ∀ k, volume (C k) ≠ ⊤) (hCpos : ∀ k, 0 < volume (C k))
