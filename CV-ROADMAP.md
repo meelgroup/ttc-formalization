@@ -425,6 +425,21 @@ assume-a-theorem-as-a-predicate approach was abandoned**, and it generalizes:
      (`integral_prod_eq_prod_integral'`, `integral_prod_sq`, `prod_sq_div_le`,
      `prod_sq_div_le_exp`).
 
+     **Correction to the correction (2026-08-11).** That replacement list was itself
+     incomplete, and this roadmap overstated what had been recovered. Of the four cited
+     names, `prod_sq_div_le` is genuinely there, and the telescoping pair `ratio` /
+     `prod_ratio` exists under other names (`Ttc.CV.prod_range_ratio` / `prod_fin_ratio`,
+     `Ttc/Volume/CousinsVempala.lean:361,373`). But **`avg_sq_le` — the averaging lemma —
+     is not in the replacement list and did not exist anywhere in the repo.** That is not
+     a naming discrepancy: nothing in `Arlib/` or `Ttc/` related the second moment of an
+     empirical mean of `k` scores to the second moment of one score, which is precisely
+     the bridge from §5.1's per-sample `c = 1 + 2/n` to §5.2's per-phase `1 + κ/m`.
+     First proved as `Ttc.CVEst.avgOf_sq_moment_le` (`Ttc/Volume/CVEstimator.lean`), with
+     `avgOf_sq_moment_le_budget` giving the sample count `k ≥ (c − 1)·m/κ` that buys the
+     budget. **That sample count is the file's cost and is worse than the paper's** — the
+     assembly needs `Θ(n·L⁴·log(1/p)/κ³)` samples in total, so `CVEstimator.lean`
+     establishes *accuracy*, never `O*(n³)`.
+
 So §4 was never "apply a Mathlib theorem." It was **build the library first**:
 continuous-state-space Markov chain theory with quantitative convergence, and
 convex-geometry foundations (Prékopa–Leindler at minimum), none of which exists in
@@ -484,7 +499,14 @@ project with its own repo, not as a step inside the `Ttc` development.
    spaces.** The large piece. Independently valuable to Mathlib.
 4. **§3 isoperimetry** for logconcave densities, on top of 1–3.
 5. **§4** ball walk, warm start, wasted steps, speedy walk.
-6. **§5.2** telescoping estimator, Chebyshev, median amplification → Theorem 1.1.
+6. ~~**§5.2** telescoping estimator, Chebyshev, median amplification → Theorem 1.1.~~
+   **Done** — and this row was stale twice over. The telescope, the per-ratio Chebyshev
+   and the median amplification all live in `Ttc/Volume/CousinsVempala.lean`
+   (`prod_range_ratio`, `measure_notMem_relErr_le:333`, `median_relErr_ge:498`); the
+   `k`-sample Chebyshev, the error composition across phases, the averaging bridge and
+   the assembly are `Ttc/Volume/CVEstimator.lean`. What remains is *not* §5.2: it is
+   `hsampler` (a sampler delivering the phase ratios) and `hend` (the last Gaussian
+   equals the volume). §0′ supersedes §0 but never came back to correct this section.
 7. **Instantiate `Ttc.VolumeAlgorithm`** and rewire `Ttc` (see §6 below).
 
 Steps 1–2 are worth doing regardless of whether the rest is attempted.
