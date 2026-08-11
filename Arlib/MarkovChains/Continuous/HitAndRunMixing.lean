@@ -130,10 +130,22 @@ statement it does not prove.  Each has a machine-checked satisfiability witness.
       ∀ mu, IsProbabilityMeasure mu → IsWarm (ofReal W) mu pi →
         ∀ t, TVLe (iterate P mu t) pi (ofReal (√W · (1 − phi²/2)^t))
 
-`Arlib/MarkovChains/Continuous/MixingFromConductance.lean` records at length that this
-implication — conductance ⟹ geometric decay, i.e. the Cheeger inequality plus the passage
-from a spectral gap to total variation — is *not* proved anywhere in this repository, and
-takes it as a hypothesis for the same reason.
+⚠ **This paragraph used to claim the implication is "not proved anywhere in this
+repository".  That was FALSE, and is corrected here (2026-08-11).**  The Cheeger inequality
+and the spectral-gap⟹TV passage are *both* proved, and had been since 2026-08-08/09:
+`Arlib.MarkovChains.sq_conductance_div_two_le_spectralGap` (`Cheeger.lean`, the hard
+direction) and `Arlib.MarkovChains.tvLe_iterate_of_ofReal_le_conductance` (`L2Mixing.lean`,
+whose conclusion is literally the body of the `hLS` binder below), both axiom-clean.
+`MixingFromConductance.lean`'s corresponding passage is stale in the same way: it is true of
+*that file*, but `Cheeger.lean` and `L2Mixing.lean` import it and supply exactly the pieces
+it lists as missing.
+
+`Arlib/MarkovChains/Continuous/ConductanceToTV.lean` therefore **discharges `hLS`**:
+`Arlib.MarkovChains.ls_of_hasNonnegSpectrum` proves this binder verbatim from
+`IsReversible`, `HasNonnegSpectrum` and a nonempty `SmallSets`, and `ls_lazy` proves it for
+`lazy P` from reversibility alone.  What is *not* reachable is `hLS` for the **plain**
+`hitAndRun K` kernel, which needs a hit-and-run-specific spectral fact — and that is exactly
+the paper's own gap recorded as error 2 below, not a formalisation shortfall.
 
 **It is false for a general reversible Markov kernel, and this file is the first place that
 is recorded.**  Take `Ω = Bool`, `P x = dirac (!x)` (the swap kernel), `pi = piHalf`.  `P` is
