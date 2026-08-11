@@ -34,6 +34,7 @@ import Arlib.Convexity.GaussianCooling.Variance
 import Arlib.Convexity.GaussianCooling.ZLogconcave
 import Arlib.Convexity.GaussianCooling.IndicatorVariance
 import Arlib.Convexity.GaussianCooling.Unblock
+import Arlib.Convexity.GaussianCooling.PhaseMean
 
 /-!
 # Arlib.Convexity
