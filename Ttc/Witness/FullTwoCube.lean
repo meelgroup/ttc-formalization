@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Exec.Api
+import Ttc.Exec.PriceList
 import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
 
@@ -216,10 +217,11 @@ equal.
 **Cost — exponential in `n`, paid twice, on a dilated body.**  See this module's
 docstring.  Unconditional correctness, not efficiency. -/
 theorem ttc_volume_estimate_two_cube_full (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ) :
-    1 - δ ≤ twoAccFull n hn ε δ hε0 hε1 cVol cSample :=
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cSample : ℕ) :
+    1 - δ ≤ twoAccFull n hn ε δ hε0 hε1
+      (Ttc.ttcVolPrice (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ) cSample :=
   (ttc_volume_estimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn
-    twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) cVol cSample).1
+    twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) cSample).1
 
 /-- **`Ttc.ttc_volume_estimate` on a two-cube DNF at two structurally different
 parameter pairs, with the achieved bound a positive numeral.**
@@ -236,28 +238,38 @@ is the vacuous `0 ≤ (…).toReal`.  Both runs carry the exponential cost recor
 this module's docstring. -/
 theorem ttc_volume_estimate_two_cube_full_at (n : ℕ) (hn : 1 ≤ n)
     (hε₁ : (0 : ℝ) < 1/3) (hε₁' : (1/3 : ℝ) ≤ 1)
-    (hε₂ : (0 : ℝ) < 1/2) (hε₂' : (1/2 : ℝ) ≤ 1) (cVol cSample : ℕ) :
-    ((0 : ℝ) < 1/10 ∧ (1/10 : ℝ) ≤ twoAccFull n hn (1/3) (9/10) hε₁ hε₁' cVol cSample
+    (hε₂ : (0 : ℝ) < 1/2) (hε₂' : (1/2 : ℝ) ≤ 1) (cSample : ℕ) :
+    ((0 : ℝ) < 1/10 ∧ (1/10 : ℝ) ≤ twoAccFull n hn (1/3) (9/10) hε₁ hε₁'
+        (Ttc.ttcVolPrice (atomsT n hn (1/3) (9/10) hε₁ hε₁') (twoForm n) (1/3) (9/10))
+        cSample
       ∧ (4/5 : ℝ) < 9/10 ∧ (9/10 : ℝ) < 1)
-    ∧ ((0 : ℝ) < 3/4 ∧ (3/4 : ℝ) ≤ twoAccFull n hn (1/2) (1/4) hε₂ hε₂' cVol cSample) := by
+    ∧ ((0 : ℝ) < 3/4 ∧ (3/4 : ℝ) ≤ twoAccFull n hn (1/2) (1/4) hε₂ hε₂'
+        (Ttc.ttcVolPrice (atomsT n hn (1/2) (1/4) hε₂ hε₂') (twoForm n) (1/2) (1/4))
+        cSample) := by
   refine ⟨⟨by norm_num, ?_, by norm_num, by norm_num⟩, ⟨by norm_num, ?_⟩⟩
   · have h := ttc_volume_estimate_two_cube_full n hn (1/3) (9/10) hε₁ hε₁'
-      (by norm_num) (by norm_num) cVol cSample
+      (by norm_num) (by norm_num) cSample
     linarith
   · have h := ttc_volume_estimate_two_cube_full n hn (1/2) (1/4) hε₂ hε₂'
-      (by norm_num) (by norm_num) cVol cSample
+      (by norm_num) (by norm_num) cSample
     linarith
 
 /-- **The bound is a genuine number, not `ENNReal.toReal ⊤ = 0`.**  A strictly
 positive lower bound on the `toReal` forces the measure itself to be nonzero and
 finite. -/
 theorem twoProbFull_pos_ne_top (n : ℕ) (hn : 1 ≤ n)
-    (hε0 : (0 : ℝ) < 1/3) (hε1 : (1/3 : ℝ) ≤ 1) (cVol cSample : ℕ) :
-    0 < twoProbFull n hn (1/3) (9/10) hε0 hε1 cVol cSample
-      ∧ twoProbFull n hn (1/3) (9/10) hε0 hε1 cVol cSample ≠ ⊤ := by
+    (hε0 : (0 : ℝ) < 1/3) (hε1 : (1/3 : ℝ) ≤ 1) (cSample : ℕ) :
+    0 < twoProbFull n hn (1/3) (9/10) hε0 hε1
+        (Ttc.ttcVolPrice (atomsT n hn (1/3) (9/10) hε0 hε1) (twoForm n) (1/3) (9/10))
+        cSample
+      ∧ twoProbFull n hn (1/3) (9/10) hε0 hε1
+        (Ttc.ttcVolPrice (atomsT n hn (1/3) (9/10) hε0 hε1) (twoForm n) (1/3) (9/10))
+        cSample ≠ ⊤ := by
   have h := (ttc_volume_estimate_two_cube_full_at n hn hε0 hε1 (by norm_num)
-    (by norm_num) cVol cSample).1.2.1
-  have hpos : 0 < (twoProbFull n hn (1/3) (9/10) hε0 hε1 cVol cSample).toReal :=
+    (by norm_num) cSample).1.2.1
+  have hpos : 0 < (twoProbFull n hn (1/3) (9/10) hε0 hε1
+      (Ttc.ttcVolPrice (atomsT n hn (1/3) (9/10) hε0 hε1) (twoForm n) (1/3) (9/10))
+      cSample).toReal :=
     lt_of_lt_of_le (by norm_num : (0:ℝ) < 1/10) h
   exact ⟨(ENNReal.toReal_pos_iff.1 hpos).1, (ENNReal.toReal_pos_iff.1 hpos).2.ne⟩
 

@@ -133,17 +133,24 @@ kernel this development does not have.  The constructed volume oracle is
 whose count appears below.
 `thm:runtime`'s `O(m·n⁴)` remains out of scope, before and after this section.
 
-**No closed form, and no uniform bound over the cubes, is available.**
-`Ttc.MonteCarlo.rad` is `Exists.choose` of `∃ R, 0 < R ∧ K ⊆ ball 0 R`: only
-`Ttc.MonteCarlo.rad_pos` and `Ttc.MonteCarlo.subset_ball_rad` are provable about it,
-and *no upper bound on it is derivable at all*.  Hence `nSamp` has no closed-form
-upper bound, per cube or uniformly, and the `cVol` of `Ttc.runCost_le` cannot be
-instantiated at any arithmetic expression that dominates it.  That is why the section
-below goes through `Ttc.runCostAt` (`Runtime`), the same fold with a **per-cube price
-list**, and stops at `∑ᵢ (coinsᵢ + stepsᵢ·⌈Thresh⌉)` — a sum of opaque terms, not an
-expression in `n`, `ε`, `δ`, `m`.  `Ttc.ttcComplexity`'s defining property, that it is
-raw arithmetic in the algorithm's inputs, is exactly what cannot survive the
-substitution.
+**A closed form for the volume half now exists; for the sampler half it does not.**
+This paragraph used to say that neither was available, on the grounds that
+`Ttc.MonteCarlo.rad` was `Exists.choose` of `∃ R, 0 < R ∧ K ⊆ ball 0 R`, about which no
+upper bound is derivable.  `rad` is now the **infimum** of the enclosing radii, so
+`Ttc.MonteCarlo.rad_le_of_subset_closedBall` (`Volume/RadBound`) exists and
+`Ttc.MonteCarlo.nSamp_roundBody_le` is unconditional.  `Ttc/Exec/PriceList.lean` carries
+it over the cubes — `diam (region M i) ≤ diam (sol M φ)` for every cube, by
+`Ttc.region_subset_sol` and monotonicity of `Metric.diam` — and
+`Ttc.ttcVolCoins_le_ttcVolPrice` is the uniform bound.  `Ttc.ttcVolPrice` is what
+`Ttc.ttc_volume_estimate` now carries in place of its old `cVol` binder.
+
+`Ttc.ttcSampleSteps` still has **no** uniform bound: `Ttc.mixStepsBound`
+(`Exec/SampleBound`) is evaluated at the inflated body's diameter, warm-start ratio and
+TV tolerance, and the last two need an upper bound on `Vol(P'ᵢ)` that this development
+does not prove.  So the section below still goes through `Ttc.runCostAt` (`Runtime`), the
+same fold with a **per-cube price list**, and
+`Ttc.ttcCoinAndStepCharge_le_volPrice` (`Exec/PriceList`) is the mixed statement that
+results: uniform and closed in the volume half, a sum over cubes in the sampler half.
 
 ## Nothing here asserts anything
 

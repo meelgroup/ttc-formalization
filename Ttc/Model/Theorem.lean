@@ -60,12 +60,48 @@ measurability proof into `Model/`.  The price is that the bridge
 that bridge is what makes `ttc` an honest name for the run rather than a fresh definition
 nothing connects to the analysis.
 
-**Why `cVol` and `cSample`.**  `alg:ttc` line 24's `Vol_ED` and line 43's
-`GenerateSamples` are oracle calls whose per-call cost the paper never fixes, so
-`Ttc/Runtime.lean` leaves them parametric and the statement quantifies over them.
-nfalean has no such parameter because its cost model is entirely internal.  Fixing them
-would trade a claim about every charging convention for a claim about one arbitrary
-convention.
+**Why `cVol` is now a number and `cSample` is still a binder.**  `alg:ttc` line 24's
+`Vol_ED` and line 43's `GenerateSamples` are oracle calls whose per-call cost the paper
+never fixes, so `Ttc/Runtime.lean` leaves them parametric.  Both used to be binders here.
+`cVol` no longer is: it is the explicit natural
+
+```
+⌈(γ⁻¹ · diam (Sol(preprocess atoms φ) at the dilated atoms) + 1)ⁿ / (ε'² · δ')⌉₊ + 1
+γ  = algGamma atoms φ ε δ                        -- `q·γ̂`, the dilated inscribed radius
+ε' = (algBlock atoms φ ε δ).epsPrime  = ε/12
+δ' = (algBlock atoms φ ε δ).deltaPrime = δ/(5m)
+```
+
+and `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) proves it dominates the number of
+coins the constructed `Vol_ED` reads **at every cube of the DNF** — uniformly, because
+each cube's region is inside the solution set (`Ttc.region_subset_sol`) and
+`Metric.diam` is monotone, so `diam (region M i) ≤ diam (sol M φ)` for all `i`.  Nothing
+in the substitution is an assumption: `Ttc.MonteCarlo.nSamp_roundBody_le`
+(`Volume/RadBound`) is the per-cube closed form and it is unconditional, since
+`Ttc.MonteCarlo.rad` is the *infimum* of the enclosing radii.
+
+**`cVol` is exponential in the dimension, and the conjunct below must not be read as a
+polynomial bound.**  The `(…)ⁿ` is hit-and-miss Monte Carlo's rejection factor: sampling
+uniformly from a ball of radius `R` to hit a body of inradius `1` needs `Θ(Rⁿ)` draws.
+The price is `Θ((diam/γ)ⁿ / (ε'²·δ'))` and no rearrangement makes it smaller.
+
+`cSample` **remains a binder, and that is a finding rather than an omission.**
+`Ttc.mixSteps_le` (`Exec/SampleBound`) is a per-cube closed form, `Θ(4ⁿ·(γ+Dm)^{4n}/γ^{4n})`
+— also exponential in `n` — but it is evaluated at three quantities that move with the
+cube: the inflated body's diameter, the warm-start ratio `Vol(P'ᵢ)/Vol(B)` and the TV
+tolerance `ε'/(4·Vol(P'ᵢ))`.  A *uniform* price needs an upper bound on `Vol(P'ᵢ)`, the
+volume of the Kannan–Vempala inflated dilated polytope, and this development proves none:
+the only statement about that body's size is the *hypothesis* `hD` of
+`Ttc.mixCost_le_mixSteps`, never discharged at the run's own cubes.  `Exec/PriceList`'s
+docstring records the exact residue.
+
+**Three undercounts stand, and a concrete `cVol` must not be read as denying them.**
+`Ttc.kv97SampD`'s rejection rounds are unbounded and counted nowhere; `alg:ttc` lines
+32–42's `while` loops are uncharged; and `Ttc.mixSteps` does not occur in `Ttc.ttcRun`'s
+definitional closure at all — it enters through `Ttc.ttcRates`, the *law*, while
+`GenerateSamples` is the read-off `Ttc.trajGen`.  So `cSample` prices the chain the
+sampler's law is defined by, not steps the run takes.  A bound on an undercount is not a
+bound on the count, and nothing here bounds a running time.
 
 **There is no iterated integral.**  Earlier versions of this statement carried
 `∫⁻ c, trajLaw (ttcRates … c) {t | …} ∂(MonteCarlo.coins n)` — outer over the volume
@@ -320,8 +356,11 @@ rates that draw produced.  No iterated integral.
   `GenerateSamples` draw per returned point) is at most
   `m · (C_vol + C_sample · (Θ + 1))`, written out as explicit arithmetic in `ε`, `δ` and
   `m = |toDNFd (preprocess atoms φ)|` so that the conjunct names nothing this file's
-  reader cannot find.  See the module docstring for which quantifier this is and what it
-  is not.
+  reader cannot find — with `C_vol` **substituted** by the explicit
+  `⌈(γ⁻¹·diam(Sol) + 1)ⁿ / (ε'²·δ')⌉₊ + 1`, which is **exponential in the dimension `n`**.
+  `C_sample` is still a binder; the module docstring says exactly what blocks it and
+  which three undercounts a concrete number here does *not* repair.  See the module
+  docstring for which quantifier this is and what it is not.
 
 Eleven binders, all conditions on the input; only `hφ` and `hpos` are shape
 hypotheses.  `AUDIT.md` §1h has the three preprocessing steps, what is known about
@@ -332,26 +371,53 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
     (hpos : 0 < volSol (atomSet atoms) φ)
-    (cVol cSample : ℕ) :
+    (cSample : ℕ) :
     -- (accuracy) the estimate returned is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttc atoms φ ε δ
+            (⌈((algGamma atoms φ ε δ)⁻¹
+                  * Metric.diam
+                      (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
+                / ((algBlock atoms φ ε δ).epsPrime ^ 2
+                    * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1) cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) **almost every** run — `All[…]` is `∀ᵐ`, so a null exceptional set
     -- is permitted — and, unlike earlier versions, under **no termination hypothesis**:
-    -- charged at most `m·(c_vol + c_samp·(Θ + 1))`
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    -- charged at most `m·(c_vol + c_samp·(Θ + 1))`, with `c_vol` the explicit
+    -- `⌈(γ⁻¹·diam(Sol) + 1)ⁿ / (ε'²·δ')⌉₊ + 1` — **exponential in `n`**
+    (All[r ← ttc atoms φ ε δ
+            (⌈((algGamma atoms φ ε δ)⁻¹
+                  * Metric.diam
+                      (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
+                / ((algBlock atoms φ ε δ).epsPrime ^ 2
+                    * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1) cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ)
-          * ((cVol : ℝ) + (cSample : ℝ)
+          * (((⌈((algGamma atoms φ ε δ)⁻¹
+                    * Metric.diam
+                        (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))
+                      + 1) ^ n
+                  / ((algBlock atoms φ ε δ).epsPrime ^ 2
+                      * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1 : ℕ) : ℝ)
+              + (cSample : ℝ)
               * (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
                   + 15 * (Real.log (15 / (2 * δ))
                       + Real.log ((toDNFd (preprocess atoms φ)).length))
                   + 1))]) := by
   rw [ttc_eq_ttcPairLaw]
-  refine ⟨ttc_accuracy_pairLaw atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample, ?_⟩
-  have h := all_ttcPairLaw_cost_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample
+  refine ⟨ttc_accuracy_pairLaw atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1
+    (⌈((algGamma atoms φ ε δ)⁻¹
+          * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))
+            + 1) ^ n
+        / ((algBlock atoms φ ε δ).epsPrime ^ 2
+            * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1) cSample, ?_⟩
+  have h := all_ttcPairLaw_cost_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1
+    (⌈((algGamma atoms φ ε δ)⁻¹
+          * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))
+            + 1) ^ n
+        / ((algBlock atoms φ ε δ).epsPrime ^ 2
+            * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1) cSample
   simpa only [ttcComplexity_def] using h
 
 #print axioms ttc_volume_estimate

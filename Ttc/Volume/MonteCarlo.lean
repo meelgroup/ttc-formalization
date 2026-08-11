@@ -146,7 +146,7 @@ valid radii are bounded below by `0`, and the enclosure because `‖x‖` is a l
 every valid radius, hence at most their infimum — which is where the `+ 1` in `rad`'s body
 earns its keep, reopening the ball.  Unlike `Exists.choose`, `sInf` also admits an
 *upper* bound; that is
-`Ttc.MonteCarlo.radMin_le_of_subset_closedBall` in `Ttc/Volume/RadBound.lean`. -/
+`Ttc.MonteCarlo.rad_le_of_subset_closedBall` in `Ttc/Volume/RadBound.lean`. -/
 
 theorem rad_pos (K : Set (Space n)) : 0 < rad K := by
   classical

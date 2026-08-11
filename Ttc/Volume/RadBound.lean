@@ -12,9 +12,9 @@ import Ttc.Volume.MonteCarlo
 cube — is `Ttc.MonteCarlo.nSamp` of the cube's **normalised** region, and `nSamp`
 is `⌈(ε²·p·q)⁻¹⌉₊ + 1` with `q = Ttc.MonteCarlo.hitData K = (rad K)⁻ⁿ·Vol K / Vol(B₁)`.
 So a closed form for the coin count needs an **upper bound on `Ttc.MonteCarlo.rad`**,
-and that is what this file supplies — up to one step which the present definition of
-`rad` makes unprovable, and which is isolated below as a hypothesis so that the
-obstruction is visible rather than hidden.
+and that is what this file supplies — **unconditionally**, now that
+`Ttc.MonteCarlo.rad` (`Model/Pseudocode`) is the *infimum* of the valid radii rather
+than an `Exists.choose` of one.
 
 ## What is proved here, unconditionally
 
@@ -32,7 +32,14 @@ obstruction is visible rather than hidden.
   needed for the containment; finiteness reappears only in §2.
 * `Ttc.MonteCarlo.hitData_ge_of_rad_le` and `Ttc.MonteCarlo.nSamp_le_of_rad_le` — from
   *any* upper bound `rad K ≤ R` the sample count is at most `⌈Rⁿ/(ε²·p)⌉₊ + 1`.
-* `Ttc.MonteCarlo.nSamp_roundBody_le` — the two combined, at `R = roundRad γ K`.
+* `Ttc.MonteCarlo.rad_le_of_subset_closedBall` — **the upper bound `Exists.choose` could
+  not give**: any enclosing *closed* ball of radius `D` gives `rad K ≤ D + 1`.  It is a
+  three-line consequence of `rad`'s `sInf`, and it is what makes everything below
+  hypothesis-free.
+* `Ttc.MonteCarlo.rad_roundBody_le` — that bound at the normalised body:
+  `rad (roundBody c γ K) ≤ roundRad γ K`.
+* `Ttc.MonteCarlo.nSamp_roundBody_le` — all of it combined, at `R = roundRad γ K`, with
+  **no hypothesis about `rad`**.
 
 **The bound is exponential in the dimension `n`, and that is the honest answer.**
 `hitData` carries the factor `(rad K)⁻ⁿ`: hit-and-miss Monte Carlo needs `Θ(Rⁿ)`
@@ -45,26 +52,18 @@ i.e. `Θ((diam K / γ)ⁿ / (ε²·p))`. There is no polynomial bound to be had 
 file makes the exponential one explicit, it does not make it smaller. Nothing in it
 bounds a *running time* — see `Ttc/Exec/Complexity.lean` §4.
 
-## The obstruction: `rad` is a `Classical.choose`
+## What used to be the obstruction, and how it was removed
 
-`Ttc.MonteCarlo.rad K = if h : ∃ R, 0 < R ∧ K ⊆ Metric.ball 0 R then h.choose else 1`
-(`Model/Pseudocode.lean`). The **only** facts about `h.choose` that `Exists.choose_spec`
-supplies are `0 < h.choose` and `K ⊆ Metric.ball 0 h.choose`. Both are *lower*-bound
-information: the set of reals satisfying them is upward closed, so it is unbounded
-above, and therefore **no inequality `rad K ≤ R` is derivable for any `R`**. Producing an
-explicit ball around `roundBody` (which this file does) does not help: it only exhibits
-one more valid radius, and `choose` is under no obligation to have picked it or anything
-near it. This is exactly the note already carried by `Ttc.mcVolCoins` and
-`Ttc.ttcCoinAndStepCharge_le_sum`.
+`Ttc.MonteCarlo.rad` used to be `if h : ∃ R, 0 < R ∧ K ⊆ Metric.ball 0 R then h.choose
+else 1`. The **only** facts `Exists.choose_spec` supplies about `h.choose` are
+`0 < h.choose` and `K ⊆ Metric.ball 0 h.choose`, and both are *lower*-bound information:
+the set of reals satisfying them is upward closed, hence unbounded above, so **no
+inequality `rad K ≤ R` was derivable for any `R`**. Producing an explicit ball around
+`roundBody` did not help — it only exhibited one more valid radius, and `choose` is under
+no obligation to have picked it or anything near it. `Ttc.MonteCarlo.nSamp_roundBody_le`
+therefore carried `rad (roundBody c γ K) ≤ roundRad γ K` as an explicit hypothesis.
 
-Hence `Ttc.MonteCarlo.nSamp_roundBody_le` takes `rad (roundBody c γ K) ≤ roundRad γ K`
-as an explicit hypothesis. **It is not an assumption of the development** — nothing
-imports this file to discharge it, and no `def`, `structure` or `axiom` here asserts
-it. It is the precise statement of what the current definition of `rad` withholds.
-
-## The fix, and why it is not applied here
-
-Replace the `Classical.choose` by the **infimum** of the valid radii:
+`rad` is now the **infimum** of the valid radii, plus one (`Model/Pseudocode`):
 
 ```lean
 noncomputable def rad (K : Set (Space n)) : ℝ :=
@@ -72,28 +71,16 @@ noncomputable def rad (K : Set (Space n)) : ℝ :=
   then sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} + 1 else 1
 ```
 
-`Ttc.MonteCarlo.radMin` below **is** that definition, and the three theorems
-`Ttc.MonteCarlo.radMin_pos`, `Ttc.MonteCarlo.subset_ball_radMin`,
-`Ttc.MonteCarlo.radMin_le_of_subset_closedBall` show it keeps both properties the
-present `rad` has, verbatim, and adds the missing upper bound. The `+ 1` is not
-cosmetic: `sInf` of the valid radii need not itself be valid (take `K` a closed ball),
-and it opens the ball again.
+The `+ 1` is not cosmetic: `sInf` of the valid radii need not itself be valid (take `K` a
+closed ball), and it reopens the ball, so `Ttc.MonteCarlo.subset_ball_rad` survives
+verbatim. `Ttc.MonteCarlo.rad_le_of_subset_closedBall` below is the inequality the old
+definition withheld, and `Ttc.MonteCarlo.rad_roundBody_le` is it at the run's own body,
+so **`Ttc.MonteCarlo.nSamp_roundBody_le` now carries no hypothesis about `rad` at all**.
 
-Adopting it touches exactly two files, neither of which this file owns:
-
-1. `Ttc/Model/Pseudocode.lean:848–851` — the body of `Ttc.MonteCarlo.rad`, replaced by
-   the block above. Its *type* is unchanged, so no downstream statement moves.
-2. `Ttc/Volume/MonteCarlo.lean:144–159` — the proofs of `Ttc.MonteCarlo.rad_pos` and
-   `Ttc.MonteCarlo.subset_ball_rad`, whose current one-liners go through
-   `Exists.choose_spec`. Their *statements* are unchanged; the replacement proofs are
-   `Ttc.MonteCarlo.radMin_pos` and `Ttc.MonteCarlo.subset_ball_radMin` verbatim. A
-   third theorem, `Ttc.MonteCarlo.radMin_le_of_subset_closedBall`, is added there.
-
-Nothing else in the development sees `rad`'s body: outside those two files only
-`rad_pos`, `rad_ne_zero`, `rad_pow_pos` and `subset_ball_rad` are ever used, and every
-one of them survives. `Ttc.MonteCarlo.radMin_roundBody_le` is the payoff waiting for it
-— with the swap made, it discharges `Ttc.MonteCarlo.nSamp_roundBody_le`'s `hrad` and the
-closed form becomes unconditional.
+`Ttc.mcVolCoins` and `Ttc.ttcCoinAndStepCharge_le_sum` carried a note saying that no
+closed form for the coin count existed. That note is superseded by this file, and
+`Ttc/Exec/PriceList.lean` is where the closed form is carried to the run's own price
+list, uniformly over the DNF's cubes.
 -/
 
 namespace Ttc
@@ -229,43 +216,11 @@ theorem nSamp_le_of_rad_le {K : Set (Space n)} {R ε pf : ℝ} (hR : 0 < R) (hε
   rw [nSamp]
   exact Nat.add_le_add_right (Nat.ceil_le_ceil (heq ▸ hinv)) 1
 
-/-! ## §3. The two halves joined, at the run's own body
+/-! ## §3. The upper bound on `rad` that the `sInf` definition supplies
 
-`hrad` is the step the present `Ttc.MonteCarlo.rad` cannot supply — see the module
-docstring. Everything else is discharged. -/
-
-/-- **The closed form at the body the run actually calls `Vol_ED` on.**
-
-    nSamp (roundBody c γ K) ε p ≤ ⌈(γ⁻¹·diam K + 1)ⁿ / (ε²·p)⌉₊ + 1
-
-`hrad` is **not** an assumption of the development: it is the inequality
-`Ttc.MonteCarlo.rad`'s `Classical.choose` withholds, isolated so that it is visible.
-`Ttc.MonteCarlo.radMin_roundBody_le` below proves the corresponding statement for the
-proposed replacement `Ttc.MonteCarlo.radMin`. -/
-theorem nSamp_roundBody_le {c : Space n} {γ ε pf : ℝ} {K : Set (Space n)}
-    (hγ : 0 < γ) (hε : 0 < ε) (hpf : 0 < pf) (hball : Metric.ball c γ ⊆ K)
-    (hfin : volume K ≠ ⊤)
-    (hrad : rad (roundBody c γ K) ≤ roundRad γ K) :
-    nSamp (roundBody c γ K) ε pf ≤ ⌈roundRad γ K ^ n / (ε ^ 2 * pf)⌉₊ + 1 :=
-  nSamp_le_of_rad_le (roundRad_pos hγ) hε hpf hrad
-    (ball_subset_roundBody hγ hball) (volume_roundBody_ne_top hγ hfin)
-
-/-! ## §4. `radMin`: the definition `rad` would have to become
-
-Everything below is about `Ttc.MonteCarlo.radMin`, a *new* definition local to this
-file. It is not used anywhere: it exists to show that the replacement proposed in the
-module docstring keeps the two properties the development consumes and gains the one it
-needs. Substituting it for `Ttc.MonteCarlo.rad` in `Ttc/Model/Pseudocode.lean` — a file
-this agent does not own — turns `Ttc.MonteCarlo.nSamp_roundBody_le`'s hypothesis into a
-theorem. -/
-
-open scoped Classical in
-/-- **The least enclosing radius, plus one.** The `Classical.choose`-free replacement
-for `Ttc.MonteCarlo.rad`: same shape, same default `1` when no radius exists, but
-`sInf` in place of `Exists.choose`, so an upper bound is derivable. -/
-noncomputable def radMin (K : Set (Space n)) : ℝ :=
-  if ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R
-  then sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} + 1 else 1
+Three lines, and they are the whole of what changed: `rad K` is `sInf` of the valid radii
+plus one, `sInf` is bounded above by every element of a set bounded below, and an
+enclosing *closed* ball of radius `D` puts `D + t` in that set for every `t > 0`. -/
 
 /-- The valid radii are bounded below by `0`. -/
 theorem bddBelow_radSet (K : Set (Space n)) :
@@ -277,28 +232,10 @@ theorem sInf_radSet_nonneg (K : Set (Space n))
     0 ≤ sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} :=
   le_csInf h fun _ hR => hR.1.le
 
-/-- **`radMin` is positive** — `Ttc.MonteCarlo.rad_pos`, verbatim. -/
-theorem radMin_pos (K : Set (Space n)) : 0 < radMin K := by
-  classical
-  rw [radMin]
-  split_ifs with h
-  · have := sInf_radSet_nonneg K h; linarith
-  · exact one_pos
-
-/-- **`radMin` encloses `K`** — `Ttc.MonteCarlo.subset_ball_rad`, verbatim. -/
-theorem subset_ball_radMin {K : Set (Space n)}
-    (h : ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R) :
-    K ⊆ Metric.ball (0 : Space n) (radMin K) := by
-  classical
-  intro x hx
-  rw [radMin, if_pos h, mem_ball_zero_iff]
-  have hle : ‖x‖ ≤ sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} :=
-    le_csInf h fun R hR => (mem_ball_zero_iff.mp (hR.2 hx)).le
-  linarith
-
-/-- **The bound `rad` cannot give.** Any closed ball enclosing `K` bounds `radMin`. -/
-theorem radMin_le_of_subset_closedBall {K : Set (Space n)} {D : ℝ} (hD : 0 ≤ D)
-    (hsub : K ⊆ Metric.closedBall (0 : Space n) D) : radMin K ≤ D + 1 := by
+/-- **The bound `Exists.choose` could not give.** Any closed ball enclosing `K` bounds
+`Ttc.MonteCarlo.rad`. -/
+theorem rad_le_of_subset_closedBall {K : Set (Space n)} {D : ℝ} (hD : 0 ≤ D)
+    (hsub : K ⊆ Metric.closedBall (0 : Space n) D) : rad K ≤ D + 1 := by
   classical
   have hex : ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R :=
     ⟨D + 1, by linarith, hsub.trans (Metric.closedBall_subset_ball (by linarith))⟩
@@ -306,18 +243,36 @@ theorem radMin_le_of_subset_closedBall {K : Set (Space n)} {D : ℝ} (hD : 0 ≤
     refine le_of_forall_pos_le_add fun t ht => ?_
     refine csInf_le (bddBelow_radSet K) ?_
     exact ⟨by linarith, hsub.trans (Metric.closedBall_subset_ball (by linarith))⟩
-  rw [radMin, if_pos hex]
+  rw [rad, if_pos hex]
   linarith
 
-/-- **The payoff.** With `radMin` in place of `rad`, the hypothesis of
-`Ttc.MonteCarlo.nSamp_roundBody_le` is a theorem: the normalised body's least enclosing
-radius is at most the explicit `Ttc.roundRad`. -/
-theorem radMin_roundBody_le {c : Space n} {γ : ℝ} {K : Set (Space n)} (hγ : 0 < γ)
+/-- **The bound at the run's own body**: the normalised body's least enclosing radius is
+at most the explicit `Ttc.roundRad`.  This is what discharges the hypothesis
+`Ttc.MonteCarlo.nSamp_roundBody_le` used to carry. -/
+theorem rad_roundBody_le {c : Space n} {γ : ℝ} {K : Set (Space n)} (hγ : 0 < γ)
     (hball : Metric.ball c γ ⊆ K) (hbdd : Bornology.IsBounded K) :
-    radMin (roundBody c γ K) ≤ roundRad γ K :=
-  radMin_le_of_subset_closedBall
+    rad (roundBody c γ K) ≤ roundRad γ K :=
+  rad_le_of_subset_closedBall
     (mul_nonneg (inv_pos.mpr hγ).le Metric.diam_nonneg)
     (roundBody_subset_closedBall hγ hball hbdd)
+
+/-! ## §4. The two halves joined, at the run's own body
+
+No hypothesis about `Ttc.MonteCarlo.rad` remains: the geometry (`hγ`, `hball`, `hbdd`)
+and the parameter range (`hε`, `hpf`) are all of it. -/
+
+/-- **The closed form at the body the run actually calls `Vol_ED` on.**
+
+    nSamp (roundBody c γ K) ε p ≤ ⌈(γ⁻¹·diam K + 1)ⁿ / (ε²·p)⌉₊ + 1
+
+**Unconditional in `rad`** — `Ttc.MonteCarlo.rad_roundBody_le` supplies the enclosing
+radius from `rad`'s own `sInf`.  **Exponential in `n`** — see the module docstring. -/
+theorem nSamp_roundBody_le {c : Space n} {γ ε pf : ℝ} {K : Set (Space n)}
+    (hγ : 0 < γ) (hε : 0 < ε) (hpf : 0 < pf) (hball : Metric.ball c γ ⊆ K)
+    (hbdd : Bornology.IsBounded K) (hfin : volume K ≠ ⊤) :
+    nSamp (roundBody c γ K) ε pf ≤ ⌈roundRad γ K ^ n / (ε ^ 2 * pf)⌉₊ + 1 :=
+  nSamp_le_of_rad_le (roundRad_pos hγ) hε hpf (rad_roundBody_le hγ hball hbdd)
+    (ball_subset_roundBody hγ hball) (volume_roundBody_ne_top hγ hfin)
 
 end Ttc.MonteCarlo
 
@@ -336,11 +291,8 @@ standard axioms. Re-check with `lake build Ttc.Volume.RadBound`. -/
 #print axioms Ttc.exists_ball_superset_roundBody
 #print axioms Ttc.MonteCarlo.hitData_ge_of_rad_le
 #print axioms Ttc.MonteCarlo.nSamp_le_of_rad_le
-#print axioms Ttc.MonteCarlo.nSamp_roundBody_le
-#print axioms Ttc.MonteCarlo.radMin
 #print axioms Ttc.MonteCarlo.bddBelow_radSet
 #print axioms Ttc.MonteCarlo.sInf_radSet_nonneg
-#print axioms Ttc.MonteCarlo.radMin_pos
-#print axioms Ttc.MonteCarlo.subset_ball_radMin
-#print axioms Ttc.MonteCarlo.radMin_le_of_subset_closedBall
-#print axioms Ttc.MonteCarlo.radMin_roundBody_le
+#print axioms Ttc.MonteCarlo.rad_le_of_subset_closedBall
+#print axioms Ttc.MonteCarlo.rad_roundBody_le
+#print axioms Ttc.MonteCarlo.nSamp_roundBody_le

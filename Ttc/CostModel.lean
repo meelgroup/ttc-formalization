@@ -97,11 +97,17 @@ which `Ttc.coinCost_ttcVol_le` bounds by `Ttc.ttcVolCoins`, and which
 has a hit and a miss.  `cSample` denotes `Ttc.mixCost` at the sampler's geometry, which
 `Ttc.mixCost_le_e2eBallWalkSteps` bounds by `Ttc.mixSteps`.  A KV97 or Hit-and-Run mixing
 theorem lands as a *smaller* upper bound on the latter — that is the attachment point, and
-it exists now.  What still blocks substituting a closed form into
-`Ttc.ttcCost_le_ttcComplexity` is unchanged and is not about cost modelling:
-`Ttc.MonteCarlo.rad` is a `Classical.choice` term with no derivable upper bound
-(`Exec/Complexity` §4), and the rejection rounds remain uncounted, so the *total* is still
-an undercount.  `Ttc/Model/Theorem.lean` and `Ttc/Model/ProblemSetting.lean` are untouched.
+it exists now.
+
+**`cVol` has since been given a value, and `cSample` has not.**  `Ttc.MonteCarlo.rad` is
+now the infimum of the enclosing radii rather than a `Classical.choice`, so
+`Ttc.MonteCarlo.nSamp_roundBody_le` (`Volume/RadBound`) is an unconditional closed form,
+and `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) makes it uniform over the DNF's
+cubes; `Ttc.ttc_volume_estimate` carries that number in place of its old `cVol` binder.
+No uniform bound on `Ttc.mixCost` at the run's cubes is available — see
+`Exec/PriceList`'s docstring for the exact residue — so `cSample` is still a binder.  And
+the rejection rounds remain uncounted whatever is substituted, so the *total* is still an
+undercount.  `Ttc/Model/ProblemSetting.lean` is untouched.
 -/
 
 namespace Ttc

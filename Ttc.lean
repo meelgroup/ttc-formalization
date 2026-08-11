@@ -444,6 +444,7 @@ import Ttc.Invariants
 import Ttc.Runtime
 import Ttc.CostModel
 import Ttc.Exec.SampleBound
+import Ttc.Exec.PriceList
 import Ttc.Dnf
 
 -- What the constants buy

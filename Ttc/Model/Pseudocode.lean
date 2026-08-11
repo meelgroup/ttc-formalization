@@ -849,7 +849,7 @@ open scoped Classical in
 /-- **The least enclosing radius, plus one**; `1` if no radius exists.
 
 `sInf` rather than `Exists.choose`: the infimum of the valid radii is a *canonical* choice,
-so an **upper** bound is derivable — `Ttc.MonteCarlo.radMin_le_of_subset_closedBall` in
+so an **upper** bound is derivable — `Ttc.MonteCarlo.rad_le_of_subset_closedBall` in
 `Ttc/Volume/RadBound.lean` turns any explicit enclosing closed ball into a bound on `rad`,
 which is what makes the sample count's closed form unconditional.  With `Exists.choose` no
 such inequality is provable: `Exists.choose_spec` gives only `0 < ·` and `K ⊆ ball 0 ·`,
