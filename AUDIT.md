@@ -1851,9 +1851,35 @@ file is the *assembly towards* discharging it, not the discharge.
 `Ttc.ttc_volume_endToEnd`, but by a different construction —
 [`Ttc.VolumeAlgorithm.monteCarlo`](Ttc/Volume/MonteCarlo.lean), hit-and-miss Monte
 Carlo, exponential in `n`. `Ttc/Volume/CousinsVempala.lean` was **bypassed, not
-proved**, and nothing in it has been discharged; it remains the only route to a
-*polynomial-time* volume oracle. `CV-ROADMAP.md` §0(0) says the same from the other
-side.
+proved**; it remains the only route to a *polynomial-time* volume oracle.
+
+**Three later constructions in that file are not degenerate — and what they show is
+mostly negative.** `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler`,
+`…OfSamplerFixedRate` and `…OfSamplerCooling` take a genuine sampler rather than a
+constant score; `hTV` — the sampler itself — is their only mathematical debt. What
+they establish about the schedule is worth reading before quoting any of it:
+
+* **The fixed-rate schedule does not anneal.** `Arlib.geomSchedule_total_cooling_lt`
+  proves that an `α = 1/n` schedule meeting the per-phase variance budget cools by a
+  factor **less than `11/10`**. Consequently
+  `Ttc.CV.cold_start_mem_relErr_of_fixedRate_fields` shows that the telescope's
+  *first factor alone* already estimates `Vol K` to within `11/(5n)` — the
+  construction is consistent and non-vacuous, but at that schedule it is not
+  computing anything the cold start did not already know.
+* **The general-`α` schedule does anneal, and annealing is not free.**
+  `Ttc.CV.cool_schedule_anneals` gives total cooling `≥ e^L` at
+  `m = ⌈8(n+1)L²/κ⌉`, and `Ttc.CV.cool_flat_slacks_satisfiable` checks the whole
+  hypothesis set at a strictly positive TV error, with no lower bound on `n`. But
+  enlarging `m` to buy cooling tightens the per-phase budget `κ/m` by the same
+  factor, and `Ttc.CV.cold_start_exponent_ge_of_coolRate` locates the crossover
+  against `11/(5n)` at `e^{2L} ≳ 17.6·L²/κ²` — essentially dimension-free. Below it
+  the general-`α` schedule inherits the fixed-rate degeneracy in full.
+* **No rate or running-time claim is made anywhere in that file.** A polynomial
+  phase count is not a polynomial algorithm; the per-phase sampling cost is
+  untouched.
+
+`CV-ROADMAP.md` §0′ carries the critical-path table and the nine findings against
+the Cousins–Vempala paper (five of them statements false as printed).
 
 ### 3d. Downstream structures with partial witnesses
 
