@@ -18,6 +18,7 @@ import Arlib.Convexity.StepLength
 import Arlib.Convexity.HitAndRunStep
 import Arlib.Convexity.LocalizationLimit
 import Arlib.Convexity.NeedleProfile
+import Arlib.Convexity.LocalizationAssembly
 import Arlib.Convexity.ConcaveSelection
 import Arlib.Convexity.SignedCut
 import Arlib.Convexity.DyerFrieze
