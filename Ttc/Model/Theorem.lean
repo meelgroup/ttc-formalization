@@ -60,77 +60,38 @@ measurability proof into `Model/`.  The price is that the bridge
 that bridge is what makes `ttc` an honest name for the run rather than a fresh definition
 nothing connects to the analysis.
 
-**Why both charging constants are now numbers.**  `alg:ttc` line 24's
-`Vol_ED` and line 43's `GenerateSamples` are oracle calls whose per-call cost the paper
-never fixes, so `Ttc/Runtime.lean` leaves them parametric.  Both used to be binders here.
-**Neither is any more**, and the theorem's binders are exactly its eleven inputs and input
-conditions.  `cVol` is the explicit natural
+**Why `cVol` and `cSample` stay parametric.**  `alg:ttc` line 24's `Vol_ED` and line 43's
+`GenerateSamples` are oracle calls whose per-call cost the paper never fixes, so
+`Ttc/Runtime.lean` leaves them parametric and the statement quantifies over them.
+nfalean has no such parameter because its cost model is entirely internal.  Quantifying
+keeps this a claim about **every** charging convention rather than one arbitrary one.
 
-```
-⌈(γ⁻¹ · diam (Sol(preprocess atoms φ) at the dilated atoms) + 1)ⁿ / (ε'² · δ')⌉₊ + 1
-γ  = algGamma atoms φ ε δ                        -- `q·γ̂`, the dilated inscribed radius
-ε' = (algBlock atoms φ ε δ).epsPrime  = ε/12
-δ' = (algBlock atoms φ ε δ).deltaPrime = δ/(5m)
-```
+Both *are* now derived quantities, and both have proved closed forms — the statement is
+parametric by choice, not for want of them:
 
-and `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) proves it dominates the number of
-coins the constructed `Vol_ED` reads **at every cube of the DNF** — uniformly, because
-each cube's region is inside the solution set (`Ttc.region_subset_sol`) and
-`Metric.diam` is monotone, so `diam (region M i) ≤ diam (sol M φ)` for all `i`.  Nothing
-in the substitution is an assumption: `Ttc.MonteCarlo.nSamp_roundBody_le`
-(`Volume/RadBound`) is the per-cube closed form and it is unconditional, since
-`Ttc.MonteCarlo.rad` is the *infimum* of the enclosing radii.
+* `Ttc.CostModel.coinCost_est_eq` is an **equality**, `coinCost (MonteCarlo.est K ε pf)
+  = MonteCarlo.nSamp K ε pf`, and `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`)
+  bounds it uniformly over the DNF's cubes by
+  `⌈(γ⁻¹·diam(Sol) + 1)ⁿ / (ε'²·δ')⌉₊ + 1`.
+* `Ttc.ttcSampleSteps_le_ttcSampPrice` (`Exec/SamplePrice`) bounds the sampler's chain
+  length uniformly by `⌈Ttc.mixStepsBound at cube-free arguments⌉₊`, under exactly the
+  five input conditions this theorem already carries.
 
-**`cVol` is exponential in the dimension, and the conjunct below must not be read as a
-polynomial bound.**  The `(…)ⁿ` is hit-and-miss Monte Carlo's rejection factor: sampling
-uniformly from a ball of radius `R` to hit a body of inradius `1` needs `Θ(Rⁿ)` draws.
-The price is `Θ((diam/γ)ⁿ / (ε'²·δ'))` and no rearrangement makes it smaller.
+**Those prices are exponential in `n`, not `O(n⁴)`.**  `cVol` is
+`Θ((diam/γ)ⁿ / (ε'²·δ'))` — hit-and-miss Monte Carlo's rejection factor — and `cSample`
+is `Θ(4ⁿ·(γ+Dm)^{4n}/γ^{4n})`, with a further `(1+κ/(10^ρ·q·γ̂))ⁿ·10^(ρn)·qⁿ` inside the
+logarithm.  `thm:runtime`'s `cVol = O(n⁴)`, `cSample = O(n³)` are the **paper's** figures
+for a Cousins–Vempala oracle and a polynomial sampler; **this development proves neither,
+and for the constructions it does build the true prices are exponential.**  Substituting
+`O(n⁴)` here would assert what the formalisation refutes.
 
-**`cSample` is now a number too.**  It is the explicit natural
-
-```
-⌈ (log Mw + 2·log (1/eps)) · (1024·((γ+Dm)/γ)^(2n)
-                              + 16384·4ⁿ·n²·Dm²/dl² · ((γ+Dm)/γ)^(4n)) + 1 ⌉₊
-dl  = 10^ρ · q·γ̂                                  -- the ball-walk step
-γ   = dl + κ,   κ = kappaOf (cOf ε') r            -- the inflated inscribed radius
-Dm  = (1 + κ/dl) · diam (10^ρ · Sol(preprocess atoms φ) at the dilated atoms)
-V   = (1 + κ/dl)ⁿ · 10^(ρn) · qⁿ · Vol(F)         -- the inflated body's volume, bounded
-Mw  = V / vol (ball 0 γ),      eps = ε' / (4·V)
-```
-
-— `Ttc.mixStepsBound` (`Exec/SampleBound`) at arguments that name **no cube**, ceilinged
-once.  `Ttc.mixStepsBound` already carries the `+1` of `Arlib.MarkovChains.mixingTime_le`,
-which is why there is no `+ 1` outside the `⌈·⌉₊` as there is for `cVol`.
-`Ttc.ttcSampleSteps_le_ttcSampPrice` (`Exec/SamplePrice`) proves it dominates the chain
-length at **every cube of the DNF**, under the same five conditions on the input this
-theorem already carries and no geometric side condition — so it is a price and not an
-arbitrary natural.  The three cube-dependent arguments were replaced by cube-free ones in
-`Exec/InflateBound`: the diameter and the warm-start ratio by upper bounds and the TV
-tolerance by a **lower** bound, because `Ttc.mixStepsBound` is *decreasing* in it.
-
-An earlier version of this paragraph said a uniform `cSample` was blocked, because an upper
-bound on `Vol(P'ᵢ)` — the Kannan–Vempala inflated dilated polytope — was missing.  It is
-not missing: `Ttc.toReal_volume_ttcSampBody_le` supplies it, from
-`Arlib.KV97.volume_inflated_le` and `Ttc.region_subset_sol`, and it reduces to the user's
-own `Vol(F)` (`Ttc.ttcSampVolPrice_model`).  That is not circular — a cost bound in terms
-of the input's own volume is a closed form in the input, exactly as `cVol`'s
-`diam (Sol …)` is.
-
-**Both prices are exponential in the dimension, and the conjuncts below must not be read
-as polynomial bounds.**  `cVol` is `Θ((diam/γ)ⁿ / (ε'²·δ'))`; `cSample` is
-`Θ(4ⁿ·(γ+Dm)^{4n}/γ^{4n})`, and its `Mw`/`eps` carry a further
-`(1 + κ/(10^ρ·q·γ̂))ⁿ · 10^(ρn) · qⁿ` inside a logarithm.  No rearrangement makes either
-smaller.
-
-**Three undercounts stand, and two concrete numerals must not be read as denying them.**
-`Ttc.kv97SampD`'s rejection rounds are unbounded and counted nowhere; `alg:ttc` lines
-32–42's `while` loops are uncharged; per-step arithmetic is free.  And — the caveat a
-concrete `cSample` changes nothing about — `Ttc.mixSteps` **does not occur in
-`Ttc.ttcRun`'s definitional closure at all**: it enters through `Ttc.ttcRates`, the *law*
-the sample coins are drawn from, while `GenerateSamples` in the run is `Ttc.trajGen`, a
-read-off.  So `cSample` prices the chain the sampler's law is defined by, **not steps the
-modelled run takes.**  A bound on an undercount is not a bound on the count, and nothing
-here bounds a running time.
+Three further reasons a concrete numeral here would overclaim, all unchanged: `mixSteps`
+does not occur in `Ttc.ttcRun`'s definitional closure at all — it enters through
+`Ttc.ttcRates`, the *law* — so `cSample` prices the chain the sampler's law is defined by
+rather than steps the run takes; `Ttc.kv97SampD`'s rejection rounds are unbounded and
+counted nowhere; and `alg:ttc` lines 32–42's `while` loops and per-step arithmetic are
+uncharged.  A bound on an undercount is not a bound on the count, and **nothing here
+bounds a running time.**
 
 **There is no iterated integral.**  Earlier versions of this statement carried
 `∫⁻ c, trajLaw (ttcRates … c) {t | …} ∂(MonteCarlo.coins n)` — outer over the volume
@@ -385,17 +346,7 @@ rates that draw produced.  No iterated integral.
   `GenerateSamples` draw per returned point) is at most
   `m · (C_vol + C_sample · (Θ + 1))`, written out as explicit arithmetic in `ε`, `δ` and
   `m = |toDNFd (preprocess atoms φ)|` so that the conjunct names nothing this file's
-  reader cannot find — with **both** charging constants substituted: `C_vol` by
-  `⌈(γ⁻¹·diam(Sol) + 1)ⁿ / (ε'²·δ')⌉₊ + 1` and `C_sample` by `⌈mixStepsBound at the
-  uniform arguments⌉₊`.  **Both are exponential in the dimension `n`** —
-  `Θ((diam/γ)ⁿ/(ε'²δ'))` and `Θ(4ⁿ(γ+Dm)^{4n}/γ^{4n})` — and neither conjunct may be read
-  as a polynomial bound.  `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) and
-  `Ttc.ttcSampleSteps_le_ttcSampPrice` (`Exec/SamplePrice`) are what make the two numerals
-  *prices*: each dominates what the corresponding oracle costs at **every** cube.  The
-  module docstring says which three undercounts a concrete number here does *not* repair,
-  and in particular that `Ttc.mixSteps` never occurs in `Ttc.ttcRun`'s definitional
-  closure — `C_sample` prices the chain the sampler's *law* is defined by, not steps the
-  modelled run takes.  See the module docstring for which quantifier this is and what it
+  reader cannot find.  See the module docstring for which quantifier this is and what it
   is not.
 
 Eleven binders, all conditions on the input; only `hφ` and `hpos` are shape
@@ -406,163 +357,28 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) :
+    (hpos : 0 < volSol (atomSet atoms) φ)
+    (cVol cSample : ℕ) :
     -- (accuracy) the estimate returned is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ
-            (⌈((algGamma atoms φ ε δ)⁻¹
-                  * Metric.diam
-                      (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
-                / ((algBlock atoms φ ε δ).epsPrime ^ 2
-                    * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1)
-           (
-            ⌈(Real.log ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-              (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
-              (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
-              ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-              (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
-              (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-              latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-              (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ
-              + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ) ^ 2
-              * ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-              latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-              (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ) ^ 2 * (((latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-              latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-              (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ
-              + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊);
+      Pr[r ← ttc atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) **almost every** run — `All[…]` is `∀ᵐ`, so a null exceptional set
     -- is permitted — and, unlike earlier versions, under **no termination hypothesis**:
-    -- charged at most `m·(c_vol + c_samp·(Θ + 1))`, with `c_vol` the explicit
-    -- `⌈(γ⁻¹·diam(Sol) + 1)ⁿ / (ε'²·δ')⌉₊ + 1` and `c_samp` the explicit
-    -- `⌈mixStepsBound at the uniform arguments⌉₊` — **both exponential in `n`**
-    (All[r ← ttc atoms φ ε δ
-            (⌈((algGamma atoms φ ε δ)⁻¹
-                  * Metric.diam
-                      (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
-                / ((algBlock atoms φ ε δ).epsPrime ^ 2
-                    * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1)
-           (
-            ⌈(Real.log ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-              (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
-              (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
-              ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-              (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
-              (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-              latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-              (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ
-              + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ) ^ 2
-              * ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-              latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-              (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ) ^ 2 * (((latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-              algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-              latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-              (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ
-              + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊);
+    -- charged at most `m·(c_vol + c_samp·(Θ + 1))`
+    (All[r ← ttc atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ)
-          * (((⌈((algGamma atoms φ ε δ)⁻¹
-                    * Metric.diam
-                        (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))
-                      + 1) ^ n
-                  / ((algBlock atoms φ ε δ).epsPrime ^ 2
-                      * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1 : ℕ) : ℝ)
-              +
-              ((⌈(Real.log ((1 +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-                (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
-                (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
-                ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-                (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
-                (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-                latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-                (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ)
-                ^ 2 * ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-                latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-                (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ) ^ 2 * (((latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-                latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-                (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) *
-                algGamma atoms φ ε δ +
-                Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊ : ℕ) : ℝ)
+          * ((cVol : ℝ) + (cSample : ℝ)
               * (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
                   + 15 * (Real.log (15 / (2 * δ))
                       + Real.log ((toDNFd (preprocess atoms φ)).length))
                   + 1))]) := by
   rw [ttc_eq_ttcPairLaw]
-  exact ⟨ttc_accuracy_pairLaw atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 _ _,
-    all_ttcPairLaw_cost_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 _ _⟩
+  refine ⟨ttc_accuracy_pairLaw atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample, ?_⟩
+  have h := all_ttcPairLaw_cost_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample
+  simpa only [ttcComplexity_def] using h
 
 #print axioms ttc_volume_estimate
 
