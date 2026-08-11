@@ -10,6 +10,7 @@ import Arlib.Convexity.Isoperimetry
 import Arlib.Convexity.Localization
 import Arlib.Convexity.LocalizationLemma
 import Arlib.Convexity.BrunnSharp
+import Arlib.Convexity.KLS97
 import Arlib.Convexity.CrossRatio
 import Arlib.Convexity.StepLength
 import Arlib.Convexity.HitAndRunStep
