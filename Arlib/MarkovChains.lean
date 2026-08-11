@@ -6,6 +6,7 @@ import Arlib.MarkovChains.Continuous.Conductance
 import Arlib.MarkovChains.Continuous.Warmness
 import Arlib.MarkovChains.Continuous.MixingFromConductance
 import Arlib.MarkovChains.Continuous.BallWalk
+import Arlib.MarkovChains.Continuous.HitAndRun
 import Arlib.MarkovChains.Continuous.Cheeger
 import Arlib.MarkovChains.Continuous.PointwiseMixing
 import Arlib.MarkovChains.Continuous.PointwiseRoute
