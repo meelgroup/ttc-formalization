@@ -114,8 +114,23 @@ ones:
 
 | Oracle | Original path — still present, still unconditional | New path — conditional |
 | --- | --- | --- |
-| Volume | `Ttc.mcVol`, `Ttc.VolumeAlgorithm.monteCarlo` — correct, **exponential in `n`** | `Ttc.VolumeAlgorithm.cousinsVempalaOfBiasedEnd`, `Ttc/Volume/CVEstimator.lean` |
-| Sample | `Ttc.kv97SamplerOfBallWalk` — `law_tv` is a **theorem** (`mixesWithin_lazy_ballWalk_polytope`), step count `2^Θ(n)·log(…)` | `Ttc.kv97SamplerOfHitAndRun` — `law_tv` from an **assumed** `HitAndRunTheorem11Input` |
+| Volume | `Ttc.mcVol`, `Ttc.VolumeAlgorithm.monteCarlo` — correct, **exponential in `n`** | `Ttc.ttc_accuracy_cousinsVempala` (`Ttc/Exec/CVBackend.lean`), through `VolumeAlgorithm.cousinsVempalaOfRuns` |
+| Sample | `Ttc.kv97SamplerOfBallWalk` — `law_tv` is a **theorem** (`mixesWithin_lazy_ballWalk_polytope`), step count `2^Θ(n)·log(…)` | `Ttc.kv97SamplerOfHitAndRun` (`Ttc/Sampler/ConstructHitAndRun.lean`) — `law_tv` from an **assumed** `HitAndRunTheorem11Input` |
+
+**The two new entry points are the declarations to read.** For the volume side,
+`Ttc.ttc_accuracy_cousinsVempala`; for the sample side,
+`Ttc.kv97SamplerOfHitAndRun`. Read their *types*. Note that the generalisation
+underneath the volume one is definitional, not a parallel copy —
+`Ttc.volOfAlg_monteCarlo`, `Ttc.volGoodOf_monteCarlo` and
+`Ttc.Box.bxTtcProbAlg_eq` are all `rfl`, which is the cheapest possible evidence
+that the existing path was not disturbed.
+
+Two further honesty notes on the volume entry point, both in its docstring: the
+`1 − δ` is at a **fixed good coin** (integrating the coin out costs a further
+`δ/4`, and that integration is *not* performed), and the `hω` binder hides a
+**search** cost — `Ttc.exists_volGood_coin` certifies inhabitation only. There is
+also **no joint CV witness**: the `monteCarlo` bundle is witnessed jointly and
+unconditionally, but the CV one only degenerately, blocked on `big`.
 
 So the honest one-line summary is: **the replacements exist as conditional entry
 points alongside retained unconditional ones**, not as substitutions. A green
