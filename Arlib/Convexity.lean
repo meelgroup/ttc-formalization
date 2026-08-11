@@ -54,6 +54,7 @@ import Arlib.Convexity.KLS97Lemma38
 import Arlib.Convexity.SharpIsoperimetryConcave
 import Arlib.Convexity.LocalizationLSC
 import Arlib.Convexity.LocalizationTransport
+import Arlib.Convexity.HlocFromLocalization
 
 /-!
 # Arlib.Convexity
