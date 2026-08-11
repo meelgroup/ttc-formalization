@@ -767,6 +767,89 @@ hypotheses transported to the deduplicated cube list are in
 `Ttc.TwoCube.toDNFd_twoForm` proves the two-cube DNF is already duplicate-free —
 **special to this witness**, not a general fact.
 
+### The two per-call charges `cVol`, `cSample`: parametric by choice, and exponential in fact
+
+`alg:ttc` line 24's `Vol_ED` and line 43's `GenerateSamples` are oracle calls whose
+per-call cost the paper never fixes, so the statement quantifies over them. That keeps
+the running-time half a claim about **every** charging convention rather than one
+arbitrary one. (nfalean needs no such parameter: its cost model is entirely internal.)
+
+Both are nevertheless *derived* quantities with proved closed forms — the statement is
+parametric by choice, not for want of them:
+
+* `Ttc.CostModel.coinCost_est_eq` is an **equality**, `coinCost (MonteCarlo.est K ε pf)
+  = MonteCarlo.nSamp K ε pf`, and `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`)
+  bounds it uniformly over the DNF's cubes by `⌈(γ⁻¹·diam(Sol) + 1)ⁿ / (ε'²·δ')⌉₊ + 1`.
+* `Ttc.ttcSampleSteps_le_ttcSampPrice` (`Exec/SamplePrice`) bounds the sampler's chain
+  length uniformly by `⌈Ttc.mixStepsBound at cube-free arguments⌉₊`, under exactly the
+  five input conditions the headline already carries.
+
+**Those prices are exponential in `n`, not `O(n⁴)`.** `cVol` is `Θ((diam/γ)ⁿ/(ε'²·δ'))`
+— hit-and-miss Monte Carlo's rejection factor — and `cSample` is
+`Θ(4ⁿ·(γ+Dm)^{4n}/γ^{4n})`, with a further `(1+κ/(10^ρ·q·γ̂))ⁿ·10^(ρn)·qⁿ` inside the
+logarithm. `thm:runtime`'s `cVol = O(n⁴)`, `cSample = O(n³)` are the **paper's** figures,
+for a Cousins–Vempala oracle and a polynomial sampler; **this development proves neither,
+and for the constructions it does build the true prices are exponential.** Substituting
+`O(n⁴)` into the headline would assert what the formalisation refutes.
+
+Three further reasons a concrete numeral there would overclaim: `mixSteps` does not occur
+in `Ttc.ttcRun`'s definitional closure at all — it enters through `Ttc.ttcRates`, the
+*law* — so `cSample` prices the chain the sampler's law is defined by rather than steps
+the run takes; `Ttc.kv97SampD`'s rejection rounds are unbounded and counted nowhere; and
+`alg:ttc` lines 32–42's `while` loops and per-step arithmetic are uncharged. **A bound on
+an undercount is not a bound on the count, and nothing here bounds a running time.**
+
+### Which quantifier the running-time half uses, and what it is not
+
+`All[r ← μ; E r]` is `∀ᵐ r ∂μ`, and it carries **no termination hypothesis**: the
+absorption loops halt `Ttc.ttc`-almost surely (`Ttc.trajLaw_ae_terminates`,
+`Process/Truncation`; transported by `Ttc.ae_ttcLaw_ttcTerminates`), so the guard earlier
+versions carried is discharged rather than assumed. The *pointwise* form remains **false**
+without interrupt-truncation — off the absorption guard `Ttc.absorbLevel` degenerates
+(`Nat.sInf ∅ = 0`) and the count handed to `GenerateSamples` is unbounded — but the a.e.
+form no longer needs it. A truncated variant is designed in `Process/Truncation` and
+deliberately not applied; its sentinel would have to be `-1`, not `0`, since `0` is a
+legitimate output of `Ttc.run` (`Findings/SmallBody`) and `0 ∈ relErr 1 V`, so a `0`
+sentinel would let interrupted runs count as *correct*.
+
+This is **not** weaker than nfalean's support-based `All`. For a `PMF`,
+`support p ⊆ {x | E x}` ⟺ `p.toOuterMeasure {¬E} = 0`, so the support and a.e. forms
+coincide; and by `Ttc.all_ttcPairLaw_iff_atoms` the same collapse holds for `Ttc.ttc`,
+which is a pushforward along a countably determined map and hence carried by a countable
+set. `Monadic/MeasurePr` proves `∀ ⟹ AllS ⟹ All` with **both arrows strict**
+(`exists_all_and_not_allS`, `exists_allS_and_not_forall`), and restating the conjunct with
+`AllS` would genuinely discard the claim at coin sequences leaving the unit ball, since
+`Ttc.MonteCarlo.coinLaw` is `Arlib.uniformOn volume (Metric.ball 0 1)` and so `ttcLaw` is
+not `IsOpenPosMeasure`.
+
+Two strictly sharper statements are kept, **incomparable** with the conjunct — sharper in
+the bound, weaker in the hypothesis: `Ttc.ttcPairLaw_cost_le_of_terminates` (over
+`Set.range (Ttc.ttcPair …)`, no exceptional set at all) and
+`Ttc.all_ttcPairLaw_cost_le_of_terminates` (the `max`-shaped `Ttc.ttcThresh` rather than
+the sum). The constant in the headline is at most a factor 2 off on the threshold term
+(`max a b ≤ a + b`, both branches kept and proved nonnegative); that factor is what
+dropping the guard cost.
+
+### Why a `Measure` and not a `PMF`
+
+`Ttc.MonteCarlo.coins` is `MeasureTheory.Measure.infinitePi` of the uniform law on a
+Euclidean ball — an **atomless** measure on an uncountable space — so there is no `PMF`
+whose `toOuterMeasure` it is. This is a fact about the object, not a stylistic choice;
+`Monadic/MeasurePr` works through the consequences. What survives of the Giry structure:
+`Ttc.ttcTrajKernel` is a Markov kernel, `⊗ₘ` is the monadic bind, `Ttc.ttcLaw` is a
+probability measure. `Model/Pseudocode` spells `Ttc.ttc` with `Measure.bind`/`Measure.map`
+rather than `⊗ₘ` deliberately: the `⊗ₘ` form is definitionally `Ttc.ttcPairLaw` but would
+drag `Ttc.ttcTrajKernel` and its measurability proof into `Model/`. The price is that
+`Ttc.ttc_eq_ttcPairLaw` (`Monadic/Program`) is a three-step proof rather than `rfl`.
+
+There is also **no iterated integral**. Earlier versions carried
+`∫⁻ c, trajLaw (ttcRates … c) {t | …} ∂(MonteCarlo.coins n)`, quantifying the two coin
+sequences separately in the two conjuncts. Folding them into one measure is
+`Ttc.lintegral_good_event_eq_compProd`, and it is not free: it needs the good event
+measurable **jointly** in `c` and `t`, which is what `Monadic/EventMeasurable` establishes
+via `Ttc.CountablyDetermined` (`Ttc.run` folds through a `Multiset (Space n)` state with no
+measurable structure, and `Ttc.absorbLevel` is an unbounded `Nat.sInf` search).
+
 > **Do not cite [`Ttc/Witness/Headline.lean`](Ttc/Witness/Headline.lean) for this.**
 > `Ttc.TwoCube.ttc_volume_estimate_two_cube` and `…_at` witness
 > [`Ttc.ttc_volume_inputs`](Ttc/Exec/Inputs.lean) — several rungs down, below the
