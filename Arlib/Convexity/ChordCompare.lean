@@ -80,7 +80,8 @@ Subadditivity would give `2/3` for the union.  The sharp value is `1/2` and it i
 pieces overlap; `1/2` is attained at ratio `1 : 3`.  The paper's budget
 `1/8 + q₂ + 1/3 < 3/4` therefore becomes `1/8 + q₂ + 1/2`, which is `< 1` exactly when
 `q₂ < 3/8` — true for the sharp cap constant `2(1 − Φ(1)) = 0.3173…` but not for the
-dimension-free `q₂ = 1/2` of `tvLe_hitAndRun_lemma41_of_half`.  See the report to the caller
+dimension-free `q₂ = 1/2` that `tvLe_hitAndRun_lemma41_of_half` once assumed — that corollary
+is now **deleted**, because the corrected budget `1/8 + q₂ + 1/2` is vacuous there.  See the report to the caller
 for what this does to the paper's constants and for the alternative of retuning the factor
 `2` (a factor `Λ` allows the confinement `ρ ≤ 9 − 8/Λ`, `μ ≤ 8 − 9/Λ`, and at `Λ = 8` the
 union of the bad sets has mass `≈ 0.24`).

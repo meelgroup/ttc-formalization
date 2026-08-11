@@ -5,6 +5,7 @@ Authors: ArLib contributors
 -/
 import Arlib.Convexity.StepLength
 import Arlib.MarkovChains.Continuous.HitAndRun
+import Arlib.MarkovChains.Continuous.SphereCoord
 
 /-!
 # Lemma 3.2 of Lovász–Vempala: the median hit-and-run step is at least `s_α/32`
@@ -115,16 +116,22 @@ polar-coordinate identity `Arlib.MarkovChains.lintegral_polar_at` plus the eleme
 integral `Arlib.lintegral_pow_Ioc`.  That is `toSphere_mul_le_volume_of_cone`, and it is the
 only geometry in this file.
 
-One piece of Mathlib really is absent: **`Measure.toSphere` is not known to be invariant
-under `θ ↦ −θ`**.  The paper uses that invariance implicitly, by reading `p` as a property of
-the sphere `∂(x + (s/2)B)` (a symmetric object) and then union-bounding over the two
-endpoints of the chord.  The cone bound only ever sweeps the outgoing half-ray, so it bounds
-`{θ : x + (s/2)θ ∉ K}` and not `{θ : x − (s/2)θ ∉ K}`.  Rather than assume the invariance,
-`toSphere_badDir_neg_le` reflects the *body*: `K* = {y : x + x − y ∈ K}` is convex, contains
-`x`, admits the same radius `t`, has `vol(tB \ K*) = vol(tB \ K)`, and its outgoing bad
-directions are `K`'s incoming ones.  Only the measure-preserving map `y ↦ (x+x) − y` on
-Lebesgue measure is used.  A Mathlib lemma `(volume.toSphere).map (Neg.neg) = volume.toSphere`
-would shorten this, and is the single missing API this development would have liked.
+The one piece of API the argument needs beyond that is the invariance of `Measure.toSphere`
+under `θ ↦ −θ`.  The paper uses it implicitly, by reading `p` as a property of the sphere
+`∂(x + (s/2)B)` (a symmetric object) and then union-bounding over the two endpoints of the
+chord.  The cone bound only ever sweeps the outgoing half-ray, so it bounds
+`{θ : x + (s/2)θ ∉ K}` and not `{θ : x − (s/2)θ ∉ K}`.
+
+Mathlib v4.32 does not have that invariance, but **this repository now does**:
+`Arlib.MarkovChains.toSphere_map_neg` (and its set form `toSphere_preimage_neg`) of
+`Arlib/MarkovChains/Continuous/SphereCoord.lean` proves
+`(volume.toSphere).map (Neg.neg) = volume.toSphere`, as the antipodal case of the rotation
+invariance `toSphere_map_sphereMap`.  Earlier versions of this file recorded the invariance
+as "the single missing API this development would have liked" and worked around it by
+reflecting the *body* (`K* = {y : x + x − y ∈ K}`), a ~40-line detour; that detour is gone.
+`toSphere_badDir_neg_le` is now three lines: rewrite the incoming bad set as the antipodal
+preimage of the outgoing one (`setOf_sub_smul_notMem_eq_preimage_neg`), apply the
+invariance, and quote `toSphere_badDir_le`.
 
 ## Constants
 
@@ -341,10 +348,15 @@ theorem toSphere_badDir_le [NeZero n] {K : Set (EuclideanSpace ℝ (Fin n))}
 The cone argument only ever sweeps the *outgoing* half-ray `{x + rθ : r > 0}`, so it bounds
 the measure of `{θ : x + (t/2)θ ∉ K}` and not that of `{θ : x − (t/2)θ ∉ K}`.  The paper
 gets the second bound for free by reading `p` as "the fraction of the sphere `∂(x+(s/2)B)`
-outside `K`", which is a symmetric notion; formally that would need the invariance of
-`Measure.toSphere` under `θ ↦ −θ`, which Mathlib does not have.  We get it instead by
-reflecting the *body*: `K* = {y : x + x − y ∈ K}` is convex, contains `x`, admits the same
-radius `t`, and its outgoing bad directions are exactly `K`'s incoming ones. -/
+outside `K`", which is a symmetric notion; formally that needs the invariance of
+`Measure.toSphere` under `θ ↦ −θ`.
+
+That invariance is `Arlib.MarkovChains.toSphere_map_neg` of
+`Arlib/MarkovChains/Continuous/SphereCoord.lean` (set form: `toSphere_preimage_neg`), so the
+proof is now the paper's own: the incoming bad directions are the antipodes of the outgoing
+ones (`setOf_sub_smul_notMem_eq_preimage_neg`), and the antipodal map preserves the measure.
+Earlier versions of this file avoided the invariance by reflecting the *body*
+(`K* = {y : x + x − y ∈ K}`), which is no longer necessary. -/
 theorem toSphere_badDir_neg_le [NeZero n] {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKm : MeasurableSet K) {x : EuclideanSpace ℝ (Fin n)} (hx : x ∈ K)
     {α t : ℝ} (ht : 0 < t) (hα : 63 / 64 ≤ α) (hα1 : α ≤ 1)
@@ -353,49 +365,13 @@ theorem toSphere_badDir_neg_le [NeZero n] {K : Set (EuclideanSpace ℝ (Fin n))}
         {θ : Metric.sphere (0 : EuclideanSpace ℝ (Fin n)) 1 |
           x - (t / 2) • (θ : EuclideanSpace ℝ (Fin n)) ∉ K}
       ≤ ENNReal.ofReal (1 / 32) * sphereArea n := by
-  set ρ : EuclideanSpace ℝ (Fin n) → EuclideanSpace ℝ (Fin n) := fun y => x + x - y with hρdef
-  set K' : Set (EuclideanSpace ℝ (Fin n)) := ρ ⁻¹' K with hK'
-  have hρmp : MeasurePreserving ρ (volume : Measure (EuclideanSpace ℝ (Fin n))) volume :=
-    Measure.measurePreserving_sub_left volume (x + x)
-  have hρcont : Continuous ρ := by fun_prop
-  have hK'm : MeasurableSet K' := hKm.preimage hρcont.measurable
-  have hK'c : Convex ℝ K' := by
-    intro y₁ h₁ y₂ h₂ a b ha hb hab
-    have hcomb := hKc h₁ h₂ ha hb hab
-    have heq : a • ρ y₁ + b • ρ y₂ = (a + b) • (x + x) - (a • y₁ + b • y₂) := by
-      rw [hρdef]; module
-    rw [heq, hab, one_smul] at hcomb
-    exact hcomb
-  have hx' : x ∈ K' := by
-    show ρ x ∈ K
-    rw [hρdef]
-    simpa using hx
-  have hpre : ∀ S : Set (EuclideanSpace ℝ (Fin n)), ρ ⁻¹' (Metric.closedBall x t ∩ S)
-      = Metric.closedBall x t ∩ ρ ⁻¹' S := by
-    intro S
-    ext y
-    have hd : dist (ρ y) x = dist y x := by
-      rw [hρdef, dist_eq_norm, dist_eq_norm, show x + x - y - x = -(y - x) by module, norm_neg]
-    simp only [Set.mem_preimage, Set.mem_inter_iff, Metric.mem_closedBall, hd]
-  have hmem' : t ∈ stepRadiusSet K' α x := by
-    refine ⟨ht.le, ?_⟩
-    have h1 : volume (K' ∩ Metric.closedBall x t) = volume (K ∩ Metric.closedBall x t) := by
-      have hmp := hρmp.measure_preimage (s := Metric.closedBall x t ∩ K)
-        (measurableSet_closedBall.inter hKm).nullMeasurableSet
-      rw [hpre K] at hmp
-      rw [Set.inter_comm K' _, hmp, Set.inter_comm]
-    rw [h1]
-    exact hmem.2
-  have hsets : {θ : Metric.sphere (0 : EuclideanSpace ℝ (Fin n)) 1 |
-        x + (t / 2) • (θ : EuclideanSpace ℝ (Fin n)) ∉ K'}
-      = {θ : Metric.sphere (0 : EuclideanSpace ℝ (Fin n)) 1 |
-        x - (t / 2) • (θ : EuclideanSpace ℝ (Fin n)) ∉ K} := by
-    ext θ
-    have : ρ (x + (t / 2) • (θ : EuclideanSpace ℝ (Fin n)))
-        = x - (t / 2) • (θ : EuclideanSpace ℝ (Fin n)) := by rw [hρdef]; module
-    simp only [Set.mem_setOf_eq, hK', Set.mem_preimage, this]
-  rw [← hsets]
-  exact toSphere_badDir_le hK'c hK'm hx' ht hα hα1 hmem'
+  have hBadm : MeasurableSet {θ : Metric.sphere (0 : EuclideanSpace ℝ (Fin n)) 1 |
+      x + (t / 2) • (θ : EuclideanSpace ℝ (Fin n)) ∉ K} := by
+    have hc : Continuous fun θ : Metric.sphere (0 : EuclideanSpace ℝ (Fin n)) 1 =>
+        x + (t / 2) • (θ : EuclideanSpace ℝ (Fin n)) := by fun_prop
+    exact hKm.compl.preimage hc.measurable
+  rw [setOf_sub_smul_notMem_eq_preimage_neg, toSphere_preimage_neg hBadm]
+  exact toSphere_badDir_le hKc hKm hx ht hα hα1 hmem
 
 /-! ### The chord through a good direction -/
 
