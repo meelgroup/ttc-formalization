@@ -841,14 +841,27 @@ variable {n : ℕ}
 
 `Ttc.MonteCarlo.correct` hands over exactly three facts about `K` — convex, contains the
 unit ball, finite volume — and `Arlib.Convexity.exists_closedBall_superset_of_convex` turns
-them into a radius (`Ttc.MonteCarlo.exists_ball_superset`).  `rad` picks one by choice,
-totally: it is defined (as `1`) even when no radius exists, so that `est` is a total
-function and `est_meas` needs no hypothesis. -/
+them into a radius (`Ttc.MonteCarlo.exists_ball_superset`).  `rad` takes the *least* such
+radius, plus one, totally: it is defined (as `1`) even when no radius exists, so that `est`
+is a total function and `est_meas` needs no hypothesis. -/
 
 open scoped Classical in
-/-- A radius enclosing `K`, chosen classically; `1` if there is none. -/
+/-- **The least enclosing radius, plus one**; `1` if no radius exists.
+
+`sInf` rather than `Exists.choose`: the infimum of the valid radii is a *canonical* choice,
+so an **upper** bound is derivable — `Ttc.MonteCarlo.radMin_le_of_subset_closedBall` in
+`Ttc/Volume/RadBound.lean` turns any explicit enclosing closed ball into a bound on `rad`,
+which is what makes the sample count's closed form unconditional.  With `Exists.choose` no
+such inequality is provable: `Exists.choose_spec` gives only `0 < ·` and `K ⊆ ball 0 ·`,
+both lower-bound facts, and the satisfying set is upward closed.
+
+The `+ 1` is load-bearing.  `sInf` of the valid radii need not itself be valid — take `K` a
+closed ball, whose infimum of *open*-ball radii is its own radius — so the `+ 1` reopens the
+ball and keeps `Ttc.MonteCarlo.subset_ball_rad`.  The definition stays total: it is `1` when
+no radius exists, so `est` is a total function and `est_meas` needs no hypothesis. -/
 noncomputable def rad (K : Set (Space n)) : ℝ :=
-  if h : ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R then h.choose else 1
+  if ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R
+  then sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} + 1 else 1
 
 /-! ## The target set
 

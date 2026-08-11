@@ -138,14 +138,23 @@ instance instIsProbabilityMeasureCoins : IsProbabilityMeasure (coins n) := by
 
 `correct` hands over exactly three facts about `K` — convex, contains the unit ball, finite
 volume — and `Arlib.Convexity.exists_closedBall_superset_of_convex` turns them into a
-radius.  `rad` picks one by choice, totally: it is defined (as `1`) even when no radius
-exists, so that `est` is a total function and `est_meas` needs no hypothesis. -/
+radius.  `rad` takes the *least* such radius, plus one, totally: it is defined (as `1`) even
+when no radius exists, so that `est` is a total function and `est_meas` needs no hypothesis.
+
+Both facts below come out of `sInf` rather than `Exists.choose_spec`: positivity because the
+valid radii are bounded below by `0`, and the enclosure because `‖x‖` is a lower bound for
+every valid radius, hence at most their infimum — which is where the `+ 1` in `rad`'s body
+earns its keep, reopening the ball.  Unlike `Exists.choose`, `sInf` also admits an
+*upper* bound; that is
+`Ttc.MonteCarlo.radMin_le_of_subset_closedBall` in `Ttc/Volume/RadBound.lean`. -/
 
 theorem rad_pos (K : Set (Space n)) : 0 < rad K := by
   classical
   rw [rad]
   split_ifs with h
-  · exact h.choose_spec.1
+  · have hnn : 0 ≤ sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} :=
+      le_csInf h fun _ hR => hR.1.le
+    linarith
   · exact one_pos
 
 theorem rad_ne_zero (K : Set (Space n)) : rad K ≠ 0 := (rad_pos K).ne'
@@ -156,7 +165,11 @@ theorem subset_ball_rad {K : Set (Space n)}
     (h : ∃ R : ℝ, 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R) :
     K ⊆ Metric.ball (0 : Space n) (rad K) := by
   classical
-  rw [rad, dif_pos h]; exact h.choose_spec.2
+  intro x hx
+  rw [rad, if_pos h, mem_ball_zero_iff]
+  have hle : ‖x‖ ≤ sInf {R : ℝ | 0 < R ∧ K ⊆ Metric.ball (0 : Space n) R} :=
+    le_csInf h fun R hR => (mem_ball_zero_iff.mp (hR.2 hx)).le
+  linarith
 
 /-- **The radius exists**, from exactly the hypotheses `VolumeAlgorithm.correct` supplies.
 `Arlib` produces a *closed* ball; a `+1` opens it. -/
