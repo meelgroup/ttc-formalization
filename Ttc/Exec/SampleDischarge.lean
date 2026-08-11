@@ -83,16 +83,28 @@ by `Ttc.canonDm`, and `Arlib.KV97.dist_le_of_mem_inflated` inflates that to
 `(1 + κ/step)·canonDm`, which *is* `Ttc.ttcSampDiam`.  `hwarm` likewise follows from
 `Ttc.isWarm_uniformOn_subset` (`Sampler/Construct`) at the inclusion of the start's ball.
 
-## What is still open, and it is not any of the above
+## The uniform price, with nothing left over
 
-Everything here is **per cube**.  `Ttc.runCost` charges one price at every cube, so a
-uniform `cSample` still needs bounds *over the cubes* — `supᵢ Ttc.ttcSampDiam`,
-`supᵢ Ttc.ttcSampWarm` and `infᵢ Ttc.ttcSampTol` — and the last two need a uniform
-**upper** bound on `Vol(P'ᵢ)`, which this file does not supply and which
-`Exec/PriceList`'s docstring names as the residue.  Nothing here changes that, and nothing
-here changes the three undercounts `Exec/PriceList` records: `Ttc.kv97SampD`'s rejection
-rounds, `alg:ttc`'s uncharged `while` loops, and the fact that `Ttc.mixSteps` prices the
-chain the sampler's *law* is defined by rather than steps `Ttc.ttcRun` takes.
+Everything above is **per cube**, and `Ttc.runCost` charges one price at every cube.
+`Exec/InflateBound` supplies the missing half — the uniform *upper* bound on `Vol(P'ᵢ)`,
+the monotonicity of `Ttc.mixStepsBound` that consumes it, and the uniform price
+`Ttc.ttcSampStepsPrice` — leaving `hγ`, `hDm`, `hMw` and `heps1` as open binders of
+`Ttc.ttcSampleSteps_le_ttcSampStepsPrice`.  All four are theorems of this file, so
+
+```
+Ttc.ttcSampleSteps_le_ttcSampStepsPrice_run
+  : ttcSampleSteps atoms φ ε δ i ≤ ttcSampStepsPrice atoms φ ε δ
+```
+
+holds under the five input conditions and cube membership alone.  Note the two files pull
+in **opposite directions on the same quantity** and both are needed: `Exec/InflateBound`
+bounds `Vol(P'ᵢ)` above (so the tolerance is bounded below), and §5 here bounds it below
+(so the tolerance is at most `1`).
+
+What this does **not** repair are the three undercounts `Exec/PriceList` records:
+`Ttc.kv97SampD`'s rejection rounds are counted nowhere, `alg:ttc`'s `while` loops are
+uncharged, and `Ttc.mixSteps` prices the chain the sampler's *law* is defined by rather
+than steps `Ttc.ttcRun` takes.  A bound on an undercount is not a bound on the count.
 
 No `sorry`, no new `axiom`, and no `def` at all: every declaration below is a theorem
 about names that already existed.
@@ -121,11 +133,6 @@ theorem ttcSampCanonBody_eq (i : {c : Cube A // c ∈ toDNFd (ttcInput atoms φ)
           • region (atomSet (ttcAtoms atoms φ ε δ)) i.val :=
   canon_body_eq_smul_region _ (toDNFd_isPositive (ttcInput_isPositive atoms φ))
     (latticeScale_pos _) i
-
-/-- **The run's ball-walk step is positive** — `10^ρ > 0` and `Ttc.algGamma_pos`. -/
-theorem ttcSampStep_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) : 0 < ttcSampStep atoms φ ε δ :=
-  mul_pos (latticeScale_pos _) (algGamma_pos atoms φ ε δ hε0 hε1 hn hφ hpos)
 
 /-- **The Kannan–Vempala displacement is nonnegative** — `κ = c + √(2 log r)` with
 `c = Ttc.cOf …` itself a square root. -/
@@ -664,6 +671,31 @@ theorem mixCost_le_ceil_ttcSampStepsBound (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn 
     (ttcSampDiam_pos atoms φ ε δ hε0 hε1 hn hφ hpos i)
     (ttcSampTol_le_one atoms φ ε δ hε0 hε1 hn hφ hpos i)
 
+/-- **The uniform `cSample` price, with every side condition discharged.**
+
+`Ttc.ttcSampleSteps_le_ttcSampStepsPrice` (`Exec/InflateBound` §4) carries four open
+hypotheses — `hγ`, `hDm`, `hMw` and `heps1`.  All four are theorems of this file, so the
+uniform price holds under the **five conditions on the input alone**:
+
+```
+0 < ε,  ε ≤ 1,  1 ≤ n,  φ.IsPositive,  0 < volSol (atomSet atoms) φ.
+```
+
+Together with `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) this is the pair of
+per-cube-free prices the run's charge is built from, both now unconditional on the
+geometry.  **Exponential in `n`** — twice over, see `Exec/InflateBound`'s docstring — and
+still a price for the chain the sampler's *law* is defined by, not for steps
+`Ttc.ttcRun` takes. -/
+theorem ttcSampleSteps_le_ttcSampStepsPrice_run (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
+    (hφ : φ.IsPositive) (hpos : 0 < volSol (atomSet atoms) φ) {i : Cube A}
+    (hi : i ∈ toDNFd (ttcInput atoms φ)) :
+    (ttcSampleSteps atoms φ ε δ i : ℝ) ≤ ttcSampStepsPrice atoms φ ε δ :=
+  ttcSampleSteps_le_ttcSampStepsPrice atoms φ ε δ hε0 hε1 hn hφ hpos hi
+    (ttcSampInradius_pos atoms φ ε δ hε0 hε1 hn hφ hpos)
+    (ttcSampDiam_pos atoms φ ε δ hε0 hε1 hn hφ hpos ⟨i, hi⟩)
+    (one_le_ttcSampWarm atoms φ ε δ hε0 hε1 hn hφ hpos ⟨i, hi⟩)
+    (ttcSampTol_le_one atoms φ ε δ hε0 hε1 hn hφ hpos ⟨i, hi⟩)
+
 end Assemble
 
 end Ttc
@@ -671,7 +703,6 @@ end Ttc
 /-! ## Axiom profile -/
 
 #print axioms Ttc.ttcSampCanonBody_eq
-#print axioms Ttc.ttcSampStep_pos
 #print axioms Ttc.ttcSampKappa_nonneg_run
 #print axioms Ttc.ttcSampInradius_pos
 #print axioms Ttc.ttcSampStep_le_ttcSampInradius
@@ -697,6 +728,7 @@ end Ttc
 #print axioms Ttc.ttcSampleSteps_le_run
 #print axioms Ttc.ttcSampleSteps_le_branchTwo_run
 #print axioms Ttc.mixCost_le_ceil_ttcSampStepsBound
+#print axioms Ttc.ttcSampleSteps_le_ttcSampStepsPrice_run
 
 
 
