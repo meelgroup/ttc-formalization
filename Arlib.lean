@@ -6,6 +6,7 @@ import Arlib.Probability
 import Arlib.Lattice
 import Arlib.Convexity
 import Arlib.MarkovChains
+import Arlib.Topology.HamSandwich
 
 /-!
 # Arlib — staging area
