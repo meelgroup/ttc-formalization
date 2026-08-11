@@ -7,6 +7,7 @@ import Arlib.MarkovChains.Continuous.Warmness
 import Arlib.MarkovChains.Continuous.MixingFromConductance
 import Arlib.MarkovChains.Continuous.BallWalk
 import Arlib.MarkovChains.Continuous.MetropolisGaussian
+import Arlib.MarkovChains.Continuous.MetropolisConductance
 import Arlib.MarkovChains.Continuous.HitAndRun
 import Arlib.MarkovChains.Continuous.SphereCoord
 import Arlib.MarkovChains.Continuous.HitAndRunOverlap
