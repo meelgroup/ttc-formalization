@@ -563,6 +563,7 @@ end HamSandwich
 /-! ### Axiom audit -/
 
 #print axioms measure_level_eq_zero
+#print axioms setIntegral_halfSpace_add_neg
 #print axioms continuousAt_setIntegral_param
 #print axioms exists_halfSpace_bisecting_pair
 #print axioms exists_halfSpace_bisecting_pair_of_finrank
