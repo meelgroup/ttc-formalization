@@ -19,21 +19,28 @@ space), and nothing from `Ttc.Coupling` or `Ttc.Process`.
 business. The point of the check is whether *this* development has to construct a probability
 space of its own in order to *state* its theorem.)
 
-**2. `Model/` and `Probability/` are the whole audit surface** (`#modelClosure`,
-`#modelClosureOfType`). Every `Ttc` constant the declaration transitively unfolds to is
-*defined in a file under `Ttc/Model/` or under `Ttc/Probability/`*. This is the check that
-backs the reader-facing promise made in `Ttc.lean`: open those two directories — four files
-of model plus four short files of probability vocabulary — and every constant
-the headline mentions is defined in front of you. It is strictly stronger than check 1, and
-it fails the build the moment a definition the statement depends on drifts out of them, which
-is exactly the regression worth catching.
+**2. `Model/`, `Probability/` and `Geometry/` are the whole audit surface**
+(`#modelClosure`, `#modelClosureOfType`). Every `Ttc` constant the declaration transitively
+unfolds to is *defined in a file under `Ttc/Model/`, `Ttc/Probability/` or
+`Ttc/Geometry/`*. This is the check that backs the reader-facing promise made in `Ttc.lean`:
+open those three directories — four files of model, four short files of probability
+vocabulary, one file of convex geometry — and every constant the headline mentions is
+defined in front of you. It is strictly stronger than check 1, and it fails the build the
+moment a definition the statement depends on drifts out of them, which is exactly the
+regression worth catching.
 
 The surface was one directory until the probability vocabulary was moved out of
-`Model/Prelude` into `Ttc/Probability/`. **Why it is two, and what bounds the second one,
+`Model/Prelude` into `Ttc/Probability/`, and two until the canonical `(Am, bv)` description
+was moved out into `Ttc/Geometry/`. **Why it is three, and what bounds the second and third,
 is argued at "The audit surface" below — read that before quoting this check**; the short
 version is that `Ttc.ttc` is a `Measure`, so the ambient randomness is part of what the
 headline's type unfolds to no matter where it is filed, and `Ttc/Probability/` is held to
-vocabulary-plus-nothing-the-walk-can-see in exchange for being admitted.
+vocabulary-plus-nothing-the-walk-can-see in exchange for being admitted, while
+`Ttc/Geometry/` is held to definitions-only.
+
+The counts did not move when `Ttc/Geometry/` was split off — 109 / 157 / 199 / 206 before
+and after — which is the point: the same constants are in the same closures, filed
+somewhere that says more accurately what they are.
 
 ## What "closure" means here, precisely
 
@@ -215,22 +222,38 @@ the surface (`Process/Thinning`, `Process/Truncation`, `Coupling/Family`,
 `Sampler/Construct`, `Volume/MonteCarlo`), and none of it is needed to read the statement.
 `Ttc/Probability.lean`'s docstring restates that rule for anyone adding a file there.
 
-An auditor's reading list is therefore five files rather than four: `Model/Prelude`,
-`Model/ProblemSetting`, `Model/Pseudocode`, `Model/Theorem`, and `Ttc/Probability/` (four
+An auditor's reading list is therefore six files rather than four: `Model/Prelude`,
+`Model/ProblemSetting`, `Model/Pseudocode`, `Model/Theorem`, `Ttc/Probability/` (four
 short files, two of which import Mathlib and `Arlib` alone, and which between them state
-exactly two `Prop`s — the two oracle contracts named above). The
+exactly two `Prop`s — the two oracle contracts named above), and `Ttc/Geometry/`.
+
+**3. `Ttc/Geometry/` is the third directory, and it is definitions only.** The
 convex-geometry data the sampler is applied at — `Ttc.facetOf`, `Ttc.canonAm`,
-`Ttc.canonBv`, `Ttc.canonDm`, `Ttc.canonRfac` — is *not* probability and stays in
-`Model/Prelude`.
+`Ttc.canonBv`, `Ttc.canonDm`, `Ttc.canonRfac` — is *not* probability, and it is not
+vocabulary the statement is written in either: `Ttc.ttc_volume_estimate` does not mention
+any of the five, so `#modelClosureOfType` on the headline never reaches them. But
+`Ttc.ttc` does, so they must be inside the surface or `#modelClosure Ttc.ttc` fails
+outright. They used to sit in `Model/Prelude` for that reason; they now sit in
+`Ttc/Geometry/CanonPolytope.lean`, and `auditSurface` names three directories instead of
+two.
+
+The bound on what may go there is tighter than for `Ttc/Probability/`: **definitions only,
+no `Prop`s at all, and nothing that is not convex geometry determined by the formula.**
+`Ttc/Probability/` earns its two `Prop`s from a structural argument (a theorem cannot be
+stated upstream of the definition it mentions, and `Ttc.algOracles` consumes both at
+elaboration time); no such argument applies here, and there is nothing in the directory
+that would need one. Every property of these five objects is proved outside the surface,
+as before.
 -/
 
 namespace Ttc.Audit
 
 /-- **The audit surface, as directories.** A constant is inside it when the module that
-defines it lies under one of these. See the section docstring above for why there are two
-and what `Ttc/Probability/` is allowed to contain; extending this list is a change to what
-the reader-facing promise *means* and must be argued for there, not here. -/
-def auditSurface : List Name := [`Ttc.Model, `Ttc.Probability]
+defines it lies under one of these. See the section docstring above for why there are three
+and what `Ttc/Probability/` and `Ttc/Geometry/` are allowed to contain; extending this list
+is a change to what the reader-facing promise *means* and must be argued for there, not
+here. -/
+def auditSurface : List Name := [`Ttc.Model, `Ttc.Probability, `Ttc.Geometry]
 
 /-- Constants in `cls` that are **not** defined in a file under one of
 `Ttc.Audit.auditSurface`, paired with the module that does define them. -/
@@ -252,9 +275,9 @@ elab "#modelClosure " id:ident : command => do
   let some _ := env.find? n | throwError "not found"
   let cls := (closureAux env {} [n] {}).erase n
   match outsideSurface env cls with
-  | [] => logInfo m!"OK — closure of {n} is defined entirely under Ttc/Model/ or \
-      Ttc/Probability/ ({cls.toList.length} Ttc constants)"
-  | bad => throwError m!"OUTSIDE Model/ and Probability/ in closure of {n}: {bad}"
+  | [] => logInfo m!"OK — closure of {n} is defined entirely under Ttc/Model/, \
+      Ttc/Probability/ or Ttc/Geometry/ ({cls.toList.length} Ttc constants)"
+  | bad => throwError m!"OUTSIDE Model/, Probability/ and Geometry/ in closure of {n}: {bad}"
 
 open Ttc.Audit in
 /-- The same, seeded from a **theorem's** type, so the statement — not the proof — is what
@@ -265,9 +288,9 @@ elab "#modelClosureOfType " id:ident : command => do
   let some ci := env.find? n | throwError "not found"
   let cls := closureAux env {} ci.type.getUsedConstants.toList {}
   match outsideSurface env cls with
-  | [] => logInfo m!"OK — the STATEMENT of {n} is defined entirely under Ttc/Model/ or \
-      Ttc/Probability/ ({cls.toList.length} Ttc constants)"
-  | bad => throwError m!"OUTSIDE Model/ and Probability/ in the statement of {n}: {bad}"
+  | [] => logInfo m!"OK — the STATEMENT of {n} is defined entirely under Ttc/Model/, \
+      Ttc/Probability/ or Ttc/Geometry/ ({cls.toList.length} Ttc constants)"
+  | bad => throwError m!"OUTSIDE Model/, Probability/ and Geometry/ in the statement of {n}: {bad}"
 
 /-! ## Reporting variants that do not fail the build
 
@@ -483,7 +506,8 @@ role between three homes:
   (`Coupling/Family`), `Ttc.mixSteps`/`ballWalkLaw`/`kv97SampD`/`kv97ContLaw`
   (`Sampler/Construct`) and `Ttc.e2eSampD` (`Exec/EndToEnd`).  These were briefly in
   `Model/Prelude` and are not any more;
-* into `Model/Prelude` (the vocabulary): the canonical linear description
+* into `Ttc/Geometry/CanonPolytope` (convex geometry, definitions only): the canonical
+  linear description
   `Ttc.facetOf`/`canonAm`/`canonBv`/`canonDm`/`canonRfac` (`Exec/CanonPolytope`) together
   with `Ttc.instFiniteCubeMem`/`instFiniteFacetIndex`, which `Ttc.facetOf` needs and which
   used to sit in `Model/Pseudocode`.  This group is **convex geometry read off the

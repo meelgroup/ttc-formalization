@@ -340,52 +340,11 @@ volume, so measure theory cannot leave the audit surface entirely without the he
 ceasing to mean what it means.  (An `open MeasureTheory` in the geometry section below
 was vestigial and has been removed.)
 
-What did **not** go is the block below.  The `(Am, bv)` system, the facet count and the
-diameter are the *geometry* the sampler is applied at — convex geometry read off the
-formula, no randomness anywhere in it — so it stays here, with `region`, `latticeScale`
-and `FacetIndex`, which is what it is built from.
-
-## The canonical linear description of the dilated cubes
-
-Plain geometry read off the formula — no choice is made beyond the enumeration of the
-facet index. -/
-
-section CanonicalPolytope
-
-
-/-- **The facets of `D`, enumerated.**  `Ttc.instFiniteFacetIndex` makes `FacetIndex D`
-finite, so it is in bijection with `Fin (Nat.card (FacetIndex D))`.  The enumeration is
-needed only because the sampler's row index lives in `Type 0` while `FacetIndex D` lives
-in `A`'s universe; nothing depends on *which* bijection is chosen. -/
-noncomputable def facetOf {A : Type*} (D : DNF A) :
-    Fin (Nat.card (FacetIndex D)) ≃ FacetIndex D :=
-  (Finite.equivFin (FacetIndex D)).symm
-
-open scoped Classical in
-/-- **The canonical normal vectors.**  Row `k` of cube `i`'s system is the coefficient
-vector of the atom under row `k`'s literal when that facet belongs to `i`, and the
-zero vector otherwise. -/
-noncomputable def canonAm {A : Type*} {n : ℕ} (atoms : A → LinAtom n) (D : DNF A)
-    (i : {c : Cube A // c ∈ D}) (k : Fin (Nat.card (FacetIndex D))) : Space n :=
-  if (facetOf D k).1 = i then WithLp.toLp 2 (atoms (facetOf D k).2.val.atom).coeff else 0
-
-open scoped Classical in
-/-- **The canonical offsets**, dilated by `s`: the atom's bound scaled by `s` on the
-rows belonging to cube `i`, and `0` elsewhere. -/
-noncomputable def canonBv {A : Type*} {n : ℕ} (atoms : A → LinAtom n) (D : DNF A) (s : ℝ)
-    (i : {c : Cube A // c ∈ D}) (k : Fin (Nat.card (FacetIndex D))) : ℝ :=
-  if (facetOf D k).1 = i then s * (atoms (facetOf D k).2.val.atom).bound else 0
-
-/-- **The canonical facet bound**: the exact facet count, so `hcard` holds with
-equality and no slack enters `Ttc.Params.gamma` or `Ttc.Params.thresh`. -/
-noncomputable def canonRfac {A : Type*} (D : DNF A) : ℝ := (Nat.card (FacetIndex D) : ℝ)
-
-/-- **The canonical diameter bound**: the metric diameter of the dilated region
-itself. -/
-noncomputable def canonDm {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF A) (ρ : ℤ)
-    (i : {c : Cube A // c ∈ D}) : ℝ :=
-  Metric.diam (latticeScale ρ • region M i.val)
-
-end CanonicalPolytope
+The `(Am, bv)` system, the facet count and the diameter went the same way, for the same
+reason stated differently.  They are convex geometry the *sampler* is applied at, not
+vocabulary the *statement* is written in: `Ttc.ttc_volume_estimate` never mentions them,
+and a reader checking what is being claimed never needs them.  They are now
+`Ttc/Geometry/CanonPolytope.lean` — five definitions, still inside the audit surface,
+which `Ttc/Audit/ClosureCheck.lean` widened to a third directory to admit them. -/
 
 end Ttc
