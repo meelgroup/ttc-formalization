@@ -22,14 +22,33 @@ be derived and are taken as parameters `cVol` and `cSample`. Leaving them free i
 what makes the statement about the *structure* of the run, which is the part this
 model can actually see.
 
-**There is no cost model below the oracle call.** `Ttc.stepCost` is the *whole* of
-this development's notion of cost: one unit of `cVol` per `Vol_ED` call and one unit
-of `cSample` per sample. Nothing in the development counts machine operations, and
-nothing relates either parameter to the running time of any implementation — not the
-paper's `O(n⁴)`/`O(n³)`, and not the constructed subroutines' own step counts either.
-Instantiating `cVol`/`cSample` is therefore a *pricing convention*, never a theorem;
-`Ttc.runCost_le` is true at every pair of naturals, including wrong ones.
-`Ttc/Exec/Complexity.lean`'s last section instantiates them at the counts the
+**`Ttc.stepCost` charges oracle calls and nothing else.** One unit of `cVol` per
+`Vol_ED` call and one unit of `cSample` per sample: this file counts *calls*, and the
+per-call prices are inputs to it. `Ttc.runCost_le` is true at every pair of naturals,
+including wrong ones, so nothing here makes any particular price correct.
+
+**What the prices denote is fixed elsewhere, and only for two of the three
+subroutines.** `Ttc/CostModel.lean` supplies two *derived* cost quantities — quantities
+computed from the constructed subroutines' own definitions rather than asserted of them:
+
+* `Ttc.coinCost`, the least number of coins a function of the coin sequence reads.
+  `Ttc.coinCost_est_eq` shows the constructed `Vol_ED`'s estimator costs **exactly**
+  `Ttc.MonteCarlo.nSamp` coins, and `Ttc.coinCost_ttcVol_le` shows the price list
+  `Ttc/Exec/Complexity.lean` §4 charges dominates the derived cost of the run's own
+  `vol` field. That is the sense in which `cVol` now denotes something.
+* `Ttc.mixCost`, the least ball-walk budget at which the chain's law meets its
+  total-variation specification. `Ttc.mixCost_le_mixSteps` and
+  `Ttc.mixCost_le_e2eBallWalkSteps` are the proved upper bounds, and are the shape in
+  which any future mixing theorem prices `cSample`.
+
+**The sampler's rejection rounds still denote nothing, and cannot.** `Ttc.kv97SampD` is
+a density; it consumes no coins and carries no budget, so neither notion applies to it,
+and no object in this development performs the rejection loop. Both derived quantities
+are also query counts, not machine operations. So instantiating `cVol`/`cSample` at any
+concrete arithmetic expression remains an undercount, and neither this file nor
+`Ttc/CostModel.lean` proves that `TTC` runs in any amount of time — not the paper's
+`O(n⁴)`/`O(n³)`, and not `thm:runtime`'s `O(m·n⁴)`.
+`Ttc/Exec/Complexity.lean`'s last section instantiates the prices at the counts the
 constructed subroutines carry and says, at length, exactly what that does and does
 not establish.
 

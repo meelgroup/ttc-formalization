@@ -33,8 +33,8 @@ Ttc/
   Lattice/       thm:decomposition and lem:lattice               (4)
   Constants/     what ε', κ, γ are chosen to satisfy             (2)
   Audit/         the machine-checked audit-surface probes         (1)
-  TtcProb, Access, Estimate, Invariants, Runtime, Dnf, Capstone,
-  ModelSupport                                                    (8)
+  TtcProb, Access, Estimate, Invariants, Runtime, CostModel, Dnf,
+  Capstone, ModelSupport                                          (9)
 ```
 
 **Recount rather than quote.** These counts have drifted repeatedly and are a
@@ -441,6 +441,7 @@ import Ttc.Volume.MonteCarlo
 -- The modelled loop, and what a run costs
 import Ttc.Invariants
 import Ttc.Runtime
+import Ttc.CostModel
 import Ttc.Dnf
 
 -- What the constants buy
