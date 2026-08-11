@@ -7,6 +7,7 @@ import Arlib.Probability.Rejection
 import Arlib.Probability.SubgaussianTail
 import Arlib.Probability.UniformOn
 import Arlib.Probability.RunPlumbing
+import Arlib.Probability.Geometric
 
 /-!
 # Arlib.Probability
