@@ -233,3 +233,13 @@ theorem runCostAt_le_uniform (cVol cSample : ι → ℕ) (CV CS : ℕ) (ρ : ℤ
   simpa [List.length_map, smul_eq_mul] using hsum
 
 end Ttc
+
+/-! ## Axiom profile -/
+
+#print axioms Ttc.Terminates
+#print axioms Ttc.stepPre_snd_le
+#print axioms Ttc.runCost_le
+#print axioms Ttc.runCostAt
+#print axioms Ttc.runCostAt_const
+#print axioms Ttc.runCostAt_le_sum
+#print axioms Ttc.runCostAt_le_uniform
