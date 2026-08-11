@@ -14,6 +14,7 @@ import Arlib.Convexity.KLS97
 import Arlib.Convexity.KLS97Sharp
 import Arlib.Convexity.CrossRatio
 import Arlib.Convexity.CrossRatioOneDim
+import Arlib.Convexity.ChordCompare
 import Arlib.Convexity.StepLength
 import Arlib.Convexity.HitAndRunStep
 import Arlib.Convexity.LocalizationLimit
