@@ -518,6 +518,7 @@ import Ttc.Findings.CubeLattice
 import Ttc.Sampler.Contract
 import Ttc.Sampler.Bridge
 import Ttc.Sampler.HitAndRunTheorem11
+import Ttc.Sampler.ConstructHitAndRun
 import Ttc.Sampler.Rates
 import Ttc.Sampler.Construct
 import Ttc.Sampler.RatesNonneg
