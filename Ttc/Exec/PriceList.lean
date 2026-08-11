@@ -63,12 +63,16 @@ Mwᵢ   = Vol(P'ᵢ) / Vol(B(10^ρ·cᵢ, γ))          epsᵢ = ε' / (4 · Vol
 ```
 
 with `P'ᵢ = Arlib.KV97.inflated …` the Kannan–Vempala inflated dilated polytope of cube
-`i`.  **Both need an upper bound on `Vol(P'ᵢ)`, and this development proves none.**  The
-only statement about the inflated body's size anywhere in it is the *hypothesis* `hD` of
-`Ttc.mixCost_le_mixSteps` — a diameter bound taken as an argument, never discharged at the
-run's own cubes.  So `cSample` stays a binder of `Ttc.ttc_volume_estimate`, and the
-residue is named rather than invented: it is a proved upper bound on
-`volume (Arlib.KV97.inflated (canonAm …) (canonBv …) …)`.
+`i`.  **This paragraph is superseded — both are now proved.**  `Ttc/Exec/InflateBound.lean`
+supplies the uniform upper bound on `Vol(P'ᵢ)`, reducing to `volSol` itself, and
+`Ttc/Exec/SampleDischarge.lean` discharges all sixteen side conditions of
+`Ttc.mixCost_le_mixSteps` and `Ttc.mixCost_le_ceil_mixStepsBound` at the run's own data.
+
+Two corrections to what this paragraph used to say, both worth keeping because they were
+wrong in instructive ways.  `hD` was **never** the obstruction: it is a *diameter* bound,
+not a volume one, and it is discharged outright by `Ttc.dist_le_ttcSampDiam`.  And the
+hypothesis with real content, `heps1`, needs a *lower* bound on `Vol(P'ᵢ)` — the opposite
+direction from the one this paragraph asked for.
 
 `Ttc.ttcCoinAndStepCharge_le_volPrice` below is therefore stated in the honest mixed
 shape — the volume half uniform and closed, the sampler half still a sum over cubes.

@@ -445,6 +445,7 @@ import Ttc.Runtime
 import Ttc.CostModel
 import Ttc.Exec.SampleBound
 import Ttc.Exec.InflateBound
+import Ttc.Exec.SampleDischarge
 import Ttc.Exec.PriceList
 import Ttc.Dnf
 

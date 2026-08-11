@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Exec.PriceList
+import Ttc.Exec.InflateBound
 import Ttc.Exec.RegimeInputs
 
 /-!
@@ -129,7 +129,7 @@ theorem ttcSampStep_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : 
 
 /-- **The Kannan–Vempala displacement is nonnegative** — `κ = c + √(2 log r)` with
 `c = Ttc.cOf …` itself a square root. -/
-theorem ttcSampKappa_nonneg :
+theorem ttcSampKappa_nonneg_run :
     0 ≤ Arlib.KV97.kappaOf
         (Arlib.KV97.cOf
           (inputParamsTotal (ttcAtoms atoms φ ε δ) (ttcInput atoms φ) ε δ).epsPrime)
@@ -140,14 +140,14 @@ theorem ttcSampKappa_nonneg :
 theorem ttcSampInradius_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
     (hpos : 0 < volSol (atomSet atoms) φ) : 0 < ttcSampInradius atoms φ ε δ := by
   have h1 := ttcSampStep_pos atoms φ ε δ hε0 hε1 hn hφ hpos
-  have h2 := ttcSampKappa_nonneg atoms φ ε δ
+  have h2 := ttcSampKappa_nonneg_run atoms φ ε δ
   simpa [ttcSampInradius] using by linarith
 
 /-- **`hδγ`: the ball-walk step is at most the inscribed radius** — the displacement is
 nonnegative, so this is unconditional. -/
 theorem ttcSampStep_le_ttcSampInradius :
     ttcSampStep atoms φ ε δ ≤ ttcSampInradius atoms φ ε δ := by
-  have h2 := ttcSampKappa_nonneg atoms φ ε δ
+  have h2 := ttcSampKappa_nonneg_run atoms φ ε δ
   simpa [ttcSampInradius] using by linarith
 
 /-- **The dilated inscribed ball sits in the uninflated body.**
@@ -311,7 +311,7 @@ theorem ttcSampDiam_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : 
     (i : {c : Cube A // c ∈ toDNFd (ttcInput atoms φ)}) :
     0 < ttcSampDiam atoms φ ε δ i := by
   have hstep := ttcSampStep_pos atoms φ ε δ hε0 hε1 hn hφ hpos
-  have hkap := ttcSampKappa_nonneg atoms φ ε δ
+  have hkap := ttcSampKappa_nonneg_run atoms φ ε δ
   have hfac : 0 < 1 + Arlib.KV97.kappaOf
       (Arlib.KV97.cOf (inputParamsTotal (ttcAtoms atoms φ ε δ) (ttcInput atoms φ) ε δ).epsPrime)
       (canonRfac (toDNFd (ttcInput atoms φ))) / ttcSampStep atoms φ ε δ := by
@@ -339,7 +339,7 @@ theorem ttcSampInradius_le_ttcSampDiam (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1
     (i : {c : Cube A // c ∈ toDNFd (ttcInput atoms φ)}) :
     ttcSampInradius atoms φ ε δ ≤ ttcSampDiam atoms φ ε δ i := by
   have hstep := ttcSampStep_pos atoms φ ε δ hε0 hε1 hn hφ hpos
-  have hkap := ttcSampKappa_nonneg atoms φ ε δ
+  have hkap := ttcSampKappa_nonneg_run atoms φ ε δ
   have hdiam : ttcSampStep atoms φ ε δ
       ≤ canonDm (atomSet (ttcAtoms atoms φ ε δ)) (toDNFd (ttcInput atoms φ))
           (ttcPrec atoms φ ε δ) i := by
@@ -672,7 +672,7 @@ end Ttc
 
 #print axioms Ttc.ttcSampCanonBody_eq
 #print axioms Ttc.ttcSampStep_pos
-#print axioms Ttc.ttcSampKappa_nonneg
+#print axioms Ttc.ttcSampKappa_nonneg_run
 #print axioms Ttc.ttcSampInradius_pos
 #print axioms Ttc.ttcSampStep_le_ttcSampInradius
 #print axioms Ttc.ball_subset_ttcSampCanonBody
