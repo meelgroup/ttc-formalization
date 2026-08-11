@@ -18,6 +18,7 @@ import Arlib.MarkovChains.Continuous.PointwiseRoute
 import Arlib.MarkovChains.Continuous.L2Mixing
 import Arlib.MarkovChains.Continuous.BallWalkConductance
 import Arlib.MarkovChains.Continuous.SpeedyWalk
+import Arlib.MarkovChains.Continuous.SpeedyConductanceSharp
 import Arlib.MarkovChains.Continuous.SpeedyToUniform
 import Arlib.MarkovChains.Continuous.TVWitness
 import Arlib.MarkovChains.Continuous.HoldingTime
