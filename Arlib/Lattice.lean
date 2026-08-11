@@ -15,6 +15,7 @@ import Arlib.Lattice.KV97.Theorem2
 import Arlib.Lattice.KV97.Corollary
 import Arlib.Lattice.KV97.Lemma1
 import Arlib.Lattice.Rounding.ContTent
+import Arlib.Lattice.Rounding.Coins
 
 /-!
 # Arlib.Lattice
