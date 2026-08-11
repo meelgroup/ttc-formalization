@@ -31,6 +31,8 @@ import Arlib.MarkovChains.Continuous.NonStationary
 import Arlib.MarkovChains.Continuous.SpeedyOverlap
 import Arlib.MarkovChains.Continuous.StarPolar
 import Arlib.MarkovChains.Continuous.HitAndRunMixing
+import Arlib.MarkovChains.Continuous.ConductanceToTV
+import Arlib.MarkovChains.Continuous.MetropolisConductanceSharp
 
 /-!
 # Arlib.MarkovChains

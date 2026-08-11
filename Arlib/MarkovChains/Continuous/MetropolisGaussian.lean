@@ -106,13 +106,36 @@ and the whole witness section — carry `0 < s`.
 
 ## Scope: what is deliberately absent
 
-There is **no conductance bound and no mixing bound here, in any form** — not as a
-theorem, not as an assumed predicate, not as a definition whose name asserts one.  The
-Cousins-Vempala conductance bound for this chain rests on the isoperimetric inequality for
-the Gaussian-restricted density; `Arlib/Convexity/GaussianCooling/Unblock.lean` supplies
-that input, and turning it into a conductance bound for `metropolisGaussian` is a separate
-piece of work.  What this file supplies is the object such a bound would be *about*,
-together with the reversibility that any conductance argument presupposes.
+There is **no conductance bound and no mixing bound in *this file*, in any form** — not as
+a theorem, not as an assumed predicate, not as a definition whose name asserts one.  What
+this file supplies is the object such a bound is *about*, together with the reversibility
+that any conductance argument presupposes.
+
+⚠ **This section used to say the bound did not exist anywhere, and that turning the
+isoperimetric input into one "is a separate piece of work".  Both halves are now out of
+date** (corrected 2026-08-11); it misled at least one reader into believing the chain had
+no conductance bound at all.  Two now exist, and the split mirrors
+`BallWalkConductance` (exponential) versus `SpeedyConductanceSharp` (sharp):
+
+* `Arlib.MarkovChains.conductance_metropolisGaussian_ge`
+  (`MetropolisConductance.lean`) — unconditional on convex bodies, but its acceptance floor
+  is the density *sandwich* `α = e^{-R²/(2s)}`, which at Cousins–Vempala parameters is
+  `e^{-n/2}`: **exponentially small**.
+* `Arlib.MarkovChains.conductance_metropolisGaussian_sharp_ge`
+  (`MetropolisConductanceSharp.lean`) — routed through
+  `Arlib.MarkovChains.conductance_speedyGaussian_ge`, with acceptance floor
+  `a = e^{-(2Rδ+δ²)/(2s)}`, a **constant** in that regime.  It carries `thm:iso` as a
+  binder, needs a radius bound `∀ x ∈ K, ‖x‖ ≤ R` that the ball-walk theorems do not, and
+  lands at `Ω(δ·log 2/(σ·n))` rather than `Ω(δ·log 2/(σ·√n))`.
+
+A structural fact worth recording here, since it is a fact about *this kernel*: the
+`ℓ`-floor in `hoverlap` **cannot** be dropped for `metropolisGaussian` the way
+`Arlib.MarkovChains.overlap_speedyWalk_convex` drops it for the speedy walk.  `speedyWalk`
+normalises by `vol(B(x,δ) ∩ K)`, i.e. it *conditions* on landing in `K`, so `ell` cancels;
+`metropolisGaussian` normalises by `vol(B(x,δ))` and parks rejected mass on a Dirac at `x`.
+For `u ∈ T` that Dirac term vanishes, so `P u Tᶜ ≤ ell K δ u` and `P v T ≤ ell K δ v`, and a
+thin convex cone with `u, v` near the apex drives both to `0`.  The floor is a
+counterexample-backed necessity, not a gap in the proof.
 -/
 
 namespace Arlib.MarkovChains
