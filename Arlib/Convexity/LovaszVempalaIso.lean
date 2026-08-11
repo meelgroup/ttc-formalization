@@ -43,8 +43,9 @@ So **no cross chord meets `N = K ∩ {x₁ > 1/3}`**, which has measure `2/3`.  
 
     E(h)·min{vol S₁, vol S₂} = M·(2/3)·(1/64)  →  ∞     while    vol S₃ = 1 − 2/64 < 1.
 
-Any `M > 96` refutes the conclusion.  `hIso` of `HitAndRunConductance.lean:909–918` is this
-statement verbatim for the uniform density, so **`hIso` is a false hypothesis**: dilating the
+Any `M > 96` refutes the conclusion.  `hIso` of `HitAndRunConductance.lean`, *as it stood
+before the repair recorded below*, was this statement verbatim for the uniform density, so it
+was **a false hypothesis**: dilating the
 counterexample by `4` gives `K = [0,4]²` (which contains a unit ball, at centre `(2,2)`),
 `D = 4√2`, `S₁ = [0,1/2]²`, `S₂ = [7/2,4]×[0,1/2]`, `N = K ∩ {x₁ > 4/3}` — every *other*
 hypothesis of `conductance_hitAndRun_ge` is then satisfiable at `n = 2`, while `hIso` is not.
@@ -69,12 +70,13 @@ as a hypothesis.  It is exactly what the paper's own application of Theorem 2.1 
 downstream consumer loses anything.  With it, `M ≤ 1/3` is available whether or not the needle
 meets `S₂`, and the paper's argument goes through unchanged; that is `Arlib.needle_iso` below.
 
-**Recommended replacement for `hIso`** (two binder insertions and nothing else; the orchestrator
-owns that file — this file does not edit it):
+**The repair, as applied.**  `HitAndRunConductance.lean` now carries exactly **one** extra
+clause in `hIso` (and `HitAndRunMixing.lean` threads the same clause through both of its
+capstones):
 
     (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
         (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
-      (∀ x ∈ K, h x ≤ 1 / 3) → Measurable h →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
       MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
       (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
         (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →
@@ -83,17 +85,26 @@ owns that file — this file does not edit it):
           min (uniformOn volume K T₁) (uniformOn volume K T₂)
         ≤ uniformOn volume K ((K \ T₁) \ T₂))
 
-`Measurable h` is needed as well: `hIso`'s conclusion is a `∫⁻`, and any proof of it has to turn
-that into a Bochner integral to reach the one-dimensional theory.  Both new binders are supplied
-by the consumer at `h x = stepRadius K α x / (48·D·√n)`: the `1/3` bound is
-`Arlib.MarkovChains.stepRadius_le_two_mul_diam` (which gives the stronger `1/(24√n)`), and
-measurability of `stepRadius` is a `Continuous`/`Measurable` fact about a `sSup` of a
-measurable family.
+It is discharged at the use site by `Arlib.MarkovChains.weight_le_third`, which gives the
+stronger `h ≤ 1/(24√n)` — the paper's own "clearly `h(x) ≤ 1/3`" — so no caller supplies it.
 
-## 2. Borsuk–Ulam is **not** needed — `HitAndRunConductance.lean:50–53` is stale
+**`Measurable h` was deliberately *not* added.**  An earlier draft of this docstring proposed it
+as a second insertion, on the grounds that a `∫⁻` has to become a Bochner integral somewhere.
+Two facts say otherwise.  (i) It is not part of the repair: `Arlib.not_hIso_two_measurable`
+refutes the old binder even when restricted to measurable `h`, since the counterexample weight
+is an indicator.  (ii) The consumer cannot discharge it: there is no measurability lemma for
+`Arlib.stepRadius` anywhere in this repository, so the clause would be an obligation nobody can
+meet.  Nor does omitting it make `hIso` materially harder to prove — Mathlib's `∫⁻` is a
+supremum over simple functions below `h`, and each of those inherits both the chord bound and
+the `1/3` bound, so the arbitrary-`h` case reduces to the measurable one.  Whoever eventually
+finds they need measurability must land `Measurable (Arlib.stepRadius K α)` in the same
+change.
 
-That docstring says the signed case of the transverse cut "is where Borsuk–Ulam re-enters", and
-that Borsuk–Ulam is absent from Mathlib, hence `hIso` is out of reach.  This is no longer true,
+## 2. Borsuk–Ulam is **not** needed — the old `HitAndRunConductance.lean` claim was stale
+
+An earlier revision of that docstring (at what were then lines 50–53; the text has since been
+corrected in place) said the signed case of the transverse cut "is where Borsuk–Ulam re-enters",
+and that Borsuk–Ulam is absent from Mathlib, hence `hIso` is out of reach.  This is not true,
 and the file that supersedes it says so explicitly
 (`Arlib/Convexity/LocalizationAssembly.lean:42–44`: *"no Borsuk–Ulam is used: with the equality
 form, only one integrand ever needs bisecting"*).  Checked at the declaration, not the prose:
@@ -137,9 +148,13 @@ Everything in §2 of the paper except the Localization Lemma itself.
   Lemma as its single binder `hloc`.
 * `Arlib.chord_le_of_corner_boxes` — **the geometric core of the counterexample of §1**, proved:
   no chord of `[0,1]²` through `[0,1/8]²` and `[7/8,1]×[0,1/8]` ever reaches height `7/24`, let
-  alone `1/3`.  The remaining steps of §1 (the volumes of five explicit boxes, and
-  `∫⁻ M·1_N dπ = M·π(N)`) are routine measure bookkeeping and are *not* formalised here; the
-  falsity of Theorem 2.1 as printed rests on them plus this lemma.
+  alone `1/3`.
+
+**The counterexample of §1 is machine-checked end to end** in
+`Arlib.Convexity.LovaszVempalaIsoFalse`: `Arlib.not_hIso_two` is the *negation* of the `hIso`
+binder written out verbatim at `n = 2` and `K = [0,4]²`, and `Arlib.cexK_hitAndRun_hypotheses`
+discharges every other geometric hypothesis of `conductance_hitAndRun_ge` at that same body.
+Nothing in §1 rests on prose any more.
 
 ## 4. What is assumed
 

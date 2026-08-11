@@ -103,6 +103,14 @@ misbehave (the ball walk) is forced to use:
 * `Arlib.MarkovChains.tvLe_iterate_hitAndRun_unitBall` — the two combined: Theorem 1.1 for a
   body with a unit inball, with `hphi` discharged, leaving only `hLem41`, `hIso` and `hLS`.
 
+  **`hIso` carries a clause that is not in Lovász–Vempala's Theorem 2.1**, namely
+  `∀ x ∈ K, h x ≤ 1/3`.  Theorem 2.1 is *false* without it — `Arlib.not_hIso_two`
+  (`Arlib/Convexity/LovaszVempalaIsoFalse.lean`) refutes the printed statement at `n = 2`,
+  `K = [0,4]²` — so before the clause was inserted both theorems here were **vacuous** at
+  that instance.  The clause costs nothing: it is the paper's own "clearly `h(x) ≤ 1/3`",
+  proved as `Arlib.MarkovChains.weight_le_third`, and it is discharged inside
+  `conductance_hitAndRun_ge_of_tv`, not by any caller.
+
 *Non-vacuity* (`CLAUDE.md` §11).
 
 * `Arlib.MarkovChains.ls_const` — the instantly mixing kernel satisfies the `hLS` binder.
@@ -872,8 +880,10 @@ repository, so the general-`r` `hphi` remains a hypothesis; see the module docst
 /-- **`hphi` at `r = 1`, from Theorem 4.2.**  The two `∀`-hypotheses are those of
 `conductance_hitAndRun_ge` and are passed straight through: `hLem41` is the paper's Lemma 4.1
 (one-step overlap, being proved in `HitAndRunOverlap.lean`) and `hIso` is the paper's
-Theorem 2.1 (the weighted isoperimetric inequality, the genuine open gap).  Nothing is added
-to them here. -/
+Theorem 2.1 (the weighted isoperimetric inequality) **in its corrected form**, carrying the
+clause `∀ x ∈ K, h x ≤ 1/3` without which Theorem 2.1 is false (`Arlib.not_hIso_two`).
+Nothing is added to them here beyond that correction, which is inherited verbatim from
+`conductance_hitAndRun_ge`. -/
 theorem ofReal_inv_le_conductance_hitAndRun_of_unitBall {n : ℕ} (hn : 1 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
@@ -884,6 +894,7 @@ theorem ofReal_inv_le_conductance_hitAndRun_of_unitBall {n : ℕ} (hn : 1 ≤ n)
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - 1 / 500)))
     (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
         (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
       MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
       (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
         (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →
@@ -910,7 +921,9 @@ theorem ofReal_inv_le_conductance_hitAndRun_of_unitBall {n : ℕ} (hn : 1 ≤ n)
 This is the closest statement to `Ttc.HitAndRunTheorem11Input.mixing` that this development
 reaches: it is about the real kernel and the real target, the exceptional-set hypothesis is
 the paper's, and the only residual assumptions are `hLem41`, `hIso` (both from Theorem 4.2)
-and `hLS` (Lovász–Simonovits Corollary 1.5).
+and `hLS` (Lovász–Simonovits Corollary 1.5).  `hIso` is Theorem 2.1 **corrected**: it carries
+`∀ x ∈ K, h x ≤ 1/3`, without which the statement is false (`Arlib.not_hIso_two`) and this
+theorem would be vacuous at `n = 2`, `K = [0,4]²`.
 
 **It is at `r = 1` and at the deadline `lvThreshold n 1 R M eps = 2⁵⁶·n²·R²·log(8M/ε²)`, not
 at the paper's `10¹⁰·n²·(R²/r²)·ln(M/ε)`.**  The two missing pieces are named in the module
@@ -932,6 +945,7 @@ theorem tvLe_iterate_hitAndRun_unitBall {n : ℕ} (hn : 1 ≤ n)
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - 1 / 500)))
     (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
         (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
       MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
       (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
         (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →

@@ -36,29 +36,78 @@ This file assembles that theorem — `Arlib.MarkovChains.conductance_hitAndRun_g
 **two inline `∀`-hypotheses**, and proves everything else.  The two are *not* on the
 same footing, and the difference is the point of this file:
 
-## 1. `hIso` — the genuine, open gap
+## 1. `hIso` — the open gap, **and a correction to the paper**
 
 `hIso` is the paper's **Theorem 2.1**, the weighted isoperimetric inequality, specialised
 to the uniform density (which is all Theorem 4.2 consumes):
 
 > Let `S₁, S₂, S₃` partition the convex body `K` and let `h : K → ℝ₊` satisfy
 > `h(x) ≤ (1/3)·min(1, d_K(u,v))` for every `u ∈ S₁`, `v ∈ S₂` and every `x` on the chord
-> of `K` through `u` and `v`.  Then `π(S₃) ≥ E_π(h)·min(π S₁, π S₂)`.
+> of `K` through `u` and `v`, **and `h ≤ 1/3` on all of `K`**.  Then
+> `π(S₃) ≥ E_π(h)·min(π S₁, π S₂)`.
 
-**It is unproved in this repository and there is no route to it here.**  Lovász–Vempala
-prove it by a single invocation of the Localization Lemma (Kannan–Lovász–Simonovits 1995,
-Corollary 2.4) on a *signed* pair of integrands.  `Arlib/Convexity/TransverseCut.lean`
-settles the nonnegative case of the transverse-cut step (`exists_two_sided_halfSpace`) and
-records at lines 69–83 that the signed case "is where Borsuk–Ulam re-enters"; Borsuk–Ulam
-is absent from Mathlib v4.32 entirely.  So `hIso` is the whole remaining mathematical
-distance between this file and an unconditional Theorem 4.2.
+### The emphasised clause is not in the paper, and Theorem 2.1 is FALSE without it
 
-It is written out **inline, as a `∀`-hypothesis of the theorem that consumes it** — not a
+The printed hypothesis constrains `h` only on the union of the chords through cross pairs,
+while the conclusion integrates `h` over all of `K`; for `n ≥ 2` that union can miss a set
+of positive measure, on which `h` is unconstrained.  `Arlib.not_hIso_two`
+(`Arlib/Convexity/LovaszVempalaIsoFalse.lean`) is the **negation of the binder as it was
+previously written here**, machine-checked at `n = 2` and `K = [0,4]²`, with
+`T₁ = [0,1/2]²`, `T₂ = [7/2,4]×[0,1/2]` and `h = 1000·1_{[0,4]×[4/3,4]}`: no cross chord
+rises above height `7/6`, so `h` vanishes on every one of them, yet
+`E_π(h)·min(π T₁, π T₂) = 125/12 > 1 ≥ π(K ∖ T₁ ∖ T₂)`.  `Arlib.cexK_hitAndRun_hypotheses`
+checks that this `K` satisfies *every other* hypothesis of `conductance_hitAndRun_ge`, so the
+old binder made this theorem **vacuous at that instance**.
+
+The repair costs the argument nothing: the paper's own §4 application verifies `h ≤ 1/3`
+("clearly"), and that step is `Arlib.MarkovChains.weight_le_third` here — in the stronger
+form `h ≤ 1/(24√n)`.  It is discharged at the use site inside
+`conductance_hitAndRun_ge_of_tv`, so no caller has to supply it.
+`Arlib.cexH_not_le_third` confirms the new clause is exactly what kills the counterexample.
+`Arlib.not_hIso_two_measurable` further shows that adding `Measurable h` would **not** be a
+repair — the counterexample weight is measurable — which is why no measurability binder was
+added; the repo has no measurability lemma for `Arlib.stepRadius` to discharge one with.
+
+### What remains open, and it is not Borsuk–Ulam
+
+Lovász–Vempala prove Theorem 2.1 by a single invocation of the Localization Lemma
+(Kannan–Lovász–Simonovits 1995, Corollary 2.4) on a *signed* pair of integrands.  Earlier
+versions of this docstring said the signed case "is where Borsuk–Ulam re-enters" and that
+Borsuk–Ulam is absent from Mathlib; **that is stale**.  `Arlib.exists_flat_cut_zero_pos`
+(`Arlib/Convexity/LocalizationAssembly.lean:370`) takes **arbitrary signed** integrands
+`g₁ g₂ : E → ℝ` — its only hypotheses on them are `IntegrableOn`, `∫_C g₁ = 0` and
+`0 < ∫_C g₂` — and delivers a cut with `∫ g₁ = 0` and `0 < ∫ g₂` on one side.  With the
+equality-refined form only **one** integrand is ever bisected, by a one-parameter
+intermediate value theorem (`Arlib.exists_pencil_bisecting`); the other needs no bisection
+because its two masses sum to something positive.  No Borsuk–Ulam is used anywhere.
+
+Everything in §2 of the paper except that invocation is now proved, in
+`Arlib/Convexity/LovaszVempalaIso.lean`: `Arlib.oneDim_crossRatio_partition` (the
+one-dimensional cross-ratio inequality for measurable partitions), `Arlib.needle_iso` (the
+repaired one-dimensional Theorem 2.1) and `Arlib.needle_iso_of_chord` (Theorem 2.1 on a
+needle inside `K`, unconditional).  `Arlib.thm21_of_localization` is Theorem 2.1 for the
+uniform density with the Localization Lemma as its single binder.
+
+The residuals are the two that `Arlib/Convexity/LocalizationAssembly.lean` classifies as
+open, and both moved today:
+
+* **(C) lower semicontinuity** — `Arlib/Convexity/LocalizationLSC.lean` runs the needle with
+  `g₂` bounded *lower semicontinuous*.  This is only half of what Theorem 2.1 needs: the
+  `g₁` slot carries an **equality** and `g₁ = 1_{T₁} − A·1_K` is merely measurable, which
+  that file's own boundary discussion shows is not reachable (a needle is a null set, and the
+  equality does not transfer even for open `S`).
+* **(F) the Euclidean transport and nondegeneracy** — closed in
+  `Arlib/Convexity/LocalizationTransport.lean`
+  (`Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean`, via
+  `PiLp.volume_preserving_toLp`), with nondegeneracy closed modulo one explicit `hsep`.
+
+`hIso` is written out **inline, as a `∀`-hypothesis of the theorem that consumes it** — not a
 named `Prop`, not a `structure` field, not a `class`.  A reader of
 `conductance_hitAndRun_ge`'s type sees the inequality in full.  Compare
 `../gaussian-cooling-vempala/lean/Isoperimetry.lean`, which "has" isoperimetry only through
 an `IsoInput`/`OneDimIso` predicate that assumes its own conclusion; that is exactly the
-mistake this file refuses to make.
+mistake this file refuses to make — and the counterexample above is why writing the binder
+out in full matters: it is what made the error findable.
 
 ## 2. `hLem41` — a placeholder for work in flight, not a gap
 
@@ -242,6 +291,34 @@ theorem stepRadius_le_two_mul_diam (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (
       _ ≤ 2 ^ n * Metric.diam K ^ n := by nlinarith
       _ = (2 * Metric.diam K) ^ n := (mul_pow 2 _ n).symm
   exact (pow_le_pow_iff_left₀ ht0 (by positivity) hn).1 hpow
+
+/-- **The paper's unargued "clearly `h(x) ≤ 1/3`", as a standalone bound.**
+
+For `h(x) = s_α(x)/(48·D·√n)` and any `x ∈ K`, `s_α(x) ≤ 2·diam K ≤ 2D`
+(`Arlib.MarkovChains.stepRadius_le_two_mul_diam`) and `48·D·√n ≥ 48·D`, so
+`h(x) ≤ 2D/(48D√n) = 1/(24√n) ≤ 1/24 ≤ 1/3`.
+
+It appears inside `Arlib.MarkovChains.weight_le_of_chord` as an intermediate step, but it is
+needed on its own now: the `hIso` binder of the theorems below carries `∀ x ∈ K, h x ≤ 1/3`
+as an explicit hypothesis, because **without it Theorem 2.1 is false** — see
+`Arlib.not_hIso_two` (`Arlib/Convexity/LovaszVempalaIsoFalse.lean`).  This lemma is what
+discharges that hypothesis at the use site, so the repair costs the argument nothing. -/
+theorem weight_le_third (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin n))}
+    (hKb : Bornology.IsBounded K) {α : ℝ} (hα : 1 / 2 ≤ α)
+    {D : ℝ} (hD : Metric.diam K ≤ D) (hD0 : 0 < D)
+    {x : EuclideanSpace ℝ (Fin n)} (hxK : x ∈ K) :
+    stepRadius K α x / (48 * D * Real.sqrt n) ≤ 1 / 3 := by
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast Nat.pos_of_ne_zero hn
+  have hsq : 0 < Real.sqrt n := Real.sqrt_pos.mpr hnR
+  have hsq1 : (1 : ℝ) ≤ Real.sqrt n := by
+    rw [show (1 : ℝ) = Real.sqrt 1 from Real.sqrt_one.symm]
+    exact Real.sqrt_le_sqrt (by exact_mod_cast Nat.one_le_iff_ne_zero.mpr hn)
+  have hc0 : (0 : ℝ) < 48 * D * Real.sqrt n := by positivity
+  have hsmall : stepRadius K α x ≤ 2 * D := by
+    have h := stepRadius_le_two_mul_diam hn hKb hα hxK
+    linarith
+  rw [div_le_iff₀ hc0]
+  nlinarith [mul_nonneg hD0.le (sub_nonneg.mpr hsq1)]
 
 /-! ## 2. The chain of §4 -/
 
@@ -486,16 +563,24 @@ hit-and-run on `K` is at least `lam/(245760·n·D)` when Lemma 4.1 holds with lo
 
 **Two hypotheses carry content, and they are not on the same footing.**
 
-* `hIso` — **the genuine open gap.**  It is the paper's Theorem 2.1, the weighted
-  isoperimetric inequality, specialised to the uniform density: for a partition
+* `hIso` — **the open gap, in its corrected form.**  It is the paper's Theorem 2.1, the
+  weighted isoperimetric inequality, specialised to the uniform density: for a partition
   `T₁, T₂, (K \ T₁) \ T₂` of `K` and a nonnegative weight `h` bounded by
-  `(1/3)·min(1, d_K(u,v))` on every chord joining `T₁` to `T₂`, the middle piece has mass
-  at least `E_π(h)·min(π T₁, π T₂)`.  **Nothing in this repository proves it, and nothing
-  here can**: Lovász–Vempala derive it from the Localization Lemma (KLS 1995, Cor. 2.4)
-  applied to a *signed* pair of integrands, and `Arlib/Convexity/TransverseCut.lean` records
-  (lines 69–83) that the signed case is exactly where Borsuk–Ulam re-enters — a theorem
-  absent from Mathlib v4.32.  It is written out inline here, as a `∀`-hypothesis, precisely
-  so that it cannot be mistaken for something proved.
+  `(1/3)·min(1, d_K(u,v))` on every chord joining `T₁` to `T₂` **and by `1/3` on all of
+  `K`**, the middle piece has mass at least `E_π(h)·min(π T₁, π T₂)`.
+
+  The second bound is **not** in the paper, and Theorem 2.1 is false without it:
+  `Arlib.not_hIso_two` refutes the uncorrected binder at `n = 2`, `K = [0,4]²`.  It is
+  discharged at the use site below by `Arlib.MarkovChains.weight_le_third`, so it costs no
+  caller anything; see §1 of the module docstring.
+
+  What is still assumed is one invocation of the Localization Lemma (KLS 1995, Cor. 2.4) on
+  a signed pair of integrands — **not** Borsuk–Ulam, which
+  `Arlib.exists_flat_cut_zero_pos` shows is not needed.  Everything else in §2 of the paper
+  is proved in `Arlib/Convexity/LovaszVempalaIso.lean` (`Arlib.needle_iso`,
+  `Arlib.needle_iso_of_chord`, `Arlib.thm21_of_localization`).  `hIso` is written out inline
+  here, as a `∀`-hypothesis, precisely so that it cannot be mistaken for something proved —
+  and that is what made the paper's error findable.
 
 * `hLem41` — **not a gap; work in flight.**  The paper's Lemma 4.1: two points close in
   cross-ratio distance *and* close relative to their median step lengths have one-step
@@ -521,9 +606,14 @@ statement: `K` convex, closed, measurable and bounded, containing a unit ball
 paper's own "Suppose `K` contains a unit ball" for Lemma 3.4.
 
 **Non-vacuity, stated honestly.**  No witness for the hypothesis bundle is exhibited here,
-and none can be until `hIso` is proved: `hIso` is a theorem of the paper, so the bundle is
-satisfiable for every convex body, but that satisfiability is exactly the open gap.  What
-*can* be said is that no hypothesis is degenerate on its face — `hLem41` is discharged by the
+and none can be until `hIso` is proved.  This is not a formality: in the shape `hIso` had
+before the `∀ x ∈ K, h x ≤ 1/3` clause was inserted, the bundle was **provably
+unsatisfiable** at `n = 2`, `K = [0,4]²` (`Arlib.not_hIso_two`,
+`Arlib.cexK_hitAndRun_hypotheses`), i.e. the theorem was vacuous there.  With the clause the
+binder is the corrected Theorem 2.1, whose one-dimensional and needle forms are proved
+(`Arlib.needle_iso`, `Arlib.needle_iso_of_chord`) and whose remaining content is a single
+invocation of the Localization Lemma (`Arlib.thm21_of_localization`).  What *can* be said
+otherwise is that no hypothesis is degenerate on its face — `hLem41` is discharged by the
 paper's Lemma 4.1, and the geometric side conditions hold for, say, the unit ball itself. -/
 theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
@@ -535,6 +625,7 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - lam)))
     (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
         (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
       MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
       (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
         (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →
@@ -709,7 +800,13 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
     exact weight_le_of_chord hn' hKc hKcl hKm hKb hKtop (by norm_num) (by norm_num) hD hD0
       (hS1int u hu) (hS2int v hv) huv (hmove u (hS1int u hu)) (hmove v (hS2int v hv))
       (hdich u hu v hv) hxK hxt
-  have hisoS := hIso g S1 S2 hgnn hS1m hS2m hS1K hS2K hdisj hcond
+  -- the global bound `h ≤ 1/3` of Theorem 2.1, which the paper calls clear and which is
+  -- *not* a consequence of the chord bound (`Arlib.not_hIso_two`)
+  have hg13 : ∀ x ∈ K, g x ≤ 1 / 3 := by
+    intro x hx
+    rw [hgapp x]
+    exact weight_le_third hn' hKb (by norm_num) hD hD0 hx
+  have hisoS := hIso g S1 S2 hgnn hg13 hS1m hS2m hS1K hS2K hdisj hcond
   have hiso2 : ENNReal.ofReal (1 / (30720 * (n : ℝ) * D)) * min (pi S1) (pi S2)
       ≤ pi ((K \ S1) \ S2) := by
     refine le_trans ?_ hisoS
@@ -894,8 +991,9 @@ an error in KLS 1997, and not a change in the order of the bound, which remains 
 `1/(n·D)` up to an absolute constant.
 
 Read the docstring of `conductance_hitAndRun_ge_of_tv` for the classification of the
-hypotheses: `hIso` is the **genuine open gap** (the paper's Theorem 2.1, which needs
-Borsuk–Ulam via the Localization Lemma on signed integrands); `hLem41` is a placeholder for
+hypotheses: `hIso` is the **open gap, in its corrected form** (the paper's Theorem 2.1, which
+is *false* as printed — `Arlib.not_hIso_two` — and which needs the Localization Lemma on
+signed integrands, but **not** Borsuk–Ulam); `hLem41` is a placeholder for
 work in flight elsewhere in this repository; and the paper's Lemma 3.3 is **proved**, in
 `Arlib/Convexity/KLS97Sharp.lean`, and is no longer a hypothesis of either theorem. -/
 theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
@@ -908,6 +1006,7 @@ theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fi
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - 1 / 500)))
     (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
         (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
       MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
       (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
         (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →
@@ -930,6 +1029,7 @@ theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fi
 section AxiomCheck
 
 #print axioms stepRadius_le_two_mul_diam
+#print axioms weight_le_third
 #print axioms stepRadius_le_of_chord
 #print axioms weight_le_of_chord
 #print axioms one_le_diam_of_unitBall
