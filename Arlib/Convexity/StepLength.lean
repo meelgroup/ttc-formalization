@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: ArLib contributors
 -/
 import Arlib.Convexity.BrunnSharp
+import Arlib.Convexity.KLS97Sharp
 import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.MeasureTheory.Measure.Prod
@@ -49,22 +50,33 @@ to be *concave* — which is the paper's Lemma 3.1 and the main content of this 
 * `Arlib.aemeasurable_stepRadius` — `s_α` is a.e.-measurable on `K` (a corollary of Lemma 3.1:
   concave ⟹ continuous on `interior K`, and `vol(frontier K) = 0`).
 * `Arlib.volume_goodSet_ge` — the distributional step of Lemma 3.4:
-  `(1−α)·vol {x ∈ K : σ(x,t) ≥ α} ≥ (1 − α − t√n/2)·vol K`.
+  `(1−α)·vol {x ∈ K : σ(x,t) ≥ α} ≥ (1 − α − 10·t√n/2)·vol K`.
 * `Arlib.lintegral_stepRadius_ge` — **Lemma 3.4**:
-  `∫_K s_α ≥ ((1−α)/√n)·vol K`.
+  `∫_K s_α ≥ ((1−α)/(10√n))·vol K`.
 
-## The one thing that is assumed rather than proved
+## Lemma 3.3 is proved, not assumed
 
 The paper's **Lemma 3.3** (= Corollary 4.6 of Kannan–Lovász–Simonovits 1997),
 
 `∫_K vol((x + tB) \ K) dx ≤ (t√n / 2r) · vol(K) · vol(tB)`,
 
-is *quoted* by Lovász–Vempala and is **not proved anywhere in this repository**.  It enters
-`Arlib.volume_goodSet_ge` and `Arlib.lintegral_stepRadius_ge` as a visible inline
-`∀`-hypothesis named `hLem33`, specialised to inradius `r = 1`.  There is deliberately **no
-named `Prop`** for it: a named predicate would be indistinguishable, to a reader skimming the
-file, from something that has been established.  Anything downstream of Lemma 3.4 inherits the
-hypothesis and must keep carrying it.
+is *quoted* by Lovász–Vempala.  It is **proved in this repository**, at the correct order `√n`
+and with an explicit absolute constant, as `Arlib.lintegral_volume_closedBall_sdiff_le_sqrt`
+in `Arlib/Convexity/KLS97Sharp.lean`; the specialisation to inradius `r = 1` used here is
+`Arlib.lem33_sqrt`.  It used to enter `Arlib.volume_goodSet_ge` and
+`Arlib.lintegral_stepRadius_ge` as a visible inline `∀`-hypothesis `hLem33`; that hypothesis is
+gone.  `Arlib.lintegral_stepRadius_ge` now discharges it from `hball : closedBall z 1 ⊆ K`,
+which is exactly the paper's "Suppose `K` contains a unit ball", and `volume_goodSet_ge` still
+takes the inequality inline (it is the purely distributional step and needs no convexity).
+
+**The constant.**  What is proved is the `10√n` form,
+`∫_K vol((x + tB) \ K) dx ≤ (10·t√n / 2r)·vol(K)·vol(tB)`, not the paper's `C = 1`.  This is a
+constant-factor loss in the majorant used by `KLS97Sharp.lean`'s route — the exponential
+envelope `e^{2−λh}` in place of the Gaussian, plus `(1+x)ⁿ − 1 ≤ nx·e^{nx}` — **not** evidence
+of an error in KLS97; that file's docstring has the breakdown (the route's true asymptotics is
+`√(2π)·t√n/2r`, and the ball itself attains `1/√(2π)` against the printed `1/2`).  The cost
+downstream is that Lemma 3.4 reads `∫_K s_α ≥ ((1−α)/(10√n))·vol K` instead of
+`((1−α)/√n)·vol K` — the same order in `n`, which is all the conductance bound needs.
 
 ## Lemma 3.2 lives next door
 
@@ -549,20 +561,24 @@ lemma measurableSet_goodSet {K : Set (EuclideanSpace ℝ (Fin n))} (hK : Measura
 /-- **The distributional half of Lemma 3.4.**
 
 Given the paper's Lemma 3.3 — *quoted*, not proved, by Lovász–Vempala from Corollary 4.6 of
-Kannan–Lovász–Simonovits 1997, and likewise **not proved here** — this is exactly the paper's
-step
+Kannan–Lovász–Simonovits 1997, and **proved in this repository** as
+`Arlib.lintegral_volume_closedBall_sdiff_le_sqrt` / `Arlib.lem33_sqrt`
+(`Arlib/Convexity/KLS97Sharp.lean`) — this is exactly the paper's step
 
 > `∫_K σ(x,t) dx ≤ α·vol(K) + (1−α)·vol({x ∈ K : σ(x,t) ≥ α})` , hence
-> `vol({x ∈ K : σ(x,t) ≥ α}) ≥ (1 − t√n / (2(1−α)))·vol(K)`.
+> `vol({x ∈ K : σ(x,t) ≥ α}) ≥ (1 − 10·t√n / (2(1−α)))·vol(K)`.
 
-**READ THIS BEFORE USING.**  The hypothesis `hLem33` is an *assumption*, supplied inline by the
-caller.  It is the specialisation to inradius `r = 1` (i.e. `K` contains a unit ball) of
+The Lemma 3.3 inequality is still taken here as an inline hypothesis, because this step is
+*purely distributional*: it uses neither convexity nor closedness of `K`, only measurability
+and finite volume, and so it would be wrong to bolt those hypotheses on merely to discharge the
+input.  The discharge happens one level up, in `Arlib.lintegral_stepRadius_ge`, which carries
+`hKc`, `hKcl` and `hball : closedBall z 1 ⊆ K` and calls `Arlib.lem33_sqrt`.  **No caller needs
+to supply Lemma 3.3 as an assumption any more**, and no `hLem33` binder survives past this
+theorem.
 
-`∫_K vol((x + tB) \ K) dx ≤ (t√n / 2r) · vol(K) · vol(tB)`.
-
-Nothing in this repository proves it; there is deliberately **no named `Prop`** for it, so that
-it cannot be mistaken for something that has been established.  Every consumer must carry it
-as a visible hypothesis.
+The constant is `10√n`, not the paper's `√n`: `KLS97Sharp.lean` proves the `√n` *order* with an
+explicit absolute constant `C = 10`, a constant-factor loss in its exponential-envelope
+majorant rather than any error in KLS97 (see that file's docstring).
 
 The conclusion is stated multiplied through by `(1 − α)` so that no `ℝ≥0∞` subtraction or
 division appears. -/
@@ -570,9 +586,9 @@ theorem volume_goodSet_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKm : MeasurableSet K) (hKfin : volume K ≠ ⊤) {α : ℝ} (hα0 : 0 ≤ α) (hα1 : α < 1)
     {t : ℝ} (ht : 0 < t)
     (hLem33 : ∫⁻ x in K, volume (Metric.closedBall x t \ K)
-        ≤ ENNReal.ofReal (t * Real.sqrt n / 2) * volume K
+        ≤ ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K
             * volume (Metric.closedBall (0 : EuclideanSpace ℝ (Fin n)) t)) :
-    ENNReal.ofReal (1 - α - t * Real.sqrt n / 2) * volume K
+    ENNReal.ofReal (1 - α - t * (10 * Real.sqrt n) / 2) * volume K
       ≤ ENNReal.ofReal (1 - α) * volume (goodSet K α t) := by
   classical
   -- notation
@@ -625,14 +641,14 @@ theorem volume_goodSet_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin n))}
   -- combine, in `ℝ≥0∞`
   have hmain : V * volume K
       ≤ V * volume A + ENNReal.ofReal α * V * volume (K \ A)
-        + ENNReal.ofReal (t * Real.sqrt n / 2) * volume K * V := by
+        + ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K * V := by
     calc V * volume K = (∫⁻ x in K, f x) + (∫⁻ x in K, g x) := htotal.symm
       _ ≤ ((∫⁻ x in A, f x) + (∫⁻ x in K \ A, f x))
-            + ENNReal.ofReal (t * Real.sqrt n / 2) * volume K * V := by
+            + ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K * V := by
           rw [← hsplit]
           exact add_le_add le_rfl (by rw [← hball 0]; exact hLem33)
       _ ≤ V * volume A + ENNReal.ofReal α * V * volume (K \ A)
-            + ENNReal.ofReal (t * Real.sqrt n / 2) * volume K * V :=
+            + ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K * V :=
           add_le_add (add_le_add hAbound hDbound) le_rfl
   -- pass to real numbers
   set Vr : ℝ := V.toReal with hVr
@@ -643,19 +659,19 @@ theorem volume_goodSet_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin n))}
   have hvDnn : 0 ≤ vD := ENNReal.toReal_nonneg
   have hvK : (volume K).toReal = vA + vD := by
     rw [hKsplit, ENNReal.toReal_add hAfin hDfin]
-  have hC : (0 : ℝ) ≤ t * Real.sqrt n / 2 := by positivity
+  have hC : (0 : ℝ) ≤ t * (10 * Real.sqrt n) / 2 := by positivity
   have hrhstop : V * volume A + ENNReal.ofReal α * V * volume (K \ A)
-      + ENNReal.ofReal (t * Real.sqrt n / 2) * volume K * V ≠ ⊤ := by
+      + ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K * V ≠ ⊤ := by
     refine ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨ENNReal.mul_ne_top hVtop hAfin,
       ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hVtop) hDfin⟩, ?_⟩
     exact ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hKfin) hVtop
   have hreal : Vr * (vA + vD)
-      ≤ Vr * vA + α * Vr * vD + t * Real.sqrt n / 2 * (vA + vD) * Vr := by
+      ≤ Vr * vA + α * Vr * vD + t * (10 * Real.sqrt n) / 2 * (vA + vD) * Vr := by
     have hmono := ENNReal.toReal_mono hrhstop hmain
     have hA1 : V * volume A ≠ ⊤ := ENNReal.mul_ne_top hVtop hAfin
     have hA2 : ENNReal.ofReal α * V * volume (K \ A) ≠ ⊤ :=
       ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hVtop) hDfin
-    have hA3 : ENNReal.ofReal (t * Real.sqrt n / 2) * volume K * V ≠ ⊤ :=
+    have hA3 : ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K * V ≠ ⊤ :=
       ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hKfin) hVtop
     rw [ENNReal.toReal_add (ENNReal.add_ne_top.mpr ⟨hA1, hA2⟩) hA3,
       ENNReal.toReal_add hA1 hA2, ENNReal.toReal_mul, ENNReal.toReal_mul,
@@ -663,12 +679,12 @@ theorem volume_goodSet_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin n))}
       ENNReal.toReal_ofReal hα0, ENNReal.toReal_ofReal hC, hvK] at hmono
     exact hmono
   -- the algebraic rearrangement
-  have hkey : (1 - α - t * Real.sqrt n / 2) * (vA + vD) ≤ (1 - α) * vA := by nlinarith
+  have hkey : (1 - α - t * (10 * Real.sqrt n) / 2) * (vA + vD) ≤ (1 - α) * vA := by nlinarith
   -- and back to `ℝ≥0∞`
-  rcases le_or_gt (1 - α - t * Real.sqrt n / 2) 0 with hsign | hsign
+  rcases le_or_gt (1 - α - t * (10 * Real.sqrt n) / 2) 0 with hsign | hsign
   · rw [ENNReal.ofReal_eq_zero.mpr hsign, zero_mul]
     exact bot_le
-  · have h1 : ENNReal.ofReal ((1 - α - t * Real.sqrt n / 2) * (volume K).toReal)
+  · have h1 : ENNReal.ofReal ((1 - α - t * (10 * Real.sqrt n) / 2) * (volume K).toReal)
         ≤ ENNReal.ofReal ((1 - α) * vA) := by
       rw [hvK]; exact ENNReal.ofReal_le_ofReal hkey
     rwa [ENNReal.ofReal_mul hsign.le, ENNReal.ofReal_mul (by linarith : (0:ℝ) ≤ 1 - α),
@@ -732,16 +748,27 @@ private lemma ofReal_sq_div_le_lintegral {b c : ℝ} (hb : 0 < b) (hc : 0 < c) :
   field_simp
   ring
 
-/-- **Lemma 3.4 of Lovász–Vempala.**  `∫_K s_α ≥ ((1−α)/√n)·vol(K)`.
+/-- **Lemma 3.4 of Lovász–Vempala.**  `∫_K s_α ≥ ((1−α)/(10√n))·vol(K)`.
 
-**READ THIS BEFORE USING.**  The hypothesis `hLem33` is *the paper's Lemma 3.3* — Corollary 4.6
-of Kannan–Lovász–Simonovits 1997, which Lovász–Vempala quote rather than prove.  It is **not
-proved anywhere in this repository**, and it is deliberately supplied here as an inline
-`∀`-hypothesis rather than as a named `Prop`, so that it can never be mistaken for an
-established fact.  It is stated at inradius `r = 1`, i.e. for a `K` containing a unit ball;
-that is exactly the hypothesis "Suppose `K` contains a unit ball" of the paper's Lemma 3.4.
+**This statement has no assumed inputs.**  The paper's Lemma 3.3 — Corollary 4.6 of
+Kannan–Lovász–Simonovits 1997, which Lovász–Vempala quote rather than prove — used to appear
+here as an inline `∀`-hypothesis `hLem33`.  It is now *proved*, in
+`Arlib/Convexity/KLS97Sharp.lean`, and discharged inside this proof by
+`Arlib.lem33_sqrt hn hKc hKcl hKfin hball`.  What replaces the hypothesis is
+`hball : Metric.closedBall z 1 ⊆ K` — exactly the paper's own "Suppose `K` contains a unit
+ball" for Lemma 3.4, and the `r = 1` instance of Lemma 3.3's inradius hypothesis.  `hKcl` was
+already present and is what `KLS97Sharp.lean` needs (its cap step uses the metric projection
+onto `K`).
 
-Everything else is proved: the distributional step is `Arlib.volume_goodSet_ge`, the
+**The constant.**  The conclusion is `((1−α)/(10√n))·vol K`, where the paper writes
+`((1−α)/√n)·vol K`.  The factor `10` is inherited from `Arlib.lem33_sqrt`, which proves Lemma
+3.3 in the form `(10·t√n/2r)·vol(K)·vol(tB)`.  That is a constant-factor loss in the majorant
+used by the proof route there — an exponential envelope `e^{2−λh}` in place of the Gaussian,
+and `(1+x)ⁿ − 1 ≤ nx·e^{nx}` — **not** an error in KLS97, whose `C = 1` is consistent with
+everything proved here; `KLS97Sharp.lean`'s docstring has the breakdown.  The order in `n` is
+unchanged, which is all the downstream conductance bound uses.
+
+Everything else is proved too: the distributional step is `Arlib.volume_goodSet_ge`, the
 measurability of `s_α` comes from its concavity (Lemma 3.1) via
 `Arlib.aemeasurable_stepRadius`, and the layer-cake identity is Mathlib's
 `MeasureTheory.lintegral_eq_lintegral_meas_le`.
@@ -751,15 +778,17 @@ reading of `∫_K s(x) dx` for a nonnegative function and needs no integrability
 theorem lintegral_stepRadius_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K) (hKfin : volume K ≠ ⊤)
     {α : ℝ} (hα0 : 0 < α) (hα1 : α < 1)
-    (hLem33 : ∀ t : ℝ, 0 < t → ∫⁻ x in K, volume (Metric.closedBall x t \ K)
-        ≤ ENNReal.ofReal (t * Real.sqrt n / 2) * volume K
-            * volume (Metric.closedBall (0 : EuclideanSpace ℝ (Fin n)) t)) :
-    ENNReal.ofReal ((1 - α) / Real.sqrt n) * volume K
+    {z : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K) :
+    ENNReal.ofReal ((1 - α) / (10 * Real.sqrt n)) * volume K
       ≤ ∫⁻ x in K, ENNReal.ofReal (stepRadius K α x) := by
+  have hLem33 : ∀ t : ℝ, 0 < t → ∫⁻ x in K, volume (Metric.closedBall x t \ K)
+      ≤ ENNReal.ofReal (t * (10 * Real.sqrt n) / 2) * volume K
+          * volume (Metric.closedBall (0 : EuclideanSpace ℝ (Fin n)) t) :=
+    Arlib.lem33_sqrt hn hKc hKcl hKfin hball
   have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast Nat.pos_of_ne_zero hn
   have hsqrt : 0 < Real.sqrt n := Real.sqrt_pos.mpr hnpos
   have hb : (0 : ℝ) < 1 - α := by linarith
-  set c : ℝ := Real.sqrt n / 2 with hc
+  set c : ℝ := 5 * Real.sqrt n with hc
   have hcpos : 0 < c := by rw [hc]; linarith
   have hs_nn : 0 ≤ᵐ[volume.restrict K] stepRadius K α :=
     Filter.Eventually.of_forall fun x => stepRadius_nonneg hn hKfin hα0 x
@@ -779,7 +808,7 @@ theorem lintegral_stepRadius_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin
             rw [Measure.restrict_apply hgm, Set.inter_eq_left.mpr goodSet_subset]
         _ ≤ _ := measure_mono fun x hx => le_stepRadius_of_mem_goodSet hn hKfin hα0 hx
     refine le_trans ?_ (mul_le_mul' (le_refl (ENNReal.ofReal (1 - α))) h2)
-    rw [show c * t = t * Real.sqrt n / 2 by rw [hc]; ring]
+    rw [show c * t = t * (10 * Real.sqrt n) / 2 by rw [hc]; ring]
     exact h1
   -- integrate the pointwise bound over `t`
   have hstep : ENNReal.ofReal ((1 - α) ^ 2 / (2 * c)) * volume K
@@ -796,7 +825,7 @@ theorem lintegral_stepRadius_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin
           filter_upwards [self_mem_ae_restrict measurableSet_Ioi] with t ht
           exact hlow t ht
   -- cancel the common factor `ofReal (1 - α)`
-  have key : ENNReal.ofReal (1 - α) * (ENNReal.ofReal ((1 - α) / Real.sqrt n) * volume K)
+  have key : ENNReal.ofReal (1 - α) * (ENNReal.ofReal ((1 - α) / (10 * Real.sqrt n)) * volume K)
       ≤ ENNReal.ofReal (1 - α) * ∫⁻ t in Set.Ioi (0 : ℝ),
           (volume.restrict K) {x : EuclideanSpace ℝ (Fin n) | t ≤ stepRadius K α x} := by
     refine le_trans (le_of_eq ?_) hstep
@@ -804,6 +833,7 @@ theorem lintegral_stepRadius_ge (hn : n ≠ 0) {K : Set (EuclideanSpace ℝ (Fin
     congr 2
     rw [hc]
     field_simp
+    norm_num
   simp only [mul_comm (ENNReal.ofReal (1 - α))] at key
   exact (ENNReal.mul_le_mul_iff_left (ENNReal.ofReal_pos.mpr hb).ne'
     ENNReal.ofReal_ne_top).mp key
