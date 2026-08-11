@@ -209,16 +209,35 @@ and `Arlib.Convexity.LocalizationTransverse`)*:
   non-integrable nonnegative function is `0`, not `+∞`).  Its `W` *is* bounded with support
   in `[0,1]` (`Arlib.normalised_volume_slice_le`), so exposing it is routine but not done.
 
-*(genuinely open)*:
-
 * **(F) Two residues of (E)'s composition**, both explicit hypotheses rather than hidden
-  assumptions.  The limit body must contain two distinct points — a chain collapsing to a point
-  gives a degenerate needle, for which a profile on `(0,1)` is the wrong shape;
-  `Arlib.le_diam_of_sign_separated` supplies it when the positive parts of `g₁`, `g₂` are
-  slab-separated, but that is a condition on the data.  And the chain lives in
-  `EuclideanSpace ℝ (Fin n)` while the needle theorems live in `Fin (m+1) → ℝ`, so a
-  measure-preserving transport between them is still missing
-  (`EuclideanSpace.volume_preserving_measurableEquiv` should make it routine).
+  assumptions.  **Both are now addressed** in `Arlib/Convexity/LocalizationTransport.lean`.
+
+  *The transport is closed outright, with no residual binder.*  `EuclideanSpace ℝ (Fin n)` is
+  `WithLp 2 (Fin n → ℝ)`, and in this Mathlib `WithLp` is a **structure**, so none of it was
+  definitional — each transport is proved.  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean`
+  restates the slab-free form *verbatim* over `EuclideanSpace ℝ (Fin (m+1))`.  The
+  `MeasurableSet`/`IsCompact`/`Convex`/`Collinear` transfer lemmas are stated as **iffs** on
+  purpose: `toLp ⁻¹' (ofLp ⁻¹' T) = T` by `rfl`, so they move hypotheses in both directions.
+
+  ⚠ **This sentence used to name a lemma that does not exist.**  It said the transport
+  "should be routine" via `EuclideanSpace.volume_preserving_measurableEquiv`.  There is no
+  such declaration in this Mathlib.  The actual bridge is `PiLp.volume_preserving_toLp` /
+  `PiLp.volume_preserving_ofLp` together with `MeasurableEquiv.toLp`.
+
+  *Nondegeneracy is closed modulo exactly one explicit data hypothesis*,
+  `hsep : ∀ x, g₁ x = 0 → g₂ x < ε`, in `Arlib.exists_ne_mem_iInter_of_chain`.  The cutting
+  scheme is free to collapse to a point, and the only consequences a collapse has for the two
+  chain invariants are `g₁ p = 0` and `ε ≤ g₂ p`; `hsep` is exactly the denial of that
+  conjunction, hence the weakest hypothesis *this pointwise argument* can use — **not**
+  claimed weakest outright.  `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean_of_sep`
+  is the composed form downstream consumers want: both conclusions, no nondegeneracy
+  hypothesis, only `hsep`.
+
+  ⚠ **Strictness gap for anyone wiring `hsep` to slab separation.**
+  `Arlib.forall_lt_of_sign_separated` derives `hsep`, but needs the `g₁` side **strict**
+  (`a < L x → g₁ x < 0`).  `Arlib.le_diam_of_sign_separated` (`NeedleLimit.lean:234`) is
+  stated with `≤ 0`, and the non-strict form does **not** suffice: `g₁` may vanish above the
+  level, where nothing bounds `g₂`.  That is why `hsep` is stated directly.
 
 ## Provenance caveat
 
