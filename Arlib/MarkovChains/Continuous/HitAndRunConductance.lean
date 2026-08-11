@@ -19,13 +19,21 @@ import Arlib.Probability.TV
 
 Formally, `Arlib.MarkovChains.conductance_hitAndRun_ge`:
 
-    ENNReal.ofReal (1 / (2 ^ 24 * n * D)) ≤ conductance (hitAndRun K) (uniformOn volume K)
+    ENNReal.ofReal (1 / (2 ^ 27 * n * D)) ≤ conductance (hitAndRun K) (uniformOn volume K)
 
 with `conductance` the genuine infimum of `Arlib/MarkovChains/Continuous/Conductance.lean`
 and `hitAndRun` the kernel of `Arlib/MarkovChains/Continuous/HitAndRun.lean`.
 
+**`2²⁷`, not the paper's `2²⁴`, and the reason is a constant and nothing else.**  Lemma 3.3
+is proved in this repository (`Arlib.lem33_sqrt`) at `10·t√n/2r` rather than the paper's
+`t√n/2r`, so Lemma 3.4 reads `∫_K s ≥ ((1−α)/(10√n))·vol K`; that factor `10` propagates
+verbatim to the headline, giving `1/(122880000·n·D)`, and `122880000 > 2²⁴ = 16777216`.  The
+factor `10` is a constant-factor loss in the exponential-envelope majorant that
+`KLS97Sharp.lean`'s route uses in place of the Gaussian — **not** an error in KLS 1997, whose
+`C = 1` is consistent with everything proved here.  The order in `n` and `D` is the paper's.
+
 This file assembles that theorem — `Arlib.MarkovChains.conductance_hitAndRun_ge` — around
-**three inline `∀`-hypotheses**, and proves everything else.  The three are *not* on the
+**two inline `∀`-hypotheses**, and proves everything else.  The two are *not* on the
 same footing, and the difference is the point of this file:
 
 ## 1. `hIso` — the genuine, open gap
@@ -52,46 +60,49 @@ named `Prop`, not a `structure` field, not a `class`.  A reader of
 an `IsoInput`/`OneDimIso` predicate that assumes its own conclusion; that is exactly the
 mistake this file refuses to make.
 
-## 2. `hLem33` and `hLem41` — placeholders for work in flight, not gaps
+## 2. `hLem41` — a placeholder for work in flight, not a gap
 
-These two are **temporary**, and are being proved concurrently in this same repository.
-They are threaded here in the same inline style purely so that this file can be built and
-audited before they land; when they do, each is discharged by a single application.
+`hLem41` is **temporary**, and is being proved concurrently in this same repository.  It is
+threaded here in the same inline style purely so that this file can be built and audited
+before it lands; when it does, it is discharged by a single application.
 
-* `hLem33` is the paper's **Lemma 3.3** (= Corollary 4.6 of Kannan–Lovász–Simonovits 1997),
-  quoted without proof by Lovász–Vempala.  It is *already* threaded through
-  `Arlib.lintegral_stepRadius_ge` in `Arlib/Convexity/StepLength.lean` as an inline
-  hypothesis of exactly this shape; this file simply passes it along.  It is being proved
-  in `Arlib/Convexity/KLS97.lean`.
-* `hLem41` is the paper's **Lemma 4.1**, the one-step overlap bound: two points that are
-  close in cross-ratio distance *and* close relative to their median step lengths have
-  overlapping one-step distributions.  It is being proved in
-  `Arlib/MarkovChains/Continuous/HitAndRunOverlap.lean`.
+`hLem41` is the paper's **Lemma 4.1**, the one-step overlap bound: two points that are close
+in cross-ratio distance *and* close relative to their median step lengths have overlapping
+one-step distributions.  It is being proved in
+`Arlib/MarkovChains/Continuous/HitAndRunOverlap.lean`.
 
-Neither is an obstruction of the kind `hIso` is: both are ordinary (if laborious) geometry
-that the surrounding development already knows how to do.  As of writing, neither of the two
-concurrent files discharges its hypothesis *at the paper's constants*, and the difference is
-recorded here rather than hidden:
+It is not an obstruction of the kind `hIso` is: it is ordinary (if laborious) geometry that
+the surrounding development already knows how to do.  As of writing that concurrent file does
+not discharge it *at the paper's constant*, and the difference is recorded here rather than
+hidden: `tvLe_hitAndRun_lemma41` obtains `1 − 1/2880` rather than the paper's `1 − 1/500`
+(its cap constant is `1/2`, not the paper's erroneous `1/6`), and it hypothesises
+`|u−v| < (2/√n)·F(u)` rather than the paper's `max{F(u),F(v)}` — the latter follows by
+symmetry, since `TVLe` and `crossRatioDist` are symmetric.  **This is why the theorem below
+is stated twice**: once parametrically in the Lemma 4.1 loss
+(`conductance_hitAndRun_ge_of_tv`, giving `lam/(245760·n·D)` from `d_TV ≤ 1 − lam`), and once
+at the paper's `lam = 1/500` (`conductance_hitAndRun_ge`, giving `1/(2²⁷·n·D)`).  At
+`lam = 1/2880` the same theorem gives `1/(707788800·n·D)`, i.e. roughly `1/2³⁰·n·D`.
 
-* `Arlib/Convexity/KLS97.lean`'s `lem33_const_n` proves the Lemma 3.3 bound with `(n : ℝ)`
-  in place of `Real.sqrt n`.  That is strictly weaker for `n ≥ 2`, so it does **not** yet
-  discharge `hLem33` as stated here (which is the `√n` form that `StepLength.lean` requires).
-  If only the `n` form is ever available, Lemma 3.4 degrades to `∫_K s ≥ ((1−α)/n)·vol K` and
-  the conductance bound picks up one extra factor `√n`; that change lives in `StepLength.lean`,
-  not here.
-* `Arlib/MarkovChains/Continuous/HitAndRunOverlap.lean`'s `tvLe_hitAndRun_lemma41` obtains
-  `1 − 1/2880` rather than the paper's `1 − 1/500` (its cap constant is `1/2`, not the
-  paper's erroneous `1/6`), and it hypothesises `|u−v| < (2/√n)·F(u)` rather than the paper's
-  `max{F(u),F(v)}` — the latter follows by symmetry, since `TVLe` and `crossRatioDist` are
-  symmetric.  **This is why the theorem below is stated twice**: once parametrically in the
-  Lemma 4.1 loss (`conductance_hitAndRun_ge_of_tv`, giving `lam/(24576·n·D)` from
-  `d_TV ≤ 1 − lam`), and once at the paper's `lam = 1/500`
-  (`conductance_hitAndRun_ge`, giving `1/(2²⁴·n·D)`).  At `lam = 1/2880` the same theorem
-  gives `1/(70778880·n·D)`, i.e. roughly `1/2²⁶·n·D`.
+## 3. `hLem33` — discharged; no longer a hypothesis of this file
+
+The paper's **Lemma 3.3** (= Corollary 4.6 of Kannan–Lovász–Simonovits 1997), quoted without
+proof by Lovász–Vempala, **is proved in this repository**, as
+`Arlib.lintegral_volume_closedBall_sdiff_le_sqrt` in `Arlib/Convexity/KLS97Sharp.lean` (its
+inradius-`1` specialisation being `Arlib.lem33_sqrt`).  It used to be threaded through this
+file as an inline `∀`-hypothesis `hLem33`, because `Arlib.lintegral_stepRadius_ge` carried one
+of exactly that shape; `StepLength.lean` now discharges it internally from
+`hball : closedBall z 1 ⊆ K` — the paper's own "Suppose `K` contains a unit ball" — and **no
+`hLem33` binder survives anywhere in this file.**
+
+What is proved is the `10√n` form, not the paper's `√n`.  That is a constant-factor loss in
+the majorant of the proof route in `KLS97Sharp.lean` (an exponential envelope `e^{2−λh}` in
+place of the Gaussian, plus `(1+x)ⁿ − 1 ≤ nx·e^{nx}`), **not** an error in KLS97.  The order
+is `√n`, as in the paper; only the absolute constant differs, and the whole cost downstream is
+the factor `10` in the headline recorded at the top of this docstring.
 
 ## What is proved here
 
-Everything else in §4, and the constant comes out at the paper's `2²⁴`:
+Everything else in §4:
 
 * `Arlib.MarkovChains.stepRadius_le_two_mul_diam` — `s_α(x) ≤ 2·diam K` for `α ≥ 1/2`.
   This is the paper's unargued "clearly `h(x) ≤ 1/3`".
@@ -111,9 +122,9 @@ Everything else in §4, and the constant comes out at the paper's `2²⁴`:
   separation bound above).
 * `Arlib.MarkovChains.one_le_diam_of_unitBall` — `diam K ≥ 1` for a body with inradius `1`.
 * `Arlib.MarkovChains.conductance_hitAndRun_ge_of_tv` — **Theorem 4.2, parametric in the
-  Lemma 4.1 loss**: `d_TV ≤ 1 − lam` gives `Φ ≥ lam/(24576·n·D)`.
+  Lemma 4.1 loss**: `d_TV ≤ 1 − lam` gives `Φ ≥ lam/(245760·n·D)`.
 * `Arlib.MarkovChains.conductance_hitAndRun_ge` — **Theorem 4.2**, at `lam = 1/500`:
-  `Φ ≥ 1/(2²⁴·n·D)`.
+  `Φ ≥ 1/(2²⁷·n·D)`.
 
 ## Reused rather than rebuilt
 
@@ -129,20 +140,23 @@ Everything else in §4, and the constant comes out at the paper's `2²⁴`:
 
 ## Constants, and where they differ from the paper
 
-The headline constant is the paper's, `1/(2²⁴·n·D)`, and the intermediate bookkeeping is
-slightly *better* than the paper's:
+The headline constant is `1/(2²⁷·n·D)` where the paper writes `1/(2²⁴·n·D)`.  **The entire
+difference is the factor `10` in the proved Lemma 3.3**; every other step of the bookkeeping
+here is the paper's or slightly better than it:
 
 | quantity | paper | here |
 |---|---|---|
-| `∫_K s / vol K` | `> 1/4000·nD` after `1/(48D√n)` | `≥ 1/(3072·n·D)` (exact `48·64`) |
+| Lemma 3.3 | `t√n/2r` | `10·t√n/2r` (proved, `KLS97Sharp.lean`) |
+| `∫_K s / vol K` | `> 1/4000·nD` after `1/(48D√n)` | `≥ 1/(30720·n·D)` (exact `48·64·10`) |
 | escape flow | `≥ (1/2000)·vol(S₃')` | same |
-| final | `1/2²⁴·nD` | `1/(12288000·n·D) ≥ 1/2²⁴·nD` |
-| general | — | `lam/(24576·n·D)` from `d_TV ≤ 1 − lam` |
+| final | `1/2²⁴·nD` | `1/(122880000·n·D) ≥ 1/2²⁷·nD` |
+| general | — | `lam/(245760·n·D)` from `d_TV ≤ 1 − lam` |
 
 The paper reaches `2²⁴` as `2²³` times a factor `2` for `vol(Sᵢ') ≥ vol(Sᵢ)/2`; here the
 same factor `2` appears one step earlier, as `π(S) ≤ 2·min(π S₁', π S₂')`, and the
-arithmetic lands at `12288000 ≤ 2²⁴ = 16777216`.  The stated theorem is therefore exactly
-the paper's, with no loss.
+arithmetic lands at `500·245760 = 122880000 ≤ 2²⁷ = 134217728`.  Absent the factor `10` the
+same route would land at `12288000 ≤ 2²⁴`, i.e. exactly the paper's statement; that factor is
+a constant-factor loss in a majorant, not a discrepancy with KLS97 (see §3 above).
 
 ## Two places where the formalisation is more careful than the paper
 
@@ -466,11 +480,11 @@ theorem one_le_diam_of_unitBall (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin
 
 /-! ## 4. Theorem 4.2 -/
 
-/-- **Theorem 4.2 of Lovász–Vempala.**  For a convex body `K ⊆ ℝⁿ` containing the unit ball
-and of diameter at most `D`, the conductance of hit-and-run on `K` is at least
-`1/(2²⁴·n·D)`.
+/-- **Theorem 4.2 of Lovász–Vempala, parametric in the Lemma 4.1 loss.**  For a convex body
+`K ⊆ ℝⁿ` containing the unit ball and of diameter at most `D`, the conductance of
+hit-and-run on `K` is at least `lam/(245760·n·D)` when Lemma 4.1 holds with loss `lam`.
 
-**Three hypotheses carry content, and they are not on the same footing.**
+**Two hypotheses carry content, and they are not on the same footing.**
 
 * `hIso` — **the genuine open gap.**  It is the paper's Theorem 2.1, the weighted
   isoperimetric inequality, specialised to the uniform density: for a partition
@@ -483,11 +497,6 @@ and of diameter at most `D`, the conductance of hit-and-run on `K` is at least
   absent from Mathlib v4.32.  It is written out inline here, as a `∀`-hypothesis, precisely
   so that it cannot be mistaken for something proved.
 
-* `hLem33` — **not a gap; work in flight.**  The paper's Lemma 3.3 (= KLS 1997, Cor. 4.6),
-  quoted without proof by Lovász–Vempala.  It is already an inline hypothesis of
-  `Arlib.lintegral_stepRadius_ge` and is simply forwarded; it is being proved in
-  `Arlib/Convexity/KLS97.lean`.
-
 * `hLem41` — **not a gap; work in flight.**  The paper's Lemma 4.1: two points close in
   cross-ratio distance *and* close relative to their median step lengths have one-step
   distributions at total variation distance less than `1 − 1/500`.  It is being proved in
@@ -495,32 +504,32 @@ and of diameter at most `D`, the conductance of hit-and-run on `K` is at least
   repository's total-variation bound (`Arlib/Probability/TV.lean`), i.e. `d_TV(μ,ν) ≤ ε`;
   the paper's strict `<` is weakened to `≤`, which is all the proof consumes.
 
+**The paper's Lemma 3.3 is no longer among them.**  It used to appear here as a third inline
+hypothesis `hLem33`, forwarded to `Arlib.lintegral_stepRadius_ge`.  That hypothesis is
+**discharged**: Lemma 3.3 is proved in `Arlib/Convexity/KLS97Sharp.lean`
+(`Arlib.lintegral_volume_closedBall_sdiff_le_sqrt`, specialised as `Arlib.lem33_sqrt`), and
+`StepLength.lean` now consumes it internally from `hball`.  No `hLem33` binder remains.  The
+price is its constant: the proved form is `10·t√n/2r`, which is why the conclusion below has
+`245760` where the paper's arithmetic gives `24576`.
+
 The remaining hypotheses are the standing geometric side conditions of the paper's own
 statement: `K` convex, closed, measurable and bounded, containing a unit ball
 `closedBall z 1` (at an arbitrary centre, as in the paper), of diameter at most `D`, and
-`1 ≤ n`.  Note that `hball` is used here only for non-degeneracy — `0 < vol K` and
-`1 ≤ diam K ≤ D`, the latter being what makes `4000 ≤ 2²⁴·n·D` — because the *content* of
-"contains a unit ball" enters the argument through `hLem33`, which is stated at inradius
-`r = 1`.
+`1 ≤ n`.  `hball` now does double duty: besides non-degeneracy — `0 < vol K` and
+`1 ≤ diam K ≤ D` — it is what discharges Lemma 3.3 inside
+`Arlib.lintegral_stepRadius_ge`, which is stated at inradius `r = 1`.  That is exactly the
+paper's own "Suppose `K` contains a unit ball" for Lemma 3.4.
 
 **Non-vacuity, stated honestly.**  No witness for the hypothesis bundle is exhibited here,
 and none can be until `hIso` is proved: `hIso` is a theorem of the paper, so the bundle is
 satisfiable for every convex body, but that satisfiability is exactly the open gap.  What
-*can* be said is that no hypothesis is degenerate on its face — `hLem33` is discharged for
-every body of inradius `1` by KLS 1997, `hLem41` by the paper's Lemma 4.1, and the
-geometric side conditions hold for, say, the unit ball itself.
-
-The constant is the paper's.  Internally the proof gets `1/(12288000·n·D)`, which is
-slightly better than `1/2²⁴·n·D = 1/(16777216·n·D)`; the statement is rounded to the
-paper's constant. -/
+*can* be said is that no hypothesis is degenerate on its face — `hLem41` is discharged by the
+paper's Lemma 4.1, and the geometric side conditions hold for, say, the unit ball itself. -/
 theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
     {z : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K)
     {D : ℝ} (hD : Metric.diam K ≤ D) {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam ≤ 1)
-    (hLem33 : ∀ t : ℝ, 0 < t → ∫⁻ x in K, volume (Metric.closedBall x t \ K)
-      ≤ ENNReal.ofReal (t * Real.sqrt n / 2) * volume K
-          * volume (Metric.closedBall (0 : EuclideanSpace ℝ (Fin n)) t))
     (hLem41 : ∀ u ∈ K, ∀ v ∈ K, crossRatioDist K u v < 1 / 8 →
       dist u v < 2 / Real.sqrt n * max (medianStep K u) (medianStep K v) →
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - lam)))
@@ -533,7 +542,7 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
       (∫⁻ x, ENNReal.ofReal (h x) ∂(uniformOn volume K)) *
           min (uniformOn volume K T₁) (uniformOn volume K T₂)
         ≤ uniformOn volume K ((K \ T₁) \ T₂)) :
-    ENNReal.ofReal (lam / (24576 * (n : ℝ) * D))
+    ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))
       ≤ conductance (hitAndRun K) (uniformOn volume K) := by
   have hn' : n ≠ 0 := Nat.one_le_iff_ne_zero.mp hn
   haveI : NeZero n := ⟨hn'⟩
@@ -582,14 +591,14 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
   have hgnn : ∀ x, 0 ≤ g x := fun x =>
     div_nonneg (stepRadius_nonneg hn' hKtop (by norm_num) x) hcpos.le
   -- Lemma 3.4 gives the average weight
-  have hconst : 1 / (48 * D * Real.sqrt n) * ((1 - 63 / 64) / Real.sqrt n)
-      = 1 / (3072 * (n : ℝ) * D) := by
+  have hconst : 1 / (48 * D * Real.sqrt n) * ((1 - 63 / 64) / (10 * Real.sqrt n))
+      = 1 / (30720 * (n : ℝ) * D) := by
     rw [show (1 : ℝ) - 63 / 64 = 1 / 64 by norm_num, div_mul_div_comm, one_mul, div_div]
     congr 1
-    linear_combination (3072 * D) * hsqsq
-  have hL34 : ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n) * volume K
+    linear_combination (30720 * D) * hsqsq
+  have hL34 : ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n)) * volume K
       ≤ ∫⁻ x in K, ENNReal.ofReal (stepRadius K (63 / 64) x) :=
-    lintegral_stepRadius_ge hn' hKc hKcl hKm hKtop (by norm_num) (by norm_num) hLem33
+    lintegral_stepRadius_ge hn' hKc hKcl hKm hKtop (by norm_num) (by norm_num) hball
   have hpiint : (∫⁻ x, ENNReal.ofReal (g x) ∂pi)
       = ENNReal.ofReal (1 / (48 * D * Real.sqrt n)) *
           ((volume K)⁻¹ * ∫⁻ x in K, ENNReal.ofReal (stepRadius K (63 / 64) x)) := by
@@ -604,17 +613,18 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
     rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
     congr 1
     rw [hpidef, uniformOn_def, lintegral_smul_measure, smul_eq_mul]
-  have hinv : ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n)
+  have hinv : ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n))
       ≤ (volume K)⁻¹ * ∫⁻ x in K, ENNReal.ofReal (stepRadius K (63 / 64) x) := by
-    have hcancel : (volume K)⁻¹ * (ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n) * volume K)
-        = ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n) := by
-      rw [show (volume K)⁻¹ * (ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n) * volume K)
-            = ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n) * (volume K * (volume K)⁻¹) from by
-          ring, ENNReal.mul_inv_cancel hK0 hKtop, mul_one]
-    calc ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n)
-        = (volume K)⁻¹ * (ENNReal.ofReal ((1 - 63 / 64) / Real.sqrt n) * volume K) := hcancel.symm
+    have hcancel : (volume K)⁻¹ * (ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n)) * volume K)
+        = ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n)) := by
+      rw [show (volume K)⁻¹ * (ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n)) * volume K)
+            = ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n)) * (volume K * (volume K)⁻¹) from
+          by ring, ENNReal.mul_inv_cancel hK0 hKtop, mul_one]
+    calc ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n))
+        = (volume K)⁻¹ * (ENNReal.ofReal ((1 - 63 / 64) / (10 * Real.sqrt n)) * volume K) :=
+          hcancel.symm
       _ ≤ _ := by gcongr
-  have hint : ENNReal.ofReal (1 / (3072 * (n : ℝ) * D))
+  have hint : ENNReal.ofReal (1 / (30720 * (n : ℝ) * D))
       ≤ ∫⁻ x, ENNReal.ofReal (g x) ∂pi := by
     rw [hpiint, ← hconst, ENNReal.ofReal_mul (by positivity)]
     gcongr
@@ -700,7 +710,7 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
       (hS1int u hu) (hS2int v hv) huv (hmove u (hS1int u hu)) (hmove v (hS2int v hv))
       (hdich u hu v hv) hxK hxt
   have hisoS := hIso g S1 S2 hgnn hS1m hS2m hS1K hS2K hdisj hcond
-  have hiso2 : ENNReal.ofReal (1 / (3072 * (n : ℝ) * D)) * min (pi S1) (pi S2)
+  have hiso2 : ENNReal.ofReal (1 / (30720 * (n : ℝ) * D)) * min (pi S1) (pi S2)
       ≤ pi ((K \ S1) \ S2) := by
     refine le_trans ?_ hisoS
     gcongr
@@ -780,28 +790,28 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
           exact measure_union_le _ _
       _ = pi ((interior K \ S) \ S2) + pi S2 := by rw [hintc, add_zero]
   -- the arithmetic of the final constant
-  have h4c : (4 : ℝ≥0∞) * ENNReal.ofReal (lam / (24576 * (n : ℝ) * D))
-      = ENNReal.ofReal (4 * (lam / (24576 * (n : ℝ) * D))) := by
+  have h4c : (4 : ℝ≥0∞) * ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))
+      = ENNReal.ofReal (4 * (lam / (245760 * (n : ℝ) * D))) := by
     rw [show (4 : ℝ≥0∞) = ENNReal.ofReal 4 by simp, ← ENNReal.ofReal_mul (by norm_num)]
-  have hcmp1 : (4 : ℝ≥0∞) * ENNReal.ofReal (lam / (24576 * (n : ℝ) * D)) ≤ eps := by
+  have hcmp1 : (4 : ℝ≥0∞) * ENNReal.ofReal (lam / (245760 * (n : ℝ) * D)) ≤ eps := by
     rw [h4c, hepsdef]
     refine ENNReal.ofReal_le_ofReal ?_
-    rw [show 4 * (lam / (24576 * (n : ℝ) * D)) = lam / (6144 * ((n : ℝ) * D)) by
+    rw [show 4 * (lam / (245760 * (n : ℝ) * D)) = lam / (61440 * ((n : ℝ) * D)) by
       field_simp; ring]
     rw [div_le_div_iff₀ (by positivity) (by norm_num)]
     nlinarith
-  have hcmp3 : (4 : ℝ≥0∞) * ENNReal.ofReal (lam / (24576 * (n : ℝ) * D))
-      ≤ eps * ENNReal.ofReal (1 / (3072 * (n : ℝ) * D)) := by
+  have hcmp3 : (4 : ℝ≥0∞) * ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))
+      ≤ eps * ENNReal.ofReal (1 / (30720 * (n : ℝ) * D)) := by
     rw [h4c, hepsdef, ← ENNReal.ofReal_mul (by linarith)]
     refine ENNReal.ofReal_le_ofReal (le_of_eq ?_)
     field_simp
     ring
   -- the three branches
-  have hmain : 4 * (ENNReal.ofReal (lam / (24576 * (n : ℝ) * D)) * pi S)
+  have hmain : 4 * (ENNReal.ofReal (lam / (245760 * (n : ℝ) * D)) * pi S)
       ≤ 4 * flow P pi S Sᶜ := by
     by_cases hc1 : pi S ≤ 2 * pi ((S ∩ interior K) \ S1)
-    · calc 4 * (ENNReal.ofReal (lam / (24576 * (n : ℝ) * D)) * pi S)
-          = (4 * ENNReal.ofReal (lam / (24576 * (n : ℝ) * D))) * pi S := by ring
+    · calc 4 * (ENNReal.ofReal (lam / (245760 * (n : ℝ) * D)) * pi S)
+          = (4 * ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))) * pi S := by ring
         _ ≤ eps * pi S := by gcongr
         _ ≤ eps * (2 * pi ((S ∩ interior K) \ S1)) := by gcongr
         _ = 2 * (eps * pi ((S ∩ interior K) \ S1)) := by ring
@@ -811,8 +821,8 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
         _ ≤ 2 * (2 * flow P pi S Sᶜ) := by gcongr
         _ = 4 * flow P pi S Sᶜ := by ring
     by_cases hc2 : pi Sᶜ ≤ 2 * pi ((interior K \ S) \ S2)
-    · calc 4 * (ENNReal.ofReal (lam / (24576 * (n : ℝ) * D)) * pi S)
-          = (4 * ENNReal.ofReal (lam / (24576 * (n : ℝ) * D))) * pi S := by ring
+    · calc 4 * (ENNReal.ofReal (lam / (245760 * (n : ℝ) * D)) * pi S)
+          = (4 * ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))) * pi S := by ring
         _ ≤ eps * pi S := by gcongr
         _ ≤ eps * pi Sᶜ := mul_le_mul_right (hShalf.trans hSc) eps
         _ ≤ eps * (2 * pi ((interior K \ S) \ S2)) := by gcongr
@@ -846,13 +856,13 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
       rcases le_total (pi S1) (pi S2) with h | h
       · rw [min_eq_left h]; exact h1.le
       · rw [min_eq_right h]; exact h2'.le
-    calc 4 * (ENNReal.ofReal (lam / (24576 * (n : ℝ) * D)) * pi S)
-        = (4 * ENNReal.ofReal (lam / (24576 * (n : ℝ) * D))) * pi S := by ring
-      _ ≤ (eps * ENNReal.ofReal (1 / (3072 * (n : ℝ) * D))) * pi S := by gcongr
-      _ = eps * (ENNReal.ofReal (1 / (3072 * (n : ℝ) * D)) * pi S) := by ring
-      _ ≤ eps * (ENNReal.ofReal (1 / (3072 * (n : ℝ) * D)) * (2 * min (pi S1) (pi S2))) := by
+    calc 4 * (ENNReal.ofReal (lam / (245760 * (n : ℝ) * D)) * pi S)
+        = (4 * ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))) * pi S := by ring
+      _ ≤ (eps * ENNReal.ofReal (1 / (30720 * (n : ℝ) * D))) * pi S := by gcongr
+      _ = eps * (ENNReal.ofReal (1 / (30720 * (n : ℝ) * D)) * pi S) := by ring
+      _ ≤ eps * (ENNReal.ofReal (1 / (30720 * (n : ℝ) * D)) * (2 * min (pi S1) (pi S2))) := by
           gcongr
-      _ = 2 * (eps * (ENNReal.ofReal (1 / (3072 * (n : ℝ) * D)) * min (pi S1) (pi S2))) := by
+      _ = 2 * (eps * (ENNReal.ofReal (1 / (30720 * (n : ℝ) * D)) * min (pi S1) (pi S2))) := by
           ring
       _ ≤ 2 * (eps * pi ((K \ S1) \ S2)) := by gcongr
       _ ≤ 2 * (eps * (pi ((S ∩ interior K) \ S1) + pi ((interior K \ S) \ S2))) := by gcongr
@@ -863,26 +873,36 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
   have h4top : (4 : ℝ≥0∞) ≠ ⊤ := by norm_num
   exact (ENNReal.mul_le_mul_iff_right h4ne h4top).mp hmain
 
-/-- **Theorem 4.2 of Lovász–Vempala, at the paper's own constants.**
+/-- **Theorem 4.2 of Lovász–Vempala, at the paper's Lemma 4.1 constant.**
 
-    Φ(hit-and-run on K)  ≥  1/(2²⁴·n·D).
+    Φ(hit-and-run on K)  ≥  1/(2²⁷·n·D).
 
 This is `Arlib.MarkovChains.conductance_hitAndRun_ge_of_tv` at the paper's Lemma 4.1 loss
-`lam = 1/500`, where the general bound reads `1/(500·24576·n·D) = 1/(12288000·n·D)`, and
-`12288000 ≤ 2²⁴ = 16777216`.
+`lam = 1/500`, where the general bound reads `1/(500·245760·n·D) = 1/(122880000·n·D)`.
 
-Read the docstring of `conductance_hitAndRun_ge_of_tv` for the classification of the three
-content-bearing hypotheses: `hIso` is the **genuine open gap** (the paper's Theorem 2.1,
-which needs Borsuk–Ulam via the Localization Lemma on signed integrands), while `hLem33`
-and `hLem41` are placeholders for work in flight elsewhere in this repository. -/
+**Why `2²⁷` and not the paper's `2²⁴`.**  The exact constant the proof delivers is
+`122880000`, and `122880000 > 2²⁴ = 16777216`, so the paper's power of two is *not* what this
+route proves and is not claimed.  The statement is rounded up to the next power of two,
+`2²⁷ = 134217728 ≥ 122880000`, purely for legibility — the exact form
+`1/(122880000·n·D)` is available by rerunning the final comparison, and is strictly stronger.
+
+The whole gap to the paper is one factor `10`: the proved Lemma 3.3
+(`Arlib.lem33_sqrt`) reads `10·t√n/2r` where the paper writes `t√n/2r`, so Lemma 3.4 reads
+`∫_K s ≥ ((1−α)/(10√n))·vol K`, and `10 · 12288000 = 122880000`.  That `10` is a
+constant-factor loss in the exponential-envelope majorant used by `KLS97Sharp.lean` — **not**
+an error in KLS 1997, and not a change in the order of the bound, which remains the paper's
+`1/(n·D)` up to an absolute constant.
+
+Read the docstring of `conductance_hitAndRun_ge_of_tv` for the classification of the
+hypotheses: `hIso` is the **genuine open gap** (the paper's Theorem 2.1, which needs
+Borsuk–Ulam via the Localization Lemma on signed integrands); `hLem41` is a placeholder for
+work in flight elsewhere in this repository; and the paper's Lemma 3.3 is **proved**, in
+`Arlib/Convexity/KLS97Sharp.lean`, and is no longer a hypothesis of either theorem. -/
 theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
     {z : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K)
     {D : ℝ} (hD : Metric.diam K ≤ D)
-    (hLem33 : ∀ t : ℝ, 0 < t → ∫⁻ x in K, volume (Metric.closedBall x t \ K)
-      ≤ ENNReal.ofReal (t * Real.sqrt n / 2) * volume K
-          * volume (Metric.closedBall (0 : EuclideanSpace ℝ (Fin n)) t))
     (hLem41 : ∀ u ∈ K, ∀ v ∈ K, crossRatioDist K u v < 1 / 8 →
       dist u v < 2 / Real.sqrt n * max (medianStep K u) (medianStep K v) →
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - 1 / 500)))
@@ -895,13 +915,13 @@ theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fi
       (∫⁻ x, ENNReal.ofReal (h x) ∂(uniformOn volume K)) *
           min (uniformOn volume K T₁) (uniformOn volume K T₂)
         ≤ uniformOn volume K ((K \ T₁) \ T₂)) :
-    ENNReal.ofReal (1 / (2 ^ 24 * (n : ℝ) * D))
+    ENNReal.ofReal (1 / (2 ^ 27 * (n : ℝ) * D))
       ≤ conductance (hitAndRun K) (uniformOn volume K) := by
   have hnR : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
   have hD1 : (1 : ℝ) ≤ D := le_trans (one_le_diam_of_unitBall hn hKb hball) hD
   refine le_trans (ENNReal.ofReal_le_ofReal ?_)
     (conductance_hitAndRun_ge_of_tv hn hKc hKcl hKm hKb hball hD (by norm_num) (by norm_num)
-      hLem33 hLem41 hIso)
+      hLem41 hIso)
   rw [div_le_div_iff₀ (by positivity) (by positivity)]
   nlinarith
 
