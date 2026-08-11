@@ -6,6 +6,7 @@ import Arlib.Convexity.Polytope
 import Arlib.Convexity.LogConcave
 import Arlib.Convexity.PrekopaLeindler
 import Arlib.Convexity.PrekopaLeindlerN
+import Arlib.Convexity.IntervalReduction
 import Arlib.Convexity.Isoperimetry
 import Arlib.Convexity.Localization
 import Arlib.Convexity.LocalizationLemma
