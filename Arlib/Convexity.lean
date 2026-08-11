@@ -13,6 +13,7 @@ import Arlib.Convexity.BrunnSharp
 import Arlib.Convexity.KLS97
 import Arlib.Convexity.KLS97Sharp
 import Arlib.Convexity.OneDimIsoperimetry
+import Arlib.Convexity.SharpIsoperimetry
 import Arlib.Convexity.CrossRatio
 import Arlib.Convexity.CrossRatioOneDim
 import Arlib.Convexity.ChordCompare
