@@ -12,7 +12,9 @@ of the file's definitions are a `Classical.choose` — so some proofs have to be
 scope where the algorithm is written down.  Not all of them have to be *stated*
 there.  This file holds the ones that are not about the model at all: four facts of
 `Multiset` and `Set` bookkeeping, generic in the carrier type, with nothing of
-`alg:ttc` in their statements.  `Model/Pseudocode` imports it.
+`alg:ttc` in their statements.  `Model/Pseudocode` imports it, and so does
+`Probability/Trajectory`, which holds the trajectory read-offs and the two oracle
+contracts proved from the dictionary below.
 
 ## What is here, and what it replaced
 
@@ -23,8 +25,9 @@ there.  This file holds the ones that are not about the model at all: four facts
   carrier type.  Every *term-mode* use therefore still elaborates unchanged, by
   unfolding a definition; the one `rw` that matched `Ttc.toMultiset` syntactically
   (`Ttc.count_of_coupledAt`, `Coupling/Run`) became an `exact`.  They are what
-  `Ttc.trajThin_le` — `Ttc.Oracles.thin_le` for the run's own bundle — is proved
-  from.
+  `Ttc.trajThin_le` (`Probability/Trajectory`) — `Ttc.Oracles.thin_le` for the run's
+  own bundle — is proved from, which is why `Probability/Trajectory` imports this
+  file.
 * `Ttc.exists_finEnum_of_finite` — a finite set is listed bijectively by `Fin` of
   its `Set.ncard`.  It used to be `Ttc.hasLatticeEnum_of_finite`, stated at
   `Ttc.HasLatticeEnum`; `Ttc.exists_latticeEnum` (still in `Model/Pseudocode`,
@@ -48,7 +51,8 @@ it is stated in.  `Model/Pseudocode` itself imports `Ttc/Probability/` — the a
 randomness the algorithm's law is built from — which is a whole directory and is part
 of the audited surface in its own right (see `Ttc/Audit/ClosureCheck.lean`'s
 `Ttc.Audit.auditSurface`).  Against those, `Model/Pseudocode → ModelSupport →
-Model/ProblemSetting` adds one module holding four theorems and no definitions.
+Model/ProblemSetting` — and `Probability/Trajectory → ModelSupport`, the same edge
+one directory over — adds one module holding four theorems and no definitions.
 
 *The machine check does not move.*  `Ttc/Audit/ClosureCheck.lean`'s `#modelClosure`
 walks the definitional closure of `Ttc.ttcAlgOutput`, `Ttc.ttcRun`, `Ttc.ttc` and of
@@ -71,21 +75,24 @@ now one more member of it.
 The reason the rest of `Model/Pseudocode`'s theorems stayed is **not** the audit
 check — `#modelClosure` cannot see a theorem unless a `def`'s body names it, and only
 `Ttc.exists_latticeEnum` is named that way (`Ttc.latticeEnum` is `Classical.choose` of
-it, so it must stay under `Model/`).  The reason is their **statements**.
+it, so it must stay inside the audit surface).  The reason is their **statements**.
 `Ttc.trajThin_le`, `Ttc.card_trajGen`, `Ttc.latticeEnum_injective` and
-`Ttc.cubeOf_spec` each mention a definition of `Model/Pseudocode`
-(`Ttc.trajThin`, `Ttc.trajGen`, `Ttc.latticeEnum`, `Ttc.cubeOf`), and every one of
-those definitions *is* in the measured closure, so it cannot leave `Model/` either —
-which pins the theorem upstream of nothing and downstream of nothing.  The four here
-are exactly the ones whose statements survive having `Model/Pseudocode`'s vocabulary
-taken away: three become facts about `∑ Multiset.replicate`, one about `Set.ncard`.
+`Ttc.cubeOf_spec` each mention a definition that is itself in the measured closure
+(`Ttc.trajThin`, `Ttc.trajGen`, `Ttc.latticeEnum`, `Ttc.cubeOf`), so each is pinned
+to wherever that definition is filed — upstream of nothing and downstream of nothing.
+For the first two that turned out to be a *filing* answer rather than a fixed one:
+the read-offs moved to `Probability/Trajectory`, which is in the audit surface too,
+and the two contracts went with them, so `Model/Pseudocode` is down to four theorems.
+The four facts here are the ones whose statements survive having that vocabulary
+taken away altogether: three become facts about `∑ Multiset.replicate`, one about
+`Set.ncard`.
 -/
 
 namespace Ttc
 
 /-! ## Count vectors as multisets
 
-`Ttc.toMultiset pt k` (`Model/Pseudocode`) is `∑ s, Multiset.replicate (k s) (pt s)`:
+`Ttc.toMultiset pt k` (`Probability/Trajectory`) is `∑ s, Multiset.replicate (k s) (pt s)`:
 the multiset holding `k s` copies of `pt s`.  These are the three facts that make it
 a dictionary between count vectors and multisets, stated at the sum itself so that
 they say nothing about `alg:ttc`.  Each applies to `Ttc.toMultiset` by unfolding a
@@ -97,7 +104,7 @@ variable {α : Type*} [DecidableEq α] {L : ℕ}
 
 /-- **The multiplicities are the ones prescribed** — the point of the dictionary.
 Needs `pt` injective, so that distinct indices contribute to distinct points.
-Applies to `Ttc.toMultiset pt k` (`Model/Pseudocode`) by unfolding it. -/
+Applies to `Ttc.toMultiset pt k` (`Probability/Trajectory`) by unfolding it. -/
 theorem count_toMultiset {pt : Fin L → α} (hpt : Function.Injective pt)
     (k : Fin L → ℕ) (s : Fin L) :
     Multiset.count (pt s) (∑ t, Multiset.replicate (k t) (pt t)) = k s := by
@@ -119,7 +126,7 @@ theorem count_toMultiset_of_notMem (pt : Fin L → α) (k : Fin L → ℕ)
 
 /-- **A count-bounded multiset is a sub-multiset** — the form `Ttc.Oracles.thin_le`
 needs, where the ambient multiset is arbitrary rather than another `Ttc.toMultiset`.
-This is what `Ttc.trajThin_le` (`Model/Pseudocode`) is proved from. -/
+This is what `Ttc.trajThin_le` (`Probability/Trajectory`) is proved from. -/
 theorem toMultiset_le_of_count_le {pt : Fin L → α}
     (hpt : Function.Injective pt) {k : Fin L → ℕ} {X : Multiset α}
     (h : ∀ s, k s ≤ Multiset.count (pt s) X) :

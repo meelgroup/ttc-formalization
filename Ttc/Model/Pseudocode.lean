@@ -21,49 +21,59 @@ oracle argument**. The structural invariants of the modelled execution are in
 ## What proof content is here, and why
 
 This file **is not proof-free**, and it used to claim it was. What it now carries is
-the smallest set of proofs that leaves it able to elaborate at all: **six
+the smallest set of proofs that leaves it able to elaborate at all: **four
 theorems**, one of them `private`, and no instances. Every one of them is a fact
 about something *this file defines*, without which some *other* definition of this
 file cannot be written down. Two groups:
 
-1. **What the run's own oracle bundle cannot be built without** (3).
+1. **What the run's own oracle bundle cannot be built without** (1).
    `Ttc.algOracles` constructs an `Ttc.Oracles` and that structure has two *proof*
-   fields, so `Ttc.trajThin_le` and `Ttc.card_trajGen` — and
-   `Ttc.latticeEnum_injective`, which `thin_le` is applied at — are literally part
-   of the term.
+   fields; `Ttc.trajThin_le` and `Ttc.card_trajGen` now sit in
+   `Probability/Trajectory` beside the read-offs they are about, but
+   `Ttc.latticeEnum_injective`, which `thin_le` is applied at, mentions
+   `Ttc.latticeEnum` and so has to stay here with it.
 2. **What a `Classical.choose` cannot be taken without** (3). `Ttc.latticeEnum` is
    `choose`n from `Ttc.exists_latticeEnum`, and `Ttc.cubeOf` from the `private`
    `Ttc.exists_cubeOf`; `Ttc.cubeOf_spec` is that choice's `choose_spec`, and stays
    only because exporting the `private` theorem it reads would put a *new* name in
    the audit surface to remove an old one — and, unlike every other theorem here,
    a name that `#modelClosure` would then *see*, since `Ttc.cubeOf` unfolds to a
-   `Classical.choose` of it.
+   `Classical.choose` of it.  That is measured, not estimated: it is +1 on
+   `#modelClosure Ttc.ttc` (199 → 200) and on the statement closure (206 → 207).
 
 `Ttc.exists_latticeEnum` is the one theorem here that `#modelClosure` already sees,
 for the same reason: `Ttc.latticeEnum` is `Classical.choose` of it, and a `def`'s
-body *is* walked. It cannot leave `Model/` at all.
+body *is* walked. It cannot leave the audit surface at all.
 
-**Everything that could leave has left.** Of the six, none but
+**Everything that could leave has left.** Of the four, none but
 `Ttc.exists_latticeEnum` is reachable by `Ttc/Audit/ClosureCheck.lean`'s
 `closureAux` — it does not walk a theorem's value, and `Ttc.algOracles`' two proof
 fields are lifted into anonymous `Ttc.algOracles._proof_1/_2`, which are themselves
 theorems — so the rest are invisible in `#modelClosure Ttc.ttc`; they are here
 because the file does not *elaborate* without them, and that failure is the check.
-What kept them here is not the audit but their **statements**: each of the five
-mentions a definition of this file (`Ttc.trajThin`, `Ttc.trajGen`,
-`Ttc.latticeEnum`, `Ttc.cubeOf`, `Ttc.HasLatticeEnum`), and those definitions are
-in the measured closure, so they cannot move out of `Model/` either.
+What kept them here is not the audit but their **statements**: each of the three
+mentions a definition of this file (`Ttc.latticeEnum`, `Ttc.cubeOf`,
+`Ttc.HasLatticeEnum`), and those definitions are in the measured closure, so they
+cannot move out of the audit surface either.
 
 What was here and is not any more:
 
+* `Probability/Trajectory` — the five trajectory read-offs `Ttc.toMultiset`,
+  `Ttc.trajThin`, `Ttc.trajPois`, `Ttc.trajGen`, `Ttc.padRow` together with the two
+  oracle contracts about them, `Ttc.trajThin_le` and `Ttc.card_trajGen`.  Read-offs
+  of a trajectory belong beside the trajectory law, and the two contracts had to
+  travel with them: a theorem cannot be stated upstream of the definition it
+  mentions.  `Ttc.algOracles` below still reads all seven, by import; the move
+  changed no closure count, since the five are inside the audit surface either way
+  and the two are invisible to the walk;
 * `ModelSupport` — the four facts whose statements mention nothing of this file, so
   that nothing kept them: the count-vector dictionary `Ttc.count_toMultiset`,
   `Ttc.count_toMultiset_of_notMem`, `Ttc.toMultiset_le_of_count_le` (stated there at
-  the sum `Ttc.toMultiset` *is*, generic in the carrier type, so every use here is
+  the sum `Ttc.toMultiset` *is*, generic in the carrier type, so every use is
   by unfolding a definition), and `Ttc.exists_finEnum_of_finite`, which is what
   `Ttc.hasLatticeEnum_of_finite` was once `Ttc.HasLatticeEnum` is not mentioned.
-  `Ttc/ModelSupport.lean` is the one file outside `Model/` that this file imports,
-  and its docstring states what that costs.
+  `Ttc/ModelSupport.lean` is the one file outside `Model/` and `Ttc/Probability/`
+  that this file imports, and its docstring states what that costs.
 
 and, evicted downstream earlier, with names, statements and proofs unchanged:
 
@@ -746,109 +756,6 @@ end Algorithm
 
 end Ttc
 
-/-! # The trajectory read-offs
-
-`Ttc.trajOracles` (`Coupling/Family`) is an `Ttc.Oracles` bundle whose four random
-fields are *read off* a trajectory `ω : ℕ → Fin L → ℕ` of the coupled level family.
-Two of its six fields — `thin_le` and `gen_card` — are **contracts**: proof
-obligations, discharged in `Coupling/Family` by `Ttc.toMultiset_le_of_count_le` and
-`Multiset.card_replicate`. The other four are **values**: plain arithmetic on `ω`.
-
-This section holds the values, and nothing else. It is deliberately positioned
-*upstream* of `Ttc.Oracles`: it needs nothing beyond `Model/Prelude` (for
-`Ttc.Space`), and a `Ttc.run` that reads the trajectory directly needs no oracle
-bundle and hence no contract.
-
-Nothing here is a `Prop`, and nothing here is assumed: every declaration is a
-definition whose body is the arithmetic the paper's pseudocode performs. The facts
-*about* these definitions — that `Ttc.trajThin` produces a sub-multiset, that
-`Ttc.trajGen` produces exactly `N` points — stay with the theorems that prove them,
-in `Coupling/Family`, and are what `Ttc.trajOracles`' two contract fields are built
-from.
-
-## Why the read-offs take a *row*, not a table
-
-`trajPois` takes the membership row `mem i : Fin L → Bool` and the level slice
-`ω j : Fin L → ℕ`, not the table `mem` and the trajectory `ω` with indices `i`, `j`.
-That is the honest granularity: the value depends on the table only at the cube
-being processed and on the trajectory only at the level being read, which is
-precisely what `Ttc.trajOracles_pois_congr` and `Ttc.trajOracles_gen_congr`
-(`Monadic/EventMeasurable`) and the congruence lemmas of `Exec/Coverage` say. Taking
-rows makes those facts visible in the signature instead of provable from it.
-
-These definitions live here, rather than in `Coupling/`, because they are part of
-the audit surface: `Ttc/Audit/ClosureCheck.lean` requires the algorithm's output to
-be defined entirely under `Ttc/Model/`, and a `Ttc.run` that reads a trajectory
-directly reaches them. -/
-
-namespace Ttc
-
-variable {L : ℕ}
-
-/-! ## Count vectors as multisets
-
-The run's state is a `Multiset (Space n)`; the family is a count vector. This is the
-dictionary between them, given an injective enumeration `pt` of the lattice points.
-`Ttc.toMultiset` builds the multiset with prescribed multiplicities; that it *has*
-those multiplicities (`Ttc.count_toMultiset`) is a theorem, and is in `ModelSupport`
-— stated at the sum this definition unfolds to, so that it mentions nothing of this
-file — together with the rest of the dictionary.  The two oracle contracts it is
-there to prove are below.  Its cardinality lemma `Ttc.card_toMultiset`, which no
-contract needs, is in `Coupling/Family`. -/
-
-/-- The multiset holding `k s` copies of the lattice point `pt s`. -/
-noncomputable def toMultiset {n : ℕ} (pt : Fin L → Space n) (k : Fin L → ℕ) :
-    Multiset (Space n) :=
-  ∑ s, Multiset.replicate (k s) (pt s)
-
-/-! ## The four read-offs
-
-`vol` and `covered` are read off nothing — `Ttc.trajOracles` returns the functions it
-was handed — so they need no definition here. The three that read `ω` do. -/
-
-/-- **`thin`, read off the trajectory** (`alg:ttc` lines 33, 40): what survives of
-`X` at a level whose count vector is `ωj`.
-
-Capped at what `X` actually holds, so that the sub-multiset contract
-(`Ttc.Oracles.thin_le`, discharged in `Coupling/Family`) holds for *every* multiset
-and not only for the ones the run produces. On the states the run does reach the
-multiplicities *are* the level's counts, so the `min` is inert — see `Coupling/Run`. -/
-noncomputable def trajThin {n : ℕ} (pt : Fin L → Space n) (ωj : Fin L → ℕ)
-    (X : Multiset (Space n)) : Multiset (Space n) :=
-  toMultiset pt fun s => min (ωj s) (Multiset.count (pt s) X)
-
-/-- **`Pois(λ)`, read off the trajectory** (`alg:ttc` lines 38, 41): the family's
-total over the cube whose membership row is `m`, at a level whose count vector is
-`ωj`. The rate `λ` is not read — the trajectory already carries it. -/
-def trajPois (m : Fin L → Bool) (ωj : Fin L → ℕ) : ℕ :=
-  ∑ s ∈ Finset.univ.filter fun s => m s = true, ωj s
-
-/-- **`GenerateSamples`, read off the trajectory** (`alg:ttc` line 43): the family
-restricted to the cube whose membership row is `m`, at a level whose count vector is
-`ωj`.
-
-`gen` must return exactly `N` points for **every** `N` (`Ttc.Oracles.gen_card`,
-discharged in `Coupling/Family`), but the family's size is whatever `pois` returned.
-So this falls back to `N` copies of `pad` when the two disagree — a branch the run
-never takes, since it always passes the `N` that `trajPois` produced. The caller
-supplies `pad` from the cube's own lattice points where it has any
-(`Ttc.padPoint`), so that the membership contract still holds. -/
-noncomputable def trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool)
-    (ωj : Fin L → ℕ) (N : ℕ) (pad : Space n) : Multiset (Space n) :=
-  open Classical in
-  if Multiset.card (toMultiset pt fun s => if m s then ωj s else 0) = N then
-    toMultiset pt fun s => if m s then ωj s else 0
-  else Multiset.replicate N pad
-
-/-- A lattice point of the cube whose membership row is `m`, if it has one. Used only
-as `Ttc.trajGen`'s `pad`, i.e. only on the branch the run never takes.
-`Ttc.padPoint` (`Coupling/Family`) is this at the row `mem i`. -/
-noncomputable def padRow {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) : Space n :=
-  open Classical in
-  if h : ∃ s, m s = true then pt h.choose else 0
-
-end Ttc
-
 /-! # What `Vol_ED` **computes**, with no probability space of ours
 
 This section holds the *data* half of the constructed volume oracle: the definitions
@@ -862,8 +769,9 @@ which imports this file.
 receive it as an oracle field, the definitions below must be reachable from
 `Ttc/Model/Pseudocode.lean`, which is the audit surface.  They are, because they are
 *here*: `Ttc/Audit/ClosureCheck.lean` requires the algorithm's output to be defined
-entirely under `Ttc/Model/`, so the data half of the estimator lives in `Model/`
-rather than in `Volume/`.
+entirely under `Ttc/Model/` or `Ttc/Probability/`, and the estimator is not
+probability vocabulary, so the data half of it lives in `Model/` rather than in
+`Volume/`.
 
 ## Data versus law: what had to move, and what did not
 
@@ -1034,14 +942,17 @@ a fact about the proof rather than a name in the statement.
 
 Everything the bundle is built from, since the whole point is that
 `Ttc/Audit/ClosureCheck.lean`'s `#modelClosure Ttc.ttcRun` passes — every `Ttc`
-constant `Ttc.ttcRun` unfolds to is defined under `Ttc/Model/`.  Three groups moved
-into this file for that reason, each keeping its name and its proof:
+constant `Ttc.ttcRun` unfolds to is defined under `Ttc/Model/` or
+`Ttc/Probability/`.  Three groups moved into this file for that reason, each keeping
+its name and its proof:
 
-* the two oracle **contracts** (`Ttc.trajThin_le`, `Ttc.card_trajGen`), formerly
-  `Coupling/Family` — they are theorems *about* the read-offs already defined above,
-  and the bundle's `thin_le` and `gen_card` fields are exactly these two.  The
-  count-vector dictionary they are proved from came with them and has since gone on
-  to `ModelSupport`, where it is stated without mentioning `Ttc.toMultiset`;
+* the five trajectory read-offs and the two oracle **contracts** about them
+  (`Ttc.trajThin_le`, `Ttc.card_trajGen`), formerly `Coupling/Family` — the bundle's
+  `thin_le` and `gen_card` fields are exactly those two.  All seven have since gone
+  on to `Probability/Trajectory`, beside the trajectory law they read off, which is
+  inside the audit surface just as this file is; the count-vector dictionary they
+  are proved from went to `ModelSupport`, where it is stated without mentioning
+  `Ttc.toMultiset`;
 * the **coverage test** (`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`), formerly
   `Exec/Coverage` — `alg:ttc` line 27's membership query, classically;
 * the **lattice enumeration** (`Ttc.HasLatticeEnum`, `Ttc.exists_latticeEnum`,
@@ -1062,39 +973,6 @@ and every proof it contains is discharged in this file. -/
 namespace Ttc
 
 open MeasureTheory Set
-
-/-! ## The two oracle contracts
-
-`Ttc.toMultiset` (above) turns a count vector into the run's `Multiset (Space n)`
-state.  The facts that make it a dictionary — that the multiplicities are the
-prescribed ones — are `Ttc.count_toMultiset`, `Ttc.count_toMultiset_of_notMem` and
-`Ttc.toMultiset_le_of_count_le` (`ModelSupport`), stated there at the sum
-`Ttc.toMultiset` is and so mentioning nothing of this file.  What is here is the two
-contracts `Ttc.Oracles` demands of any bundle, which mention `Ttc.trajThin` and
-`Ttc.trajGen` and therefore cannot be stated anywhere else. -/
-
-section Dictionary
-
-variable {L : ℕ}
-
-/-- **The `thin` contract**: `Ttc.trajThin` removes elements, it never invents them.
-This is `Ttc.Oracles.thin_le` for the bundle `Ttc.ttcRun` builds. -/
-theorem trajThin_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
-    (ωj : Fin L → ℕ) (X : Multiset (Space n)) : trajThin pt ωj X ≤ X :=
-  toMultiset_le_of_count_le hpt fun _ => min_le_right _ _
-
-/-- **The `gen` contract**: `Ttc.trajGen` returns exactly `N` points.  This is
-`Ttc.Oracles.gen_card` for the bundle `Ttc.ttcRun` builds. -/
-theorem card_trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) (ωj : Fin L → ℕ)
-    (N : ℕ) (pad : Space n) : Multiset.card (trajGen pt m ωj N pad) = N := by
-  classical
-  rw [trajGen]
-  by_cases h : Multiset.card (toMultiset pt fun s => if m s then ωj s else 0) = N
-  · simp only [h, if_pos]
-  · simp only [h, if_false]
-    exact Multiset.card_replicate _ _
-
-end Dictionary
 
 /-! ## Line 27: the coverage test
 
@@ -1288,8 +1166,10 @@ noncomputable def algMem : Cube A → Fin (algIndex atoms φ ε δ) → Bool :=
 Monte-Carlo estimator `Ttc.mcVol` at the volume coins `c`, and lines 33/38/40/41/43's
 `thin`, `Pois` and `GenerateSamples` are the read-offs `Ttc.trajThin`,
 `Ttc.trajPois`, `Ttc.trajGen` of the sample trajectory `t`, padded by
-`Ttc.padRow`.  The bundle's two proof fields are `Ttc.trajThin_le` at
-`Ttc.latticeEnum_injective` and `Ttc.card_trajGen`; both are proved above.
+`Ttc.padRow` — all five in `Probability/Trajectory`.  The bundle's two proof fields
+are `Ttc.trajThin_le` at `Ttc.latticeEnum_injective` and `Ttc.card_trajGen`; the two
+contracts are proved beside the read-offs they are about, and
+`Ttc.latticeEnum_injective` above.
 
 Nothing is assumed, and nothing is a proof: this is a closed term in
 `(atoms, φ, ε, δ, c, t)`.  `Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) proves that it

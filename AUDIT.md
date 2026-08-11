@@ -14,7 +14,7 @@ environment; §5 has the probe that re-checks them all in one pass.
 
 The vocabulary, the pseudocode and the problem statement are in
 [`Ttc/Model/`](Ttc/Model/) — **four files** (the audit surface also includes
-[`Ttc/Probability/`](Ttc/Probability/)'s four definition-only files, since the
+[`Ttc/Probability/`](Ttc/Probability/)'s four short files, since the
 headline is a statement about a `Measure`; see §1b):
 [`Prelude`](Ttc/Model/Prelude.lean) (the vocabulary),
 [`ProblemSetting`](Ttc/Model/ProblemSetting.lean) (what `Vol(F)` is and what
@@ -1103,9 +1103,10 @@ force before deciding what "read `Model/` and stop" buys.
 
 The statement names quantities; their **bodies are not self-contained**, and this
 is the enumeration of what the statement's *meaning* depends on.  Since the moves
-above, every one of these is defined under `Model/` — so the list is no longer a
-list of things beyond the boundary, but of things **inside** it that a reader of
-`Model/` must actually read rather than skim:
+above, every one of these is defined inside the audit surface `Model/` ∪
+`Ttc/Probability/` — so the list is no longer a list of things beyond the boundary,
+but of things **inside** it that a reader of the surface must actually read rather
+than skim:
 
 * **The run wrappers** the quantities are built from — the count of enumerated
   lattice points, the rate vector `Ttc.algRates`, the run's output `Ttc.ttcRun`,
@@ -1392,41 +1393,49 @@ carrier-generic bookkeeping with nothing of `alg:ttc` in their statements.  The
 residue has come down from 27 declarations to a single figure and was still
 falling while this was written; **count it with
 `grep -cE '^(private )?theorem ' Ttc/Model/Pseudocode.lean`** rather than quoting
-this page.  At the last measurement it was **6 theorems and no instance**, in the
+this page.  At the last measurement it was **4 theorems and no instance**, in the
 two groups below.
 
 The reason they cannot simply be moved out is worth stating, because the obvious
 reason is the wrong one.  `closureAux` never walks a **theorem's** value
 (`ConstantInfo.value?` is `none` for theorems in Lean 4.32), and `Ttc.algOracles`'
 two proof fields are lifted into anonymous `Ttc.algOracles._proof_1/_2`, which are
-themselves theorems — so five of the six are invisible to `#modelClosure` while still
+themselves theorems — so three of the four are invisible to `#modelClosure` while still
 being required for the file to *elaborate*.  **But a theorem a `def`'s body names is
 not invisible**, and one of them is exactly that: `Ttc.latticeEnum` is
 `Classical.choose` of `Ttc.exists_latticeEnum`, so that theorem is in every closure
-report and must stay under `Model/` outright.  (`Ttc.exists_cubeOf` is in the same
-position and escapes only by being `private`, since a private name begins `_private`
-rather than `Ttc`.)  For the other four the binding constraint is not the audit at
+report and must stay inside the audit surface outright.  (`Ttc.exists_cubeOf` is in
+the same position and escapes only by being `private`, since a private name begins
+`_private` rather than `Ttc`; measured, un-`private`ing it would take
+`#modelClosure Ttc.ttc` from 199 to 200 and the statement closure from 206 to 207.)
+For the other three the binding constraint is not the audit at
 all but their **statements** — see below.  Pushing one downstream produces an
 elaboration error; pulling one upstream produces a type error.
 
-1. **What the run's own oracle bundle cannot be built without** (4).  This group is
-   the price of `#modelClosure Ttc.ttcRun` passing.  `Ttc.ttcRun` constructs an
-   `Ttc.Oracles` *inline*, and that structure has two **proof** fields, so the two
-   discharges `Ttc.trajThin_le` and `Ttc.card_trajGen` are literally part of the
-   term.  Likewise `Ttc.latticeEnum` is `Classical.choose`n from
-   `Ttc.exists_latticeEnum`, so that theorem is part of the definition — and it is
-   the one theorem here that *is* visible to `#modelClosure`, because a `def` body
-   names it — and `Ttc.latticeEnum_injective` is the argument `thin_le` is applied
-   to.
+1. **What the run's own oracle bundle cannot be built without** (2).  This group is
+   the price of `#modelClosure Ttc.ttcRun` passing.  `Ttc.algOracles` constructs an
+   `Ttc.Oracles`, and that structure has two **proof** fields, so the two discharges
+   `Ttc.trajThin_le` and `Ttc.card_trajGen` are literally part of the term — those
+   two now sit in [`Ttc/Probability/Trajectory.lean`](Ttc/Probability/Trajectory.lean)
+   with the five trajectory read-offs they are about, which is inside the audit
+   surface just as `Model/` is.  What could not follow them is
+   `Ttc.latticeEnum_injective`, the argument `thin_le` is applied to, whose statement
+   names `Ttc.latticeEnum`; and `Ttc.latticeEnum` is itself `Classical.choose`n from
+   `Ttc.exists_latticeEnum`, so that theorem is part of the definition — and is the
+   one theorem here that *is* visible to `#modelClosure`, because a `def` body names
+   it.
 2. **What line 20's rate vector cannot be built without** (2).  `Ttc.cubeOf` is
    `Classical.choose`n from the private `Ttc.exists_cubeOf`, and `Ttc.cubeOf_spec` is
    that choice's `choose_spec`; `Ttc.rates` reads both through `Ttc.cubeAt`.
 
-Group 1 is the one to watch: its members are *not* about `alg:ttc` — they are
-multiset and cardinality bookkeeping — and the group exists because the headline is
-stated at a *constructed* bundle rather than monadically.  **What keeps the residue
-here is the theorems' own statements**: each mentions a definition of this file, so
-moving it would mean moving the definition.  The facts whose statements survived
+**What keeps the residue here is the theorems' own statements**: each mentions a
+definition that is itself in the measured closure, so moving the theorem means moving
+the definition — which is exactly how the two multiset/cardinality contracts left.
+They were bookkeeping about a trajectory rather than about `alg:ttc`, so the five
+read-offs they mention could honestly be re-filed beside the trajectory law and the
+contracts could travel with them.  `Ttc.latticeEnum` and `Ttc.cubeOf` have no such
+home: one enumerates lattice points of a region, the other looks up which cube
+contains a point, and neither is probability.  The facts whose statements survived
 being rephrased without that vocabulary — the count-vector dictionary
 (`Ttc.count_toMultiset` and friends) and the `Set.ncard` enumeration lemma — went to
 [`Ttc/ModelSupport.lean`](Ttc/ModelSupport.lean), which `Model/Pseudocode` imports;

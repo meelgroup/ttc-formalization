@@ -203,16 +203,18 @@ prints them.  `Ttc.ttcRun` is that term with the bundle **filled in** from the r
 `(c, t)` itself: `Vol_ED` is the Monte-Carlo estimator `Ttc.mcVol` at the volume
 coins `p.1`, and `thin`, `Pois`, `GenerateSamples` are the read-offs
 `Ttc.trajThin`, `Ttc.trajPois`, `Ttc.trajGen` of the sample trajectory `p.2`, over
-the lattice enumeration `Ttc.latticeEnum` — every one of them defined in
-`Model/Pseudocode`.
+the lattice enumeration `Ttc.latticeEnum` — `Ttc.mcVol` and `Ttc.latticeEnum` in
+`Model/Pseudocode`, the three trajectory read-offs in `Ttc/Probability/Trajectory`
+beside the law they read.
 
 Nothing about that bundle is assumed: it is a closed term, and
 `Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) proves — by `rfl` — that
 `Ttc.ttcRun … p.1 p.2` is `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle … p.1 p.2)`.  So
 `Ttc.ttcRun` is not a rename: it is the same term, and the machine check
 `#modelClosure Ttc.ttcRun` (`Audit/ClosureCheck`) confirms that every `Ttc` constant
-it unfolds to is defined under `Ttc/Model/`.  The target is the **user's own**
-`Vol(F)`, at the original `φ`: neither preprocessing pass moves it.
+it unfolds to is defined under `Ttc/Model/` **or `Ttc/Probability/`** — 152 and 5
+respectively, the five being the trajectory read-offs.  The target is the **user's
+own** `Vol(F)`, at the original `φ`: neither preprocessing pass moves it.
 
 The runtime conjunct names no `Exec/Api` vocabulary at all.  Earlier versions were
 stated in the folded terms `Ttc.ttcTerminates`, `Ttc.ttcCost`, `Ttc.ttcNumCubes` and

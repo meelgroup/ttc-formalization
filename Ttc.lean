@@ -68,7 +68,7 @@ invariant; the rest are description.
   dictionary and the `Set.ncard` enumeration lemma — are in `Ttc/ModelSupport.lean`,
   which `Model/Pseudocode` imports and whose docstring states what that import
   costs.  Everything else has been pushed out, and the residue is small and
-  still shrinking — 6 theorems and no instance when this was last measured, down
+  still shrinking — 4 theorems and no instance when this was last measured, down
   from 27; count it with
   `grep -cE '^(private )?theorem ' Ttc/Model/Pseudocode.lean` rather than quoting
   this sentence.  `AUDIT.md` §1h-iv lists them by group.
@@ -177,7 +177,7 @@ Ttc/TtcProb → Ttc/Access`, and `Model/ProblemSetting` imports nothing but
 * `Ttc.Invariants` — the structural facts about the modelled loop: the
   exit levels, and what `𝒳` can contain.
 * `Ttc.Coupling.Family` — the coupled level family, its law, and the oracle
-  bundle that reads a trajectory: the read-offs of `Model/Pseudocode`
+  bundle that reads a trajectory: the read-offs of `Probability/Trajectory`
   (`Ttc.trajThin`, `Ttc.trajPois`, `Ttc.trajGen`) packaged with the two
   *contracts* `thin_le` and `gen_card`.
 * `Ttc.Coupling.Run` — the run **is** the family, pathwise; the halving
@@ -305,11 +305,14 @@ precisely because the build does not.
 ## The audit surface (`Model/`)
 
 `Model/` is kept deliberately small: a referee who wants to trust the *statement*
-reads the four files listed above — **and the four short definition-only files of
+reads the four files listed above — **and the four short files of
 `Ttc/Probability/`** — and stops. The surface is two directories, not one, because
 `Ttc.ttc` is a `Measure`: the ambient randomness is in what the headline's type
 unfolds to no matter where it is filed. `Ttc/Probability/` is bounded in exchange:
-definitions only, no `Prop`, no hypothesis bundle, nothing assumed. Two things make
+vocabulary, no hypothesis bundle, nothing assumed, and a `Prop` only where a
+definition filed there forces one and `#modelClosure`'s walk cannot see it — as of
+this writing exactly two, the oracle contracts `Ttc.trajThin_le` and
+`Ttc.card_trajGen`, which are `_proof_` fields of `Ttc.algOracles`. Two things make
 this more than a filing convention.
 
 **It is machine-checked, for the statement.** `Ttc/Audit/ClosureCheck.lean`
@@ -340,7 +343,7 @@ them, never as a size the files should be judged by.
 `#closure`/`#closureOfType`, the stricter checks that forbid the statement naming
 this development's own probability spaces, stay disabled — by construction rather
 than by filing. `Ttc.ttc` **is** a measure, so its statement names measures; every
-constant those checks flag is nonetheless defined under `Model/`.
+constant those checks flag is nonetheless defined inside the audit surface.
 
 Two per-file points not implied by the above: that `volSol` is the volume of the
 right set is checked, for that symbol alone, in `Volume/VolSolCheck`; and
