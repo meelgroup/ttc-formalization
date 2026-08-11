@@ -433,6 +433,7 @@ import Ttc.Exec.ScaleFactor
 import Ttc.Exec.Rescaled
 import Ttc.Coupling.Product
 import Ttc.Volume.Bridge
+import Ttc.Volume.RadBound
 import Ttc.Volume.VolSolCheck
 import Ttc.Volume.CousinsVempala
 import Ttc.Volume.CVInstantiate
