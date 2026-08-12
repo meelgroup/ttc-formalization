@@ -7,9 +7,11 @@ import Ttc.Model.Theorem
 import Ttc.Witness.Inputs
 
 /-!
-# `Witness/FullTwoCube`: `Ttc.ttc_volume_estimate` is not vacuous
+# `Witness/FullTwoCube`: `Ttc.ttc_volume_estimate_parametric` is not vacuous
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) is a `∀` under **eleven** binders
+`Ttc.ttc_volume_estimate_parametric` (`Exec/PricedHeadline.lean`) — the price-parametric
+form of the headline, and the repo's unconditional result — is a `∀` under **eleven**
+binders
 
 ```
 atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
@@ -107,8 +109,8 @@ different runs; nothing here is computed, simplified, or claimed to relate to th
 | --- | --- |
 | `Ttc.TwoCube.interior_region_nonempty_two_d` | both regions are full-dimensional |
 | `Ttc.TwoCube.twoVolPos` | `hpos`: `0 < Vol(Sol F)`, from the line above |
-| `Ttc.TwoCube.twoProbFull_def` | the named probability **is** `Ttc.ttc_volume_estimate`'s measure, here |
-| `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` | `Ttc.ttc_volume_estimate` itself, at every `(ε, δ) ∈ (0,1]²` |
+| `Ttc.TwoCube.twoProbFull_def` | the named probability **is** the headline's measure, here |
+| `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` | `Ttc.ttc_volume_estimate_parametric` itself, at every `(ε, δ) ∈ (0,1]²` |
 | `Ttc.TwoCube.ttc_volume_estimate_two_cube_full_at` | the same at `(1/3, 9/10)` and `(1/2, 1/4)`, bounds `1/10` and `3/4`, both proved positive |
 | `Ttc.TwoCube.twoProbFull_pos_ne_top` | the bound is a real number, not `ENNReal.toReal ⊤ = 0` |
 
@@ -139,7 +141,7 @@ ball of radius `Ttc.TwoCube.gamT > 0` inside it (`Ttc.TwoCube.ball_subset_two_d`
 open subset of a set lies in its interior, and a ball of positive radius is nonempty,
 so the interior is nonempty.  No box geometry is recomputed.
 
-This is no longer a binder of `Ttc.ttc_volume_estimate` — pruning makes it true rather
+This is no longer a binder of the headline — pruning makes it true rather
 than assuming it — but it is what `Ttc.volSol_pos_of_interior` consumes to give the
 binder that *is* there, `Ttc.TwoCube.twoVolPos`. -/
 theorem interior_region_nonempty_two_d (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
@@ -163,7 +165,7 @@ theorem twoVolPos (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 :
 
 /-! ## The run, named -/
 
-/-- **The probability `Ttc.ttc_volume_estimate` bounds on this witness.**  A pure
+/-- **The probability the headline bounds on this witness.**  A pure
 abbreviation for the measure in the headline's conclusion, asserting nothing
 (`Ttc.TwoCube.twoProbFull_def`): the run law `Ttc.ttcLaw` (`Monadic/Program`) of the
 good event, at a point `p = (volume coins, sample trajectory)`.
@@ -178,7 +180,7 @@ noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 <
     {r | r.1 ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
 
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
-the measure in `Ttc.ttc_volume_estimate`'s conclusion at
+the measure in `Ttc.ttc_volume_estimate_parametric`'s conclusion at
 `atoms := Ttc.TwoCube.atomsT …` and `φ := Ttc.TwoCube.twoForm n` — the headline writes
 the measured quantity as `Ttc.ttcAlgOutput … (Ttc.ttcOracleBundle …)`, which is
 `Ttc.ttcEstimate` by `rfl` (`Ttc.ttcAlgOutput_eq_ttcEstimate`) — and nothing else
@@ -196,8 +198,14 @@ noncomputable def twoAccFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < 
 
 /-! ## The witness -/
 
-/-- **`Ttc.ttc_volume_estimate` on a DNF with two cubes**, at every
+/-- **`Ttc.ttc_volume_estimate_parametric` on a DNF with two cubes**, at every
 `(ε, δ) ∈ (0,1]²` and every `n ≥ 1`.
+
+⚠ The witnessed statement is the **price-parametric** headline
+(`Exec/PricedHeadline`), not `Ttc.ttc_volume_estimate` (`Model/Theorem`), whose two
+prices are fixed.  The nine binders of the latter are a sub-list of these eleven, so the
+same two-cube data meets them and its accuracy conjunct follows by instantiation; no
+declaration here states that instance.
 
 All eleven binders are met by the two-cube data of `Ttc/Witness/TwoCube.lean`: `hφ` is
 `Ttc.TwoCube.twoForm_isPositive` and `hpos` is `Ttc.TwoCube.twoVolPos`.  Nothing is
@@ -206,8 +214,8 @@ for boundedness of `Sol(F)`: at eleven binders the statement
 prunes and cleans the formula itself, constructs the ball (`Ttc.autoCen`,
 `Ttc.autoGamma`) and dilates by `Ttc.runScale`, dividing the estimate by `cⁿ`.
 
-`Ttc.ttc_volume_estimate` concludes a conjunction (accuracy ∧ runtime); this is its
-accuracy half, `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` in the **user's** `δ`, about the
+`Ttc.ttc_volume_estimate_parametric` concludes a conjunction (accuracy ∧ runtime); this
+is its accuracy half, `Pr[ output ∈ (1±ε)·Vol(F) ] ≥ 1 − δ` in the **user's** `δ`, about the
 **original** `Vol(Sol F)`.  `Ttc.TwoCube.twoProbFull_def` writes the probability out.
 It is a *different run* from `Ttc.TwoCube.twoAccD` (`Ttc/Witness/Inputs.lean`), which
 is undilated, unpruned, uncleaned and takes the ball as data; the two are not claimed
@@ -218,11 +226,11 @@ docstring.  Unconditional correctness, not efficiency. -/
 theorem ttc_volume_estimate_two_cube_full (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (cVol cSample : ℕ) :
     1 - δ ≤ twoAccFull n hn ε δ hε0 hε1 cVol cSample :=
-  (ttc_volume_estimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn
+  (ttc_volume_estimate_parametric (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn
     twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1) cVol cSample).1
 
-/-- **`Ttc.ttc_volume_estimate` on a two-cube DNF at two structurally different
-parameter pairs, with the achieved bound a positive numeral.**
+/-- **`Ttc.ttc_volume_estimate_parametric` on a two-cube DNF at two structurally
+different parameter pairs, with the achieved bound a positive numeral.**
 
 * `(ε, δ) = (1/3, 9/10)`: bound `1/10 > 0`, at a `δ ∈ (4/5, 1)` where
   `Ttc.ttc_volume_endToEnd`'s budget `1 − δ − δ/4 = −1/8` certifies nothing.

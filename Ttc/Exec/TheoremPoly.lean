@@ -266,7 +266,7 @@ theorem ttc_volume_estimate_poly {A : Type*} {n : ℕ}
                           + Real.log ((toDNFd (preprocess atoms φ)).length))
                       + 1))]) := by
   obtain ⟨hacc, hrun⟩ :=
-    ttc_volume_estimate atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos cVol cSample
+    ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos cVol cSample
   refine ⟨hacc, ?_⟩
   have hb := PolyComplexity.ttcComplexity_le_poly atoms φ ε δ cVol cSample K kv hn hkv h4K
     hCv hvolFac hrfac hR1 hγ0 hε0 hε1 hδ0 hδ1 hcVol hcSample
@@ -517,7 +517,7 @@ theorem isBigO_ttc_runtime_cv {Af : ℕ → Type*}
     ∧ Asymptotics.IsBigO Filter.atTop
         (fun N : ℕ => ttcComplexity (atoms N) (φ N) ε δ (cVol N) (cSample N))
         (fun N : ℕ => (N : ℝ) ^ K) := by
-  refine ⟨fun N hN => ttc_volume_estimate (atoms N) (φ N) ε δ hε0 hε1 hδ0 hδ1 hN (hφ N)
+  refine ⟨fun N hN => ttc_volume_estimate_parametric (atoms N) (φ N) ε δ hε0 hε1 hδ0 hδ1 hN (hφ N)
     (hpos N) (cVol N) (cSample N), ?_⟩
   have h2le : (2 : ℝ) ≤ 1 / p := by rw [le_div_iff₀ hp0]; linarith
   have hlogp : (0 : ℝ) ≤ Real.log (1 / p) := by
