@@ -141,8 +141,15 @@ upper bound is derivable.  `rad` is now the **infimum** of the enclosing radii, 
 `Ttc.MonteCarlo.nSamp_roundBody_le` is unconditional.  `Ttc/Exec/PriceList.lean` carries
 it over the cubes — `diam (region M i) ≤ diam (sol M φ)` for every cube, by
 `Ttc.region_subset_sol` and monotonicity of `Metric.diam` — and
-`Ttc.ttcVolCoins_le_ttcVolPrice` is the uniform bound.  `Ttc.ttcVolPrice` is what
-`Ttc.ttc_volume_estimate` now carries in place of its old `cVol` binder.
+`Ttc.ttcVolCoins_le_ttcVolPrice` is the uniform bound.  `Ttc.ttcVolPrice` is the price the
+modelled run can be *shown* to pay for one `Vol_ED` call.
+
+⚠ **It is not what the headline carries** (corrected 2026-08-12; this paragraph used to
+say `Ttc.ttc_volume_estimate` carries it "in place of its old `cVol` binder", which was
+false when written and is still false).  The headline's `cVol` slot is now fixed at the
+**Cousins–Vempala** operation price, which no lemma anywhere dominates `Ttc.ttcVolCoins`
+by; see the boxed warning in `Ttc/Exec/PricedHeadline.lean`.  `Ttc.ttcVolPrice` is the
+honest one and it is exponential in `n`.
 
 `Ttc.ttcSampleSteps` still has **no** uniform bound: `Ttc.mixStepsBound`
 (`Exec/SampleBound`) is evaluated at the inflated body's diameter, warm-start ratio and

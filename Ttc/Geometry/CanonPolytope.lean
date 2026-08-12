@@ -29,8 +29,11 @@ bound on what may go here: **definitions only, no `Prop`s, and nothing that is n
 geometry determined by the formula**.  Every *property* of these objects continues to be
 proved outside the surface.
 
-The statement of `Ttc.ttc_volume_estimate` does not mention any of them, so
-`#modelClosureOfType` on the headline is unaffected.
+The statement of `Ttc.ttc_volume_estimate` now mentions `Ttc.canonRfac` **explicitly**
+(corrected 2026-08-12; this used to say it mentioned none of them, which was true until
+the headline's two prices were fixed inline).  That is precisely why the five have to be
+inside the audit surface rather than merely reachable through `Ttc.ttc`'s body, and
+`#modelClosureOfType` on the headline stays green because they are.
 -/
 
 namespace Ttc
