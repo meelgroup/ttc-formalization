@@ -396,6 +396,7 @@ import Ttc.TtcProb
 import Ttc.Access
 import Ttc.Estimate
 import Ttc.Model.Theorem
+import Ttc.Model.TheoremPoly
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
 import Ttc.Exec.Inscribed
