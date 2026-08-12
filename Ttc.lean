@@ -19,7 +19,7 @@ content, one directory per object of the paper it discharges:
 
 ```
 Ttc/
-  Model/         the statement — read this and stop            (4 files)
+  Model/         the statement — read this and stop            (5 files)
   Exec/          the oracle-free capstones, and their plumbing (32)
   Rounding/      claim:cl, over the rounding that realises it  (11)
   Witness/       non-vacuity: the box, and the two-cube DNF     (8)
@@ -39,8 +39,9 @@ Ttc/
 
 **Recount rather than quote.** These counts have drifted repeatedly and are a
 snapshot (`find Ttc -name '*.lean' | sed 's|/[^/]*$||' | sort | uniq -c`, 109
-files at the commit this paragraph was written). Only the `Model/` count is an
-invariant; the rest are description.
+files at the commit this paragraph was written). The `Model/` count used to be
+called an invariant; it went from four to five when `Model/TheoremPoly` landed
+(2026-08-12), so treat every number here as description and recount.
 
 ### `Model/` — the statement
 
@@ -105,12 +106,36 @@ invariant; the rest are description.
                               binder is tabulated in `Ttc.Exec.Inputs`; why the last
                               one, `big`, **cannot** be discharged is proved in
                               `Ttc.Exec.Regime`.
+* `Ttc.Model.TheoremPoly`    — the same theorem with the two per-call prices
+                              **discharged**: `Ttc.ttc_volume_estimate_quartic` has
+                              the accuracy conjunct byte-identical to
+                              `Model/Theorem`'s and the runtime side collapsed to
+                              `m·n⁴·(…)`, with `_quintic` the loose `n⁵` form the
+                              paper prints.  The prices enter as hypotheses — the
+                              oracle bundle of `Ttc.ttc` is untouched, and the
+                              accuracy half is still the Monte-Carlo/ball-walk one;
+                              what makes pricing them coherent is that the call
+                              **counts** are oracle-independent.  **Nothing there
+                              proves `TTC` runs in `O(m n⁴)`**: the prices are
+                              conditional on `HitAndRunTheorem11Input`,
+                              Cousins–Vempala's `hphase_mean`/`hphase_var` and
+                              `thm:iso`, and the `n⁴` needs a temperature-scale body
+                              (`R = O(σ)`) — in the `R ≍ σ√n` regime it is `n⁵`.
 
-Four files, and the count is an invariant rather than a description: `Model/` is
-what a referee reads to trust the *statement* and the *algorithm*, so anything
-that is neither belongs elsewhere. The test that has settled every borderline case
-is declaration mix, not subject matter — a file carrying tactic proofs and a
-witness chain fails it however relevant its contents are.
+**Five files as of 2026-08-12** — this paragraph said "four, and the count is an
+invariant" until `Model/TheoremPoly` landed, so recount rather than quote it. The
+*rule* is the invariant, not the number: `Model/` is what a referee reads to trust
+the *statement* and the *algorithm*, so anything that is neither belongs
+elsewhere. The test that has settled every borderline case is declaration mix, not
+subject matter — a file carrying tactic proofs and a witness chain fails it
+however relevant its contents are.
+
+`Model/TheoremPoly` earns its place by that rule: it states the *same* theorem —
+accuracy conjunct byte-identical to `Model/Theorem`'s — with the runtime
+right-hand side collapsed from `m·(cVol + cSample·(Θ+1))` to `m·n⁴·(…)`, once the
+two per-call prices are bounded. It carries the price hypotheses, not proofs of
+them; the prices themselves are priced in `Exec/SamplerCost`, `Exec/VolumePriceCV`
+and `Exec/CoolDrawPrice`, which is where the tactic proofs live.
 
 `Model/ProblemSetting` is held to a sharper form of the same rule, modelled on
 `nfalean/ApproxNFA/Model/ProblemSetting.lean`: it states the **problem** — the
