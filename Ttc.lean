@@ -448,6 +448,7 @@ import Ttc.Exec.CostedBackend
 import Ttc.Exec.CVBackend
 import Ttc.Exec.SamplerCost
 import Ttc.Exec.VolumePriceCV
+import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.PolyComplexity
 import Ttc.Exec.SampleBound
 import Ttc.Exec.InflateBound
