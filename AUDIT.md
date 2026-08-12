@@ -671,17 +671,19 @@ would be a build error, not a silent divergence.
 >
 > | theorem | file | prices |
 > | --- | --- | --- |
-> | `Ttc.ttc_volume_estimate` | `Ttc/Model/Theorem.lean` | **fixed** at the Cousins–Vempala and hit-and-run numbers; **nine** binders; runtime side reads `m·n⁴·(…)` under a `∀ R γ` guard |
-> | `Ttc.ttc_volume_estimate_parametric` | `Ttc/Exec/PricedHeadline.lean` | free; **eleven** binders + `cVol cSample`; this is the old headline, character for character, and is what everything below means |
+> | `Ttc.ttc_volume_estimate` | `Ttc/Model/Theorem.lean` | **fixed inside `Ttc.ttc`'s own definition**, at the Cousins–Vempala and hit-and-run numbers; **nine** binders; runtime side reads `m·n⁴·(…)` under a `∀ R γ` guard |
+> | `Ttc.ttc_volume_estimate_parametric` | `Ttc/Exec/PricedHeadline.lean` | free, over `Ttc.ttcCharged`; **eleven** binders + `cVol cSample`; this is the old headline modulo that rename, and is what everything below means |
 > | `Ttc.ttcPoly_volume_estimate_cv` | `Ttc/Exec/PolyAccuracy.lean` | the *swapped-bundle* run — genuinely Cousins–Vempala over hit-and-run — conditional on `Ttc.HitAndRunTheorem11Input`, which is **inhabited nowhere** |
 >
-> The first one's two prices are named `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt`, and live
-> in `Ttc/Prices/Fixed.lean` — a **fourth audit-surface directory**, added 2026-08-12 so the
-> headline could name them instead of spelling both expressions out inline three times over
-> (which had grown its type to ~150 lines). That widening is argued at point 4 of
-> `Audit/ClosureCheck.lean`'s surface section; the two `rfl` bridges
-> `Ttc.cvVolPriceAt_eq`/`Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) prove each equals the
-> `Ttc/Exec/` price it is named after, so the names do not stand in for the analysis.
+> The first one's measure takes **four arguments and no prices**: `Ttc.ttc atoms φ ε δ`.
+> Since 2026-08-12 `Ttc.ttc` is a four-ary `def` in `Model/Pseudocode`, equal by `rfl` to
+> `Ttc.ttcCharged atoms φ ε δ (cvVolPriceAt …) (hrSampPriceAt …)` — the equation is the
+> lemma `Ttc.ttc_def`, and `Ttc.ttcCharged` is the price-parametric law (the old six-ary
+> `Ttc.ttc`, renamed) that every downstream result is proved over. The two prices are
+> defined beside `Ttc.stepCost`/`Ttc.runCost`/`Ttc.algCost` in the same file, and the `rfl`
+> bridges `Ttc.cvVolPriceAt_eq`/`Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) prove each
+> equals the `Ttc/Exec/` price it is named after, so the names do not stand in for the
+> analysis.
 >
 > They are **not** prices this run is proved to pay: `cVol` and
 > `cSample` are unit multipliers in `Ttc.stepCost` (`Model/Pseudocode:202`,

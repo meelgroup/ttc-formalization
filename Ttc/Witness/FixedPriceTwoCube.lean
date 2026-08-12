@@ -16,12 +16,12 @@ this file states the instance.
 ## Why it is a separate file
 
 `Ttc/Exec/VolPriceCVAlg.lean` imports `Ttc/Witness/FullTwoCube.lean`, so the witness cannot
-live there; and `Ttc/Model/Theorem.lean` names `Ttc.cvVolPriceAt`/`Ttc.hrSampPriceAt`
-(`Ttc/Prices/Fixed.lean`) rather than `Ttc.ttcVolPriceCVAlg`/`Ttc.ttcSampPriceHR`, because
-those two are `Ttc/Exec/`-defined and `#modelClosureOfType` tests the *defining module*.
-This file is downstream of everything, so it may name either pair; it states the witness at
-the `Ttc/Exec/` names, and `Ttc.cvVolPriceAt_eq`/`Ttc.hrSampPriceAt_eq`
-(`Exec/VolPriceCVAlg`) are the two `rfl` bridges.
+live there; and `Ttc.ttc` (`Model/Pseudocode`) charges `Ttc.cvVolPriceAt`/`Ttc.hrSampPriceAt`
+rather than `Ttc.ttcVolPriceCVAlg`/`Ttc.ttcSampPriceHR`, because those two are
+`Ttc/Exec/`-defined and `#modelClosure` tests the *defining module*.  This file is downstream
+of everything, so it may name either pair; it states the witness at the `Ttc/Exec/` names,
+and `Ttc.cvVolPriceAt_eq`/`Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) are the two `rfl`
+bridges.
 
 ## What this does and does not establish
 
@@ -49,8 +49,8 @@ open MeasureTheory Set
 — so the headline's accuracy conjunct holds there, at the Cousins–Vempala volume price and
 the hit-and-run sampling price.
 
-The prices are named here at their `Ttc/Exec/` spellings and in the headline at their
-`Ttc/Prices/` ones; the two pairs are equal by `Ttc.cvVolPriceAt_eq` and
+The prices are named here at their `Ttc/Exec/` spellings and inside `Ttc.ttc` at their
+`Model/Pseudocode` ones; the two pairs are equal by `Ttc.cvVolPriceAt_eq` and
 `Ttc.hrSampPriceAt_eq`.  Cost caveat as in
 `Ttc/Witness/FullTwoCube.lean`: this is unconditional *correctness*, and the prices charged
 are not prices this run is proved to pay. -/

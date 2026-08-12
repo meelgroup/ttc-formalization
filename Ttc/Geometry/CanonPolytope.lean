@@ -24,8 +24,7 @@ The move has one consequence a reader must be told about rather than left to dis
 `Ttc.Audit.auditSurface` now names three directories, not two.  These five constants are in
 the definitional closure of `Ttc.ttc`, so `#modelClosure Ttc.ttc` would fail outright if
 `Ttc.Geometry` were not admitted.  The promise the check enforces is correspondingly
-"`Model/`, `Probability/`, `Geometry/` and (since 2026-08-12) `Prices/`" — and
-`Ttc/Audit/ClosureCheck.lean` states the
+"`Model/`, `Probability/` and `Geometry/`" — and `Ttc/Audit/ClosureCheck.lean` states the
 bound on what may go here: **definitions only, no `Prop`s, and nothing that is not convex
 geometry determined by the formula**.  Every *property* of these objects continues to be
 proved outside the surface.

@@ -19,19 +19,19 @@ space), and nothing from `Ttc.Coupling` or `Ttc.Process`.
 business. The point of the check is whether *this* development has to construct a probability
 space of its own in order to *state* its theorem.)
 
-**2. `Model/`, `Probability/`, `Geometry/` and `Prices/` are the whole audit surface**
+**2. `Model/`, `Probability/` and `Geometry/` are the whole audit surface**
 (`#modelClosure`, `#modelClosureOfType`). Every `Ttc` constant the declaration transitively
-unfolds to is *defined in a file under `Ttc/Model/`, `Ttc/Probability/`, `Ttc/Geometry/` or
-`Ttc/Prices/`*. This is the check that backs the reader-facing promise made in `Ttc.lean`:
-open those four directories — four files of model, four short files of probability
-vocabulary, one file of convex geometry, one file holding the two fixed per-call prices —
-and every constant the headline mentions is defined in front of you. It is strictly stronger than check 1, and it fails the build the
+unfolds to is *defined in a file under `Ttc/Model/`, `Ttc/Probability/` or
+`Ttc/Geometry/`*. This is the check that backs the reader-facing promise made in `Ttc.lean`:
+open those three directories — four files of model, four short files of probability
+vocabulary, one file of convex geometry — and every constant the headline mentions is
+defined in front of you. It is strictly stronger than check 1, and it fails the build the
 moment a definition the statement depends on drifts out of them, which is exactly the
 regression worth catching.
 
 The surface was one directory until the probability vocabulary was moved out of
 `Model/Prelude` into `Ttc/Probability/`, and two until the canonical `(Am, bv)` description
-was moved out into `Ttc/Geometry/`. **Why it is four, and what bounds the second, third and fourth,
+was moved out into `Ttc/Geometry/`. **Why it is three, and what bounds the second and third,
 is argued at "The audit surface" below — read that before quoting this check**; the short
 version is that `Ttc.ttc` is a `Measure`, so the ambient randomness is part of what the
 headline's type unfolds to no matter where it is filed, and `Ttc/Probability/` is held to
@@ -40,9 +40,9 @@ vocabulary-plus-nothing-the-walk-can-see in exchange for being admitted, while
 
 The counts did not move when `Ttc/Geometry/` was split off — 109 / 157 / 199 / 206 before
 and after — which is the point: the same constants are in the same closures, filed
-somewhere that says more accurately what they are. `Ttc/Prices/` is not like that: it added
-two constants the headline's type genuinely names, so the fourth count moved. The number the
-invocations below print is the current one; quote that, not this sentence.
+somewhere that says more accurately what they are. The counts *did* move on 2026-08-12,
+when `Ttc.ttc` became four-ary and its body took on the two fixed per-call prices. The
+number the invocations below print is the current one; quote that, not this sentence.
 
 ## What "closure" means here, precisely
 
@@ -227,8 +227,7 @@ the surface (`Process/Thinning`, `Process/Truncation`, `Coupling/Family`,
 An auditor's reading list is therefore six files rather than four: `Model/Prelude`,
 `Model/ProblemSetting`, `Model/Pseudocode`, `Model/Theorem`, `Ttc/Probability/` (four
 short files, two of which import Mathlib and `Arlib` alone, and which between them state
-exactly two `Prop`s — the two oracle contracts named above), `Ttc/Geometry/` and
-`Ttc/Prices/` (one file, two `def`s).
+exactly two `Prop`s — the two oracle contracts named above), and `Ttc/Geometry/`.
 
 **3. `Ttc/Geometry/` is the third directory, and it is definitions only.** The
 convex-geometry data the sampler is applied at — `Ttc.facetOf`, `Ttc.canonAm`,
@@ -249,39 +248,29 @@ elaboration time); no such argument applies here, and there is nothing in the di
 that would need one. Every property of these five objects is proved outside the surface,
 as before.
 
-**4. `Ttc/Prices/` is the fourth directory, and it is the one widening that is not free.**
-Added 2026-08-12, and it holds exactly two `def`s: `Ttc.cvVolPriceAt` and
-`Ttc.hrSampPriceAt`, the two per-call prices `Ttc.ttc_volume_estimate` charges.
+**A note on where the two fixed prices live.** `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt`
+— the two per-call charges `Ttc.ttc` is `Ttc.ttcCharged` *at* — are filed in
+`Model/Pseudocode`, beside `Ttc.stepCost`, `Ttc.runCost` and `Ttc.algCost`, and not in a
+fourth directory. They have to be inside the surface, because `Ttc.ttc`'s own definition
+names them and `#modelClosure Ttc.ttc` walks definition bodies; and `Model/`'s cost-model
+half is where the rest of the charging vocabulary already is.
 
-Unlike the other three, this is **Exec-derived arithmetic admitted into the surface**. The
-two prices are *analysed* in `Ttc/Exec/` (`Ttc.ttcVolPriceCVAlg` from Cousins–Vempala,
-`Ttc.ttcSampPriceHR` from hit-and-run), so naming either there-defined constant in the
-headline's type turns this check red. State the trade honestly rather than dress it up: for
-a day the headline dodged the check by spelling both expressions out **inline**, three times
-over, and the check stayed green while the type grew to ~150 lines — the promise "open these
-directories and read the statement" was satisfied to the letter and destroyed in substance.
-Admitting the directory is the visible version of the same widening, and it buys back a
-headline a human can read.
-
-Two things bound it. The rule is as tight as `Ttc/Geometry/`'s — **definitions only, no
-`Prop`s at all, and nothing but those two prices**; anything else priced later goes through
-this paragraph first. And the names are not allowed to stand in for the analysis: the two
-`rfl` bridges `Ttc.cvVolPriceAt_eq` and `Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) prove
-each equals the `Ttc/Exec/` price it is named after, so a reader who suspects the
-`Ttc/Prices/` copy has drifted can check the equation rather than the two expressions
-(`CLAUDE.md` §13). Every property of both — including that neither is a price `Ttc.ttc` is
-proved to pay — is stated outside the surface, in `Exec/PricedHeadline`.
+They are copies of two `Ttc/Exec/` prices, and copies are the case `CLAUDE.md` §13 is about:
+a name must not stand in for the analysis it is named after. `Ttc.cvVolPriceAt_eq` and
+`Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) prove each equals `Ttc.ttcVolPriceCVAlg` /
+`Ttc.ttcSampPriceHR` by `rfl`, so a drift in either copy is a build error rather than a
+silent divergence. What the two prices are *worth* — in particular that neither is a price
+`Ttc.ttc` is proved to pay — is stated outside the surface, in `Exec/PricedHeadline`.
 -/
 
 namespace Ttc.Audit
 
 /-- **The audit surface, as directories.** A constant is inside it when the module that
 defines it lies under one of these. See the section docstring above for why there are three
-and what `Ttc/Probability/`, `Ttc/Geometry/` and `Ttc/Prices/` are allowed to contain;
-extending this list
+and what `Ttc/Probability/` and `Ttc/Geometry/` are allowed to contain; extending this list
 is a change to what the reader-facing promise *means* and must be argued for there, not
 here. -/
-def auditSurface : List Name := [`Ttc.Model, `Ttc.Probability, `Ttc.Geometry, `Ttc.Prices]
+def auditSurface : List Name := [`Ttc.Model, `Ttc.Probability, `Ttc.Geometry]
 
 /-- Constants in `cls` that are **not** defined in a file under one of
 `Ttc.Audit.auditSurface`, paired with the module that does define them. -/
@@ -304,7 +293,7 @@ elab "#modelClosure " id:ident : command => do
   let cls := (closureAux env {} [n] {}).erase n
   match outsideSurface env cls with
   | [] => logInfo m!"OK — closure of {n} is defined entirely under Ttc/Model/, \
-      Ttc/Probability/, Ttc/Geometry/ or Ttc/Prices/ ({cls.toList.length} Ttc constants)"
+      Ttc/Probability/ or Ttc/Geometry/ ({cls.toList.length} Ttc constants)"
   | bad => throwError m!"OUTSIDE Model/, Probability/ and Geometry/ in closure of {n}: {bad}"
 
 open Ttc.Audit in
@@ -317,7 +306,7 @@ elab "#modelClosureOfType " id:ident : command => do
   let cls := closureAux env {} ci.type.getUsedConstants.toList {}
   match outsideSurface env cls with
   | [] => logInfo m!"OK — the STATEMENT of {n} is defined entirely under Ttc/Model/, \
-      Ttc/Probability/, Ttc/Geometry/ or Ttc/Prices/ ({cls.toList.length} Ttc constants)"
+      Ttc/Probability/ or Ttc/Geometry/ ({cls.toList.length} Ttc constants)"
   | bad => throwError m!"OUTSIDE Model/, Probability/ and Geometry/ in the statement of {n}: {bad}"
 
 /-! ## Reporting variants that do not fail the build
@@ -499,7 +488,7 @@ be charged on the same bundle.  A naming change, not drift.
 
 ### `Ttc.ttc` — the whole algorithm as one law (`Model/Pseudocode`)
 
-`Ttc.ttc atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)` is the `Measure` analogue of
+`Ttc.ttcCharged atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)` is the `Measure` analogue of
 nfalean's `ApproxNFA.countNFAM : PMF (ℝ × ℕ)`: draw the volume coins, draw the sample
 trajectory at the rates they produced, return `(estimate, cost)`.  Full closure:
 **199** `Ttc` constants, of which **0** are outside `Ttc/Model/` and
@@ -549,7 +538,7 @@ role between three homes:
 Nothing was duplicated: `Ttc.algRates` and `Ttc.algCost` (`Model/Pseudocode`) are the
 run's own `Ttc.ttcRates` and `Ttc.ttcCost` spelled in `Model/` vocabulary, and
 `Ttc.algRates_eq_ttcRates`, `Ttc.algCost_eq_ttcCost` (`Exec/Api`) hold by `rfl`.  The
-honesty bridge is `Ttc.ttc_eq_ttcPairLaw` (`Monadic/Program`), which identifies
+honesty bridge is `Ttc.ttcCharged_eq_ttcPairLaw` (`Monadic/Program`), which identifies
 `Ttc.ttc` with the composition–product form `Ttc.ttcPairLaw` the rest of the
 development reasons about; it is *not* `rfl`, because `Ttc.ttc` is stated with
 `MeasureTheory.Measure.bind`/`map` — deliberately, so that no measurability proof has

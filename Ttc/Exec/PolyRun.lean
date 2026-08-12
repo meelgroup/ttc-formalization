@@ -327,7 +327,7 @@ end Cost
 
 `Ttc.ttcPoly` is a `MeasureTheory.Measure.bind`, and `MeasureTheory.Measure.bind`
 degenerates to the zero measure unless the family is measurable.  The four lemmas
-below supply exactly what `Ttc.ttc_eq_ttcPairLaw` (`Monadic/Program.lean:359`)
+below supply exactly what `Ttc.ttcCharged_eq_ttcPairLaw` (`Monadic/Program.lean:359`)
 supplies for `Ttc.ttc`, at an arbitrary `Ttc.VolumeAlgorithm`: the coin-measurability
 of the volume estimates (which is `Ttc.VolumeAlgorithm.est_meas`, a field), of the
 rate vector, the kernel they define, and the joint measurability of the read-off
@@ -417,7 +417,7 @@ theorem measurable_polyPair (V : VolumeAlgorithm n) (cVol cSample : ℕ) :
   exact (countablyDetermined_polyPair atoms φ ε δ V cVol cSample).measurable
 
 /-- **`Ttc.ttcPoly` is the composition–product pushed along the read-off.**  Verbatim
-`Ttc.ttc_eq_ttcPairLaw` (`Monadic/Program.lean:359`), at `V.μ` instead of
+`Ttc.ttcCharged_eq_ttcPairLaw` (`Monadic/Program.lean:359`), at `V.μ` instead of
 `Ttc.MonteCarlo.coins`.  This is what shows the `Measure.bind` is not the junk zero
 measure. -/
 theorem ttcPoly_eq_map_compProd (V : VolumeAlgorithm n)

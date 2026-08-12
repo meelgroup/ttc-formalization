@@ -4,6 +4,8 @@ Released under Apache 2.0 license.
 -/
 import Ttc.ModelSupport
 import Ttc.Probability
+import Arlib.MarkovChains.Continuous.HitAndRunMixing
+import Arlib.Convexity.GaussianCooling.PhaseSchedule
 
 /-!
 # `Model/Pseudocode`: `alg:ttc`, **and the preprocessing that precedes it**
@@ -810,13 +812,123 @@ return (ttcRun … c t, algCost … c t)        -- the estimate and what it cost
 ```
 
 Written with `Measure.bind`/`Measure.map`, neither of which carries a measurability
-obligation, so the definition is total and proof-free; `Ttc.ttc_eq_ttcPairLaw`
+obligation, so the definition is total and proof-free; `Ttc.ttcCharged_eq_ttcPairLaw`
 (`Monadic/Program`) proves it behaves like the display.  Returning the pair is what makes
 both halves of the headline statements about *the same run*. -/
-noncomputable def ttc (cVol cSample : ℕ) : MeasureTheory.Measure (ℝ × ℕ) :=
+noncomputable def ttcCharged (cVol cSample : ℕ) : MeasureTheory.Measure (ℝ × ℕ) :=
   (MonteCarlo.coins n).bind fun c =>
     (trajLaw (algRates atoms φ ε δ c)).map fun t =>
       (ttcRun atoms φ ε δ c t, algCost atoms φ ε δ c t cVol cSample)
+
+/-! ## The two per-call prices `Ttc.ttc` charges
+
+`Ttc.ttcCharged` above leaves both per-call charges free, which is the general object and
+the one every price-parametric statement is proved over.  `Ttc.ttc` — the four-argument law
+the headline is stated about, `TTC(F, ε, δ)` and nothing else — is that law at two **fixed**
+charges, defined immediately below.
+
+They are here, in the cost-model half of `Model/Pseudocode`, beside `Ttc.stepCost`,
+`Ttc.runCost` and `Ttc.algCost`, because `Ttc.ttc`'s own definition names them: filing them
+downstream would put the headline's measure outside `Ttc/Model/` and outside
+`Ttc.Audit.auditSurface`.  Both are copies of a `Ttc/Exec/` price, and the copies are not
+allowed to stand in for the analysis — `Ttc.cvVolPriceAt_eq` and `Ttc.hrSampPriceAt_eq`
+(`Exec/VolPriceCVAlg`) prove each equals the price it is named after, by `rfl`
+(`CLAUDE.md` §13).
+-/
+
+/-- **The Cousins–Vempala per-call volume price at the run's own data.**  The right-hand
+side of `Ttc.ttcVolPriceCVAlg_model`, verbatim.  Equal to `Ttc.ttcVolPriceCVAlg` by `rfl`
+(`Ttc.cvVolPriceAt_eq`, `Exec/VolPriceCVAlg`).
+
+Reading it: `(⌈4·lsThreshold⌉₊ + 3)` transitions at `⌈n·r⌉₊` operations each, times the
+number of Cousins–Vempala draws — `(⌈log(1/δ')/2(4/5−1/2)²⌉₊ + 1)` per phase across
+`Arlib.GaussianCooling.coolPhases` phases.
+
+⚠ **Not a price `Ttc.ttc` is proved to pay** — see `Ttc.ttc`'s docstring below. -/
+noncomputable def cvVolPriceAt : ℕ :=
+  (⌈4 * Arlib.MarkovChains.lsThreshold 1 (Real.log 2 / (5120 * (n : ℝ)))
+        ((algBlock atoms φ ε δ).epsPrime)⌉₊ + 1 + 2)
+      * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
+    * ((⌈Real.log (1 / (algBlock atoms φ ε δ).deltaPrime)
+            / (2 * (4 / 5 - 1 / 2) ^ 2)⌉₊ + 1)
+        * (Arlib.GaussianCooling.coolPhases n
+              (1 + Real.log (1 + (n : ℝ)
+                * ((algGamma atoms φ ε δ)⁻¹
+                    * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
+                        (preprocess atoms φ))) ^ 2))
+              ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)
+            * (⌈(1 + 2 / (n : ℝ) - 1)
+                  * (Arlib.GaussianCooling.coolPhases n
+                      (1 + Real.log (1 + (n : ℝ)
+                        * ((algGamma atoms φ ε δ)⁻¹
+                            * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
+                                (preprocess atoms φ))) ^ 2))
+                      ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10) : ℕ)
+                  / ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)⌉₊ + 1)))
+
+open scoped Pointwise in
+/-- **The hit-and-run per-draw sampling price at the run's own data.**  The right-hand side
+of `Ttc.ttcSampPriceHR_model`, verbatim.  Equal to `Ttc.ttcSampPriceHR` by `rfl`
+(`Ttc.hrSampPriceAt_eq`, `Exec/VolPriceCVAlg`).
+
+Reading it: `⌊2⁵⁶·n²·(R²/γ²)·log(8M/ν²)⌋₊ + 1` transitions plus `2` post-processing units,
+at `⌈n·r⌉₊` operations each, with `ν = ε'/(4·(2R)ⁿ)` the worst-case TV tolerance, `R` the
+inflated body's diameter and `γ` its inradius.
+
+⚠ **Not a price `Ttc.ttc` is proved to pay**, and for this one there provably cannot be such
+a lemma — see `Exec/SampPriceHR`, "What is *not* here". -/
+noncomputable def hrSampPriceAt : ℕ :=
+  (⌊2 ^ 56 * (n : ℝ) ^ 2 * ((1 +
+    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+    (canonRfac (toDNFd (preprocess atoms φ))) /
+    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
+    Metric.diam (latticeScale (algPrec atoms φ ε δ) •
+    sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))) ^ 2 /
+    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+    (canonRfac (toDNFd (preprocess atoms φ)))) ^ 2 *
+    Real.log (8 * (((1 +
+    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+    (canonRfac (toDNFd (preprocess atoms φ))) /
+    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) ^ n *
+    (latticeScale (algPrec atoms φ ε δ) ^ n *
+    (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))) /
+    (MeasureTheory.volume (Metric.ball (0 : Space n)
+    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+    (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) /
+    ((algBlock atoms φ ε δ).epsPrime / (4 * (2 * ((1 +
+    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+    (canonRfac (toDNFd (preprocess atoms φ))) /
+    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
+    Metric.diam (latticeScale (algPrec atoms φ ε δ) •
+    sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)))) ^ n)) ^ 2)⌋₊ + 1 + 2) *
+    ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
+
+/-- **`TTC(F, ε, δ)` as one law, at the run's own four inputs and nothing else.**  This is
+the measure `Ttc.ttc_volume_estimate` is stated about: `Ttc.ttcCharged` with the two
+per-call charges fixed, so that neither appears as an argument.  `Ttc.ttc_def` is the
+equation, by `rfl`.
+
+⚠ **The two prices are not prices this run is proved to pay.**  `Ttc.algOracles` is a closed
+term over `Ttc.mcVol` — hit-and-miss Monte Carlo — whose sampling law is the lazy ball walk;
+the prices fixed here are the Cousins–Vempala and hit-and-run ones.  `cVol`/`cSample` are
+unit multipliers in `Ttc.stepCost` (`stepCost cVol cSample N = cVol + cSample * N`), so
+substituting *any* pair of naturals gives a law of this shape — at `0` the charged cost is
+identically `0`.  Fixing them is a **modelling choice, not a costing of this run**: the
+prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`) and
+`Ttc.ttcSampPrice` (`Exec/SamplePrice`), and both are exponential in `n`.  Read the boxed
+warning at the head of `Ttc/Exec/PricedHeadline.lean` before quoting any running-time
+statement about this measure. -/
+noncomputable def ttc : MeasureTheory.Measure (ℝ × ℕ) :=
+  ttcCharged atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ)
+
+/-- **The prices, from a lemma rather than from the statement.**  `Ttc.ttc` is
+`Ttc.ttcCharged` at the two fixed charges — by `rfl`, so the two are interchangeable
+wherever a price-parametric result is being applied. -/
+theorem ttc_def :
+    ttc atoms φ ε δ
+      = ttcCharged atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ) := rfl
 
 end Run
 

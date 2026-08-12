@@ -176,7 +176,7 @@ ball, dilating, and dividing the estimate back down — is inside `Ttc.ttcLaw` a
 the original `Ttc.TwoCube.twoForm n`.  This is *not* `Ttc.TwoCube.twoProbD`. -/
 noncomputable def twoProbFull (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1)
     (cVol cSample : ℕ) : ENNReal :=
-  ttc (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ cVol cSample
+  ttcCharged (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ cVol cSample
     {r | r.1 ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))}
 
 /-- **The abbreviation, written out**, with `Ttc.TwoCube.twoVolPos` folded in.  This is
@@ -188,7 +188,7 @@ changes. -/
 theorem twoProbFull_def (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1)
     (cVol cSample : ℕ) :
     twoProbFull n hn ε δ hε0 hε1 cVol cSample =
-      ttc (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ cVol cSample
+      ttcCharged (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ cVol cSample
         {r | r.1 ∈ relErr ε (volSol (Ttc.atomSet (atomsT n hn ε δ hε0 hε1)) (twoForm n))} := rfl
 
 /-- The same quantity as a real number — the left-hand side of the guarantee. -/

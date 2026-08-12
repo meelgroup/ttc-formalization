@@ -211,7 +211,7 @@ m · n^K · ( Cv·volFac + 2⁶²·rfac·(R²/γ²)·log(2R) · (Θ + 1) )
 ```
 
 with `cVol` and `cSample` discharged at their assumed upper bounds.  Same binder order,
-same `Pr[…]`/`All[…]`, same measure `Ttc.ttc atoms φ ε δ cVol cSample`, and — this is the
+same `Pr[…]`/`All[…]`, same measure `Ttc.ttcCharged atoms φ ε δ cVol cSample`, and — this is the
 point — **the accuracy conjunct is the same proposition, character for character**.  Both
 conjuncts still speak about the *same* run.
 
@@ -252,11 +252,11 @@ theorem ttc_volume_estimate_poly {A : Type*} {n : ℕ}
       ≤ 2 ^ 62 * (n : ℝ) ^ 4 * rfac * (R ^ 2 / γ ^ 2) * Real.log (2 * R)) :
     -- (accuracy) the estimate is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttcCharged atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) almost every run is charged at most `m·n^K·(Cv·volFac + 2⁶²·…·(Θ+1))`
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    (All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ K
           * (Cv * volFac
@@ -295,10 +295,10 @@ theorem ttc_volume_estimate_quartic {A : Type*} {n : ℕ}
     (hcSample : (cSample : ℝ)
       ≤ 2 ^ 62 * (n : ℝ) ^ 4 * rfac * (R ^ 2 / γ ^ 2) * Real.log (2 * R)) :
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttcCharged atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    (All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
           * (Cv * volFac
@@ -334,10 +334,10 @@ theorem ttc_volume_estimate_quintic {A : Type*} {n : ℕ}
     (hcSample : (cSample : ℝ)
       ≤ 2 ^ 62 * (n : ℝ) ^ 4 * rfac * (R ^ 2 / γ ^ 2) * Real.log (2 * R)) :
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttcCharged atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    (All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 5
           * (Cv * volFac
@@ -385,10 +385,10 @@ theorem ttc_volume_estimate_poly_cv {A : Type*} {n : ℕ}
     (hcSample : (cSample : ℝ)
       ≤ 2 ^ 62 * (n : ℝ) ^ 4 * rfac * (R ^ 2 / γ ^ 2) * Real.log (2 * R)) :
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttcCharged atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    (All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ K
           * (2 ^ 13 * Cq * (qFac * (L ^ 4 * Real.log (1 / p) / κ ^ 3))
@@ -439,10 +439,10 @@ theorem ttc_volume_estimate_quartic_cv {A : Type*} {n : ℕ}
     (hcSample : (cSample : ℝ)
       ≤ 2 ^ 62 * (n : ℝ) ^ 4 * rfac * (R ^ 2 / γ ^ 2) * Real.log (2 * R)) :
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttcCharged atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    (All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
           * (2 ^ 13 * Cq * (qFac * (L ^ 4 * Real.log (1 / p) / κ ^ 3))
@@ -510,9 +510,9 @@ theorem isBigO_ttc_runtime_cv {Af : ℕ → Type*}
     (hm : ∀ N : ℕ, (toDNFd (preprocess (atoms N) (φ N))).length ≤ mBound) :
     (∀ N : ℕ, 1 ≤ N →
       (1 - δ ≤
-        Pr[r ← ttc (atoms N) (φ N) ε δ (cVol N) (cSample N);
+        Pr[r ← ttcCharged (atoms N) (φ N) ε δ (cVol N) (cSample N);
           r.1 ∈ relErr ε (volSol (atomSet (atoms N)) (φ N))])
-      ∧ All[r ← ttc (atoms N) (φ N) ε δ (cVol N) (cSample N);
+      ∧ All[r ← ttcCharged (atoms N) (φ N) ε δ (cVol N) (cSample N);
           (r.2 : ℝ) ≤ ttcComplexity (atoms N) (φ N) ε δ (cVol N) (cSample N)])
     ∧ Asymptotics.IsBigO Filter.atTop
         (fun N : ℕ => ttcComplexity (atoms N) (φ N) ε δ (cVol N) (cSample N))
@@ -632,24 +632,24 @@ theorem ttc_volume_estimate_poly_two_cube (n : ℕ) (hn : 1 ≤ n)
     ∧ 1 ≤ (toDNFd (preprocess (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1)
               (TwoCube.twoForm n))).length
     -- (iii) the good event has strictly positive, finite measure: `All[…]` is not vacuous
-    ∧ (0 < ttc (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
+    ∧ (0 < ttcCharged (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
             (1 / 2) (1 / 2) 1 1
           {r | r.1 ∈ relErr (1 / 2)
             (volSol (atomSet (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1))
               (TwoCube.twoForm n))}
-      ∧ ttc (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
+      ∧ ttcCharged (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
             (1 / 2) (1 / 2) 1 1
           {r | r.1 ∈ relErr (1 / 2)
             (volSol (atomSet (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1))
               (TwoCube.twoForm n))} ≠ ⊤)
     -- (iv) the capstone's own conclusion at this data, both conjuncts
     ∧ ((1 : ℝ) - 1 / 2 ≤
-        Pr[r ← ttc (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
+        Pr[r ← ttcCharged (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
               (1 / 2) (1 / 2) 1 1;
           r.1 ∈ relErr (1 / 2)
             (volSol (atomSet (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1))
               (TwoCube.twoForm n))]
-      ∧ All[r ← ttc (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
+      ∧ All[r ← ttcCharged (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1) (TwoCube.twoForm n)
               (1 / 2) (1 / 2) 1 1;
           (r.2 : ℝ) ≤
             ((toDNFd (preprocess (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1)
@@ -687,7 +687,7 @@ theorem ttc_volume_estimate_poly_two_cube (n : ℕ) (hn : 1 ≤ n)
     (TwoCube.twoVolPos n hn (1 / 2) (1 / 2) hε0 hε1) 1 1 1 1 1 1 1 4 le_rfl
     zero_le_one zero_le_one le_rfl le_rfl one_pos (by exact_mod_cast hcVol)
     (by exact_mod_cast hcSample)
-  have hposR : (0 : ℝ) < ((ttc (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1)
+  have hposR : (0 : ℝ) < ((ttcCharged (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1)
       (TwoCube.twoForm n) (1 / 2) (1 / 2) 1 1)
         {r | r.1 ∈ relErr (1 / 2)
           (volSol (atomSet (TwoCube.atomsT n hn (1 / 2) (1 / 2) hε0 hε1))

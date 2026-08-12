@@ -3,7 +3,6 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Exec.CoolDrawPrice
-import Ttc.Prices.Fixed
 import Ttc.Exec.PriceList
 import Ttc.Exec.SampPriceHR
 import Ttc.Audit.ClosureCheck
@@ -493,16 +492,17 @@ noncomputable def cvAlgModelRhs : ℕ :=
 so the closure check below is a check on the model form and not on a lookalike. -/
 theorem cvAlgModelRhs_eq : ttcVolPriceCVAlg atoms φ ε δ = cvAlgModelRhs atoms φ ε δ := rfl
 
-/-! ### The two bridges to `Ttc/Prices/Fixed`
+/-! ### The two bridges to `Model/Pseudocode`'s fixed prices
 
-`Ttc.ttc_volume_estimate` charges `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt`, which are
-copies of these two prices filed inside `Ttc.Audit.auditSurface` so that the headline's type
-may name them (`Audit/ClosureCheck`, point 4).  A copy whose *name* asserts it is the price
-is exactly the failure mode `CLAUDE.md` §13 warns about, so the assertion is proved rather
-than asserted — and both proofs are `rfl`, so a drift in either copy is a build error.
+`Ttc.ttc` (`Model/Pseudocode`) is `Ttc.ttcCharged` at two fixed per-call charges,
+`Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` — copies of these two prices, filed beside
+`Ttc.ttc` itself because its *definition* names them.  A copy whose *name* asserts it is the
+price is exactly the failure mode `CLAUDE.md` §13 warns about, so the assertion is proved
+rather than asserted — and both proofs are `rfl`, so a drift in either copy is a build
+error.
 
-They live here because `Ttc/Prices/Fixed.lean` may not import `Ttc/Exec/` (it would leave
-the audit surface) and `Ttc/Exec/SampPriceHR.lean` is upstream of this file. -/
+They live here because `Model/Pseudocode` may not import `Ttc/Exec/` (it would leave the
+audit surface) and `Ttc/Exec/SampPriceHR.lean` is upstream of this file. -/
 
 /-- `Ttc.cvVolPriceAt` **is** the Cousins–Vempala volume price — same `rfl` as
 `Ttc.ttcVolPriceCVAlg_model`. -/

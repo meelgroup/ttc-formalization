@@ -356,8 +356,8 @@ it, and `MeasureTheory.Measure.dirac_prod` evaluates the resulting kernel at a c
 sequence.  The `Model/`-side names are definitionally the run's own
 (`Ttc.algRates_eq_ttcRates`, `Ttc.algCost_eq_ttcCost`, both `rfl`), so the last step is
 `rfl`. -/
-theorem ttc_eq_ttcPairLaw (cVol cSample : ℕ) :
-    ttc atoms φ ε δ cVol cSample = ttcPairLaw atoms φ ε δ cVol cSample := by
+theorem ttcCharged_eq_ttcPairLaw (cVol cSample : ℕ) :
+    ttcCharged atoms φ ε δ cVol cSample = ttcPairLaw atoms φ ε δ cVol cSample := by
   have hpair : Measurable (ttcPair atoms φ ε δ cVol cSample) :=
     measurable_ttcPair atoms φ ε δ cVol cSample
   rw [ttcPairLaw_def, ttcLaw_def, Measure.compProd_eq_comp_prod,

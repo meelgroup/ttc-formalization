@@ -4,7 +4,6 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Program
-import Ttc.Prices.Fixed
 import Ttc.Exec.PricedHeadline
 
 /-!
@@ -17,12 +16,16 @@ definition, no auxiliary lemma, no proof to work through.  The accuracy half com
 
 Both conjuncts speak about **the same run**, drawn from the one measure
 
-    ttc atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ)
-      : Measure (ℝ × ℕ)
+    ttc atoms φ ε δ : Measure (ℝ × ℕ)
 
-whose `Ttc.ttc` is defined in `Model/Pseudocode` and whose two per-call prices are the two
-`def`s of `Ttc/Prices/Fixed.lean`: accuracy about `r.1`, running time about `r.2`.  This
-mirrors `ApproxNFA.countNFAM A n ε δ : PMF (ℝ × ℕ)`.
+defined in `Model/Pseudocode` — `TTC`'s own four inputs and nothing else: accuracy about
+`r.1`, running time about `r.2`.  This mirrors
+`ApproxNFA.countNFAM A n ε δ : PMF (ℝ × ℕ)`.
+
+The two per-call charges do not appear here.  They enter through `Ttc.ttc`'s *definition*,
+`Ttc.ttc = Ttc.ttcCharged atoms φ ε δ (cvVolPriceAt …) (hrSampPriceAt …)`, and the equation
+is the lemma `Ttc.ttc_def` (by `rfl`).  `Ttc.ttcCharged` is the price-parametric law every
+downstream result is proved over.
 
 Nine binders — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.  Among them there is no
 interpretation, no parameter block, no converter, no oracle, no precision, no
@@ -31,20 +34,18 @@ inscribed-ball data and no boundedness hypothesis.
 `Pr[p ← μ; E p]` is `(μ {p | E p}).toReal` and `All[p ← μ; E p]` is `∀ᵐ p ∂μ`, both from
 `Monadic/MeasurePr`.
 
-Audit path: `Model/`'s four files, `Ttc/Probability/`'s four, `Ttc/Geometry/` and
-`Ttc/Prices/`.  `#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) fails
-the build if any constant in this theorem's *type* is defined outside them.  `Ttc/Prices/`
-is the newest and least free of the four; the argument for admitting it, and the bound on
-what may go there, are in that file's section docstring.
+Audit path: `Model/`'s four files, `Ttc/Probability/`'s four, and `Ttc/Geometry/`.
+`#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) fails the build if any
+constant in this theorem's *type* is defined outside them.
 
 ## ⚠ The two prices are fixed — and they are not the run's own prices ⚠
 
 `Ttc.ttc` executes neither oracle being priced: its bundle `Ttc.algOracles` is a closed
 term over `Ttc.mcVol` — hit-and-miss Monte Carlo — whose sampling law is the lazy ball
 walk.  `cVol`/`cSample` are unit multipliers in `Ttc.stepCost`, so substituting *any* pair
-of naturals yields a bound of the shape below; at `0` it yields `r.2 ≤ 0`.  Charging
-`Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` is a **modelling choice, not a costing of this
-run**.  The prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`)
+of naturals yields a law of this shape; at `0` the charged cost is identically `0`.
+Charging `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` inside `Ttc.ttc` is a **modelling
+choice, not a costing of this run**.  The prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`)
 and `Ttc.ttcSampPrice` (`Exec/SamplePrice`), and both are exponential in `n`.  Read the
 boxed warning at the head of `Ttc/Exec/PricedHeadline.lean` before quoting the running-time
 conjunct, and **note that nothing anywhere proves `TTC` runs in `O(m·n⁴)`**: the
@@ -54,7 +55,8 @@ nowhere), the per-draw charge rests on `thm:iso`, the charged cost is an underco
 `Arlib.MarkovChains.exists_halfspace_max_lt` shows the obvious repair is **false**).
 
 **The price-parametric, unconditional form has not been lost.**  It is
-`Ttc.ttc_volume_estimate_parametric`, kept character for character, and it — not this
+`Ttc.ttc_volume_estimate_parametric`, over `Ttc.ttcCharged` — the old headline, unchanged
+except that the measure now goes by its price-parametric name — and it — not this
 theorem — is what `Ttc/Exec/TheoremPoly.lean` and `Ttc/Witness/FullTwoCube.lean` consume.
 Non-vacuity for *this* theorem is `Ttc.TwoCube.ttc_volume_estimate_two_cube_fixed`
 (`Ttc/Witness/FixedPriceTwoCube.lean`).
@@ -97,7 +99,7 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (hpos : 0 < volSol (atomSet atoms) φ) :
     -- (accuracy) the estimate is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ);
+      Pr[r ← ttc atoms φ ε δ;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) at any `(R, γ)` bounding the fixed sampling price quartically, almost
@@ -106,7 +108,7 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
       ((hrSampPriceAt atoms φ ε δ : ℕ) : ℝ)
           ≤ 2 ^ 62 * (n : ℝ) ^ 4 * canonRfac (toDNFd (preprocess atoms φ))
               * (R ^ 2 / γ ^ 2) * Real.log (2 * R) →
-      All[r ← ttc atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ);
+      All[r ← ttc atoms φ ε δ;
         (r.2 : ℝ) ≤
           ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
             * (2 ^ 42

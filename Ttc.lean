@@ -19,7 +19,7 @@ content, one directory per object of the paper it discharges:
 
 ```
 Ttc/
-  Model/         the statement — read this and stop            (5 files)
+  Model/         the statement — read this and stop            (4 files)
   Exec/          the oracle-free capstones, and their plumbing (32)
   Rounding/      claim:cl, over the rounding that realises it  (11)
   Witness/       non-vacuity: the box, and the two-cube DNF     (8)
@@ -40,8 +40,9 @@ Ttc/
 **Recount rather than quote.** These counts have drifted repeatedly and are a
 snapshot (`find Ttc -name '*.lean' | sed 's|/[^/]*$||' | sort | uniq -c`, 109
 files at the commit this paragraph was written). The `Model/` count used to be
-called an invariant; it went from four to five when `Exec/TheoremPoly` landed
-(2026-08-12), so treat every number here as description and recount.
+called an invariant; it went from four to five when `Exec/TheoremPoly` landed and back to
+four when that file moved to `Ttc/Exec/` (both 2026-08-12), so treat every number here as
+description and recount.
 
 ### `Model/` — the statement
 
@@ -90,10 +91,14 @@ called an invariant; it went from four to five when `Exec/TheoremPoly` landed
                               2026-08-12; this entry used to say eleven-plus-two,
                               which is now `Ttc.ttc_volume_estimate_parametric` in
                               `Ttc/Exec/PricedHeadline.lean`, the same statement
-                              with the two per-call costs `cVol cSample` still
-                              free). The headline's two prices are **fixed**, at
-                              the Cousins–Vempala and hit-and-run numbers, which
-                              are *not* prices this run is proved to pay — read
+                              over `Ttc.ttcCharged` with the two per-call costs
+                              `cVol cSample` still free). The measure it is stated
+                              about takes **`TTC`'s own four inputs and nothing
+                              else**: `Ttc.ttc atoms φ ε δ`, a four-ary `def` equal
+                              by `rfl` to `Ttc.ttcCharged` at two fixed prices
+                              (`Ttc.ttc_def`). Those prices are the
+                              Cousins–Vempala and hit-and-run numbers, which are
+                              *not* prices this run is proved to pay — read
                               `Ttc/Exec/PricedHeadline.lean`'s boxed warning before
                               quoting the runtime conjunct. No interpretation,
                               no parameter block, no converter, no oracle argument
@@ -481,7 +486,6 @@ import Ttc.Exec.SamplerCost
 import Ttc.Exec.VolumePriceCV
 import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.SampPriceHR
-import Ttc.Prices.Fixed
 import Ttc.Exec.VolPriceCVAlg
 import Ttc.Witness.FixedPriceTwoCube
 import Ttc.Exec.PolyRun

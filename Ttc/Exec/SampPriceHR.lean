@@ -42,16 +42,16 @@ import Ttc.Exec.SampleDischarge
 `Ttc.SamplerCost.samplePrice n γ R M ε' rfac` (`Exec/SamplerCost`) prices one hit-and-run
 draw as a function of six *free* parameters.  `Ttc.ttc_volume_estimate` cannot carry such a
 thing *as a named constant*: its statement may only mention constants defined under
-`Ttc/Model/`, `Ttc/Probability/`, `Ttc/Geometry/` or `Ttc/Prices/` (`Ttc.Audit.auditSurface`,
-enforced by
+`Ttc/Model/`, `Ttc/Probability/` or `Ttc/Geometry/` (`Ttc.Audit.auditSurface`, enforced by
 `#modelClosureOfType`).  This file removes the six binders by instantiating each at the
 run's **own** data, exactly as `Exec/SamplePrice` does for the ball walk.
 
 (This paragraph used to add that "free geometry binders would have to be quantified in the
 headline", offered as a reason the headline could not carry the price.  As of 2026-08-12 the
 headline *does* quantify two of them — `∀ R γ`, guarding the running-time conjunct only —
-and names `Ttc.hrSampPriceAt` (`Ttc/Prices/Fixed.lean`), a surface-side copy of the price
-below, equal to it by `rfl` (`Ttc.hrSampPriceAt_eq`).  See `Ttc/Exec/PricedHeadline.lean`.)
+and `Ttc.ttc` is four-ary, charging `Ttc.hrSampPriceAt` (`Model/Pseudocode`) inside its own
+definition — a surface-side copy of the price below, equal to it by `rfl`
+(`Ttc.hrSampPriceAt_eq`).  See `Ttc/Exec/PricedHeadline.lean`.)
 
 ```
 ttcSampPriceHR atoms φ ε δ

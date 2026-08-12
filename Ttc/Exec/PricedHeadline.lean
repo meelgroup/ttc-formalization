@@ -68,7 +68,11 @@ running-time conjunct alone, so that the accuracy conjunct stays unconditional.
 ## Why the parametric form had to be copied rather than derived
 
 `Ttc.ttc_volume_estimate_parametric` is `Ttc.ttc_volume_estimate` as it stood before this
-change, character for character, under a new name.  It is **not** derivable from the
+change, under a new name and over `Ttc.ttcCharged` — the six-ary law that used to be called
+`Ttc.ttc`, renamed on 2026-08-12 when `Ttc.ttc` became the four-ary
+`TTC(F, ε, δ)` with both prices fixed inside it (`Model/Pseudocode`, `Ttc.ttc_def`).  That
+rename is the *only* difference; the proposition is otherwise the old headline verbatim.  It
+is **not** derivable from the
 fixed-price form (a `∀` over two naturals is strictly stronger than one instance of it), so
 its four-line proof is repeated.  Downstream consumers that need the prices free —
 `Ttc/Exec/TheoremPoly.lean`, `Ttc/Witness/FullTwoCube.lean` — use this one.
@@ -98,7 +102,7 @@ variable {A : Type*} {n : ℕ}
 /-! ## §1 — the parametric headline, preserved
 
 `Ttc.ttc_volume_estimate` as it read before the prices were fixed.  Both conjuncts speak
-about the same run, drawn from `Ttc.ttc atoms φ ε δ cVol cSample`, and both prices are
+about the same run, drawn from `Ttc.ttcCharged atoms φ ε δ cVol cSample`, and both prices are
 binders, so the statement holds at *every* pair of naturals. -/
 
 /-- **`thm:volumettc` + `thm:runtime`, with the two per-call prices left free.**
@@ -122,11 +126,11 @@ theorem ttc_volume_estimate_parametric {A : Type*} {n : ℕ}
     (cVol cSample : ℕ) :
     -- (accuracy) the estimate is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ cVol cSample;
+      Pr[r ← ttcCharged atoms φ ε δ cVol cSample;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) almost every run is charged at most `m·(cVol + cSample·(Θ + 1))`
-    (All[r ← ttc atoms φ ε δ cVol cSample;
+    (All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ)
           * ((cVol : ℝ) + (cSample : ℝ)
@@ -134,7 +138,7 @@ theorem ttc_volume_estimate_parametric {A : Type*} {n : ℕ}
                   + 15 * (Real.log (15 / (2 * δ))
                       + Real.log ((toDNFd (preprocess atoms φ)).length))
                   + 1))]) := by
-  rw [ttc_eq_ttcPairLaw]
+  rw [ttcCharged_eq_ttcPairLaw]
   refine ⟨ttc_accuracy_pairLaw atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample, ?_⟩
   have h := all_ttcPairLaw_cost_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1 cVol cSample
   simpa only [ttcComplexity_def] using h
@@ -380,7 +384,7 @@ theorem all_ttc_cost_le_quartic {A : Type*} {n : ℕ}
     (hcVol : (cVol : ℝ) ≤ Cv * (n : ℝ) ^ 4 * volFac)
     (hcSample : (cSample : ℝ)
       ≤ 2 ^ 62 * (n : ℝ) ^ 4 * rfac * (R ^ 2 / γ ^ 2) * Real.log (2 * R)) :
-    All[r ← ttc atoms φ ε δ cVol cSample;
+    All[r ← ttcCharged atoms φ ε δ cVol cSample;
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
           * (Cv * volFac
@@ -425,7 +429,7 @@ theorem all_ttc_cost_le_quartic_at_run {A : Type*} {n : ℕ}
     (hcVol : (cVol : ℝ) ≤ Cv * (n : ℝ) ^ 4 * volFac)
     (hMB : ttcSampWarmPrice atoms φ ε δ ≤ (2 * ttcSampDiamPrice atoms φ ε δ) ^ n)
     (hepsn : 1 / 2 ^ n ≤ (algBlock atoms φ ε δ).epsPrime) :
-    All[r ← ttc atoms φ ε δ cVol (ttcSampPriceHR atoms φ ε δ);
+    All[r ← ttcCharged atoms φ ε δ cVol (ttcSampPriceHR atoms φ ε δ);
       (r.2 : ℝ) ≤
         ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
           * (Cv * volFac
