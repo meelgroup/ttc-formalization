@@ -665,6 +665,24 @@ proof enters `Model/` — then apply `Ttc.ttc_accuracy_pairLaw` and
 that the names in the statement name what they claim to: a wrong abbreviation
 would be a build error, not a silent divergence.
 
+> ⚠ **Read this first (2026-08-12): there are now three headline theorems, and this
+> section describes the second of them.** Everything below about "eleven binders" is
+> the *price-parametric* statement, which was renamed and moved:
+>
+> | theorem | file | prices |
+> | --- | --- | --- |
+> | `Ttc.ttc_volume_estimate` | `Ttc/Model/Theorem.lean` | **fixed** at the Cousins–Vempala and hit-and-run numbers; **nine** binders; runtime side reads `m·n⁴·(…)` under a `∀ R γ` guard |
+> | `Ttc.ttc_volume_estimate_parametric` | `Ttc/Exec/PricedHeadline.lean` | free; **eleven** binders + `cVol cSample`; this is the old headline, character for character, and is what everything below means |
+> | `Ttc.ttcPoly_volume_estimate_cv` | `Ttc/Exec/PolyAccuracy.lean` | the *swapped-bundle* run — genuinely Cousins–Vempala over hit-and-run — conditional on `Ttc.HitAndRunTheorem11Input`, which is **inhabited nowhere** |
+>
+> The first one's fixed prices are **not** prices this run is proved to pay: `cVol` and
+> `cSample` are unit multipliers in `Ttc.stepCost` (`Model/Pseudocode:202`,
+> `stepCost cVol cSample N = cVol + cSample * N`), so *any* pair of naturals yields a
+> bound of that shape — at `0` it yields `r.2 ≤ 0`. Fixing them is a modelling choice.
+> `Ttc.ttcVolPrice` and `Ttc.ttcSampPrice` are the numbers this run *is* shown to pay
+> (§ below), and both are exponential in `n`. See the boxed warning at the head of
+> `Ttc/Exec/PricedHeadline.lean`.
+
 It takes **eleven binders about the algorithm and its input**, and its type
 contains no `Ttc.TtcProb`, no `Ttc.VolumeAlgorithm` and no `Ttc.KV97Sampler`:
 
@@ -676,7 +694,9 @@ Two more explicit binders follow them, `cVol cSample : ℕ`, the per-call costs 
 running-time conjunct is charged in; every "eleven" on this page means the list
 above and excludes those two. The raw arity is therefore **15** — eleven, plus the
 two costs, plus the implicit ambient `{A}` and `{n}`. §5's probe prints the raw
-number; say which convention you are quoting.
+number; say which convention you are quoting. (`Ttc.ttc_volume_estimate` itself now
+has nine explicit binders and raw arity 11 — the two prices are gone and the ambient
+`{A}`, `{n}` remain.)
 
 **Eleven binders**, and it is worth naming what is *not* among them: no
 interpretation `M`, no parameter block `P`, no DNF converter, no oracle argument,
@@ -867,6 +887,10 @@ hypotheses transported to the deduplicated cube list are in
 **special to this witness**, not a general fact.
 
 ### The two per-call charges `cVol`, `cSample`: parametric by choice, and exponential in fact
+
+> ⚠ 2026-08-12: parametric in `Ttc.ttc_volume_estimate_parametric`, which is what this
+> subsection is about. In `Ttc.ttc_volume_estimate` they are now **fixed** at two numbers
+> that are *not* either of the two derived bounds below — see the box at the head of §1e.
 
 `alg:ttc` line 24's `Vol_ED` and line 43's `GenerateSamples` are oracle calls whose
 per-call cost the paper never fixes, so the statement quantifies over them. That keeps
@@ -1222,6 +1246,11 @@ prices, each machine-checked:
 Nothing in that file removes `hφ`, and **nothing in it is imported by the capstone**.
 
 ### Non-vacuity at eleven binders
+
+> ⚠ 2026-08-12: this witnesses `Ttc.ttc_volume_estimate_parametric`. The nine binders of
+> `Ttc.ttc_volume_estimate` are a sub-list of these eleven, so the same two-cube data
+> meets them — see `Ttc.TwoCube.ttc_volume_estimate_two_cube_fixed` (below), added so the
+> fixed-price headline has a witness of its own rather than one by instantiation-in-prose.
 
 [`Ttc.TwoCube.ttc_volume_estimate_two_cube_full`](Ttc/Witness/FullTwoCube.lean) applies
 **this** statement to the two-cube instance at every `n ≥ 1` and every

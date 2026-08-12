@@ -85,11 +85,17 @@ called an invariant; it went from four to five when `Exec/TheoremPoly` landed
   to is defined under `Ttc/Model/` (see "the audit surface" below).
 * `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
                               guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
-                              at **eleven binders** — `atoms φ ε δ hε0 hε1 hδ0 hδ1
-                              hn hφ hpos`, the count every docstring here uses —
-                              plus the two per-call cost constants `cVol cSample`,
-                              so 13 explicit and 15 raw. Say which convention you
-                              are quoting. No interpretation,
+                              at **nine binders** — `atoms φ ε δ hε0 hε1 hδ0 hδ1
+                              hn hφ hpos` — so 9 explicit and 11 raw (corrected
+                              2026-08-12; this entry used to say eleven-plus-two,
+                              which is now `Ttc.ttc_volume_estimate_parametric` in
+                              `Ttc/Exec/PricedHeadline.lean`, the same statement
+                              with the two per-call costs `cVol cSample` still
+                              free). The headline's two prices are **fixed**, at
+                              the Cousins–Vempala and hit-and-run numbers, which
+                              are *not* prices this run is proved to pay — read
+                              `Ttc/Exec/PricedHeadline.lean`'s boxed warning before
+                              quoting the runtime conjunct. No interpretation,
                               no parameter block, no converter, no oracle argument
                               and no precision argument (the precision is
                               `GetPrecision`'s output `P.precision gammaHat`).  Both
@@ -476,6 +482,7 @@ import Ttc.Exec.VolumePriceCV
 import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.SampPriceHR
 import Ttc.Exec.VolPriceCVAlg
+import Ttc.Witness.FixedPriceTwoCube
 import Ttc.Exec.PolyRun
 import Ttc.Exec.PolyAccuracy
 import Ttc.Exec.PolyComplexity

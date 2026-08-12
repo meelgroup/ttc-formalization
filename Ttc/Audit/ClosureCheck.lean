@@ -229,11 +229,12 @@ exactly two `Prop`s — the two oracle contracts named above), and `Ttc/Geometry
 
 **3. `Ttc/Geometry/` is the third directory, and it is definitions only.** The
 convex-geometry data the sampler is applied at — `Ttc.facetOf`, `Ttc.canonAm`,
-`Ttc.canonBv`, `Ttc.canonDm`, `Ttc.canonRfac` — is *not* probability, and it is not
-vocabulary the statement is written in either: `Ttc.ttc_volume_estimate` does not mention
-any of the five, so `#modelClosureOfType` on the headline never reaches them. But
-`Ttc.ttc` does, so they must be inside the surface or `#modelClosure Ttc.ttc` fails
-outright. They used to sit in `Model/Prelude` for that reason; they now sit in
+`Ttc.canonBv`, `Ttc.canonDm`, `Ttc.canonRfac` — is *not* probability. ⚠ This paragraph used
+to add that it is "not vocabulary the statement is written in either", on the ground that
+`Ttc.ttc_volume_estimate` mentioned none of the five; **that stopped being true on
+2026-08-12**, when the headline's two prices were fixed and spelled out inline, and its type
+now names `Ttc.canonRfac` explicitly. `Ttc.ttc` reaches all five in any case, so they must
+be inside the surface or `#modelClosure Ttc.ttc` fails outright. They used to sit in `Model/Prelude` for that reason; they now sit in
 `Ttc/Geometry/CanonPolytope.lean`, and `auditSurface` names three directories instead of
 two.
 
