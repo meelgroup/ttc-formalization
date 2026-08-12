@@ -33,6 +33,7 @@ import Arlib.MarkovChains.Continuous.StarPolar
 import Arlib.MarkovChains.Continuous.HitAndRunMixing
 import Arlib.MarkovChains.Continuous.ConductanceToTV
 import Arlib.MarkovChains.Continuous.MetropolisConductanceSharp
+import Arlib.MarkovChains.Continuous.LensHalfspace
 
 /-!
 # Arlib.MarkovChains

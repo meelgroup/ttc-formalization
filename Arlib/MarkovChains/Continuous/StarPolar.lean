@@ -106,9 +106,37 @@ formalised here —
 So `cor:overlap` at `δ/√n` would follow from a bound of the form
 `max{vol(K ∩ B(u,δ) ∩ H_u), vol(K ∩ B(v,δ) ∩ H_v)} ≥ c·max{vol(K ∩ B(u,δ)), vol(K ∩ B(v,δ))}`
 for a convex `K ∋ u,v`.  That inequality is **not proved here and is not assumed anywhere in
-this file** — no theorem below carries it as a binder — but it is the whole of the remaining
-gap.  It survives both configurations that defeat the naive arguments (a thin cone at `u`, and
-one at `v`); we have no proof of it, and no counterexample.
+this file** — no theorem below carries it as a binder.
+
+⚠ **It is also FALSE, and this paragraph used to say otherwise** (corrected 2026-08-12).  It
+claimed the inequality "survives both configurations that defeat the naive arguments … we have
+no proof of it, and no counterexample."  The second half was wrong, and the counterexample is
+the very configuration the first half names:
+`Arlib/MarkovChains/Continuous/LensHalfspace.lean` refutes it with
+`Arlib.MarkovChains.exists_halfspace_max_lt` — for **every** `c > 0` there is a dimension and a
+configuration at `‖u−v‖ ≤ δ/√n` where it fails.  The witness `apexConeBody u v` is the solid
+cone with apex at `v` opening towards `u`: both half-space slices are trapped in the apex
+slice, while an *expanding* homothety about `v` gives `(1+t/4)ⁿ·vol(K∩B_v) ≤ vol(K∩B_u)`.  So
+the best possible constant at separation `t` is `≤ (1+t/4)^{−n}`, and a constant `c` forces
+`t = O(δ/n)`.
+
+**Hence the `δ/n` hypothesis of `Arlib.MarkovChains.volume_lens_inter_ge_max` below is
+OPTIMAL up to the constant**, not an artefact — `Arlib.MarkovChains.volume_lens_le_apexConeBody`
+proves `(1+t/4)ⁿ·vol(lens) ≤ max{vol(K∩B_u), vol(K∩B_v)}`.  No `δ/n^α` with `α < 1` is
+available for the `max` form, and
+`Arlib.MarkovChains.exists_overlap_speedyWalk_sqrt_dim_counterexample` shows the *conclusion*
+of `overlap_speedyWalk_convex` genuinely fails at `‖u−v‖ < δ/√n` with every other hypothesis
+holding.
+
+**The real gap is elsewhere, and this is the useful part.**  `volume_lens_inter_ge_max` is
+tight; what blocks `δ/√n` is the **shape** of `hoverlap`.  The paper's route needs the **min**
+form of KLS 3.5 *together with* an `ℓ`-comparability hypothesis — exactly the `d_ℓ(u,v) < 1/3`
+of `lem:overlap` that `overlap_speedyWalk_convex` deletes.  The two one-step laws are
+normalised by `vol(K∩B_u)` and `vol(K∩B_v)` **separately**, so
+`P_u(Tᶜ) + P_v(T) ≥ vol(lens)/max{…}` and the `min` alone does not close it; the
+counterexample is precisely a configuration with `20·ℓ(v) < ℓ(u)`.  Note the paper's `min`
+form itself is **not** impugned — `Arlib.MarkovChains.volume_lens_eq_min_apexConeBody` shows
+the lens *equals* that `min` on this body, at constant `1`.
 
 The cost of the gap is exactly one factor of `√n` in the conductance:
 `conductance_speedyWalk_ge_of_convex` gives `Ω(δ/(σn))` where the paper claims `Ω(δ/(σ√n))`.
