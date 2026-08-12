@@ -3,6 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Exec.CoolDrawPrice
+import Ttc.Prices.Fixed
 import Ttc.Exec.PriceList
 import Ttc.Exec.SampPriceHR
 import Ttc.Audit.ClosureCheck
@@ -491,6 +492,25 @@ noncomputable def cvAlgModelRhs : ℕ :=
 /-- `Ttc.cvAlgModelRhs` **is** the price — the same `rfl` as `Ttc.ttcVolPriceCVAlg_model`,
 so the closure check below is a check on the model form and not on a lookalike. -/
 theorem cvAlgModelRhs_eq : ttcVolPriceCVAlg atoms φ ε δ = cvAlgModelRhs atoms φ ε δ := rfl
+
+/-! ### The two bridges to `Ttc/Prices/Fixed`
+
+`Ttc.ttc_volume_estimate` charges `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt`, which are
+copies of these two prices filed inside `Ttc.Audit.auditSurface` so that the headline's type
+may name them (`Audit/ClosureCheck`, point 4).  A copy whose *name* asserts it is the price
+is exactly the failure mode `CLAUDE.md` §13 warns about, so the assertion is proved rather
+than asserted — and both proofs are `rfl`, so a drift in either copy is a build error.
+
+They live here because `Ttc/Prices/Fixed.lean` may not import `Ttc/Exec/` (it would leave
+the audit surface) and `Ttc/Exec/SampPriceHR.lean` is upstream of this file. -/
+
+/-- `Ttc.cvVolPriceAt` **is** the Cousins–Vempala volume price — same `rfl` as
+`Ttc.ttcVolPriceCVAlg_model`. -/
+theorem cvVolPriceAt_eq : cvVolPriceAt atoms φ ε δ = ttcVolPriceCVAlg atoms φ ε δ := rfl
+
+/-- `Ttc.hrSampPriceAt` **is** the hit-and-run sampling price — same `rfl` as
+`Ttc.ttcSampPriceHR_model`. -/
+theorem hrSampPriceAt_eq : hrSampPriceAt atoms φ ε δ = ttcSampPriceHR atoms φ ε δ := rfl
 
 /-! ## §8  Non-vacuity
 

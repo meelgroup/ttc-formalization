@@ -675,7 +675,15 @@ would be a build error, not a silent divergence.
 > | `Ttc.ttc_volume_estimate_parametric` | `Ttc/Exec/PricedHeadline.lean` | free; **eleven** binders + `cVol cSample`; this is the old headline, character for character, and is what everything below means |
 > | `Ttc.ttcPoly_volume_estimate_cv` | `Ttc/Exec/PolyAccuracy.lean` | the *swapped-bundle* run — genuinely Cousins–Vempala over hit-and-run — conditional on `Ttc.HitAndRunTheorem11Input`, which is **inhabited nowhere** |
 >
-> The first one's fixed prices are **not** prices this run is proved to pay: `cVol` and
+> The first one's two prices are named `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt`, and live
+> in `Ttc/Prices/Fixed.lean` — a **fourth audit-surface directory**, added 2026-08-12 so the
+> headline could name them instead of spelling both expressions out inline three times over
+> (which had grown its type to ~150 lines). That widening is argued at point 4 of
+> `Audit/ClosureCheck.lean`'s surface section; the two `rfl` bridges
+> `Ttc.cvVolPriceAt_eq`/`Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) prove each equals the
+> `Ttc/Exec/` price it is named after, so the names do not stand in for the analysis.
+>
+> They are **not** prices this run is proved to pay: `cVol` and
 > `cSample` are unit multipliers in `Ttc.stepCost` (`Model/Pseudocode:202`,
 > `stepCost cVol cSample N = cVol + cSample * N`), so *any* pair of naturals yields a
 > bound of that shape — at `0` it yields `r.2 ≤ 0`. Fixing them is a modelling choice.

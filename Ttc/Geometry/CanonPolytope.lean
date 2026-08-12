@@ -24,14 +24,16 @@ The move has one consequence a reader must be told about rather than left to dis
 `Ttc.Audit.auditSurface` now names three directories, not two.  These five constants are in
 the definitional closure of `Ttc.ttc`, so `#modelClosure Ttc.ttc` would fail outright if
 `Ttc.Geometry` were not admitted.  The promise the check enforces is correspondingly
-"`Model/`, `Probability/` and `Geometry/`" — and `Ttc/Audit/ClosureCheck.lean` states the
+"`Model/`, `Probability/`, `Geometry/` and (since 2026-08-12) `Prices/`" — and
+`Ttc/Audit/ClosureCheck.lean` states the
 bound on what may go here: **definitions only, no `Prop`s, and nothing that is not convex
 geometry determined by the formula**.  Every *property* of these objects continues to be
 proved outside the surface.
 
 The statement of `Ttc.ttc_volume_estimate` now mentions `Ttc.canonRfac` **explicitly**
 (corrected 2026-08-12; this used to say it mentioned none of them, which was true until
-the headline's two prices were fixed inline).  That is precisely why the five have to be
+the headline's two prices were fixed, `Ttc.canonRfac` appearing in the guard on the
+running-time conjunct).  That is precisely why the five have to be
 inside the audit surface rather than merely reachable through `Ttc.ttc`'s body, and
 `#modelClosureOfType` on the headline stays green because they are.
 -/

@@ -4,21 +4,24 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Program
+import Ttc.Prices.Fixed
 import Ttc.Exec.PricedHeadline
 
 /-!
 # The main theorem: `thm:volumettc` + `thm:runtime` for `TTC(F, ε, δ)`
 
 The **statement layer**: one theorem, `Ttc.ttc_volume_estimate`, and nothing else — no
-definition, no auxiliary lemma.  The accuracy half comes from
-`Ttc.ttc_accuracy_pairLaw`; the running-time half is
-`Ttc.PricedHeadline.all_ttc_cost_le_quartic` (`Ttc/Exec/PricedHeadline.lean`).
+definition, no auxiliary lemma, no proof to work through.  The accuracy half comes from
+`Ttc.ttc_volume_estimate_parametric` and the running-time half from
+`Ttc.PricedHeadline.all_ttc_cost_le_quartic`, both in `Ttc/Exec/PricedHeadline.lean`.
 
 Both conjuncts speak about **the same run**, drawn from the one measure
 
-    ttc atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)
+    ttc atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ)
+      : Measure (ℝ × ℕ)
 
-defined in `Model/Pseudocode`: accuracy about `r.1`, running time about `r.2`.  This
+whose `Ttc.ttc` is defined in `Model/Pseudocode` and whose two per-call prices are the two
+`def`s of `Ttc/Prices/Fixed.lean`: accuracy about `r.1`, running time about `r.2`.  This
 mirrors `ApproxNFA.countNFAM A n ε δ : PMF (ℝ × ℕ)`.
 
 Nine binders — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.  Among them there is no
@@ -28,64 +31,33 @@ inscribed-ball data and no boundedness hypothesis.
 `Pr[p ← μ; E p]` is `(μ {p | E p}).toReal` and `All[p ← μ; E p]` is `∀ᵐ p ∂μ`, both from
 `Monadic/MeasurePr`.
 
-Audit path: `Model/`'s four files, `Ttc/Probability/`'s four, and `Ttc/Geometry/`.
-`#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) fails the build if
-any constant in this theorem's *type* is defined outside them — which is why the two
-prices below are spelled out as arithmetic rather than named: `Ttc.ttcVolPriceCVAlg` and
-`Ttc.ttcSampPriceHR` live in `Ttc/Exec/`, so **naming** either one in the type would turn
-the check red.  The expressions are `Ttc.ttcVolPriceCVAlg_model`'s and
-`Ttc.ttcSampPriceHR_model`'s right-hand sides, each equal to its price by `rfl`.
+Audit path: `Model/`'s four files, `Ttc/Probability/`'s four, `Ttc/Geometry/` and
+`Ttc/Prices/`.  `#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) fails
+the build if any constant in this theorem's *type* is defined outside them.  `Ttc/Prices/`
+is the newest and least free of the four; the argument for admitting it, and the bound on
+what may go there, are in that file's section docstring.
 
-## ⚠ THE PRICES ARE NOW FIXED — AND THEY ARE NOT THE RUN'S OWN PRICES ⚠
+## ⚠ The two prices are fixed — and they are not the run's own prices ⚠
 
-This theorem used to quantify over two per-call prices `cVol cSample : ℕ`.  It no longer
-does: the volume slot is fixed at the **Cousins–Vempala** operation price and the
-sampling slot at the **hit-and-run** per-draw price, both evaluated at `(atoms, φ, ε, δ)`,
-so that the running-time side can read `m · n⁴ · (…)`.
+`Ttc.ttc` executes neither oracle being priced: its bundle `Ttc.algOracles` is a closed
+term over `Ttc.mcVol` — hit-and-miss Monte Carlo — whose sampling law is the lazy ball
+walk.  `cVol`/`cSample` are unit multipliers in `Ttc.stepCost`, so substituting *any* pair
+of naturals yields a bound of the shape below; at `0` it yields `r.2 ≤ 0`.  Charging
+`Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` is a **modelling choice, not a costing of this
+run**.  The prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`)
+and `Ttc.ttcSampPrice` (`Exec/SamplePrice`), and both are exponential in `n`.  Read the
+boxed warning at the head of `Ttc/Exec/PricedHeadline.lean` before quoting the running-time
+conjunct, and **note that nothing anywhere proves `TTC` runs in `O(m·n⁴)`**: the
+hit-and-run step count is meaningful only under `Ttc.HitAndRunTheorem11Input` (inhabited
+nowhere), the per-draw charge rests on `thm:iso`, the charged cost is an undercount, and the
+`n⁴` holds only in the temperature-scale regime `R = O(σ)` (`n⁵` at `R ≍ σ√n`, and
+`Arlib.MarkovChains.exists_halfspace_max_lt` shows the obvious repair is **false**).
 
-**`Ttc.ttc` executes neither of those two oracles.**  Its bundle `Ttc.algOracles`
-(`Model/Pseudocode`) is a closed term over `Ttc.mcVol` — hit-and-miss Monte Carlo — whose
-sampling law is the **lazy ball walk**.  The prices the modelled run can be *shown* to pay
-are `Ttc.ttcVolPrice` (`Exec/PriceList`, justified by `Ttc.ttcVolCoins_le_ttcVolPrice`) and
-`Ttc.ttcSampPrice` (`Exec/SamplePrice`, justified by `Ttc.ttcSampleSteps_le_ttcSampPrice`),
-and both are **exponential in `n`**.  Charging the two numbers below is legal arithmetic
-and nothing more — `cVol`/`cSample` are per-call *unit prices* in `Ttc.runCost`'s fold and
-the call **counts** are oracle-independent (`m` volume calls, `≤ Θ+1` samples each) — but
-it is a **modelling choice, not a costing of this run**.  No lemma anywhere dominates
-`Ttc.ttcVolCoins` or `Ttc.ttcSampleSteps` by the numbers below, and for the sampler there
-cannot be one (`Exec/SampPriceHR`, "What is *not* here").  Read the boxed warning at the
-head of `Ttc/Exec/PricedHeadline.lean` before quoting anything from here.
-
-**The unconditional, price-parametric statement has not been lost.**  It is
-`Ttc.ttc_volume_estimate_parametric` (`Ttc/Exec/PricedHeadline.lean`), kept character for
-character, and it — not this theorem — is what `Ttc/Exec/TheoremPoly.lean` and
-`Ttc/Witness/FullTwoCube.lean` consume.  The fixed-price form below does **not** imply it.
-
-## What is conditional, and what is not
-
-* the **accuracy** conjunct is **unconditional** under the nine binders, exactly as before;
-* the **running-time** conjunct is **guarded**: `∀ R γ, 1 ≤ R → 0 < γ → (the hit-and-run
-  price is ≤ 2⁶²·n⁴·rfac·(R²/γ²)·log(2R)) → …`.  The guard is discharged at the run's own
-  geometry — `R = Ttc.ttcSampDiamPrice`, `γ = Ttc.ttcSampInradius` — by
-  `Ttc.ttcSampPriceHR_le_quartic`, which itself carries two binders **nothing in this
-  repository proves**: the warm start `M ≤ (2R)ⁿ` and the regime condition `2⁻ⁿ ≤ ε'`.
-  Guarding the runtime conjunct rather than adding those to the theorem's binder list is
-  deliberate: it keeps the accuracy half free of an unwitnessed hypothesis, so
-  `Ttc/Witness/FullTwoCube.lean` can still witness it.
-
-The volume side needs **no** guard: `Ttc.PricedHeadline.cvPrice_le` discharges it from the
-nine binders alone.  Its `2⁴²·n⁴` nevertheless assumes the warm start `M = 1` *inside* the
-price, which is nowhere proved.
-
-**Nothing anywhere proves that `TTC` runs in `O(m·n⁴)`.**  The hit-and-run step count is
-meaningful only under `Ttc.HitAndRunTheorem11Input` (assumed, inhabited nowhere); the
-Cousins–Vempala per-draw charge rests on `thm:iso`, an unproved binder of
-`Arlib.MarkovChains.conductance_metropolisGaussian_sharp_ge`; and the charged cost is an
-**undercount** — one unit per oracle call, nothing for the arithmetic inside a call, the
-rejection rounds, or `alg:ttc`'s lines 32–42 loops.  The `n⁴` also holds only where the
-body is temperature-scale (`R = O(σ)`); in the Cousins–Vempala regime `R ≍ σ√n` it is `n⁵`,
-and `Arlib.MarkovChains.exists_halfspace_max_lt` shows the obvious route to recovering the
-missing `√n` is **false**, not merely open.
+**The price-parametric, unconditional form has not been lost.**  It is
+`Ttc.ttc_volume_estimate_parametric`, kept character for character, and it — not this
+theorem — is what `Ttc/Exec/TheoremPoly.lean` and `Ttc/Witness/FullTwoCube.lean` consume.
+Non-vacuity for *this* theorem is `Ttc.TwoCube.ttc_volume_estimate_two_cube_fixed`
+(`Ttc/Witness/FixedPriceTwoCube.lean`).
 
 [`AUDIT.md`](../../AUDIT.md) §1e is written to be read alongside this file, and carries
 what is deliberately not restated here: which quantifier the running-time half uses and
@@ -99,27 +71,25 @@ namespace Ttc
 
 open MeasureTheory Set
 open Ttc.Monadic
-open scoped Pointwise
 
-set_option maxHeartbeats 4000000 in
-/-- **`thm:volumettc` + `thm:runtime`, at two FIXED per-call prices.**  `TTC` is run on
-`F = (atoms, φ)` at accuracy `ε` and confidence `δ`; both halves speak about the same run,
-drawn from `Ttc.ttc` at the Cousins–Vempala volume price and the hit-and-run sampling
-price.
+/-- **`thm:volumettc` + `thm:runtime`, at two fixed per-call prices.**  `TTC` is run on
+`F = (atoms, φ)` at accuracy `ε` and confidence `δ`; both halves speak about the same run.
 
 * **Accuracy.** `Pr[ TTC(F, ε, δ) ∈ (1 ± ε)·Vol(F) ] ≥ 1 − δ`, at the **user's own**
   `Vol(F)`, **unconditionally** under the nine binders.  The output is
   `Model/Pseudocode`'s `Ttc.ttcRun`, which takes no oracle argument.
 * **Running time.** `All[…]` is `∀ᵐ`, with **no termination hypothesis**: the absorption
-  loops halt `Ttc.ttc`-almost surely.  Under the guard `1 ≤ R`, `0 < γ` and "the fixed
-  sampling price is at most `2⁶²·n⁴·rfac·(R²/γ²)·log(2R)`", the charged cost is at most
-  `m · n⁴ · (2⁴²·volFac + 2⁶²·rfac·(R²/γ²)·log(2R)·(Θ+1))`, written out as explicit
-  arithmetic in `ε`, `δ`, the run's own geometry and `m = |toDNFd (preprocess atoms φ)|`.
+  loops halt `Ttc.ttc`-almost surely.  At any `(R, γ)` bounding the fixed sampling price
+  quartically, `alg:ttc`'s charged cost is at most `m · n⁴ · (2⁴²·volFac + 2⁶²·rfac·(R²/γ²)
+  ·log(2R)·(Θ+1))`, written out as explicit arithmetic in `ε`, `δ`, the run's own geometry
+  and `m = |toDNFd (preprocess atoms φ)|`.  The guard is discharged at the run's own
+  geometry by `Ttc.PricedHeadline.all_ttc_cost_le_quartic_at_run`, which leaves visible the
+  two binders nothing in this repository proves — the warm start `M ≤ (2R)ⁿ` and `2⁻ⁿ ≤ ε'`.
+  It guards this conjunct only, so the accuracy half stays unconditional.
 
-⚠ **The run does not execute the two oracles being priced** — see this file's docstring and
-the boxed warning in `Ttc/Exec/PricedHeadline.lean`.  The price-parametric, unconditional
-form is `Ttc.ttc_volume_estimate_parametric`.  Correctness, not efficiency: nothing here
-proves `TTC` runs in `O(m·n⁴)`.  See also `AUDIT.md` §1e. -/
+⚠ **The run does not execute the two oracles being priced.**  Correctness, not efficiency:
+nothing here proves `TTC` runs in `O(m·n⁴)`.  See this file's docstring, the boxed warning
+in `Ttc/Exec/PricedHeadline.lean`, and `AUDIT.md` §1e. -/
 theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
@@ -127,136 +97,16 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (hpos : 0 < volSol (atomSet atoms) φ) :
     -- (accuracy) the estimate is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
     (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ
-            -- `cVol` := the Cousins–Vempala per-call volume price
-            ((⌈4 * Arlib.MarkovChains.lsThreshold 1 (Real.log 2 / (5120 * (n : ℝ)))
-                    ((algBlock atoms φ ε δ).epsPrime)⌉₊ + 1 + 2)
-                  * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
-                * ((⌈Real.log (1 / (algBlock atoms φ ε δ).deltaPrime)
-                        / (2 * (4 / 5 - 1 / 2) ^ 2)⌉₊ + 1)
-                    * (Arlib.GaussianCooling.coolPhases n
-                          (1 + Real.log (1 + (n : ℝ)
-                            * ((algGamma atoms φ ε δ)⁻¹
-                                * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                                    (preprocess atoms φ))) ^ 2))
-                          ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)
-                        * (⌈(1 + 2 / (n : ℝ) - 1)
-                              * (Arlib.GaussianCooling.coolPhases n
-                                  (1 + Real.log (1 + (n : ℝ)
-                                    * ((algGamma atoms φ ε δ)⁻¹
-                                        * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                                            (preprocess atoms φ))) ^ 2))
-                                  ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10) : ℕ)
-                              / ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)⌉₊ + 1))))
-            -- `cSample` := the hit-and-run per-draw price
-            ((⌊2 ^ 56 * (n : ℝ) ^ 2 * ((1 +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ))) /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-                  Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-                  sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))) ^ 2 /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ)))) ^ 2 *
-                  Real.log (8 * (((1 +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ))) /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) ^ n *
-                  (latticeScale (algPrec atoms φ ε δ) ^ n *
-                  (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))) /
-                  (volume (Metric.ball (0 : Space n)
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) /
-                  ((algBlock atoms φ ε δ).epsPrime / (4 * (2 * ((1 +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ))) /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-                  Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-                  sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)))) ^ n)) ^ 2)⌋₊
-                + 1 + 2)
-              * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊);
+      Pr[r ← ttc atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ);
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
     -- (running time) at any `(R, γ)` bounding the fixed sampling price quartically, almost
     -- every run is charged at most `m·n⁴·(2⁴²·volFac + 2⁶²·rfac·(R²/γ²)·log(2R)·(Θ + 1))`
     (∀ R γ : ℝ, 1 ≤ R → 0 < γ →
-      (((⌊2 ^ 56 * (n : ℝ) ^ 2 * ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) /
-              (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-              Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-              sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))) ^ 2 /
-              (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))) ^ 2 *
-              Real.log (8 * (((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) /
-              (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) ^ n *
-              (latticeScale (algPrec atoms φ ε δ) ^ n *
-              (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))) /
-              (volume (Metric.ball (0 : Space n)
-              (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) /
-              ((algBlock atoms φ ε δ).epsPrime / (4 * (2 * ((1 +
-              Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-              (canonRfac (toDNFd (preprocess atoms φ))) /
-              (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-              Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-              sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)))) ^ n)) ^ 2)⌋₊
-            + 1 + 2)
-          * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊ : ℕ) : ℝ)
-        ≤ 2 ^ 62 * (n : ℝ) ^ 4 * canonRfac (toDNFd (preprocess atoms φ))
-            * (R ^ 2 / γ ^ 2) * Real.log (2 * R) →
-      All[r ← ttc atoms φ ε δ
-            ((⌈4 * Arlib.MarkovChains.lsThreshold 1 (Real.log 2 / (5120 * (n : ℝ)))
-                    ((algBlock atoms φ ε δ).epsPrime)⌉₊ + 1 + 2)
-                  * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
-                * ((⌈Real.log (1 / (algBlock atoms φ ε δ).deltaPrime)
-                        / (2 * (4 / 5 - 1 / 2) ^ 2)⌉₊ + 1)
-                    * (Arlib.GaussianCooling.coolPhases n
-                          (1 + Real.log (1 + (n : ℝ)
-                            * ((algGamma atoms φ ε δ)⁻¹
-                                * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                                    (preprocess atoms φ))) ^ 2))
-                          ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)
-                        * (⌈(1 + 2 / (n : ℝ) - 1)
-                              * (Arlib.GaussianCooling.coolPhases n
-                                  (1 + Real.log (1 + (n : ℝ)
-                                    * ((algGamma atoms φ ε δ)⁻¹
-                                        * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                                            (preprocess atoms φ))) ^ 2))
-                                  ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10) : ℕ)
-                              / ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)⌉₊ + 1))))
-            ((⌊2 ^ 56 * (n : ℝ) ^ 2 * ((1 +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ))) /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-                  Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-                  sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))) ^ 2 /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ)))) ^ 2 *
-                  Real.log (8 * (((1 +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ))) /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) ^ n *
-                  (latticeScale (algPrec atoms φ ε δ) ^ n *
-                  (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))) /
-                  (volume (Metric.ball (0 : Space n)
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) /
-                  ((algBlock atoms φ ε δ).epsPrime / (4 * (2 * ((1 +
-                  Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-                  (canonRfac (toDNFd (preprocess atoms φ))) /
-                  (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-                  Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-                  sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)))) ^ n)) ^ 2)⌋₊
-                + 1 + 2)
-              * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊);
+      ((hrSampPriceAt atoms φ ε δ : ℕ) : ℝ)
+          ≤ 2 ^ 62 * (n : ℝ) ^ 4 * canonRfac (toDNFd (preprocess atoms φ))
+              * (R ^ 2 / γ ^ 2) * Real.log (2 * R) →
+      All[r ← ttc atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ);
         (r.2 : ℝ) ≤
           ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
             * (2 ^ 42
