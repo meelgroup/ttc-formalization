@@ -112,7 +112,7 @@ they are the general forms, at an arbitrary `sampD`-certificate pairing.
   would have to inhabit `Ttc.HitAndRunTheorem11Input`, which nothing in this development
   does and which is exactly the assumed content of Lovász–Vempala Theorem 1.1; and it
   would have to supply `hphase_mean`/`hphase_var`.  No witness is faked.  Contrast
-  `Ttc.ttc_volume_estimate_poly_two_cube` (`Model/TheoremPoly.lean:626`), which is a
+  `Ttc.ttc_volume_estimate_poly_two_cube` (`Exec/TheoremPoly.lean:626`), which is a
   witness on the *unconditional* path.
 
 ## What is here

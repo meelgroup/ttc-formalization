@@ -8,7 +8,7 @@ import Ttc.Exec.VolumePriceCV
 import Ttc.Witness.FullTwoCube
 
 /-!
-# `Model/TheoremPoly`: `Ttc.ttc_volume_estimate` with the runtime side priced
+# `Exec/TheoremPoly`: `Ttc.ttc_volume_estimate` with the runtime side priced
 
 > ## ⚠ NOTHING IN THIS FILE PROVES THAT `TTC` RUNS IN `O(m·n⁵)` — OR IN ANY TIME AT ALL ⚠
 >

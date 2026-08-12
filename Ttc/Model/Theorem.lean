@@ -26,19 +26,19 @@ oracle, no precision, no inscribed-ball data and no boundedness hypothesis.
 `Pr[p ← μ; E p]` is `(μ {p | E p}).toReal` and `All[p ← μ; E p]` is `∀ᵐ p ∂μ`, both from
 `Monadic/MeasurePr`.
 
-Audit path: `Model/`'s files (**five** since `Model/TheoremPoly` landed — recount rather
+Audit path: `Model/`'s files (**five** since `Exec/TheoremPoly` landed — recount rather
 than quote), `Ttc/Probability/`'s four, and `Ttc/Geometry/`.
 `#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) fails the build if
 any constant in this theorem's *type* is defined outside them.
 
-## The prices are no longer parametric-and-exponential — see `Model/TheoremPoly`
+## The prices are no longer parametric-and-exponential — see `Exec/TheoremPoly`
 
 ⚠ **This section used to say the prices `cVol`/`cSample` stand for are "exponential in
 `n`".  That is out of date** (corrected 2026-08-12).  It was true of the *constructed*
 oracles — `Ttc.mcVol` (hit-and-miss Monte Carlo) and the lazy ball walk — and those are
 still what the **accuracy** conjunct is proved for.  But both per-call prices now have
 polynomial bounds, and `Ttc.ttc_volume_estimate_quartic`
-(`Ttc/Model/TheoremPoly.lean`) is this theorem with the runtime right-hand side collapsed
+(`Ttc/Exec/TheoremPoly.lean`) is this theorem with the runtime right-hand side collapsed
 accordingly:
 
 * `cSample ≤ 2^62·n⁴·rfac·(R²/γ²)·log(2R)` — `Ttc.SamplerCost.samplePrice_le_quartic`,
@@ -88,7 +88,7 @@ Correctness, not efficiency.  `cVol`/`cSample` stay **parametric here**; the two
 *constructed* oracles this theorem's accuracy half is proved for — `Ttc.mcVol` and the
 lazy ball walk — are exponential in `n`.  For the same statement with both prices
 discharged at polynomial bounds, see `Ttc.ttc_volume_estimate_quartic`
-(`Model/TheoremPoly`), and read the module docstring above for the three conditions that
+(`Exec/TheoremPoly`), and read the module docstring above for the three conditions that
 come with it.  See also `AUDIT.md` §1e. -/
 theorem ttc_volume_estimate {A : Type*} {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)

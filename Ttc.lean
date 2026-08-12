@@ -40,7 +40,7 @@ Ttc/
 **Recount rather than quote.** These counts have drifted repeatedly and are a
 snapshot (`find Ttc -name '*.lean' | sed 's|/[^/]*$||' | sort | uniq -c`, 109
 files at the commit this paragraph was written). The `Model/` count used to be
-called an invariant; it went from four to five when `Model/TheoremPoly` landed
+called an invariant; it went from four to five when `Exec/TheoremPoly` landed
 (2026-08-12), so treat every number here as description and recount.
 
 ### `Model/` — the statement
@@ -106,7 +106,7 @@ called an invariant; it went from four to five when `Model/TheoremPoly` landed
                               binder is tabulated in `Ttc.Exec.Inputs`; why the last
                               one, `big`, **cannot** be discharged is proved in
                               `Ttc.Exec.Regime`.
-* `Ttc.Model.TheoremPoly`    — the same theorem with the two per-call prices
+* `Ttc.Exec.TheoremPoly`    — the same theorem with the two per-call prices
                               **discharged**: `Ttc.ttc_volume_estimate_quartic` has
                               the accuracy conjunct byte-identical to
                               `Model/Theorem`'s and the runtime side collapsed to
@@ -123,14 +123,14 @@ called an invariant; it went from four to five when `Model/TheoremPoly` landed
                               (`R = O(σ)`) — in the `R ≍ σ√n` regime it is `n⁵`.
 
 **Five files as of 2026-08-12** — this paragraph said "four, and the count is an
-invariant" until `Model/TheoremPoly` landed, so recount rather than quote it. The
+invariant" until `Exec/TheoremPoly` landed, so recount rather than quote it. The
 *rule* is the invariant, not the number: `Model/` is what a referee reads to trust
 the *statement* and the *algorithm*, so anything that is neither belongs
 elsewhere. The test that has settled every borderline case is declaration mix, not
 subject matter — a file carrying tactic proofs and a witness chain fails it
 however relevant its contents are.
 
-`Model/TheoremPoly` earns its place by that rule: it states the *same* theorem —
+`Exec/TheoremPoly` earns its place by that rule: it states the *same* theorem —
 accuracy conjunct byte-identical to `Model/Theorem`'s — with the runtime
 right-hand side collapsed from `m·(cVol + cSample·(Θ+1))` to `m·n⁴·(…)`, once the
 two per-call prices are bounded. It carries the price hypotheses, not proofs of
@@ -421,7 +421,7 @@ import Ttc.TtcProb
 import Ttc.Access
 import Ttc.Estimate
 import Ttc.Model.Theorem
-import Ttc.Model.TheoremPoly
+import Ttc.Exec.TheoremPoly
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
 import Ttc.Exec.Inscribed

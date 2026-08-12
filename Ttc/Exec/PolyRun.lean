@@ -16,7 +16,7 @@ import Ttc.Monadic.Program
 Carlo** volume estimator and the **lazy ball walk**, with the two per-call prices
 `cVol`, `cSample` left as binders.  `Ttc.ttc_volume_estimate` (`Model/Theorem.lean:93`)
 is its *unconditional* accuracy result, and `Ttc.ttc_volume_estimate_quartic`
-(`Model/TheoremPoly.lean:284`) prices those binders — but only by **hypothesis**:
+(`Exec/TheoremPoly.lean:284`) prices those binders — but only by **hypothesis**:
 nothing there says the run executes a polynomial oracle.
 
 This file is **additive**.  It builds, beside `Ttc.ttc` and changing nothing about it,
