@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.PriceList
+import Ttc.Exec.SampPriceHR
 import Ttc.Audit.ClosureCheck
 import Ttc.Witness.FullTwoCube
 
@@ -276,11 +277,10 @@ theorem one_le_canonRfac_run (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (h
   rw [canonRfac]
   exact h
 
-/-- **`heps1 : ε_draw ≤ 1`** — `ε' = ε/12 ≤ 1/12`. -/
-theorem algBlock_epsPrime_le_one (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) : (algBlock atoms φ ε δ).epsPrime ≤ 1 := by
-  rw [algBlock_epsPrime_eq atoms φ ε δ hε0 hε1 hn hφ hpos]
-  linarith
+-- **`heps1 : ε_draw ≤ 1`.**  `Ttc.algBlock_epsPrime_le_one` is proved UNCONDITIONALLY in
+-- `Ttc/Exec/SampPriceHR.lean`, from `Params.hε0`/`hε1` directly, needing none of this
+-- file's input conditions.  This file used to carry a five-hypothesis copy of it; that
+-- duplicate is gone, and the unconditional one is used at the call site below.
 
 /-! ## §4  The bound — `2⁴²·n⁴·(algorithm-derived factors)`
 
@@ -334,7 +334,7 @@ theorem ttcVolPriceCVAlg_le (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (h�
       (algBlock_deltaPrime_pos atoms φ ε δ hε0 hε1 hn hφ hpos hδ0)
       (algBlock_deltaPrime_le_half atoms φ ε δ hε0 hε1 hn hφ hpos hδ1)
       (le_refl (1 : ℝ)) (algBlock_epsPrime_pos atoms φ ε δ)
-      (algBlock_epsPrime_le_one atoms φ ε δ hε0 hε1 hn hφ hpos) hr0).trans (le_of_eq ?_)
+      (algBlock_epsPrime_le_one atoms φ ε δ) hr0).trans (le_of_eq ?_)
   have h8 : (8 : ℝ) * 1 / (algBlock atoms φ ε δ).epsPrime ^ 2
       = 8 / (algBlock atoms φ ε δ).epsPrime ^ 2 := by ring
   rw [h8]
@@ -553,7 +553,6 @@ are this file's own numeral auxiliaries — see §7's docstring; the vocabulary 
 #print axioms Ttc.cvAlgKappa_le_one
 #print axioms Ttc.algBlock_deltaPrime_le_half
 #print axioms Ttc.one_le_canonRfac_run
-#print axioms Ttc.algBlock_epsPrime_le_one
 #print axioms Ttc.ttcVolPriceCVAlg_le
 #print axioms Ttc.ttcVolPriceCVAlg_pos
 #print axioms Ttc.ttcVolPriceCVAlg_model
