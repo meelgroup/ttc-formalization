@@ -671,7 +671,8 @@ theorem exists_lovasz_quarter_instance :
   set r : ℝ := Real.sqrt ((2 : ℕ) : ℝ) with hrdef
   have hr1 : (1 : ℝ) ≤ r := by
     have h : Real.sqrt 1 ≤ Real.sqrt ((2 : ℕ) : ℝ) := Real.sqrt_le_sqrt (by rw [h2R]; norm_num)
-    rw [hrdef]; simpa using h
+    rw [hrdef, ← Real.sqrt_one]
+    exact h
   have hr0 : (0 : ℝ) < r := lt_of_lt_of_le one_pos hr1
   set q : ℝ := Real.sqrt r with hqdef
   have hq2 : q ^ 2 = r := Real.sq_sqrt hr0.le

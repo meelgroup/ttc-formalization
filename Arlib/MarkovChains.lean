@@ -67,6 +67,7 @@ import Arlib.MarkovChains.Continuous.LambdaBoundSharp
 import Arlib.MarkovChains.Continuous.KLS97Shell
 import Arlib.MarkovChains.Continuous.SpeedyExactOnShrunken
 import Arlib.MarkovChains.Continuous.WastedSteps
+import Arlib.MarkovChains.Continuous.MapSpeedyToTarget
 
 /-!
 # Arlib.MarkovChains

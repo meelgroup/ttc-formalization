@@ -659,7 +659,7 @@ theorem ellGaussianMeasure_univ_ne_top {s : ℝ} (hs : 0 < s)
 
 /-- The total `ℓ·γ`-mass is nonzero: on `c·K` the local conductance is `1` and the Gaussian
 weight is positive, and `c·K` contains `ball 0 c`. -/
-theorem ellGaussianMeasure_univ_ne_zero {K : Set (EuclideanSpace ℝ (Fin n))}
+theorem ellGaussianMeasure_univ_ne_zero_of_ball {K : Set (EuclideanSpace ℝ (Fin n))}
     (hK : MeasurableSet K) (hKc : Convex ℝ K)
     (hball : ball (0 : EuclideanSpace ℝ (Fin n)) 1 ⊆ K) {c δ s : ℝ} (hc0 : 0 < c)
     (hc1 : c < 1) (hδ : 0 < δ) (hδc : δ ≤ 1 - c) (hs : 0 < s) :
@@ -707,7 +707,7 @@ theorem half_le_speedyProb_shrunken {n : ℕ} (hn : 1 ≤ n)
   have hδc : δ ≤ 1 - (1 - 1 / (2 * (n : ℝ))) := by linarith
   have h0K : (0 : EuclideanSpace ℝ (Fin n)) ∈ K := hball (mem_ball_self one_pos)
   have hM0 : ellGaussianMeasure K δ s Set.univ ≠ 0 :=
-    ellGaussianMeasure_univ_ne_zero hK hKc hball hc0 hc1 hδ hδc hs
+    ellGaussianMeasure_univ_ne_zero_of_ball hK hKc hball hc0 hc1 hδ hδc hs
   have hMtop : ellGaussianMeasure K δ s Set.univ ≠ ⊤ :=
     ellGaussianMeasure_univ_ne_top hs K δ hKvol
   have hkey : ENNReal.ofReal (1 / 2) * ellGaussianMeasure K δ s Set.univ
@@ -776,7 +776,7 @@ theorem tvLe_speedyRejection_target_of {K : Set (EuclideanSpace ℝ (Fin n))}
   have hMtop : ellGaussianMeasure K δ s Set.univ ≠ ⊤ :=
     ellGaussianMeasure_univ_ne_top hs K δ hKvol
   have hM0 : ellGaussianMeasure K δ s Set.univ ≠ 0 :=
-    ellGaussianMeasure_univ_ne_zero hK hKc hball hc0 hc1 hδ hδc hs
+    ellGaussianMeasure_univ_ne_zero_of_ball hK hKc hball hc0 hc1 hδ hδc hs
   haveI : IsProbabilityMeasure (Arlib.condOn (ellGaussianMeasure K δ s) Set.univ) :=
     Arlib.isProbabilityMeasure_condOn _ hM0 hMtop
   -- Step 1: conditioning on the shrunken body costs a factor 8.
@@ -929,7 +929,7 @@ theorem exists_speedyRejection_witness :
     measure_ball_lt_top.ne, by norm_num, by norm_num, by norm_num,
     Arlib.TVLe.refl _, (zero_le : (0 : ℝ≥0∞) ≤ ENNReal.ofReal (1 / 32))⟩
   refine Arlib.isProbabilityMeasure_condOn _ ?_ ?_
-  · exact ellGaussianMeasure_univ_ne_zero measurableSet_ball (convex_ball _ _) subset_rfl
+  · exact ellGaussianMeasure_univ_ne_zero_of_ball measurableSet_ball (convex_ball _ _) subset_rfl
       (c := 1 / 2) (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
   · exact ellGaussianMeasure_univ_ne_top (by norm_num) _ _ measure_ball_lt_top.ne
 
@@ -989,7 +989,7 @@ section AxiomCheck
 #print axioms Arlib.MarkovChains.pow_le_acceptance_ratio
 #print axioms Arlib.MarkovChains.ball_subset_smul_set
 #print axioms Arlib.MarkovChains.ellGaussianMeasure_univ_ne_top
-#print axioms Arlib.MarkovChains.ellGaussianMeasure_univ_ne_zero
+#print axioms Arlib.MarkovChains.ellGaussianMeasure_univ_ne_zero_of_ball
 #print axioms Arlib.MarkovChains.ellGaussianMeasure_smul_set
 #print axioms Arlib.MarkovChains.half_le_speedyProb_shrunken
 #print axioms Arlib.MarkovChains.tvLe_speedyRejection_target_of
