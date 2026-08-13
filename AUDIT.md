@@ -4869,3 +4869,59 @@ additive — and must not inherit "additive bookkeeping" as an unexamined assump
   the **full-space** Gaussian tail (R-free, exponentially small), not by `vol(K)·max γ`,
   which would only trade `R ≤ 2` for `R ≤ e^{3/2}`.
 * `hLov` — §0m. Blocked on Mathlib, off the critical path.
+
+## §0o — Where items 1–3 come from in the literature, and a correction to §0n
+
+Provenance for the three items §0n left on the critical path, with `file:line` into the
+local sources, plus one correction to §0n that changes which Lean route is cheapest.
+
+### The citations
+
+| item | source | what it says |
+|---|---|---|
+| phase induction | CV `lem:accuracy`, `1409.6011/vol3_journal.tex:1419`, eqn `eqn:exact-chance` at **:1429**, consumed at **:1588** | `Pr(X_i^j = X̄_i^j, ∀ i,j) ≥ 1 − tν`, "by induction and the definition of total variation distance" |
+| `hTV` wiring | CV `lem:map-speedy-to-ball`, **:942**, adapting **KLS95 Theorem 4.16** (`BF02574061.pdf`), stated at **:940**; estimator side `lem:fn-indep` **:1398**, `lem:cov-bd` **:1405**, `lem:exp-bd` **:1412**, all from **[LV2]** = Lovász–Vempala, *Simulated annealing in convex bodies and an O\*(n⁴) volume algorithm*, JCSS 72(2):392–417, 2006 | per-phase `‖R − Q‖_tv ≤ 10ε` from `O(1)` expected samples |
+| time change | CV `lem:speedy-to-ball`, **:915**, attributed to **[CV2014]** = Cousins–Vempala, *A cubic algorithm for computing Gaussian volume*, SODA 2014, 1215–1228 | `E[ball-walk steps] ≤ Mt/λ` |
+
+### Correction to §0n: CV's composition is additive, and ours is geometric only by choice
+
+§0n asserted the recursion "**must**" be geometric. That overstates it. CV's own accounting
+is **additive** (`t·ν`), and reading :1428–1429 shows why: they never propagate an approximate
+*law* through the phases at all. They use the **coupling characterisation** of TV — with
+probability `1 − tν` the entire run coincides pointwise with an exact run — so the
+conditioning/redraw step costs nothing, because one couples the *randomness* rather than the
+distributions. Conditioning is not non-expansive on laws, but it is harmless under a coupling.
+
+So there are two routes with different prices, and §0n named only the second:
+
+1. **CV's coupling route** — additive. Blocked in this library: `Arlib/Probability/TV.lean:67`
+   states there is no coupling characterisation of TV here, and Mathlib has no maximal coupling
+   to import. Closing that is the expensive part.
+2. **Law-propagation route** — additive *through the chain* by the Markov-kernel data-processing
+   inequality, but paying a multiplicative constant at the one conditioning step per phase.
+   The constant is **8**, not the `C ≈ 4` §0n guessed: `Arlib.tvLe_condOn_half`
+   (`MapSpeedyToTarget.lean:232`) proves `TVLe (condOn μ A) (condOn ν A) (8ε)` at mass `≥ 1/2`,
+   and that is the sharp constant this library actually has.
+
+Route 2 remains polynomial for the reason §0n gave (mixing is logarithmic in accuracy, so
+`ε_phase := ε_final·8^{−m}` costs a factor `~m`). It is the cheaper route **in Lean**, and it is
+the one being taken. The geometric constant is therefore a stated engineering choice, not a
+mathematical necessity — which is the part §0n got wrong.
+
+The one lemma route 2 needs and this library lacks is named at `Arlib/Probability/TV.lean:69`:
+**no data-processing inequality for a Markov kernel.** Everything else for the induction exists.
+
+### Item 3 is a gap Cousins–Vempala also have
+
+`lem:speedy-to-ball`'s cited source [CV2014] is **not** among the local PDFs, but CV reproduce
+the proof in full at **:919–938**, and it is exactly the linearity-of-expectation argument that
+`WastedSteps.lean` already formalises: "For any point `x`, the expected number of steps until a
+proper step is made is `1/ℓ(x)` … by linearity of expectation". CV then identify that sum with
+"the number of ball-walk steps the trajectory takes" **definitionally**.
+
+So the residual gap recorded at `TrajTransfer.lean:99-105` (the path-level time change
+`ω_t = Y_{N t}`, blocked on measurability of the successive jump times) is **not** a failure to
+formalise a published proof — it is a step no source in the local set proves. Consequence for
+the capstone: what is proved is a bound on expected **step count**, and a *running-time* claim
+needs either the time change proved outright or an explicit statement that it adopts CV's
+convention. This must not be blurred in the README.
