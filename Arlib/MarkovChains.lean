@@ -72,6 +72,7 @@ import Arlib.MarkovChains.Continuous.LovaszSmoothing
 import Arlib.MarkovChains.Continuous.LovaszSmoothingSharp
 import Arlib.MarkovChains.Continuous.LambdaFromShrunken
 import Arlib.MarkovChains.Continuous.SamplerStepCount
+import Arlib.MarkovChains.Continuous.ColdPhaseRegime
 
 /-!
 # Arlib.MarkovChains
