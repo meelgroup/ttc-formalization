@@ -4925,3 +4925,85 @@ formalise a published proof — it is a step no source in the local set proves. 
 the capstone: what is proved is a bound on expected **step count**, and a *running-time* claim
 needs either the time change proved outright or an explicit statement that it adopts CV's
 convention. This must not be blurred in the README.
+
+## §0p — Items 1–3 after this round: what landed, and the one arithmetic trap
+
+Three files landed (`6e44eb1`, `05ead4f`, `e8d7d0b`). Full tree: 3746 jobs, **3989 theorems
+scanned, 0 non-standard axioms, 0 `sorry`**.
+
+### Item 1 — phase induction. Skeleton proved, not yet instantiated.
+
+`Arlib/Convexity/GaussianCooling/PhaseInduction.lean`: `TVLe.iterate` (chain steps cost
+**nothing**), `tvLe_phase_step` (the single conditioning per phase costs **8**), and
+`tvLe_phaseChain : TVLe (Qh m) (Q m) (nu * ∑_{j<m} 8^j)`, witnessed non-vacuously on `Bool`
+with `Qh 2 ≠ Q 2` and error strictly in `(0,1)`.
+
+**Correction to §0o and to `TV.lean`'s old Scope paragraph.** §0o said the kernel
+data-processing inequality was the one missing lemma. It was never missing:
+`Arlib.tvLe_step` / `Arlib.tvLe_iterate` (`Warmness.lean:293`, `:302`) have had it all along,
+resting on `lintegral_le_of_tvLe` (`:241`), and in a **strictly stronger** form than the new
+`TVLe.bind` — no `IsProbabilityMeasure`, no `ε ≠ ⊤`. `TV.lean`'s Scope paragraph asserted the
+absence and has been rewritten. New code should prefer `Arlib.tvLe_step`.
+
+What remains for item 1 is the **instantiation** of `tvLe_phaseChain` at the real chain.
+
+### Item 3 — time change. Pathwise half proved; probabilistic half blocked on Mathlib.
+
+`Arlib/MarkovChains/Continuous/TimeChange.lean` clears the obstruction named at
+`TrajTransfer.lean:105`: `measurable_jumpTime` (with `measurable_properCount`,
+`measurable_jumpChain`, and adaptedness), and
+
+    jumpChain_properCount : jumpChain ω (properCount ω t) = ω t
+
+for **every** path, no hypotheses. A proper step is defined pathwise as *the path moved*, and
+`pathMeasure_ballWalk_properStep` proves that notion coincides with the ball walk's acceptance
+event, probability exactly `ell K δ x` — that bridge is what makes the names honest. Hence
+`lintegral_jumpTime_one_pathMeasure_ballWalk : E[first jump time] = (ell x)⁻¹`.
+
+**Still open, and the reason is now exact**: the `j`-th sojourn for `j ≥ 1`, and the jump
+chain's law, both need the **strong Markov property for `Kernel.trajMeasure`**. Verified
+independently: `grep -rn StrongMarkov` over all of Mathlib v4.32 returns **nothing**, and
+`Mathlib/Probability/Kernel/IonescuTulcea/Traj.lean` has no shift lemma and no stopping-time
+lemma. So the *running-time* claim is still not closed, and must not be quoted as closed.
+
+### Item 2 — `hTV` discharged, with two honest limits
+
+`Ttc/Volume/CVSampler.lean`: `hTV_cvLaw` proves `CVAmended.lean:246`'s `hTV` body verbatim;
+`cousinsVempalaOfSpeedySampler` is the `hTV`-free constructor. Run on `interior K` and
+transported by `coolLaw_interior` — an equality, so no `MeasurableSet K` binder appears.
+
+* **Prose refuted, not a theorem.** `CVAmended.lean:318-323` and `PhaseFromTV` §5 assert that
+  `ν` is fixed before `K` is seen and therefore cannot track `coolLaw … K i` for every `K`.
+  `Measure.infinitePi` indexes over an *arbitrary* type; index by `(K, ε, p)` and project.
+  Nothing machine-checked is contradicted — the prose is.
+* **Phase-`0` warm start is a hypothesis.** `WarmSpeedy` warms phase `i+1` from phase `i`;
+  phase `0` has no predecessor and nothing warms it. The witness discharges it only by taking
+  `mu0` stationary — satisfiability, not an algorithm.
+* **The constructor's witness is degenerate at `phases = 0`**, exactly as the pre-existing
+  amended witness at `CVAmended.lean:310` already is. Inherited, not a regression; `hbudget`
+  is the binder that blocks a real schedule (`geomSchedule_total_cooling_lt` forces total
+  cooling `< 1.1`).
+
+### The arithmetic trap, and the fix that already exists but is not wired
+
+`hTV_cvLaw` carries `hRadσ : Rad K ε p ≤ 2√(σsq K ε p j)·√n` at **every** `j`. Since `σsq`
+increases, it binds at `j = 0`. A non-circular Gaussian cooling must start cold,
+`σ₀² ≲ 1/n` (`ColdStart.lean` — otherwise `chain 0 ≈ vol K`, the unknown). Together these
+force **`R ≤ 2`**, i.e. `K ⊆ 2·Bₙ`: a sandwiching ratio of at most 2, which is not the general
+problem.
+
+This is **not** a limitation of Cousins–Vempala, and not even a limitation of this repository —
+it is an artefact of `CVSampler` reaching for the *untruncated*
+`tvLe_speedyRejection_coolLaw_of_mixing`. Both pieces needed to remove it are already proved
+and are simply not chained:
+
+* `ColdTruncation.mixesWithin_lazy_speedyMetropolisGaussian_cold_truncated` — mixing with **no
+  radius binder on `K` at all**, at a σ-free `104857600·n²` step count, on
+  `K ∩ closedBall 0 (2σ√n)`;
+* `ColdTruncation.tvLe_coolLaw_inter_closedBall` — the TV price of that truncation, back to
+  `coolLaw … K i`.
+
+**The next task is therefore well-defined**: a truncated analogue of
+`tvLe_speedyRejection_coolLaw_of_mixing` chaining those two through the rejection routine,
+then re-deriving `hTV_cvLaw` without `hRadσ`. That, not the phase induction, is now the
+shortest path to a non-circular sampler.
