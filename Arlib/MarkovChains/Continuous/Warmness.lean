@@ -27,6 +27,24 @@ here.
    only ever checks at time zero — Cousins–Vempala, §4.2 (`vol3_journal.tex:747–826`),
    where `M(Q_i, Q_{i+1}) ≤ √e` is verified once per phase and then used at every step of
    the ball walk inside that phase.
+
+   ⚠ **`√e` is CV's constant at CV's schedule `σ²ᵢ₊₁ = σ²ᵢ(1 + 1/n)`, and this repository's
+   schedule binder is twice that rate** (`hcc : cc ≤ 1 + 2/n`, binder #33 of
+   `Ttc.ttc_runtime_mn4`), which supports `M ≤ e`, not `√e`.  Both are proved:
+   `Arlib.GaussianCooling.isWarm_coolLaw_succ_sqrt_exp` gives `√e` at `1 + 1/n`, and
+   `isWarm_coolLaw_succ_exp` gives `e` at `1 + 2/n`
+   (`Arlib/Convexity/GaussianCooling/WarmChain.lean`).  Nothing downstream depends on the
+   value — `hMc : 1 ≤ Mcool` is a free binder — but do not quote `√e` for this repo's
+   schedule.
+
+   ⚠ **CV's proof of that lemma has an arithmetic slip at `vol3_journal.tex:787`**, which
+   computes the partition-function ratio as `(1/(1 − 1/n))^{n/2} ≤ √e`.  That inequality is
+   false for every `n ≥ 2` — the quantity decreases to `√e` from *above* (`2` at `n = 2`,
+   `1.6529` at `n = 100`, against `√e = 1.64872`).  The hypothesis is
+   `σ²ᵢ₊₁ = σ²ᵢ(1 + 1/n)`, so the ratio is `1 + 1/n` and the correct expression is
+   `(1 + 1/n)^{n/2} ≤ √e`, which *is* true (it increases to `√e` from below).  **The lemma
+   is correct; only the displayed step is wrong.**  `isWarm_coolLaw_succ_sqrt_exp` proves
+   the lemma as stated, via the correct conversion.
 3. **Total variation never increases** (`tvLe_step`, `tvLe_iterate`, and the corollary
    `tvLe_iterate_of_invariant_mono`).  Running the chain cannot move the law *away* from
    stationarity: the map `μ ↦ step P μ` is a contraction for total variation.  This is the
@@ -151,7 +169,13 @@ content of this section is that the *same* `M` works at every time: a chain star
 "`μ` is `M`-warm" need only be checked at time zero, which is what makes the warm-start
 bookkeeping of Cousins–Vempala §4.2 (`vol3_journal.tex:747–826`) a finite amount of work:
 `M(Q_i, Q_{i+1}) ≤ √e` is established once per cooling phase and then holds throughout the
-ball walk of that phase. -/
+ball walk of that phase.
+
+⚠ `√e` is CV's constant at CV's rate `1 + 1/n`; this repository's schedule binder is
+`cc ≤ 1 + 2/n`, which supports `e`.  Both are now proved —
+`Arlib.GaussianCooling.isWarm_coolLaw_succ_sqrt_exp` and `isWarm_coolLaw_succ_exp`
+(`Arlib/Convexity/GaussianCooling/WarmChain.lean`) — and the module docstring above records
+an arithmetic slip in CV's own proof of the `√e` lemma. -/
 
 /-- Warmness is exactly domination by the scaled measure, `μ ≤ M • pi`.  This is the form
 in which monotonicity of `step` can be applied to it. -/

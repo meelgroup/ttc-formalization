@@ -12,6 +12,12 @@ in a few minutes without reading a single hard proof.
 the name. Every name on this page was checked to exist in the compiled
 environment; §5 has the probe that re-checks them all in one pass.
 
+> **Two deliberate exceptions**, both in §0a–§0d, both because there is no
+> declaration name to point at: **§0d**, whose subject is stale *docstring prose*,
+> and the tables in **§0a/§0b**, which anchor freshly landed declarations whose
+> names are not yet load-bearing anywhere else. Expect those numbers to drift and
+> re-`grep` the name, which is always given alongside.
+
 The vocabulary, the pseudocode and the problem statement are in
 [`Ttc/Model/`](Ttc/Model/) — **four files** (the audit surface also includes
 [`Ttc/Probability/`](Ttc/Probability/)'s four short files, since the
@@ -139,18 +145,39 @@ build over the new path certifies the *reduction*, not the algorithm.
 **What is genuinely assumed, and who owns it.** In descending order of depth:
 
 * **`hLS` / `hLSs`** — Lovász–Simonovits 1993 Corollary 1.5 (conductance → TV).
-  Binders of `Arlib/MarkovChains/Continuous/HitAndRunMixing.lean`. **This is the
-  one binder owned by nobody**: genuinely absent from this repository, needing
-  Cheeger plus spectral-gap→TV, as `MixingFromConductance.lean` already explains at
-  length. Everything on the sampler side rests on it.
+  Binders of `Arlib/MarkovChains/Continuous/HitAndRunMixing.lean`.
+  ~~**This is the one binder owned by nobody.**~~ **Corrected 2026-08-12, and read
+  §0c before quoting this bullet.** `hLS` is **discharged** for a reversible kernel
+  with non-negative spectrum (`Arlib.MarkovChains.ls_of_hasNonnegSpectrum`), and in
+  particular for any **lazy** chain from reversibility alone
+  (`Arlib.MarkovChains.ls_lazy`), both in
+  `Arlib/MarkovChains/Continuous/ConductanceToTV.lean`, from Cheeger's hard
+  direction (`Cheeger.lean`) and `L2Mixing.lean` — both of which predate the claim.
+  It is **not** discharged for the *plain* hit-and-run kernel, and cannot be: `hLS`
+  is outright **false** for a general reversible chain (the `Bool` swap-kernel
+  counterexample), so that residue is a **paper error** — *Hit-and-Run from a
+  Corner* §5 applies Cor. 1.5 to a non-lazy chain — and not a missing proof. The
+  lazy repair costs a factor `2` in the conductance and `4` in the deadline.
+  `hLSs`, the `s`-conductance form, is **provably unreachable** by this L2 route.
 * **`hIso`** — Lovász–Vempala Theorem 2.1. **Known FALSE as stated**; see below.
 * **`hloc`** — the Localization Lemma at the shape `thm:iso` needs.
   `Arlib.hloc_of_localization` reduces it to the localization stack; residuals are
-  that stack's (C) continuity requirement and (F) `v ≠ 0`.
+  that stack's (C) continuity requirement and (F) `v ≠ 0`. **Since 2026-08-12 this
+  is no longer on the critical path to `thm:iso`**: `Convexity/IsoOpenClosed.lean`
+  and `Convexity/IsoIndicator.lean` prove `thm:iso` with **no localization binder at
+  all**, by routing around the stack rather than through it. `hloc` remains open,
+  and (C) remains an obstruction (§0b); it is just no longer what blocks the
+  isoperimetric inequality. §0e.
 * **`hsampler`** of `Ttc/Volume/CVEstimator.lean` — the CV phase ratios. Note the
   unclosed seam: `HitAndRunTheorem11Input.at_steps` yields `TVLe` to
   `Arlib.uniformOn`, **not** to `coolLaw`; uniform→Gaussian is CV §4's
-  speedy/Metropolis machinery and is not attempted.
+  speedy/Metropolis machinery ~~and is not attempted~~. **Corrected 2026-08-12: it
+  is attempted, and largely done.** `Arlib.GaussianCooling.coolLaw_eq_uniformOn_gaussianWeight`
+  (`GaussianCooling/PhaseMeanRoute.lean:216`) proves `coolLaw` **is** the Gaussian-weighted
+  uniform law unconditionally, and `MetropolisMixingUncond.lean` gives a mixing bound
+  to exactly that law with no isoperimetry hypothesis. What stops it is not the
+  machinery but the local-conductance floor those theorems carry, which §0e shows is
+  contradictory on the cube for `n ≥ 3`.
 
 **Non-vacuity — where it is weaker than you would like (check 4).** Three of the
 new bundles have witnesses that are *inhabited but forced*, and each says so:
@@ -173,12 +200,29 @@ new bundles have witnesses that are *inhabited but forced*, and each says so:
 * `Ttc/Volume/CVEstimator.lean` needs `Θ(n·L⁴·log(1/p)/κ³)` samples — **worse than
   the paper's**. It establishes *accuracy*; it must **never** be quoted as
   establishing `O*(n³)`.
-* The `(1d-2)` discharge holds at `1/(2√3) ≈ 0.289`, not CV's `ln 2 ≈ 0.693`, so
-  the separation threshold grows by `2√3·ln 2 ≈ 2.401`.
-* `Arlib/MarkovChains/Continuous/StarPolar.lean` proves KLS 3.5 at the paper's
-  constant `1/(e+1)` but at separation `δ/n`, **not** `δ/√n`, giving conductance
-  `Ω(δ/(σn))` against `Ω(δ/(σ√n))` — a `√n` loss, and not a
-  constant-sharpening issue.
+* ~~The `(1d-2)` discharge holds at `1/(2√3) ≈ 0.289`, not CV's `ln 2 ≈ 0.693`, so
+  the separation threshold grows by `2√3·ln 2 ≈ 2.401`.~~ **Closed 2026-08-12 — see
+  §0e.** `Arlib.oneDim_isoperimetry_gaussianFactor_sharp`
+  (`Arlib/Convexity/OneDimSharp.lean:518`) proves `(1d-2)` at `√(2/π)/σ`, and
+  `Arlib.log_two_le_sqrt_two_div_pi` (`:554`) is the machine-checked
+  `ln 2 ≤ √(2/π)`, so the whole downstream stack runs at the paper's own `ln 2` and
+  the `2.401` threshold penalty is gone.
+* ~~`StarPolar.lean` proves KLS 3.5 at separation `δ/n`, **not** `δ/√n`, a `√n`
+  loss.~~ **Superseded 2026-08-12 — the `√n` is recovered, and it is still not `n⁴`.**
+  `Arlib.MarkovChains.kls_lemma35_at_sep_sqrt_dim` (`LensMin.lean`) proves the
+  **`min` form** of KLS95 Lemma 3.5 at `δ/√n` at constant `1/40`, and
+  `kls_lemma35_at_sep_sqrt_dim_sharp` (`OverlapSqrt.lean`) sharpens it to `1/8`, and
+  `kls_lemma35_at_sep_sqrt_dim_quarter` (`LensSharp.lean`) to `1/4`.
+  **The `√n` is real** — at a fixed kernel step it is exactly a factor `√n` in `Φ`
+  (`speedy_sqrt_gain`, `DeltaCap.lean`) — **but `n⁴` still does not follow.** The two
+  blockers this bullet used to name have both moved since it was written: a
+  **Metropolis** overlap lemma at `δ/√n` now exists
+  (`metropolisGaussian_overlap_sqrt_of_convex`, `MetropolisOverlapSqrt.lean`) and
+  `hiso` is **discharged** for the density that lemma's conductance corollary uses
+  (`OneDimSharp.lean`). What blocks `n⁴` now is a *different* fact, and it is a
+  negative: the local-conductance floor those theorems need is **unsatisfiable on
+  the cube** (`EllFloor.lean`). Read §0b's three layers and then §0e; do not stop at
+  the first.
 * The hit-and-run step count is polynomial in `n`, but `R²/r²` is unbounded for a
   general body; well-roundedness is *assumed* via binders, not achieved.
 
@@ -195,7 +239,1456 @@ the *unrepaired* `hIso` is **vacuous** at `K = [0,4]²` and generically for `n �
 the "`hIso` needs Borsuk–Ulam" claim in `HitAndRunConductance.lean`, and the
 "Mathlib does not support polar decomposition" claim in `SpeedyOverlap.lean`
 (Mathlib has it, *and this repo already wrapped it*). Treat confident-sounding
-docstrings in this development as claims to re-check, not as findings.
+docstrings in this development as claims to re-check, not as findings. **§0d lists
+the docstrings currently known to be stale and not yet corrected** — read it before
+you believe any "this is not proved anywhere" sentence you meet in a `.lean` file.
+
+---
+
+## 0a. The goal-state capstone `Ttc.ttc_runtime_mn4` (2026-08-12)
+
+> ## ⚠ THIS SECTION DOES **NOT** SAY THAT `TTC` RUNS IN `O(m·n⁴)` ⚠
+>
+> It says that a **charged-cost** statement of that shape now exists, over one run
+> of a **different program** from the headline's, under **38 named hypotheses**, of
+> which **five have no route to a proof anywhere in this repository**. Do not quote
+> the exponent without the sentence that follows it.
+
+### What the theorem is
+
+[`Ttc.ttc_runtime_mn4`](Ttc/Exec/RuntimeMN4.lean) (`Ttc/Exec/RuntimeMN4.lean:409`)
+is one theorem about **one run** of `Ttc.ttcPoly` — `alg:ttc` with the
+Cousins–Vempala volume estimator swapped in for hit-and-miss Monte Carlo and the
+hit-and-run law swapped in for the lazy ball walk — with two conjuncts over the
+identical measure:
+
+* **accuracy**, `1 − δ ≤ Pr[ r.1 ∈ (1 ± ε)·Vol(F) ]`, and
+* **charged cost**, `All[ (r.2 : ℝ) ≤ m · n⁴ · (explicit factors) ]`,
+
+with `Ttc.PolyComplexity.threshFactor` expanded to closed arithmetic in the bound
+(`Ttc.ttc_runtime_mn4_threshFactor` proves the expansion is the definition, by
+`rfl`), so no project `def` stands between the reader and the number.
+
+This is **not** a new mathematical result. It is
+`Ttc.ttcPoly_volume_estimate_cv` (`Exec/PolyAccuracy.lean:751`) renamed to a stable
+goal-state name, with four accounting-error binders discharged — `hrfac`, `hep0`,
+`hep1`, `heps1`, all four theorems of this repository at hypotheses the statement
+already carried. `Ttc.ttc_runtime_mn4_tol_le_one` (`RuntimeMN4.lean:358`) is the
+`heps1` discharge.
+
+**One thing did change, and it is the substantive edit of 2026-08-12 (later in the
+day).** The capstone no longer runs on `Ttc.cvVolAlg`. `Ttc.ttcPoly_volume_estimate_cv`
+runs `Ttc.VolumeAlgorithm.cousinsVempalaOfRuns`, whose `hphase_mean` is an **equation**
+`∫ g dν = chain(i+1)/chain(i)`; `Ttc.ttc_runtime_mn4` runs
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean`
+(`Ttc/Volume/CVInstantiate.lean:458`, new), whose `hphase_mean` is the **interval**
+`∫ g dν ∈ (1 ± ε/(2(2+ε)m))·(chain(i+1)/chain(i))`. The two constructors produce the
+same `Ω`, `μ` and `est` and establish the same `VolumeAlgorithm` guarantee, so both
+conjuncts are unchanged; only the hypothesis is weaker. **The residual-hypothesis count
+is unchanged at 38** — nothing was discharged. What changed is that one of the 38 is now
+a statement something could in principle prove; see "the five with no route" below.
+
+The one binder that had to move with it is `hphase_var`, now stated at
+`Arlib.GaussianCooling.varBudget (ε/2)` rather than `varBudget ε`. `varBudget` is
+monotone, so this is a **strictly stronger** hypothesis than the one it replaces. That
+it is *forced* is a docstring argument (`CVInstantiate.lean:441-448`) resting on a real
+lemma — `Arlib.GaussianCooling.exp_varBudget` (`GaussianCooling/Schedule.lean:186`),
+`exp (varBudget κ) − 1 = κ²/5` — and on the accuracy split
+`cousinsVempalaOfApproxMean` performs; **it is not itself a theorem**. There is no
+declaration asserting "no split keeps the full `varBudget ε`".
+
+### The binder count, printed by the build rather than asserted by this page
+
+A `#binderProfile` elaborator at the foot of `RuntimeMN4.lean` walks the compiled
+`ConstantInfo.type` and prints the counts at build time:
+
+```
+Ttc.ttc_runtime_mn4              68 raw ∀-binders = 64 explicit + 2 implicit + 2 instance
+Ttc.ttcPoly_volume_estimate_cv   72 raw ∀-binders = 68 explicit + 2 implicit + 2 instance
+```
+
+Of the 64 explicit binders of `Ttc.ttc_runtime_mn4`, **26 are data** a caller
+supplies and **38 are residual hypotheses**. `72` is the *raw* binder count of the
+predecessor, not a hypothesis count.
+
+```
+raw ∀-binders                     68
+  = explicit                      64
+      of which data               26
+      of which HYPOTHESES         38   ← the number to watch
+  + implicit ({A}, {n})            2
+  + instance                       2   (1 data, 1 trivial hypothesis)
+```
+
+### The 38, by group
+
+The full table — every binder by name, its statement, and what discharges it — is
+the module docstring's ledger in
+[`Ttc/Exec/RuntimeMN4.lean`](Ttc/Exec/RuntimeMN4.lean), §"The ledger". It is the
+authority; this is the summary a human needs to decide whether to read it.
+
+| group | count | what it is |
+| --- | --- | --- |
+| **A** — FPRAS parameter range and input conditions | 7 | `hε0 hε1 hδ0 hδ1 hn hφ hpos`. Exactly what `Ttc.ttc_volume_estimate` also carries; conditions on the *user's* input, not debts. They will never go away |
+| **B** — Lovász–Vempala Theorem 1.1 | 1 | `H : Ttc.HitAndRunTheorem11Input`. **Inhabited nowhere.** |
+| **C** — Cousins–Vempala's residual sampler hypotheses | 5 | `hσ hg hgb` are conditions on caller-chosen schedule/score data; `hphase_mean` (now the **interval** form) and `hphase_var` (now at `varBudget (ε/2)`) are where the development actually stops |
+| **D** — the hit-and-run warm start | 9 | `hrin hin hRout hout hsigma hM hSm` are caller-supplied start data; `hS` and `hdom` are Theorem 1.1's exceptional-start and `M`-warmness hypotheses |
+| **E** — the sampler-side cost regime | 6 | `hR1 hgam0 hgamR hMw1` are regime conditions on free binders; `hMwB` is the warm-start bound; `hepn` is `1/2ⁿ ≤ ε'` |
+| **F** — the volume-side (Gaussian cooling) cost regime | 10 | `hL hkap0 hkap1 hcc1 hcc hp0 hp1 hMc hed0 hed1`, all conditions on free binders of the statement. They say which regime the quoted `n⁴` is the cost in |
+
+`7 + 1 + 5 + 9 + 6 + 10 = 38`.
+
+### The five with no route to a proof — the honest core of the debt
+
+~~six~~ **five, since the `hphase_mean` rewire of 2026-08-12.** The count of
+*residual hypotheses* did not move; what moved is which of them are routeless.
+
+| binder | what it assumes | where the repository stops |
+| --- | --- | --- |
+| `H : Ttc.HitAndRunTheorem11Input` | Lovász–Vempala 2005 Thm 1.1, hit-and-run mixing from a warm start | `Ttc/Sampler/HitAndRunTheorem11.lean`, a structure with one field `mixing`, **inhabited nowhere**. Its own proof would rest on LS93 Cor. 1.5 — see §0c |
+| `hphase_var` | the second-moment bound for the phase score, at `varBudget (ε/2)` | `Ttc/Volume/CVInstantiate.lean:476`. A *transport* problem: CV §5.1's corresponding bound for the **ideal** estimator is proved unconditionally (`Arlib.GaussianCooling.fixed_var_bound_ratio_indicator`) |
+| `hS` | the start gives the exceptional set little mass | Thm 1.1's exceptional-start hypothesis, in measure form |
+| `hdom` | off the exceptional set the start is `M`-warm | same source |
+| `hMwB` | `Mwarm ≤ (2R)ⁿ` — the warm-start bound | `Ttc/Exec/SampPriceHR.lean`: **nothing in this repository constructs a warm start at any `M`** |
+
+**`hphase_mean` left this table, and it is worth reading why, because the reason is
+not "it was proved".** In the *equation* form `Ttc.cvVolAlg` still carries
+(`∫ g dν = chain(i+1)/chain(i)`) it was routeless **in principle**:
+`Arlib.GaussianCooling.exists_tvLe_coolLaw_integral_phaseScore_ne`
+(`Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:518`) exhibits, for every
+`ε ∈ (0,1]`, a probability measure `ν` at total variation `≤ ε` from `coolLaw` whose
+phase-score integral is exactly `(1−ε)·(chain(i+1)/chain(i))` — so no
+total-variation bound whatsoever, however strong, implies the equality. (Read that
+theorem for what it is: a **counterexample to the implication "TV ⇒ the equation"**,
+not a refutation of the equation, which holds exactly at `coolLaw` itself —
+`Arlib.GaussianCooling.integral_phaseScore_coolLaw` — and at a degenerate kernel,
+`exists_markovKernel_mixesWithin_coolLaw_exact`, at TV exactly `0` in one step.)
+
+In the **interval** form the capstone now carries, it is routeless only *in
+practice*: `Ttc.CV.sampledPhase_mean_mem_relErr` derives exactly that interval from
+a TV guarantee `hTV` on a sampler for `Arlib.GaussianCooling.coolLaw`, and
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` is the constructor that walks it.
+What is missing is the sampler — a proved `hTV` at the accuracy the slack conditions
+need. **That is the same open problem as row 1, not a separate impossibility.**
+
+Everything else among the 38 is an input condition, a condition on caller-chosen
+schedule/start data, a regime condition on a free binder of the statement, or —
+in the single case of `hepn` — scheduled, with a named landing lemma.
+
+### Five reasons this is not an `O(m·n⁴)` runtime claim
+
+Reproduced from `RuntimeMN4.lean`'s own boxed warning, which is the authority.
+Each is alone fatal to the unconditional reading.
+
+1. **The charged cost is an undercount.** `Ttc.ttcPolyCost` charges **one unit per
+   oracle call** and nothing else. It prices at **zero** the arithmetic inside a
+   call, the sampler's rejection rounds, and `alg:ttc` lines 32–42's `while` loops.
+   `r.2` is a call count with unit prices attached, not a running time.
+2. **This is `Ttc.ttcPoly`, not `Ttc.ttc`.** `Model/Theorem.lean`'s headline runs
+   `Ttc.algOracles`, and the prices *that* run can be shown to pay
+   (`Ttc.ttcVolPrice`, `Ttc.ttcSampPrice`) are exponential in `n`. Swapping the
+   oracles is a modelling choice — see the box at the head of `Exec/PricedHeadline.lean`.
+3. **The accuracy conjunct is conditional** on all 38, most sharply on the five above.
+4. **The warm start is assumed** (`hMw1`/`hMwB`).
+5. **The `n⁴` needs a temperature-scale body (`R = O(σ)`).** In the Cousins–Vempala
+   regime `R ≍ σ√n` the conductance floor forces a smaller step, the per-draw cost
+   becomes `n⁴` and the total `n⁵`; and `Arlib.MarkovChains.exists_halfspace_max_lt`
+   proves the obvious route to recovering the missing `√n` is **false**, not open.
+
+### Non-vacuity (check 4) — reported, not papered over
+
+* `Ttc.isProbabilityMeasure_ttcPoly` (`Exec/PolyRun.lean`) is the **measure-level**
+  check: a `Measure.bind` of a non-measurable family is the zero measure, at which
+  every `All[…]` holds vacuously and every `Pr[…]` is `0`. That instance rules it
+  out at every `V`, hence at `Ttc.cvVolAlg`.
+* `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanWitness`
+  (`Volume/CVInstantiate.lean:634`) shows the Cousins–Vempala hypothesis bundle
+  **this theorem actually quantifies over** (rows 9–13) is jointly satisfiable. It
+  is degenerate on purpose (zero phases), so it witnesses satisfiability and nothing
+  else. It is *not* `Ttc.Box.exists_cvVolAlg_witness` (`Exec/CVBackend.lean:774`),
+  which witnesses `Ttc.cvVolAlg`'s bundle — the one carrying the **equation** form
+  of row 12, no longer the bundle the capstone runs on.
+* **There is no full witness for `Ttc.ttc_runtime_mn4`, and there must not be a
+  faked one.** One would have to inhabit `Ttc.HitAndRunTheorem11Input`, which is
+  exactly the assumed content of LV Theorem 1.1. The witness on the
+  *unconditional* path is `Ttc.ttc_volume_estimate_poly_two_cube`
+  (`Exec/TheoremPoly.lean`), at exponential prices.
+
+### Semantic `def`s (check 6)
+
+`RuntimeMN4.lean` introduces **no `def` into the mathematical development**. It
+contains exactly one `def` — `private partial def Ttc.Audit.binderProfileAux`, the
+meta-level `Lean.Expr → Nat × Nat × Nat` binder counter behind `#binderProfile`. It
+is not `Prop`-valued, asserts nothing, and appears in no statement.
+
+### `Ttc.SamplerCost.samplePrice_le_quartic_eps` — the `hepn` binder's landing lemma
+
+`Ttc/Exec/SampPriceEps.lean:183` proves the per-sample price bound **without** the
+regime hypothesis `1/2ⁿ ≤ ε'`, by declining to absorb `log(1/ε')` into `n·log(2R)`:
+
+```
+samplePrice n γ R M ε' rfac  ≤  2⁶² · n³ · rfac · (R²/γ²) · (n·log(2R) + log(1/ε'))
+```
+
+**This is a per-consumer choice, not an unconditional elimination.** `samplePrice`
+grows without bound as `ε' → 0`, so no `ε'`-free right-hand side can drop the
+hypothesis; what the lemma does is move the dependence from a *hypothesis* into a
+visible *term*. `Ttc.SamplerCost.samplePrice_le_quartic_of_eps`
+(`SampPriceEps.lean:261`) recovers the old `ε'`-free shape from it, at `2⁶³` rather
+than `2⁶²` — the factor `2` is exactly the `log(1/ε') ≤ n·log(2R)` step. A consumer
+that prints `2⁶²` literally must print `2⁶³` instead.
+
+**The capstone does not yet use it.** `Ttc.ttc_runtime_mn4` still carries `hepn`,
+and `RuntimeMN4.lean` does not import `SampPriceEps.lean`. The ledger therefore
+stays at **38**; the module docstring's §"The `hepn` swap" spells out the three-step
+change that would take it to 37.
+
+---
+
+## 0b. The `δ/√n` results in `Arlib` — proved, and what still stands between them and a runtime
+
+> ## ⚠ THE `√n` IS REAL — AND `n⁴` STILL DOES NOT FOLLOW ⚠
+>
+> KLS95 Lemma 3.5 and Cousins–Vempala's `cor:overlap` are now proved at separation
+> `δ/√n` instead of `δ/n`, and at a **fixed kernel step** the conductance gain is
+> exactly `√n`. What still blocks `n⁴` is **not** a step-size cap.
+>
+> ⚠ **This section was written before the isoperimetry work of later the same day,
+> and two of its statements are superseded. Read §0e with it.** The "named missing
+> piece" it identifies — a Metropolis overlap lemma at `δ/√n` — has landed
+> (`MetropolisOverlapSqrt.lean`), and `hiso` is no longer a hypothesis of that
+> lemma's conductance corollary (`OneDimSharp.lean`). What replaced them is a
+> **negative**: the local-conductance floor those theorems need is unsatisfiable on
+> the cube (`EllFloor.lean`). Everything below about the `√n` itself, and about
+> `hcomp` for the *speedy* walk, still stands.
+
+### What is proved
+
+*Line numbers in this table drifted after it was written; the declaration names are
+the authority — `grep -n` for them. Where a re-checked number is known it is given.*
+
+| declaration | statement | hypotheses beyond the paper's |
+| --- | --- | --- |
+| `Arlib.MarkovChains.kls_lemma35_at_sep_sqrt_dim` (`Continuous/LensMin.lean:423`) | **KLS95 Lemma 3.5, `min` form, at separation `δ/√n`**, constant `1/40`: `vol(K ∩ B(u,δ) ∩ B(v,δ)) ≥ (1/40)·min{ℓ(u),ℓ(v)}·vol(δBₙ)` | **none.** `2 ≤ n`, `Convex ℝ K`, `u, v ∈ K`, `0 < δ`, `‖u−v‖ ≤ δ/√n`. No measurability of `K` (convex sets are null-measurable), no floor on `ℓ`, no `d_ℓ` comparability |
+| `Arlib.MarkovChains.kls_lemma35_at_sep_sqrt_dim_sharp` (`Continuous/OverlapSqrt.lean:364`) | the same at constant **`1/8`** | none |
+| `Arlib.MarkovChains.kls_lemma35_at_sep_sqrt_dim_quarter` (`Continuous/LensSharp.lean:569`) | the same at constant **`1/4`**, identical binders — **this is the sharpest of the three, and the one to quote** | none |
+| `Arlib.MarkovChains.overlap_speedyWalk_sqrt_of_ell_comparable` (`Continuous/OverlapSqrt.lean:527`) | **`cor:overlap` at `δ/√n`**, constant **12**: `1 ≤ 12·(P_u(Tᶜ) + P_v(T))` | **one, and it is load-bearing** — `ℓ`-comparability, `d_ℓ(u,v) < 1/3`, written division-free. It is Cousins–Vempala's own hypothesis, but it is a hypothesis. The variant that actually discharges `hoverlap`, `…_of_ell_comparable_global` (`:556`), takes comparability **globally over `K`** and weakens the constant to `20` |
+| `Arlib.MarkovChains.conductance_speedyGaussian_ge_of_ell_comparable` (`Continuous/OverlapSqrt.lean:669`) | `thm:speedyconductance` with `hoverlap` discharged: `Φ ≥ δ·log2/(640·σ·√n)` for `δ ≤ σ/(8√n)` | `hcomp` as above, **and `hiso`** — and §0e's discharge does **not** reach this one: it is proved for the Gaussian-times-log-concave density, whereas the speedy walk's stationary law is `1_K·ℓ` |
+| `Arlib.MarkovChains.speedy_sqrt_gain` (`Continuous/DeltaCap.lean:299`) | at **one and the same kernel** `speedyWalk K δ`, the `δ/√n` bound is exactly `√n` times the `δ/n` one | none — pure arithmetic on the two conclusions |
+| `Arlib.MarkovChains.metropolis_hfloor_forces_step_cap` (`Continuous/DeltaCap.lean:132`) | the Metropolis acceptance floor `hfloor` **caps** `δ ≤ (ln 20)·σ/√n ≈ 3σ/√n` once `σ√n ≤ R` | only hypotheses `conductance_metropolisGaussian_sharp_ge` already makes, plus `σ√n ≤ R` |
+| `Arlib.MarkovChains.sup_bounds_agree_at_own_caps` (`Continuous/DeltaCap.lean:357`) | both bounds, each at **its own** maximal `δ`, equal `ln2/(5120·n)` | none — and see below for why this comparison is **not** the operative one |
+
+**Do not write "the step is *forced* to `Θ(σ/√n)`" without the qualifier.** The
+proved statement is one-sided: `metropolis_hfloor_forces_step_cap` is an **upper**
+bound `δ ≤ (ln 20)·σ/√n`, and it carries the extra hypothesis `σ√n ≤ R`, which the
+sharp Metropolis conductance theorem does not make. Nothing in `DeltaCap.lean`
+concludes `… ≤ δ`. The companion `acceptance_factor_ge_of_step_le` (`:227`) runs
+under the *opposite* radius hypothesis `R ≤ σ√n` and says only that at
+`δ ≤ σ/(8√n)` the acceptance factor is `≥ e^{−1/4}`. The honest sentence is: the
+floor caps the step at `≈ 3σ/√n`, and `σ/(8√n)` is feasible — so `Θ(σ/√n)` is the
+operative *scale*, bounded above by proof and shown feasible by proof. The two ends
+are a factor `≈ 24` apart and `hδσ` is **not** implied by the floor.
+
+**The mechanism, in one sentence**, since it is what closed a gap the repository had
+documented as needing "a genuinely different argument": pair a point behind `u` with a
+point ahead of `v`; the sign conditions cancel the `t`-linear terms, so the midpoint's
+excess over `δ` is **quadratic** (`t²/(4δ)`, i.e. `δ/(4n)` at `t = δ/√n`, not the
+`δ/(2√n)` a bare triangle inequality gives), which a `(1 − 1/n)` homothety absorbs at
+constant cost; then Brunn–Minkowski. `Arlib.MarkovChains.midpoint_mem_ball_inter`
+(`LensMin.lean:109`) is the crux.
+
+### What the `√n` does and does not buy — three layers, and do not stop at the first
+
+`Arlib/MarkovChains/Continuous/DeltaCap.lean` exists to settle exactly this question,
+and its answer has three layers. Reading only the first gets it backwards.
+
+**Layer 1 — the two bounds, each at its own cap, agree.** Compare the two conductance
+theorems as *statements*:
+
+| theorem | cap on `δ` | conductance bound | at its own maximal `δ` |
+| --- | --- | --- | --- |
+| `conductance_speedyWalk_ge_of_convex` (`Continuous/StarPolar.lean:626`) | `δ ≤ σ/8` | `δ·log2/(640·σ·n)` | `log2/(5120·n)` |
+| `conductance_speedyGaussian_ge_of_ell_comparable` (`Continuous/OverlapSqrt.lean:669`) | `δ ≤ σ/(8√n)` | `δ·log2/(640·σ·√n)` | `log2/(5120·n)` |
+
+They are **identically equal**, and this is a theorem, not this page's arithmetic:
+`Arlib.MarkovChains.sup_bounds_agree_at_own_caps` (`DeltaCap.lean:357`). It makes the
+`√n` look illusory.
+
+**Layer 2 — that comparison is an artifact, and the `√n` is real.** The `δ` of
+`conductance_speedyGaussian_ge` (`SpeedyConductanceSharp.lean:320`) is an
+**isoperimetric scale**, not a step size: that theorem takes the kernel `P` as a
+parameter independent of its own `δ`. The two rows above are **one theorem at two
+parameterizations** of it — `StarPolar.lean` instantiates at `δ_abs := δ/√n` with
+kernel `speedyWalk K δ` (`speedyGaussian_reparam_cap`, `speedyGaussian_reparam_conclusion`),
+`OverlapSqrt.lean` at `δ_abs := δ` with the *same* kernel. **Neither shrank any cap**;
+both inherited `hδσ` from the abstract theorem. What differs is only which overlap
+lemma each can supply. So:
+
+* At **one and the same kernel step** `speedyWalk K δ`, the second bound is exactly
+  `√n` times the first — `Arlib.MarkovChains.speedy_sqrt_gain` (`DeltaCap.lean:299`).
+* The operative step is set by the **Metropolis acceptance floor**, not by these caps.
+  `metropolis_hfloor_forces_step_cap` (`DeltaCap.lean:132`) shows `hfloor` forces
+  `δ ≤ (ln 20)·σ/√n ≈ 3σ/√n` once `σ√n ≤ R`; at the nominal `δ = σ/8` the acceptance
+  factor is `e^{−√n/8}` (`acceptance_floor_at_step_sigma_div_eight`) — exponentially
+  small in `n`, and no `θ ≤ 1` compensates — while at `δ ≤ σ/(8√n)` it is `≥ e^{−1/4}`
+  (`acceptance_factor_ge_of_step_le`). So `σ/√n` is the right scale.
+* Evaluated at that operative step `δ = σ/(8√n)`: `Φ ≥ log2/(5120·n^{3/2})` on the old
+  route (`speedy_old_bound_at_operative_step`) against `Φ ≥ log2/(5120·n)` on the new
+  (`speedy_new_bound_at_operative_step`) — **a genuine factor `√n` in `Φ`, hence a
+  factor `n` in the step count `1/Φ²`.**
+
+**The step-size cap is therefore not the obstruction**, and any statement that the `√n`
+"cancels" is wrong.
+
+**Layer 3 — and `n⁴` still does not follow.** ⚠ **Both bullets below were true when
+written and both have since been overtaken. Keep reading into §0e.**
+
+* ~~**The `δ/√n` overlap lemma exists only for the *unfiltered* speedy walk.**~~
+  `Arlib.MarkovChains.metropolisGaussian_overlap_of_convex`
+  (`MetropolisConductanceSharp.lean:238`) concludes only for pairs at separation `δ/n`,
+  which is why the sharp Metropolis theorem lands on `δ·log2/(640σn)`. ~~A Metropolis
+  overlap lemma at separation `δ/√n` is the named missing piece.~~ **It landed the same
+  day**: `Arlib.MarkovChains.metropolisGaussian_overlap_sqrt_of_convex`
+  (`MetropolisOverlapSqrt.lean:164`), at constant `20`. It needs no `ℓ`-comparability;
+  it needs a **uniform local-conductance floor** `hell` together with `hfloor`
+  instead — and that pair is exactly what `EllFloor.lean` proves contradictory on the
+  cube. §0e.
+* ~~**`hcomp` and `hiso` remain hypotheses.**~~ `hcomp` — `ℓ`-comparability at `δ/√n` —
+  **does** remain a hypothesis of the speedy-walk route, is Cousins–Vempala's own, and
+  is not automatic on every convex body (next subsection). **`hiso` no longer remains**
+  for the *filtered* route: `Arlib.hiso_metropolisGaussian_sharp_sqrt_logTwo`
+  (`OneDimSharp.lean:1040`) proves that binder character for character. It does **not**
+  reach the speedy walk's own `hiso`, whose density is `1_K·ℓ` rather than
+  `1_K·γ_σ`. §0e.
+
+Every file involved says so itself, and none may be quoted otherwise:
+`OverlapSqrt.lean`'s §"No rate claim" ("nothing below asserts, or may be quoted as
+asserting, a polynomial mixing time"), `LensMin.lean`'s §"What is *not* done here", and
+`DeltaCap.lean`'s closing line ("Nothing in this file is a mixing-time or
+polynomial-time statement, and none of it may be quoted as one").
+
+*A side finding, recorded because it removes a distraction rather than a blocker.*
+`DeltaCap.lean` §3 shows `hδσ`'s own `√n` is removable — its real content is the
+dimension-free `16·(ln 2)·δ ≤ σ`, so the honest cap is `σ/(16 ln 2) ≈ σ/11.09` and
+`δ ≤ σ/8` genuinely fails (`not_isoStep_quarter_at_sigma_div_eight`). The file
+**deliberately does not re-prove** `conductance_speedyGaussian_ge` with the weaker
+binder — that would mean editing a file it does not own — and no declaration in it
+claims the relaxed theorem. It is also not needed: the operative step `Θ(σ/√n)` is well
+inside the existing cap.
+
+### What the comparability hypothesis costs, and that the counterexample survives
+
+`Arlib.MarkovChains.exists_overlap_speedyWalk_sqrt_dim_counterexample`
+(`Continuous/LensHalfspace.lean`) proves that the conclusion of
+`overlap_speedyWalk_convex` is **false** at separation `δ/√n`. Nothing above
+contradicts it: `exists_ell_not_comparable_at_sqrt_dim_counterexample`
+(`OverlapSqrt.lean:816`) re-derives that witness (`n = 23409`, `δ = 1`,
+`K = apexConeBody u v`) and proves it violates comparability by a wide margin —
+`d_ℓ(u,v) > 0.95` against a hypothesis that permits `1/3`. **That is the whole content
+of the new theorem**: reinstating Cousins–Vempala's `d_ℓ(u,v) < 1/3`, which
+`overlap_speedyWalk_convex` deliberately deletes, is exactly what the `√n` costs.
+
+The `min` form is also the *only* form available: the `max` form is **false**, by
+`Arlib.MarkovChains.exists_halfspace_max_lt`.
+
+**`lem:f-dist` is not proved.** Cousins–Vempala do not assume `d_ℓ < 1/3` in
+`cor:overlap`; they *derive* it from `d_h(u,v) < 1/4` for `h = f·ℓ`, via a
+Gaussian-ratio estimate the paper states only "for `n` large enough" and whose
+arithmetic is tight. Formalising it would turn `hcomp` from a hypothesis into a
+consequence of the consumer's existing binder. `ell_le_of_densDist_ell_lt`
+(`OverlapSqrt.lean:599`) supplies the second half of that bridge already.
+
+**Non-vacuity.** `Arlib.MarkovChains.exists_overlap_speedyWalk_sqrt_comparable_witness`
+(`OverlapSqrt.lean:711`) meets every hypothesis simultaneously on a **bounded convex
+body of positive volume** (`K = B(0,1) ⊆ ℝ²`, `δ = 3`, where `ℓ` is constant), which is
+the point: the *other* route to `hoverlap`, the local-conductance floor `11 ≤ 20·ℓ(x)`
+of `overlap_speedyWalk`, is satisfiable by **no** bounded convex body at all (`ℓ → 1/2`
+at every boundary point), so that theorem is empty for convex bodies and its own witness
+is `K = ℝ²`.
+
+### The Localization continuity gap is an **obstruction**, not unfinished work
+
+`Arlib/Convexity/LocalizationMeasurable.lean` settles the status of the two residuals
+this page used to list for the localisation stack, **(C)** continuity of the integrands
+and **(F)** `v ≠ 0`.
+
+* **(F) is closed.** `Arlib.exists_needle_of_compact_convex` (`:226`) is the missing
+  composition — compact convex body ⟶ chain ⟶ needle — which nothing had joined, with
+  `v ≠ 0` recovered along the way (it was available one level down and *discarded* by a
+  `-` pattern). `Arlib.exists_needle_of_compact_convex_witness` (`:266`) is the
+  non-vacuity check, on the closed unit ball.
+* **(C) is an obstruction.** Two theorems, both about a Lebesgue-null hyperplane:
+  * `Arlib.exists_null_measurableSet_needleIntegral_eq_one` (`:442`) — a measurable `S`
+    with `volume S = 0`, hence `∫_T 1_S = 0` for **every** `T`, together with a needle
+    and profile meeting every clause `hLoc` imposes, for which the needle integral is
+    `1`. Modifying an integrand on a null set leaves every hypothesis untouched and
+    moves the conclusion by `1`. **Therefore no argument that controls `1_{S₁}` only
+    through its a.e. class — `L¹` density, Lusin, Vitali–Carathéodory, in-measure
+    approximation — can produce `hLoc`.**
+  * `Arlib.exists_transverse_oscillation_eq_one` (`:550`) — for that same `S` and
+    **every** body of positive volume, some point has transverse oscillation exactly
+    `1`. The moduli of `Arlib.exists_tendsto_transverse_modulus` are therefore `≥ 1` at
+    every stage of every chain, so they do not tend to `0`. That lemma is the *unique*
+    place the localisation limit passage consumes continuity. **So weakening
+    `Continuous` to `Measurable` is closed too.**
+
+  **`hLoc` is not claimed false.** A needle is a null set, and Fubini forbids a null set
+  meeting every line in positive length, so an integrand cannot defeat *every* needle.
+  What is proved is that the two routes available to this repository are closed, and
+  that `Arlib.Convexity.LocalizationLSC`'s boundary — `S` open for the positivity slot,
+  an unremovable `η`-slack for the equality slot — is where the approximation route
+  genuinely stops.
+
+`LocalizationMeasurable.lean` contains **no** `def`, `structure`, `class` or named
+`Prop`, and no theorem in it takes the Localization Lemma, the isoperimetric inequality
+or Dyer–Frieze as a hypothesis. Nothing in it is named for a statement it does not prove.
+
+---
+
+## 0c. `hLS` is discharged for lazy chains — and the plain kernel is a *paper* gap
+
+`AUDIT.md` used to call `hLS` "the one binder owned by nobody". **That was wrong,
+and it was wrong before it was written.** Lovász–Simonovits 1993 Corollary 1.5 —
+conductance ⟹ geometric TV decay — was already provable in this repository:
+
+* `Arlib.MarkovChains.sq_conductance_div_two_le_spectralGap`
+  (`Continuous/Cheeger.lean`) — the **hard** direction of Cheeger, `Φ²/2 ≤ gap`;
+* `Arlib.MarkovChains.tvLe_iterate_of_ofReal_le_conductance`
+  (`Continuous/L2Mixing.lean`) — *literally the body of the `hLS` binder*.
+
+`Arlib/MarkovChains/Continuous/ConductanceToTV.lean` is the glue. What it lands:
+
+* **`Arlib.MarkovChains.ls_of_hasNonnegSpectrum`** — the `hLS` binder, **verbatim,
+  proved**, for a reversible kernel with non-negative spectrum on a space carrying a
+  measurable set of mass in `(0, 1/2]`.
+* **`Arlib.MarkovChains.ls_lazy`** — the same for `lazy P`, from `IsReversible P pi`
+  **alone**: `hasNonnegSpectrum_lazy` supplies the spectral hypothesis from
+  reversibility. The price is quoted, not hidden — `ofReal_half_le_conductance_lazy`
+  and `lsThreshold_half`: half the conductance, four times the deadline.
+* `Arlib.MarkovChains.tvLe_iterate_of_exceptional_of_isReversible` — LV Theorem 1.1
+  with `hLS` **eliminated**, proved by handing `ls_of_hasNonnegSpectrum` to the
+  `hLS` slot with no massaging; and `tvLe_iterate_lazy_hitAndRun_unitBall`, where
+  the only residual assumptions are `hLem41` and `hIso`.
+* The one genuinely new proof is
+  `Arlib.MarkovChains.smallSets_nonempty_of_rayleighSet_nonempty`, a median argument
+  buying the kernel-free hypothesis.
+
+**What is *not* discharged, and why it is a finding rather than a to-do.**
+
+* **`hLS` for the plain (non-lazy) hit-and-run kernel is not reachable**, and
+  `hLS` is *false* for a general reversible chain: `HitAndRunMixing.lean` records
+  the swap kernel `P x = dirac (!x)` on `Bool`, which is `piHalf`-reversible with
+  conductance `1` and has `d_TV = 1/2` for every `t` against a bound `√2·2⁻ᵗ`.
+  §5 of *Hit-and-Run from a Corner* applies Cor. 1.5 to a **non-lazy** chain. So
+  the two results agree, and the conclusion is about the paper: **with laziness the
+  argument works at 4× the deadline; without it, it is false.** The paper needs the
+  lazy kernel.
+* **`hLSs`, the `s`-conductance form, is provably unreachable by this route.** Its
+  premise `ofReal ph ≤ conductanceS P pi s` is *strictly weaker* than what Cheeger
+  consumes, since `conductance ≤ conductanceS`. It needs the LS93
+  curve/localisation argument plus atomless `π`, and is not attempted.
+
+`H : Ttc.HitAndRunTheorem11Input` is therefore still inhabited nowhere — §0a row 1
+is unaffected by this. What changed is *why*: not "nobody owns the conductance⟹TV
+step" but "the paper applies it to a kernel for which it is false, and the lazy
+repair costs a factor 4".
+
+---
+
+## 0d. Known-stale `.lean` docstrings, not yet corrected
+
+Recorded here rather than fixed, so a later pass has a worklist and no reader takes
+a confident "this is not proved anywhere" sentence at face value. Each entry gives
+`file:line`, the stale claim, and what refutes it. **Line numbers here are
+deliberate and are the exception to this page's no-line-numbers policy** (see the
+top of the page): a docstring paragraph has no declaration name to point at.
+
+| `file:line` | the stale claim | what refutes it |
+| --- | --- | --- |
+| `Ttc/Model/Theorem.lean:27` | "**Nine** binders — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`" | the list it prints has **eleven** entries, and eleven is the count. See §5's binder-count subsection |
+| `Arlib/Convexity/LocalizationLemma.lean:76-89` | gap **(G1)** needs the two-measure ham-sandwich, i.e. Borsuk–Ulam, "which Mathlib `v4.32` does not have" | `Arlib.exists_flat_cut_zero_pos` (`Convexity/LocalizationAssembly.lean:415`) cuts with arbitrary *signed* integrands, so Borsuk–Ulam is not needed. `HitAndRunConductance.lean:76` already records this; `LocalizationLemma.lean` does not |
+| `Arlib/Convexity/LocalizationTransverse.lean:42-47` | "## What is *not* proved here — nothing shows that the bodies produced by `Arlib.exists_flat_cut_chain` are closed" | `Arlib/Convexity/LocalizationClosed.lean` closes chain closedness; `Arlib.exists_flat_cut_chain_collinear_compact_ge` (`:219`) delivers compact bodies |
+| `Arlib/Convexity/NeedleProfile.lean:105-113, 124` | **(G2c)**, the affine change of coordinates, is "the one undischarged ingredient" of the needle stack | the route of record no longer runs through this file's profile machinery: `Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain` (`NeedleSlabChain.lean`) reaches the needle conclusions via the slab/chain route, and `Arlib.exists_needle_of_compact_convex` (`Convexity/LocalizationMeasurable.lean:226`) is the composed entry point. **Verify before editing** — G2c may still be open *for this file's own statements* |
+| `Arlib/MarkovChains/Continuous/SpeedyOverlap.lean:59-62` | KLS95 Lemma 3.5 "is **not** proved here", and its proof needs a polar decomposition "which Mathlib does not support today" | `Arlib.MarkovChains.kls_lemma35_at_sep_sqrt_dim` (`LensMin.lean:423`) proves the `min` form at `δ/√n` with **no** polar decomposition — a midpoint/Brunn–Minkowski argument. Mathlib *does* have polar decomposition and this repo wraps it (`lintegral_polar_at`, `HitAndRun.lean:479`) |
+| `Arlib/MarkovChains/Continuous/MixingFromConductance.lean:79-94` | Cheeger's hard direction and the decay bound "are not proved in this file" and "none of that is attempted here" | true *of that file*, but misleading: `Cheeger.lean` and `L2Mixing.lean` import it and supply exactly the listed missing pieces. Flagged from `HitAndRunMixing.lean`, left to the file's owner |
+| `Arlib/Convexity/LocalizationMeasurable.lean:18` | cites "`AUDIT.md:147-149` records two residuals of the localisation stack" | **drifted**, by this very edit: inserting §0a–§0d pushed everything below down by several hundred lines, and `AUDIT.md:147-149` is now the `hLS` bullet. The content it means — residuals **(C)** and **(F)** — is §0b's "The Localization continuity gap is an obstruction" subsection. A live illustration of why this page names declarations rather than lines |
+| `Arlib/Convexity/GaussianCooling/Unblock.lean:77-83` | a chain stationary for `Arlib.uniformOn (volume.withDensity g) K` "is a Metropolis-filtered … chain, and **no such kernel is built in this library**" | `Arlib.MarkovChains.metropolisGaussian` (`Continuous/MetropolisGaussian.lean:444`) is that kernel, and `isReversible_metropolisGaussian` (`:586`) proves the stationary law. Note `BallWalk.lean:24` is **not** stale — it says the filter is not applied *in that file*, which is correct |
+
+**Added 2026-08-12, second pass.** Eight more, found while re-deriving §0e and §0f.
+The first three are the load-bearing ones: each asserts, in a file a reader would
+treat as authoritative, that something is *not* done which now is.
+
+| `file:line` | the stale claim | what refutes it |
+| --- | --- | --- |
+| `Arlib/Convexity/GaussianCooling/PhaseMeanApprox.lean:105-118` | its whole §2, "The repository's own framing is stale, in two files this agent may not edit" — four factual claims, **all four now false**: that `CVInstantiate.lean:83` says "This is where the development actually stops"; that `RuntimeMN4.lean:133` is hypothesis #12; that `cousinsVempalaOfRuns` is at `CVInstantiate.lean:265`; and that "the **live** path … the one `Ttc.ttc_runtime_mn4` goes through — was never rewired to the approximate-mean constructor" | the quoted sentence was **deleted** from `CVInstantiate.lean` (`:83` now opens "**`hphase_mean` is the deep one, and it is stated too strongly here.**"); `RuntimeMN4.lean:133` is now hypothesis **#8**, `H`; `cousinsVempalaOfRuns` is at `:298`; and **the live path was rewired** — `Ttc.ttc_runtime_mn4` (`RuntimeMN4.lean:409`) runs `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean`. The worst entry in this table: an `Arlib` file asserting a `Ttc`-side defect that has since been fixed |
+| `Arlib/MarkovChains/Continuous/MetropolisOverlapSqrt.lean:273-277` | `hiso` "is **not proved in this repository**", therefore the theorem "is not a mixing-time bound and not an `O*(n³)` claim, and may not be quoted as either" | the first half is false: `Arlib.hiso_metropolisGaussian_sharp_sqrt_logTwo` (`Convexity/OneDimSharp.lean:1040`) proves that exact binder, and `conductance_metropolisGaussian_sharp_sqrt_ge_of_convex` (`:1073`) is the discharged corollary. `MetropolisMixing.lean:70` already flags it. **The second half is still correct**, and §0e explains why it is the more important half |
+| `Ttc/Volume/CouplingAccuracy.lean:114-120` | of the chain layer: "No single body is yet known to satisfy both. Flagged, not faked." | `Arlib.GaussianCooling.exists_couplingRoute_chain_witness` (`GaussianCooling/CouplingRouteUncond.lean:256`) exhibits one — `K = B(0,1) ⊆ ℝ²`, every binder discharged. The **first** bullet of that same section (the `k ≥ 2` indexing caveat, `:105-113`) is still accurate, and the section's headline — "the composition has none" — is still true |
+| `Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:118-136` | §4's bug-oracle finding: that `CVInstantiate.lean:81-82` justifies the obstruction with the false premise "a Markov chain run for finitely many steps is at total-variation distance `> 0` from its stationary law" | the finding was **acted on**. `CVInstantiate.lean:89-95` now says the opposite and cites `Arlib.MarkovChains.mixesWithin_const` as the refutation. The theorem `exists_markovKernel_mixesWithin_coolLaw_exact` is unaffected; only the framing is stale |
+| `Ttc/Exec/PolyAccuracy.lean:723-727`, `Ttc/Exec/CVBackend.lean:494-495`, `Ttc/Exec/PolyRun.lean:40-41` | all three quote `CVInstantiate.lean:83` as saying "this is where the development actually stops" | that sentence no longer exists anywhere in `CVInstantiate.lean`. `Ttc/Volume/PhaseFromSampler.lean:62` already records the quote as stale; these three do not |
+| `Ttc/Exec/CVBackend.lean:491`, `Ttc/Exec/PolyRun.lean:39`, `Ttc/Volume/PhaseFromSampler.lean:350`, `Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:30` | all four cite `Ttc/Volume/CVInstantiate.lean:265` for `Ttc.VolumeAlgorithm.cousinsVempalaOfRuns` | the declaration is at **`:298`** — ~30 lines of docstring were inserted above it. `PhaseMeanRoute.lean:31` additionally cites `:277-286` for the two binders; they are at `:310-319`. `CVBackend.lean:654` and `:772` cite `:342` for `cousinsVempalaOfRunsWitness`; it is at `:375` |
+| `Arlib/Convexity/GaussianCooling/CouplingRoute.lean:90,100` and `CouplingRouteUncond.lean:62` | name the estimator lemma `Ttc.CV.volume_accuracy_of_samples` | the namespace is **`Ttc.CVEst`** (`Ttc/Volume/CVEstimator.lean:582`). `CouplingAccuracy.lean:30-31` records the correction; those two files do not |
+| `Arlib/Convexity/IsoIndicator.lean:95` and `:798` | cite `AUDIT.md:192` and `CV-ROADMAP.md:240` for the `(1d-2)` constant | both are line citations into *this* page and `CV-ROADMAP.md`, and this very edit moved them again — and the content they point at is now struck through, because `OneDimSharp.lean` closed that gap. Cite the section, not the line. (`LocalizationMeasurable.lean:18`'s citation of `AUDIT.md:147-149` is already in the table above and has drifted a second time.) |
+
+Two things this table is **not**. It is not a list of unsound claims — every
+declaration in every file above is proved and axiom-clean; the staleness is in
+prose about *what else exists*. And it is not exhaustive: it is what one pass
+found. `AUDIT.md`'s standing advice stands — treat a confident-sounding docstring
+in this development as a claim to re-check.
+
+---
+
+## 0e. `thm:iso` is discharged — and a *floor* is what blocks the runtime now (2026-08-12)
+
+> ## ⚠ THE DEEP PROBABILITY OBSTRUCTION IS GONE, AND THE RUNTIME DID NOT MOVE ⚠
+>
+> Read both halves or neither. **Half one:** the isoperimetric inequality
+> Cousins–Vempala's conductance bound needs is now a **theorem**, with no
+> localization binder, for exactly the density the Metropolis-filtered Gaussian ball
+> walk uses; and the mixing bound built on it —
+> `4·5120²·n²·(log M + 2·log(1/ε))/(log 2)² + 1` steps suffice — carries **no
+> isoperimetry hypothesis at all**. **Half two:** that bound also carries a
+> *pointwise local-conductance floor*, and `EllFloor.lean` proves the floor is
+> **unsatisfiable on the cube `[-1,1]ⁿ` for `n ≥ 3`** — a body squarely inside the
+> class the Gaussian-cooling volume oracle quantifies over. So the theorem is true
+> and **vacuous where the oracle needs it**. Nothing here is a mixing-time or
+> polynomial-time claim about any convex body the algorithm meets.
+
+### The `(1d-2)` constant, and why it was the whole gap
+
+The metric branch of `thm:iso` reads `d / c` for the `(1d-2)` constant `c`, and every
+downstream consumer writes `d / log 2`. This repository had `(1d-2)` only at
+`1/(2√3) ≈ 0.2887` (`Arlib.oneDim_isoperimetry_gaussianFactor_unconditional`,
+`Convexity/ConcaveProfileIso.lean:631`) against Cousins–Vempala's `ln 2 ≈ 0.6931` — a
+factor `2.4` short, and short in the wrong direction, so the consumer's binder could
+not be filled.
+
+[`Arlib/Convexity/OneDimSharp.lean`](Arlib/Convexity/OneDimSharp.lean) closes it:
+
+* `Arlib.oneDim_isoperimetry_gaussianFactor_sharp` (`:518`) proves `(1d-2)` at
+  **`√(2/π)/σ ≈ 0.7979/σ`**, with exactly the hypotheses of the `1/(2√3)` version.
+* `Arlib.log_two_le_sqrt_two_div_pi` (`:554`) is the machine-checked
+  `ln 2 ≤ √(2/π)`. (The strict `>` is arithmetic in the docstring; the non-strict
+  `≤` is what the weakening needs, and it is what is proved.)
+* `Arlib.oneDim_isoperimetry_gaussianFactor_logTwo` (`:572`) is the `√(2/π)` theorem
+  weakened along it to `log 2 / σ` — the shape the stack consumes.
+
+The crux is three lines and uses **no** Brascamp–Lieb, **no** Hensley bound and no
+variance hypothesis: `h = F·γ_σ` with `F` log-concave is `σ^{-2}`-strongly
+log-concave, so tilting by the Gaussian re-centred at `x` leaves a log-concave
+function, which cannot exceed its value at `x` on *both* sides
+(`Arlib.gaussian_domination_of_logConcave`, `:212`); on the side where it does not,
+the mass is at most `h(x)·σ√(π/2)` (`Arlib.needle_tail_mass_le`, `:354`).
+`Arlib.exists_gaussian_tails_gt` (`:1212`) shows `σ√(π/2)` is the ceiling **of this
+argument**, and `Arlib.uniform_saturates_hensley` (`:1171`) diagnoses where the old
+`1/(2√3)` was lost — not in Hensley's bound, which is tight for the uniform weight,
+but in the pointwise Cheeger step.
+
+### `thm:iso` itself — two theorems, and what each costs
+
+| declaration | what it is | the price |
+| --- | --- | --- |
+| `Arlib.gaussianRestricted_isoperimetry_openClosed` (`Convexity/IsoOpenClosed.lean:854`) | `thm:iso` for a general `h = f·e^{−‖x‖²/2σ²}` with `f` log-concave, **no `hloc` and no localization binder of any kind** — the `(1d-2)` input is discharged inside the proof | **three hypotheses**, in the file's own words: `S₁, S₂` **open**, `S₃` **closed**, and `h` **continuous and bounded** (plus `Integrable h`). Its separation threshold is `2√3·d`, **not** `d/ln 2` |
+| `Arlib.gaussianIndicator_isoperimetry_measurable` (`Convexity/IsoIndicator.lean:476`) | the same for the **indicator** density `1_K·γ_{σ²}`, with `S₁ S₂ S₃` merely **measurable** | **two more hypotheses**: `hRσ : √3·R ≤ 2σ√n` and `hK0 : volume K ≠ 0`. `hRσ` is what turns the density branch into metric separation; without it the route survives only at the reduced constant `min(d, 4σd√n/(2√3·R))` |
+
+The two are joined at `ln 2` in `OneDimSharp.lean`
+(`gaussianRestricted_isoperimetry_openClosed_logTwo` `:631`,
+`gaussianIndicator_isoperimetry_measurable_logTwo`), and the payoff is
+
+* **`Arlib.hiso_metropolisGaussian_sharp_sqrt_logTwo` (`OneDimSharp.lean:1040`)** —
+  the `hiso` binder of `Arlib.MarkovChains.conductance_metropolisGaussian_sharp_sqrt_ge`
+  (`MarkovChains/Continuous/MetropolisOverlapSqrt.lean:284-295`) **character for
+  character**, proved; and
+* **`Arlib.conductance_metropolisGaussian_sharp_sqrt_ge_of_convex`
+  (`OneDimSharp.lean:1073`)** — that conductance bound with `hiso` gone. The only
+  hypothesis it adds is `hRσ`.
+
+**Scope this, and do not write a flat "`hiso` is discharged".** The discharge covers
+exactly **one** binder. Still carried, unproved, elsewhere in the tree: the `δ/n`
+Metropolis theorem `conductance_metropolisGaussian_sharp_ge`
+(`MetropolisConductanceSharp.lean:431`, binder at `:438` — **no `_of_convex` variant
+exists**), and the whole speedy-walk family (`SpeedyWalk.lean:976, 1210, 1322`;
+`SpeedyToUniform.lean:230, 278`; `OverlapSqrt.lean:680`;
+`SpeedyConductanceSharp.lean:333`). §0b's table row for
+`conductance_speedyGaussian_ge_of_ell_comparable` is *not* affected by this section.
+
+### The Metropolis overlap lemma at `δ/√n` — §0b's "named missing piece", landed
+
+`Arlib.MarkovChains.metropolisGaussian_overlap_sqrt_of_convex`
+(`MetropolisOverlapSqrt.lean:164`) concludes
+`1 ≤ 20·(metropolisGaussian K δ s u Tᶜ + metropolisGaussian K δ s v T)` for pairs at
+separation `< δ/√n` — the filtered analogue §0b named as missing. It needs **no**
+`ℓ`-comparability. What it needs instead is the pair
+
+```
+hell   : ∀ x ∈ K, ofReal θ ≤ ell K δ x
+hfloor : 1 ≤ 20 · e^{−(2Rδ+δ²)/(2σ²)} · (1/4) · θ
+```
+
+and `conductance_metropolisGaussian_sharp_sqrt_ge` (`:278`) carries the pair up into
+`Φ ≥ δ·log2/(640·σ·√n)`. Sharpest lens constant behind it: `1/4`,
+`Arlib.MarkovChains.volume_lens_ge_min_ball_inter_quarter` (`LensSharp.lean:409`).
+
+> **`LensSharp` does not refute `1/(e+1)`, and this page must not say it does.** The
+> `1/(e+1) ≈ 0.269` discussion is a numeric remark in that file's module docstring
+> (`:88-104`) about where *this proof skeleton* tops out at `n = 2` (half-space factor
+> `≤ 1/2`, midpoint `≤ 0.5223`, harmonic combination `0.2555`). It is unformalised
+> prose and it is a ceiling on the argument, not on the constant. The proved constant
+> is `1/4`; `1/(e+1)` is neither achieved nor refuted.
+
+### Mixing, and the arithmetic
+
+`Arlib/MarkovChains/Continuous/MixingSqrt.lean` does the `Φ⁻²` bookkeeping —
+`mixesWithin_at_operative_step` (`:361`) turns `Φ ≥ (σ/(8√n))·log2/(640σ√n)` into
+`5120²·n²·(log M + 2·log(1/ε))/(log 2)² + 1` steps, and the two ratio brackets
+(`conductanceMixingTime_old_le_dim_mul_new` `:442`,
+`dim_mul_conductanceMixingTime_new_sub_one_le_old` `:468`) pin the old route at a
+factor `n` worse. `MetropolisMixing.lean` instantiates it at the Metropolis kernel
+(still carrying `hiso`), and **`MetropolisMixingUncond.lean` is the same with `hiso`
+discharged**: `mixesWithin_lazy_metropolisGaussian_at_operative_step_of_convex`
+(`:130`) and three companions.
+
+Three things to keep straight about "unconditional":
+
+1. It means **"no `hiso` binder"** and nothing more. `hell`, `hfloor`, the new `hRσ`,
+   the body's geometry and the warm start all remain binders.
+2. The step count is a **hypothesis on `t`** (`… + 1 ≤ t`), i.e. "that many steps
+   suffice" — not a conclusion of the form `t = O(…)`.
+3. The **plain-chain** pair (`:196`, `:223`) still carries
+   `hpsd : HasNonnegSpectrum`, which is proved for no Metropolis kernel here and is
+   not removable (the `Bool` swap kernel is the counterexample). Only the **lazy**
+   pair is free of it, at `4×` the deadline.
+
+`exists_mixesWithin_lazy_metropolisGaussian_uncond_witness` (`:291`) discharges every
+hypothesis of the two lazy theorems at once — and **read where**: `n = 2`,
+`K = B(0,1/2) ⊆ ℝ²`, `δ = 1`, `σ = 8√2`, `θ = 1/4`. `B(0,1/2)` does **not** contain
+the unit ball, so the witness sits *outside* the Gaussian-cooling consumer's class,
+and `n = 2` is precisely where the next subsection's negative does not bite. There is
+no witness for the plain-chain pair or for the two phase-law theorems (`:443`,
+`:476`).
+
+### `EllFloor.lean` — the decisive negative, stated precisely
+
+**Do not write "`hell` is unsatisfiable".** `hell` alone is satisfiable — trivially at
+`θ ≤ 0`, and non-trivially by this very file's `le_ell_of_ball_subset_of_radius`
+(`EllFloor.lean:498`) at `θ = (1/(1+2R))ⁿ`. What is proved is that **`hell` and
+`hfloor` are jointly contradictory**:
+
+| declaration | statement |
+| --- | --- |
+| `Arlib.MarkovChains.two_pow_card_mul_ell_le_one` (`EllFloor.lean:244`) | if `k` of the coordinate half-spaces `{y j ≤ x j}` support `K` at `x` then `2^k · ell K δ x ≤ 1`, **at every step size `δ`**. No convexity, measurability or boundedness. Proof: the coordinate-reflection group |
+| `Arlib.MarkovChains.le_two_pow_neg_of_ell_floor_cube` (`:359`) | any `θ` meeting `hell` on `[-1,1]ⁿ` has `θ ≤ 2⁻ⁿ` |
+| `Arlib.MarkovChains.metropolis_ell_floor_unsatisfiable_on_cube` (`:402`) | **`n ≥ 3`, `hell`, `hfloor` (the `1/4` shape) ⟹ `False`** — `θ`, `δ`, `σ`, `R` all universally quantified, so this is "no `θ`, at any step size" |
+| `Arlib.MarkovChains.metropolis_ell_floor_dim_unsatisfiable_on_cube` (`:483`) | the same for the `(1−1/n)ⁿ` shape of `hfloor`, at **`n ≥ 5`** |
+| `Arlib.MarkovChains.exists_convex_body_meeting_all_but_ell_floor` (`:417`) | **the attribution theorem** — at `σ = 1`, `δ = 1/(8√n)`, `R = √n`, the cube meets *every other* binder, including `ball 0 1 ⊆ K` and `hRσ`, and no `θ` meeting `hell` on it satisfies `hfloor`. So the failure is the local-conductance floor's alone |
+
+The body is `[-1,1]ⁿ`, side `2`, **not** the unit cube — it contains the unit ball
+(`ball_subset_cube`, `:307`), which is exactly what puts it inside the class
+`Ttc/Volume/CVInstantiate.lean:148,153` quantifies over (`Convex ℝ K`,
+`ball 0 1 ⊆ K`, `volume K ≠ ⊤`). `hfloor` forces `θ ≥ 1/5`; a corner forces
+`θ ≤ 2⁻ⁿ`; `2⁻ⁿ < 1/5` from `n = 3`.
+
+**This is the same phenomenon as §0b's remark that `overlap_speedyWalk`'s floor
+`11 ≤ 20·ℓ(x)` is satisfiable by no bounded convex body — sharpened, not
+duplicated.** That remark was about `ℓ → 1/2` at a *smooth* boundary point and was
+prose. `EllFloor` proves a quantitative, dimension-dependent version — `ℓ ≤ 2⁻ᵏ` at a
+`k`-fold corner, at every `δ`, by a group argument — for the *filtered* kernel's
+floor, and turns it into a `→ False`.
+
+**What it does not rule out.** `n = 2`. Corner-free bodies — the file exhibits no
+restricted class inside the consumer's class on which `hell` holds at `θ ≥ 1/5`, but
+it does not prove none exists; what it does prove is that every *pointwise* floor of
+the shape this repository has is exponentially small once `ball 0 1 ⊆ K` forces
+`R ≥ 1` (`general_ell_floor_le_three_pow_neg`, `:527`, `≤ 3⁻ⁿ`). And it does not
+touch the truth of `conductance_metropolisGaussian_sharp_sqrt_ge_of_convex`, which is
+true — and vacuous on the cube.
+
+**What survives is the average, not the infimum.** `isSmooth_of_ball_subset` (`:549`)
+proves **every** convex `K ⊇ B(0,1)` is `(δ, 1 − (1−δ)ⁿ)`-smooth, i.e.
+`(1−δ)ⁿ·vol K ≤ ∫_K ℓ`, for every `0 < δ < 1`. `IsSmooth` constrains the *average* of
+`ℓ` and is blind to the corner; `cube_smooth_but_no_pointwise_floor` (`:613`) states
+both facts on one body.
+
+### The speedy route, and why it is not the way round
+
+`Arlib/Convexity/EllLogConcave.lean` proves the two positive facts one would need —
+`Arlib.isLogConcave_ell_toReal` (`:262`, no hypothesis on `δ`) and
+`Arlib.continuous_ell_toReal` (`:431`) — and then records **two** (not three)
+obstructions to using them for the speedy walk's own `hiso`:
+
+1. **no Gaussian factor.** `hrev` forces the stationary law to be a scalar multiple of
+   `ellMeasure K δ`, density `1_K·ℓ`; every unconditional `n`-dimensional
+   isoperimetric inequality here is for `f·e^{−‖x‖²/2σ²}`, and the compensating
+   `e^{+‖x‖²/2σ²}` is log-**convex**;
+2. **measurable vs open/closed.** The speedy binder quantifies over measurable
+   `S₁ S₂ S₃`; the general-`f` capstone is proved only for `S₁, S₂` open and `S₃`
+   closed, and the measurable upgrade is indicator-specific.
+
+**Both are narrative docstring arguments, not proved negatives** — every declaration
+in that file is a positive result or a witness. The only machine-checked negative in
+this cluster is `Arlib.exists_separated_no_disjoint_open_enlargement`
+(`IsoOpenClosed.lean:1205`), and it refutes the open-enlargement **mechanism**, not
+the statement. `ellGaussian_isoperimetry_openClosed_logTwo` (`EllLogConcave.lean:474`)
+is, in the file's own words, "an **instance** of an existing theorem, not a new one".
+
+### Non-vacuity and semantic `def`s for this section
+
+Every one of `IsoOpenClosed`, `IsoIndicator`, `OneDimSharp`, `EllLogConcave`,
+`LensMin`, `LensSharp`, `OverlapSqrt`, `DeltaCap`, `MetropolisOverlapSqrt`,
+`MixingSqrt`, `MetropolisMixing`, `MetropolisMixingUncond` and `EllFloor` contains
+**no `def`, `structure`, `class` or `axiom`** — every declaration is a `theorem`. So
+check 6 is empty for the whole cluster. Witnesses exist for
+`gaussianRestricted_isoperimetry_openClosed` (`IsoOpenClosed.lean:916`),
+`gaussianIndicator_isoperimetry_measurable` (`IsoIndicator.lean:873`),
+`oneDim_isoperimetry_gaussianFactor_sharp` (`OneDimSharp.lean:1096`),
+`conductance_metropolisGaussian_sharp_sqrt_ge` (`MetropolisOverlapSqrt.lean:344`,
+every binder **except** `hiso`), and the mixing theorems (`MetropolisMixing.lean:397`
+except `hiso`; `MetropolisMixingUncond.lean:291`, with the class caveat above).
+
+### `Arlib/Probability/TVTensor.lean`
+
+TV tensorization, used by the coupling route of §0f: `Arlib.Probability.TVLe.prod`
+(`:226`) gives `TVLe (μ₁ ⊗ μ₂) (μ₁' ⊗ μ₂') (e₁ + e₂)` and `TVLe.pi` (`:284`) the
+finite-product form at `∑ᵢ eᵢ`. `IsProbabilityMeasure` is load-bearing on all four
+arguments: the hybrid step integrates the `e₂` slack against `μ₁'`, and
+`∫⁻ e₂ ∂μ₁' = e₂·μ₁'(univ)` collapses to `e₂` only because `μ₁'(univ) = 1`.
+**That necessity is argued in the docstring and is not mechanised** — the file's one
+negative, `not_tvLe_prod_witness_quarter` (`:412`), proves a *different* sharpness
+(that `e₁ + e₂` cannot be replaced by one factor's `1/4`). Do not call it a
+counterexample to the normalisation claim.
+
+---
+
+## 0f. The Cousins–Vempala phase-mean routes, and the layer with no witness (2026-08-12)
+
+`hphase_mean` is the binder §0a's ledger calls row 12. Three files attack it and one
+composes the result; the honest summary is that the **abstract** layers are real and
+the **composed** layer has no non-vacuity witness at all.
+
+### `coolLaw` is the mixing bound's stationary law — proved, unconditionally
+
+`Arlib.GaussianCooling.coolLaw_eq_uniformOn_gaussianWeight`
+(`GaussianCooling/PhaseMeanRoute.lean:216`) proves
+
+```
+coolLaw m σsq K i = Arlib.uniformOn (volume.withDensity (gaussianWeight (σsq i))) K
+```
+
+under `0 < σsq j`, `MeasurableSet K`, `ball 0 1 ⊆ K`, `volume K ≠ ⊤` and `i < m`. No
+error term, no `hiso`, no warm start. That is the join between §0e's mixing bound and
+Cousins–Vempala's phase laws, and it is the reason the coupling route below composes
+at all.
+
+### The negative on the *equation* — read what it actually says
+
+`Arlib.GaussianCooling.exists_tvLe_coolLaw_integral_phaseScore_ne`
+(`PhaseMeanRoute.lean:518`) is **a counterexample to the implication "a TV bound gives
+the equation"**, not a refutation of the equation. For every `ε ∈ (0,1]` it exhibits a
+probability measure `ν` with `TVLe ν (coolLaw …) ε` whose phase-score integral is
+exactly `(1−ε)·(chain(i+1)/chain(i))` — so the relative error *is* the TV error, and
+no mixing theorem short of exact sampling can deliver equality. The equation itself
+holds exactly at `coolLaw` (`integral_phaseScore_coolLaw`) and at a degenerate kernel
+(`exists_markovKernel_mixesWithin_coolLaw_exact`, `:557`, TV exactly `0` in one step).
+That is precisely why the capstone was rewired to the interval form (§0a).
+
+### Route A — `PhaseMeanApprox.lean`, and what it costs
+
+`integral_phaseScore_mem_Icc_of_tvLe` (`:262`) derives the *interval* hypothesis from
+a TV bound `e` plus a slack condition
+`exp(R²/(2σᵢ²))·e ≤ η·(chain(i+1)/chain(i))`; `integral_prod_phaseScore_mem_relErr`
+(`:311`) telescopes it over the phases under a budget `2mη ≤ τ`. **Both are `hiso`-
+free and warm-start-free.** The two composed forms (`:366`, `:466`) carry `hiso`
+verbatim and a warm start.
+
+The cost: `log(1/tvBudget) = R²/(2σᵢ²) + log(1/η) + log(1/r)`, machine-checked as
+`Arlib.GaussianCooling.log_one_div_tvBudget_exp` (`:433`). **That identity is the
+whole of the machine-checked content.** The reading that `R²/(2σᵢ²)` is polynomially
+large in `n` on a cooling schedule — hence that Route A costs the exponent — is
+arithmetic in the docstring, and the file says so itself at `:167`. Do not upgrade it.
+
+Witnesses exist for the two `hiso`-free layers (`:576`, `:605`); the composed ones
+have none, and the file says so.
+
+### Route B — the coupling route, composed, with a chain-layer witness
+
+* `Arlib.GaussianCooling.le_measureReal_runMeasure_of_failure_budget`
+  (`GaussianCooling/CouplingRoute.lean:213`) — the abstract transfer: if every
+  coordinate law is within TV `b` of the exact one and `(r·m)·b ≤ ρ`, then a success
+  probability `q` at the exact laws transfers to `q − ρ` at the sampled ones. Built on
+  §0e's `TVLe.pi`. Witness at `:442`, at `b = 1/4 > 0` with `ν ≠ ν'` provably.
+* `Arlib.GaussianCooling.le_measureReal_runMeasure_metropolisGaussian_budget_of_convex`
+  (`CouplingRouteUncond.lean:184`) — the same with the coordinate laws instantiated at
+  `iterate (lazy (metropolisGaussian K δᵢ σᵢ²)) mu0 t` and `hiso` discharged by
+  `Arlib.hiso_metropolisGaussian_sharp_sqrt_logTwo`. `hRσ` replaces it; `hell`,
+  `hfloor` and the warm start remain.
+* **`Arlib.GaussianCooling.exists_couplingRoute_chain_witness`
+  (`CouplingRouteUncond.lean:256`) is the chain-layer non-vacuity witness**, and it
+  discharges every binder of that theorem including `hgood`, plus `0 < q − ρ` so the
+  conclusion is not the trivial `0 ≤ measure`. **Read the parameters**: `n = 2`,
+  `r = m = 1`, `K = B(0,1) ⊆ ℝ²`, and the estimator is `V ≡ 1`, `acc = 0`, `q = 1`,
+  with the warm start *being* the stationary law (`M = 1`). It certifies the chain
+  layer is instantiable. It certifies nothing about any estimator.
+
+### ⚠ `Ttc/Volume/CouplingAccuracy.lean` — the composed layer has **no witness**
+
+`Ttc.CVCoupling.volume_accuracy_couplingRoute` (`:152`) and
+`Ttc.CVCoupling.volume_accuracy_metropolisGaussian` (`:240`) join Route B's transfer
+to the estimator: here the abstract `q` is **concretely `1 − p`**, supplied by
+`Ttc.CVEst.volume_accuracy_of_samples` (`Ttc/Volume/CVEstimator.lean:582`) — note the
+namespace is `Ttc.CVEst`, not `Ttc.CV`, and two `Arlib` docstrings still get this
+wrong (§0d). The conclusion is `1 − p − ρ ≤ (runMeasure …).real {ω | …}`.
+
+**There is no non-vacuity witness for either theorem, and the file says so** (`:89`:
+"This file adds no witness of its own, and the composition has none"). It contains
+exactly two theorems and no `exists_*` declaration. The two witnesses it could
+inherit live on incompatible spaces — `exists_couplingRoute_witness` on
+`RunSpace Bool 1 1`, and `CVEstimator`'s bundle witnesses on `Unit` with
+deterministic scores, so `hsampler` there holds only at `η = 0`. **This is a
+CLAUDE.md §11 check-3 hole and is reported as one.** It is not *known* vacuous —
+the pieces are individually satisfiable — but "not known vacuous" is not
+"certified non-vacuous", and this page will not blur them.
+
+Two further caveats of that file, one live and one stale:
+
+* **live — the `k ≥ 2` run-space indexing caveat** (`:105-113`).
+  `Arlib.Probability.RunSpace E r m = Fin r → Fin m → E` carries **one** `E`-coordinate
+  per (run, phase), so for `k ≥ 2` the binders `hindep_in` and `hsample_mean`
+  constrain `k` functions of a *single* coordinate, which forces degeneracy unless `E`
+  itself packs `k` draws. The bundle is cleanly satisfiable at `k = 1`, so the theorems
+  are not vacuous on that account; but the "`k` independent samples per phase" reading
+  of `volume_accuracy_metropolisGaussian`, where `E = EuclSpace n` is forced, needs
+  `k = 1`. Flagged in the file, not fixed;
+* **stale** — its second bullet (`:114-120`) says no body is known to satisfy the
+  chain layer's hypotheses. One is; see §0d.
+
+Note also that this file still carries `hiso` as a binder (`:248-259`): it has **not**
+been switched to the `_of_convex` version, so §0e's discharge has not yet reached it.
+
+### What remains — the whole list, after §§0a–0f
+
+Stated once, so that no reader has to reassemble it, and stated in the order of how
+much mathematics is left in each:
+
+1. **Sampler existence.** `H : Ttc.HitAndRunTheorem11Input` is inhabited nowhere
+   (§0a row 1), and no sampler in this repository comes with a proved `hTV` at the
+   accuracy Cousins–Vempala's slack conditions need (§0a, §0f). Everything else on
+   the volume side that used to look deep now reduces to this.
+2. **Hypothesis applicability — the `ell` floor, and the speedy route.** The
+   Metropolis conductance and mixing theorems are true and their isoperimetry is
+   discharged, but their local-conductance floor is contradictory on the cube for
+   `n ≥ 3` (§0e), so they say nothing about the bodies the volume oracle quantifies
+   over. The speedy walk, whose stationary density `1_K·ℓ` has no corner problem,
+   has its **own** undischarged `hiso`, and `EllLogConcave.lean`'s two obstructions
+   to closing it are arguments, not theorems (§0e). This is where the mathematics
+   now is.
+3. **The estimator's connection to a real algorithm.** `Ttc/Volume/CouplingAccuracy.lean`
+   composes the transfer with the estimator and has **no non-vacuity witness**
+   (§0f); `hphase_var` is still routeless (§0a); and the `k ≥ 2` run-space indexing
+   caveat means the "`k` samples per phase" reading of the composed theorem needs
+   `k = 1`.
+4. **A cost model with no complexity field.** `Ttc.VolumeAlgorithm`
+   (`Ttc/Volume/Oracle.lean:70-93`) has exactly seven fields — `Ω`, `mΩ`, `μ`,
+   `isProb`, `est`, `est_meas`, `correct` — and **not one of them mentions a step
+   count, an oracle-call count or a cost**. Its `correct` field is an accuracy
+   guarantee and nothing else. So no instantiation of it, Cousins–Vempala's
+   included, can *state* a complexity, let alone prove one; all charging happens
+   outside, in `Ttc.ttcPolyCost`. **This one is a design decision, not a proof
+   problem** — and it is why §0a's `m·n⁴` is a charged-cost statement rather than a
+   runtime.
+
+The exponent arithmetic over the charged-cost model is unchanged by anything in
+§§0e–0f, and was already done before them.
+
+---
+
+## 0g. An unconditional polynomial-time uniform sampler — and why TTC is still not polynomial (2026-08-12)
+
+> ## ⚠ READ BOTH COLUMNS ⚠
+>
+> **Landed.** There is now a **uniform sampler on a convex body whose mixing bound
+> is a theorem with no mathematical hypothesis at all** — no isoperimetry binder,
+> no warm-start binder, no smoothness binder, no comparability binder. Hypotheses:
+> `2 ≤ n`, `K` measurable and convex, `B(0,1) ⊆ K`, a diameter bound `D`, and
+> `0 < ρ ≤ 1`. Step count `O(n⁴·D²·log(1+D)/ρ²)`. It is packaged in the exact shape
+> `Ttc.HitAndRunTheorem11Input.mixing` demands, and priced.
+>
+> **Not landed.** **`Ttc.ttc` and `Ttc.ttcPoly` are not rewired onto it.**
+> `HitAndRunTheorem11Input` is still the assumed, nowhere-inhabited contract every
+> `Ttc/Exec/` sampling number rests on; `Ttc.ttcSampPrice` is unchanged and still
+> `Θ(4ⁿ(γ+Dm)^{4n}/γ^{4n})`; the *volume* oracle is exponential independently and by
+> construction (§0, `Ttc.ttcVolPrice`). **Nothing in this subsection makes TTC run in
+> polynomial time, and none of it may be quoted as if it did.**
+
+### The Arlib stack: three binders, three theorems
+
+`Arlib.MarkovChains.mixesWithin_lazy_speedyWalk_uniformOn`
+(`MarkovChains/Continuous/SpeedyToUniform.lean:226`) consumes exactly three mathematical
+inputs. Each is now produced:
+
+| binder | discharged by | the constant |
+| --- | --- | --- |
+| `hiso` — isoperimetry for `ellProb K δ` | `Arlib.hiso_ellProb_of_ball_bound` ([`Convexity/LogConcaveIso.lean`](Arlib/Convexity/LogConcaveIso.lean)) | **`κ = 1/(8R)` for `K ⊆ B(0,R)` — free of `n`.** Proved by pinning `σ = 2R` in the Gaussian-tilt isoperimetry `gaussianRestricted_isoperimetry_openClosed_logTwo` (§0e), *not* by a `σ → ∞` limit, which sends the coefficient to `0`. The literature's sharp constant is `2/D` in the `min` form; **this is `1/(8D)` in the product form, and the file says so** |
+| `hwarm` — a warm start *for `ellProb K δ`*, not for `uniformOn volume K` | `Arlib.MarkovChains.isWarm_uniformOn_unitBall_ellProb` ([`MarkovChains/Continuous/WarmEllProb.lean`](Arlib/MarkovChains/Continuous/WarmEllProb.lean)) | `M = (1+D)ⁿ·vol K/vol B(0,1)`, from the **samplable** start `uniformOn volume (ball 0 1)`. **Exponential in `n`, and that is fine**: only `log M` enters `conductanceMixingTime`. Contrast `IsWarm.refl` (`SpeedyWalk.lean:1343`), which starts the chain from its own stationary law and is useless as an algorithm |
+| `hsmooth : IsSmooth K δ s` | `Arlib.MarkovChains.isSmooth_of_ball_subset` ([`EllFloor.lean:549`](Arlib/MarkovChains/Continuous/EllFloor.lean)) at `s = 1 − (1−δ)ⁿ ≈ nδ`; sharpened by `isSmooth_sqrt_of_ball_subset` ([`SmoothSqrt.lean:620`](Arlib/MarkovChains/Continuous/SmoothSqrt.lean)) to `s = 4e²δ√n` | `IsSmooth` is an **average** condition, not a pointwise floor — which is why it is satisfiable where §0e's pointwise `hell`/`hfloor` is *provably not* |
+
+Composition: [`SpeedyUniformPoly.lean`](Arlib/MarkovChains/Continuous/SpeedyUniformPoly.lean)
+(tunes `δ` so the bias is a named `ρ` rather than an opaque `s/(1−s)`) →
+[`UniformSamplerUncond.lean`](Arlib/MarkovChains/Continuous/UniformSamplerUncond.lean) →
+[`UniformSamplerSharp.lean`](Arlib/MarkovChains/Continuous/UniformSamplerSharp.lean).
+
+### Two routes, and TTC's backend is on the *slower* one
+
+Both are unconditional. They differ only in the step size `δ`, and the step count is `δ⁻²`.
+
+| route | `δ` | `φ` at `κ = 1/(8D)` | steps | theorem |
+| --- | --- | --- | --- | --- |
+| **uncond** | `ρ/(4n)` | `min(1/32, ρ/(8192·D·n²))` | `O(n⁵·D²·log(1+D)/ρ²)` | `mixesWithin_lazy_speedyWalk_uniformOn_uncond_steps` (`UniformSamplerUncond.lean:339`) |
+| **sharp** | `ρ/(128√n)` | `min(1/32, ρ/(262144·D·n^{3/2}))` | `O(n⁴·D²·log(1+D)/ρ²)` | `mixesWithin_lazy_speedyWalk_uniformOn_sharp_steps` (`UniformSamplerSharp.lean:358`) |
+
+⚠ **Do not read "sharp beats uncond" as a numerical fact at every `n`.** The exponent
+improves for all `n`; the *constants* run the other way, and what is proved is
+`steps_sharp_le_steps_uncond` (`UniformSamplerSharp.lean:498`) **under `1024 ≤ n`** —
+`φ_sharp/φ_uncond = √n/32`, so below `n = 1024` the sharpened route is numerically worse.
+`sqrtSharp_sq_gain_eq` (`:457`) is the exact identity `1024·φ_sharp² = n·φ_uncond²`, with no
+inequality and no dimension hypothesis.
+
+⚠ **And `Ttc.speedyMixSteps` is built on `ρ/(4n)`** — the `n⁵` route
+([`Ttc/Sampler/SpeedyBackend.lean:176`](Ttc/Sampler/SpeedyBackend.lean)). The `n⁴` sharp
+route is proved in `Arlib` and **is not what any `Ttc/` declaration consumes**. Rebuilding
+`speedyMixSteps` on `mixesWithin_lazy_speedyWalk_uniformOn_sharp_steps` is a *known,
+unstarted* task, not a claimed one.
+
+A third route, at `O(n³·D²·log(1+D)/ρ²)`, is proved conditionally in the same file —
+`mixesWithin_lazy_speedyWalk_uniformOn_sqrtCond` (`:619`) still carries `hiso` and
+`hwarm` as well; **`…_sharp3` (`:701`) is the one to read**, with `hiso`/`hwarm`
+discharged and `hcomp` the *single* remaining mathematical binder — resting on the
+conductance sharpening
+`conductance_speedyWalk_sqrt_ge` ([`SpeedyConductanceSqrt.lean:277`](Arlib/MarkovChains/Continuous/SpeedyConductanceSqrt.lean)),
+whose binder is
+`hcomp : ∀ x y ∈ K, ‖x − y‖ ≤ δ/√n → ell K δ x ≤ ofReal (3/2) · ell K δ y`.
+**`hcomp` is unproved.** The `K_δ`-shrinkage route to it is refuted in the same file:
+`ell_goodPoints_le_ell` runs the wrong way, and confinement forces `1 − vol S/vol K ≤ r` at
+every finite `t` (`obstruction_ballOne_in_ballTwo`, `UniformSamplerSharp.lean:892`).
+
+### The `Ttc`-facing layer
+
+| file | what it is |
+| --- | --- |
+| [`Ttc/Sampler/SpeedyBackend.lean`](Ttc/Sampler/SpeedyBackend.lean) | `Ttc.speedyMixSteps`, and `tvLe_iterate_lazy_speedyWalk_uniformOn_at_steps` — the conclusion of `HitAndRunTheorem11Input.mixing` **as a theorem**. `..._ballTwo_dim2` (`:600`) discharges every hypothesis at `K = B(0,2)`, `n = 2`, `ρ = 1/2`: a zero-hypothesis instance, which is precisely what `HitAndRunTheorem11Input` has never had |
+| [`Ttc/Sampler/SpeedyBackendUncond.lean`](Ttc/Sampler/SpeedyBackendUncond.lean) | `tvLe_transport_inscribedAffine` discharges the `hequiv` scaling-equivariance seam, via `SpeedyAffine.map_speedyWalk_affineChart` ([`SpeedyAffine.lean`](Arlib/MarkovChains/Continuous/SpeedyAffine.lean): `D ↦ D/γ`, `δ ↦ γδ`, `ρ` unchanged), so the `B(0,1) ⊆ K` normalisation is not a restriction. Witnesses at `γ ≠ 1` |
+| [`Ttc/Exec/SampPricePoly.lean`](Ttc/Exec/SampPricePoly.lean) | `drawOpCharge_le_poly` (`:303`): `≤ 2³⁰·n⁶·rfac·(Dm/γ)²·(log(1+Dm/γ) + log(2/ρ))/ρ²`. The `n⁶` is the `n⁵` route × `n` per draw |
+| [`Ttc/Exec/SpeedySamplerChain.lean`](Ttc/Exec/SpeedySamplerChain.lean) | `speedyWalk_mixes_and_drawPrice_le_poly` (`:260`) — mixing **and** price at the same `t`, in one conjunction |
+
+### The comparison against the incumbent exponential price — per route, with the threshold
+
+Three separate numbers. **Collapsing them to one is an error**; each is proved against a
+different right-hand side.
+
+| claim | against | file:line |
+| --- | --- | --- |
+| polynomial price is **larger** at `n = 2` | `mixStepsBound` | `expTerm_lt_polyPrice_at_dim_two`, `SpeedySamplerChain.lean:308` |
+| polynomial price ≤ exponential at **`n = 3`** | `mixStepsBound` (`= 16384·4ⁿ·n²·(D/γ)²·((γ+D)/γ)^{4n}·(…)`) | `polyPrice_le_expTerm_at_dim_three`, `:347` |
+| polynomial price ≤ exponential at **`n = 29`** | `2048·4ⁿ·log(√Mw/eps)`, a *lower* bound on `mixSteps` itself | `polyPrice_le_expLowerBound_at_dim_29`, `:426` |
+| polynomial is `o(exponential)` in `n`, at fixed geometry | `mixStepsBound` | `polyPrice_isLittleO_mixStepsBound`, `SampPricePoly.lean:504` |
+
+### The structural blocker — why `poly ≤ ttcSampPrice` is not merely unfinished
+
+The chain to `Ttc.ttcSampPrice` **at TTC's own arguments** is not closed, and the reason is
+not a missing lemma. The polynomial bound carries `1/ρ²` where the exponential bound carries
+`log(1/eps)`. Fixing `n` and sending the accuracy to `0`, the two diverge in opposite
+directions, so **no comparison uniform in the accuracy parameter exists**, at any dimension
+threshold. `polyPrice_isLittleO_mixStepsBound` is stated at *fixed* `ρ`, `eps` for exactly
+this reason. The bookkeeping items on top of that blocker — `2·ttcSampInradius ≤
+ttcSampDiamPrice`, `ttcSampTolPrice ≤ 1`, an `rfac` bound — are real but secondary.
+
+⚠ **This blocker is `speedyWalk`-specific, and the earlier text here overstated it.**
+Struck: ~~any reading on which this is an obstruction *for TTC*~~. Lovász–Vempala,
+*Hit-and-Run from a Corner* (2005), Thm 1.1 gives hit-and-run
+`m > 10¹⁰·n²R²/r²·ln(M/ε)` — **logarithmic** in `1/ε` — and says in terms that the
+polynomial dependence is *"unavoidable for the ball walk"* and is what hit-and-run
+removes. That is the route `Ttc.HitAndRunTheorem11Input` has always named, and it is
+already stated in this repository: `Arlib.MarkovChains.tvLe_iterate_hitAndRun_unitBall`
+(`HitAndRunMixing.lean:944`) with `Arlib.MarkovChains.lvThreshold` (`:829`) carrying the
+`ln(M/ε)`. So the `1/ρ²` above is a fact about the *speedy/ball* backend of §0g and about
+its comparison to `ttcSampPrice` — **not** a barrier to a polynomial-time TTC. See §0h.
+
+With that scoping, the rest stands. It is
+`README.md` finding **§19** ("the speedy walk's stationary bias does not decay with
+time") surfacing in the price algebra. The `1/ρ²` is there because the bias is a
+property of the *stationary* law `ellProb K δ`, so it is removed only by shrinking `δ`,
+and `δ` enters the step count as `δ⁻²`; running longer does not help. At the
+lattice-counting tolerance `ρ = θ/V` with `V` exponentially large, `1/ρ²` is itself
+exponential — which is exactly §19's conclusion. **One finding, two surfaces.**
+Removing it needs the trajectory-level holding-time argument §19 names (conditionally
+independent `Geom(ℓ(Yᵢ))` given the jump chain, on a `Kernel.traj` trajectory measure);
+nothing in this subsection attempts it.
+
+### Also landed, and what it does *not* upgrade
+
+* [`Arlib/Convexity/GaussianCooling/WarmChain.lean`](Arlib/Convexity/GaussianCooling/WarmChain.lean)
+  — `isWarm_coolLaw_succ_exp`: each Gaussian-cooling phase is **`e`-warm** for the next,
+  free of `n`, under the schedule `σ²ᵢ₊₁ ≤ (1 + 2/n)σ²ᵢ`. Crux `chain_succ_le_pow_mul`
+  (`Z(i+1) ≤ λⁿZ(i)`) by the rescaling `x ↦ λx`, shorter and slightly more general than
+  Cousins–Vempala's polar/cone argument. This is why the cooling-ratio binder
+  `cc ≤ 1 + 2/n` (§0a, binder #33) has the shape it has.
+* [`Arlib/MarkovChains/Continuous/BallWalkTransfer.lean`](Arlib/MarkovChains/Continuous/BallWalkTransfer.lean)
+  — `le_conductanceS_lazy_ballWalk_of_ball_subset` (`:479`): a **polynomial `s`-conductance**
+  bound, `min(1/16, ofReal(1/(8R))·ofReal(δ/(2n))/64)/2`, on the exact kernel
+  `Ttc.ballWalkLaw` iterates, every binder discharged.
+* **None of this touches `hphase_mean`/`hphase_var` or CV's `thm:iso`.** §0e's "sharp
+  constant remains open" stands: `κ = 1/(8R)` is a *ball-bound* isoperimetry for the speedy
+  walk's own stationary law `ellProb`, a different object from the Gaussian-restricted
+  measure the volume oracle needs. ~~The Gaussian-target chain still wants a kernel
+  reversible for `1_K·ℓ·γ`, and no such kernel is verified in this repository.~~
+  **Corrected later the same day — see the next bullet; that sentence was written before
+  `SpeedyGaussian.lean` was verified and is false.**
+* [`Arlib/MarkovChains/Continuous/SpeedyGaussian.lean`](Arlib/MarkovChains/Continuous/SpeedyGaussian.lean)
+  — **the kernel reversible for `1_K·ℓ·γ` now exists.**
+  `Arlib.MarkovChains.speedyMetropolisGaussian` (a speedy proposal with a Gaussian
+  Metropolis filter) is a Markov kernel, and `isReversible_speedyMetropolisGaussian`
+  (`:446`) proves it reversible for `ellGaussianMeasure K δ s`, the measure with density
+  `ℓ·e^{−‖x‖²/(2s)}` on `K` — **with no convexity of `K` and no positivity of `δ` or `s`**,
+  only `MeasurableSet K`. Corollaries for the normalised `ellGaussianProb` and for
+  invariance. The crux is `ellGaussian_mul_speedyMetropolisGaussian`, in which `ℓ`
+  cancels out of the moving term — that cancellation *is* the speedy device. The stuck-point
+  guard is not ported: it is subsumed by the `(1 − m(x))·δ_x` atom.
+  `exists_speedyMetropolisGaussian_witness` (`:656`) discharges everything on `K = B(0,1)`
+  and proves **`0 < P₀({0}ᶜ) < 1`** — the `< 1` half certifies the filter genuinely rejects,
+  so this is **not `speedyWalk` in disguise** (`speedyWalk`'s move probability is exactly `1`
+  at every non-stuck point). That is stronger than the repository's `metropolisGaussian`
+  precedent.
+  ⚠ **Scope: a kernel and its reversibility, and nothing more.** No conductance bound, no
+  mixing bound, no spectral gap. `conductance_speedyWalk_ge_of_convex` (`StarPolar.lean:626`)
+  is stated for `speedyWalk` and does **not** apply. `conductance_speedyGaussian_ge`
+  (`SpeedyConductanceSharp.lean:320`) *is* abstract in its kernel and would accept this one,
+  but three things are missing and none is proved for it anywhere: **(1)** `hoverlap` — the
+  repository's speedy overlap lemmas are about the *uniform* law on `B(x,δ) ∩ K`, and the
+  filter thins it by `min(1, g(y)/g(x))`, so the geometric estimate must be multiplied by an
+  acceptance floor re-derived against the speedy normaliser; **(2)** the `hpi` bridge from
+  the `ℝ≥0∞` density `ℓ·g` to that theorem's real-density form; **(3)** `hiso` wiring from
+  `Arlib.ellGaussian_isoperimetry_measurable_logTwo`, whose `hellKpos`, `hellLip`, `hLσ` must
+  be discharged. This is the next work list, not a claim.
+* `Ttc.VolumeAlgorithm` still has **no complexity field** (§0f). Nothing above changes that.
+
+---
+
+## 0h. The route of record for the sampler: Lovász–Vempala 2005, and the three binders left
+
+**Source.** László Lovász and Santosh Vempala, *Hit-and-Run from a Corner* (2005),
+`faculty.cc.gatech.edu/~vempala/papers/start.pdf`. **Theorem 1.1**, verbatim:
+
+> Let `K` be a convex body that contains a ball of radius `r` and is contained in a ball of
+> radius `R`. Let `σ` be a starting distribution and let `σ_m` be the distribution of the
+> current point after `m` steps of hit-and-run in `K`. Let `ε > 0`, and suppose the density
+> function `dσ/dπ_K` is bounded by `M` except on a set `S` with `σ(S) ≤ ε/2`. Then for
+> `m > 10¹⁰·n²·R²/r²·ln(M/ε)`, the total variation distance of `σ_m` and `π_K` is less
+> than `ε`.
+
+The paper's own framing of why this is the route: it *"improves on existing bounds by
+reducing the dependence on `M` and `ε` from polynomial (**which is unavoidable for the ball
+walk**) to logarithmic, while maintaining the optimal dependence on `r`, `R` and `n`."* And
+the mechanism: *"At the heart of this theorem is a bound of `Ω(r/(nR))` on the conductance
+of **every subset** (Theorem 4.2) — for the ball walk, the conductance of small sets can be
+arbitrarily small; therefore the need for a warm start."*
+
+**`Ttc.HitAndRunTheorem11Input` is this theorem.** Its `(M, S, hS, hdom)` clause is LV 1.1's
+"bounded by `M` except on a set `S` with `σ(S) ≤ ε/2`" — so residual hypotheses **#21, #22
+and #27** (`hS`, `hdom`, `hMwB`) are *the paper's own hypothesis*, not repository debt.
+**Owner-authorised 2026-08-12 to remain as hypotheses** ("you can use a hypothesis … that
+TTC starts with warmth `M`").
+
+**And LV 1.1 is already stated here, as a theorem, with three binders left.**
+`Arlib.MarkovChains.tvLe_iterate_hitAndRun_unitBall` (`HitAndRunMixing.lean:944`),
+threshold `Arlib.MarkovChains.lvThreshold` (`:829`):
+
+| binder | state | what closing it takes |
+| --- | --- | --- |
+| `hLem41` — LV Lemma 4.1 / Lovász (1999) Lemma 8, the TV overlap for cross-ratio-near points | **one estimate short.** `tvLe_hitAndRun_lemma41` (`HitAndRunOverlap.lean:583`) proves it with the spherical-cap probability `q₂` as a *binder*; every other input of the paper's proof is discharged (`hitAndRun_ball_medianStep_le`, `chordLength_mul_norm_le`, `hitAndRun_chord_bad_le`). `…_unconditional` (`:751`) is **vacuous for `n ≥ 2`** — it plugs in the trivial `q₂ = 1 − 1/n`, making the bound exceed `1`. The file says what is owed: `q₂ < 3/8`, against a true cap probability of `1/2` at `n = 2` and `0.4226…` at `n = 3` | the **spherical-cap concentration estimate**: `P(‖x−u‖·‖u−v‖ < √n·\|⟪x−u, u−v⟫\|) → P(\|N(0,1)\| ≥ 1) ≈ 0.317 < 3/8`, hence a dimension threshold. Then **constant-chasing downstream**: `…_of_le_three_eighths` gives `1 − (3/8 − q₂)/120 ≈ 1 − 1/2069`, weaker than the `1 − 1/500` that `conductance_hitAndRun_ge` (`HitAndRunConductance.lean:999`) was derived against, so its `1/(2²⁷·n·D)` must be re-derived |
+| `hIso` — LV Theorem 2.1, cross-ratio isoperimetry | **one binder from done.** `Arlib.thm21_of_localization` (`LovaszVempalaIso.lean:733`) proves Theorem 2.1 for the uniform density with the Localization Lemma as its **single** binder `hloc`. Note the printed Theorem 2.1 is **false as stated** and the repair (`∀ x ∈ K, h x ≤ 1/3`) is already inserted — `Arlib.not_hIso_two` | **the localization discharge**, at `g₁ = 1_{T₁} − A·1_K`, `g₂ = A·h·1_K − 1_{K∖T₁∖T₂}` (`LovaszVempalaIso.lean:163`) |
+| `hLS` — the Lovász–Simonovits `√W·(1 − φ²/2)^t` step | **a fork, not a gap.** Discharged for **lazy** chains (`ConductanceToTV.lean`, `ls_lazy`); the general form for plain kernels is **refuted** — the swap kernel on `Bool` (`HitAndRunMixing.lean:127-148`) — and that is a *paper* gap, not a repository one | a **modelling decision**: restate the contract over `lazy (hitAndRun K)`. Costs a factor `2` in the step count; nothing in `ttcRun` executes hit-and-run steps, so nothing downstream is disturbed. **Changes a stated interface — must not be done silently** |
+
+### The crux, and why it pays twice
+
+`hloc` for LV's Theorem 2.1 is **the same object** as `hloc` for CV's `thm:iso` —
+`LovaszVempalaIso.lean:724` says so directly (*"Compare `Arlib.gaussianRestricted_isoperimetry`'s
+`hloc`"*). Both instantiate the Localization Lemma at **indicator-based** integrands, and
+both are blocked by the same thing: `Arlib.exists_needleIntegral_eq_zero_and_pos_of_collinear`
+(`LocalizationClosed.lean:380`) requires **`Continuous g₁, g₂`**. That is `AUDIT.md`'s
+long-standing item **(C)**.
+
+So the single highest-leverage lemma in this repository is: **discharge the Localization
+Lemma for indicator integrands** — by mollification with a limit passage, or by weakening
+the collinear form's `Continuous` hypothesis to lower semicontinuity plus boundedness (and
+discharging `v ≠ 0`). It unlocks CV's `thm:iso` *and* LV's `hIso` *and* hence
+`HitAndRunTheorem11Input`, which in turn discharges residual hypothesis **#8** and — via
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` — **`hphase_mean`** (`RuntimeMN4.lean:244`:
+*"what is missing is the sampler, i.e. a proved `hTV` — the same open problem as #8"*).
+
+**What would still remain after all of that:** `hphase_var` (#13, routeless), the `r → 1`
+rescaling seam (`HitAndRunMixing.lean:168-180`, self-described "finite bookkeeping"), the
+`hdom` shape reconciliation (the contract's `uniformOn K (A \ S)` versus the theorem's
+`uniformOn K A` — the contract is the *stronger* form, so an inhabitant weakens cleanly),
+and §0f's cost-model scope decision. **Not** the `1/ρ²` of §0g: that belongs to the
+speedy/ball backend and is not on this route.
+
+### ☠ DEAD THEOREMS — `hIso_of_thm21` and `conductance_hitAndRun_ge_of_thm21` (2026-08-12)
+
+**Do not build on `Arlib.hIso_of_thm21` or `Arlib.conductance_hitAndRun_ge_of_thm21`
+(`Arlib/Convexity/CrossRatioIsoBridge.lean`). Their `hthm21` hypothesis is FALSE**, so both
+are vacuously true and prove nothing. Refuted by `Arlib.not_thm21_book`
+(`Arlib/Convexity/WeightedIsoBook.lean`) at `n = 1`, `K = closedBall 0 1`.
+
+**The defect is two missing clauses.** The `hIso` binder of `conductance_hitAndRun_ge`
+(`HitAndRunConductance.lean:1005-1010`) reads `… MeasurableSet T₁ → MeasurableSet T₂ →
+T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ → …`. The `hthm21` binder
+(`CrossRatioIsoBridge.lean:445-453`) **dropped `T₁ ⊆ K` and `T₂ ⊆ K`**. With `u ∉ K`,
+`crossRatioDist K u v ≥ 1` always — the chord parameters satisfy `0 < a ≤ 1 < b` and
+`d_K(u,v) = (b−a)/(a(b−1))` — so `min 1 (d_K u v)/3 = 1/3` and the chord hypothesis
+degenerates into the global `g ≤ 1/3` it already assumes, carrying **zero** geometric
+information. Witness: `U₁` a ball of volume `vol K/2` placed far outside `K`, `U₂` of
+relative volume `9/10` inside `K`, `g ≡ 1/3`, `A = 1/2`; the conclusion would assert
+`vol K/6 ≤ vol K/10`.
+
+**Lovász–Vempala Theorem 2.1 itself is untouched** — there `S₁, S₂, S₃` partition `K`, so the
+subset clauses hold by construction. This is an encoding defect introduced in this
+repository, not a defect in the source.
+
+**Repaired:** `Arlib.hIso_measurable_of_thm21_sub`, `Arlib.hIso_book`,
+`Arlib.conductance_hitAndRun_ge_book` (`WeightedIsoBook.lean`) rerun the same proofs against
+`hthm21sub` — identical but with `U₁ ⊆ K → U₂ ⊆ K →` inserted. **Repoint anything aimed at
+the dead pair.**
+
+> **⚠ Audit lesson, recorded because it was missed here.** The dead pair was verified by
+> checking that `conductance_hitAndRun_ge_of_thm21` composes into `conductance_hitAndRun_ge`
+> by `exact`, and that check **passed**. It had to: a false hypothesis makes any composition
+> typecheck. `#print axioms` was clean, `lake build` was green, the composition was
+> machine-checked — and the theorem was worthless. This is exactly `CLAUDE.md` §11's
+> non-vacuity failure mode. **A binder must be checked for satisfiability, not only for
+> fit.** The cheap test: diff the new binder against the binder it claims to serve, clause
+> by clause. Two missing clauses were visible by eye.
+
+### ⚠ The acceptance test needed strengthening — 2026-08-12
+
+The old test was: *`grep -rn "HitAndRunTheorem11Input" --include="*.lean" Ttc/ Arlib/` must
+show a **constructor application**, not only the `structure` declaration and binders.*
+
+**That test now passes, and it must not be read as a green light.**
+`Ttc.hitAndRunTheorem11Input_of_binders` (`Ttc/Sampler/HitAndRunBackend.lean:587`) really
+does build a `HitAndRunTheorem11Input` — `refine ⟨?_⟩` over the `mixing` field. But it takes
+`HLem41`, `HIso`, `HLS` as hypotheses **universally quantified over all `n` and all `K`**,
+which is *stronger* than the per-body binders elsewhere. It is a **reduction of inhabitation
+to three named statements**, not a witness. The file says so itself.
+
+**The corrected test, in three parts.** All three must hold:
+1. a constructor application exists — **now true**;
+2. it takes **no hypothesis** that is itself unproved — currently **false**, three remain;
+3. a `Nonempty Ttc.HitAndRunTheorem11Input` or a `def`/`instance` of that type with no
+   hypotheses elaborates — currently **false**.
+
+Until (2) and (3) hold, every hit-and-run cost number in `Ttc/Exec/` is arithmetic without
+meaning, exactly as §0a says. This is `CLAUDE.md` §11's non-vacuity check: a conditional
+constructor is precisely the failure mode that check exists to catch.
+
+---
+
+## 0i. `hcomp` is discharged; the volume oracle's blocker is now a *single* named theorem (2026-08-13)
+
+Two things changed today, in opposite directions. Read both before quoting anything in
+`SpeedyGaussianConductance.lean` or `OverlapPerPair.lean`.
+
+### (a) Proved: Cousins–Vempala's `lem:f-dist`, and with it `hcomp`
+
+`Arlib.MarkovChains.ell_comparable_of_densDist`
+(`Arlib/MarkovChains/Continuous/OverlapPerPair.lean:232`) is CV `1409.6011`'s `lem:f-dist`
+(`vol3_journal.tex:548`, the paper's Lemma 6.3): from `d_h(u,v) < 1/4` for `h = ℓ·γ`,
+`‖u−v‖ ≤ δ/√n`, `δ ≤ σ/(8√n)` and `K ⊆ 4σ√n·Bₙ`, conclude `ℓ(u) ≤ (3/2)ℓ(v)` and
+symmetrically.
+
+Consequences, all axiom-clean, all verified by a forced rebuild (`Built`, 3442 jobs):
+
+* `overlap_speedyWalk_sqrt_perPair` (`:276`) and
+  `conductance_speedyMetropolisGaussian_ge_perPair` (`:361`) — the `hcomp` binder is
+  **removed**, not moved. It was *globally false*
+  (`exists_ell_not_comparable_at_sqrt_dim_counterexample`); the consumer's own
+  `densDist h u v < 1/4` clause, previously documented as "not used", now carries it.
+* The dimension threshold `n ≥ 21` is **derived**, not assumed — it is CV's unquantified
+  "for `n` large enough", computed in `gaussianWeightReal_le_of_cv` (`:95`) at the bracket
+  `9/8` (rather than the paper's `1.1`, because `(4/3)·(9/8) = 3/2` exactly).
+* `ell_comparable_of_densDist_witness` (`:406`) discharges the entire hypothesis bundle at
+  two **distinct** points, so the `densDist` premise is not secretly diagonal-only.
+
+### (b) Found: `hellLip`/`hLσ` has no witness with non-constant `ℓ` — INFORMAL
+
+`conductance_speedyMetropolisGaussian_ge` (`SpeedyGaussianConductance.lean:530`) and its
+`_perPair` refinement still carry
+
+    hellLip : ∀ u ∈ K, ∀ v ∈ K, ℓ(u) ≤ ℓ(v)·exp(Lf·‖u−v‖)
+    hLσ     : √3·(σ²·Lf + R) ≤ 2σ√n
+
+**Nothing in the repository discharges these, and the following argument — which is
+INFORMAL, not machine-checked — says nothing can, at the operative step.** `hLσ` caps
+`Lf ≤ 2√n/(√3·σ)`, so over a distance `δ ≤ σ/(8√n)` the permitted variation of `log ℓ` is
+`Lf·δ ≤ 2/(8√3) ≈ 0.144`. But `ℓ` at a cube corner is `≤ 2⁻ⁿ`
+(`Arlib.MarkovChains.two_pow_mul_ell_cube_corner_le_one`, **machine-checked**, `EllFloor.lean:327`)
+and `≈ 1` at distance `δ√n` inward, so the true rate is `≈ √n·log 2/δ = 8n·log 2/σ`, which
+exceeds the cap `1.15√n/σ` for every `n ≥ 1`. The only witness in the tree
+(`ellGaussian_isoperimetry_measurable_logTwo_strict_witness`) takes `Lf = 0` on a body so
+small that `ℓ` is constant.
+
+So `conductance_speedyMetropolisGaussian_ge` and `_perPair` are **not** mixing-time,
+spectral-gap or runtime bounds, and must not be quoted as such. Turning the argument above
+into a refutation lemma, in the style of `EllFloor.lean`'s
+`metropolis_ell_floor_unsatisfiable_on_cube`, is deferred work.
+
+`hellLip` is an artefact of *this repository's* route, not of the mathematics: CV's `thm:iso`
+(`vol3_journal.tex:467`) uses no Lipschitz control of `ℓ` anywhere. It enters at exactly one
+place — `Arlib.norm_sub_ge_of_densDist_weighted` (`Arlib/Convexity/IsoWeighted.lean:237`),
+which converts the density branch `4(d/σ)√n ≤ d_h(u,v)` into a *metric* separation
+`‖u−v‖ ≥ 2√3·d` so that `exists_disjoint_open_enlargement_weighted` can build disjoint open
+enlargements and thereby lift the isoperimetric inequality from open/closed sets to
+measurable ones.
+
+### (c) The Metropolis route is refuted on the consumer's class — and this one IS machine-checked
+
+`Arlib/MarkovChains/Continuous/EllFloor.lean` settles it: `hfloor` forces `θ ≥ 1/5`, the cube
+`[-1,1]ⁿ` is in the consumer's class (`CVInstantiate.lean:148,153`), and `ℓ ≤ 2⁻ⁿ` at its
+corner, so `metropolis_ell_floor_unsatisfiable_on_cube` shows no `θ` meets `hell` and
+`hfloor` together for `n ≥ 3`. `MetropolisMixingUncond.lean` is therefore
+**`hiso`-unconditional only**; its `hell`/`hfloor` pair restricts the body class to bodies
+with no corner at scale `δ`, which excludes the polytopes TTC's volume oracle is applied to.
+Its non-vacuity witness `exists_mixesWithin_lazy_metropolisGaussian_uncond_witness` uses
+`K = B(0,1/2) ⊆ ℝ²` with `δ = 1` — a body *contained in the proposal ball*, which violates
+the consumer's `ball 0 1 ⊆ K`.
+
+### (d) The blocker, stated as one theorem
+
+Both routes fail at the same joint, and it is not isoperimetry — the `ℓ`-weighted
+isoperimetric inequality is **already proved with no Lipschitz hypothesis of any kind**:
+
+    Arlib.ellGaussian_isoperimetry_openClosed_logTwo   (Arlib/Convexity/EllLogConcave.lean:474)
+
+for `h(x) = ℓ(x)·e^{−‖x‖²/(2σ²)}`, obtained by instantiating the general log-concave-weight
+Gaussian isoperimetry at `f = ℓ` via `Arlib.isLogConcave_ell_toReal` (`:262`). Its **only**
+deficiency against the `hiso` binder of
+`Arlib.MarkovChains.conductance_speedyGaussian_ge` is set regularity: it needs `S₁, S₂` open
+and `S₃` closed, whereas `hiso` is stated for **measurable** `S₁, S₂, S₃`.
+
+> **The blocker is the measurable upgrade of `ellGaussian_isoperimetry_openClosed_logTwo`,
+> reached without the metric-enlargement detour.**
+
+**UPDATE, same day — this blocker is now CLOSED for a general log-concave cofactor.** See
+§0j. What remains of it is the instantiation at `f = ℓ`, which needs only integrability and
+positive mass for `h = ℓ·γ`.
+
+The detour is what costs `hellLip`, and the repository already proves the detour cannot be
+repaired in general: `Arlib.exists_separated_no_disjoint_open_enlargement`
+(`Arlib/Convexity/IsoOpenClosed.lean:1205`) exhibits separated sets with no disjoint open
+enlargement. So the upgrade has to go through the localization directly, on the measurable
+sets — CV's own route, and the machinery is in
+`Arlib/Convexity/LocalizationMeasurable.lean`. Everything downstream — the speedy-walk
+conductance, its transfer to the uniform walk (`HoldingTime.lean`, `SpeedyToUniform.lean`),
+`hphase_mean`, `hphase_var` — is already routed.
+
+The average-`ℓ` facts needed on the far side are already unconditional on the whole class:
+`isSmooth_of_ball_subset` (`EllFloor.lean`) gives `(1−δ)ⁿ·vol K ≤ ∫_K ℓ` for every convex `K`
+with `ball 0 1 ⊆ K`, which is what `tvLe_ellProb_uniformOn` (`SpeedyToUniform.lean:207`)
+consumes — the same infimum-to-average dissolution that fixed `hIso`, `hLem41` and `hcomp`.
+
+---
+
+## 0j. `thm:iso` is proved for **measurable** sets — the paper's unproved step, discharged (2026-08-13)
+
+Cousins–Vempala's Theorem 5.4 (`thm:iso`, `1409.6011/vol3_journal.tex:467`) is stated for an
+*arbitrary* partition of `ℝⁿ`. Its proof reduces to the one-dimensional inequalities via the
+step at `vol3_journal.tex:499`:
+
+> "By a standard combinatorial argument, we can assume that `Zᵢ = {t : (1−t)a+tb ∈ Sᵢ}` are
+> intervals that partition `[a,b]`."
+
+**The paper does not prove that step**, and it is the reason this repository had `thm:iso`
+only for `S₁, S₂` open and `S₃` closed (`gaussianRestricted_isoperimetry_openClosed_logTwo`,
+`OneDimSharp.lean:631`), where the reduction is available.
+
+### The capstone
+
+```lean
+Arlib.gaussianRestricted_isoperimetry_measurable_logTwo   -- Arlib/Convexity/IsoMeasurableUncond.lean:119
+```
+
+Identical to the open/closed capstone binder for binder, except that `IsOpen S₁`,
+`IsOpen S₂`, `IsClosed S₃` become `MeasurableSet S₁`, `MeasurableSet S₂`, `MeasurableSet S₃`,
+plus an added `hd : 0 < d`. Axiom-clean; full tree 3713 jobs, 0 errors, 0 `sorry`.
+
+### The `ℓ`-weighted instantiation — `hellLip` and `hLσ` deleted
+
+```lean
+Arlib.ellGaussian_isoperimetry_measurable_logTwo_uncond   -- Arlib/Convexity/IsoMeasurableUncond.lean:139
+```
+
+`thm:iso` for measurable sets at `h = ℓ·γ`. Set against
+`Arlib.ellGaussian_isoperimetry_measurable_logTwo` (`Arlib/Convexity/IsoWeighted.lean:851`),
+which reaches the same conclusion through the metric-enlargement detour, the binders
+`hellLip`, `hLσ` — and the parameters `R` and `Lf` they mention — are **gone**. Log-concavity
+of `ℓ` (`isLogConcave_ell_toReal`) does the work log-Lipschitzness was being asked for,
+because the route never converts the density branch.
+
+Its side conditions come from `Arlib/Convexity/EllGaussianFacts.lean`
+(`ellGaussian_continuous`, `ellGaussian_le_one`, `ellGaussian_integrable`,
+`ellGaussian_integral_pos`), which extracts and generalises what had been proof-local `have`s
+inside `ellGaussian_isoperimetry_openClosed_logTwo`. Notably none of them needs
+`MeasurableSet K`; only the log-concavity of `ℓ` does.
+
+### The idea, and why it is not blocked by the repository's own counterexample
+
+The previous route to the measurable case (`exists_disjoint_open_enlargement_gaussianIndicator`,
+`IsoIndicator.lean:405`) discharges the *density* branch of the separation disjunction by
+converting it into the *metric* branch. That needs a global log-Lipschitz bound on `h` — free
+for `1_K·γ`, and the unsatisfiable `hellLip` for `ℓ·γ` (§0i(b)).
+
+The new route **never converts the density branch.** Each pair stays in whichever branch it
+was in, and only the *thresholds* move, from `d` to any `d' < d`. What that needs is a
+perturbation bound for `densDist`, which uniform continuity on a compact set supplies — and
+crucially **the thickening radius is chosen after the compact sets**, so it has no inequality
+to satisfy against `σ`, `R` or `n`. A global Lipschitz constant does; that is `hLσ`, and it
+fails.
+
+`Arlib.exists_separated_no_disjoint_open_enlargement` (`IsoOpenClosed.lean:1205`) — which
+shows disjoint open supersets of `S₁, S₂` need not exist at all — is evaded, not contradicted:
+there the two sets touch *inside* `{h = 0}`. The route never asks for supersets of `S₁, S₂`,
+only of compact subsets of `S₁ ∩ {h > 0}` and `S₂ ∩ {h > 0}`, which are disjoint compacts and
+so a positive distance apart; the discarded part carries no mass because `h` vanishes there.
+
+### The four pieces, each independently forced-rebuilt and axiom-clean
+
+| file | key theorem | content |
+|---|---|---|
+| `Arlib/Convexity/IsoInnerRegular.lean` | `exists_compact_subset_setIntegral_ge` | inner regularity **inside `{h > 0}`** — the `∀ x ∈ C, 0 < h x` clause is load-bearing |
+| `Arlib/Convexity/IsoEnlargeContinuous.lean` | `exists_disjoint_open_enlargement_of_continuous` | the crux; `densDist_ge_sub_of_perturb` is its arithmetic core (`3η/m`) |
+| `Arlib/Convexity/IsoEnlargeMeasurable.lean` | `exists_enlargement_of_measurable` | the composition, with the `2ε` residual bookkeeping |
+| `Arlib/Convexity/IsoEnlargeSlack.lean` | `gaussianRestricted_isoperimetry_measurable_of_enlargements` | slack-tolerant reduction + the limits `ε ↓ 0`, `d' ↑ d` |
+
+### Non-vacuity, and what each witness certifies
+
+* `exists_disjoint_open_enlargement_of_continuous_witness` — an instance where the **metric
+  branch is FALSE** at the only pair, so the density branch carries the disjunction alone.
+  That instance is out of reach of the Lipschitz route, which is the point of the file.
+* `exists_enlargement_of_measurable_witness` — both `S₁` and `S₂` of positive `h`-mass, so
+  the composition does not reduce to its degenerate branches.
+* `exists_enlargements_witness` — `S₁, S₂` **not open** and the conclusion's left side
+  strictly positive, so the data is genuinely outside the reach of the open/closed capstone.
+* `gaussianRestricted_isoperimetry_measurable_logTwo_witness`
+  (`IsoMeasurableUncond.lean:216`) — the **capstone's own** bundle, discharged at the closed
+  slab partition `{⟪e,x⟫ ≤ −1/4}`, `{1/4 ≤ ⟪e,x⟫}` with `f ≡ 1`, `σ = 1`, `d = log 2/4`. Its
+  last two conjuncts prove `¬IsOpen S₁` and `¬IsOpen S₂`, so the capstone is exhibited being
+  applied exactly where `gaussianRestricted_isoperimetry_openClosed_logTwo` cannot be. Strict
+  positivity of the left-hand side for the same slab data comes from
+  `exists_enlargements_witness`.
+
+### What this does NOT give — read before quoting it
+
+**The capstone carries `hhc : Continuous h`, and the consumer's density is not continuous.**
+
+The continuity binder is *inherited*, not added: `gaussianRestricted_isoperimetry_openClosed_logTwo`
+(`OneDimSharp.lean:631`) already carries it, and §0j changes only the three regularity binders
+on `S₁, S₂, S₃`. But Cousins–Vempala's Theorem 5.4 itself assumes only that `f` is log-concave,
+which **includes discontinuous indicators** — so what is proved here is Theorem 5.4 for
+measurable sets *for continuous `h`*, which is strictly weaker than the paper's statement.
+
+That matters because it is exactly the case the consumer needs. `hiso` in
+`Arlib.MarkovChains.conductance_speedyGaussian_ge` is instantiated, via
+`Arlib.MarkovChains.hpi_ellGaussian`, at
+
+    h = Set.indicator K (fun x => (ell K δ x).toReal * gaussianWeightReal (σ^2) x)
+
+which is **discontinuous across `∂K`**: `ℓ > 0` at a boundary point (a corner still has
+`ℓ ≥ 2⁻ⁿ > 0`) while the indicator drops to `0`. So `gaussianRestricted_isoperimetry_measurable_logTwo`
+instantiates at `ℓ·γ` — the density of `ellGaussian_isoperimetry_openClosed_logTwo`, with no
+indicator — and **not** at the consumer's `1_K·ℓ·γ`. Nor is the gap a monotonicity one that
+could be waved through: `∫ ℓ·γ > ∫ 1_K·ℓ·γ` by the collar mass just outside `K`, and the
+residual set `(U₁ ∪ U₂)ᶜ` picks that collar up on the right-hand side.
+
+So the remaining work is **not** a one-line instantiation. It is an indicator bridge, and the
+template for it is already in the tree — `Arlib.gaussianIndicator_isoperimetry_measurable`
+(`Arlib/Convexity/IsoIndicator.lean:476`) does exactly this for `1_K·γ`, by running the
+open/closed capstone at the *continuous* mollified density
+`h_j = e^{−j·dist(x, closure K)}·γ` and letting `j → ∞` by dominated convergence
+(`tendsto_setIntegral_expNegInfDist_mul_gaussian`, `setIntegral_indicator_closure_eq`;
+`volume (frontier K) = 0` via `Ttc.CousinsVempala.volume_interior_eq` reconciles `closure K`
+with `K`). The version needed here carries the extra factor `ℓ`, and — unlike the indicator
+case — may use the **density** branch, because §0j's enlargement does not require converting
+it. `Arlib.isLogConcave_exp_neg_infDist` (`IsoIndicator.lean:152`) supplies log-concavity of
+the mollifier.
+
+Until that bridge lands, **nothing in §0j may be quoted as a conductance, mixing-time or
+runtime statement**, and §0i(b)'s scope warning on `SpeedyGaussianConductance.lean` stands
+exactly as written.
+
+---
+
+## 0k. `thm:speedyconductance` is unconditional — `hellLip` and `hLσ` are gone (2026-08-13)
+
+§0j closed the measurable case of `thm:iso` for a *continuous* density, and flagged that the
+consumer needs the **indicator** density `1_K·ℓ·γ`, which is discontinuous across `∂K`. That
+bridge is now built, and the conductance bound follows.
+
+### The two new capstones
+
+```lean
+Arlib.ellGaussianIndicator_isoperimetry_measurable_logTwo  -- Arlib/Convexity/IsoIndicatorEll.lean:89
+Arlib.conductance_speedyMetropolisGaussian_ge_uncond       -- Arlib/Convexity/SpeedyGaussianUncond.lean:112
+```
+
+The second is Cousins–Vempala's `thm:speedyconductance` (`vol3_journal.tex:624`):
+
+    Φ(speedyMetropolisGaussian K δ σ²) ≥ δ·log 2 / (640·σ·√n)
+
+with respect to `ellGaussianProb K δ σ²`, carrying **no isoperimetric and no comparability
+hypothesis**. Against `conductance_speedyMetropolisGaussian_ge_perPair`
+(`OverlapPerPair.lean:361`), the binders `hLf`, `hellLip`, `hLσ` and the parameter `Lf` are
+deleted; everything else, including the conclusion, is verbatim.
+
+### Why the mollification bridge closes
+
+Run the §0j capstone at `g j = e^{−j·d(x, K̄)}·ℓ·γ` with the parts cut to `K`
+(`S₁' = S₁ ∩ K`, `S₂' = S₂ ∩ K`, `S₃' = (S₁' ∪ S₂')ᶜ`). Then:
+
+* **the separation hypothesis transfers exactly** — on `K`, `d(x,K̄) = 0`, so `g j = h`
+  pointwise and `densDist (g j) u v = densDist h u v` for all `u,v ∈ K`, for every `j`. No
+  comparison estimate, and the density branch is never converted. This is what the older
+  route (`gaussianIndicator_isoperimetry_measurable`, `IsoIndicator.lean:476`) cannot do: it
+  must force every pair into the metric branch, which is what costs a Lipschitz constant;
+* **two of the three integrals never move** — `S₁', S₂' ⊆ K`, so `∫_{S₁'} g j = ∫_{S₁} h`
+  for every `j`;
+* **only the mass and the residual take a limit**, and both land exactly:
+  `∫ g j → ∫_{K̄} ℓγ = ∫ h` and `∫_{S₃'} g j → ∫_{S₃} h`, using `S₃' ∩ K = S₃ ∩ K` from the
+  partition and `volume (frontier K) = 0` for convex `K`.
+
+Supporting file: `Arlib/Convexity/EllMollifier.lean` (13 theorems — log-concavity of the
+mollified cofactor, the four analytic side conditions, and the two dominated-convergence
+limits).
+
+### Non-vacuity — and why it is not routine here
+
+`conductance_speedyMetropolisGaussian_ge_uncond_witness` (`SpeedyGaussianUncond.lean:150`)
+discharges **every** binder simultaneously at `n = 21`, `K = B̄(0,1)`, `σ = 100`, `δ = 1`,
+`R = 1`, and carries the conductance conclusion itself as its last conjunct.
+
+This is the point: the binders it drops are exactly the ones §0i(b) argues have **no** witness
+with non-constant `ℓ`, so `conductance_speedyMetropolisGaussian_ge_perPair` had no
+unconditional instance at all. Here `δ = 1` on a body of radius `1`, so `ℓ` is genuinely
+non-constant, and the bundle is still met.
+
+### What this does NOT give
+
+A conductance bound is not a mixing time and not a running time. The conductance-to-TV step
+and the speedy-to-target transfer (`SpeedyToUniform.lean`, `HoldingTime.lean`) are separate
+and are **not** performed here, and `hphase_mean`/`hphase_var` — the two remaining hypotheses
+of the volume algorithm (`CVInstantiate.lean:255`) — are still open until they are. `R`
+survives in the binders because the *overlap* side still needs it, via
+`acceptance_floor_of_cv`; only the isoperimetry side became `R`-free.
+
+§0i(b)'s scope warning on `SpeedyGaussianConductance.lean` still applies to the theorems
+*in that file*, which continue to carry `hellLip`; it no longer describes the state of the
+art, which is this section.
 
 ---
 
@@ -665,15 +2158,16 @@ proof enters `Model/` — then apply `Ttc.ttc_accuracy_pairLaw` and
 that the names in the statement name what they claim to: a wrong abbreviation
 would be a build error, not a silent divergence.
 
-> ⚠ **Read this first (2026-08-12): there are now three headline theorems, and this
+> ⚠ **Read this first (2026-08-12): there are now four headline theorems, and this
 > section describes the second of them.** Everything below about "eleven binders" is
 > the *price-parametric* statement, which was renamed and moved:
 >
-> | theorem | file | prices |
+> | theorem | file | prices, and binder count |
 > | --- | --- | --- |
-> | `Ttc.ttc_volume_estimate` | `Ttc/Model/Theorem.lean` | **fixed inside `Ttc.ttc`'s own definition**, at the Cousins–Vempala and hit-and-run numbers; **nine** binders; runtime side reads `m·n⁴·(…)` under a `∀ R γ` guard |
-> | `Ttc.ttc_volume_estimate_parametric` | `Ttc/Exec/PricedHeadline.lean` | free, over `Ttc.ttcCharged`; **eleven** binders + `cVol cSample`; this is the old headline modulo that rename, and is what everything below means |
-> | `Ttc.ttcPoly_volume_estimate_cv` | `Ttc/Exec/PolyAccuracy.lean` | the *swapped-bundle* run — genuinely Cousins–Vempala over hit-and-run — conditional on `Ttc.HitAndRunTheorem11Input`, which is **inhabited nowhere** |
+> | `Ttc.ttc_volume_estimate` | `Ttc/Model/Theorem.lean` | **fixed inside `Ttc.ttc`'s own definition**, at the Cousins–Vempala and hit-and-run numbers. **11 explicit / 13 raw** — the same eleven as the parametric one, with `cVol cSample` gone. Runtime side reads `m·n⁴·(…)` under a `∀ R γ` guard |
+> | `Ttc.ttc_volume_estimate_parametric` | `Ttc/Exec/PricedHeadline.lean` | free, over `Ttc.ttcCharged`. **13 explicit / 15 raw** — the eleven plus `cVol cSample`. This is the old headline modulo that rename, and is what everything below means |
+> | `Ttc.ttcPoly_volume_estimate_cv` | `Ttc/Exec/PolyAccuracy.lean` | the *swapped-bundle* run — genuinely Cousins–Vempala over hit-and-run. **68 explicit / 72 raw**, conditional on `Ttc.HitAndRunTheorem11Input`, which is **inhabited nowhere** |
+> | `Ttc.ttc_runtime_mn4` | `Ttc/Exec/RuntimeMN4.lean` | the **goal-state capstone**: the row above with four accounting binders discharged. **64 explicit / 68 raw**, of which **38 are residual hypotheses**. §0a is the ledger |
 >
 > The first one's measure takes **four arguments and no prices**: `Ttc.ttc atoms φ ε δ`.
 > Since 2026-08-12 `Ttc.ttc` is a four-ary `def` in `Model/Pseudocode`, equal by `rfl` to
@@ -700,13 +2194,15 @@ contains no `Ttc.TtcProb`, no `Ttc.VolumeAlgorithm` and no `Ttc.KV97Sampler`:
 atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
 ```
 
-Two more explicit binders follow them, `cVol cSample : ℕ`, the per-call costs the
-running-time conjunct is charged in; every "eleven" on this page means the list
-above and excludes those two. The raw arity is therefore **15** — eleven, plus the
-two costs, plus the implicit ambient `{A}` and `{n}`. §5's probe prints the raw
-number; say which convention you are quoting. (`Ttc.ttc_volume_estimate` itself now
-has nine explicit binders and raw arity 11 — the two prices are gone and the ambient
-`{A}`, `{n}` remain.)
+In `Ttc.ttc_volume_estimate_parametric` two more explicit binders follow them,
+`cVol cSample : ℕ`, the per-call costs the running-time conjunct is charged in; every
+"eleven" on this page means the list above and excludes those two. That statement's
+raw arity is therefore **15** — eleven, plus the two costs, plus the implicit ambient
+`{A}` and `{n}` — and its explicit arity is **13**.
+
+**`Ttc.ttc_volume_estimate` itself has exactly the eleven above: 11 explicit, 13 raw.**
+The two prices are gone; the ambient `{A}`, `{n}` remain. §5's probe prints the raw
+number; say which convention you are quoting.
 
 **Eleven binders**, and it is worth naming what is *not* among them: no
 interpretation `M`, no parameter block `P`, no DNF converter, no oracle argument,
@@ -722,7 +2218,9 @@ passes* (dilation, pruning, cleanup) as what the headline certifies `alg:ttc`
 statement.
 
 **Two conjuncts, not one — and both about the same run.** Both are stated over a
-single law on a single space: `Ttc.ttc atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)`
+single law on a single space: `Ttc.ttcCharged atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)`
+(and, for the fixed-price headline, its four-ary specialisation
+`Ttc.ttc atoms φ ε δ`, equal to it by `Ttc.ttc_def`)
 ([`Model/Pseudocode`](Ttc/Model/Pseudocode.lean)), the algorithm's own law on
 `(estimate, charged cost)` — draw the volume coins, draw the sample trajectory at
 the rates they produced, return the pair. **There is no iterated integral.** The
@@ -896,11 +2394,39 @@ hypotheses transported to the deduplicated cube list are in
 `Ttc.TwoCube.toDNFd_twoForm` proves the two-cube DNF is already duplicate-free —
 **special to this witness**, not a general fact.
 
-### The two per-call charges `cVol`, `cSample`: parametric by choice, and exponential in fact
+### The two per-call charges `cVol`, `cSample`: parametric upstream, fixed in the headline, exponential in fact
 
-> ⚠ 2026-08-12: parametric in `Ttc.ttc_volume_estimate_parametric`, which is what this
-> subsection is about. In `Ttc.ttc_volume_estimate` they are now **fixed** at two numbers
-> that are *not* either of the two derived bounds below — see the box at the head of §1e.
+> ⚠ **Read this box before the subsection.** `cVol`/`cSample` are **no longer binders
+> of `Ttc.ttc_volume_estimate`.** They are binders of
+> `Ttc.ttc_volume_estimate_parametric`, the price-parametric statement over
+> `Ttc.ttcCharged`, which is what everything below is about. In the headline they are
+> **fixed**, at `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` (`Model/Pseudocode`), inside
+> `Ttc.ttc`'s own *definition* — and those are **not** either of the two derived bounds
+> below. See the box at the head of §1e.
+
+#### What the fixing did and did not change
+
+**Did:** the headline's running-time conjunct now reads `m · n⁴ · (…)`, so the shape
+`thm:runtime` prints is the shape the theorem states. `Ttc.ttc_volume_estimate` lost
+two binders in the process — it is **11 explicit / 13 raw**, not the 13/15 earlier
+revisions of this page and of the README quote.
+
+**Did not:** make the run pay those prices. `Ttc.ttc`'s oracle bundle is the closed
+term `Ttc.algOracles` — hit-and-miss Monte Carlo over the lazy ball walk — and
+`cVol`/`cSample` are unit multipliers in `Ttc.stepCost`'s fold, so substituting *any*
+pair of naturals yields a law of this shape (at `0`, the charged cost is identically
+`0`). Charging the Cousins–Vempala and hit-and-run prices inside a run that executes
+neither oracle is a **modelling choice, not a costing of this run**. The prices this
+run *can* be shown to pay are `Ttc.ttcVolPrice` and `Ttc.ttcSampPrice`, and they are
+still exponential in `n` — the closed forms are below and are unchanged.
+
+**So the sentence this subsection used to end with —** "substituting `O(n⁴)` into the
+headline would assert what the formalisation refutes" — **is now too strong for the
+headline and exactly right for the run.** Precisely: the *statement* has been given the
+`n⁴` shape at fixed prices, legally, as arithmetic; what remains refuted is that
+`Ttc.ttc`'s **own** oracles cost `O(n⁴)`, and what remains unproved is that `TTC` runs
+in `O(m·n⁴)` at all. §0a's `Ttc.ttc_runtime_mn4` is the nearest thing to the latter, and
+it is a charged-cost bound over a *different program* under 38 hypotheses.
 
 `alg:ttc` line 24's `Vol_ED` and line 43's `GenerateSamples` are oracle calls whose
 per-call cost the paper never fixes, so the statement quantifies over them. That keeps
@@ -922,8 +2448,10 @@ parametric by choice, not for want of them:
 `Θ(4ⁿ·(γ+Dm)^{4n}/γ^{4n})`, with a further `(1+κ/(10^ρ·q·γ̂))ⁿ·10^(ρn)·qⁿ` inside the
 logarithm. `thm:runtime`'s `cVol = O(n⁴)`, `cSample = O(n³)` are the **paper's** figures,
 for a Cousins–Vempala oracle and a polynomial sampler; **this development proves neither,
-and for the constructions it does build the true prices are exponential.** Substituting
-`O(n⁴)` into the headline would assert what the formalisation refutes.
+and for the constructions it does build the true prices are exponential.** Reading the
+headline's fixed `O(n⁴)` charge as a statement about `Ttc.algOracles` would therefore
+assert what the formalisation refutes — see the box at the head of this subsection for
+what the fixing does and does not claim.
 
 Three further reasons a concrete numeral there would overclaim: `mixSteps` does not occur
 in `Ttc.ttcRun`'s definitional closure at all — it enters through `Ttc.ttcRates`, the
@@ -1257,9 +2785,10 @@ Nothing in that file removes `hφ`, and **nothing in it is imported by the capst
 
 ### Non-vacuity at eleven binders
 
-> ⚠ 2026-08-12: this witnesses `Ttc.ttc_volume_estimate_parametric`. The nine binders of
-> `Ttc.ttc_volume_estimate` are a sub-list of these eleven, so the same two-cube data
-> meets them — see `Ttc.TwoCube.ttc_volume_estimate_two_cube_fixed` (below), added so the
+> ⚠ 2026-08-12: this witnesses `Ttc.ttc_volume_estimate_parametric`. The **eleven**
+> binders of `Ttc.ttc_volume_estimate` are exactly this list — that statement's two extra
+> binders were `cVol cSample`, which it no longer has — so the same two-cube data meets
+> them. See `Ttc.TwoCube.ttc_volume_estimate_two_cube_fixed` (below), added so the
 > fixed-price headline has a witness of its own rather than one by instantiation-in-prose.
 
 [`Ttc.TwoCube.ttc_volume_estimate_two_cube_full`](Ttc/Witness/FullTwoCube.lean) applies
@@ -1980,6 +3509,17 @@ that a real sampler would have to supply — `hphase_mean`, `hphase_var`,
 module docstring says this in its own words; so does
 [`CV-ROADMAP.md`](CV-ROADMAP.md).
 
+> **Since 2026-08-12 there is a fourth constructor and a fourth witness**, and the
+> capstone uses them: `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean`
+> (`Ttc/Volume/CVInstantiate.lean:458`), whose `hphase_mean` is an interval rather
+> than an equation and whose `hphase_var` is at `varBudget (ε/2)`, witnessed by
+> `cousinsVempalaOfRunsApproxMeanWitness` (`:634`) — degenerate in the same way
+> (zero phases), for the same reason. §0a and §0f are the audit surface for that
+> change. `hphases_pos` was also **deleted** as a binder of
+> `VolumeAlgorithm.cousinsVempalaOfApproxMean` (`CousinsVempala.lean:2065`), the
+> `m = 0` case now being handled in the proof; `cousinsVempalaOfSampler` still
+> carries it.
+
 `Ttc.VolumeAlgorithm.cousinsVempala` is **not** reached by either capstone (§5's
 walks report `false` from `Ttc.TtcProb.volume_estimate` *and* from
 `Ttc.ttc_volume_endToEnd`): `volAlg` is an assumed field of `TtcProb`, and this
@@ -2021,11 +3561,22 @@ the Cousins–Vempala paper (five of them statements false as printed).
 
 ### 3d. Downstream structures with partial witnesses
 
+> **The 2026-08-12 additions to this list are in §0e and §0f rather than here**,
+> because they are all `∀`-binder bundles rather than structures: the isoperimetry
+> and Metropolis-mixing witnesses (§0e's closing subsection), the chain-layer
+> coupling witness `Arlib.GaussianCooling.exists_couplingRoute_chain_witness`, and
+> — **loudly** — the fact that `Ttc/Volume/CouplingAccuracy.lean`'s two composed
+> theorems have **no witness at all** (§0f). Read those before concluding that this
+> page's witness inventory is complete.
+
 Two more, both in `Arlib/`, both witnessing hypothesis bundles that are *not yet*
 on the headline's path but are where the remaining oracles will be discharged.
 Their limitations are the point:
 
-* **`hiso` is no longer open.** An earlier revision of this file said the
+* **`hiso` is no longer open** — *this* `hiso`, the **ball walk's** isoperimetric
+  binder, which is a different statement from Cousins–Vempala's `thm:iso` of §0e and
+  is discharged at an **exponentially small** constant. Do not read the two as one.
+  An earlier revision of this file said the
   isoperimetric inequality (`∀ d > 0, ∀ A B …, κ·d·π(A)·π(B) ≤ π(K \ A \ B)`) was
   "the open end of the whole Phase-4 stack", carried as a `∀`-binder by every
   mixing theorem. It is now a theorem, with nothing assumed:
@@ -2284,6 +3835,25 @@ description of the two dilated regions is the canonical one of
 proves. These are the residual assumptions of that kind. None is hidden — each is
 stated in the file that introduces it — but they are collected here because they
 are exactly what a green build does not certify.
+
+> **The 2026-08-12 material adds nothing to this section, and that is a checked
+> claim, not an omission.** Every file behind §0e and §0f — `IsoOpenClosed`,
+> `IsoIndicator`, `OneDimSharp`, `EllLogConcave`, `LocalizationMeasurable`,
+> `LensMin`, `LensSharp`, `OverlapSqrt`, `DeltaCap`, `MetropolisOverlapSqrt`,
+> `MixingSqrt`, `MetropolisMixing`, `MetropolisMixingUncond`, `EllFloor`,
+> `TVTensor`, `PhaseMeanRoute`, `PhaseMeanApprox`, `CouplingRoute`,
+> `CouplingRouteUncond`, `Ttc/Volume/CouplingAccuracy` — contains **no `def`,
+> `structure`, `class` or `axiom` at all; every declaration is a `theorem`.
+> `Ttc/Exec/RuntimeMN4.lean`'s single `def` is the meta-level binder counter behind
+> `#binderProfile`, is not `Prop`-valued and appears in no statement. The one name
+> in that file's runtime bound that could stand in for a proof,
+> `Ttc.PolyComplexity.threshFactor`, is **expanded away** in the statement, and
+> `Ttc.ttc_runtime_mn4_threshFactor` proves the expansion *is* the definition by
+> `rfl`. The names that remain in the bound (`canonRfac`, `toDNFd`, `preprocess`)
+> are computed from the input by the algorithm itself, not claimed identities.
+> One name that **does** promise a semantic identity is
+> `Arlib.GaussianCooling.coolLaw`, and it is **proved**, not asserted:
+> `coolLaw_eq_uniformOn_gaussianWeight` (`PhaseMeanRoute.lean:216`) — §0f.
 
 **The strongest residual assumption is a pair of `def`s asserted to be the
 implementation.** The `law_eq` and `oracle_eq` fields say that two `def`s
@@ -2667,14 +4237,27 @@ run_cmd do
 `{A}` and `{n}` from the `variable` line. So `Ttc.ttc_volume_final` reports **28**,
 against the **26 explicit** binders §1d lists and a caller must supply — the same
 `raw = explicit + 2` relation §1b explains for `Ttc.ttc_volume`. Quote whichever
-you like, but say which. Add `` `Ttc.ttc_volume_estimate `` to the list and it
-reports **15 raw**: the two implicits, the **eleven** binders §1e lists
-(`atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`), and the two per-call cost constants
-`cVol`/`cSample`, which every "eleven" on this page silently excludes because they
-are parameters of the *cost model* rather than of the algorithm. **That makes
-`raw = explicit + 2` wrong for this theorem** — it is `raw = 11 + 2 + 2` — and an
-earlier revision of this paragraph quoted "11 explicit / 13 raw" by applying the
-relation instead of running the probe.
+you like, but say which.
+
+Add `` `Ttc.ttc_volume_estimate `` to the list and it reports **13 raw**: the two
+implicits and the **eleven** binders §1e lists
+(`atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`). `raw = explicit + 2` holds for this
+theorem again.
+
+> ⚠ **Corrected 2026-08-12, twice over, and the history is worth keeping.** This
+> paragraph used to report **15 raw** — the two implicits, the eleven, and the two
+> per-call cost constants `cVol`/`cSample` — and to conclude that
+> `raw = explicit + 2` was *wrong* for this theorem, scolding an earlier revision for
+> quoting "11 explicit / 13 raw" by applying the relation instead of running the
+> probe. `cVol`/`cSample` are no longer binders (§1e's box), so the earlier revision's
+> arithmetic is now the right answer, reached the wrong way. **Run the probe.** The
+> claim "11 and 13" on this page is a report of a build the author ran, not a
+> derivation, and it goes stale the moment a binder moves.
+
+For `Ttc.ttc_runtime_mn4` (§0a) do **not** use this probe: `RuntimeMN4.lean` ships
+`#binderProfile`, which splits the raw count by `BinderInfo` and prints
+`68 raw = 64 explicit + 2 implicit + 2 instance` at build time. `cntF` above would
+report only the `68`, and 4 of those are not obligations anyone discharges.
 
 ### Re-check the `Model/` boundary yourself
 

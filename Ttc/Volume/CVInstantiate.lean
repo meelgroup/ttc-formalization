@@ -28,6 +28,14 @@ A second step, `Ttc.VolumeAlgorithm.cousinsVempalaOfRuns`, then takes the coin s
 six more from `Arlib/Probability/RunPlumbing.lean`, leaving **exactly two**:
 `hphase_mean` and `hphase_var`. Those two are the whole residual gap, and both are about
 the sampler, not about bookkeeping.
+
+A third step, `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean`, is the same wiring with
+`hphase_mean` **relaxed from an equation to an interval** — the shape a total-variation
+bound on a sampler can actually deliver, and the shape
+`Ttc.CV.run_relErr_four_fifths_approxMean` consumes. It is the constructor the capstone
+`Ttc.ttc_runtime_mn4` runs on. Its conclusion, its coin space, its score and its estimate
+are `cousinsVempalaOfRuns`'s; only the mean hypothesis (and, forced by the accuracy split,
+the variance budget) differs.
 -/
 
 namespace Ttc
@@ -63,7 +71,7 @@ and the six hypotheses that concern *only* those three are discharged from `Arli
 | `hindep_runs`  | remains | the `reps` runs use independent randomness |
 | `hprodLp`      | remains | each run's telescoping product is in `L²` |
 | `hphase_indep` | remains | the `phases` phases use independent randomness |
-| `hphase_mean`  | remains | **the deep one — see below** |
+| `hphase_mean`  | remains | **stated too strongly — see below** |
 | `hphase_var`   | remains | relative second moment `≤ 1 + κ/m` for the *sampled* score |
 
 Six discharged, **eight remaining**. Six of the eight (`hW_meas`, `hmed_meas`, `hmed`,
@@ -72,15 +80,35 @@ bookkeeping about whatever concrete `W` and `med` a caller supplies; `hphase_var
 transport problem (§5.1 proves the corresponding bound for the *ideal* estimator
 unconditionally, `Arlib.GaussianCooling.fixed_var_bound_ratio_indicator`).
 
-**`hphase_mean` is the deep one.** It demands
+**`hphase_mean` is the deep one, and it is stated too strongly here.** It demands
 `∫ W K ε p j i dμ = chain (i+1) / chain i` — *exact* unbiasedness of the phase-`i` score
 for the phase ratio. `Arlib.GaussianCooling.chain_ratio_eq` identifies the right-hand side
 as a deterministic integral against the phase-`i` density `coolWeight i / chain i`, so
-what is missing is a random variable whose law *is* that density. No mixing bound can
-deliver this: a Markov chain run for finitely many steps is at total-variation distance
-`> 0` from its stationary law, which makes the score's mean the ratio only up to an error,
-never on the nose. Closing it requires either a perfect sampler or restating §5.2 with an
-approximately-unbiased score. This is where the development actually stops.
+what is missing is a random variable whose law *is* that density.
+
+The reason no mixing bound delivers the equation is **not** that a Markov chain is always
+at positive total-variation distance from its stationary law. That claim is *false*, and
+this repository refutes it: `Arlib.MarkovChains.mixesWithin_const`
+(`Arlib/MarkovChains/Continuous/Warmness.lean:382`) proves
+`MixesWithin (Kernel.const Ω π) π μ₀ 1 0` — total variation exactly `0`, in one step. The
+correct argument is about what a *bound* buys: a guarantee `TV ≤ tvErr` with `tvErr > 0`
+pins the score's mean only to within `tvErr` (times the score's sup-norm), and
+`Arlib.GaussianCooling.exists_tvLe_coolLaw_integral_phaseScore_ne` makes that
+machine-checked — at every `tvErr > 0` there is a law within `tvErr` of `coolLaw` whose
+phase-score integral is *not* the chain ratio. So an equation is not a hypothesis any
+mixing theorem can discharge, at any rate.
+
+Nor is the remedy "a perfect sampler *or* restating §5.2" — Cousins–Vempala do neither:
+they keep the exact-law equation and pay for the sampler with a coupling. The remedy used
+here is the third one, and it is already in the repository:
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean` (below) carries the **interval**
+`∫ W ∈ (1 ± ε/(2(2+ε)m))·(chain(i+1)/chain i)` instead, which is exactly what a TV bound
+buys, and `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` *derives* that interval from a TV
+guarantee (`Ttc.CV.sampledPhase_mean_mem_relErr`) rather than assuming it. The capstone
+`Ttc.ttc_runtime_mn4` runs on the interval form. The equation-carrying
+`cousinsVempalaOfRuns` is kept only because `Ttc.cvVolAlg` and
+`Ttc.ttcPoly_volume_estimate_cv` are stated at it. What remains genuinely open is the
+*sampler*: producing `hTV` at the accuracy the slack conditions need.
 
 ## Side conditions introduced
 
@@ -239,7 +267,12 @@ schedule and chain files, **twelve of `cousinsVempala`'s fourteen hypotheses are
 theorems**. The two that remain are exactly the two that are about the *sampler* rather
 than about bookkeeping:
 
-* `hphase_mean` — the phase-`i` score is unbiased for the phase-`i` chain ratio;
+* `hphase_mean` — the phase-`i` score is **exactly** unbiased for the phase-`i` chain
+  ratio. This is stronger than the mathematics needs and stronger than any sampler
+  guarantee can supply; `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean` below is the
+  same construction on the interval form, and is what the capstone runs on. This
+  constructor is retained because `Ttc.cvVolAlg` and `Ttc.ttcPoly_volume_estimate_cv` are
+  stated at it;
 * `hphase_var` — its relative second moment is at most `1 + varBudget ε / phases`.
 
 Both are now stated against `ν j i`, the law of one phase's randomness, not against the
@@ -347,6 +380,266 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfRunsWitness (n : ℕ) : Volume
     (fun _ _ _ _ _ _ _ _ _ _ i => i.elim0)
     (fun _ _ _ _ _ _ _ _ _ _ i => i.elim0)
 
+/-! ## The same, with the phase mean an interval rather than an equation
+
+`cousinsVempalaOfRuns` above asks each phase score to be **exactly** unbiased for the
+chain ratio.  No sampler can supply that (see the docstring of
+`cousinsVempalaOfRunsApproxMean` below), and the run bound does not need it:
+`Ttc.CV.run_relErr_four_fifths_approxMean` tolerates a per-phase relative bias `η`
+provided `2·m·η ≤ τ` and the accuracy is split as `innerAcc + τ + innerAcc·τ ≤ ε`.
+`cousinsVempalaOfRunsApproxMean` is the same wiring on that weaker hypothesis, with the
+split **hard-wired** so that no new binder appears for it. -/
+
+/-- **§5.2 on the universal run space, with `hphase_mean` an interval rather than an
+equation — the constructor the capstone `Ttc.ttc_runtime_mn4` runs on.**
+
+Same coin space, same score, same median selector, same conclusion as
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRuns`: the estimate on `K` at accuracy `ε` and
+confidence `p` is the median of `Arlib.GaussianCooling.reps ε p` independent runs of
+`Arlib.GaussianCooling.chain … 0 · ∏ᵢ g K ε p j i (ω j i)`, correct within relative `ε`
+with probability `≥ 1 − p`.  **The `VolumeAlgorithm` guarantee is character-for-character
+the one `cousinsVempalaOfRuns` produces** — `VolumeAlgorithm.correct` is a `Prop` field, so
+the two constructions differ only in *how* that field is proved, not in what it says, and
+the data fields (`Ω`, `μ`, `est`) are the same expressions —
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean_est` below checks the `est` half of
+that claim by `rfl` rather than leaving it to the reader's eye.
+
+## The one hypothesis that changes
+
+| | `cousinsVempalaOfRuns` | here |
+| --- | --- | --- |
+| `hphase_mean` | `∫ g dν = chain(i+1)/chain(i)` | `∫ g dν ∈ (1 ± ε/(2(2+ε)m))·(chain(i+1)/chain(i))` |
+
+`m = phases K ε p`, so the per-phase tolerance is `Θ(ε/m)`, not `Θ(ε)` — the `m` is not
+cosmetic, the per-phase biases multiply and `Arlib.GaussianCooling.phaseBias_le` is what
+pays for the compounding.
+
+**Why the equation had to go.**  It is not that a Markov chain is always at positive
+total-variation distance from its stationary law — that claim is *false*, and this
+repository refutes it: `Arlib.MarkovChains.mixesWithin_const` exhibits
+`MixesWithin (Kernel.const Ω π) π μ₀ 1 0`, total variation exactly `0` in one step.  The
+correct statement is about what a *bound* buys: a guarantee `TV(law of the sample, coolLaw
+i) ≤ tvErr` with `tvErr > 0` constrains the score's mean only to within `tvErr` (times the
+score's sup-norm), and no strengthening of a mixing bound short of `tvErr = 0` pins the
+mean on the nose.  `Arlib.GaussianCooling.exists_tvLe_coolLaw_integral_phaseScore_ne` makes
+this machine-checked: it exhibits a law at total variation `≤ tvErr` of `coolLaw` whose
+phase-score integral is **not** the chain ratio, at every `tvErr > 0`.  The interval below
+is exactly what a TV bound does buy, and
+`Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` derives it from `hTV` rather than assuming
+it (`Ttc.CV.sampledPhase_mean_mem_relErr`).
+
+## The accuracy split, hard-wired
+
+`Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` splits the requested `ε` into an inner
+(Chebyshev) accuracy and a mean bias.  Rather than expose the split as data, this
+constructor fixes it at the repository's own choice, which meets the composition
+`innerAcc + meanBias + innerAcc·meanBias ≤ ε` with **equality**:
+
+* `innerAcc ε = ε/2`,
+* `meanBias ε = ε/(2+ε)` (so `ε/2 + ε/(2+ε) + (ε/2)(ε/(2+ε)) = ε`),
+* `phaseBias K ε p = ε/(2(2+ε)·m) = meanBias ε/(2m)`, meeting `2·m·phaseBias ≤ meanBias`
+  with equality when `m > 0` and trivially when `m = 0`.
+
+Consequently **`hphase_var` is stated at `Arlib.GaussianCooling.varBudget (ε/2)`, not at
+`varBudget ε`**.  That is forced, not chosen: `Real.exp (varBudget ε) - 1 = ε²/5`
+(`Arlib.GaussianCooling.exp_varBudget`), and `cousinsVempalaOfApproxMean` needs
+`exp (varBudget') - 1 ≤ innerAcc(ε)²/5`; once any of the budget is spent on bias,
+`innerAcc ε < ε` and the variance budget shrinks with it.  There is no split with a
+strictly positive bias tolerance that keeps the full `varBudget ε`.
+
+## Everything else is `cousinsVempalaOfRuns` verbatim
+
+`hσ`, `hg`, `hgb` are the same side conditions on caller-chosen data; the six plumbing
+hypotheses are discharged from the same `Arlib/Probability/RunPlumbing.lean` theorems and
+the four schedule/chain hypotheses from the same `Arlib/…/Schedule.lean` and
+`Arlib/…/Chain.lean` theorems.  No `hphases_pos` is required: `cousinsVempalaOfApproxMean`
+handles the zero-phase case directly, which is what keeps the degenerate non-vacuity
+witness below available. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfRunsApproxMean (n : ℕ) (E : Type)
+    [MeasurableSpace E] (ν : ℕ → ℕ → Measure E) [∀ j i, IsProbabilityMeasure (ν j i)]
+    -- the schedule data the caller picks
+    (phases : Set (Space n) → ℝ → ℝ → ℕ)
+    (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    -- the score family: run `j`, phase `i` of input `(K, ε, p)` scores its own coordinate
+    (g : Set (Space n) → ℝ → ℝ → ℕ → ℕ → E → ℝ) (B : ℝ)
+    -- side conditions on that data (NOT among the fourteen)
+    (hσ : ∀ K ε p j, 0 < σsq K ε p j)
+    (hg : ∀ K ε p j i, Measurable (g K ε p j i))
+    (hgb : ∀ K ε p j i x, |g K ε p j i x| ≤ B)
+    -- the two remaining hypotheses, both about the sampler
+    (hphase_mean : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ)) ∈
+        relErr (ε / (2 * (2 + ε) * (phases K ε p : ℝ)))
+          (Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K ((i : ℕ) + 1) /
+            Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K (i : ℕ)))
+    (hphase_var : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ x, (g K ε p j (i : ℕ) x) ^ 2 ∂(ν j (i : ℕ))
+        ≤ (1 + Arlib.GaussianCooling.varBudget (ε / 2) / (phases K ε p : ℝ)) *
+            (∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ))) ^ 2) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfApproxMean n (Arlib.Probability.NatRunSpace E)
+    (Arlib.Probability.natRunMeasure ν) phases
+    Arlib.GaussianCooling.reps
+    (fun ε => Arlib.GaussianCooling.varBudget (ε / 2))
+    (fun ε => ε / 2)
+    (fun ε => ε / (2 + ε))
+    (fun K ε p => ε / (2 * (2 + ε) * (phases K ε p : ℝ)))
+    (fun K ε p i => Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K i)
+    -- `W`: the phase score reads the coordinate of its own (run, phase) pair
+    (fun K ε p => Arlib.Probability.natScore (g K ε p))
+    -- `med`: the explicit measurable median selector of the `reps ε p` run products
+    (fun K ε p ω => Arlib.Probability.medianSel
+      fun j : Fin (Arlib.GaussianCooling.reps ε p) =>
+        Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K 0 *
+          ∏ i : Fin (phases K ε p),
+            Arlib.Probability.natScore (g K ε p) (j : ℕ) (i : ℕ) ω)
+    -- hreps_pos, hreps : from `Arlib/…/Schedule.lean`
+    Arlib.GaussianCooling.reps_pos
+    Arlib.GaussianCooling.reps_spec
+    -- hbudget0 : the budget is taken at the *inner* accuracy `ε/2`
+    (fun ε hε => Arlib.GaussianCooling.varBudget_nonneg (ε / 2) (by linarith))
+    -- hinner_pos
+    (fun ε hε => by linarith)
+    -- hbias_nonneg
+    (fun K ε p hε => by
+      have h2 : (0 : ℝ) ≤ 2 + ε := by linarith
+      have hm : (0 : ℝ) ≤ (phases K ε p : ℝ) := Nat.cast_nonneg _
+      exact div_nonneg hε.le (by nlinarith))
+    -- hmean_nonneg
+    (fun ε hε => div_nonneg hε.le (by linarith))
+    -- hmean_lt_one
+    (fun ε hε => by rw [div_lt_one (by linarith)]; linarith)
+    -- hphaseBudget : `2·m·phaseBias = meanBias` when `m > 0`, and `0 ≤ meanBias` when `m = 0`
+    (fun K ε p hε => by
+      have h2 : (0 : ℝ) < 2 + ε := by linarith
+      rcases Nat.eq_zero_or_pos (phases K ε p) with h0 | hp
+      · rw [h0]
+        simp only [Nat.cast_zero, mul_zero, zero_mul]
+        exact div_nonneg hε.le h2.le
+      · have hm : ((phases K ε p : ℝ)) ≠ 0 := Nat.cast_ne_zero.mpr hp.ne'
+        have key : 2 * ((phases K ε p : ℝ)) * (ε / (2 * (2 + ε) * (phases K ε p : ℝ)))
+            = ε / (2 + ε) := by
+          field_simp
+        exact key.le)
+    -- hcompose : the split meets the composition with equality
+    (fun ε hε => by
+      have h2 : (2 : ℝ) + ε ≠ 0 := by positivity
+      have key : ε / 2 + ε / (2 + ε) + ε / 2 * (ε / (2 + ε)) = ε := by
+        field_simp
+        ring
+      exact key.le)
+    -- hbudget : `varBudget_spec` at the inner accuracy
+    (fun ε hε => Arlib.GaussianCooling.varBudget_spec (ε / 2) (by linarith))
+    -- hW_meas
+    (fun K ε p => Arlib.Probability.measurable_natScore (hg K ε p))
+    -- hmed_meas
+    (fun K ε p => Arlib.Probability.measurable_medianSel_natRuns (hg K ε p) _ _ _)
+    -- hmed
+    (fun K ε p ω => Arlib.Probability.isMedian_medianSel_natRuns (g K ε p) _ _ _ ω)
+    -- hindep_runs
+    (fun K ε p => Arlib.Probability.iIndepFun_natRuns ν (hg K ε p) _ _ _)
+    -- hprodLp
+    (fun K ε p j => Arlib.Probability.memLp_two_natRunProd ν (hg K ε p) (hgb K ε p) j _)
+    -- hchain_pos, hchain_end : from `Arlib/…/Chain.lean`
+    (fun K ε p _hε _hp _hp1 _hconv hball hfin i =>
+      Arlib.GaussianCooling.chain_pos (hσ K ε p) hball hfin i)
+    (fun K ε p _hε _hp _hp1 _hconv _hball _hfin =>
+      Arlib.GaussianCooling.chain_end (phases K ε p) (σsq K ε p) K)
+    -- hphase_indep
+    (fun K ε p _ _ _ _ _ _ j =>
+      Arlib.Probability.iIndepFun_natScore_phases ν (hg K ε p) j _)
+    -- hphase_mean : transferred to the coordinate law by `integral_natRunCoord`
+    (fun K ε p hε hp hp1 hconv hball hfin j i => by
+      have hmean : ∫ ω, Arlib.Probability.natScore (g K ε p) j (i : ℕ) ω
+            ∂(Arlib.Probability.natRunMeasure ν)
+          = ∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ)) :=
+        integral_natRunCoord ν j (i : ℕ) (hg K ε p j (i : ℕ))
+      rw [hmean]
+      exact hphase_mean K ε p hε hp hp1 hconv hball hfin j i)
+    -- hphase_var : same transfer, on both the second moment and the mean
+    (fun K ε p hε hp hp1 hconv hball hfin j i => by
+      have hsq : ∫ ω, (Arlib.Probability.natScore (g K ε p) j (i : ℕ) ω) ^ 2
+            ∂(Arlib.Probability.natRunMeasure ν)
+          = ∫ x, (g K ε p j (i : ℕ) x) ^ 2 ∂(ν j (i : ℕ)) :=
+        integral_natRunCoord ν j (i : ℕ) ((hg K ε p j (i : ℕ)).pow_const 2)
+      have hmean : ∫ ω, Arlib.Probability.natScore (g K ε p) j (i : ℕ) ω
+            ∂(Arlib.Probability.natRunMeasure ν)
+          = ∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ)) :=
+        integral_natRunCoord ν j (i : ℕ) (hg K ε p j (i : ℕ))
+      rw [hsq, hmean]
+      exact hphase_var K ε p hε hp hp1 hconv hball hfin j i)
+
+/-- **The two constructors build the *same estimator*** — the prose claim above, checked.
+
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRuns` (equation form of `hphase_mean`) and
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean` (interval form) produce
+`VolumeAlgorithm`s with the same coin space, the same coin law and — this lemma — the same
+`est`, by `rfl`. So swapping one for the other in a statement about a *run* of the
+algorithm (e.g. `Ttc.ttc_runtime_mn4`) changes no distribution and weakens no conclusion;
+it changes only which hypothesis the `VolumeAlgorithm.correct` field was proved from.
+
+The equation-form hypotheses are taken as arguments here only because `cousinsVempalaOfRuns`
+cannot be applied without them; nothing in the proof uses them (`VolumeAlgorithm.est` does
+not depend on the `Prop` fields). -/
+theorem VolumeAlgorithm.cousinsVempalaOfRunsApproxMean_est (n : ℕ) (E : Type)
+    [MeasurableSpace E] (ν : ℕ → ℕ → Measure E) [∀ j i, IsProbabilityMeasure (ν j i)]
+    (phases : Set (Space n) → ℝ → ℝ → ℕ) (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    (g : Set (Space n) → ℝ → ℝ → ℕ → ℕ → E → ℝ) (B : ℝ)
+    (hσ : ∀ K ε p j, 0 < σsq K ε p j) (hg : ∀ K ε p j i, Measurable (g K ε p j i))
+    (hgb : ∀ K ε p j i x, |g K ε p j i x| ≤ B)
+    (hmean_eq : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ)) =
+        Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K ((i : ℕ) + 1) /
+          Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K (i : ℕ))
+    (hvar_eq : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ x, (g K ε p j (i : ℕ) x) ^ 2 ∂(ν j (i : ℕ))
+        ≤ (1 + Arlib.GaussianCooling.varBudget ε / (phases K ε p : ℝ)) *
+            (∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ))) ^ 2)
+    (hmean_mem : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ)) ∈
+        relErr (ε / (2 * (2 + ε) * (phases K ε p : ℝ)))
+          (Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K ((i : ℕ) + 1) /
+            Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K (i : ℕ)))
+    (hvar_half : ∀ (K : Set (Space n)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space n) 1 ⊆ K → volume K ≠ ⊤ → ∀ j (i : Fin (phases K ε p)),
+      ∫ x, (g K ε p j (i : ℕ) x) ^ 2 ∂(ν j (i : ℕ))
+        ≤ (1 + Arlib.GaussianCooling.varBudget (ε / 2) / (phases K ε p : ℝ)) *
+            (∫ x, g K ε p j (i : ℕ) x ∂(ν j (i : ℕ))) ^ 2) :
+    (VolumeAlgorithm.cousinsVempalaOfRuns n E ν phases σsq g B hσ hg hgb
+        hmean_eq hvar_eq).est
+      = (VolumeAlgorithm.cousinsVempalaOfRunsApproxMean n E ν phases σsq g B hσ hg hgb
+          hmean_mem hvar_half).est :=
+  rfl
+
+/-- **Non-vacuity of the `cousinsVempalaOfRunsApproxMean` bundle** (`CLAUDE.md` §11).
+
+The capstone `Ttc.ttc_runtime_mn4` quantifies over *this* bundle, so it needs its own
+witness; `Ttc.Box.exists_cvVolAlg_witness` witnesses the equation-carrying bundle of
+`cousinsVempalaOfRuns` and does not cover this one.
+
+Exactly as degenerate, and for exactly the same reason, as
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsWitness`: zero phases, so `Fin (phases K ε p)` is
+empty and both remaining hypotheses hold by `Fin.elim0`.  It witnesses *satisfiability of
+the hypothesis bundle* and nothing else — in particular it is not evidence that the
+sampler debt is dischargeable.  (It survives only because
+`Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` no longer demands `0 < phases K ε p`; a
+witness with `m ≥ 1` is not available here, because `hgb` asks for a **uniform** bound on
+the score while the chain ratio `chain(i+1)/chain(i)` is unbounded over the bodies `K` the
+hypotheses range over.) -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanWitness (n : ℕ) :
+    VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfRunsApproxMean n Unit (fun _ _ => Measure.dirac ())
+    (fun _ _ _ => 0) (fun _ _ _ _ => 1) (fun _ _ _ _ _ _ => 1) 1
+    (fun _ _ _ _ => one_pos) (fun _ _ _ _ _ => measurable_const)
+    (fun _ _ _ _ _ _ => le_of_eq (abs_one))
+    (fun _ _ _ _ _ _ _ _ _ _ i => i.elim0)
+    (fun _ _ _ _ _ _ _ _ _ _ i => i.elim0)
+
 end Ttc
 
 /-! ## Axiom audit (`CLAUDE.md` §4) -/
@@ -356,3 +649,6 @@ end Ttc
 #print axioms Ttc.integral_natRunCoord
 #print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRuns
 #print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsWitness
+#print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean
+#print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean_est
+#print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanWitness

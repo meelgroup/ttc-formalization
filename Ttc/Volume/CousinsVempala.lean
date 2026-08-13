@@ -2031,9 +2031,17 @@ The price is bookkeeping, all of it explicit:
   bias must be `Θ(τ/m)`, not `Θ(τ)`. This is `Arlib.GaussianCooling.phaseBias_le`, and the
   `m` is not cosmetic: the per-phase errors multiply.
 * `hcompose` — the accuracy split `innerAcc ε + meanBias ε + innerAcc ε · meanBias ε ≤ ε`
-  (`Ttc.CV.relErr_trans`), satisfiable for every `ε > 0` by e.g. `innerAcc ε = ε/2`,
-  `meanBias ε = ε/4`, which asks each phase for `phaseBias ≤ ε/(8m)`.
+  (`Ttc.CV.relErr_trans`), satisfiable for every `ε > 0` with **equality** by
+  `innerAcc ε = ε/2`, `meanBias ε = ε/(2+ε)` (`Ttc.CV.witCompose`), which asks each phase
+  for `phaseBias ≤ ε/(2(2+ε)m)`.
 * `hbudget` is stated at the *inner* accuracy `innerAcc ε`.
+
+**No `hphases_pos`.** The `m = 0` case is handled directly rather than assumed away: with
+zero phases the telescoping product is empty, the run reports `chain K ε p 0`, and
+`hchain_end` at `phases K ε p = 0` says that *is* `Vol(K)`, so the run is exactly right on
+every coin and the `4/5` bound is `1 ≥ 4/5`. Keeping the hypothesis off the interface is
+what lets the degenerate (zero-phase) non-vacuity witnesses of `CLAUDE.md` §11 survive at
+this constructor and at everything built on it.
 
 `hphase_var` is still an argument here; `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler`
 discharges both it and `hphase_mean`. -/
@@ -2057,7 +2065,6 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfApproxMean (n : ℕ) (Ω : Typ
     (hbias_nonneg : ∀ K ε p, 0 < ε → 0 ≤ phaseBias K ε p)
     (hmean_nonneg : ∀ ε, 0 < ε → 0 ≤ meanBias ε)
     (hmean_lt_one : ∀ ε, 0 < ε → meanBias ε < 1)
-    (hphases_pos : ∀ K ε p, 0 < ε → 0 < phases K ε p)
     (hphaseBudget : ∀ K ε p, 0 < ε →
       2 * (phases K ε p : ℝ) * phaseBias K ε p ≤ meanBias ε)
     (hcompose : ∀ ε, 0 < ε → innerAcc ε + meanBias ε + innerAcc ε * meanBias ε ≤ ε)
@@ -2097,11 +2104,28 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfApproxMean (n : ℕ) (Ω : Typ
       measurable_const.mul (Finset.measurable_prod _ fun i _ => hW_meas K ε p j (i : ℕ)))
     hmed_meas hmed hindep_runs
     (fun K ε p hε hp hp1 hconv hball hfin j => by
+      rcases Nat.eq_zero_or_pos (phases K ε p) with hm0 | hm
+      · -- **zero phases.** The product is empty, so the run reports `chain K ε p 0`, and
+        -- `hchain_end` at `phases K ε p = 0` says that is exactly `Vol(K)`.
+        haveI : IsEmpty (Fin (phases K ε p)) := by rw [hm0]; infer_instance
+        have hend : chain K ε p 0 = (volume K).toReal := by
+          have h := hchain_end K ε p hε hp hp1 hconv hball hfin
+          rwa [hm0] at h
+        have hb : (0 : ℝ) ≤ (volume K).toReal := ENNReal.toReal_nonneg
+        have hset : {ω : Ω | chain K ε p 0 *
+              ∏ i : Fin (phases K ε p), W K ε p (j : ℕ) (i : ℕ) ω
+                ∈ relErr ε (volume K).toReal} = Set.univ := by
+          ext ω
+          simp only [Set.mem_setOf_eq, Set.mem_univ, iff_true, Finset.univ_eq_empty,
+            Finset.prod_empty, mul_one, hend, relErr, Set.mem_Icc]
+          constructor <;> nlinarith [hε.le]
+        rw [hset, probReal_univ]
+        norm_num
       have h := CV.run_relErr_four_fifths_approxMean (μ := μ)
         (W := fun i : Fin (phases K ε p) => W K ε p (j : ℕ) (i : ℕ))
         (A := chain K ε p) (κ := varBudget ε) (ε := innerAcc ε) (ε₀ := ε)
         (η := phaseBias K ε p) (τ := meanBias ε)
-        (hphases_pos K ε p hε) (hbudget0 ε hε) (hinner_pos ε hε) (hbias_nonneg K ε p hε)
+        hm (hbudget0 ε hε) (hinner_pos ε hε) (hbias_nonneg K ε p hε)
         (hmean_nonneg ε hε) (hmean_lt_one ε hε) (hphaseBudget K ε p hε)
         (hphase_indep K ε p hε hp hp1 hconv hball hfin (j : ℕ))
         (fun i => (hW_meas K ε p (j : ℕ) (i : ℕ)).aestronglyMeasurable)
@@ -2263,7 +2287,7 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfSampler (n : ℕ) (Ω : Type)
     (fun K ε p j i ω =>
       phaseScore (phases K ε p) (σsq K ε p) (interior K) i (X K ε p j i ω))
     med
-    hreps_pos hreps hbudget0 hinner_pos hbias_nonneg hmean_nonneg hmean_lt_one hphases_pos
+    hreps_pos hreps hbudget0 hinner_pos hbias_nonneg hmean_nonneg hmean_lt_one
     hphaseBudget hcompose hbudget
     -- `hW_meas`: the phase score is measurable on the *open* body `interior K`
     (fun K ε p j i =>
@@ -2903,7 +2927,9 @@ positive whenever `ε` is. -/
 noncomputable def witPhaseBias {n : ℕ} : Set (Space n) → ℝ → ℝ → ℝ :=
   fun _ ε _ => ε / (2 * (2 + ε))
 
-/-- `hphases_pos`. -/
+/-- `hphases_pos` — the binder `Ttc.VolumeAlgorithm.cousinsVempalaOfSampler` still carries.
+`Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean` no longer asks for it: it handles the
+zero-phase case directly, so its witness below does not use this. -/
 theorem witPhases_pos {n : ℕ} (K : Set (Space n)) (ε p : ℝ) : 0 < witPhases K ε p := by
   simp [witPhases]
 
@@ -3040,7 +3066,6 @@ noncomputable def VolumeAlgorithm.cousinsVempalaApproxMeanWitness (n : ℕ) :
     (fun K ε p hε => (CV.witPhaseBias_pos K ε p hε).le)
     (fun ε hε => (CV.witEndBias_pos ε hε).le)
     CV.witEndBias_lt_one
-    (fun K ε p _ => CV.witPhases_pos K ε p)
     CV.witPhaseBudget
     CV.witCompose
     CV.witVarBudget_le_inner

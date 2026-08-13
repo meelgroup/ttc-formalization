@@ -9,6 +9,8 @@ import Arlib.Probability.UniformOn
 import Arlib.Probability.RunPlumbing
 import Arlib.Probability.Geometric
 import Arlib.Probability.RejectionRounds
+import Arlib.Probability.TVTensor
+import Arlib.Probability.DeltaIndependence
 
 /-!
 # Arlib.Probability

@@ -174,10 +174,16 @@ conditional on the paper's Theorem 2.1) proves `Φ ≥ 1/(2²⁷·n·D)` for a b
 containing a **unit** ball.  `ofReal_inv_le_conductance_hitAndRun_of_unitBall` below
 discharges `hphi` from it in the case `r = 1`, using `D ≤ 2R`.  The general `r` is the
 paper's "hit-and-run is invariant under a scaling of space (i.e. there is a 1–1 mapping
-between the random walk in `K` and `cK`)"; the equivariance
-`(hitAndRun (c • K)).map (c • ·) = ...` is **not** proved in this repository, so `hphi` is
-threaded as a hypothesis rather than manufactured.  It is one clearly identified,
-finite piece of measure-theoretic bookkeeping, not an open problem.
+between the random walk in `K` and `cK`)"; ~~the equivariance
+`(hitAndRun (c • K)).map (c • ·) = ...` is **not** proved in this repository~~ — **STALE,
+corrected 2026-08-12.** It **is** proved: `Ttc.map_hitAndRun_chart`
+(`Ttc/Sampler/HitAndRunBackend.lean`) gives
+`Measure.map (r • · + zin) (hitAndRun ((r • · + zin) ⁻¹' K) y) = hitAndRun K (r • y + zin)`
+for **every** `y`, with no membership hypothesis. Note the equivariance is under
+*similarities* only, not general affine maps: hit-and-run's direction law is `unifSphere n`,
+which is Euclidean-metric-dependent; a uniform scaling plus a translation is a similarity,
+so the `r`/`zin` chart is covered and a general linear chart is not. `hphi` is still threaded
+as a hypothesis in *this* file, which is untouched by the above.
 
 ## The constant, honestly (`CLAUDE.md` §11)
 

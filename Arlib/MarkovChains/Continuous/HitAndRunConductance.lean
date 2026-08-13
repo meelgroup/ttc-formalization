@@ -589,6 +589,15 @@ hit-and-run on `K` is at least `lam/(245760·n·D)` when Lemma 4.1 holds with lo
   repository's total-variation bound (`Arlib/Probability/TV.lean`), i.e. `d_TV(μ,ν) ≤ ε`;
   the paper's strict `<` is weakened to `≤`, which is all the proof consumes.
 
+  It is demanded only on `interior K`, which is where the proof below applies it (`S₁'` and
+  `S₂'` are cut down to the interior; see §1 of *Two places where the formalisation is more
+  careful than the paper*).  That restriction is not cosmetic: the `∀ u ∈ K` form is
+  **unreachable**, because the side condition `chordLow K u v < 0` of the proved Lemma 4.1
+  is false at every boundary point (`Arlib.MarkovChains.chordLow_eq_zero_of_notMem_interior`).
+  On the interior the binder is discharged outright, at `1 − 1/8000` for `n ≥ 1100`, by
+  `Arlib.MarkovChains.hLem41_interior_uncond`; `conductance_hitAndRun_ge_of_tv` below is this
+  theorem with the binder restored to `∀ u ∈ K` for backward compatibility.
+
 **The paper's Lemma 3.3 is no longer among them.**  It used to appear here as a third inline
 hypothesis `hLem33`, forwarded to `Arlib.lintegral_stepRadius_ge`.  That hypothesis is
 **discharged**: Lemma 3.3 is proved in `Arlib/Convexity/KLS97Sharp.lean`
@@ -615,12 +624,13 @@ binder is the corrected Theorem 2.1, whose one-dimensional and needle forms are 
 invocation of the Localization Lemma (`Arlib.thm21_of_localization`).  What *can* be said
 otherwise is that no hypothesis is degenerate on its face — `hLem41` is discharged by the
 paper's Lemma 4.1, and the geometric side conditions hold for, say, the unit ball itself. -/
-theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
+theorem conductance_hitAndRun_ge_of_tv_interior (hn : 1 ≤ n)
+    {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
     {z : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K)
     {D : ℝ} (hD : Metric.diam K ≤ D) {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam ≤ 1)
-    (hLem41 : ∀ u ∈ K, ∀ v ∈ K, crossRatioDist K u v < 1 / 8 →
+    (hLem41 : ∀ u ∈ interior K, ∀ v ∈ interior K, crossRatioDist K u v < 1 / 8 →
       dist u v < 2 / Real.sqrt n * max (medianStep K u) (medianStep K v) →
       Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - lam)))
     (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
@@ -759,7 +769,7 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
     refine Or.inr ?_
     have hsep : ¬ dist u v < 2 / Real.sqrt n * max (medianStep K u) (medianStep K v) := by
       intro hlt
-      have htv := hLem41 u (hS1K hu) v (hS2K hv) h8 hlt
+      have htv := hLem41 u (hS1int u hu) v (hS2int v hv) h8 hlt
       have hu' : P u Sᶜ < eps := ((hmem1 u).1 hu).2
       have hv' : P v S < eps := ((hmem2 v).1 hv).2
       have h1 : P u S ≤ P v S + ENNReal.ofReal (1 - lam) := (htv S hSm).1
@@ -970,11 +980,49 @@ theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace �
   have h4top : (4 : ℝ≥0∞) ≠ ⊤ := by norm_num
   exact (ENNReal.mul_le_mul_iff_right h4ne h4top).mp hmain
 
+/-- **Theorem 4.2 with `hLem41` demanded on all of `K`** — the shape this theorem had before
+`conductance_hitAndRun_ge_of_tv_interior` was split off, kept verbatim so that every existing
+consumer continues to typecheck.
+
+The proof is the whole content of the claim that the split is a *strengthening*: a caller
+holding Lemma 4.1 on all of `K` gets it on `interior K` by `interior_subset`, so nothing that
+could be proved from this statement is lost by the weaker binder.  The converse fails, and
+that is the point: **the `∀ u ∈ K` form is not obtainable from the paper's Lemma 4.1.**
+`Arlib.MarkovChains.tvLe_hitAndRun_lemma41_uncond` (`SphereCap.lean`) needs
+`chordLow K u v < 0`, and for `u ∈ frontier K` and `v ∈ interior K` that is *false*: a point
+`u + t(v−u) ∈ K` with `t < 0` would put `u` on an open segment between a point of `K` and an
+interior point, hence in `interior K`.  So `chordLow K u v = 0` there, for every body, in
+every dimension.  On `interior K` the same side condition is
+`Arlib.chordLow_neg_of_mem_interior`, and the discharged binder is
+`Arlib.MarkovChains.hLem41_interior_uncond` (`HitAndRunLem41Discharge.lean`). -/
+theorem conductance_hitAndRun_ge_of_tv (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
+    (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
+    (hKb : Bornology.IsBounded K)
+    {z : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K)
+    {D : ℝ} (hD : Metric.diam K ≤ D) {lam : ℝ} (hlam0 : 0 < lam) (hlam1 : lam ≤ 1)
+    (hLem41 : ∀ u ∈ K, ∀ v ∈ K, crossRatioDist K u v < 1 / 8 →
+      dist u v < 2 / Real.sqrt n * max (medianStep K u) (medianStep K v) →
+      Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - lam)))
+    (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
+        (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
+      MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
+      (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
+        (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →
+        h x ≤ min 1 (crossRatioDist K u v) / 3) →
+      (∫⁻ x, ENNReal.ofReal (h x) ∂(uniformOn volume K)) *
+          min (uniformOn volume K T₁) (uniformOn volume K T₂)
+        ≤ uniformOn volume K ((K \ T₁) \ T₂)) :
+    ENNReal.ofReal (lam / (245760 * (n : ℝ) * D))
+      ≤ conductance (hitAndRun K) (uniformOn volume K) :=
+  conductance_hitAndRun_ge_of_tv_interior hn hKc hKcl hKm hKb hball hD hlam0 hlam1
+    (fun u hu v hv => hLem41 u (interior_subset hu) v (interior_subset hv)) hIso
+
 /-- **Theorem 4.2 of Lovász–Vempala, at the paper's Lemma 4.1 constant.**
 
     Φ(hit-and-run on K)  ≥  1/(2²⁷·n·D).
 
-This is `Arlib.MarkovChains.conductance_hitAndRun_ge_of_tv` at the paper's Lemma 4.1 loss
+This is `Arlib.MarkovChains.conductance_hitAndRun_ge_of_tv_interior` at the paper's Lemma 4.1 loss
 `lam = 1/500`, where the general bound reads `1/(500·245760·n·D) = 1/(122880000·n·D)`.
 
 **Why `2²⁷` and not the paper's `2²⁴`.**  The exact constant the proof delivers is
@@ -990,12 +1038,45 @@ constant-factor loss in the exponential-envelope majorant used by `KLS97Sharp.le
 an error in KLS 1997, and not a change in the order of the bound, which remains the paper's
 `1/(n·D)` up to an absolute constant.
 
-Read the docstring of `conductance_hitAndRun_ge_of_tv` for the classification of the
+Read the docstring of `conductance_hitAndRun_ge_of_tv_interior` for the classification of the
 hypotheses: `hIso` is the **open gap, in its corrected form** (the paper's Theorem 2.1, which
 is *false* as printed — `Arlib.not_hIso_two` — and which needs the Localization Lemma on
 signed integrands, but **not** Borsuk–Ulam); `hLem41` is a placeholder for
 work in flight elsewhere in this repository; and the paper's Lemma 3.3 is **proved**, in
 `Arlib/Convexity/KLS97Sharp.lean`, and is no longer a hypothesis of either theorem. -/
+theorem conductance_hitAndRun_ge_interior (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
+    (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
+    (hKb : Bornology.IsBounded K)
+    {z : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K)
+    {D : ℝ} (hD : Metric.diam K ≤ D)
+    (hLem41 : ∀ u ∈ interior K, ∀ v ∈ interior K, crossRatioDist K u v < 1 / 8 →
+      dist u v < 2 / Real.sqrt n * max (medianStep K u) (medianStep K v) →
+      Arlib.TVLe (hitAndRun K u) (hitAndRun K v) (ENNReal.ofReal (1 - 1 / 500)))
+    (hIso : ∀ (h : EuclideanSpace ℝ (Fin n) → ℝ)
+        (T₁ T₂ : Set (EuclideanSpace ℝ (Fin n))), (∀ x, 0 ≤ h x) →
+      (∀ x ∈ K, h x ≤ 1 / 3) →
+      MeasurableSet T₁ → MeasurableSet T₂ → T₁ ⊆ K → T₂ ⊆ K → Disjoint T₁ T₂ →
+      (∀ u ∈ T₁, ∀ v ∈ T₂, ∀ x ∈ K,
+        (∃ t : ℝ, x = (AffineMap.lineMap u v : ℝ → EuclideanSpace ℝ (Fin n)) t) →
+        h x ≤ min 1 (crossRatioDist K u v) / 3) →
+      (∫⁻ x, ENNReal.ofReal (h x) ∂(uniformOn volume K)) *
+          min (uniformOn volume K T₁) (uniformOn volume K T₂)
+        ≤ uniformOn volume K ((K \ T₁) \ T₂)) :
+    ENNReal.ofReal (1 / (2 ^ 27 * (n : ℝ) * D))
+      ≤ conductance (hitAndRun K) (uniformOn volume K) := by
+  have hnR : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hD1 : (1 : ℝ) ≤ D := le_trans (one_le_diam_of_unitBall hn hKb hball) hD
+  refine le_trans (ENNReal.ofReal_le_ofReal ?_)
+    (conductance_hitAndRun_ge_of_tv_interior hn hKc hKcl hKm hKb hball hD (by norm_num)
+      (by norm_num) hLem41 hIso)
+  rw [div_le_div_iff₀ (by positivity) (by positivity)]
+  nlinarith
+
+/-- **Theorem 4.2 at `1/(2²⁷·n·D)` with `hLem41` demanded on all of `K`** — the shape this
+theorem had before `conductance_hitAndRun_ge_interior` was split off, kept verbatim so that
+every existing consumer continues to typecheck, and derived from the interior form by
+`interior_subset`.  See `conductance_hitAndRun_ge_of_tv`'s docstring for why the `∀ u ∈ K`
+form is the one that cannot be discharged. -/
 theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
@@ -1015,14 +1096,9 @@ theorem conductance_hitAndRun_ge (hn : 1 ≤ n) {K : Set (EuclideanSpace ℝ (Fi
           min (uniformOn volume K T₁) (uniformOn volume K T₂)
         ≤ uniformOn volume K ((K \ T₁) \ T₂)) :
     ENNReal.ofReal (1 / (2 ^ 27 * (n : ℝ) * D))
-      ≤ conductance (hitAndRun K) (uniformOn volume K) := by
-  have hnR : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
-  have hD1 : (1 : ℝ) ≤ D := le_trans (one_le_diam_of_unitBall hn hKb hball) hD
-  refine le_trans (ENNReal.ofReal_le_ofReal ?_)
-    (conductance_hitAndRun_ge_of_tv hn hKc hKcl hKm hKb hball hD (by norm_num) (by norm_num)
-      hLem41 hIso)
-  rw [div_le_div_iff₀ (by positivity) (by positivity)]
-  nlinarith
+      ≤ conductance (hitAndRun K) (uniformOn volume K) :=
+  conductance_hitAndRun_ge_interior hn hKc hKcl hKm hKb hball hD
+    (fun u hu v hv => hLem41 u (interior_subset hu) v (interior_subset hv)) hIso
 
 /-! ## Axiom profile -/
 
@@ -1033,7 +1109,9 @@ section AxiomCheck
 #print axioms stepRadius_le_of_chord
 #print axioms weight_le_of_chord
 #print axioms one_le_diam_of_unitBall
+#print axioms conductance_hitAndRun_ge_of_tv_interior
 #print axioms conductance_hitAndRun_ge_of_tv
+#print axioms conductance_hitAndRun_ge_interior
 #print axioms conductance_hitAndRun_ge
 
 end AxiomCheck

@@ -27,7 +27,8 @@ The two per-call charges do not appear here.  They enter through `Ttc.ttc`'s *de
 is the lemma `Ttc.ttc_def` (by `rfl`).  `Ttc.ttcCharged` is the price-parametric law every
 downstream result is proved over.
 
-Nine binders — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.  Among them there is no
+Eleven explicit binders — `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos` — thirteen raw, counting
+the implicit `{A} {n}`.  Among them there is no
 interpretation, no parameter block, no converter, no oracle, no precision, no
 inscribed-ball data and no boundedness hypothesis.
 

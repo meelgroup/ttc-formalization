@@ -490,6 +490,10 @@ import Ttc.Exec.VolPriceCVAlg
 import Ttc.Witness.FixedPriceTwoCube
 import Ttc.Exec.PolyRun
 import Ttc.Exec.PolyAccuracy
+import Ttc.Exec.RuntimeMN4
+import Ttc.Exec.SampPriceEps
+import Ttc.Exec.SampPricePoly
+import Ttc.Exec.SpeedySamplerChain
 import Ttc.Exec.PolyComplexity
 import Ttc.Exec.SampleBound
 import Ttc.Exec.InflateBound
@@ -569,7 +573,12 @@ import Ttc.Sampler.ConstructHitAndRun
 import Ttc.Sampler.Rates
 import Ttc.Sampler.Construct
 import Ttc.Sampler.RatesNonneg
+import Ttc.Sampler.SpeedyBackend
+import Ttc.Sampler.SpeedyBackendUncond
+import Ttc.Sampler.HitAndRunBackend
+import Ttc.Sampler.HitAndRunBackendUncond
 import Ttc.Rounding.ArlibBridge
 import Ttc.Volume.CVTheorem11
 import Ttc.Volume.CVEstimator
 import Ttc.Volume.PhaseFromSampler
+import Ttc.Volume.CouplingAccuracy
