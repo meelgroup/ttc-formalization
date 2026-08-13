@@ -75,6 +75,7 @@ import Arlib.MarkovChains.Continuous.SamplerStepCount
 import Arlib.MarkovChains.Continuous.ColdPhaseRegime
 import Arlib.MarkovChains.Continuous.ColdTruncation
 import Arlib.MarkovChains.Continuous.WastedStepsGaussian
+import Arlib.MarkovChains.Continuous.TimeChange
 
 /-!
 # Arlib.MarkovChains
