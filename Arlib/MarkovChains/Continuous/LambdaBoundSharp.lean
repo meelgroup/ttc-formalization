@@ -80,6 +80,18 @@ that turns out to be unsatisfiable would make them worthless:
 Hypothesis 1 was briefed as "a two-line argument once `f̂` exists".  It is not.  See the
 paper-oracle note below.
 
+**UPDATE — superseded in part.**  `Arlib/MarkovChains/Continuous/LovaszSmoothing.lean` defines
+the ball-convolution `ballSmoothing` concretely and proves `f̂(x) ≤ 2·ℓ(x)·f(x)`
+(`ballSmoothing_le_two_mul_ell_mul`), so hypothesis 1 is discharged **up to a factor 2** and
+the two abstract binders over an arbitrary `fhat` collapse to the single binder `hLov`.  The
+sharp constant is *not* available on that route, and the factor 2 is a genuine limit rather
+than slack: the separating half-ball forced by convexity of the superlevel set need not carry
+at most half of `K`'s share of the proposal ball, and `LovaszSmoothing.lean`'s docstring gives
+an instance in `ℝ²` where the ratio tends to exactly 2.  A sharp proof must use a half on
+which `f` *exceeds* `f(x)`, i.e. quantitative log-concavity, not merely convexity of superlevel
+sets — which is more than CV's three displayed lines contain.  The downstream conclusions are
+correspondingly `λ ≥ c/2` and `λ ≥ 1/4`, against the paper's `c` and `1/2`.
+
 ## Paper-oracle notes
 
 * **The displayed chain proving the pointwise step at `:869` does not compose as printed.**
