@@ -94,6 +94,7 @@ import Arlib.Convexity.GaussianCooling.TerminalMoment
 import Arlib.Convexity.GaussianCooling.PhaseFromTVGeneral
 import Arlib.Convexity.GaussianCooling.ColdStart
 import Arlib.Convexity.GaussianCooling.PhaseSamplerTV
+import Arlib.Convexity.GaussianCooling.WarmSpeedy
 
 /-!
 # Arlib.Convexity
