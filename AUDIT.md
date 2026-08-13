@@ -1692,6 +1692,73 @@ art, which is this section.
 
 ---
 
+## 0l. The sampler chain closes; four `Ttc` interface binders are refuted (2026-08-13)
+
+### Landed unconditionally
+
+| Cousins–Vempala result | repo theorem |
+|---|---|
+| `lem:speedy-to-ball` (`:915`) | `sum_lintegral_inv_ell_iterate_speedyWalk_le` (`WastedSteps.lean`) |
+| `lem:sigma-roundness` (`:882`) | `gaussian_rounded` (`LambdaBoundSharp.lean`) |
+| both KLS97 inputs to `lem:map-speedy-to-ball`, at `δ ≤ 1/(2n)` | `KLS97Shell.lean` |
+| the crux of `lem:map-speedy-to-ball` | `condOn_ellGaussianMeasure_shrunken` (`SpeedyExactOnShrunken.lean`) |
+| a cooling schedule meeting the variance budget | `GeneralRate.lean` |
+
+`lem:speedy-to-ball` bounds the **sum of per-step conditional expected holding times** — CV's own
+linearity-of-expectation quantity — not the path-level step count of a single trajectory, which
+needs the unproved time change `ω_t = Y_{N_t}`.
+
+### The cooling obstruction was an artefact, and the phase count is now known exactly
+
+`PhaseVar.lean`'s `geomSchedule_total_cooling_lt` showed the fixed rate `α = 1/n` cannot both meet
+the variance budget and cool. `GeneralRate.lean` shows this is an artefact of `α` being too large:
+`generalCoolRate_lt_fixedRate` puts the admissible rate below `1/n` by a factor `16L/κ`, and
+
+    α = log(1+ε²/5)/(16(n+1)log(nR²)),   m = Θ(n·log²(nR²)/ε²)
+
+meets budget and cooling simultaneously (`exists_admissible_volume`). `generalPhaseCount_ge_of_budget`
+is a **matching lower bound**, so that phase count is *forced*, not merely sufficient.
+
+**Why it is worse than the paper's `O*(n)`.** CV do not shrink `α`. At `vol3_journal.tex:1440` they
+spread the budget as `1 + (cᵢ−1)/kᵢ` with `kᵢ` samples averaged per phase. The repo's shape
+`1 + κ/m` is the `kᵢ = 1` specialisation, and under `kᵢ = 1` the `Θ̃(n/ε²)` count is forced.
+Recovering `O*(n)` needs per-phase sample counts in the interface — a change of hypothesis shape,
+not a sharper estimate.
+
+### Four binders of `cousinsVempala` that cannot be supplied at its own generality
+
+`cousinsVempala` quantifies over **every** `K` with `Convex ℝ K`, `ball 0 1 ⊆ K`, `volume K ≠ ⊤`.
+At that generality:
+
+1. **`MeasurableSet K` is false.** `ball 0 2 ∪ S` with `S ⊆ sphere 0 2` arbitrary is convex,
+   contains the unit ball, has finite volume, and can be non-Borel — Mathlib's `MeasurableSet` on
+   `EuclideanSpace` is Borel, and completeness of Lebesgue measure does not help. Recorded in
+   `PhaseFromTV.lean`, which works around it by scoring `interior K` (open, hence Borel), using
+   `Convex.addHaar_frontier` to keep the chain ratios and exact law unchanged.
+2. **No radius is exposed**, but `hphase_var`'s bound `B = e^{R²/(2σᵢ²)}` needs one; `coolRatio` is
+   unbounded on an unbounded body.
+3. **The terminal constant is refuted.** `hterm_not_dischargeable` (`TerminalMoment.lean`) shows the
+   uniform constant `1 + 2/n` FAILS at the terminal phase for every `n ≥ 1`, on a fixed-rate
+   schedule, at `K = B₁`. The terminal weight is the constant `1`, so the ratio computes exactly to
+   `e^{R²/(2σᵢ²)}` — `≥ 1` by Cauchy–Schwarz, unbounded as `σᵢ² ↓ 0`.
+   **The paper locates the defect**: CV prove `1 + 2/n` only for Gaussian→Gaussian
+   (`lem:fixed-var-bound`, `:1353`); the terminal step is `lem:starting-gauss` (`:1326`), which
+   *assumes* `σᵢ² ≥ C²n` and yields the different constant `e²`, and `lem:accuracy` (`:1419`) pays
+   for it with a separate `(1 + e²/k)` factor. The `Ttc` binder collapses that two-constant
+   accounting into one, and the collapse is what is unsound. Repair: `hflat`, i.e.
+   `R² ≤ 2σᵢ²·log(1+2/n)` at the terminal index (`hphase_var_of_tvLe_of_flat`).
+4. **`hgb`** — the uniform-in-`K` bound impossibility already at `CVInstantiate.lean:629`–`633`.
+
+These are refutations, not gaps: no amount of further proving supplies them. The interface must be
+amended to carry them as binders.
+
+### Scope
+
+None of this is a running time. `VolumeAlgorithm` still has no complexity field, so no runtime is
+even statable inside the interface; the intended route is a step-count theorem outside it.
+
+---
+
 ## 1. Is the capstone about the real object?
 
 Read only the **type** of one declaration — everything before the `:=`.
