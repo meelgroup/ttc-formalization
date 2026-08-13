@@ -9,7 +9,125 @@ import Arlib.Convexity.Localization
 /-!
 # Lovász–Vempala's smoothing `f̂` at its true `1/16` normalisation
 
-(docstring filled in at the end)
+Lovász–Vempala, *The geometry of logconcave functions and sampling algorithms*, RSA
+30(3):307–358, 2007, §6.1 defines the smoothing
+
+    `f̂(x) = inf_C (1/vol C) ∫_C f(x+u) du`,   `C` convex `⊆ rB` with `vol(C) = ω_n rⁿ/16`,
+
+i.e. at **one sixteenth** of the ball's volume.  `Arlib.MarkovChains.Continuous.LovaszSmoothing`
+formalises instead the function of Cousins–Vempala's transcription
+(`1409.6011/vol3_journal.tex:862`), which reads "a convex subset `D` of `δBₙ` of **half** its
+volume".  This file formalises Lovász–Vempala's own function, `ballSmoothing16`, and reproves
+the pointwise theory for it.
+
+## Paper-oracle: three transcription defects in Cousins–Vempala's §"lem:lambda-bound"
+
+1. **The volume in the definition of `f̂` is wrong.**  `vol3_journal.tex:862` says "half its
+   volume"; Lovász–Vempala say `ω_n rⁿ/16`.  The half-ball appears in Lovász–Vempala only in
+   the easy remark (16), `f̂(x) ≤ f(x)`.  The two functions are genuinely different; they are
+   comparable only up to a constant (`ballSmoothing16_le_two_mul_ballSmoothing`, which *is*
+   Lovász–Vempala's Lemma 6.1).  Consequently the hypothesis `hLov` carried by
+   `avgLocalConductance_ge_half_of_lovasz` in `LovaszSmoothing.lean` is a statement about a
+   function that Lovász–Vempala's Lemma 6.3 says nothing about;
+   `avgLocalConductance_ge_half_of_lovasz16` here restates it about the right one.
+
+2. **The definition of `a`-rounded is transcribed with the wrong quantifier.**
+   `vol3_journal.tex:851` says "any level set `L` contains a ball of radius `a · μ_f(L)`"
+   (universal).  Lovász–Vempala (p. 311) say: "a density function is `a`-rounded if for every
+   `0 ≤ s ≤ 1` **it has a** level set `L` of probability at most `s` that contains a ball of
+   radius `a·s`" (existential).  Cousins–Vempala's version is the *stronger* hypothesis, so
+   their appeal to Lemma 6.3 is still sound provided the level-set measure takes the value
+   `s` (true for a log-concave density), but the printed definition is not the source's.
+
+3. **The printed proof chain at `vol3_journal.tex:869` does not compose as written** — line 1's
+   numerator is missing `∩ K` and line 2's denominator must be `vol(δBₙ)`; and its last step
+   treats `{y ∈ x+δBₙ : f(y) ≤ f(x)}` as an admissible index of the infimum, which it is not
+   (it is neither convex nor of the prescribed volume).  This defect was already recorded in
+   `LambdaBoundSharp`; it is repeated here because it is what the sharp constant rests on.
+
+**Not a defect:** the constant of Lemma 6.3 itself.  Lovász–Vempala state
+`∫_{ℝⁿ} f̂ ≥ 1 − 32 r^{1/2} n^{1/4} / a^{1/2}`, which is Cousins–Vempala's
+`1 − 32 δ^{1/2} n^{1/4} / a^{1/2}` verbatim after `r ↦ δ`.  (Internal check: at `a = 1/4` this
+is the `1 − 64 r^{1/2} n^{1/4}` they quote for the isotropic case.)  Nothing was weakened
+there.
+
+## PROVED here, unconditionally
+
+* **`exists_volume_cut_eq`** — a bounded measurable set can be cut by a hyperplane of any
+  prescribed direction at any prescribed volume.  The content is that `t ↦ vol(S ∩ {φ ≤ t})`
+  is continuous (`continuous_volume_cut`), which holds because level hyperplanes are null.
+* **`exists_convex_partition`** — the parallel slicing of Lovász–Vempala's Lemma 6.1: a bounded
+  convex measurable set of volume `k·w` splits into `k` disjoint convex measurable pieces of
+  volume exactly `w`.
+* **`ballSmoothing16`** (`def`) — Lovász–Vempala's `f̂`, verbatim except that the index set is
+  restricted to *measurable* `C` and the minimum is an infimum.  The restriction shrinks the
+  index set, so `ballSmoothing16 ≥` the paper's `f̂`: every upper bound proved here holds a
+  fortiori for the paper's `f̂`, and every lower bound on `∫_K` of the paper's `f̂` holds a
+  fortiori for `∫_K ballSmoothing16`.  Both consumers compose in the safe direction.
+* **`exists_eight_sixteenthBalls`** — a half-ball splits into exactly eight admissible pieces.
+* **`ballSmoothing16_le_self`** — Lovász–Vempala's inequality (16), `f̂ ≤ f`.  Sharp.
+* **`ballSmoothing16_le_two_mul_ell_mul`** — the pointwise step `f̂(x) ≤ 2·ℓ(x)·f(x)`.
+* **`ballSmoothing16_le_ell_mul_of_balanced`** — the **sharp** `f̂(x) ≤ ℓ(x)·f(x)` whenever some
+  separating half of the proposal ball carries at most half of `K`'s share of that ball.
+* **`ballSmoothing16_eq_zero_of_far_half_free`** — the sharp bound (indeed `f̂(x) = 0`) in the
+  opposite extreme, when all of `K`'s share lies strictly on the near side.
+* **`exists_balanced_dual_of_isMax` / `ballSmoothing16_le_ell_mul_of_isMax`** — the **sharp**
+  constant holds outright at every maximum point of `f` (so at the mode of a log-concave
+  density, and everywhere for a uniform density): with an empty superlevel set every
+  hyperplane separates, and one of the two halves is the balanced one.
+* **`ballSmoothing16_mul_volume_le_two_mul`** — **Lovász–Vempala Lemma 6.1**, with their
+  constant `2`, in full generality.
+* **`isLogConcaveENN_ballSmoothing16`** — **Lovász–Vempala Lemma 6.2**: `f̂` is log-concave.
+  Their proof, via the repository's Prékopa–Leindler marginal lemma
+  (`Arlib.isLogConcaveENN_marginal_prod`) transported from `Fin n → ℝ` to
+  `EuclideanSpace ℝ (Fin n)` along `WithLp.toLp`.
+* **`lovasz16_bound_indicator_ball`** — a genuine, proved instance of the *conclusion* of
+  Lemma 6.3 for `ballSmoothing16`.
+
+## NOT proved, and why
+
+**Lovász–Vempala Lemma 6.3 and Lemma 6.4 are not formalised.**  Lemma 6.4 ("`K` convex
+containing a ball of radius `t`, `X` uniform in `K`, `Y` uniform in `X + sB`; then
+`P(Y ∉ K) ≤ s√n/(2t)`") is Corollary 4.6 of Kannan–Lovász–Simonovits, *Random walks and an
+O*(n⁵) volume algorithm*, RSA 11 (1997) §4.2, whose proof runs through the surface area:
+`P ≤ (δ/(2√n))·vol_{n−1}(∂K)/vol(K)` (their Corollary 4.5) together with
+`vol(K) ≥ (r/n)·vol_{n−1}(∂K)`.  **Mathlib has no `(n−1)`-dimensional surface measure of a
+convex body** in a usable form — no boundary Hausdorff measure with the Cauchy/Fubini
+projection formula, no `vol(K) ≥ (r/n)·area(∂K)`.  Building that development is out of scope
+here, and inventing a surrogate would be worse than saying so.  Lemma 6.3 is therefore carried
+as the binder `hLov` of `avgLocalConductance_ge_half_of_lovasz16` and
+`avgLocalConductance_ge_of_lovasz16_balanced`, exactly as before — but now stated about
+Lovász–Vempala's own `f̂`.
+
+**The sharp pointwise step is not proved unconditionally**, and the factor `2` here is *not*
+the factor `2` of `LovaszSmoothing.lean`.  That file's factor `2` came with a counterexample
+showing it is a hard limit *of the half-volume definition*; that counterexample **dies** at
+the `1/16` normalisation, because there is now room to slide the index set `C` off `K`
+(checked by hand, **not** formalised here).  So the constant `2` proved here is not known to
+be optimal.  What *is* structural is this:
+
+> the separating half-ball has volume `vol(δBₙ)/2`, so it contains **exactly eight** pairwise
+> disjoint admissible pieces, never sixteen (`exists_eight_sixteenthBalls`).  Any argument
+> whose only input is "log-concavity gives a half-ball on which `f ≤ f(x)`" therefore yields
+> `min_i ∫_{Pᵢ} f ≤ (1/8)·f(x)·vol(B(x,δ) ∩ K)`, i.e. `f̂(x) ≤ 2·ℓ(x)·f(x)`, and cannot do
+> better.
+
+Reaching `ℓ(x)·f(x)` needs a genuine dichotomy: when the separating half carries more than
+half of `K ∩ B(x,δ)` one must place `C` in the *opposite* half, where `f` may exceed `f(x)`,
+and control it by the fact that `K` is thin there.  The two proved cases
+(`ballSmoothing16_le_ell_mul_of_balanced` and `ballSmoothing16_eq_zero_of_far_half_free`) are
+the two ends of that dichotomy; closing the middle needs quantitative spherical-cap volume
+estimates that are not in Mathlib either.  Cousins–Vempala's three displayed lines contain no
+such argument.
+
+## Scope
+
+The only `def` is `ballSmoothing16` and the only `structure` is `IsSixteenthBall`; neither name
+asserts an identity that is not either definitional or proved.  Nothing here is a conductance,
+mixing-time or polynomial-time statement.  `avgLocalConductance_ge_half_of_lovasz16` and
+`avgLocalConductance_ge_of_lovasz16_balanced` each carry exactly one unproved binder, `hLov`;
+`exists_lovasz16_balanced_instance` is a non-vacuity witness for the second in which `hLov`
+*and* the balance condition are both **proved**, not assumed.
 -/
 
 namespace Arlib.MarkovChains
@@ -892,11 +1010,12 @@ gives Cousins–Vempala's sharp
     `f̂(x) ≤ ℓ(x) · f(x)`.
 
 It also shows the balance hypothesis is satisfiable, hence not vacuous. -/
-theorem ballSmoothing16_le_ell_mul_of_isMax (hn : 1 ≤ n)
+theorem exists_balanced_dual_of_isMax (hn : 1 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
-    {f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hfK : ∀ y, y ∉ K → f y = 0)
-    {δ : ℝ} (hδ : 0 < δ) {x : EuclideanSpace ℝ (Fin n)} (hmax : ∀ y, f y ≤ f x) :
-    ballSmoothing16 f δ x ≤ ell K δ x * f x := by
+    {f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞}
+    (δ : ℝ) {x : EuclideanSpace ℝ (Fin n)} (hmax : ∀ y, f y ≤ f x) :
+    ∃ φ : EuclideanSpace ℝ (Fin n) →L[ℝ] ℝ, φ ≠ 0 ∧ (∀ y, f x < f y → φ x ≤ φ y) ∧
+      2 * volume (ball x δ ∩ {y | φ y ≤ φ x} ∩ K) ≤ volume (ball x δ ∩ K) := by
   obtain ⟨φ, hφ0⟩ := exists_ne_zero_dual hn
   set Wm : ℝ≥0∞ := volume (ball x δ ∩ {y : EuclideanSpace ℝ (Fin n) | φ y ≤ φ x} ∩ K) with hWm
   set Wp : ℝ≥0∞ := volume (ball x δ ∩ {y : EuclideanSpace ℝ (Fin n) | φ x ≤ φ y} ∩ K) with hWp
@@ -926,19 +1045,26 @@ theorem ballSmoothing16_le_ell_mul_of_isMax (hn : 1 ≤ n)
     rw [hunion, hinter, add_zero] at h
     exact h.symm
   rcases le_total Wm Wp with hcase | hcase
-  · refine ballSmoothing16_le_ell_mul_of_balanced hK hfK hδ hφ0 (hnosep φ) ?_
+  · refine ⟨φ, hφ0, hnosep φ, ?_⟩
     rw [two_mul, ← hWm, ← hsum]
     exact add_le_add_left hcase Wm |>.trans_eq (add_comm Wp Wm)
-  · have hneg : ∀ y : EuclideanSpace ℝ (Fin n), ((-φ) y ≤ (-φ) x) ↔ (φ x ≤ φ y) := by
-      intro y
-      simp only [ContinuousLinearMap.neg_apply, neg_le_neg_iff]
-    have hset : {y : EuclideanSpace ℝ (Fin n) | (-φ) y ≤ (-φ) x}
+  · have hset : {y : EuclideanSpace ℝ (Fin n) | (-φ) y ≤ (-φ) x}
         = {y : EuclideanSpace ℝ (Fin n) | φ x ≤ φ y} := by
-      ext y; exact hneg y
-    refine ballSmoothing16_le_ell_mul_of_balanced hK hfK hδ (neg_ne_zero.2 hφ0)
-      (hnosep (-φ)) ?_
+      ext y
+      simp only [Set.mem_setOf_eq, ContinuousLinearMap.neg_apply, neg_le_neg_iff]
+    refine ⟨-φ, neg_ne_zero.2 hφ0, hnosep (-φ), ?_⟩
     rw [hset, ← hWp, two_mul, ← hsum]
     exact add_le_add_right hcase Wp |>.trans_eq (add_comm Wp Wm)
+
+/-- **The sharp constant holds at every maximum point of `f`** — the corollary of
+`exists_balanced_dual_of_isMax`. -/
+theorem ballSmoothing16_le_ell_mul_of_isMax (hn : 1 ≤ n)
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
+    {f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hfK : ∀ y, y ∉ K → f y = 0)
+    {δ : ℝ} (hδ : 0 < δ) {x : EuclideanSpace ℝ (Fin n)} (hmax : ∀ y, f y ≤ f x) :
+    ballSmoothing16 f δ x ≤ ell K δ x * f x := by
+  obtain ⟨φ, hφ0, hsep, hb⟩ := exists_balanced_dual_of_isMax hn hK δ hmax
+  exact ballSmoothing16_le_ell_mul_of_balanced hK hfK hδ hφ0 hsep hb
 
 /-- **`lem:lambda-bound` (`vol3_journal.tex:853`) with the pointwise binder discharged, at the
 cost of a factor `2`, and with the Lovász hypothesis now stated about the function
@@ -979,7 +1105,7 @@ theorem avgLocalConductance_ge_of_lovasz16_balanced
     {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
     {f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hfK : ∀ y, y ∉ K → f y = 0)
     {δ : ℝ} (hδ : 0 < δ)
-    (hbal : ∀ x : EuclideanSpace ℝ (Fin n),
+    (hbal : ∀ x ∈ K,
       ∃ φ : EuclideanSpace ℝ (Fin n) →L[ℝ] ℝ, φ ≠ 0 ∧ (∀ y, f x < f y → φ x ≤ φ y) ∧
         2 * volume (ball x δ ∩ {y | φ y ≤ φ x} ∩ K) ≤ volume (ball x δ ∩ K))
     {c : ℝ}
@@ -987,10 +1113,296 @@ theorem avgLocalConductance_ge_of_lovasz16_balanced
     (h0 : (∫⁻ x in K, f x) ≠ 0) (htop : (∫⁻ x in K, f x) ≠ ⊤) :
     ENNReal.ofReal c ≤ (∫⁻ x in K, ell K δ x * f x) / (∫⁻ x in K, f x) := by
   have hmono : (∫⁻ x in K, ballSmoothing16 f δ x) ≤ ∫⁻ x in K, ell K δ x * f x := by
-    refine lintegral_mono fun x => ?_
-    obtain ⟨φ, hφ0, hsep, hb⟩ := hbal x
+    refine lintegral_mono_ae ?_
+    filter_upwards [self_mem_ae_restrict hK] with x hx
+    obtain ⟨φ, hφ0, hsep, hb⟩ := hbal x hx
     exact ballSmoothing16_le_ell_mul_of_balanced hK hfK hδ hφ0 hsep hb
   rw [ENNReal.le_div_iff_mul_le (Or.inl h0) (Or.inl htop)]
   exact hLov.trans hmono
 
+/-- **The `λ ≥ 1/2` corollary of `vol3_journal.tex:906`, obtained here as `λ ≥ 1/4`**, with
+`hLov` about Lovász–Vempala's own `f̂`.  At the paper's step size `δ ≤ min{σ,1}/(4096√n)` the
+Cousins–Vempala constant `1 − 32δ^{1/2}n^{1/4}/a^{1/2}` is at least `1/2`
+(`cv_error_term_le_half`); the factor-`2` pointwise step then gives `1/4`. -/
+theorem avgLocalConductance_ge_quarter_of_lovasz16 (hn : 1 ≤ n)
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
+    {f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hfK : ∀ y, y ∉ K → f y = 0)
+    {δ σ : ℝ} (hσ : 0 < σ) (hδ : 0 < δ)
+    (hstep : δ ≤ min σ 1 / (4096 * Real.sqrt n))
+    (hquasi : ∀ x : EuclideanSpace ℝ (Fin n), Convex ℝ {y | f x < f y})
+    (hLov : ENNReal.ofReal
+              (1 - 32 * Real.sqrt δ * Real.sqrt (Real.sqrt n) / Real.sqrt (min σ 1))
+              * ∫⁻ x in K, f x ≤ ∫⁻ x in K, ballSmoothing16 f δ x)
+    (h0 : (∫⁻ x in K, f x) ≠ 0) (htop : (∫⁻ x in K, f x) ≠ ⊤) :
+    ENNReal.ofReal (1 / 4) ≤ (∫⁻ x in K, ell K δ x * f x) / (∫⁻ x in K, f x) := by
+  have ha : (0 : ℝ) < min σ 1 := lt_min hσ one_pos
+  have harith := cv_error_term_le_half (a := min σ 1) ha hn hstep
+  refine le_trans ?_ (avgLocalConductance_ge_half_of_lovasz16 hn hK hfK hδ hquasi hLov h0 htop)
+  rw [ENNReal.le_div_iff_mul_le (Or.inl two_ne_zero) (Or.inl (by simp)),
+    show ((2 : ℝ≥0∞)) = ENNReal.ofReal 2 by simp, ← ENNReal.ofReal_mul (by norm_num)]
+  exact ENNReal.ofReal_le_ofReal (by linarith)
+
+/-- **Cousins–Vempala's `λ(f) ≥ 1/2` itself** (`vol3_journal.tex:906`), under the balance
+condition of `ballSmoothing16_le_ell_mul_of_balanced` and Lovász–Vempala's Lemma 6.3.  This is
+the paper's claimed constant, not a weakened one; what it costs is the balance binder. -/
+theorem avgLocalConductance_ge_half_of_lovasz16_balanced (hn : 1 ≤ n)
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
+    {f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hfK : ∀ y, y ∉ K → f y = 0)
+    {δ σ : ℝ} (hσ : 0 < σ) (hδ : 0 < δ)
+    (hstep : δ ≤ min σ 1 / (4096 * Real.sqrt n))
+    (hbal : ∀ x ∈ K,
+      ∃ φ : EuclideanSpace ℝ (Fin n) →L[ℝ] ℝ, φ ≠ 0 ∧ (∀ y, f x < f y → φ x ≤ φ y) ∧
+        2 * volume (ball x δ ∩ {y | φ y ≤ φ x} ∩ K) ≤ volume (ball x δ ∩ K))
+    (hLov : ENNReal.ofReal
+              (1 - 32 * Real.sqrt δ * Real.sqrt (Real.sqrt n) / Real.sqrt (min σ 1))
+              * ∫⁻ x in K, f x ≤ ∫⁻ x in K, ballSmoothing16 f δ x)
+    (h0 : (∫⁻ x in K, f x) ≠ 0) (htop : (∫⁻ x in K, f x) ≠ ⊤) :
+    ENNReal.ofReal (1 / 2) ≤ (∫⁻ x in K, ell K δ x * f x) / (∫⁻ x in K, f x) := by
+  have ha : (0 : ℝ) < min σ 1 := lt_min hσ one_pos
+  have harith := cv_error_term_le_half (a := min σ 1) ha hn hstep
+  refine le_trans (ENNReal.ofReal_le_ofReal (by linarith))
+    (avgLocalConductance_ge_of_lovasz16_balanced hK hfK hδ hbal hLov h0 htop)
+
+/-! ## 7. Non-vacuity: a witness whose Lovász hypothesis is proved, not assumed -/
+
+/-- **The uniform density on the unit ball, smoothed at the `1/16` normalisation, is `1` well
+inside the ball.**  For `‖x‖ < 1 − δ` every translate `x + D` of an admissible `D` stays
+inside `B(0,1)`, so every term of the infimum is `vol(D)/vol(D) = 1`. -/
+theorem one_le_ballSmoothing16_indicator_ball {δ : ℝ} (hδ : 0 < δ)
+    {x : EuclideanSpace ℝ (Fin n)} (hx : ‖x‖ < 1 - δ) :
+    1 ≤ ballSmoothing16
+      (Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞))) δ x := by
+  refine le_ballSmoothing16 fun D hD => ?_
+  have hsub : x +ᵥ D ⊆ ball (0 : EuclideanSpace ℝ (Fin n)) 1 := by
+    intro y hy
+    rw [Set.mem_vadd_set_iff_neg_vadd_mem] at hy
+    have h1 : ‖-x + y‖ < δ := by
+      have h := hD.subset_ball hy
+      simpa [vadd_eq_add, mem_ball, dist_zero_right] using h
+    have h2 : ‖y‖ ≤ ‖-x + y‖ + ‖x‖ := by
+      have hyx : (-x + y) + x = y := by abel
+      calc ‖y‖ = ‖(-x + y) + x‖ := by rw [hyx]
+        _ ≤ ‖-x + y‖ + ‖x‖ := norm_add_le _ _
+    simp only [mem_ball, dist_zero_right]
+    linarith
+  have hEq : (∫⁻ y in x +ᵥ D,
+      Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞)) y)
+      = volume D := by
+    rw [setLIntegral_congr_fun (measurableSet_vadd_set hD.measurableSet x)
+        (fun y hy => Set.indicator_of_mem (hsub hy) _), setLIntegral_one, volume_vadd_set]
+  rw [hEq, ENNReal.div_self (hD.volume_ne_zero hδ) hD.volume_ne_top]
+
+/-- **A proved instance of the conclusion of Lovász–Vempala Lemma 6.3, for the `1/16`
+smoothing.**  For the uniform density on the unit ball and `0 < δ < 1`,
+`∫_K f̂ ≥ (1−δ)ⁿ ∫_K f`, because `f̂ = 1` on the concentric ball of radius `1−δ`. -/
+theorem lovasz16_bound_indicator_ball (hn : 1 ≤ n) {δ : ℝ} (hδ : 0 < δ) (hδ1 : δ < 1) :
+    ENNReal.ofReal ((1 - δ) ^ n)
+        * (∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) 1,
+            Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞)) x)
+      ≤ ∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) 1,
+          ballSmoothing16
+            (Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞))) δ x := by
+  haveI : Nontrivial (EuclideanSpace ℝ (Fin n)) :=
+    Module.nontrivial_of_finrank_pos (R := ℝ) (by rw [finrank_euclideanSpace_fin]; omega)
+  have hball : volume (ball (0 : EuclideanSpace ℝ (Fin n)) (1 - δ))
+      = ENNReal.ofReal ((1 - δ) ^ n) * volume (ball (0 : EuclideanSpace ℝ (Fin n)) 1) := by
+    rw [Measure.addHaar_ball volume _ (by linarith), finrank_euclideanSpace_fin]
+  rw [lintegral_indicator_ball_self, ← hball]
+  calc volume (ball (0 : EuclideanSpace ℝ (Fin n)) (1 - δ))
+      = ∫⁻ _ in ball (0 : EuclideanSpace ℝ (Fin n)) (1 - δ), 1 := (setLIntegral_one _).symm
+    _ ≤ ∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) (1 - δ),
+          ballSmoothing16
+            (Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞))) δ x := by
+        refine setLIntegral_mono' measurableSet_ball fun y hy => ?_
+        refine one_le_ballSmoothing16_indicator_ball hδ ?_
+        simpa [mem_ball, dist_zero_right] using hy
+    _ ≤ ∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) 1,
+          ballSmoothing16
+            (Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞))) δ x :=
+        lintegral_mono' (Measure.restrict_mono (Metric.ball_subset_ball (by linarith)) le_rfl) le_rfl
+
+/-- **Non-vacuity witness for `avgLocalConductance_ge_of_lovasz16_balanced`.**
+
+Unit ball, uniform density, `δ = 1/2`, `c = (1/2)ⁿ > 0`.  Both nontrivial hypotheses are
+*proved* for this instance, not assumed: the balance condition by
+`exists_balanced_dual_of_isMax` (the density is constant on `K`, so every point of `K` is a
+maximum), and the Lovász inequality by `lovasz16_bound_indicator_ball`.  In particular the
+witness is not the tautology `f̂ = ℓ·f`, and the conclusion carries Cousins–Vempala's own
+constant `c` rather than `c/2`. -/
+theorem exists_lovasz16_balanced_instance (hn : 1 ≤ n) :
+    ∃ (K : Set (EuclideanSpace ℝ (Fin n))) (δ : ℝ)
+      (f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞) (c : ℝ),
+      0 < c ∧ 0 < δ ∧ MeasurableSet K ∧ (∀ y, y ∉ K → f y = 0) ∧
+      (∀ x ∈ K, ∃ φ : EuclideanSpace ℝ (Fin n) →L[ℝ] ℝ, φ ≠ 0 ∧
+        (∀ y, f x < f y → φ x ≤ φ y) ∧
+        2 * volume (ball x δ ∩ {y | φ y ≤ φ x} ∩ K) ≤ volume (ball x δ ∩ K)) ∧
+      (ENNReal.ofReal c * ∫⁻ x in K, f x ≤ ∫⁻ x in K, ballSmoothing16 f δ x) ∧
+      (∫⁻ x in K, f x) ≠ 0 ∧ (∫⁻ x in K, f x) ≠ ⊤ ∧
+      ENNReal.ofReal c ≤ (∫⁻ x in K, ell K δ x * f x) / (∫⁻ x in K, f x) := by
+  haveI : Nontrivial (EuclideanSpace ℝ (Fin n)) :=
+    Module.nontrivial_of_finrank_pos (R := ℝ) (by rw [finrank_euclideanSpace_fin]; omega)
+  set K : Set (EuclideanSpace ℝ (Fin n)) := ball 0 1 with hK
+  set f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞ :=
+    Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞)) with hf
+  have h0 : (∫⁻ x in K, f x) ≠ 0 := by
+    rw [hK, hf, lintegral_indicator_ball_self]
+    exact (Metric.measure_ball_pos volume (0 : EuclideanSpace ℝ (Fin n)) one_pos).ne'
+  have htop : (∫⁻ x in K, f x) ≠ ⊤ := by
+    rw [hK, hf, lintegral_indicator_ball_self]
+    exact measure_ball_lt_top.ne
+  have hbal : ∀ x ∈ K, ∃ φ : EuclideanSpace ℝ (Fin n) →L[ℝ] ℝ, φ ≠ 0 ∧
+      (∀ y, f x < f y → φ x ≤ φ y) ∧
+      2 * volume (ball x (1 / 2 : ℝ) ∩ {y | φ y ≤ φ x} ∩ K) ≤ volume (ball x (1 / 2 : ℝ) ∩ K) := by
+    intro x hx
+    refine exists_balanced_dual_of_isMax hn measurableSet_ball (1 / 2 : ℝ) fun y => ?_
+    rw [hf, Set.indicator_of_mem hx]
+    by_cases hy : y ∈ ball (0 : EuclideanSpace ℝ (Fin n)) 1
+    · simp [Set.indicator_of_mem hy]
+    · simp [Set.indicator_of_notMem hy]
+  have hLov : ENNReal.ofReal ((1 - 1 / 2 : ℝ) ^ n) * (∫⁻ x in K, f x)
+      ≤ ∫⁻ x in K, ballSmoothing16 f (1 / 2 : ℝ) x :=
+    lovasz16_bound_indicator_ball hn (by norm_num) (by norm_num)
+  refine ⟨K, 1 / 2, f, (1 - 1 / 2 : ℝ) ^ n, by positivity, by norm_num, measurableSet_ball,
+    fun y hy => Set.indicator_of_notMem hy _, hbal, hLov, h0, htop, ?_⟩
+  exact avgLocalConductance_ge_of_lovasz16_balanced measurableSet_ball
+    (fun y hy => Set.indicator_of_notMem hy _) (by norm_num) hbal hLov h0 htop
+
+/-- **Non-vacuity witness for `avgLocalConductance_ge_half_of_lovasz16`.**  Unit ball, uniform
+density, `δ = 1/2`, `c = (1/2)ⁿ > 0`; the Lovász hypothesis is *proved* for this instance by
+`lovasz16_bound_indicator_ball`, so no binder is discharged by fiat, and the witness is not
+the tautology `f̂ = ℓ·f`. -/
+theorem exists_lovasz16_instance (hn : 1 ≤ n) :
+    ∃ (K : Set (EuclideanSpace ℝ (Fin n))) (δ : ℝ)
+      (f : EuclideanSpace ℝ (Fin n) → ℝ≥0∞) (c : ℝ),
+      0 < c ∧ 0 < δ ∧ MeasurableSet K ∧ (∀ y, y ∉ K → f y = 0) ∧
+      (∀ x, Convex ℝ {y | f x < f y}) ∧
+      (ENNReal.ofReal c * ∫⁻ x in K, f x ≤ ∫⁻ x in K, ballSmoothing16 f δ x) ∧
+      (∫⁻ x in K, f x) ≠ 0 ∧ (∫⁻ x in K, f x) ≠ ⊤ ∧
+      ENNReal.ofReal c / 2 ≤ (∫⁻ x in K, ell K δ x * f x) / (∫⁻ x in K, f x) := by
+  haveI : Nontrivial (EuclideanSpace ℝ (Fin n)) :=
+    Module.nontrivial_of_finrank_pos (R := ℝ) (by rw [finrank_euclideanSpace_fin]; omega)
+  have h0 : (∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) 1,
+      Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞)) x) ≠ 0 := by
+    rw [lintegral_indicator_ball_self]
+    exact (Metric.measure_ball_pos volume (0 : EuclideanSpace ℝ (Fin n)) one_pos).ne'
+  have htop : (∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) 1,
+      Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞)) x) ≠ ⊤ := by
+    rw [lintegral_indicator_ball_self]
+    exact measure_ball_lt_top.ne
+  refine ⟨ball (0 : EuclideanSpace ℝ (Fin n)) 1, 1 / 2,
+    Set.indicator (ball (0 : EuclideanSpace ℝ (Fin n)) 1) (fun _ => (1 : ℝ≥0∞)),
+    (1 - 1 / 2 : ℝ) ^ n, by positivity, by norm_num, measurableSet_ball,
+    fun y hy => Set.indicator_of_notMem hy _, convex_setOf_lt_indicator_ball,
+    lovasz16_bound_indicator_ball hn (by norm_num) (by norm_num), h0, htop, ?_⟩
+  exact avgLocalConductance_ge_half_of_lovasz16 hn measurableSet_ball
+    (fun y hy => Set.indicator_of_notMem hy _) (by norm_num) convex_setOf_lt_indicator_ball
+    (lovasz16_bound_indicator_ball hn (by norm_num) (by norm_num)) h0 htop
+
+/-- **Non-vacuity witness for `avgLocalConductance_ge_quarter_of_lovasz16`** — the bundle whose
+Lovász constant is forced to be at least `1/2`, so that a degenerate `c ≤ 0` cannot satisfy it.
+Dimension `n = 2`, the unit disc, the uniform density, `σ = 1` and `δ = 1/(4096√2)`, which
+makes `hstep` an *equality*; the Lovász hypothesis is discharged by the proved
+`lovasz16_bound_indicator_ball` via `(1−δ)² ≥ 1/2`. -/
+theorem exists_lovasz16_quarter_instance :
+    ∃ (K : Set (EuclideanSpace ℝ (Fin 2))) (δ σ : ℝ) (f : EuclideanSpace ℝ (Fin 2) → ℝ≥0∞),
+      0 < σ ∧ 0 < δ ∧ MeasurableSet K ∧ (∀ y, y ∉ K → f y = 0) ∧
+      δ ≤ min σ 1 / (4096 * Real.sqrt ((2 : ℕ) : ℝ)) ∧
+      (∀ x, Convex ℝ {y | f x < f y}) ∧
+      (ENNReal.ofReal
+          (1 - 32 * Real.sqrt δ * Real.sqrt (Real.sqrt ((2 : ℕ) : ℝ))
+            / Real.sqrt (min σ 1)) * ∫⁻ x in K, f x ≤ ∫⁻ x in K, ballSmoothing16 f δ x) ∧
+      (∫⁻ x in K, f x) ≠ 0 ∧ (∫⁻ x in K, f x) ≠ ⊤ := by
+  have h2R : ((2 : ℕ) : ℝ) = 2 := by norm_num
+  set r : ℝ := Real.sqrt ((2 : ℕ) : ℝ) with hrdef
+  have hr1 : (1 : ℝ) ≤ r := by
+    have h : Real.sqrt 1 ≤ Real.sqrt ((2 : ℕ) : ℝ) := Real.sqrt_le_sqrt (by rw [h2R]; norm_num)
+    rw [hrdef, ← Real.sqrt_one]
+    exact h
+  have hr0 : (0 : ℝ) < r := lt_of_lt_of_le one_pos hr1
+  set q : ℝ := Real.sqrt r with hqdef
+  have hq2 : q ^ 2 = r := Real.sq_sqrt hr0.le
+  have hq1 : (1 : ℝ) ≤ q := by
+    have h : Real.sqrt 1 ≤ Real.sqrt r := Real.sqrt_le_sqrt hr1
+    rw [hqdef]; simpa using h
+  have hq0 : (0 : ℝ) < q := lt_of_lt_of_le one_pos hq1
+  set δ : ℝ := 1 / (4096 * q ^ 2) with hδdef
+  have hδ0 : 0 < δ := by rw [hδdef]; positivity
+  have hδsmall : δ ≤ 1 / 4096 := by
+    rw [hδdef, div_le_div_iff₀ (by positivity) (by norm_num)]
+    nlinarith
+  have hδ1 : δ < 1 := by linarith
+  have hsd : Real.sqrt δ = 1 / (64 * q) := by
+    have hsq : δ = (1 / (64 * q)) ^ 2 := by
+      rw [hδdef, div_pow, mul_pow]
+      norm_num
+    rw [hsq]
+    exact Real.sqrt_sq (by positivity)
+  have hmin : min (1 : ℝ) 1 = 1 := min_self 1
+  have hconst : 1 - 32 * Real.sqrt δ * q / Real.sqrt (min (1 : ℝ) 1) = 1 / 2 := by
+    rw [hmin, Real.sqrt_one, hsd]
+    field_simp
+    ring
+  have h0 : (∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin 2)) 1,
+      Set.indicator (ball (0 : EuclideanSpace ℝ (Fin 2)) 1) (fun _ => (1 : ℝ≥0∞)) x) ≠ 0 := by
+    rw [lintegral_indicator_ball_self]
+    exact (Metric.measure_ball_pos volume (0 : EuclideanSpace ℝ (Fin 2)) one_pos).ne'
+  have htop : (∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin 2)) 1,
+      Set.indicator (ball (0 : EuclideanSpace ℝ (Fin 2)) 1) (fun _ => (1 : ℝ≥0∞)) x) ≠ ⊤ := by
+    rw [lintegral_indicator_ball_self]
+    exact measure_ball_lt_top.ne
+  refine ⟨ball (0 : EuclideanSpace ℝ (Fin 2)) 1, δ, 1,
+    Set.indicator (ball (0 : EuclideanSpace ℝ (Fin 2)) 1) (fun _ => (1 : ℝ≥0∞)),
+    one_pos, hδ0, measurableSet_ball, fun y hy => Set.indicator_of_notMem hy _, ?_,
+    convex_setOf_lt_indicator_ball, ?_, h0, htop⟩
+  · rw [hmin, hδdef, hq2]
+  · rw [hconst]
+    refine le_trans (mul_le_mul' (ENNReal.ofReal_le_ofReal ?_) le_rfl)
+      (lovasz16_bound_indicator_ball (by norm_num) hδ0 hδ1)
+    show (1 : ℝ) / 2 ≤ (1 - δ) ^ 2
+    nlinarith [hδ0, hδsmall]
+
 end Arlib.MarkovChains
+
+/-! ### Axiom audit -/
+
+#print axioms Arlib.MarkovChains.exists_apply_eq
+#print axioms Arlib.MarkovChains.volume_setOf_apply_eq
+#print axioms Arlib.MarkovChains.continuous_volume_cut
+#print axioms Arlib.MarkovChains.exists_volume_cut_eq
+#print axioms Arlib.MarkovChains.exists_convex_partition
+#print axioms Arlib.MarkovChains.exists_nsmul_le_of_sum_le
+#print axioms Arlib.MarkovChains.IsSixteenthBall.volume_ne_top
+#print axioms Arlib.MarkovChains.IsSixteenthBall.volume_ne_zero
+#print axioms Arlib.MarkovChains.ballSmoothing16_le
+#print axioms Arlib.MarkovChains.le_ballSmoothing16
+#print axioms Arlib.MarkovChains.ballSmoothing16_mul_volume_le
+#print axioms Arlib.MarkovChains.exists_eight_sixteenthBalls
+#print axioms Arlib.MarkovChains.exists_isSixteenthBall
+#print axioms Arlib.MarkovChains.vadd_set_subset_vadd_set
+#print axioms Arlib.MarkovChains.disjoint_vadd_set
+#print axioms Arlib.MarkovChains.lintegral_le_of_sep
+#print axioms Arlib.MarkovChains.exists_eight_pieces_at
+#print axioms Arlib.MarkovChains.ballSmoothing16_le_self
+#print axioms Arlib.MarkovChains.ballSmoothing16_le_two_mul_ell_mul
+#print axioms Arlib.MarkovChains.ballSmoothing16_le_ell_mul_of_balanced
+#print axioms Arlib.MarkovChains.ballSmoothing16_eq_zero_of_far_half_free
+#print axioms Arlib.MarkovChains.exists_ne_zero_dual
+#print axioms Arlib.MarkovChains.ballSmoothing16_mul_volume_le_two_mul
+#print axioms Arlib.MarkovChains.ballSmoothing16_le_two_mul_ballSmoothing
+#print axioms Arlib.MarkovChains.isLogConcaveENN_comp_linearMap
+#print axioms Arlib.MarkovChains.isLogConcaveENN_mul
+#print axioms Arlib.MarkovChains.isLogConcaveENN_div_const
+#print axioms Arlib.MarkovChains.isLogConcaveENN_iInf
+#print axioms Arlib.MarkovChains.isLogConcaveENN_setLIntegral_vadd
+#print axioms Arlib.MarkovChains.isLogConcaveENN_ballSmoothing16
+#print axioms Arlib.MarkovChains.exists_balanced_dual_of_isMax
+#print axioms Arlib.MarkovChains.ballSmoothing16_le_ell_mul_of_isMax
+#print axioms Arlib.MarkovChains.avgLocalConductance_ge_half_of_lovasz16
+#print axioms Arlib.MarkovChains.avgLocalConductance_ge_of_lovasz16_balanced
+#print axioms Arlib.MarkovChains.avgLocalConductance_ge_quarter_of_lovasz16
+#print axioms Arlib.MarkovChains.avgLocalConductance_ge_half_of_lovasz16_balanced
+#print axioms Arlib.MarkovChains.one_le_ballSmoothing16_indicator_ball
+#print axioms Arlib.MarkovChains.lovasz16_bound_indicator_ball
+#print axioms Arlib.MarkovChains.exists_lovasz16_balanced_instance
+#print axioms Arlib.MarkovChains.exists_lovasz16_instance
+#print axioms Arlib.MarkovChains.exists_lovasz16_quarter_instance

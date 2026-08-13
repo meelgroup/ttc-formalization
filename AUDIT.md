@@ -4720,3 +4720,69 @@ number: `5/4` on the Monte-Carlo sample count, an additive `24·log(5/4)/((1−�
 on `Thresh`. Quote those with the `1 − δ`, or the sentence "the guarantee is a clean
 `1 − δ`" is item 7's failure mode wearing a budget's clothes.
 
+
+## 0m. `hLov` is off the critical path: `λ ≥ 1/2` proved outright (2026-08-13)
+
+§0h and the `LovaszSmoothing*` files route Cousins–Vempala's `lem:lambda-bound`
+(`vol3_journal.tex:853`, `λ(f) ≥ 1/2`) through Lovász–Vempala's smoothing `f̂` and their
+Lemma 6.3, and terminate in the unproved binder `hLov`. That binder is **not closable in
+Mathlib today**: LV Lemma 6.3 rests on LV Lemma 6.4 = KLS97 Corollary 4.6, whose proof needs
+the `(n−1)`-dimensional surface measure of a convex body together with
+`vol(K) ≥ (r/n)·vol_{n−1}(∂K)`. Mathlib has no boundary Hausdorff measure of a convex body
+with the Cauchy/Fubini projection formula, so the route stops there.
+
+**It does not matter for the polytime volume oracle.** Every consumer in this repository —
+`WastedSteps.lean`'s `hlam` — takes the *uniform* average
+`avgLocalConductance K δ = (∫_K ℓ)/vol(K)`, and that quantity is bounded below outright at
+step `δ ≤ 1/(2n)`:
+
+    ∫_K ℓ  ≥  ∫_{cK} ℓ  =  vol(cK)  =  cⁿ·vol(K)  ≥  (1/2)·vol(K),        c = 1 − 1/(2n),
+
+the middle equality being `ell_eq_one_on_shrunken` (ℓ is *identically* 1 on the shrunken
+body at `δ ≤ 1 − c`) and `cⁿ ≥ 1/2` being `half_le_one_sub_inv_two_mul_pow`. Both were
+already proved in `KLS97Shell.lean`; the new file
+[`LambdaFromShrunken.lean`](Arlib/MarkovChains/Continuous/LambdaFromShrunken.lean) assembles
+them:
+
+* `half_mul_volume_le_lintegral_ell` — `(1/2)·vol K ≤ ∫_K ℓ`, multiplicative form.
+* `half_le_avgLocalConductance` — `1/2 ≤ λ`, the shape `hlam` takes.
+* `sum_lintegral_inv_ell_iterate_speedyWalk_le_uncond` — `lem:speedy-to-ball`'s wasted-step
+  count with `hlam` **discharged**: `∑ᵢ ∫ ℓ⁻¹ dQᵢ ≤ 2·t·M`. The only hypothesis left is the
+  warm start, which is a genuinely separate input.
+
+*Why Cousins–Vempala could not argue this way, and what it costs.* CV need `λ` at
+`δ ≤ min{σ,1}/(4096√n)`, where `ℓ ≡ 1` on `cK` is false — hence their appeal to Lemma 6.3.
+The bound above buys CV's own constant `1/2` at the price of the smaller step `1/(2n)`:
+conductance is proportional to `δ`, so `1/Φ²` grows by `(σ√n/δ)²`. That is polynomial, and
+the chain here already runs at `δ = 1/(2n)` (`SamplerStepCount.lean`). The composed
+cold/warm step `δ := min(σ/(8√n), 1/(2n))` is `≤ 1/(2n)` unconditionally, so no case split
+is needed.
+
+*What is still not proved.* LV Lemma 6.3 itself, and `λ` at CV's larger step. `hLov` remains
+a carried hypothesis in `LovaszSmoothing.lean` and `LovaszSmoothingSharp.lean`. Neither is
+on the path to a polynomial-time volume oracle.
+
+**Three transcription defects in CV §6, all confirmed against the sources** (recorded because
+each one silently changes a statement):
+
+1. `:862` — LV's smoothing `f̂` minimises over convex `C ⊆ rB` with `vol(C) = ω_n rⁿ/**16**`
+   (LV §6.1); CV transcribe "a convex subset `D` of `δBₙ` of **half** its volume". Different
+   functions. `LovaszSmoothingSharp.lean` defines `ballSmoothing16` at LV's normalisation;
+   the pre-existing `LovaszSmoothing.lean`'s `hLov` is stated about the *half*-volume
+   function, which LV's Lemma 6.3 says nothing about.
+2. `:851` — CV define `a`-rounded with a **universal** quantifier ("any level set `L`
+   contains a ball of radius `a·μ_f(L)`"); LV p. 311 define it **existentially** ("it has a
+   level set `L` of probability at most `s` that contains a ball of radius `a·s`"). CV's is
+   the stronger hypothesis, so their appeal survives — but the printed definition is not the
+   source's.
+3. The pointwise step `f̂ ≤ ℓ·f` is proved here only as `f̂ ≤ 2ℓf` in general, and this is
+   **structural, not slack**: a half-ball has volume `V/2` and so contains exactly **eight**
+   disjoint `V/16` pieces, never sixteen (`exists_eight_sixteenthBalls`). Any argument whose
+   only input is "log-concavity gives a half-ball on which `f ≤ f(x)`" caps at `2ℓf`. The
+   sharp form is proved at every maximum point of `f` and under an explicit balance
+   condition (`ballSmoothing16_le_ell_mul_of_isMax`, `_of_balanced`).
+
+LV's Lemma 6.1 (constant `2`) and Lemma 6.2 (log-concavity of `f̂`) *are* proved in full
+generality at LV's own constants (`ballSmoothing16_mul_volume_le_two_mul`,
+`isLogConcaveENN_ballSmoothing16`), which required building the convex-partition machinery
+(`exists_volume_cut_eq`, `exists_convex_partition`) from scratch.
