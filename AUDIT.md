@@ -5071,3 +5071,50 @@ Two consequences worth stating plainly:
 
 Nothing above is machine-checked; it is arithmetic over theorem statements that are. It is
 recorded here so that no README or capstone quotes `O*(n³)` for a route that delivers `n⁴`.
+
+## §0r — The `R ≤ 2` circularity: removed per-phase, narrowed to `R ≤ 7.10` end-to-end
+
+`Arlib/Convexity/GaussianCooling/PhaseSamplerTVTruncated.lean` proves
+`tvLe_speedyRejection_coolLaw_truncated_of_mixing`: the truncated analogue of
+`PhaseSamplerTV.lean:198`, chaining `mixesWithin_lazy_speedyMetropolisGaussian_cold_truncated`
+→ `tvLe_speedyRejection_coolLaw` → `TVLe.trans` with `tvLe_coolLaw_inter_closedBall`.
+
+**Per-phase the radius condition is gone.** `hR`, `hKR : ∀ x ∈ K, ‖x‖ ≤ R` and
+`hRσ : R ≤ 2σ√n` are all absent; the only hypotheses on `K` are the four the interface already
+carries (`MeasurableSet`, `Convex`, `ball 0 1 ⊆ K`, `volume K ≠ ⊤`). Witness at
+`K = closedBall 0 10 ⊆ ℝ²¹`, which proves `¬(R ≤ 2σ√n)` — the untruncated binder is **false**
+for that body — with total error `ofReal (501/1000) < 1`. Both declarations
+`[propext, Classical.choice, Quot.sound]`, forced rebuild `Built`.
+
+### But the end-to-end consequence is not "unrestricted", and must be stated
+
+The truncation price `C` is carried as the binder `hCb`. Its minimal admissible value, with
+`a := σ²n` and the optimal split `θ = 3/4`, is
+
+    C_min = √(πn) · exp( n · [ −1.30685 + 1/(2a) + ½ ln a ] ).
+
+**Verified independently, not taken from the agent's report.** The bracket is negative — so `C`
+decays in `n` — only for `a ≲ 12.61`; at `a = 16` it is `+0.111`, i.e. `C` grows like `e^{0.11n}`
+and the bound is worthless. Two consequences:
+
+1. **The theorem's own `hcold : σ√n ≤ 4` (i.e. `a ≤ 16`) is WIDER than `hCb` can support.**
+   For `a ∈ (12.61, 16]` the binder bundle is satisfiable only at a useless `C`, so the theorem
+   is effectively vacuous there despite the binder permitting it. The usable window is
+   `σ√n ≤ 3.55`. The witness sits at `a = 1`, so it is honest, but the *usable* window is
+   narrower than the binder advertises. Anyone quoting `hcold` should quote `3.55`, not `4`.
+2. **End-to-end across a whole schedule, the radius is capped at `R ≤ 7.10`.** The truncated
+   theorem covers `a ∈ (0, 12.61]` with no radius condition; the untruncated one covers
+   `a ≥ R²/4`. Every phase needs one of the two, so the two windows must overlap:
+   `R²/4 ≤ 12.61`, i.e. **`R ≤ 7.102`**.
+
+So the honest headline is **`R ≤ 2` → `R ≤ 7.10`**: a 3.55× improvement and the removal of the
+*circularity* (the cold start no longer constrains the body at all), but **not** the removal of
+the radius restriction. A genuinely unrestricted `R` needs the truncation price to decay for
+large `a` too, which fails for the present bound because `C` is measured against the unit-ball
+normaliser lower bound `e^{−1/(2s)}·vol(B(0,1))` — a bound that becomes very lossy once
+`vol(K) ≫ vol(B(0,1))`. **The next task on this thread is a normaliser lower bound that scales
+with `vol(K)` rather than with the unit ball.** `ColdTruncation.lean`'s header already declares
+the Stirling bound on `Γ(n/2+1)` that a general-`n` proof would need to be out of scope.
+
+Inherited and unchanged: cross-phase composition is not addressed here — the truncation radius
+`2σ√n` moves with the phase, so successive cold phases run on **different** truncated bodies.
