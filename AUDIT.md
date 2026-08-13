@@ -5007,3 +5007,38 @@ and are simply not chained:
 `tvLe_speedyRejection_coolLaw_of_mixing` chaining those two through the rejection routine,
 then re-deriving `hTV_cvLaw` without `hRadσ`. That, not the phase induction, is now the
 shortest path to a non-circular sampler.
+
+### §0p, corrected on two points after review
+
+**(a) `hTV` is discharged for a SURROGATE, and the surrogate must be named.**
+`CVSampler.phaseStart` is, verbatim:
+
+    | 0     => mu0
+    | i + 1 => condOn (coolLaw m σsq (interior K) i) ((1 - 1/(2n)) • interior K)
+
+so phase `i+1` restarts from the **exact** phase-`i` law, never from phase `i`'s *sampler
+output*; and the coin space draws phases independently (`Measure.infinitePi`). This is exactly
+CLAUDE.md §1's "idealized independent-runs product space", and §1's corollary applies: the
+capstone is honest only once the **coupling lemma** back to the real sequential sampler is in
+place. That coupling is precisely the un-instantiated `tvLe_phaseChain` of item 1. Instantiating
+it inflates `tvErr` from `64·acc` to `64·acc·∑_{j<m} 8^j`, absorbable by `acc ↦ acc·8^{−m}` at
+`+m·log 8` per deadline — polynomial. **"`hTV` discharged" therefore does not mean "the sampler
+debt is paid."** It means the per-phase debt is paid and the cross-phase coupling is not.
+
+**(b) `hbudget` is a top-two blocker, not an inherited aside.**
+`geomSchedule_total_cooling_lt` (`PhaseVar.lean:620`) reads, verbatim: `0 < n`, `ε ≤ 1`,
+`0 ≤ ε`, `2m ≤ n·varBudget ε` ⊢ `(1 + 1/n)^m < 11/10`. So the interface's own binders cap
+**total cooling below 1.1**. Getting from a cold start `σ₀² ≈ 1/(4n)` to the uniform law needs
+total cooling of order `n²`. Hence the amended interface can **never** be instantiated
+non-degenerately until `hbudget` is repaired — which is why every witness for it, the
+pre-existing one at `CVAmended.lean:310` and the new one alike, sits at `phases = 0`.
+
+**Revised next-task ranking**: (1) the truncated analogue of
+`tvLe_speedyRejection_coolLaw_of_mixing`, removing the `R ≤ 2` circularity from already-proved
+pieces; (2) repair `hbudget`; (3) the phase-`0` warm start (`ColdStart.lean` plus CV
+`lem:starting-gauss`, `vol3_journal.tex:1326`, where CV's own `σ₀² = 1/(4n)` start comes from);
+(4) instantiate `tvLe_phaseChain` to supply (a)'s coupling. Two further notes for whoever does
+(4): `PhaseInduction`'s `TVLe.step`/`TVLe.iterate` are built on the weaker `TVLe.bind` and
+should be re-pointed at `Warmness.tvLe_step`/`tvLe_iterate`, which are in scope and carry no
+`IsProbabilityMeasure` or `ε ≠ ⊤`; and the hardcoded `8` is provisional — `chainErr_le` is
+already `C`-general, so recompute `C` at instantiation rather than forcing `8`.
