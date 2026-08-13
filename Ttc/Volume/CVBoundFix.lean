@@ -62,13 +62,18 @@ under exactly that guard, so no guarantee is weakened.
   mean to within a relative `< 1/2` of it and `hgb` caps that mean at `B`.
   `Ttc.exists_no_uniform_score_bound_of_phases_one` packages the same fact in the
   existential shape of `Arlib.GaussianCooling.hterm_not_dischargeable`.
-* **Open for a `K`-dependent phase count.**  The blanket claim at `CVInstantiate.lean:630-633`
-  — that *no* witness with `m ≥ 1` exists — is **not** established by the above and is
-  plausibly false: `phases` is caller data indexed by `K`, and a caller taking
-  `phases K ε p ≈ n·log(Rad K)` could in principle keep every chain ratio below a fixed
-  constant, at which point a uniform `B` would exist.  Constructing such a schedule and
-  proving the ratio bound *is* the Cousins–Vempala annealing analysis and is not attempted
-  here.  Stated plainly so the docstring's claim is not read as proved in full.
+* **Open for a `K`-dependent schedule — two unrefuted escape routes.**  The blanket claim at
+  `CVInstantiate.lean:630-633` — that *no* witness with `m ≥ 1` exists — is **not**
+  established by the above and is plausibly false, because the refutation pins *both*
+  schedule functions to constants (`hphases : phases K ε p = 1`, `hconst : σsq K ε p j = s`,
+  constant in `K` and in the phase index).  Either may be let loose:
+  (a) a `K`-dependent **phase count** — a caller taking `phases K ε p ≈ n·log(Rad K)` could
+  in principle keep every chain ratio below a fixed constant; (b) a `K`-dependent
+  **variance** at `phases ≡ 1` — as `σ₀(K)² → ∞` the cold endpoint `chain 1 σsq K 0` rises
+  towards `Vol(K)` and the single ratio falls towards `1`.  In either case a uniform `B`
+  would exist.  Neither is constructed here — (a) *is* the Cousins–Vempala annealing
+  analysis — and neither is refuted.  Stated plainly so the docstring's claim is not read as
+  proved in full.
 * **Moot.**  By §1(a) a uniform `B` was never needed.  §3 is the repair.
 
 ## 3.  The repair
@@ -97,9 +102,17 @@ therefore never be a single `B : ℝ`.
 ## 4.  What this buys, concretely
 
 `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBoundWitnessOnePhase` is a
-witness of the repaired bundle at **`phases ≡ 1`** — a non-degenerate phase count, which
-§2's refutation shows the *unrepaired* constructor cannot have at a constant schedule.  So
-the repair is not cosmetic: it strictly enlarges the set of instantiable data.
+witness of the repaired bundle at **`phases ≡ 1`** and a constant variance schedule — a
+non-degenerate phase count, at data for which §2's refutation shows the *unrepaired*
+constructor has no witness at all.  So the repair is not cosmetic: it strictly enlarges the
+set of instantiable data.
+
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound_est_of_guard` checks, by
+`rfl` after one rewrite rather than by the reader's eye (the move
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean_est` makes at
+`CVInstantiate.lean:586`), that under the guard the repaired estimator is the base
+expression in `g` itself — the clamp is invisible wherever `VolumeAlgorithm.correct`
+speaks.
 
 ## 5.  Hypotheses carried unproved
 
@@ -146,6 +159,12 @@ theorem clampScore_of_guard {g : Set (Space n) → ℝ → ℝ → ℕ → ℕ �
     {K : Set (Space n)} {ε p : ℝ} (h : CVGuard K ε p) (j i : ℕ) :
     clampScore g K ε p j i = g K ε p j i := by
   funext x; simp [clampScore, h]
+
+/-- The same, as an equality of the whole `(run, phase)`-indexed score family. -/
+theorem clampScore_eq_of_guard {g : Set (Space n) → ℝ → ℝ → ℕ → ℕ → E → ℝ}
+    {K : Set (Space n)} {ε p : ℝ} (h : CVGuard K ε p) :
+    clampScore g K ε p = g K ε p := by
+  funext j i; exact clampScore_of_guard h j i
 
 open scoped Classical in
 /-- Off the guard the clamped score is the zero function. -/
@@ -204,7 +223,8 @@ open Metric
 /-- `EuclideanSpace ℝ (Fin n)` is nontrivial in dimension `≥ 1`. -/
 theorem nontrivial_space {n : ℕ} (hn : 1 ≤ n) : Nontrivial (Space n) := by
   refine Module.nontrivial_of_finrank_pos (R := ℝ) ?_
-  simpa [finrank_euclideanSpace_fin] using hn
+  simp only [finrank_euclideanSpace_fin]
+  omega
 
 /-- The volume of a ball of radius `R ≥ 0`, in units of the unit ball. -/
 theorem volume_ball_toReal (n : ℕ) (hn : 1 ≤ n) {R : ℝ} (hR : 0 ≤ R) :
@@ -251,9 +271,11 @@ bodies, while `Arlib.GaussianCooling.chain_zero_le` caps the cold endpoint at th
 the score's mean to within a relative `ε/(2(2+ε)) < 1/2` of it; and `hgb` caps that same
 mean by `B`.
 
-**Scope.**  This refutes uniformity at a *constant* phase count.  It does **not** refute the
-blanket claim for a `K`-dependent `phases` — see §2 of the module docstring; that remains
-open, and is plausibly false. -/
+**Scope.**  `hphases` and `hconst` pin *both* schedule functions to constants, so this
+refutes uniformity only for a schedule constant in `K`.  It does **not** refute the blanket
+claim at `CVInstantiate.lean:630-633`: a `K`-dependent `phases`, or a `K`-dependent `σsq` at
+`phases ≡ 1`, both escape it — see §2 of the module docstring.  That claim remains open, and
+is plausibly false. -/
 theorem no_uniform_score_bound_of_phases_one (n : ℕ) (hn : 1 ≤ n) (E : Type)
     [MeasurableSpace E] (ν : ℕ → ℕ → Measure E) [∀ j i, IsProbabilityMeasure (ν j i)]
     (phases : Set (Space n) → ℝ → ℝ → ℕ) (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
@@ -295,8 +317,7 @@ theorem no_uniform_score_bound_of_phases_one (n : ℕ) (hn : 1 ≤ n) (E : Type)
   -- the mean of the (only) phase score is pinned near the (unbounded) chain ratio
   have hmem := hphase_mean K ε p hε hp hp1 hconv hball hfin 0
     (⟨0, by norm_num⟩ : Fin 1)
-  simp only [Nat.cast_one, mul_one, hc1, relErr, Set.mem_Icc, Fin.val_mk,
-    zero_add] at hmem
+  simp only [Nat.cast_one, mul_one, hc1, relErr, Set.mem_Icc, zero_add] at hmem
   -- ... and is at most `B`, because `|g| ≤ B`
   have hint : Integrable (g K ε p 0 0) (ν 0 0) :=
     (memLp_top_of_bound (hg K ε p 0 0).aestronglyMeasurable B
@@ -345,6 +366,25 @@ theorem exists_no_uniform_score_bound_of_phases_one (n : ℕ) (hn : 1 ≤ n) (E 
   rintro ⟨g, B, hg, hgb, hmean⟩
   exact no_uniform_score_bound_of_phases_one n hn E ν _ _ s hs
     (fun _ _ _ => rfl) (fun _ _ _ _ => rfl) g B hg hgb hmean ε p hε hp hp1
+
+/-- **The refutation at fully concrete data** (`hterm_not_dischargeable` style): dimension
+`n = 1`, coin space `Unit` with `ν ≡ dirac ()`, one phase, unit variance `s = 1`, accuracy
+and confidence both `1/2`.  No pair `(g, B)` satisfying the `hg`, `hgb` and `hphase_mean`
+binders of `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean` exists at that data. -/
+theorem no_uniform_score_bound_concrete
+    (g : Set (Space 1) → ℝ → ℝ → ℕ → ℕ → Unit → ℝ) (B : ℝ)
+    (hg : ∀ K ε p j i, Measurable (g K ε p j i))
+    (hgb : ∀ K ε p j i x, |g K ε p j i x| ≤ B)
+    (hphase_mean : ∀ (K : Set (Space 1)) (ε p : ℝ), 0 < ε → 0 < p → p < 1 → Convex ℝ K →
+      Metric.ball (0 : Space 1) 1 ⊆ K → volume K ≠ ⊤ → ∀ (_j : ℕ) (i : Fin 1),
+      ∫ x, g K ε p _j (i : ℕ) x ∂(Measure.dirac ()) ∈
+        relErr (ε / (2 * (2 + ε) * (((1 : ℕ) : ℝ))))
+          (Arlib.GaussianCooling.chain 1 (fun _ => (1 : ℝ)) K ((i : ℕ) + 1) /
+            Arlib.GaussianCooling.chain 1 (fun _ => (1 : ℝ)) K (i : ℕ))) :
+    False :=
+  no_uniform_score_bound_of_phases_one 1 le_rfl Unit (fun _ _ => Measure.dirac ())
+    (fun _ _ _ => 1) (fun _ _ _ _ => 1) 1 one_pos (fun _ _ _ => rfl) (fun _ _ _ _ => rfl)
+    g B hg hgb hphase_mean (1 / 2) (1 / 2) (by norm_num) (by norm_num) (by norm_num)
 
 end Refutation
 
@@ -513,4 +553,122 @@ noncomputable def VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound
       rw [hsq, hmean, clampScore_of_guard hguard]
       exact hphase_var K ε p hε hp hp1 hconv hball hfin j i)
 
+/-- **Under the guard the clamp is invisible: the repaired estimator is the base
+expression in `g` itself** — checked rather than left to the reader's eye, the move
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean_est` (`Ttc/Volume/CVInstantiate.lean:586`)
+makes for the equation/interval pair.
+
+On admissible `(K, ε, p)` the estimate is the median of `Arlib.GaussianCooling.reps ε p`
+independent runs of `chain … 0 · ∏ᵢ g K ε p j i (ω j i)` — with `g`, not `Ttc.clampScore g`.
+Since `Ttc.VolumeAlgorithm.correct` (`Ttc/Volume/Oracle.lean:91-93`) is quantified under
+exactly this guard, the clamp is invisible wherever the guarantee speaks. -/
+theorem VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound_est_of_guard
+    (n : ℕ) (E : Type) [MeasurableSpace E] (ν : ℕ → ℕ → Measure E)
+    [∀ j i, IsProbabilityMeasure (ν j i)]
+    (phases : Set (Space n) → ℝ → ℝ → ℕ) (σsq : Set (Space n) → ℝ → ℝ → ℕ → ℝ)
+    (g : Set (Space n) → ℝ → ℝ → ℕ → ℕ → E → ℝ) (B : Set (Space n) → ℝ → ℝ → ℝ)
+    (hσ hg hgb hphase_mean hphase_var) {K : Set (Space n)} {ε p : ℝ} (h : CVGuard K ε p) :
+    (VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound n E ν phases σsq g B
+        hσ hg hgb hphase_mean hphase_var).est K ε p
+      = fun ω => Arlib.Probability.medianSel
+          fun j : Fin (Arlib.GaussianCooling.reps ε p) =>
+            Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K 0 *
+              ∏ i : Fin (phases K ε p),
+                Arlib.Probability.natScore (g K ε p) (j : ℕ) (i : ℕ) ω := by
+  show (fun ω => Arlib.Probability.medianSel
+      fun j : Fin (Arlib.GaussianCooling.reps ε p) =>
+        Arlib.GaussianCooling.chain (phases K ε p) (σsq K ε p) K 0 *
+          ∏ i : Fin (phases K ε p),
+            Arlib.Probability.natScore (clampScore g K ε p) (j : ℕ) (i : ℕ) ω) = _
+  rw [clampScore_eq_of_guard h]
+
+/-! ## 5.  Non-vacuity (`CLAUDE.md` §11), at a phase count the base constructor cannot have -/
+
+/-- The one-phase chain ratio `chain 1 σ K 1 / chain 1 σ K 0 = Vol(K)/∫_K e^{−‖x‖²/(2s)}`.
+It is `K`-dependent and, by `Ttc.no_uniform_score_bound_of_phases_one`, unbounded over
+admissible bodies — which is exactly why the base constructor's `B : ℝ` cannot hold it. -/
+noncomputable def oneRatio {n : ℕ} (s : ℝ) (K : Set (Space n)) : ℝ :=
+  Arlib.GaussianCooling.chain 1 (fun _ => s) K 1 /
+    Arlib.GaussianCooling.chain 1 (fun _ => s) K 0
+
+theorem oneRatio_pos {n : ℕ} {s : ℝ} (hs : 0 < s) {K : Set (Space n)}
+    (hball : Metric.ball (0 : Space n) 1 ⊆ K) (hfin : volume K ≠ ⊤) : 0 < oneRatio s K :=
+  div_pos (Arlib.GaussianCooling.chain_pos (fun _ => hs) hball hfin 1)
+    (Arlib.GaussianCooling.chain_pos (fun _ => hs) hball hfin 0)
+
+/-- **Non-vacuity of the repaired bundle, at `phases ≡ 1`.**
+
+Every binder of `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound` is supplied
+simultaneously with a **positive** phase count, so the repaired hypothesis bundle is
+satisfiable without emptying `Fin (phases K ε p)`.
+
+Contrast `Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanWitness`
+(`Ttc/Volume/CVInstantiate.lean:634`) and
+`Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanAmendedWitness`
+(`Ttc/Volume/CVAmended.lean:328`), both of which take `phases = 0` so that every content-
+carrying binder holds by `Fin.elim0`; `Ttc.no_uniform_score_bound_of_phases_one` shows the
+*base* constructor admits no such `phases ≡ 1` witness at all, at any constant schedule.
+The single thing that changes is the bound: `B K ε p = oneRatio s K` is `K`-dependent, which
+`(B : ℝ)` cannot express.
+
+**What it is and is not.**  The score is the *constant* `oneRatio s K` — i.e. an oracle that
+already knows the answer — so this witnesses **satisfiability of the hypothesis bundle at a
+positive phase count**, not that any sampler achieves it.  `hphase_mean` holds with the
+interval centred exactly, `hphase_var` with equality on the second moment; the residual
+sampler debt is untouched. -/
+noncomputable def VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBoundWitnessOnePhase
+    (n : ℕ) (s : ℝ) (hs : 0 < s) : VolumeAlgorithm n :=
+  VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound n Unit
+    (fun _ _ => Measure.dirac ())
+    -- phases ≡ 1, σsq ≡ s
+    (fun _ _ _ => 1) (fun _ _ _ _ => s)
+    -- the score: the constant equal to the (K-dependent) chain ratio; the bound: its size
+    (fun K _ _ _ _ _ => oneRatio s K) (fun K _ _ => |oneRatio s K|)
+    -- hσ, hg, hgb
+    (fun _ _ _ _ => hs) (fun _ _ _ _ _ => measurable_const)
+    (fun _ _ _ _ _ _ _ _ _ _ _ _ => le_rfl)
+    -- hphase_mean : the mean is the ratio on the nose, so it lies in every relative interval
+    (fun K ε p hε _ _ _ hball hfin _ i => by
+      have hval : (i : ℕ) = 0 := Nat.lt_one_iff.1 i.isLt
+      have hr : 0 < oneRatio s K := oneRatio_pos hs hball hfin
+      rw [oneRatio] at hr
+      have hη : (0 : ℝ) ≤ ε / (2 * (2 + ε) * ((1 : ℕ) : ℝ)) := by positivity
+      simp only [hval, oneRatio, Nat.cast_one, integral_const, probReal_univ,
+        smul_eq_mul, one_mul, zero_add, relErr, Set.mem_Icc]
+      constructor <;> nlinarith)
+    -- hphase_var : the second moment equals the squared mean, and the budget is nonnegative
+    (fun K ε p hε _ _ _ hball hfin _ i => by
+      have hval : (i : ℕ) = 0 := Nat.lt_one_iff.1 i.isLt
+      have hr : 0 < oneRatio s K := oneRatio_pos hs hball hfin
+      rw [oneRatio] at hr
+      have hb : 0 ≤ Arlib.GaussianCooling.varBudget (ε / 2) :=
+        Arlib.GaussianCooling.varBudget_nonneg (ε / 2) (by linarith)
+      simp only [oneRatio, Nat.cast_one, integral_const, probReal_univ,
+        smul_eq_mul, one_mul, div_one]
+      nlinarith [sq_nonneg (Arlib.GaussianCooling.chain 1 (fun _ => s) K 1 /
+        Arlib.GaussianCooling.chain 1 (fun _ => s) K 0)])
+
 end Ttc
+
+/-! ## Axiom audit (`CLAUDE.md` §4)
+
+Every declaration above must depend on exactly `[propext, Classical.choice, Quot.sound]`. -/
+
+#print axioms Ttc.CVGuard
+#print axioms Ttc.clampScore
+#print axioms Ttc.clampScore_of_guard
+#print axioms Ttc.clampScore_of_not_guard
+#print axioms Ttc.measurable_clampScore
+#print axioms Ttc.memLp_two_clampScore
+#print axioms Ttc.nontrivial_space
+#print axioms Ttc.volume_ball_toReal
+#print axioms Ttc.exists_admissible_volume_gt
+#print axioms Ttc.no_uniform_score_bound_of_phases_one
+#print axioms Ttc.exists_no_uniform_score_bound_of_phases_one
+#print axioms Ttc.no_uniform_score_bound_concrete
+#print axioms Ttc.clampScore_eq_of_guard
+#print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound
+#print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound_est_of_guard
+#print axioms Ttc.oneRatio
+#print axioms Ttc.oneRatio_pos
+#print axioms Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBoundWitnessOnePhase
