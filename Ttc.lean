@@ -474,6 +474,7 @@ import Ttc.Volume.RadBound
 import Ttc.Volume.VolSolCheck
 import Ttc.Volume.CousinsVempala
 import Ttc.Volume.CVInstantiate
+import Ttc.Volume.CVSampler
 import Ttc.Volume.MonteCarlo
 
 -- The modelled loop, and what a run costs
