@@ -4786,3 +4786,86 @@ LV's Lemma 6.1 (constant `2`) and Lemma 6.2 (log-concavity of `f̂`) *are* prove
 generality at LV's own constants (`ballSmoothing16_mul_volume_le_two_mul`,
 `isLogConcaveENN_ballSmoothing16`), which required building the convex-partition machinery
 (`exists_volume_cut_eq`, `exists_convex_partition`) from scratch.
+
+## 0n. The sampler's per-phase obligations close; the critical path moves to the phase induction (2026-08-13)
+
+Four files landed together, all forced-rebuilt (`Built`, not `Replayed`), all `#print axioms`
+clean at `[propext, Classical.choice, Quot.sound]`, zero `sorry`.
+
+**(a) The warm start is discharged** —
+[`WarmSpeedy.lean`](Arlib/Convexity/GaussianCooling/WarmSpeedy.lean). This was the critical
+path. `PhaseSamplerTV.lean` carried `IsWarm (ofReal M) mu0 (ellGaussianProb K δ σ²)` unproved:
+`WarmChain.lean` warms one *Gaussian* law against the next, while the speedy stationary law
+carries the extra `ℓ` factor, and `EllFloor.lean` refutes any uniform pointwise floor on `ℓ`
+for this class. Closed on the shrunken body instead: for `μ` supported on `c·K`, `ℓ ≡ 1` there
+and `ℓ ≤ 1` on `K` give `μ S ≤ M·(ellGaussianProb K δ s) S` with the **same** `M`. The
+`ℓ`-deficit only shrinks the speedy normaliser, so the crux is free; the factor `2` enters
+once, at conditioning, via `coolLaw i (c·K) ≥ 1/2`. Composed constant `2e`.
+
+A refutation came with it, machine-checked rather than asserted:
+`exists_supported_on_shrunken_not_isWarm` shows support on `c·K` **alone** gives warmness for
+**no** `M`, `⊤` included — `IsWarm` is a supremum over all measurable sets while
+`ellGaussianProb` is absolutely continuous, so a Dirac mass on `c·K` gives ratio `1/0` at a
+singleton. This is the tenth binder in this project to be refuted after looking plausible.
+
+**(b) `λ ≥ 1/2` without Lovász–Vempala** — see §0m. Also proved in its Gaussian-weighted form
+in [`WastedStepsGaussian.lean`](Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean) §7.
+
+**(c) The Gaussian wasted-step analogue** — same file. New unconditional structural fact
+`metropolisMove = ℓ · speedyMetropolisMove` (no hypotheses at all), the exact one-step
+identity `E_x[exit time] = (ℓ(x)·a(x))⁻¹` for the real trajectory, and the averaged bound
+`3·∑ ≤ 10·t·M` with **both** `λ ≥ 1/2` and the acceptance floor `a ≥ 3/5` proved rather than
+assumed. `hwarm` is the only non-geometric hypothesis left in it — and (a) supplies it.
+New binder relative to the uniform file: `hKR : ∀ x ∈ K, ‖x‖ ≤ R`, unavoidable because the
+acceptance floor degrades with `‖x‖`.
+
+**(d) The cold-phase regime** — see the commit for
+[`ColdPhaseRegime.lean`](Arlib/MarkovChains/Continuous/ColdPhaseRegime.lean). `hσn : 4 ≤ σ√n`
+is gone; cold phases cost `n²` and are `σ`-free, against `σ²n³` warm, so the previously
+excluded phases were the *cheapest*.
+
+**(e) The measurability mismatch is closed** —
+[`InteriorBridge.lean`](Arlib/Convexity/GaussianCooling/InteriorBridge.lean).
+`Ttc/Volume/CVAmended.lean` deliberately carries no `MeasurableSet K` binder and must not
+(§ `CousinsVempala.lean:819`: a convex set need not be Borel, so such a binder would be
+*false*), while the whole sampler chain needs measurability. The bridge is that the sampler
+can run on `interior K` — open, convex, containing the unit ball — and
+
+    coolLaw m σsq (interior K) i  =  coolLaw m σsq K i
+
+**as an equality of measures**, not a TV estimate, because `Convex.addHaar_frontier` makes
+`interior K =ᵐ K` and both `Measure.restrict` and the normaliser `chain` read the set only
+through `volume.restrict`. No measurability hypothesis on `K` appears anywhere in that file.
+
+### What the critical path is now
+
+Not a per-phase fact — the **end-to-end phase induction**. Two caveats of (a) name it:
+
+1. **The start is conditioned.** Phase `i+1` starts from `condOn (coolLaw i) (c·K)`, not from
+   `coolLaw i`. CV's rejection routine returns a point distributed as `coolLaw i` on all of
+   `K`; starting unconditioned is *not* coverable here, because outside `c·K` the local
+   conductance can be exponentially small (`EllFloor.lean`), so that sup-ratio is unbounded.
+   The repair — redraw until the sample lands in `c·K`, `≤ 2` expected draws and `n`-free by
+   `half_le_coolLaw_smul_set` — is not itself formalised, and is exactly what `Ttc`'s sampler
+   map `X` must be defined as.
+2. **The start is the *exact* phase-`i` law**, not the previous phase's sampler output.
+
+Item 2 is the substantive one, and the accounting must not be assumed additive.
+TV-closeness does **not** transfer warmness — (a)'s own refutation is the counterexample, since
+an `ε`-mass atom survives TV-closeness — so the induction has to run through TV directly, via
+data processing under the walk kernel plus `TVLe.condOn`, and `condOn` inflates by `~1/μ(A)`
+**per phase**. The honest recursion is therefore `e_{i+1} ≤ C·e_i + 64·ε_phase` with `C ≈ 4`
+at mass `≥ 1/2` — **geometric, not additive**. That is survivable, not fatal: mixing cost is
+logarithmic in accuracy, so `ε_phase := ε_final·C^{−m}` adds only `~m·log C` to each phase's
+`log(1/ε)` deadline, an extra factor `~m`, polynomial. Whoever writes the induction should
+take the geometric accounting explicitly, or produce a genuine coupling that makes it
+additive — and must not inherit "additive bookkeeping" as an unexamined assumption.
+
+### Two residual gaps, both named, neither on the polytime critical path
+
+* `hRσ : R ≤ 2σ√n` (isoperimetric compatibility, `IsoIndicator.lean:83`) reads `R ≤ 2` at
+  ColdStart's `σ² = 1/n`, excluding bodies of radius `> 2` at their coldest variances.
+  Truncation to `K ∩ closedBall 0 (2σ√n)` is the fix; the discarded mass must be bounded by
+  the **full-space** Gaussian tail (R-free, exponentially small), not by `vol(K)·max γ`,
+  which would only trade `R ≤ 2` for `R ≤ e^{3/2}`.
+* `hLov` — §0m. Blocked on Mathlib, off the critical path.

@@ -132,8 +132,12 @@ schedule — which is why `σmax²` is carried as a factor rather than converted
 `WastedSteps.lean` converts speedy steps to ball-walk steps for the **uniform** speedy walk
 (`speedyWalk K δ`, stationary law `ellProb K δ`).  The step count of §§1–4 is for the
 **Gaussian** speedy chain (`speedyMetropolisGaussian K δ σ²`, stationary law
-`ellGaussianProb K δ σ²`).  No Gaussian analogue of `WastedSteps.lean` exists in this
-repository.  §5 is therefore stated verbatim over the uniform chain, with the total step count
+`ellGaussianProb K δ σ²`).  A Gaussian analogue of `WastedSteps.lean` **now exists** —
+`Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean`, which proves the exact one-step
+identity `E_x[exit time] = (ℓ(x)·a(x))⁻¹` for `metropolisGaussian` and the averaged bound
+`3·∑ ≤ 10·t·M` with both `λ ≥ 1/2` and the acceptance floor `a ≥ 3/5` discharged.  **§5 below
+has not been restated over it**: §5 is still stated verbatim over the uniform chain, with the
+total step count
 `m·t` supplied as a plain natural number; reading it as "the ball-walk cost of the Gaussian
 sampler" is **not** licensed by anything proved here.
 
