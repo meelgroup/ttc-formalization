@@ -65,6 +65,8 @@ import Arlib.MarkovChains.Continuous.LambdaBoundGaussian
 import Arlib.MarkovChains.Continuous.SpeedyRejection
 import Arlib.MarkovChains.Continuous.LambdaBoundSharp
 import Arlib.MarkovChains.Continuous.KLS97Shell
+import Arlib.MarkovChains.Continuous.SpeedyExactOnShrunken
+import Arlib.MarkovChains.Continuous.WastedSteps
 
 /-!
 # Arlib.MarkovChains
