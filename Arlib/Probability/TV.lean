@@ -65,11 +65,25 @@ which for probability measures is **half** the `L¹` distance.
 ## Scope
 
 This file is deliberately thin. There is no `sSup` definition of the distance itself, no
-coupling characterisation, no Pinsker inequality, no link to a density or to the Jordan
-decomposition, and no data-processing inequality for a Markov *kernel* (that needs a
-layer-cake argument to move a setwise bound past a lower integral). Nothing here converts a
-spectral gap or a conductance bound into a `TVLe`; that is the theorem this file is the
-target of, not a theorem it contains.
+coupling characterisation, no Pinsker inequality, and no link to a density or to the Jordan
+decomposition. Nothing here converts a spectral gap or a conductance bound into a `TVLe`;
+that is the theorem this file is the target of, not a theorem it contains.
+
+The **kernel** data-processing inequality is not here either, but it is *not* missing from
+the library — this paragraph used to say it was, and that was wrong long enough to mislead a
+reader. It is proved twice, downstream:
+
+* `Arlib.tvLe_step` / `Arlib.tvLe_iterate` (`Arlib/MarkovChains/Continuous/Warmness.lean:293`,
+  `:302`), resting on `Arlib.lintegral_le_of_tvLe` (`:241`), which runs the layer cake
+  directly in `ℝ≥0∞`. **This is the strong form**: no `IsProbabilityMeasure`, no `ε ≠ ⊤`.
+  Prefer it.
+* `Arlib.TVLe.bind` (`Arlib/Probability/TVKernel.lean`), reached instead through the
+  real-valued `TVLe.integral_le` below, and so carrying both of those hypotheses. It exists
+  only because it lives in this layer, which cannot see `Arlib.MarkovChains`.
+
+The absence of the *coupling* characterisation, by contrast, is real and load-bearing: it is
+why the phase composition in `Arlib/Convexity/GaussianCooling/PhaseInduction.lean` accumulates
+error geometrically where Cousins–Vempala accumulate it additively. See `AUDIT.md` §0o.
 -/
 
 namespace Arlib

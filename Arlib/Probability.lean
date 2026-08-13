@@ -10,6 +10,7 @@ import Arlib.Probability.RunPlumbing
 import Arlib.Probability.Geometric
 import Arlib.Probability.RejectionRounds
 import Arlib.Probability.TVTensor
+import Arlib.Probability.TVKernel
 import Arlib.Probability.DeltaIndependence
 
 /-!
