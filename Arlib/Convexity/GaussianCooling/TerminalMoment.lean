@@ -77,9 +77,12 @@ two-constant accounting into **one** constant `1 + κ/m` valid at every phase, a
 weaker `R² ≤ σᵢ²` buys only `e^{1/2}` (`TerminalPhase.lean:199`), which is `> 1 + 2/n` for
 every `n ≥ 3`, so it does **not** discharge `hterm`.
 
-`hflat` is written here in the same shape the `Ttc` side already uses for the sampler
-constructors it is available on (`Ttc/Volume/CousinsVempala.lean:2419-2424`), character for
-character up to the `radius K` / `R K ε p` naming; nothing under `Ttc/` is edited.
+`hflat` is the same flatness *inequality* the `Ttc` side already uses for the sampler
+constructors that expose a radius (`Ttc/Volume/CousinsVempala.lean:2419-2424`, up to the
+`radius K` / `R K ε p` naming), but at a different quantifier: there it is imposed at every
+index `j` with `phases K ε p ≤ j + 1`, here only at the single in-range terminal index
+`i : Fin (phases K ε p)` with `(i : ℕ) + 1 = phases K ε p`, which is all this route consumes.
+Nothing under `Ttc/` is edited.
 
 ## What is reused verbatim (nothing below re-proves it)
 
@@ -448,6 +451,51 @@ theorem coolLaw_interior_sq_moment_le_terminal_flat_witness (hn : 3 ≤ n) :
   exact coolLaw_interior_sq_moment_le_terminal_flat hσ (convex_closedBall _ _) hball hfin
     (R := 1) subset_rfl (by norm_num) hn0 hflat
 
+/-- **Non-vacuity of `coolLaw_interior_sq_moment_le_all`**, the `∀ i` glue.  Same body and
+same schedule as above but with `m = 2`, so the bundle is exercised on **both** branches:
+`i = 0` is interior (`0 + 1 < 2`, the logconcavity bound) and every `i ≥ 1` is terminal (the
+flat bound).  `hrate` holds by construction and `hflat` at every index follows from the
+`j = 0` case because `(1 + 1/n)ʲ ≥ 1`. -/
+theorem coolLaw_interior_sq_moment_le_all_witness (hn : 3 ≤ n) (i : ℕ) :
+    ∫ x, phaseScore 2 (fun j => ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j)
+            (interior (closedBall (0 : EuclSpace n) 1)) i x ^ 2
+          ∂(coolLaw 2 (fun j => ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j)
+              (closedBall (0 : EuclSpace n) 1) i)
+      ≤ (1 + 2 / (n : ℝ))
+        * (∫ x, phaseScore 2 (fun j => ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j)
+              (interior (closedBall (0 : EuclSpace n) 1)) i x
+            ∂(coolLaw 2 (fun j => ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j)
+                (closedBall (0 : EuclSpace n) 1) i)) ^ 2 := by
+  have hn0 : 0 < n := by omega
+  have hN : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn0
+  have hσ : ∀ j, (0 : ℝ) < ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j := fun j => by positivity
+  have hball : ball (0 : EuclSpace n) 1 ⊆ closedBall (0 : EuclSpace n) 1 :=
+    ball_subset_closedBall
+  have hfin : volume (closedBall (0 : EuclSpace n) 1) ≠ ⊤ := measure_closedBall_lt_top.ne
+  have hrate : ∀ j, ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ (j + 1)
+      = ((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j * (1 + 1 / (n : ℝ)) := by
+    intro j; rw [pow_succ]; ring
+  have hlog := two_div_add_two_le_log hn0
+  have hq : (2 : ℝ) ≤ ((n : ℝ) + 2) * Real.log (1 + 2 / (n : ℝ)) := by
+    have hmul : ((n : ℝ) + 2) * (2 / ((n : ℝ) + 2))
+        ≤ ((n : ℝ) + 2) * Real.log (1 + 2 / (n : ℝ)) :=
+      mul_le_mul_of_nonneg_left hlog (by positivity)
+    have heq2 : ((n : ℝ) + 2) * (2 / ((n : ℝ) + 2)) = 2 := by field_simp
+    linarith
+  have hflat : ∀ j : ℕ, 2 ≤ j + 1 →
+      (1 : ℝ) ^ 2 ≤ 2 * (((n : ℝ) + 2) * (1 + 1 / (n : ℝ)) ^ j)
+        * Real.log (1 + 2 / (n : ℝ)) := by
+    intro j _
+    have hpow : (1 : ℝ) ≤ (1 + 1 / (n : ℝ)) ^ j :=
+      one_le_pow₀ (by have : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
+                      linarith)
+    have hstep : (2 : ℝ) * 1
+        ≤ (((n : ℝ) + 2) * Real.log (1 + 2 / (n : ℝ))) * (1 + 1 / (n : ℝ)) ^ j :=
+      mul_le_mul hq hpow zero_le_one (by linarith)
+    nlinarith [hstep]
+  exact coolLaw_interior_sq_moment_le_all hσ (convex_closedBall _ _) hball hfin
+    (R := 1) subset_rfl hn hrate hflat i
+
 /-- Non-vacuity of the `hphase_var_of_tvLe_of_flat` bundle — **degenerate on purpose**
 (zero phases); see the section docstring. -/
 theorem hphase_var_of_tvLe_of_flat_witness (hn : 3 ≤ n) :
@@ -488,4 +536,5 @@ Every declaration above must depend on exactly `[propext, Classical.choice, Quot
 #print axioms Arlib.GaussianCooling.hterm_not_dischargeable
 #print axioms Arlib.GaussianCooling.two_div_add_two_le_log
 #print axioms Arlib.GaussianCooling.coolLaw_interior_sq_moment_le_terminal_flat_witness
+#print axioms Arlib.GaussianCooling.coolLaw_interior_sq_moment_le_all_witness
 #print axioms Arlib.GaussianCooling.hphase_var_of_tvLe_of_flat_witness

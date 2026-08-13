@@ -55,7 +55,7 @@ necessary condition reads `(n+1)m/n² ≤ κ`, i.e. `m ≲ nκ` — the same reg
 **arbitrarily large**, in sharp contrast with the fixed rate:
 
 * `totalCooling_ge_exp` — `(1+α)^m ≥ e^{mα/2}` for `α ≤ 1`, the achievability side;
-* `phaseCount_ge_of_budget` — the matching converse: any `(α, m)` meeting the budget and
+* `generalPhaseCount_ge_of_budget` — the matching converse: any `(α, m)` meeting the budget and
   cooling by `T ≥ 1` must have `(n+1)·(log T)² ≤ κ·m`.
 
 The converse is what fixes the shape of the answer: with `L := log T` the target
@@ -63,9 +63,9 @@ log-cooling, **`m ≥ (n+1)L²/κ` phases are forced**, and the explicit constru
 achieves `m ≤ 32(n+1)L²/κ + 1`. Hence `m = Θ(nL²/κ)` and `α = Θ(κ/(nL))`, tight up to an
 absolute constant.
 
-**3. An explicit admissible `(α, m)`.** `coolRate n κ L = κ/(16(n+1)L)` and
-`phaseCount n κ L = ⌈32(n+1)L²/κ⌉₊` are admissible for every `0 < κ ≤ 1` and `1 ≤ L`
-(`coolRate_meets_budget`, `coolRate_total_cooling`). Instantiated at the volume algorithm's
+**3. An explicit admissible `(α, m)`.** `generalCoolRate n κ L = κ/(16(n+1)L)` and
+`generalPhaseCount n κ L = ⌈32(n+1)L²/κ⌉₊` are admissible for every `0 < κ ≤ 1` and `1 ≤ L`
+(`generalCoolRate_meets_budget`, `generalCoolRate_total_cooling`). Instantiated at the volume algorithm's
 parameters — `κ = varBudget ε = log(1 + ε²/5)` and `L = log(nR²)` — this is
 `exists_admissible_volume`, whose phase count is
 
@@ -80,7 +80,7 @@ samples and they keep `O*(n)` phases at `α = 1/n`.
 
 The budget shape this repo's volume algorithm consumes, `1 + κ/m` with `m` the number of
 phases, is the `kᵢ = 1` specialisation of that accounting: one sample per phase. Under
-`k = 1` the *only* remaining freedom is `α`, and `phaseCount_ge_of_budget` shows the
+`k = 1` the *only* remaining freedom is `α`, and `generalPhaseCount_ge_of_budget` shows the
 resulting `Θ(nL²/κ)` phase count is then forced, not an artefact of the construction. So
 this file resolves the contradiction faithfully *within the stated budget shape*; recovering
 the paper's `O*(n)` phase count needs the `kᵢ`-sample averaging, which is a change to the
@@ -92,10 +92,10 @@ exact-sample per-phase bounds; transporting them across a TV error is `PhaseVar.
 
 ## Semantic `def`s (`CLAUDE.md` §11)
 
-`coolRate` and `phaseCount` are **closed-form abbreviations and nothing more** — they assert
+`generalCoolRate` and `generalPhaseCount` are **closed-form abbreviations and nothing more** — they assert
 no property, exactly as `Arlib.GaussianCooling.phaseVarBudget` does. Everything claimed of
-them is a theorem: `coolRate_meets_budget`, `coolRate_total_cooling`, `phaseCount_ge`,
-`phaseCount_le`, `phaseCount_pos`, `coolRate_lt_fixedRate`.
+them is a theorem: `generalCoolRate_meets_budget`, `generalCoolRate_total_cooling`, `generalPhaseCount_ge`,
+`generalPhaseCount_le`, `generalPhaseCount_pos`, `generalCoolRate_lt_fixedRate`.
 
 ## Non-vacuity (`CLAUDE.md` §11)
 
@@ -105,7 +105,7 @@ The hypotheses `0 < κ ≤ 1`, `1 ≤ L` are not vacuous, and the `∃` statemen
   `κ` really is in range;
 * `admissible_witness` — a fully concrete instance at `n = 3`, `ε = 1`, `R = 2`, with every
   hypothesis discharged numerically;
-* `exists_admissible` is *constructive*: it hands back `coolRate` and `phaseCount`, not an
+* `exists_admissible` is *constructive*: it hands back `generalCoolRate` and `generalPhaseCount`, not an
   abstract witness.
 -/
 
@@ -182,7 +182,7 @@ Proof: `(1-α²)⁻¹ = 1 + a` with `a = α²/(1-α²) ≥ α²`, and Bernoulli
 (`one_add_mul_le_pow`) gives `(1+a)^{n+1} ≥ 1 + (n+1)a ≥ 1 + (n+1)α²`.
 
 This is the half that makes the phase count `Θ(nL²/κ)` *forced* rather than merely
-achievable; see `phaseCount_ge_of_budget`. -/
+achievable; see `generalPhaseCount_ge_of_budget`. -/
 theorem generalRate_budget_necessary {n m : ℕ} (hm : 0 < m) {α κ : ℝ}
     (hα0 : 0 ≤ α) (hα1 : α < 1)
     (h : ((1 : ℝ) - α ^ 2)⁻¹ ^ (n + 1) ≤ 1 + κ / (m : ℝ)) :
@@ -248,19 +248,19 @@ theorem generalRate_budget_sufficient {n m : ℕ} (hm : 0 < m) {α κ : ℝ}
 from the fixed rate. `geomSchedule_total_cooling_lt` caps the fixed rate's total cooling at
 `11/10`; `exists_admissible` below exceeds any prescribed `T`.
 
-The exact price is `phaseCount_ge_of_budget`: cooling by `T` costs at least
+The exact price is `generalPhaseCount_ge_of_budget`: cooling by `T` costs at least
 `(n+1)(log T)²/κ` phases. -/
 
 /-- **The converse bound on total cooling.** If `(α, m)` meets the budget and cools by at
 least `T ≥ 1`, then `(n+1)·(log T)² ≤ κ·m`.
 
 Equivalently `m ≥ (n+1)(log T)²/κ`: a schedule that cools by `T` under the budget
-`1 + κ/m` **must** use `Ω(n·log²T/κ)` phases. Combined with `phaseCount_le`, which achieves
+`1 + κ/m` **must** use `Ω(n·log²T/κ)` phases. Combined with `generalPhaseCount_le`, which achieves
 `32(n+1)(log T)²/κ + 1`, this pins the phase count to `Θ(n·log²T/κ)`.
 
 Proof: `log T ≤ m·log(1+α) ≤ mα`, so `(n+1)(log T)² ≤ (n+1)m²α² = m·((n+1)α²m) ≤ mκ` by
 `generalRate_budget_necessary`. -/
-theorem phaseCount_ge_of_budget {n m : ℕ} (hm : 0 < m) {α κ T : ℝ}
+theorem generalPhaseCount_ge_of_budget {n m : ℕ} (hm : 0 < m) {α κ T : ℝ}
     (hα0 : 0 ≤ α) (hα1 : α < 1)
     (hbud : ((1 : ℝ) - α ^ 2)⁻¹ ^ (n + 1) ≤ 1 + κ / (m : ℝ))
     (hT1 : 1 ≤ T) (hT : T ≤ (1 + α) ^ m) :
@@ -293,91 +293,91 @@ multiply `σ²` by at least `e^L`), take
 Then `mα ≥ 2L`, so `(1+α)^m ≥ e^{mα/2} ≥ e^L`, while `4(n+1)α²m ≤ κ`. -/
 
 /-- **The admissible cooling rate** at budget `κ` and target log-cooling `L` in dimension
-`n`: `coolRate n κ L = κ/(16(n+1)L)`.
+`n`: `generalCoolRate n κ L = κ/(16(n+1)L)`.
 
 A *closed-form abbreviation and nothing more* — it asserts no property. What is claimed of
-it is proved: `coolRate_pos`, `coolRate_le_sixteenth`, `coolRate_meets_budget`,
-`coolRate_total_cooling`, `coolRate_lt_fixedRate`. -/
-noncomputable def coolRate (n : ℕ) (κ L : ℝ) : ℝ := κ / (16 * ((n : ℝ) + 1) * L)
+it is proved: `generalCoolRate_pos`, `generalCoolRate_le_sixteenth`, `generalCoolRate_meets_budget`,
+`generalCoolRate_total_cooling`, `generalCoolRate_lt_fixedRate`. -/
+noncomputable def generalCoolRate (n : ℕ) (κ L : ℝ) : ℝ := κ / (16 * ((n : ℝ) + 1) * L)
 
 /-- **The admissible phase count** at budget `κ` and target log-cooling `L` in dimension
-`n`: `phaseCount n κ L = ⌈32(n+1)L²/κ⌉₊`.
+`n`: `generalPhaseCount n κ L = ⌈32(n+1)L²/κ⌉₊`.
 
-A *closed-form abbreviation and nothing more*. See `phaseCount_pos`, `phaseCount_ge`,
-`phaseCount_le`, and the matching lower bound `phaseCount_ge_of_budget`. -/
-noncomputable def phaseCount (n : ℕ) (κ L : ℝ) : ℕ := ⌈32 * ((n : ℝ) + 1) * L ^ 2 / κ⌉₊
+A *closed-form abbreviation and nothing more*. See `generalPhaseCount_pos`, `generalPhaseCount_ge`,
+`generalPhaseCount_le`, and the matching lower bound `generalPhaseCount_ge_of_budget`. -/
+noncomputable def generalPhaseCount (n : ℕ) (κ L : ℝ) : ℕ := ⌈32 * ((n : ℝ) + 1) * L ^ 2 / κ⌉₊
 
 section Explicit
 
 variable {κ L : ℝ}
 
-theorem coolRate_pos (hκ0 : 0 < κ) (hL : 0 < L) : 0 < coolRate n κ L := by
-  rw [coolRate]; positivity
+theorem generalCoolRate_pos (hκ0 : 0 < κ) (hL : 0 < L) : 0 < generalCoolRate n κ L := by
+  rw [generalCoolRate]; positivity
 
 /-- The admissible rate is tiny: `α ≤ 1/16` whenever `κ ≤ 1 ≤ L`. -/
-theorem coolRate_le_sixteenth (_hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
-    coolRate n κ L ≤ 1 / 16 := by
+theorem generalCoolRate_le_sixteenth (_hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
+    generalCoolRate n κ L ≤ 1 / 16 := by
   have hN : (1 : ℝ) ≤ (n : ℝ) + 1 := by
     have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
     linarith
-  rw [coolRate, div_le_div_iff₀ (by positivity) (by norm_num)]
+  rw [generalCoolRate, div_le_div_iff₀ (by positivity) (by norm_num)]
   nlinarith
 
-/-- **How far below the fixed rate the admissible rate sits.** `coolRate n κ L < 1/n` for
+/-- **How far below the fixed rate the admissible rate sits.** `generalCoolRate n κ L < 1/n` for
 `n ≥ 1`, `0 < κ ≤ 1`, `1 ≤ L` — the fixed rate `α = 1/n` of
 `geomSchedule_total_cooling_lt` is *never* admissible in this regime, and the gap is the
 factor `16L/κ`. -/
-theorem coolRate_lt_fixedRate (hn : 0 < n) (_hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
-    coolRate n κ L < 1 / (n : ℝ) := by
+theorem generalCoolRate_lt_fixedRate (hn : 0 < n) (_hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
+    generalCoolRate n κ L < 1 / (n : ℝ) := by
   have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  rw [coolRate, div_lt_div_iff₀ (by positivity) hn']
+  rw [generalCoolRate, div_lt_div_iff₀ (by positivity) hn']
   nlinarith
 
-theorem phaseCount_ge (_hκ0 : 0 < κ) :
-    32 * ((n : ℝ) + 1) * L ^ 2 / κ ≤ (phaseCount n κ L : ℝ) :=
+theorem generalPhaseCount_ge (_hκ0 : 0 < κ) :
+    32 * ((n : ℝ) + 1) * L ^ 2 / κ ≤ (generalPhaseCount n κ L : ℝ) :=
   Nat.le_ceil _
 
-theorem phaseCount_le (hκ0 : 0 < κ) :
-    (phaseCount n κ L : ℝ) ≤ 32 * ((n : ℝ) + 1) * L ^ 2 / κ + 1 := by
-  rw [phaseCount]
+theorem generalPhaseCount_le (hκ0 : 0 < κ) :
+    (generalPhaseCount n κ L : ℝ) ≤ 32 * ((n : ℝ) + 1) * L ^ 2 / κ + 1 := by
+  rw [generalPhaseCount]
   exact (Nat.ceil_lt_add_one (by positivity)).le
 
 /-- The phase count is at least `32`, hence positive: the construction never degenerates. -/
-theorem phaseCount_ge_32 (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
-    (32 : ℝ) ≤ (phaseCount n κ L : ℝ) := by
-  refine le_trans ?_ (phaseCount_ge (n := n) (L := L) hκ0)
+theorem generalPhaseCount_ge_32 (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
+    (32 : ℝ) ≤ (generalPhaseCount n κ L : ℝ) := by
+  refine le_trans ?_ (generalPhaseCount_ge (n := n) (L := L) hκ0)
   rw [le_div_iff₀ hκ0]
   have hN : (1 : ℝ) ≤ (n : ℝ) + 1 := by
     have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
     linarith
   nlinarith
 
-theorem phaseCount_pos (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) : 0 < phaseCount n κ L := by
-  have h := phaseCount_ge_32 (n := n) hκ0 hκ1 hL
-  have : (0 : ℝ) < (phaseCount n κ L : ℝ) := by linarith
+theorem generalPhaseCount_pos (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) : 0 < generalPhaseCount n κ L := by
+  have h := generalPhaseCount_ge_32 (n := n) hκ0 hκ1 hL
+  have : (0 : ℝ) < (generalPhaseCount n κ L : ℝ) := by linarith
   exact_mod_cast this
 
 /-- **The explicit choice meets the budget.** For `0 < κ ≤ 1` and `1 ≤ L`,
 
-  `(1 - α²)^{-(n+1)} ≤ 1 + κ/m`  with  `α = coolRate n κ L`, `m = phaseCount n κ L`.
+  `(1 - α²)^{-(n+1)} ≤ 1 + κ/m`  with  `α = generalCoolRate n κ L`, `m = generalPhaseCount n κ L`.
 
-The whole content is `κ·m ≤ 64(n+1)L²`, which follows from `phaseCount_le` and
+The whole content is `κ·m ≤ 64(n+1)L²`, which follows from `generalPhaseCount_le` and
 `κ ≤ 32(n+1)L²`. -/
-theorem coolRate_meets_budget (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
-    ((1 : ℝ) - (coolRate n κ L) ^ 2)⁻¹ ^ (n + 1)
-      ≤ 1 + κ / (phaseCount n κ L : ℝ) := by
+theorem generalCoolRate_meets_budget (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
+    ((1 : ℝ) - (generalCoolRate n κ L) ^ 2)⁻¹ ^ (n + 1)
+      ≤ 1 + κ / (generalPhaseCount n κ L : ℝ) := by
   have hN1 : (1 : ℝ) ≤ (n : ℝ) + 1 := by
     have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
     linarith
   have hN0 : (0 : ℝ) < (n : ℝ) + 1 := by linarith
   have hL0 : (0 : ℝ) < L := by linarith
-  have hm := phaseCount_pos (n := n) hκ0 hκ1 hL
-  have h32 := phaseCount_ge_32 (n := n) (L := L) hκ0 hκ1 hL
-  have hmle := phaseCount_le (n := n) (L := L) hκ0
-  set m : ℕ := phaseCount n κ L with hmdef
-  set α : ℝ := coolRate n κ L with hαdef
-  have hα0 : 0 ≤ α := (coolRate_pos hκ0 hL0).le
-  have hα16 : α ≤ 1 / 16 := coolRate_le_sixteenth hκ0 hκ1 hL
+  have hm := generalPhaseCount_pos (n := n) hκ0 hκ1 hL
+  have h32 := generalPhaseCount_ge_32 (n := n) (L := L) hκ0 hκ1 hL
+  have hmle := generalPhaseCount_le (n := n) (L := L) hκ0
+  set m : ℕ := generalPhaseCount n κ L with hmdef
+  set α : ℝ := generalCoolRate n κ L with hαdef
+  have hα0 : 0 ≤ α := (generalCoolRate_pos hκ0 hL0).le
+  have hα16 : α ≤ 1 / 16 := generalCoolRate_le_sixteenth hκ0 hκ1 hL
   refine generalRate_budget_sufficient hm hα0 (by nlinarith) hκ0.le (by linarith) ?_
   -- `κ·m ≤ 64(n+1)L²`
   have hkm : κ * (m : ℝ) ≤ 64 * ((n : ℝ) + 1) * L ^ 2 := by
@@ -389,7 +389,7 @@ theorem coolRate_meets_budget (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
     nlinarith
   have hrw : 4 * ((n : ℝ) + 1) * α ^ 2 * (m : ℝ)
       = κ ^ 2 * (m : ℝ) / (64 * ((n : ℝ) + 1) * L ^ 2) := by
-    rw [hαdef, coolRate, div_pow]
+    rw [hαdef, generalCoolRate, div_pow]
     field_simp
     ring
   rw [hrw, div_le_iff₀ (by positivity)]
@@ -397,26 +397,26 @@ theorem coolRate_meets_budget (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
 
 /-- **The explicit choice cools by `e^L`.** For `0 < κ ≤ 1` and `1 ≤ L`,
 
-  `e^L ≤ (1 + α)^m`  with  `α = coolRate n κ L`, `m = phaseCount n κ L`.
+  `e^L ≤ (1 + α)^m`  with  `α = generalCoolRate n κ L`, `m = generalPhaseCount n κ L`.
 
 The whole content is `mα ≥ 2L`, then `totalCooling_ge_exp`. -/
-theorem coolRate_total_cooling (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
-    Real.exp L ≤ (1 + coolRate n κ L) ^ (phaseCount n κ L) := by
+theorem generalCoolRate_total_cooling (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
+    Real.exp L ≤ (1 + generalCoolRate n κ L) ^ (generalPhaseCount n κ L) := by
   have hN1 : (1 : ℝ) ≤ (n : ℝ) + 1 := by
     have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
     linarith
   have hN0 : (0 : ℝ) < (n : ℝ) + 1 := by linarith
   have hL0 : (0 : ℝ) < L := by linarith
-  have hmge := phaseCount_ge (n := n) (L := L) hκ0
-  set m : ℕ := phaseCount n κ L with hmdef
-  set α : ℝ := coolRate n κ L with hαdef
-  have hα0 : 0 ≤ α := (coolRate_pos hκ0 hL0).le
-  have hα1 : α ≤ 1 := le_trans (coolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
+  have hmge := generalPhaseCount_ge (n := n) (L := L) hκ0
+  set m : ℕ := generalPhaseCount n κ L with hmdef
+  set α : ℝ := generalCoolRate n κ L with hαdef
+  have hα0 : 0 ≤ α := (generalCoolRate_pos hκ0 hL0).le
+  have hα1 : α ≤ 1 := le_trans (generalCoolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
   -- `m·α ≥ 2L`
   have hmα : 2 * L ≤ (m : ℝ) * α := by
     have hlow : 32 * ((n : ℝ) + 1) * L ^ 2 / κ ≤ (m : ℝ) := hmge
     rw [div_le_iff₀ hκ0] at hlow
-    have hαval : α = κ / (16 * ((n : ℝ) + 1) * L) := by rw [hαdef, coolRate]
+    have hαval : α = κ / (16 * ((n : ℝ) + 1) * L) := by rw [hαdef, generalCoolRate]
     have hexp : (m : ℝ) * α = (m : ℝ) * κ / (16 * ((n : ℝ) + 1) * L) := by
       rw [hαval]; ring
     rw [hexp, le_div_iff₀ (by positivity : (0 : ℝ) < 16 * ((n : ℝ) + 1) * L)]
@@ -444,7 +444,7 @@ Since `T` is arbitrary it may be taken far above the `11/10` ceiling of
 `geomSchedule_total_cooling_lt` — in particular `T = nR²`, which is what the Gaussian
 cooling schedule needs.
 
-The witnesses are explicit: `α = coolRate n κ (log T)`, `m = phaseCount n κ (log T)`. -/
+The witnesses are explicit: `α = generalCoolRate n κ (log T)`, `m = generalPhaseCount n κ (log T)`. -/
 theorem exists_admissible (n : ℕ) {κ T : ℝ} (hκ0 : 0 < κ) (hκ1 : κ ≤ 1)
     (hT : Real.exp 1 ≤ T) :
     ∃ (α : ℝ) (m : ℕ), 0 < m ∧ 0 ≤ α ∧ α < 1 ∧
@@ -452,11 +452,11 @@ theorem exists_admissible (n : ℕ) {κ T : ℝ} (hκ0 : 0 < κ) (hκ1 : κ ≤ 
   have hT0 : (0 : ℝ) < T := lt_of_lt_of_le (Real.exp_pos 1) hT
   have hL : (1 : ℝ) ≤ Real.log T := (Real.le_log_iff_exp_le hT0).2 hT
   have hL0 : (0 : ℝ) < Real.log T := by linarith
-  refine ⟨coolRate n κ (Real.log T), phaseCount n κ (Real.log T),
-    phaseCount_pos hκ0 hκ1 hL, (coolRate_pos hκ0 hL0).le, ?_,
-    coolRate_meets_budget hκ0 hκ1 hL, ?_⟩
-  · exact lt_of_le_of_lt (coolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
-  · have h := coolRate_total_cooling (n := n) hκ0 hκ1 hL
+  refine ⟨generalCoolRate n κ (Real.log T), generalPhaseCount n κ (Real.log T),
+    generalPhaseCount_pos hκ0 hκ1 hL, (generalCoolRate_pos hκ0 hL0).le, ?_,
+    generalCoolRate_meets_budget hκ0 hκ1 hL, ?_⟩
+  · exact lt_of_le_of_lt (generalCoolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
+  · have h := generalCoolRate_total_cooling (n := n) hκ0 hκ1 hL
     rwa [Real.exp_log hT0] at h
 
 /-! ## Instantiation at the volume algorithm's parameters
@@ -486,22 +486,22 @@ meet the per-phase budget `1 + varBudget ε / m` *and* cool by at least `nR²`.
 
 Since `varBudget ε = log(1 + ε²/5) = Θ(ε²)`, this is
 `α = Θ(ε²/(n·log(nR²)))` and `m = Θ(n·log²(nR²)/ε²)` phases — and by
-`phaseCount_ge_of_budget` that phase count is optimal up to an absolute constant. Contrast
+`generalPhaseCount_ge_of_budget` that phase count is optimal up to an absolute constant. Contrast
 `geomSchedule_total_cooling_lt`, where the fixed rate caps the total cooling at `11/10`. -/
 theorem exists_admissible_volume (n : ℕ) {ε R : ℝ} (hε0 : 0 < ε) (hε1 : ε ≤ 1)
     (hR : Real.exp 1 ≤ (n : ℝ) * R ^ 2) :
-    ((1 : ℝ) - (coolRate n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2))) ^ 2)⁻¹ ^ (n + 1)
+    ((1 : ℝ) - (generalCoolRate n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2))) ^ 2)⁻¹ ^ (n + 1)
         ≤ 1 + varBudget ε
-            / (phaseCount n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)) : ℝ)
+            / (generalPhaseCount n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)) : ℝ)
       ∧ (n : ℝ) * R ^ 2
-        ≤ (1 + coolRate n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)))
-            ^ (phaseCount n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)))
-      ∧ 0 < phaseCount n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)) := by
+        ≤ (1 + generalCoolRate n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)))
+            ^ (generalPhaseCount n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)))
+      ∧ 0 < generalPhaseCount n (varBudget ε) (Real.log ((n : ℝ) * R ^ 2)) := by
   obtain ⟨hκ0, hκ1⟩ := varBudget_pos_le_one hε0 hε1
   have hT0 : (0 : ℝ) < (n : ℝ) * R ^ 2 := lt_of_lt_of_le (Real.exp_pos 1) hR
   have hL : (1 : ℝ) ≤ Real.log ((n : ℝ) * R ^ 2) := (Real.le_log_iff_exp_le hT0).2 hR
-  refine ⟨coolRate_meets_budget hκ0 hκ1 hL, ?_, phaseCount_pos hκ0 hκ1 hL⟩
-  have h := coolRate_total_cooling (n := n) hκ0 hκ1 hL
+  refine ⟨generalCoolRate_meets_budget hκ0 hκ1 hL, ?_, generalPhaseCount_pos hκ0 hκ1 hL⟩
+  have h := generalCoolRate_total_cooling (n := n) hκ0 hκ1 hL
   rwa [Real.exp_log hT0] at h
 
 /-! ## Non-vacuity: a fully concrete instance
@@ -533,7 +533,7 @@ variable {K : Set (EuclSpace n)} {σ κ L : ℝ}
 
 /-- **The per-phase `G`-bound at the algorithm's budget**, unconditional for a convex body.
 For `K` convex and measurable, `σ > 0`, `0 < κ ≤ 1`, `1 ≤ L`, and
-`α = coolRate n κ L`, `m = phaseCount n κ L`,
+`α = generalCoolRate n κ L`, `m = generalPhaseCount n κ L`,
 
   `G 1_K (σ²/(1-α)) · G 1_K (σ²/(1+α)) ≤ (1 + κ/m) · G 1_K (σ²)²`.
 
@@ -541,16 +541,16 @@ The constant is now the algorithm's `1 + κ/m` — no `1 + 2/n`, no `ZLogconcave
 no roundness, no boundedness. -/
 theorem G_mul_G_le_budget_indicator (hK : Convex ℝ K) (hKm : MeasurableSet K)
     (hσ : 0 < σ) (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
-    G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 - coolRate n κ L))
-        * G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + coolRate n κ L))
-      ≤ (1 + κ / (phaseCount n κ L : ℝ))
+    G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 - generalCoolRate n κ L))
+        * G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + generalCoolRate n κ L))
+      ≤ (1 + κ / (generalPhaseCount n κ L : ℝ))
         * (G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2)) ^ 2 := by
   have hL0 : (0 : ℝ) < L := by linarith
-  have hα0 : 0 ≤ coolRate n κ L := (coolRate_pos hκ0 hL0).le
-  have hα1 : coolRate n κ L < 1 :=
-    lt_of_le_of_lt (coolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
+  have hα0 : 0 ≤ generalCoolRate n κ L := (generalCoolRate_pos hκ0 hL0).le
+  have hα1 : generalCoolRate n κ L < 1 :=
+    lt_of_le_of_lt (generalCoolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
   refine (G_mul_G_le_indicator hK hKm hσ hα0 hα1).trans ?_
-  exact mul_le_mul_of_nonneg_right (coolRate_meets_budget hκ0 hκ1 hL) (sq_nonneg _)
+  exact mul_le_mul_of_nonneg_right (generalCoolRate_meets_budget hκ0 hκ1 hL) (sq_nonneg _)
 
 /-- **`E(Y²) ≤ (1 + κ/m)·E(Y)²` at the admissible rate**, for the indicator of a convex body
 of positive volume — the exact shape the volume algorithm's `hphase_var` asks for, at an
@@ -559,25 +559,25 @@ exact sample from the phase law, with the *algorithm's own* constant `1 + κ/m`.
 This is what `PhaseVar.lean`'s `coolLaw_sq_moment_le` could not deliver at the fixed rate:
 there the constant is `1 + 2/n`, and `geomSchedule_total_cooling_lt` shows no useful
 schedule reconciles it with `1 + κ/m`. Here the reconciliation is unconditional, and
-`coolRate_total_cooling` certifies that the schedule still cools by `e^L`. -/
+`generalCoolRate_total_cooling` certifies that the schedule still cools by `e^L`. -/
 theorem second_moment_le_budget_indicator (hK : Convex ℝ K) (hKm : MeasurableSet K)
     (hvol : 0 < volume K) (hσ : 0 < σ) (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) :
     (∫ x, (gW (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2) x
           / gW (Set.indicator K (1 : EuclSpace n → ℝ))
-              (σ ^ 2 / (1 + coolRate n κ L)) x) ^ 2
-        * (gW (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + coolRate n κ L)) x
-          / G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + coolRate n κ L))))
-      ≤ (1 + κ / (phaseCount n κ L : ℝ))
+              (σ ^ 2 / (1 + generalCoolRate n κ L)) x) ^ 2
+        * (gW (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + generalCoolRate n κ L)) x
+          / G (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + generalCoolRate n κ L))))
+      ≤ (1 + κ / (generalPhaseCount n κ L : ℝ))
         * (∫ x, (gW (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2) x
               / gW (Set.indicator K (1 : EuclSpace n → ℝ))
-                  (σ ^ 2 / (1 + coolRate n κ L)) x)
-            * (gW (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + coolRate n κ L)) x
+                  (σ ^ 2 / (1 + generalCoolRate n κ L)) x)
+            * (gW (Set.indicator K (1 : EuclSpace n → ℝ)) (σ ^ 2 / (1 + generalCoolRate n κ L)) x
               / G (Set.indicator K (1 : EuclSpace n → ℝ))
-                  (σ ^ 2 / (1 + coolRate n κ L)))) ^ 2 := by
+                  (σ ^ 2 / (1 + generalCoolRate n κ L)))) ^ 2 := by
   have hL0 : (0 : ℝ) < L := by linarith
-  have hα0 : 0 ≤ coolRate n κ L := (coolRate_pos hκ0 hL0).le
-  have hα1 : coolRate n κ L < 1 :=
-    lt_of_le_of_lt (coolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
+  have hα0 : 0 ≤ generalCoolRate n κ L := (generalCoolRate_pos hκ0 hL0).le
+  have hα1 : generalCoolRate n κ L < 1 :=
+    lt_of_le_of_lt (generalCoolRate_le_sixteenth hκ0 hκ1 hL) (by norm_num)
   exact second_moment_le_of_G_bound hσ.ne' (by linarith) (by intro h; linarith)
     (G_indicator_pos hKm hvol (by positivity))
     (G_mul_G_le_budget_indicator hK hKm hσ hκ0 hκ1 hL)
@@ -592,16 +592,16 @@ end Body
 #print axioms generalRate_meets_budget_iff
 #print axioms generalRate_budget_necessary
 #print axioms generalRate_budget_sufficient
-#print axioms phaseCount_ge_of_budget
-#print axioms coolRate_pos
-#print axioms coolRate_le_sixteenth
-#print axioms coolRate_lt_fixedRate
-#print axioms phaseCount_ge
-#print axioms phaseCount_le
-#print axioms phaseCount_ge_32
-#print axioms phaseCount_pos
-#print axioms coolRate_meets_budget
-#print axioms coolRate_total_cooling
+#print axioms generalPhaseCount_ge_of_budget
+#print axioms generalCoolRate_pos
+#print axioms generalCoolRate_le_sixteenth
+#print axioms generalCoolRate_lt_fixedRate
+#print axioms generalPhaseCount_ge
+#print axioms generalPhaseCount_le
+#print axioms generalPhaseCount_ge_32
+#print axioms generalPhaseCount_pos
+#print axioms generalCoolRate_meets_budget
+#print axioms generalCoolRate_total_cooling
 #print axioms exists_admissible
 #print axioms varBudget_pos_le_one
 #print axioms exists_admissible_volume
