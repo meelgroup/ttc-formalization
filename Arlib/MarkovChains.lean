@@ -69,6 +69,7 @@ import Arlib.MarkovChains.Continuous.SpeedyExactOnShrunken
 import Arlib.MarkovChains.Continuous.WastedSteps
 import Arlib.MarkovChains.Continuous.MapSpeedyToTarget
 import Arlib.MarkovChains.Continuous.LovaszSmoothing
+import Arlib.MarkovChains.Continuous.SamplerStepCount
 
 /-!
 # Arlib.MarkovChains

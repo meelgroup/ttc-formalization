@@ -73,7 +73,8 @@ ingredients, in the spirit of `CLAUDE.md` §5.
 3. **Total speedy steps** — `total_speedy_steps_le`: `m·t ≤ (32(n+1)L²/κ + 1)·(D + 1)`, where
    `32(n+1)L²/κ + 1` is `GeneralRate.lean`'s bound `generalPhaseCount_le` on the phase count
    `ColdStart.lean` uses.
-4. **Polynomial shape** — `total_speedy_steps_poly` and `total_speedy_steps_poly_varBudget`.
+4. **Polynomial shape** — `total_speedy_steps_poly`, `total_speedy_steps_poly_varBudget`, and
+   `total_speedy_steps_poly_sqrt_exp` (the same at `WarmChain.lean`'s `n`-free `M = √e`).
 5. **Total ball-walk cost** — `sum_ballWalk_cost_phases_le`.
 6. **Non-vacuity** — `sampler_step_count_witness`.
 
@@ -112,9 +113,14 @@ schedule — which is why `σmax²` is carried as a factor rather than converted
   `e` (`isWarm_coolLaw_succ_exp`), but those are warmness of `coolLaw i` **for `coolLaw (i+1)`**
   — the Gaussian-weighted *uniform* phase laws.  The speedy chain's stationary law
   `ellGaussianProb` carries an extra factor `ℓ`, and the reweighting bridge between the two is
-  **not proved in this repository**.  `M` therefore stays a hypothesis, with `hM : 1 ≤ M`;
-  substituting `M = √e` (so `log M = 1/2`) is legitimate arithmetic only once that bridge
-  exists.
+  **not proved in this repository**.  It is worse than merely unproved:
+  `Arlib/Convexity/GaussianCooling/PhaseSamplerTV.lean` (which carries the *same* residual
+  binder, for the same reason) records that `Arlib/MarkovChains/Continuous/EllFloor.lean`
+  rules out the obvious route — there is **no uniform pointwise floor on `ell`** on the
+  relevant class (`ell ≤ 2⁻ⁿ` at a cube corner, at every `δ`), so the sup-ratio
+  `coolLaw / ellGaussianProb` cannot be bounded that way.  `M` therefore stays a hypothesis,
+  with `hM : 1 ≤ M`; `total_speedy_steps_poly_sqrt_exp` substitutes `M = √e` as *arithmetic in
+  a proved bound* and says so.
 * **`hm`** — the identification of `ColdStart.lean`'s existentially-bound phase count with
   `generalPhaseCount n κ L'`.  True by construction (the docstring of
   `cold_start_annealing_witness` states the witness), but the theorem's `∃` hides it.
@@ -342,5 +348,425 @@ theorem total_speedy_steps_le_generalPhaseCount (hn : 21 ≤ n) {sigmax M eps κ
             / Real.log 2 ^ 2 + 2) :=
   total_speedy_steps_le hn hκ0 hL hsigmax hM heps0 heps1
     (GaussianCooling.generalPhaseCount_le hκ0)
+
+/-! ## 4. The polynomial shape
+
+An explicit product of factors, with the exponents visible.  See the module docstring for why
+a closed form in `R` is not offered. -/
+
+/-- **`x/2 ≤ log(1 + x)` for `0 ≤ x ≤ 1`.**  From `1 − x/2 ≤ e^{−x/2}`, which gives
+`e^{x/2} ≤ 1/(1 − x/2) ≤ 1 + x`, the last step being `x² ≤ x`. -/
+theorem half_le_log_one_add {x : ℝ} (hx0 : 0 ≤ x) (hx1 : x ≤ 1) :
+    x / 2 ≤ Real.log (1 + x) := by
+  have hd : (0 : ℝ) < 1 - x / 2 := by linarith
+  have hpos : (0 : ℝ) < Real.exp (x / 2) := Real.exp_pos _
+  have h1 : 1 - x / 2 ≤ Real.exp (-(x / 2)) := by
+    have := Real.add_one_le_exp (-(x / 2)); linarith
+  have h2 : (1 - x / 2) * Real.exp (x / 2) ≤ 1 := by
+    calc (1 - x / 2) * Real.exp (x / 2)
+        ≤ Real.exp (-(x / 2)) * Real.exp (x / 2) := mul_le_mul_of_nonneg_right h1 hpos.le
+      _ = 1 := by rw [← Real.exp_add]; simp
+  have h3 : Real.exp (x / 2) ≤ 1 / (1 - x / 2) := by
+    rw [le_div_iff₀ hd, mul_comm]; exact h2
+  have h4 : 1 / (1 - x / 2) ≤ 1 + x := by
+    rw [div_le_iff₀ hd]; nlinarith
+  have hexp : Real.exp (x / 2) ≤ 1 + x := le_trans h3 h4
+  calc x / 2 = Real.log (Real.exp (x / 2)) := (Real.log_exp _).symm
+    _ ≤ Real.log (1 + x) := Real.log_le_log hpos hexp
+
+/-- **`ε²/40 ≤ varBudget (ε/2) ≤ 1` for `0 < ε ≤ 1`.**
+
+`varBudget (ε/2) = log(1 + ε²/20)`; the lower bound is `half_le_log_one_add`, the upper bound
+is `log y ≤ y − 1`.  This is what turns the `1/κ` factor of `total_speedy_steps_poly` into the
+`ε⁻²` of `total_speedy_steps_poly_varBudget`. -/
+theorem sq_div_forty_le_varBudget_le_one {eps : ℝ} (heps0 : 0 < eps) (heps1 : eps ≤ 1) :
+    eps ^ 2 / 40 ≤ GaussianCooling.varBudget (eps / 2)
+      ∧ GaussianCooling.varBudget (eps / 2) ≤ 1 := by
+  have hx : (eps / 2) ^ 2 / 5 = eps ^ 2 / 20 := by ring
+  have hxle : eps ^ 2 / 20 ≤ 1 := by nlinarith
+  have hx0 : (0 : ℝ) ≤ eps ^ 2 / 20 := by positivity
+  constructor
+  · have := half_le_log_one_add hx0 hxle
+    rw [GaussianCooling.varBudget, hx]
+    linarith
+  · rw [GaussianCooling.varBudget, hx]
+    have := Real.log_le_sub_one_of_pos (x := 1 + eps ^ 2 / 20) (by positivity)
+    linarith
+
+/-- **The total speedy step count is bounded by an explicit product of factors.**
+
+    `m·t ≤ 5·10⁸ · (n+1) · n³ · σmax² · L² · (1 + log M + 2·log(1/ε)) / κ`.
+
+Exponents: `n⁴` (as `(n+1)·n³`), `σmax²`, `L²`, `κ⁻¹`, and one power of `log M`.  The constant
+is `33 · 13653334 = 450560022 ≤ 5·10⁸`, where `33/32` absorbs the `+1` of the phase-count bound
+(legitimate because `(n+1)L²/κ ≥ 22`) and `13653334 ≥ 6553600/(log 2)²` absorbs both the
+`(log 2)²` and the `+2` of the per-phase bound (legitimate because `hσn` forces
+`σmax²·n³ ≥ 16n² ≥ 7056`).  Every one of those side facts is proved below; nothing is
+assumed. -/
+theorem total_speedy_steps_poly (hn : 21 ≤ n) {m : ℕ} {sigmax M eps κ L : ℝ}
+    (hκ0 : 0 < κ) (hκ1 : κ ≤ 1) (hL : 1 ≤ L) (hsig0 : 0 < sigmax)
+    (hσn : 4 ≤ sigmax * Real.sqrt n) (hM : 1 ≤ M) (heps0 : 0 < eps) (heps1 : eps ≤ 1)
+    (hm : (m : ℝ) ≤ 32 * ((n : ℝ) + 1) * L ^ 2 / κ + 1) :
+    ((m * ⌈6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * (Real.log M + 2 * Real.log (1 / eps))
+          / Real.log 2 ^ 2 + 1⌉₊ : ℕ) : ℝ)
+      ≤ 5 * 10 ^ 8 * ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2
+          * (1 + (Real.log M + 2 * Real.log (1 / eps))) / κ := by
+  have hnR : (21 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hX : 0 ≤ Real.log M + 2 * Real.log (1 / eps) := by
+    have h1 : 0 ≤ Real.log M := Real.log_nonneg hM
+    have h2 : 0 ≤ Real.log (1 / eps) :=
+      Real.log_nonneg (by rw [le_div_iff₀ heps0]; linarith)
+    linarith
+  have hlogpos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlog2 : (0 : ℝ) < Real.log 2 ^ 2 := by positivity
+  have hlog048 : (0.48 : ℝ) ≤ Real.log 2 ^ 2 := by
+    nlinarith [Real.log_two_gt_d9]
+  -- `hσn` forces `σmax²·n ≥ 16`, hence `σmax²·n³ ≥ 16n² ≥ 7056`
+  have hsn : (0 : ℝ) ≤ Real.sqrt (n : ℝ) := Real.sqrt_nonneg _
+  have hsq : Real.sqrt (n : ℝ) ^ 2 = (n : ℝ) := Real.sq_sqrt (by linarith)
+  have hs16 : (16 : ℝ) ≤ sigmax ^ 2 * (n : ℝ) := by
+    nlinarith [hσn, hsq, hsn]
+  have hbig : (7056 : ℝ) ≤ sigmax ^ 2 * (n : ℝ) ^ 3 := by
+    nlinarith [mul_nonneg (sq_nonneg ((n : ℝ))) (sub_nonneg.2 hs16)]
+  refine le_trans (total_speedy_steps_le hn hκ0 hL hsig0.le hM heps0 heps1 hm) ?_
+  set X := Real.log M + 2 * Real.log (1 / eps) with hXdef
+  have hnum : (0 : ℝ) ≤ 6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X :=
+    mul_nonneg (by positivity) hX
+  have hQ : 6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X / Real.log 2 ^ 2 + 2
+      ≤ 13653334 * (sigmax ^ 2 * (n : ℝ) ^ 3) * (1 + X) := by
+    have ha : 6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X / Real.log 2 ^ 2
+        ≤ 13653334 * (sigmax ^ 2 * (n : ℝ) ^ 3) * X := by
+      rw [div_le_iff₀ hlog2]
+      nlinarith [mul_nonneg hnum (sub_nonneg.2 hlog048)]
+    have hb : (2 : ℝ) ≤ 13653334 * (sigmax ^ 2 * (n : ℝ) ^ 3) := by linarith
+    linarith
+  have hQ0 : (0 : ℝ) ≤ 6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X / Real.log 2 ^ 2 + 2 := by
+    have := div_nonneg hnum hlog2.le
+    linarith
+  have hP : 32 * ((n : ℝ) + 1) * L ^ 2 + κ ≤ 33 * ((n : ℝ) + 1) * L ^ 2 := by
+    nlinarith [sq_nonneg (L - 1)]
+  have h1X : (0 : ℝ) ≤ 1 + X := by linarith
+  rw [le_div_iff₀ hκ0]
+  have hrw : (32 * ((n : ℝ) + 1) * L ^ 2 / κ + 1)
+        * (6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X / Real.log 2 ^ 2 + 2) * κ
+      = (32 * ((n : ℝ) + 1) * L ^ 2 + κ)
+        * (6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X / Real.log 2 ^ 2 + 2) := by
+    field_simp
+  rw [hrw]
+  calc (32 * ((n : ℝ) + 1) * L ^ 2 + κ)
+        * (6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * X / Real.log 2 ^ 2 + 2)
+      ≤ (33 * ((n : ℝ) + 1) * L ^ 2) * (13653334 * (sigmax ^ 2 * (n : ℝ) ^ 3) * (1 + X)) :=
+        mul_le_mul hP hQ hQ0 (by positivity)
+    _ = 450560022 * (((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2 * (1 + X)) := by ring
+    _ ≤ 5 * 10 ^ 8 * (((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2 * (1 + X)) := by
+        refine mul_le_mul_of_nonneg_right (by norm_num) ?_
+        have : (0 : ℝ) ≤ ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2 := by positivity
+        exact mul_nonneg this h1X
+    _ = 5 * 10 ^ 8 * ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2 * (1 + X) := by ring
+
+/-- **The same bound at the volume algorithm's own variance budget `κ = varBudget (ε/2)`.**
+
+    `m·t ≤ 2·10¹⁰ · (n+1) · n³ · σmax² · L² · (1 + log M + 2·log(1/ε)) / ε²`.
+
+The only new input is `sq_div_forty_le_varBudget_le_one`, which prices `1/κ ≤ 40/ε²`; the
+constant is `40 · 5·10⁸ = 2·10¹⁰`.  So the exponents in the four named quantities are
+
+    `n⁴`,  `σmax²`,  `ε⁻²`,  `L²`,  and `log M` linearly,
+
+with `L` the annealing log-target (`ColdStart.lean`: `L' = 3·log(nR²) + 4·log(256(n+1)/κ²)`,
+hence `O(log(nR²) + log(n/ε))`) and `σmax` the largest phase standard deviation.  Neither `L`
+nor `σmax` is eliminated in favour of `R`: see the module docstring. -/
+theorem total_speedy_steps_poly_varBudget (hn : 21 ≤ n) {m : ℕ} {sigmax M eps L : ℝ}
+    (hL : 1 ≤ L) (hsig0 : 0 < sigmax) (hσn : 4 ≤ sigmax * Real.sqrt n) (hM : 1 ≤ M)
+    (heps0 : 0 < eps) (heps1 : eps ≤ 1)
+    (hm : (m : ℝ) ≤ 32 * ((n : ℝ) + 1) * L ^ 2 / GaussianCooling.varBudget (eps / 2) + 1) :
+    ((m * ⌈6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * (Real.log M + 2 * Real.log (1 / eps))
+          / Real.log 2 ^ 2 + 1⌉₊ : ℕ) : ℝ)
+      ≤ 2 * 10 ^ 10 * ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2
+          * (1 + (Real.log M + 2 * Real.log (1 / eps))) / eps ^ 2 := by
+  obtain ⟨hlow, hhigh⟩ := sq_div_forty_le_varBudget_le_one heps0 heps1
+  have hκ0 : 0 < GaussianCooling.varBudget (eps / 2) :=
+    GaussianCooling.varBudget_pos (by linarith)
+  refine le_trans (total_speedy_steps_poly hn hκ0 hhigh hL hsig0 hσn hM heps0 heps1 hm) ?_
+  have hX : 0 ≤ Real.log M + 2 * Real.log (1 / eps) := by
+    have h1 : 0 ≤ Real.log M := Real.log_nonneg hM
+    have h2 : 0 ≤ Real.log (1 / eps) :=
+      Real.log_nonneg (by rw [le_div_iff₀ heps0]; linarith)
+    linarith
+  have hZ : (0 : ℝ) ≤ ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2
+      * (1 + (Real.log M + 2 * Real.log (1 / eps))) := by
+    have h1 : (0 : ℝ) ≤ ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2 := by positivity
+    exact mul_nonneg h1 (by linarith)
+  rw [div_le_div_iff₀ hκ0 (by positivity)]
+  nlinarith [mul_nonneg hZ (sub_nonneg.2 hlow)]
+
+/-- **The same at `WarmChain.lean`'s `n`-free per-phase warm start `M = √e`.**
+
+`isWarm_coolLaw_succ_sqrt_exp` supplies the constant `√e` — free of `n`, of `K`, of the
+variance and of the phase index — at Cousins–Vempala's own schedule `σ²ᵢ₊₁ = (1 + 1/n)σ²ᵢ`.
+Substituting `M = e^{1/2}`, so that `log M = 1/2`, collapses the log factor:
+
+    `m·t ≤ 2·10¹⁰ · (n+1) · n³ · σmax² · L² · (3/2 + 2·log(1/ε)) / ε²`,
+
+with the per-phase budget `⌈6553600·σmax²·n³·(1/2 + 2·log(1/ε))/(log 2)² + 1⌉₊`.
+
+**This is substitution into a proved bound, not a proof that the chain can be started
+`√e`-warm.**  `WarmChain.lean`'s constant warms `coolLaw i` against `coolLaw (i+1)`; §§1–2 need
+warmness against `ellGaussianProb K δ σ²`, which carries the extra factor `ell K δ`, and
+`EllFloor.lean` rules out bounding the sup-ratio by a pointwise floor on `ell` (there is none:
+`ell ≤ 2⁻ⁿ` at a cube corner, at every `δ`).  See the module docstring; the same residual
+binder is carried, for the same reason, by `PhaseSamplerTV.lean`. -/
+theorem total_speedy_steps_poly_sqrt_exp (hn : 21 ≤ n) {m : ℕ} {sigmax eps L : ℝ}
+    (hL : 1 ≤ L) (hsig0 : 0 < sigmax) (hσn : 4 ≤ sigmax * Real.sqrt n)
+    (heps0 : 0 < eps) (heps1 : eps ≤ 1)
+    (hm : (m : ℝ) ≤ 32 * ((n : ℝ) + 1) * L ^ 2 / GaussianCooling.varBudget (eps / 2) + 1) :
+    ((m * ⌈6553600 * sigmax ^ 2 * (n : ℝ) ^ 3 * (1 / 2 + 2 * Real.log (1 / eps))
+          / Real.log 2 ^ 2 + 1⌉₊ : ℕ) : ℝ)
+      ≤ 2 * 10 ^ 10 * ((n : ℝ) + 1) * (n : ℝ) ^ 3 * sigmax ^ 2 * L ^ 2
+          * (3 / 2 + 2 * Real.log (1 / eps)) / eps ^ 2 := by
+  have hM : (1 : ℝ) ≤ Real.exp (1 / 2) := by
+    linarith [Real.add_one_le_exp (1 / 2 : ℝ)]
+  have h := total_speedy_steps_poly_varBudget hn (M := Real.exp (1 / 2)) hL hsig0 hσn hM
+    heps0 heps1 hm
+  rw [Real.log_exp] at h
+  refine le_trans h (le_of_eq ?_)
+  ring
+
+/-! ## 5. The ball-walk cost of that many speedy steps
+
+`WastedSteps.lean`'s `sum_lintegral_inv_ell_iterate_speedyWalk_le`, at `δ = 1/(2n)` and at a
+step count presented as a product `m·t`.
+
+**Two caveats travel with this statement and must be quoted with it.**
+
+1. *Per-step conditional expectations, not a path.*  The left-hand side is
+   `∑_{i<m·t} E_{Qᵢ}[1/ℓ]`, where each summand is the proved mean ball-walk holding time from
+   the current speedy state — exactly the quantity Cousins–Vempala bound by linearity of
+   expectation.  It is **not** the number of ball-walk steps a single trajectory takes; that
+   identification needs the path-level time change, which `TrajTransfer.lean` leaves unproved.
+2. *Uniform chain, Gaussian step count.*  `speedyWalk`/`ellProb` is the **uniform** speedy
+   walk; §§1–4 count steps of the **Gaussian** chain `speedyMetropolisGaussian`.  No Gaussian
+   analogue of `WastedSteps.lean` exists in this repository, so the two are combined only as
+   *numbers*.  `m` and `t` are plain naturals here and are given no other meaning.
+
+`hlam` is Cousins–Vempala's `lem:lambda-bound` and is carried unproved, as in `WastedSteps`. -/
+
+/-- **Total ball-walk cost of `m·t` speedy steps, at `δ = 1/(2n)`.**
+
+    `∑_{i<m·t} ∫ (ℓ)⁻¹ d(iterateᵢ) ≤ m·t·M/λ`.
+
+Read the two caveats in the section docstring before quoting this. -/
+theorem sum_ballWalk_cost_phases_le (hn : 21 ≤ n)
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
+    (hK0 : volume K ≠ 0) (hKtop : volume K ≠ ⊤)
+    {lam Mw : ℝ≥0∞} (hlam : lam ≤ avgLocalConductance K (1 / (2 * (n : ℝ))))
+    (hlam0 : lam ≠ 0) (hlamtop : lam ≠ ⊤)
+    {Q₀ : Measure (EuclideanSpace ℝ (Fin n))}
+    (hwarm : IsWarm Mw Q₀ (ellProb K (1 / (2 * (n : ℝ))))) (m t : ℕ) :
+    ∑ i ∈ Finset.range (m * t), ∫⁻ x, (ell K (1 / (2 * (n : ℝ))) x)⁻¹
+        ∂(iterate (speedyWalk K (1 / (2 * (n : ℝ)))) Q₀ i)
+      ≤ (m : ℝ≥0∞) * (t : ℝ≥0∞) * Mw / lam := by
+  have hnR : (21 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hδ : (0 : ℝ) < 1 / (2 * (n : ℝ)) := by
+    have : (0 : ℝ) < (n : ℝ) := by linarith
+    positivity
+  have h := sum_lintegral_inv_ell_iterate_speedyWalk_le hK hδ hK0 hKtop hlam hlam0 hlamtop
+    hwarm (m * t)
+  rwa [Nat.cast_mul] at h
+
+/-! ## 6. Non-vacuity (`CLAUDE.md` §11)
+
+Every binder of §§1–5 discharged simultaneously at concrete data, with the conclusions of
+§§2, 4 and 5 carried and a numeric total exhibited. -/
+
+/-- **Non-vacuity: the whole bundle at concrete `n, R, ε`.**
+
+    `n = 21`,  `K = B(0,1) ⊆ ℝ²¹`,  `R = 1`,  `σⱼ ≡ 100`,  `σmax = 100`,
+    `μⱼ = ellGaussianProb K δ σ²`,  `M = 1`,  `ε = 1/2`,  `L = 84`,  `m = 10⁸`,
+    `δ = 1/42`,  `Q₀ = ellProb K δ`,  `λ = avgLocalConductance K δ`,  `Mw = 1`,
+    `t = ⌈6553600·100²·21³·2·log 2/(log 2)² + 1⌉₊`.
+
+Nothing is a placeholder.  The warm starts are the *stationary* ones (`M = Mw = 1`, the best
+possible), the accuracy is `ε = 1/2 < 1` so the `MixesWithin` conclusion is a genuine bound and
+not the trivial `ε = 1`, and `λ` is the **exact** average local conductance, so no concession is
+made on `hlam`.  The phase-count binder is met with room: `κ = varBudget (1/4) = log(81/80) ≤
+1/80`, so `32·22·84²/κ + 1 ≥ 397393920 ≥ 10⁸`.
+
+The exhibited numeric total is `m·t ≤ 2·10²³`, from `t ≤ 2·10¹⁵` — which holds because
+`6553600·10⁴·21³·2/log 2 = 1213857792000000/log 2 < 1.76·10¹⁵` by `Real.log_two_gt_d9`.
+
+Note what this witness does **not** claim: it is a witness that the *hypotheses are
+satisfiable*, not that `10⁸` phases at `σ ≡ 100` are the schedule any algorithm would run. -/
+theorem sampler_step_count_witness :
+    ∃ (m0 : ℕ) (K : Set (EuclideanSpace ℝ (Fin 21))) (R sigmax M eps L : ℝ)
+      (sig : ℕ → ℝ) (mu : ℕ → Measure (EuclideanSpace ℝ (Fin 21)))
+      (Q₀ : Measure (EuclideanSpace ℝ (Fin 21))) (lam Mw : ℝ≥0∞) (t : ℕ),
+      MeasurableSet K ∧ Convex ℝ K ∧ volume K ≠ 0 ∧ volume K ≠ ⊤ ∧
+      0 ≤ R ∧ (∀ x ∈ K, ‖x‖ ≤ R) ∧
+      (∀ j, IsProbabilityMeasure (mu j)) ∧
+      (∀ j < m0, 0 < sig j) ∧
+      (∀ j < m0, 4 ≤ sig j * Real.sqrt ((21 : ℕ) : ℝ)) ∧
+      (∀ j < m0, R ≤ 2 * sig j * Real.sqrt ((21 : ℕ) : ℝ)) ∧
+      1 ≤ M ∧ 0 < eps ∧ eps < 1 ∧ eps ≤ 1 ∧
+      (∀ j < m0, IsWarm (ENNReal.ofReal M) (mu j)
+        (ellGaussianProb K (1 / (2 * ((21 : ℕ) : ℝ))) (sig j ^ 2))) ∧
+      (∀ j < m0, sig j ≤ sigmax) ∧ 0 < sigmax ∧
+      4 ≤ sigmax * Real.sqrt ((21 : ℕ) : ℝ) ∧ 1 ≤ L ∧
+      (m0 : ℝ) ≤ 32 * (((21 : ℕ) : ℝ) + 1) * L ^ 2
+        / GaussianCooling.varBudget (eps / 2) + 1 ∧
+      lam ≤ avgLocalConductance K (1 / (2 * ((21 : ℕ) : ℝ))) ∧ lam ≠ 0 ∧ lam ≠ ⊤ ∧
+      IsWarm Mw Q₀ (ellProb K (1 / (2 * ((21 : ℕ) : ℝ)))) ∧
+      t = ⌈6553600 * sigmax ^ 2 * (((21 : ℕ) : ℝ)) ^ 3
+        * (Real.log M + 2 * Real.log (1 / eps)) / Real.log 2 ^ 2 + 1⌉₊ ∧
+      (∀ j < m0, MixesWithin
+        (lazy (speedyMetropolisGaussian K (1 / (2 * ((21 : ℕ) : ℝ))) (sig j ^ 2)))
+        (ellGaussianProb K (1 / (2 * ((21 : ℕ) : ℝ))) (sig j ^ 2)) (mu j) t
+        (ENNReal.ofReal eps)) ∧
+      ((m0 * t : ℕ) : ℝ) ≤ 2 * 10 ^ 10 * (((21 : ℕ) : ℝ) + 1) * (((21 : ℕ) : ℝ)) ^ 3
+        * sigmax ^ 2 * L ^ 2 * (1 + (Real.log M + 2 * Real.log (1 / eps))) / eps ^ 2 ∧
+      ((m0 * t : ℕ) : ℝ) ≤ 2 * 10 ^ 23 ∧
+      ∑ i ∈ Finset.range (m0 * t), ∫⁻ x, (ell K (1 / (2 * ((21 : ℕ) : ℝ))) x)⁻¹
+          ∂(iterate (speedyWalk K (1 / (2 * ((21 : ℕ) : ℝ)))) Q₀ i)
+        ≤ (m0 : ℝ≥0∞) * (t : ℝ≥0∞) * Mw / lam := by
+  classical
+  have hcast : ((21 : ℕ) : ℝ) = (21 : ℝ) := by norm_num
+  have hδ : (0 : ℝ) < 1 / (2 * ((21 : ℕ) : ℝ)) := by rw [hcast]; norm_num
+  have hsqrt21 : Real.sqrt ((21 : ℕ) : ℝ) ^ 2 = ((21 : ℕ) : ℝ) :=
+    Real.sq_sqrt (by positivity)
+  have h4 : (4 : ℝ) ≤ Real.sqrt ((21 : ℕ) : ℝ) := by
+    nlinarith [hsqrt21, Real.sqrt_nonneg ((21 : ℕ) : ℝ), hcast]
+  have hlogpos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlog9 : (0.6931471803 : ℝ) < Real.log 2 := Real.log_two_gt_d9
+  -- the body
+  set K : Set (EuclideanSpace ℝ (Fin 21)) := Metric.ball 0 1 with hKdef
+  have hKm : MeasurableSet K := measurableSet_ball
+  have hKc : Convex ℝ K := convex_ball _ _
+  have hKb : Bornology.IsBounded K := Metric.isBounded_ball
+  have hK0 : volume K ≠ 0 := volume_unitBall_ne_zero
+  have hKtop : volume K ≠ ⊤ := volume_unitBall_ne_top
+  have hKR : ∀ x ∈ K, ‖x‖ ≤ (1 : ℝ) := by
+    intro x hx
+    rw [hKdef, Metric.mem_ball, dist_zero_right] at hx
+    exact hx.le
+  -- the Gaussian speedy law is a probability measure
+  have hs : (0 : ℝ) < (100 : ℝ) ^ 2 := by norm_num
+  haveI hprobG : IsProbabilityMeasure
+      (ellGaussianProb K (1 / (2 * ((21 : ℕ) : ℝ))) ((100 : ℝ) ^ 2)) :=
+    isProbabilityMeasure_ellGaussianProb
+      (ellGaussianMeasure_univ_ne_zero hKm hKc hKb hK0 hδ ((100 : ℝ) ^ 2))
+      (ne_top_of_le_ne_top hKtop (ellGaussianMeasure_univ_le hs K _))
+  have hwarmG : IsWarm (ENNReal.ofReal (1 : ℝ))
+      (ellGaussianProb K (1 / (2 * ((21 : ℕ) : ℝ))) ((100 : ℝ) ^ 2))
+      (ellGaussianProb K (1 / (2 * ((21 : ℕ) : ℝ))) ((100 : ℝ) ^ 2)) := by
+    intro S _
+    exact le_of_eq (by rw [ENNReal.ofReal_one, one_mul])
+  -- the uniform speedy law, for the ball-walk half
+  have hL0 : ellMeasure K (1 / (2 * ((21 : ℕ) : ℝ))) Set.univ ≠ 0 :=
+    ellMeasure_univ_ne_zero hKm hK0 hδ
+  have hLtop : ellMeasure K (1 / (2 * ((21 : ℕ) : ℝ))) Set.univ ≠ ⊤ :=
+    ne_top_of_le_ne_top hKtop (ellMeasure_univ_le K _)
+  have hlam0 : avgLocalConductance K (1 / (2 * ((21 : ℕ) : ℝ))) ≠ 0 := by
+    rw [avgLocalConductance, ← ellMeasure_univ]
+    intro hcon
+    rcases ENNReal.div_eq_zero_iff.1 hcon with h | h
+    · exact hL0 h
+    · exact hKtop h
+  have hlamtop : avgLocalConductance K (1 / (2 * ((21 : ℕ) : ℝ))) ≠ ⊤ := by
+    rw [avgLocalConductance, ← ellMeasure_univ]
+    intro hcon
+    rcases ENNReal.div_eq_top.1 hcon with ⟨-, h⟩ | ⟨h, -⟩
+    · exact hK0 h
+    · exact hLtop h
+  -- the variance budget at `ε = 1/2`
+  have hκ0 : 0 < GaussianCooling.varBudget ((1 / 2 : ℝ) / 2) :=
+    GaussianCooling.varBudget_pos (by norm_num)
+  have hκub : GaussianCooling.varBudget ((1 / 2 : ℝ) / 2) ≤ 1 / 80 := by
+    rw [GaussianCooling.varBudget]
+    have h := Real.log_le_sub_one_of_pos
+      (x := 1 + ((1 / 2 : ℝ) / 2) ^ 2 / 5) (by norm_num)
+    norm_num at h ⊢
+    linarith
+  have hm : ((100000000 : ℕ) : ℝ) ≤ 32 * (((21 : ℕ) : ℝ) + 1) * (84 : ℝ) ^ 2
+      / GaussianCooling.varBudget ((1 / 2 : ℝ) / 2) + 1 := by
+    have hinv : (397393920 : ℝ) ≤ 4967424 / GaussianCooling.varBudget ((1 / 2 : ℝ) / 2) := by
+      rw [le_div_iff₀ hκ0]
+      nlinarith [hκub]
+    have heq : 32 * (((21 : ℕ) : ℝ) + 1) * (84 : ℝ) ^ 2 = 4967424 := by
+      rw [hcast]; norm_num
+    rw [heq]
+    push_cast
+    linarith
+  -- the per-phase deadline, evaluated
+  have hone : (1 : ℝ) / (1 / 2 : ℝ) = 2 := by norm_num
+  have hDval : 6553600 * (100 : ℝ) ^ 2 * (((21 : ℕ) : ℝ)) ^ 3
+        * (Real.log 1 + 2 * Real.log (1 / (1 / 2 : ℝ))) / Real.log 2 ^ 2 + 1
+      = 1213857792000000 / Real.log 2 + 1 := by
+    rw [Real.log_one, hone, hcast]
+    field_simp
+    ring
+  have hDle : 6553600 * (100 : ℝ) ^ 2 * (((21 : ℕ) : ℝ)) ^ 3
+        * (Real.log 1 + 2 * Real.log (1 / (1 / 2 : ℝ))) / Real.log 2 ^ 2 + 1
+      ≤ ((2000000000000000 : ℕ) : ℝ) := by
+    rw [hDval]
+    have : (1213857792000000 : ℝ) / Real.log 2 ≤ 1999999999999999 := by
+      rw [div_le_iff₀ hlogpos]
+      nlinarith [hlog9]
+    push_cast
+    linarith
+  set t : ℕ := ⌈6553600 * (100 : ℝ) ^ 2 * (((21 : ℕ) : ℝ)) ^ 3
+      * (Real.log 1 + 2 * Real.log (1 / (1 / 2 : ℝ))) / Real.log 2 ^ 2 + 1⌉₊ with htdef
+  have htle : (t : ℝ) ≤ 2000000000000000 := by
+    have := Nat.ceil_le.2 hDle
+    rw [htdef]
+    exact_mod_cast this
+  -- the three conclusions
+  have hmix := mixesWithin_all_phases_kls (n := 21) (m := 100000000)
+    (sig := fun _ => (100 : ℝ)) (mu := fun _ => ellGaussianProb K
+      (1 / (2 * ((21 : ℕ) : ℝ))) ((100 : ℝ) ^ 2))
+    (sigmax := 100) (M := 1) (eps := 1 / 2) (R := 1)
+    le_rfl hKm hKc hK0 (by norm_num) hKR (fun _ => hprobG)
+    (fun _ _ => by norm_num) (fun _ _ => by nlinarith)
+    (fun _ _ => by nlinarith) le_rfl (by norm_num) (by norm_num)
+    (fun _ _ => hwarmG) (fun _ _ => le_rfl)
+  have hpoly := total_speedy_steps_poly_varBudget (n := 21) (m := 100000000)
+    (sigmax := 100) (M := 1) (eps := 1 / 2) (L := 84)
+    le_rfl (by norm_num) (by norm_num) (by nlinarith) le_rfl (by norm_num) (by norm_num) hm
+  have hball := sum_ballWalk_cost_phases_le (n := 21) le_rfl hKm hK0 hKtop
+    (lam := avgLocalConductance K (1 / (2 * ((21 : ℕ) : ℝ)))) (Mw := 1) le_rfl hlam0 hlamtop
+    (Q₀ := ellProb K (1 / (2 * ((21 : ℕ) : ℝ)))) (IsWarm.refl _) 100000000 t
+  have hnum : ((100000000 * t : ℕ) : ℝ) ≤ 2 * 10 ^ 23 := by
+    push_cast
+    nlinarith [htle, Nat.cast_nonneg (α := ℝ) t]
+  refine ⟨100000000, K, 1, 100, 1, 1 / 2, 84, fun _ => (100 : ℝ),
+    fun _ => ellGaussianProb K (1 / (2 * ((21 : ℕ) : ℝ))) ((100 : ℝ) ^ 2),
+    ellProb K (1 / (2 * ((21 : ℕ) : ℝ))),
+    avgLocalConductance K (1 / (2 * ((21 : ℕ) : ℝ))), 1, t,
+    hKm, hKc, hK0, hKtop, by norm_num, hKR, fun _ => hprobG,
+    fun _ _ => by norm_num, fun _ _ => by nlinarith, fun _ _ => by nlinarith,
+    le_rfl, by norm_num, by norm_num, by norm_num, fun _ _ => hwarmG, fun _ _ => le_rfl,
+    by norm_num, by nlinarith, by norm_num, hm, le_rfl, hlam0, hlamtop, IsWarm.refl _,
+    htdef, hmix, hpoly, hnum, hball⟩
+
+/-! ### Axiom audit (`CLAUDE.md` §4)
+
+Every theorem of this file, re-checked at elaboration time.  Each must print exactly
+`[propext, Classical.choice, Quot.sound]`; anything else — in particular `sorryAx` — means
+the file is not finished. -/
+
+section AxiomCheck
+
+#print axioms mixesWithin_lazy_speedyMetropolisGaussian_kls
+#print axioms mixesWithin_all_phases_kls
+#print axioms total_speedy_steps_le
+#print axioms total_speedy_steps_le_generalPhaseCount
+#print axioms half_le_log_one_add
+#print axioms sq_div_forty_le_varBudget_le_one
+#print axioms total_speedy_steps_poly
+#print axioms total_speedy_steps_poly_varBudget
+#print axioms total_speedy_steps_poly_sqrt_exp
+#print axioms sum_ballWalk_cost_phases_le
+#print axioms sampler_step_count_witness
+
+end AxiomCheck
 
 end Arlib.MarkovChains
