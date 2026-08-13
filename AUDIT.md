@@ -5042,3 +5042,32 @@ pieces; (2) repair `hbudget`; (3) the phase-`0` warm start (`ColdStart.lean` plu
 should be re-pointed at `Warmness.tvLe_step`/`tvLe_iterate`, which are in scope and carry no
 `IsProbabilityMeasure` or `ε ≠ ⊤`; and the hardcoded `8` is provisional — `chainErr_le` is
 already `C`-general, so recompute `C` at instantiation rather than forcing `8`.
+
+## §0q — Provisional runtime accounting under the current route (arithmetic, not a theorem)
+
+What exponent does the route actually reach, assuming every open task above lands? Dropping
+constants, and reading the step counts off the theorems as they are stated today:
+
+| quantity | shape | source |
+|---|---|---|
+| phases `m` | `n log n` | CV `lem:accuracy`, `vol3_journal.tex:1440-1460` (`m₁ ≤ 2n log 4n` plus `log(C²n)` chunks) |
+| per-phase accuracy | `acc = ε·C^{−m}`, so `log(1/acc) ~ log(1/ε) + m·log C ~ n log n` | the **geometric** composition of `tvLe_phaseChain`, `C = 8` |
+| per-phase steps `t` | `n²·log(1/acc) ~ n³ log n` | `ColdTruncation`'s σ-free `104857600·n²·(log M + 2 log(1/acc))/log²2` |
+| **total** | **`n⁴ log² n`** | `m·t` |
+
+So the route is **polynomial**, but a full factor `n log n` worse than Cousins–Vempala's
+`O*(n³)`. That factor is *entirely* the price of the geometric composition: each phase's
+deadline carries `m·log C` where CV's carries only `log(1/ε)`, because CV compose additively
+via the coupling characterisation of TV (§0o) and this library composes through laws.
+
+Two consequences worth stating plainly:
+
+1. **`n⁴ log² n` is the honest target to claim** while the composition runs through
+   `tvLe_phaseChain`. Claiming `O*(n³)` would require the coupling route, i.e. a maximal
+   coupling / coupling characterisation of TV, which neither this library nor Mathlib has.
+2. Recovering `O*(n³)` is therefore a *well-defined* future task with a known price: build the
+   coupling characterisation of `TVLe`, and the `C^m` collapses to `m`. It is not needed for a
+   polytime claim, only for a sharp one.
+
+Nothing above is machine-checked; it is arithmetic over theorem statements that are. It is
+recorded here so that no README or capstone quotes `O*(n³)` for a route that delivers `n⁴`.
