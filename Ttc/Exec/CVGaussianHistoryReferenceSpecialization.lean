@@ -4,7 +4,7 @@ import Ttc.Exec.CVGaussianSourceSharpCost
 import Ttc.Exec.CVIndependentHistoryReference
 import Ttc.Exec.CVSourceReferenceTVCapstone
 
-set_option maxHeartbeats 800000
+set_option maxHeartbeats 100000
 
 /-!
 # Gaussian specialization of the retained-history reference induction
@@ -85,7 +85,8 @@ noncomputable def gaussianReferenceWarm : ENNReal :=
   ENNReal.ofReal (2 * Real.exp 1)
 
 theorem gaussianReferenceWarm_ne_top : gaussianReferenceWarm ≠ ⊤ := by
-  simp [gaussianReferenceWarm]
+  unfold gaussianReferenceWarm
+  exact ENNReal.ofReal_ne_top
 
 /-- The source adjacent-Gaussian lemma supplies exactly the active successor case of
 `hrefWarm`; a larger operational warmth budget is harmless. -/
@@ -135,7 +136,7 @@ pieces.  The two successor premises are precisely discharged by
 `isWarm_scoreSeedReference_active_of_twoE_le` and
 `isWarm_exactTail_of_map_snd_eq` in the concrete score-aware construction. -/
 theorem referenceInputFamily_warm
-    (mu0 : Measure X) (target : Nat → Measure X)
+    (mu0 : Measure (Score × Seed)) (target : Nat → Measure (Score × Seed))
     (pi : Nat → Measure Seed) (M : Nat → ENNReal) (m : Nat)
     (hstart : IsWarm (M 0) (Measure.map Prod.snd mu0) (pi 0))
     (hactive : ∀ i, i + 1 < m → IsWarm (M (i + 1))
@@ -152,140 +153,6 @@ theorem referenceInputFamily_warm
       by_cases hi : i + 1 < m
       · exact hactive i hi
       · exact htail i hi
-
-/-- Concrete scalar history-reference theorem for the uncapped Gaussian execution.
-
-All law-quantified hypotheses of `exists_exactHistoryReference_terminal` have
-disappeared.  `hrefWarm` is the exact remaining analytic bridge: the seed marginal of
-the reference entering phase `i` is warm for the phase-`i` Gaussian target. -/
-theorem exists_gaussianHistoryReference
-    (hn : 2 ≤ n) (m : Nat)
-    {K : Set (State n)} (hK : MeasurableSet K)
-    (hKc : Convex Real K) (hball : ball (0 : State n) 1 ⊆ K)
-    (q radius : Real) (hq : 1 < q) (hR : 0 ≤ radius)
-    (delta sigma shrink : Nat → Real)
-    (hdelta : ∀ j, 0 < delta j) (hsigma : ∀ j, 0 < sigma j)
-    (hshrink : ∀ j, shrink j ≠ 0)
-    (hdeltan : ∀ j, delta j ≤ 1 / (2 * (n : Real)))
-    (hdeltaq : ∀ j, j + 1 < m →
-      delta j ≤ sigma j / (max 8 (2 * q) * Real.sqrt n))
-    (hRsigma : ∀ j, j + 1 < m → radius ≤ q * sigma j * Real.sqrt n)
-    (hKR : ∀ x ∈ K, ‖x‖ ≤ radius)
-    (steps : Nat → Nat → Nat) (retries : Nat → Nat)
-    (fallback tail : Nat → Measure (GaussianScoreSeed n))
-    [∀ j, IsProbabilityMeasure (fallback j)]
-    [∀ j, IsProbabilityMeasure (tail j)]
-    [∀ j, IsProbabilityMeasure
-      (ellGaussianProb K (delta j) ((sigma j) ^ 2))]
-    (mu0 : Measure (GaussianScoreSeed n)) [IsProbabilityMeasure mu0]
-    (V : Nat → (Nat → GaussianScoreSeed n) → Real) (eta : Real)
-    (hop : SeedProjectedOperational
-      (stateScheduleFromSeed
-        (activeReferenceTailSchedule m
-          (warmFallbackSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-            hdelta hshrink steps retries fallback) tail))
-      (activeReferenceTailSchedule m
-        (warmFallbackSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-          hdelta hshrink steps retries fallback) tail)
-      Prod.snd Prod.fst mu0 V m eta)
-    (hpi : ∀ j, hop.pi j = ellGaussianProb K (delta j) ((sigma j) ^ 2))
-    (referenceWarm : Nat → ENNReal)
-    (hReferenceTop : ∀ j, referenceWarm j ≠ ⊤)
-    (tauRef : Nat → Measure (GaussianScoreSeed n))
-    [∀ i, IsProbabilityMeasure (tauRef i)]
-    (htau0 : tauRef 0 = mu0)
-    (htauSucc : ∀ i, tauRef (i + 1) = hop.tau i)
-    (hrefWarm : ∀ i, IsWarm (referenceWarm i)
-      (Measure.map Prod.snd (tauRef i)) (hop.pi i))
-    (hReferenceLeOperational : ∀ i,
-      referenceWarm i ≤ 2 * hop.warmConst i) :
-    ∃ reference : Measure (HistoryState (GaussianScoreSeed n)),
-      IsProbabilityMeasure reference ∧
-      Measure.map Prod.snd reference = tauRef m ∧
-      TVLe
-        (retainedPathLaw
-          (fun i ↦ historyCostedKernel
-            (costedStateScheduleFromSeed
-              (costedActiveReferenceTailSchedule m
-                (warmFallbackCostedSchedule K hK delta
-                  (fun j ↦ (sigma j) ^ 2) shrink hdelta hshrink steps retries fallback)
-                tail) i) i)
-          (initialHistoryLaw mu0) m)
-        reference (∑ i ∈ range m, hop.mixError i) ∧
-      (∫⁻ z, z.1.1 ∂reference) ≤
-        ∑ i ∈ range m,
-          gaussianActiveMeanEnvelope m referenceWarm steps retries i := by
-  let S := activeReferenceTailSchedule m
-    (warmFallbackSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-      hdelta hshrink steps retries fallback) tail
-  let QR := costedStateScheduleFromSeed
-    (costedActiveReferenceTailSchedule m
-      (warmFallbackCostedSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-        hdelta hshrink steps retries fallback) tail)
-  have hforget : ∀ i z, Measure.map Prod.snd (QR i z) =
-      stateScheduleFromSeed S i z := by
-    intro i z
-    exact map_snd_costedStateActiveReferenceTailSchedule m
-      (warmFallbackSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-        hdelta hshrink steps retries fallback)
-      (warmFallbackCostedSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-        hdelta hshrink steps retries fallback) tail
-      (fun j x ↦ map_snd_gaussianWarmFallbackCostedPhaseKernel hK
-        (delta j) ((sigma j) ^ 2) (shrink j) (hdelta j) (hshrink j)
-        (steps j) (retries j) (fallback j) x) i z
-  have hphaseTV : ∀ i,
-      TVLe ((tauRef i).bind (Kernel.map (QR i) Prod.snd))
-        (tauRef (i + 1)) (hop.mixError i) := by
-    intro i
-    have hk : Kernel.map (QR i) Prod.snd = stateScheduleFromSeed S i := by
-      ext z A hA
-      rw [Kernel.map_apply _ measurable_snd]
-      exact congrArg (fun mu : Measure (GaussianScoreSeed n) ↦ mu A) (hforget i z)
-    rw [hk, htauSucc i]
-    letI : IsProbabilityMeasure (Measure.map Prod.snd (tauRef i)) :=
-      Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
-    have hwarm2 : IsWarm (2 * hop.warmConst i)
-        (Measure.map Prod.snd (tauRef i)) (hop.pi i) :=
-      (hrefWarm i).mono (hReferenceLeOperational i)
-    have hm := hop.distributional_mixing i
-      (Measure.map Prod.snd (tauRef i)) hwarm2 inferInstance
-    change TVLe ((tauRef i).bind
-      (Kernel.comap (S i) Prod.snd measurable_snd)) (hop.tau i) (hop.mixError i)
-    rw [Arlib.MarkovChains.bind_comap]
-    exact hm
-  have hphaseCost : ∀ i,
-      (∫⁻ x, Ttc.SequentialCost.stepMean (fun _ ↦ QR i) 0 x ∂tauRef i) ≤
-        gaussianActiveMeanEnvelope m referenceWarm steps retries i := by
-    intro i
-    by_cases hi : i + 1 < m
-    · rw [gaussianActiveMeanEnvelope, if_pos hi]
-      have hwarm : IsWarm (referenceWarm i)
-          (Measure.map Prod.snd (tauRef i))
-          (ellGaussianProb K (delta i) ((sigma i) ^ 2)) := by
-        rw [← hpi i]
-        exact hrefWarm i
-      simpa only [QR, Ttc.SequentialCost.stepMean] using
-        (lintegral_stepMean_costedActive_gaussian_le_referenceEnvelope
-          hn m i hi hK hKc hball hq (hdelta i) (hsigma i) (hshrink i)
-          (hdeltan i) (hdeltaq i hi) hR (hRsigma i hi) hKR
-          (steps i) (retries i) (fallback i) tail (tauRef i)
-          (hReferenceTop i) hwarm)
-    · rw [gaussianActiveMeanEnvelope, if_neg hi]
-      exact le_of_eq (by
-        simpa only [QR, Ttc.SequentialCost.stepMean] using
-        (lintegral_stepMean_costedStateActiveReferenceTailSchedule_inactive
-          m
-          (warmFallbackCostedSchedule K hK delta (fun j ↦ (sigma j) ^ 2) shrink
-            hdelta hshrink steps retries fallback)
-          tail (tauRef i) i hi))
-  have hinitState : Measure.map Prod.snd (initialHistoryLaw mu0) = tauRef 0 := by
-    rw [map_snd_initialHistoryLaw, htau0]
-  have hmain := exists_historyReference_of_incrementKernels QR
-    (initialHistoryLaw mu0) (initialHistoryLaw mu0) tauRef
-    hop.mixError (gaussianActiveMeanEnvelope m referenceWarm steps retries)
-    (d := 0) (initialBudget := 0) (TVLe.refl _)
-    hinitState (by simp [lintegral_initialHistoryCost]) hphaseTV hphaseCost m
-  simpa only [QR, zero_add] using hmain
 
 /-! ## Independent-stream and source-certificate packaging -/
 
@@ -337,80 +204,6 @@ theorem exists_sourceReferenceTVOneRunCertificate_of_scalarHistory
   · exact hrefMean.trans (by
       simpa only [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul] using hbudget)
 
-/-- Input-indexed version of the independent retained-history packaging.  This produces
-the exact `SourcePublicReferenceTVCertificates` object required by the source-sharp
-Theorem 1.1 arithmetic.  Consequently, after a concrete scalar history reference and
-retained-history accuracy are supplied for each input, no further measure/product/cost
-glue remains. -/
-theorem exists_sourcePublicReferenceTVCertificates_of_scalarHistory
-    (dim : Nat) (runtimeConstant : Real)
-    (radialR : Set (Ttc.Space dim) → Real)
-    (Omega : Ttc.CVAdaptive.VolumeInput dim → Type*)
-    [∀ a, MeasurableSpace (Omega a)]
-    (k : Ttc.CVAdaptive.VolumeInput dim → Nat)
-    (actualScalar : ∀ a, Measure (Omega a))
-    [∀ a, IsProbabilityMeasure (actualScalar a)]
-    (scalarCost : ∀ a, Omega a → ENNReal)
-    (value : ∀ a, (Fin (k a) → Omega a) → Real)
-    (scalarError scalarBudget : Ttc.CVAdaptive.VolumeInput dim → ENNReal)
-    (hcost : ∀ a, Measurable (scalarCost a))
-    (hvalue : ∀ a, Measurable (value a))
-    (hscalar : ∀ a, ∃ reference : Measure (Omega a),
-      IsProbabilityMeasure reference ∧
-      TVLe (actualScalar a) reference (scalarError a) ∧
-      (∫⁻ omega, scalarCost a omega ∂reference) ≤ scalarBudget a)
-    (herror : ∀ a, (k a : ENNReal) * scalarError a ≤
-      ENNReal.ofReal (1 / 40 : Real))
-    (hbudget : ∀ a, (k a : ENNReal) * scalarBudget a ≤
-      Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryBudget
-        runtimeConstant dim (radialR a.1) a.2.1)
-    (haccuracy : ∀ (K : Set (Ttc.Space dim)) (eps p : Real),
-      0 < eps → 0 < p → p < 1 → Convex Real K →
-      ball (0 : Ttc.Space dim) 1 ⊆ K → volume K ≠ ⊤ →
-      4 / 5 ≤ (Measure.pi
-        (fun _ : Fin (k (K, eps, p)) ↦ actualScalar (K, eps, p))).real
-        {omega | value (K, eps, p) omega ∈
-          Icc ((1 - eps) * (volume K).toReal)
-            ((1 + eps) * (volume K).toReal)}) :
-    ∃ reference : ∀ a, Measure (Fin (k a) → Omega a),
-      SourcePublicReferenceTVCertificates dim runtimeConstant radialR
-        (fun a ↦ Fin (k a) → Omega a)
-        (fun a ↦ Measure.pi (fun _ : Fin (k a) ↦ actualScalar a))
-        reference
-        (fun a ↦ totalHistoryCost (scalarCost a)) value := by
-  choose scalarReference hscalarProb hscalarTV hscalarMean using hscalar
-  letI : ∀ a, IsProbabilityMeasure (scalarReference a) := hscalarProb
-  let reference : ∀ a, Measure (Fin (k a) → Omega a) := fun a ↦
-    Measure.pi (fun _ : Fin (k a) ↦ scalarReference a)
-  refine ⟨reference,
-    { actual_probability := fun _ ↦ inferInstance
-      reference_probability := fun _ ↦ inferInstance
-      cost_measurable := fun a ↦ measurable_totalHistoryCost (hcost a)
-      value_measurable := hvalue
-      path_tv := ?_
-      reference_expected_queries := ?_
-      accuracy := haccuracy }⟩
-  · intro a
-    have htv := (product_historyReference (scalarCost a) (hcost a)
-      (fun _ : Fin (k a) ↦ actualScalar a)
-      (fun _ : Fin (k a) ↦ scalarReference a)
-      (fun _ : Fin (k a) ↦ scalarError a)
-      (fun _ : Fin (k a) ↦ scalarBudget a)
-      (fun _ ↦ hscalarTV a) (fun _ ↦ hscalarMean a)).1
-    exact htv.mono (by
-      simpa only [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul] using herror a)
-  · intro a
-    have hmean := (product_historyReference (scalarCost a) (hcost a)
-      (fun _ : Fin (k a) ↦ actualScalar a)
-      (fun _ : Fin (k a) ↦ scalarReference a)
-      (fun _ : Fin (k a) ↦ scalarError a)
-      (fun _ : Fin (k a) ↦ scalarBudget a)
-      (fun _ ↦ hscalarTV a) (fun _ ↦ hscalarMean a)).2
-    exact hmean.trans (by
-      simpa only [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul] using hbudget a)
-
-#print axioms exists_gaussianHistoryReference
 #print axioms exists_sourceReferenceTVOneRunCertificate_of_scalarHistory
-#print axioms exists_sourcePublicReferenceTVCertificates_of_scalarHistory
 
 end Ttc.CVGaussianHistoryReferenceSpecialization

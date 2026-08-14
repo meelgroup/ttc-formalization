@@ -29,31 +29,50 @@ the concrete capped hybrid-sampler envelope.  Unlike the legacy theorem,
 it does not identify those costs with `r.2` of `Ttc.ttc`: it deliberately states the
 bound for the different operational law that actually executes the certified oracles.
 Its remaining `SourcePublicOneRunCertificates` argument is visible rather than hidden.
-The reference-path alternative in `Ttc/Exec/CVSourceReferenceTVCapstone.lean` avoids an
-expected-cost premise for the operational path, but its final concrete Gaussian schedule
-and public-parameter arithmetic must still be instantiated before the certificate can be
-removed from the headline.
+The retained-history alternative in `Ttc/Exec/CVSourceReferenceTVCapstone.lean` avoids an
+expected-cost premise for the operational path.  The weighted correction in
+`Ttc/Exec/CVWeightedCorrectedAccuracy.lean` and `CVSourceWeightedClipping.lean` also
+removes the earlier, unnecessarily uniform `(1+8/k)^m` loss: its sample count follows the
+cold/hot phase factors used in the source analysis.  The operational reference now keeps
+score history and query cost while resetting only the next seed; the radius-aware
+scaled-raw theorem gives the resulting hybrid reference a uniform `2e` warmness.
 
-In particular, the present corrected sequential estimator cannot simply be substituted
-into the source runtime claim: it requires a per-phase sample count proportional to the
-number of phases, and the machine-checked lower-bound audit in
-`Ttc/Exec/CVGaussianScoreAwareConcretePhaseWitness.lean` shows that its resulting phase
-sum can exceed every fixed source envelope.  The source-sharp exact-law variance product
-is formalized separately, but turning it into an operational sequential oracle requires
-a sharper history-dependence argument than the current uniform corrected recursion.
+What remains visible at this statement layer is the concrete source certificate and its
+schedule arithmetic.  In particular, arbitrary declared operational warmness cannot be
+bounded by a universal runtime constant: the literal mixing deadline is unbounded in that
+argument.  The concrete constructor must use its proved minimal warm recurrence and bound
+the resulting logarithmic deadlines.  Moreover, the adjustable-radius Gaussian cost
+premise does not hold on the initial cold block (the checked phase-zero counterexample is
+`not_sourceColdStart_localRadiusCondition`).  A source-sharp implementation must therefore
+combine the fixed-block cold sampler with the radius-aware hot sampler.  This is a genuine
+sampler split still being exposed by the certificate interface, not the old uniform-phase
+sample-count obstruction.
+
+There is also a coefficient-level distinction between the paper's displayed expression
+and its `O*` reading.  The concrete hybrid schedule has `J = O(log R)` hot chunks; both
+the estimator sample count and hot proposal accounting contain `J`, hence the literal
+bound contains an `R^2 log^2 R` contribution.  The current exact
+`cvComplexityShapeClipped` omits every `log R` factor, so no universal constant can bound
+the concrete schedule by that smaller expression for unrestricted `R`.  A closed
+operational theorem must either retain this polylogarithmic radius factor (the honest
+`O*` interpretation) or assume a polynomial radius normalization.
 
 Compared with `sections/analysis.tex`'s `thm:runtime`, the checked operational theorem is
 an expected query-accounting result, not yet a derivation of the paper's
-`O(m n^5 rho^2 r_max)` machine-time bound.  Its volume summand has the source
-`eps^-2` query shape; obtaining the displayed paper term additionally requires the
-radial comparison `R2 <= rho^2` and charging one body-membership query by an
-`O(n*r_i)` facet scan.  Its sampling summand retains the clipped Poisson intensities and
-no checked operational theorem currently reduces those intensities to `Threshold` or
-to `n^5*rho^2*r_i`.  `Ttc.TTCRuntimePaperArithmetic.paperRuntimeEnvelope` separately
-machine-checks the deterministic unsuppressed expression from `thm:runtime` and its
-reduction to the advertised quintic shape once the two operational comparison
-inequalities are supplied.  Exact-real arithmetic, random generation, and preprocessing
-are outside this query-cost model.
+`O(m n^5 rho^2 r_max)` machine-time bound.  The unconditional explicit accounting in
+`Ttc/Exec/TTCUnconditionalExplicitRuntime.lean` eliminates the former per-call, rate-cap,
+endpoint-price, `rho`, `rMax`, and `Threshold` premises.  Its volume summand has the source
+`eps^-2` query shape; obtaining the displayed paper term additionally requires the radial
+comparison `R2 <= rho^2` and charging one body-membership query by an `O(n*r_i)` facet
+scan.  Its sampling summand uses the proved closed rate cap
+`(1+epsPrime)*algScale^n*Vol(F)` and the concrete hybrid endpoint-inspection cap.  The
+formal preprocessing theory proves the paper threshold is a lower bound on that scaled
+volume, not an upper bound, so replacing this honest cap by the paper's
+volume-independent `Threshold` is not valid for arbitrarily scaled inputs without a new
+normalization hypothesis.  `Ttc.TTCRuntimePaperArithmetic.paperRuntimeEnvelope`
+separately machine-checks the deterministic unsuppressed expression from `thm:runtime`.
+Exact-real arithmetic, random generation, and preprocessing are outside this query-cost
+model.
 
 Both conjuncts speak about **the same run**, drawn from the one measure
 
