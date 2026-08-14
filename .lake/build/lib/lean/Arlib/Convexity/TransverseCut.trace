@@ -1,0 +1,64 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["4fdf79c55feb48e6.olean"],
+  "m": false,
+  "i": "541c5fa8d22f383c.ilean",
+  "c": "05a3f5e55250e006.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/TransverseCut.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/TransverseCut.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/TransverseCut.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/TransverseCut.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/TransverseCut.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:463:0: 'Arlib.exists_massCentre_halfSpace_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:464:0: 'Arlib.setIntegral_halfSpace_pos_of_massCentre' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:465:0: 'Arlib.exists_ne_zero_apply_eq_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:466:0: 'Arlib.exists_massCentres_two_sided' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:467:0: 'Arlib.exists_two_sided_halfSpace' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:468:0: 'Arlib.exists_two_sided_halfSpace_extent_halved' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:469:0: 'Arlib.exists_two_sided_halfSpace_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:470:0: 'Arlib.exists_two_sided_halfSpace_single' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/TransverseCut.lean:471:0: 'Arlib.not_two_sided_of_sign_separated_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.TransverseCut:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.PositionalCut transitive imports (legacy)",
+         "6acc8280bf260a4d"],
+        ["Arlib.Convexity.PositionalCut:importAllArts", "7ec12fb596125f69"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/TransverseCut.lean",
+   "2b512b0db845e23c"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.TransverseCut", "c1ecfd7e69ea930e"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "f5b4560303b2ffb1"}

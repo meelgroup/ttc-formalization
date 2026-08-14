@@ -1,0 +1,71 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["5409007ad68fc480.olean"],
+  "m": false,
+  "i": "01f00002241faf56.ilean",
+  "c": "214386b04017aac2.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVIndependentStreamGeneralizedCertificate.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVIndependentStreamGeneralizedCertificate.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVIndependentStreamGeneralizedCertificate.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVIndependentStreamGeneralizedCertificate.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:124:6: `MeasureTheory.lintegral_finset_sum` has been deprecated: Use `MeasureTheory.lintegral_finsetSum` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:172:11: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:173:11: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:175:13: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:176:20: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:227:0: 'Ttc.CVIndependentStreamGeneralizedCertificate.map_independentStatePaths_independentCostedLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:228:0: 'Ttc.CVIndependentStreamGeneralizedCertificate.lintegral_independentQueryCost_le_phaseBounds' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean:229:0: 'Ttc.CVIndependentStreamGeneralizedCertificate.generalizedPublicOneRunCertificates_of_independentCostedStreams' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVIndependentStreamGeneralizedCertificate:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CVIndependentStreamAccuracy transitive imports (legacy)",
+         "4dbfa7e79e08b44c"],
+        ["Ttc.Exec.CVIndependentStreamAccuracy:importAllArts",
+         "204230c63c28947f"],
+        ["Ttc.Exec.GenericCostedPhaseCertificate transitive imports (legacy)",
+         "7bb868f3bdef53a6"],
+        ["Ttc.Exec.GenericCostedPhaseCertificate:importAllArts",
+         "6b7acfdeb4f3d9df"],
+        ["Ttc.Exec.CVGeneralPolynomialCutoffCapstone transitive imports (legacy)",
+         "fb49dcea71078a77"],
+        ["Ttc.Exec.CVGeneralPolynomialCutoffCapstone:importAllArts",
+         "b1ce705ed9428a0d"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVIndependentStreamGeneralizedCertificate.lean",
+   "971b82a833081c37"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVIndependentStreamGeneralizedCertificate",
+   "dab95f5658e74454"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "c5c6de91fae5538d"}

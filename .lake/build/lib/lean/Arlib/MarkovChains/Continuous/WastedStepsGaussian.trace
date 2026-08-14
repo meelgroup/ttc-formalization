@@ -1,0 +1,125 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["b545377775d53132.olean"],
+  "m": false,
+  "i": "cdc431c087ec9036.ilean",
+  "c": "3031a776784eb9d6.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/WastedStepsGaussian.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/WastedStepsGaussian.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/WastedStepsGaussian.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/WastedStepsGaussian.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:837:66: `mul_le_mul_right'` has been deprecated: Use `mul_le_mul_left` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1196:0: 'Arlib.MarkovChains.mul_inv_le_one_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1197:0: 'Arlib.MarkovChains.metropolisMove_eq_ell_mul_speedyMetropolisMove' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1198:0: 'Arlib.MarkovChains.metropolisGaussian_apply_singleton' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1199:0: 'Arlib.MarkovChains.pathMeasure_metropolisGaussian_dirac_holdsUntil' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1200:0: 'Arlib.MarkovChains.tsum_pathMeasure_metropolisGaussian_dirac_holdsUntil' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1201:0: 'Arlib.MarkovChains.lintegral_exitTime_pathMeasure_metropolisGaussian' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1202:0: 'Arlib.MarkovChains.acceptance_floor_le_speedyMetropolisMove' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1203:0: 'Arlib.MarkovChains.ae_restrict_acceptance_floor_le_speedyMetropolisMove' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1204:0: 'Arlib.MarkovChains.lintegral_inv_ell_mul_move_ellGaussianMeasure' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1205:0: 'Arlib.MarkovChains.mul_lintegral_gaussianWeight_le_of_le_div' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1206:0: 'Arlib.MarkovChains.mul_mul_lintegral_inv_ell_mul_move_ellGaussianProb_le_one' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1207:0: 'Arlib.MarkovChains.mul_sum_lintegral_inv_ell_mul_move_iterate_speedyMetropolisGaussian_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1208:0: 'Arlib.MarkovChains.sum_lintegral_inv_ell_mul_move_iterate_speedyMetropolisGaussian_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1209:0: 'Arlib.MarkovChains.lintegral_lintegral_exitTime_pathMeasure_metropolisGaussian' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1210:0: 'Arlib.MarkovChains.mul_sum_lintegral_exitTime_iterate_speedyMetropolisGaussian_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1211:0: 'Arlib.MarkovChains.three_le_five_mul_acceptance_floor_of_cv' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1212:0: 'Arlib.MarkovChains.three_mul_sum_lintegral_le_five_mul_of_cv' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1213:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_ne_zero_of_unitBall_subset' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1214:0: 'Arlib.MarkovChains.half_mul_lintegral_gaussianWeight_le_ellGaussianMeasure_univ' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1215:0: 'Arlib.MarkovChains.ellGaussianMeasure_univ_ne_zero_of_shrunken' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1216:0: 'Arlib.MarkovChains.mul_sum_lintegral_inv_ell_mul_move_iterate_speedyMetropolisGaussian_le_uncond' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1217:0: 'Arlib.MarkovChains.three_mul_sum_lintegral_le_ten_mul_of_cv' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1218:0: 'Arlib.MarkovChains.le_sum_lintegral_inv_ell_mul_move_iterate_stationary' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1219:0: 'Arlib.MarkovChains.exists_wastedStepsGaussian_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:1220:0: 'Arlib.MarkovChains.exists_wastedStepsGaussian_uncond_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.WastedStepsGaussian:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.WastedSteps transitive imports (legacy)",
+         "fd1e9988fbc246e0"],
+        ["Arlib.MarkovChains.Continuous.WastedSteps:importAllArts",
+         "d9b110b3308f295c"],
+        ["Arlib.MarkovChains.Continuous.SpeedyGaussianConductance transitive imports (legacy)",
+         "e3985b90e364edc7"],
+        ["Arlib.MarkovChains.Continuous.SpeedyGaussianConductance:importAllArts",
+         "41150260319e189d"],
+        ["Arlib.MarkovChains.Continuous.KLS97Shell transitive imports (legacy)",
+         "dea8a801b65973d6"],
+        ["Arlib.MarkovChains.Continuous.KLS97Shell:importAllArts",
+         "5ec5df30bdc9be14"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean",
+   "5763f7073c7fd728"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.WastedStepsGaussian",
+   "86ba13c96dc32354"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "2231874b33670acc"}

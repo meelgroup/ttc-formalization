@@ -1,0 +1,118 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["d86247f9138664c6.olean"],
+  "m": false,
+  "i": "44d70df29309cd22.ilean",
+  "c": "f614be3ec47b03db.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Monadic/EventMeasurable.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Monadic/EventMeasurable.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Monadic/EventMeasurable.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Monadic/EventMeasurable.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Monadic/EventMeasurable.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:619:0: 'Ttc.CountablyDetermined' does not depend on any axioms",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:620:0: 'Ttc.CountablyDetermined.measurableSet_preimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:621:0: 'Ttc.CountablyDetermined.measurable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:622:0: 'Ttc.CountablyDetermined.map' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:623:0: 'Ttc.CountablyDetermined.precomp' does not depend on any axioms",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:624:0: 'Ttc.CountablyDetermined.prodMk' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:625:0: 'Ttc.CountablyDetermined.bind' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:626:0: 'Ttc.CountablyDetermined.of_factors' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:627:0: 'Ttc.CountablyDetermined.measurableSet_setOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:628:0: 'Ttc.countablyDetermined_const' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:629:0: 'Ttc.countablyDetermined_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:630:0: 'Ttc.countablyDetermined_natSInf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:631:0: 'Ttc.countablyDetermined_haltLevel' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:632:0: 'Ttc.countablyDetermined_absorbLevel' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:633:0: 'Ttc.measurableSet_absorbLevel_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:634:0: 'Ttc.countablyDetermined_step' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:635:0: 'Ttc.countablyDetermined_foldl_step' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:636:0: 'Ttc.countablyDetermined_run' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:637:0: 'Ttc.countablyDetermined_run_div' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:638:0: 'Ttc.countablyDetermined_ttcAlgOutput' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:639:0: 'Ttc.measurable_ttcAlgOutput_of_traj' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:640:0: 'Ttc.measurableSet_good_event' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:641:0: 'Ttc.countablyDetermined_ttcAlgOutput_joint' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:642:0: 'Ttc.measurableSet_good_event_joint' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:643:0: 'Ttc.lintegral_good_event_eq_compProd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/EventMeasurable.lean:644:0: 'Ttc.ttc_accuracy_single_measure' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Monadic.EventMeasurable:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Api transitive imports (legacy)", "83b43b53f8e699e2"],
+        ["Ttc.Exec.Api:importAllArts", "6cd17d8943c8fd23"],
+        ["Ttc.Coupling.Family transitive imports (legacy)", "62531278c590ca4e"],
+        ["Ttc.Coupling.Family:importAllArts", "a3b193a22933916c"],
+        ["Ttc.Monadic.Kernel transitive imports (legacy)", "4d9f5c3b65e4227a"],
+        ["Ttc.Monadic.Kernel:importAllArts", "ae3fa8c83d724d8c"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Monadic/EventMeasurable.lean",
+   "e8709ddea1eca544"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Monadic.EventMeasurable", "ddd8b59d3d4d7a1e"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "1b6165a25854e7f6"}

@@ -1,0 +1,98 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["ff6850b187d68108.olean"],
+  "m": false,
+  "i": "9e5a8865b05b8ddf.ilean",
+  "c": "3490f1da4c45a5cd.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/PhaseFromTV.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/PhaseFromTV.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/PhaseFromTV.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/PhaseFromTV.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/PhaseFromTV.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:532:0: 'Arlib.GaussianCooling.restrict_interior_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:533:0: 'Arlib.GaussianCooling.chain_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:534:0: 'Arlib.GaussianCooling.coolLaw_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:535:0: 'Arlib.GaussianCooling.ball_subset_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:536:0: 'Arlib.GaussianCooling.volume_interior_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:537:0: 'Arlib.GaussianCooling.integral_phaseScore_interior_coolLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:538:0: 'Arlib.GaussianCooling.integral_phaseScore_interior_mem_Icc_of_tvLe' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:539:0: 'Arlib.GaussianCooling.phaseScore_interior_sq_moment_le_of_tvLe' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:540:0: 'Arlib.GaussianCooling.coolLaw_interior_sq_moment_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:541:0: 'Arlib.GaussianCooling.phaseScore_interior_sq_moment_le_budget' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:542:0: 'Arlib.GaussianCooling.hphase_mean_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:543:0: 'Arlib.GaussianCooling.hphase_var_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:544:0: 'Arlib.GaussianCooling.integral_phaseScore_interior_mem_Icc_of_tvLe_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:545:0: 'Arlib.GaussianCooling.phaseScore_interior_sq_moment_le_of_tvLe_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:546:0: 'Arlib.GaussianCooling.phaseScore_interior_sq_moment_le_budget_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:547:0: 'Arlib.GaussianCooling.hphase_mean_of_tvLe_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseFromTV.lean:548:0: 'Arlib.GaussianCooling.hphase_var_of_tvLe_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.GaussianCooling.PhaseFromTV:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.GaussianCooling.PhaseVar transitive imports (legacy)",
+         "748344d97be45d50"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar:importAllArts",
+         "4f43cc313e92c7b5"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanApprox transitive imports (legacy)",
+         "6ace841341423151"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanApprox:importAllArts",
+         "93f6ad310cc61fbb"],
+        ["Mathlib.Analysis.Convex.Measure transitive imports (legacy)",
+         "cb5e346914f11734"],
+        ["Mathlib.Analysis.Convex.Measure:importAllArts",
+         "92ea8c4535cd7b86"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/PhaseFromTV.lean",
+   "aa968a0afcfec6cf"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.GaussianCooling.PhaseFromTV",
+   "6292b44bb223091e"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "dba848005af2e6b1"}

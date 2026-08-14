@@ -1,0 +1,95 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["5590bac19a2bfe7c.olean"],
+  "m": false,
+  "i": "8c9dff4ae24b1a57.ilean",
+  "c": "d35805319f09a106.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Topology/OddMap.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Topology/OddMap.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Topology/OddMap.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Topology/OddMap.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Topology/OddMap.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:273:2: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:313:0: automatically included section variable(s) unused in theorem `Arlib.sphere_neg_ne_self`:\n  [FiniteDimensional ℝ E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [FiniteDimensional ℝ E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:330:0: automatically included section variable(s) unused in theorem `Arlib.contractible_sphere_compl`:\n  [FiniteDimensional ℝ E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [FiniteDimensional ℝ E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:471:0: 'Arlib.eq_of_continuous_intValued' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:472:0: 'Arlib.circle_exp_pi' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:473:0: 'Arlib.false_of_odd_lift' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:474:0: 'Arlib.exists_circle_lift_of_cover' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:475:0: 'Arlib.exists_eq_zero_of_odd_pair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:476:0: 'Arlib.sphere_neg_ne_self' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:477:0: 'Arlib.contractible_sphere_compl' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:478:0: 'Arlib.isConnected_sphere_compl_pair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:479:0: 'Arlib.exists_circle_lift_sphere' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:480:0: 'Arlib.exists_eq_zero_of_odd_pair_sphere' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/OddMap.lean:481:0: 'Arlib.exists_eq_zero_of_odd_pair_sphere_three' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Topology.OddMap:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Mathlib.Topology.Homotopy.Lifting transitive imports (legacy)",
+         "7136d03c1bf67b84"],
+        ["Mathlib.Topology.Homotopy.Lifting:importAllArts", "69b1e5aa80f26db5"],
+        ["Mathlib.Analysis.SpecialFunctions.Complex.Circle transitive imports (legacy)",
+         "7d9401acef2e68db"],
+        ["Mathlib.Analysis.SpecialFunctions.Complex.Circle:importAllArts",
+         "c1694d0ca80e199e"],
+        ["Mathlib.Analysis.Convex.Contractible transitive imports (legacy)",
+         "c58133bcc74c72e1"],
+        ["Mathlib.Analysis.Convex.Contractible:importAllArts",
+         "a7160f08a2ba9dca"],
+        ["Mathlib.Analysis.Normed.Module.Connected transitive imports (legacy)",
+         "1f4ba44c4eb1978a"],
+        ["Mathlib.Analysis.Normed.Module.Connected:importAllArts",
+         "277e7b7a2dd2e7b9"],
+        ["Mathlib.Geometry.Manifold.Instances.Sphere transitive imports (legacy)",
+         "e4484357f8f54c31"],
+        ["Mathlib.Geometry.Manifold.Instances.Sphere:importAllArts",
+         "e0ca60bb218fd180"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Topology/OddMap.lean",
+   "6643d0a6e8dbc193"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Topology.OddMap", "5db188675dd569a5"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "945ba681d4542a3a"}

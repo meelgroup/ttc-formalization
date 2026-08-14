@@ -1,0 +1,94 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["e0ddaa4287ac602e.olean"],
+  "m": false,
+  "i": "1ca401b12a339ab6.ilean",
+  "c": "729d94e6e0554c33.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/LocalizationLimit.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/LocalizationLimit.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/LocalizationLimit.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/LocalizationLimit.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/LocalizationLimit.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:484:0: 'Arlib.convex_of_tendsto_hausdorffDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:485:0: 'Arlib.exists_subseq_tendsto_hausdorffDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:486:0: 'Arlib.exists_subseq_tendsto_hausdorffDist_convex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:487:0: 'Arlib.concaveOn_of_tendsto' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:488:0: 'Arlib.nonneg_of_tendsto' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:489:0: 'Arlib.concaveOn_limit_slice_profile' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:490:0: 'Arlib.smul_set_subset_smul_set_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:491:0: 'Arlib.slice_profileBody' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:492:0: 'Arlib.convex_profileBody' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:493:0: 'Arlib.volume_slice_profileBody' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:494:0: 'Arlib.profile_profileBody' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:495:0: 'Arlib.exists_convex_slice_volume_needleWeight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:496:0: 'Arlib.concaveOn_tent' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:497:0: 'Arlib.not_convexOn_tent' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationLimit.lean:498:0: 'Arlib.exists_convex_slice_profile_not_affine' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.LocalizationLimit:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Mathlib.Topology.MetricSpace.Closeds transitive imports (legacy)",
+         "239335c962f9b11b"],
+        ["Mathlib.Topology.MetricSpace.Closeds:importAllArts",
+         "c4a3c5e040ae6bd5"],
+        ["Mathlib.Topology.Sets.VietorisTopology transitive imports (legacy)",
+         "b8348b1afccb8623"],
+        ["Mathlib.Topology.Sets.VietorisTopology:importAllArts",
+         "6d24fe029b7405fb"],
+        ["Arlib.Convexity.BrunnSharp transitive imports (legacy)",
+         "ea7adae371c29006"],
+        ["Arlib.Convexity.BrunnSharp:importAllArts", "3e3716af64ecc7d0"],
+        ["Arlib.Convexity.LocalizationLemma transitive imports (legacy)",
+         "95fe5b60c5221b48"],
+        ["Arlib.Convexity.LocalizationLemma:importAllArts",
+         "0e4eace7d3114c43"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/LocalizationLimit.lean",
+   "8c0bc6746dd57e0d"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.LocalizationLimit", "1181ce5762f39fbf"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "492ac50d63b917cd"}

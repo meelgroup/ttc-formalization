@@ -1,0 +1,67 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["8ef7a40f701772fb.olean"],
+  "m": false,
+  "i": "190a29b125026efc.ilean",
+  "c": "a9307f3680ef1b09.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/KV97RoundedEndpointBridge.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/KV97RoundedEndpointBridge.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/KV97RoundedEndpointBridge.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/KV97RoundedEndpointBridge.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/KV97RoundedEndpointBridge.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:428:0: 'Ttc.KV97RoundedEndpointBridge.map_snd_costedFineEndpointLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:429:0: 'Ttc.KV97RoundedEndpointBridge.lintegral_fst_costedFineEndpointLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:430:0: 'Ttc.KV97RoundedEndpointBridge.lintegral_fst_costedFineEndpointLaw_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:431:0: 'Ttc.KV97RoundedEndpointBridge.toReal_condOn_singleton_eq_kv97SampD' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:432:0: 'Ttc.KV97RoundedEndpointBridge.toReal_conditionedFineEndpointLaw_singleton_eq_kv97SampD' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:433:0: 'Ttc.KV97RoundedEndpointBridge.expectedQueryFineSampler' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:434:0: 'Ttc.KV97RoundedEndpointBridge.expectedQueryKV97Sampler' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:435:0: 'Ttc.KV97RoundedEndpointBridge.one_eighth_le_roundedMeasure_integerAcceptance_of_kv97' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/KV97RoundedEndpointBridge.lean:436:0: 'Ttc.KV97RoundedEndpointBridge.lintegral_fst_costedFineEndpointLaw_le_of_kv97' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.KV97RoundedEndpointBridge:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CostedKV97Rounding transitive imports (legacy)",
+         "e388efbe0b16b9a2"],
+        ["Ttc.Exec.CostedKV97Rounding:importAllArts", "6bc4d58e0f771da9"],
+        ["Ttc.Sampler.Construct transitive imports (legacy)",
+         "7113fc1b1dc34fec"],
+        ["Ttc.Sampler.Construct:importAllArts", "0b698f8d32b5b130"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/KV97RoundedEndpointBridge.lean",
+   "6eceb9ddb0acbbcf"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.KV97RoundedEndpointBridge", "a4c2dce5db3f14eb"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "21e89254c90653b1"}

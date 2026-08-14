@@ -1,0 +1,153 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["cb1853e45370f450.olean"],
+  "m": false,
+  "i": "05e61bf4349bf561.ilean",
+  "c": "a1f4dc63b70cbd18.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/NeedleLimit.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/NeedleLimit.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/NeedleLimit.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/NeedleLimit.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/NeedleLimit.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:751:0: 'Arlib.exists_mem_apply_le_of_setIntegral_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:752:0: 'Arlib.exists_mem_le_apply_of_setIntegral_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:753:0: 'Arlib.exists_pair_apply_sub_ge_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:754:0: 'Arlib.exists_pair_dist_ge_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:755:0: 'Arlib.le_diam_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:756:0: 'Arlib.integrable_icoConst' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:757:0: 'Arlib.icoConst_nonneg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:758:0: 'Arlib.icoConst_of_lt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:759:0: 'Arlib.icoConst_of_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:760:0: 'Arlib.integrable_stepLeft' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:761:0: 'Arlib.integrable_stepRight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:762:0: 'Arlib.stepLeft_nonpos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:763:0: 'Arlib.stepRight_nonpos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:764:0: 'Arlib.Ico_subset_Icc_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:765:0: 'Arlib.integral_icoConst_of_subset' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:766:0: 'Arlib.integral_stepLeft' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:767:0: 'Arlib.integral_stepRight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:768:0: 'Arlib.measurableSet_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:769:0: 'Arlib.convex_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:770:0: 'Arlib.isCompact_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:771:0: 'Arlib.isBounded_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:772:0: 'Arlib.integrable_gapG' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:773:0: 'Arlib.integrable_gapH' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:774:0: 'Arlib.integral_gapG_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:775:0: 'Arlib.integral_gapH_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:776:0: 'Arlib.gapG_nonpos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:777:0: 'Arlib.gapH_nonpos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:778:0: 'Arlib.exists_pair_one_le_dist_of_gap_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:779:0: 'Arlib.one_le_diam_of_gap_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:780:0: 'Arlib.one_le_diam_bisection_chain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:781:0: 'Arlib.exists_infinite_bisection_chain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:782:0: 'Arlib.setIntegral_iInter_eq_zero_of_tendsto' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:783:0: 'Arlib.exists_subseq_hausdorff_limit_bisection_chain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:784:0: 'Arlib.mem_of_tendsto_of_tendsto_hausdorffDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:785:0: 'Arlib.exists_pair_dist_ge_of_tendsto_hausdorffDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:786:0: 'Arlib.exists_segment_subset_of_tendsto_hausdorffDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/NeedleLimit.lean:787:0: 'Arlib.bisection_chain_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.NeedleLimit:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Mathlib.MeasureTheory.Integral.Prod transitive imports (legacy)",
+         "8721ed45745b89e2"],
+        ["Mathlib.MeasureTheory.Integral.Prod:importAllArts",
+         "f7f7a589ade57a1c"],
+        ["Arlib.Convexity.LocalizationLimit transitive imports (legacy)",
+         "e73f7e931fbedc99"],
+        ["Arlib.Convexity.LocalizationLimit:importAllArts",
+         "365fe3f85c492a69"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/NeedleLimit.lean",
+   "7738957523486888"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.NeedleLimit", "b6df3d00771ccfd4"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "cd3fa39d4b56725f"}

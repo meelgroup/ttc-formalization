@@ -1,0 +1,320 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["8ebbf74489e1fbcf.olean"],
+  "m": false,
+  "i": "fd86e14ca552898c.ilean",
+  "c": "34ce8b78dd8ac8d7.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CousinsVempala.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CousinsVempala.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CousinsVempala.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CousinsVempala.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CousinsVempala.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:947:51: Variable name `hr` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:947:64: Variable name `hη` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:948:18: Variable name `he0` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:2221:5: Variable name `hphases_pos` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:2228:5: Variable name `hradius_pos` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:2711:4: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:2859:31: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3009:9: Variable name `K` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3012:9: Variable name `K` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3042:9: Variable name `K` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3045:9: Variable name `K` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3077:9: Variable name `K` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3080:9: Variable name `K` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3090:0: 'Ttc.CV.mem_relErr_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3091:0: 'Ttc.CV.relErr_trans' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3092:0: 'Ttc.CV.measure_notMem_relErr_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3093:0: 'Ttc.CV.prod_range_ratio' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3094:0: 'Ttc.CV.prod_fin_ratio' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3095:0: 'Ttc.CV.prod_relErr_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3096:0: 'Ttc.CV.run_relErr_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3097:0: 'Ttc.CV.run_relErr_four_fifths' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3098:0: 'Ttc.CV.median_relErr_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3099:0: 'Ttc.CV.G_indicator_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3100:0: 'Ttc.CV.G_indicator_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3101:0: 'Ttc.CV.G_indicator_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3102:0: 'Ttc.CV.gaussianCooling_accuracy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3103:0: 'Ttc.CV.relErr_mono' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3104:0: 'Ttc.CV.G_indicator_mem_relErr' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3105:0: 'Ttc.CV.run_relErr_four_fifths_biasedEnd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3106:0: 'Ttc.CV.gaussianCooling_accuracy_biasedEnd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3107:0: 'Ttc.CV.run_relErr_four_fifths_approxMean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3108:0: 'Ttc.CV.volume_interior_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3109:0: 'Ttc.CV.volume_interior_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3110:0: 'Ttc.CV.ball_subset_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3111:0: 'Ttc.CV.cvRadius_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3112:0: 'Ttc.CV.subset_closedBall_cvRadius' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3113:0: 'Ttc.CV.integral_map_mem_relErr_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3114:0: 'Ttc.CV.sampledPhase_mean_mem_relErr' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3115:0: 'Ttc.CV.tv_slacks_satisfiable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3116:0: 'Ttc.CV.tv_slack_threshold_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3117:0: 'Ttc.CV.exists_pos_tvErr' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3118:0: 'Ttc.CV.hvar_exact_of_fixedRate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3119:0: 'Ttc.CV.exp_le_inv_one_sub' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3120:0: 'Ttc.CV.one_div_le_log_one_add_two_div' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3121:0: 'Ttc.CV.flat_of_sigmaSq_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3122:0: 'Ttc.CV.flat_of_fixedRate_terminal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3123:0: 'Ttc.CV.hvar_exact_of_fixedRate_all' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3124:0: 'Ttc.CV.flat_slacks_satisfiable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3125:0: 'Ttc.CV.log_one_add_two_div_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3126:0: 'Ttc.CV.sigmaSq_ge_of_flat' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3127:0: 'Ttc.CV.sigmaSq_eq_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3128:0: 'Ttc.CV.sigmaSq_zero_gt_of_flat_of_meet' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3129:0: 'Ttc.CV.coolWeight_zero_ge_of_flat' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3130:0: 'Ttc.CV.chain_zero_mem_relErr_of_flat' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3131:0: 'Ttc.CV.cold_start_mem_relErr_of_flat' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3132:0: 'Ttc.CV.varBudget_param_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3133:0: 'Ttc.CV.meet_of_fixedRate_fields' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3134:0: 'Ttc.CV.cold_start_mem_relErr_of_fixedRate_fields' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3135:0: 'Ttc.CV.sigmaSq_mono_of_rate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3136:0: 'Ttc.CV.flat_of_rate_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3137:0: 'Ttc.CV.hvar_exact_of_coolRate_all' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3138:0: 'Ttc.CV.cool_schedule_anneals' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3139:0: 'Ttc.CV.cold_start_exponent_ge_of_coolRate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3140:0: 'Ttc.CV.cool_flat_slacks_satisfiable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3141:0: 'Ttc.CV.cool_budgets_at_numbers' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3142:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerCooling' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3143:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfSamplerFixedRate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3144:0: 'Ttc.CV.iIndepFun_of_subsingleton' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3145:0: 'Ttc.CV.toReal_volume_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3146:0: 'Ttc.VolumeAlgorithm.ofRuns' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3147:0: 'Ttc.VolumeAlgorithm.cousinsVempala' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3148:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfBiasedEnd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3149:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfApproxMean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3150:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfSampler' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3151:0: 'Ttc.VolumeAlgorithm.cousinsVempalaWitness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3152:0: 'Ttc.VolumeAlgorithm.cousinsVempalaWitness_est' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3153:0: 'Ttc.VolumeAlgorithm.cousinsVempalaBiasedWitness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3154:0: 'Ttc.CV.witPhases_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3155:0: 'Ttc.CV.witPhaseBias_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3156:0: 'Ttc.CV.witEndBias_lt_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3157:0: 'Ttc.CV.witPhaseBudget' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3158:0: 'Ttc.CV.witPhase_mean_mem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3159:0: 'Ttc.VolumeAlgorithm.cousinsVempalaApproxMeanWitness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CousinsVempala.lean:3160:0: 'Ttc.VolumeAlgorithm.cousinsVempalaApproxMeanWitness_est' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.CousinsVempala:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.Bridge transitive imports (legacy)", "d896121921b5c64b"],
+        ["Ttc.Volume.Bridge:importAllArts", "c9bb00fa6a48338c"],
+        ["Arlib.Convexity.GaussianCooling.Estimator transitive imports (legacy)",
+         "5bcdb2836be0c299"],
+        ["Arlib.Convexity.GaussianCooling.Estimator:importAllArts",
+         "218d53b972ba4cce"],
+        ["Arlib.Convexity.GaussianCooling.ZLogconcave transitive imports (legacy)",
+         "d62ea60a543abd49"],
+        ["Arlib.Convexity.GaussianCooling.ZLogconcave:importAllArts",
+         "9697f2460b58edc3"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMean transitive imports (legacy)",
+         "d571e047ebf87b6d"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMean:importAllArts",
+         "ca82da8e151f3dd2"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar transitive imports (legacy)",
+         "748344d97be45d50"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar:importAllArts",
+         "4f43cc313e92c7b5"],
+        ["Arlib.Convexity.GaussianCooling.PhaseSchedule transitive imports (legacy)",
+         "19343e678c1d66de"],
+        ["Arlib.Convexity.GaussianCooling.PhaseSchedule:importAllArts",
+         "b180e4da2941263b"],
+        ["Arlib.Convexity.GaussianCooling.TerminalPhase transitive imports (legacy)",
+         "6b3bf949185838c3"],
+        ["Arlib.Convexity.GaussianCooling.TerminalPhase:importAllArts",
+         "181b2192815dc18e"],
+        ["Arlib.Convexity.GaussianCooling.Unblock transitive imports (legacy)",
+         "7ba9ffb8340a10c3"],
+        ["Arlib.Convexity.GaussianCooling.Unblock:importAllArts",
+         "287d9bdb21d9fab4"],
+        ["Mathlib.Analysis.Convex.Measure transitive imports (legacy)",
+         "cb5e346914f11734"],
+        ["Mathlib.Analysis.Convex.Measure:importAllArts",
+         "92ea8c4535cd7b86"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CousinsVempala.lean",
+   "3861f4a6854d605e"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.CousinsVempala", "f66d4c0cb44dc5eb"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "105f0be340e007e3"}

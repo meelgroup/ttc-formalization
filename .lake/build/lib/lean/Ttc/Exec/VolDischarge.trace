@@ -1,0 +1,111 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["759ddc0c7006b1c7.olean"],
+  "m": false,
+  "i": "fc3791dea603d68e.ilean",
+  "c": "7a717b51072b5428.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/VolDischarge.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/VolDischarge.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/VolDischarge.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/VolDischarge.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/VolDischarge.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:601:0: 'Ttc.mcVol' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:602:0: 'Ttc.mcVol_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:603:0: 'Ttc.mcGood' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:604:0: 'Ttc.measurableSet_mcGood' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:605:0: 'Ttc.measure_mcGood_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:606:0: 'Ttc.mcVol_mem_relErr' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:607:0: 'Ttc.mcVol_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:608:0: 'Ttc.ttc_volume_monteCarlo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:609:0: 'Ttc.Box.cenMC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:610:0: 'Ttc.Box.volMC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:611:0: 'Ttc.Box.thMC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:612:0: 'Ttc.Box.mem_toDNF_boxCube' does not depend on any axioms",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:613:0: 'Ttc.Box.length_toDNF_boxForm' does not depend on any axioms",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:614:0: 'Ttc.Box.hlen_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:615:0: 'Ttc.Box.theta_eq_MC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:616:0: 'Ttc.Box.gen_mem_MC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:617:0: 'Ttc.Box.sum_thMC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:618:0: 'Ttc.Box.thresh_div_eight_le_volumeS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:619:0: 'Ttc.Box.big_MC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:620:0: 'Ttc.Box.ttc_volume_monteCarlo_box_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:621:0: 'Ttc.Box.AtParamsMC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:622:0: 'Ttc.Box.atParamsMC_of' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/VolDischarge.lean:623:0: 'Ttc.Box.exists_two_ttc_volume_monteCarlo_instances' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.VolDischarge:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Endgoal transitive imports (legacy)", "9798675efcce8e4d"],
+        ["Ttc.Exec.Endgoal:importAllArts", "ecb35cb57dfc1dd7"],
+        ["Ttc.Volume.MonteCarlo transitive imports (legacy)",
+         "5ba022e92ba5bf2a"],
+        ["Ttc.Volume.MonteCarlo:importAllArts", "2048015e921744c1"],
+        ["Ttc.Witness.BoxSharp transitive imports (legacy)",
+         "203df08af6995dd9"],
+        ["Ttc.Witness.BoxSharp:importAllArts", "f12009d1c8756ffc"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/VolDischarge.lean",
+   "c622da28465de2eb"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.VolDischarge", "aff0c80f16eb6518"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "65e4be2365371170"}

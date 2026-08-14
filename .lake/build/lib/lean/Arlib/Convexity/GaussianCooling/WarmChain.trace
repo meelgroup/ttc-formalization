@@ -1,0 +1,103 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["a06b98f73a35f705.olean"],
+  "m": false,
+  "i": "45a1a2d83f0fcd74.ilean",
+  "c": "2b94114cad061425.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/WarmChain.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/WarmChain.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/WarmChain.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/WarmChain.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/WarmChain.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:564:0: 'Arlib.GaussianCooling.isWarm_withDensity_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:565:0: 'Arlib.GaussianCooling.measurable_coolDensity' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:566:0: 'Arlib.GaussianCooling.coolWeight_le_coolWeight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:567:0: 'Arlib.GaussianCooling.chain_succ_le_pow_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:568:0: 'Arlib.GaussianCooling.isWarm_coolLaw_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:569:0: 'Arlib.GaussianCooling.isWarm_coolLaw_succ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:570:0: 'Arlib.GaussianCooling.sqrt_pow_le_exp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:571:0: 'Arlib.GaussianCooling.isWarm_coolLaw_succ_of_ratio' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:572:0: 'Arlib.GaussianCooling.isWarm_coolLaw_succ_exp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:573:0: 'Arlib.GaussianCooling.isWarm_coolLaw_succ_sqrt_exp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:574:0: 'Arlib.GaussianCooling.isWarm_coolLaw_chain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:575:0: 'Arlib.GaussianCooling.isWarm_coolLaw_add' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:576:0: 'Arlib.GaussianCooling.chain_le_mul_of_forall_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:577:0: 'Arlib.GaussianCooling.isWarm_coolLaw_terminal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:578:0: 'Arlib.GaussianCooling.isWarm_coolLaw_terminal_exp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:579:0: 'Arlib.GaussianCooling.isWarm_coolLaw_of_subset_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:580:0: 'Arlib.GaussianCooling.isWarm_coolLaw_of_subset_ball_sqrt_exp' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:581:0: 'Arlib.GaussianCooling.exp_one_lt_three' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmChain.lean:582:0: 'Arlib.GaussianCooling.exists_isWarm_coolLaw_succ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.GaussianCooling.WarmChain:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Probability.TV transitive imports (legacy)",
+         "c83018d9e0a7a4f8"],
+        ["Arlib.Probability.TV:importAllArts", "f2dcdf6cb327760c"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar transitive imports (legacy)",
+         "748344d97be45d50"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar:importAllArts",
+         "4f43cc313e92c7b5"],
+        ["Mathlib.MeasureTheory.Measure.Haar.NormedSpace transitive imports (legacy)",
+         "a5f603da6be7e969"],
+        ["Mathlib.MeasureTheory.Measure.Haar.NormedSpace:importAllArts",
+         "60f5c1ae5bd33a3b"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/WarmChain.lean",
+   "84d346d24c13a088"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.GaussianCooling.WarmChain",
+   "6fac7cc9a912fb38"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "db1c7b43247e3199"}

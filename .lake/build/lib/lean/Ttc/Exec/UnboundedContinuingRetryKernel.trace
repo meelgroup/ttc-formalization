@@ -1,0 +1,72 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["9e82ff9269f4f49c.olean"],
+  "m": false,
+  "i": "0b713802faefeb29.ilean",
+  "c": "3d7eb1497834d3f9.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/UnboundedContinuingRetryKernel.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/UnboundedContinuingRetryKernel.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/UnboundedContinuingRetryKernel.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/UnboundedContinuingRetryKernel.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/UnboundedContinuingRetryKernel.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:127:25: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:160:8: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:331:8: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:336:0: 'Ttc.UnboundedContinuingRetry.map_eval_pathMeasure_eq_marginal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:337:0: 'Ttc.UnboundedContinuingRetry.measure_neverAccepts_eq_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:338:0: 'Ttc.UnboundedContinuingRetry.map_terminalOutput_eq_of_firstHit' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:339:0: 'Ttc.UnboundedContinuingRetry.measure_neverAccepts_eq_zero_of_pointwise_reject' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:340:0: 'Ttc.UnboundedContinuingRetry.lintegral_transitionCount_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/UnboundedContinuingRetryKernel.lean:341:0: 'Ttc.UnboundedContinuingRetry.lintegral_costEnvelope_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.UnboundedContinuingRetryKernel:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.FiniteContinuingRetryGeneralDecomposition transitive imports (legacy)",
+         "e7362b680af2f634"],
+        ["Ttc.Exec.FiniteContinuingRetryGeneralDecomposition:importAllArts",
+         "9ce4e24aee85715e"],
+        ["Ttc.Volume.CVDirectSequentialWarm transitive imports (legacy)",
+         "df958b13c08fa7c5"],
+        ["Ttc.Volume.CVDirectSequentialWarm:importAllArts", "366be881983e4b5e"],
+        ["Ttc.Volume.AmbientGaussianRejection transitive imports (legacy)",
+         "dc854e7951bd9ab0"],
+        ["Ttc.Volume.AmbientGaussianRejection:importAllArts",
+         "00bb97edec9e8829"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/UnboundedContinuingRetryKernel.lean",
+   "8b8e68c552e6818f"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.UnboundedContinuingRetryKernel", "6093d33283feed75"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "47aba4a87b14f050"}

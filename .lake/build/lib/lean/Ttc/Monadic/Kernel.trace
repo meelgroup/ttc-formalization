@@ -1,0 +1,68 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["d29a548998d60310.olean"],
+  "m": false,
+  "i": "ce8c20ab134851bc.ilean",
+  "c": "7a2b96e81f7e2e79.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Monadic/Kernel.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Monadic/Kernel.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Monadic/Kernel.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Monadic/Kernel.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Monadic/Kernel.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:238:0: 'Ttc.measurable_mcVol' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:239:0: 'Ttc.measurable_rates_of_measurable_vol' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:240:0: 'Ttc.measurable_ttcRates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:241:0: 'Ttc.measurable_poissonMeasure' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:242:0: 'Ttc.measurable_pi_poissonMeasure' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:243:0: 'Ttc.measurable_trajMeasure' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:244:0: 'Ttc.measurable_trajLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:245:0: 'Ttc.measurable_trajLaw_ttcRates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:246:0: 'Ttc.ttcTrajKernel' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Kernel.lean:247:0: 'Ttc.lintegral_trajLaw_ttcRates_eq_bind' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Monadic.Kernel:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Api transitive imports (legacy)", "83b43b53f8e699e2"],
+        ["Ttc.Exec.Api:importAllArts", "6cd17d8943c8fd23"],
+        ["Ttc.Coupling.Family transitive imports (legacy)", "62531278c590ca4e"],
+        ["Ttc.Coupling.Family:importAllArts", "a3b193a22933916c"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Monadic/Kernel.lean",
+   "64f74178d0d89b86"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Monadic.Kernel", "d3667525936bfc1c"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9428aeaedc534725"}

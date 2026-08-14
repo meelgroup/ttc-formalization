@@ -1,0 +1,101 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["4c781d993bb4e67a.olean"],
+  "m": false,
+  "i": "04624c642972afcd.ilean",
+  "c": "75bf79140048d84d.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/EllLogConcave.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/EllLogConcave.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/EllLogConcave.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/EllLogConcave.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/EllLogConcave.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:758:0: 'Arlib.volume_preimage_toLp_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:759:0: 'Arlib.preimage_toLp_add_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:760:0: 'Arlib.preimage_toLp_smul_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:761:0: 'Arlib.brunn_minkowski_mul_euclidean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:762:0: 'Arlib.ball_inter_convex_combination_subset' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:763:0: 'Arlib.isLogConcave_volume_ball_inter' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:764:0: 'Arlib.isLogConcave_ell_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:765:0: 'Arlib.isLogConcave_indicator_mul_ell_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:766:0: 'Arlib.isLogConcave_ell_toReal_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:767:0: 'Arlib.isLogConcave_indicator_mul_ell_toReal_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:768:0: 'Arlib.nontrivial_euclideanSpace' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:769:0: 'Arlib.volume_ball_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:770:0: 'Arlib.volume_ball_inter_toReal_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:771:0: 'Arlib.continuous_volume_ball_inter_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:772:0: 'Arlib.continuous_ell_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:773:0: 'Arlib.ellGaussian_isoperimetry_openClosed_logTwo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:774:0: 'Arlib.ellGaussian_isoperimetry_openClosed_logTwo_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/EllLogConcave.lean:775:0: 'Arlib.ellGaussian_isoperimetry_openClosed_logTwo_strict_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.EllLogConcave:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.LogConcave transitive imports (legacy)",
+         "623e4ec3848918e7"],
+        ["Arlib.Convexity.LogConcave:importAllArts", "00aa80730bf281e5"],
+        ["Arlib.Convexity.PrekopaLeindlerN transitive imports (legacy)",
+         "b97b6b2c51e0a27b"],
+        ["Arlib.Convexity.PrekopaLeindlerN:importAllArts", "9f78c38f2fc44ee3"],
+        ["Arlib.MarkovChains.Continuous.BallWalk transitive imports (legacy)",
+         "cfd14076c9e2bcf8"],
+        ["Arlib.MarkovChains.Continuous.BallWalk:importAllArts",
+         "75f78a0792efdefb"],
+        ["Arlib.Convexity.OneDimSharp transitive imports (legacy)",
+         "2967d03a2897ce71"],
+        ["Arlib.Convexity.OneDimSharp:importAllArts", "d4f68b874a0c42d3"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/EllLogConcave.lean",
+   "c58ddbde8acd134e"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.EllLogConcave", "cef704ecaa263b8a"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "d2a62ad1ff000882"}

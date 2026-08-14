@@ -1,0 +1,133 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["44e43149de69fce3.olean"],
+  "m": false,
+  "i": "dada6ddfcca48f5e.ilean",
+  "c": "ad0bd927cef66da6.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/Degenerate.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/Degenerate.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/Degenerate.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/Degenerate.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/Degenerate.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:416:0: 'Ttc.volume_eq_zero_of_interior_eq_empty' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:417:0: 'Ttc.volume_region_eq_zero_of_interior_empty' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:418:0: 'Ttc.nondegenCubes' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:419:0: 'Ttc.mem_nondegenCubes' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:420:0: 'Ttc.nondegenCubes_subset' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:421:0: 'Ttc.volume_biUnion_nondegenCubes' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:422:0: 'Ttc.volume_sol_eq_volume_biUnion_nondegenCubes' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:423:0: 'Ttc.volSol_eq_toReal_biUnion_nondegenCubes' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:424:0: 'Ttc.toDNF_degForm' depends on axioms: [propext]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:425:0: 'Ttc.mem_toDNFd_degForm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:426:0: 'Ttc.mem_region_pair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:427:0: 'Ttc.mem_region_thinCube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:428:0: 'Ttc.mem_region_fatCube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:429:0: 'Ttc.region_thinCube_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:430:0: 'Ttc.interior_singleton_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:431:0: 'Ttc.interior_region_thinCube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:432:0: 'Ttc.region_thinCube_nonempty' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:433:0: 'Ttc.ball_subset_region_fatCube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:434:0: 'Ttc.region_fatCube_subset_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:435:0: 'Ttc.interior_region_fatCube_nonempty' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:436:0: 'Ttc.degForm_isPositive' depends on axioms: [propext]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:437:0: 'Ttc.degForm_isBounded' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:438:0: 'Ttc.degForm_coeff_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:439:0: 'Ttc.volume_sol_degForm_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:440:0: 'Ttc.volume_sol_degForm_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:441:0: 'Ttc.volSol_degForm_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:442:0: 'Ttc.degForm_hint_fails' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:443:0: 'Ttc.hint_not_derivable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:444:0: 'Ttc.mem_nondegenCubes_degForm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:445:0: 'Ttc.not_isDNFOf_nondegenCubes_degForm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/Degenerate.lean:446:0: 'Ttc.volSol_degForm_eq_pruned' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.Degenerate:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Inscribed transitive imports (legacy)", "0cc63c5eea812fa3"],
+        ["Ttc.Exec.Inscribed:importAllArts", "d84850db3e3671a9"],
+        ["Ttc.Exec.Inputs transitive imports (legacy)", "467e13dd2b1546e1"],
+        ["Ttc.Exec.Inputs:importAllArts", "a40396b64482c568"],
+        ["Ttc.Exec.Geometry transitive imports (legacy)", "3860d04e849b89da"],
+        ["Ttc.Exec.Geometry:importAllArts", "3803d418d6c3ea54"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/Degenerate.lean",
+   "5a9110fc445af669"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.Degenerate", "d910db7664a83558"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "2883b8e68499ee25"}

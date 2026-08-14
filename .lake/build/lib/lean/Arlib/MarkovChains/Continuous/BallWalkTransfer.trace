@@ -1,0 +1,110 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["ce4ff5e7f9b9f55e.olean"],
+  "m": false,
+  "i": "9c9e96e64c0ca18e.ilean",
+  "c": "08a96b2adf7d6ded.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/BallWalkTransfer.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/BallWalkTransfer.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/BallWalkTransfer.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/BallWalkTransfer.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/BallWalkTransfer.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:331:64: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:749:0: 'Arlib.MarkovChains.conductanceSOn_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:750:0: 'Arlib.MarkovChains.le_conductanceS_of_forall_midSets' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:751:0: 'Arlib.MarkovChains.conductanceS_le_conductanceSOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:752:0: 'Arlib.MarkovChains.mul_min_le_flow_of_le_conductance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:753:0: 'Arlib.MarkovChains.volume_inter_le_ellMeasure_add' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:754:0: 'Arlib.MarkovChains.mul_sub_le_flow_ballWalk' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:755:0: 'Arlib.MarkovChains.two_mul_one_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:756:0: 'Arlib.MarkovChains.le_conductanceSOn_ballWalk_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:757:0: 'Arlib.MarkovChains.le_conductanceS_ballWalk_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:758:0: 'Arlib.MarkovChains.le_conductanceS_lazy_ballWalk_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:759:0: 'Arlib.MarkovChains.le_conductanceS_lazy_ballWalk_of_ball_subset' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:760:0: 'Arlib.MarkovChains.conductanceOn_ballWalk_le_of_ell_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:761:0: 'Arlib.MarkovChains.conductance_ballWalk_uniformOn_le_of_ell_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:762:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_ballWalk_of_sConductance' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:763:0: 'Arlib.MarkovChains.uniformOn_unitBall_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:764:0: 'Arlib.MarkovChains.uniformOn_unitBall_halfVolumeBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:765:0: 'Arlib.MarkovChains.three_quarters_le_one_sub_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:766:0: 'Arlib.MarkovChains.isSmooth_param_le_quarter' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkTransfer.lean:767:0: 'Arlib.MarkovChains.exists_ballWalkTransfer_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.BallWalkTransfer:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.HoldingTime transitive imports (legacy)",
+         "f800b4ce5d3b826c"],
+        ["Arlib.MarkovChains.Continuous.HoldingTime:importAllArts",
+         "04ea756e5c7e60fc"],
+        ["Arlib.MarkovChains.Continuous.HitAndRunMixing transitive imports (legacy)",
+         "093d2262522d7a12"],
+        ["Arlib.MarkovChains.Continuous.HitAndRunMixing:importAllArts",
+         "096902e54bf5b036"],
+        ["Arlib.MarkovChains.Continuous.EllFloor transitive imports (legacy)",
+         "95f27f29282256ee"],
+        ["Arlib.MarkovChains.Continuous.EllFloor:importAllArts",
+         "a52759558375a691"],
+        ["Arlib.Convexity.LogConcaveIso transitive imports (legacy)",
+         "d1d7731a7037d49e"],
+        ["Arlib.Convexity.LogConcaveIso:importAllArts", "e67271bdd0210d84"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/BallWalkTransfer.lean",
+   "eda53135f4553930"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.BallWalkTransfer",
+   "fc4a1f8a950dc200"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "e10c0a8a80f205f8"}

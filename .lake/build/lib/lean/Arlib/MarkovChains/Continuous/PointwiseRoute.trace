@@ -1,0 +1,110 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["14b3df4e762efd0d.olean"],
+  "m": false,
+  "i": "0ffeb2a787f16178.ilean",
+  "c": "a921d85f5d1a044d.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/PointwiseRoute.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/PointwiseRoute.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/PointwiseRoute.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/PointwiseRoute.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/PointwiseRoute.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:677:0: 'Arlib.PointwiseRoute.window_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:678:0: 'Arlib.PointwiseRoute.window_of_tvLe_inv_volume' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:679:0: 'Arlib.PointwiseRoute.ratio_bounds_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:680:0: 'Arlib.PointwiseRoute.prodTent_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:681:0: 'Arlib.PointwiseRoute.uniformOn_window' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:682:0: 'Arlib.PointwiseRoute.theorem2_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:683:0: 'Arlib.PointwiseRoute.theorem2_of_tvLe_inv_volume' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:684:0: 'Arlib.PointwiseRoute.theorem2_of_mixesWithin' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:685:0: 'Arlib.PointwiseRoute.conductanceMixingTime_inv_volume_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:686:0: 'Arlib.PointwiseRoute.not_pointwiseClose_of_atom' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:687:0: 'Arlib.PointwiseRoute.not_pointwiseClose_uniformOn_of_atom' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:688:0: 'Arlib.PointwiseRoute.exists_tvLe_with_atom' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:689:0: 'Arlib.PointwiseRoute.condOn_uniformOn_eq_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:690:0: 'Arlib.PointwiseRoute.uniformOn_acceptance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:691:0: 'Arlib.PointwiseRoute.pointwiseClose_condOn_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:692:0: 'Arlib.PointwiseRoute.pointwiseAlmostUniform_of_rejection' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:693:0: 'Arlib.PointwiseRoute.uniformOn_ball_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:694:0: 'Arlib.PointwiseRoute.uniformOn_ball_ball_euclidean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PointwiseRoute.lean:695:0: 'Arlib.PointwiseRoute.exists_theorem2_of_tvLe_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.PointwiseRoute:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.PointwiseMixing transitive imports (legacy)",
+         "5816a04fba7b8386"],
+        ["Arlib.MarkovChains.Continuous.PointwiseMixing:importAllArts",
+         "a015e80b143397e2"],
+        ["Arlib.MarkovChains.Continuous.MixingFromConductance transitive imports (legacy)",
+         "5af0d26625b961ff"],
+        ["Arlib.MarkovChains.Continuous.MixingFromConductance:importAllArts",
+         "40c3a50ba913e126"],
+        ["Arlib.Probability.UniformOn transitive imports (legacy)",
+         "35fdfeb37b37bf99"],
+        ["Arlib.Probability.UniformOn:importAllArts", "210aad2ead2bb9b1"],
+        ["Arlib.Lattice.KV97.Theorem2 transitive imports (legacy)",
+         "76ee9dd374d4ed0e"],
+        ["Arlib.Lattice.KV97.Theorem2:importAllArts", "87fcdb6d9ed3145a"],
+        ["Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar transitive imports (legacy)",
+         "5b90fbfef9f6763b"],
+        ["Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar:importAllArts",
+         "34af014a0206d57f"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/PointwiseRoute.lean",
+   "54d909b7444bed8f"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.PointwiseRoute",
+   "0e1d82dd4a364b92"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "4462b93b204dbcfe"}

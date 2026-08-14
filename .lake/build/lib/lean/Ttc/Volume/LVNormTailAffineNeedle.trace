@@ -1,0 +1,63 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["6bf358e3256c79e9.olean"],
+  "m": false,
+  "i": "9bfe2ccd98115808.ilean",
+  "c": "a0915b6d30a52104.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/LVNormTailAffineNeedle.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/LVNormTailAffineNeedle.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/LVNormTailAffineNeedle.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/LVNormTailAffineNeedle.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/LVNormTailAffineNeedle.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:274:0: 'Ttc.CVAdaptive.norm_needleMap_sq_closest' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:275:0: 'Ttc.CVAdaptive.intervalIntegral_norm_needleMap_sq_decomp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:276:0: 'Ttc.CVAdaptive.localizedNeedle_mass_pos_and_normMoment' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:277:0: 'Ttc.CVAdaptive.localizedNeedle_centeredMoment' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:278:0: 'Ttc.CVAdaptive.sq_sub_needleSegmentCenter_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:279:0: 'Ttc.CVAdaptive.localizedNeedle_variance_le_ambientScale' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/LVNormTailAffineNeedle.lean:280:0: 'Ttc.CVAdaptive.norm_needleMap_segmentCenter_le_sqrtMoment' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.LVNormTailAffineNeedle:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.LVNormTailLocalizationBridge transitive imports (legacy)",
+         "af4912f1476a1b17"],
+        ["Ttc.Volume.LVNormTailLocalizationBridge:importAllArts",
+         "7f1c89462c7712a5"],
+        ["Arlib.Convexity.SharpIsoperimetry transitive imports (legacy)",
+         "d0f2ffa37443d480"],
+        ["Arlib.Convexity.SharpIsoperimetry:importAllArts",
+         "064850d10b539c93"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/LVNormTailAffineNeedle.lean",
+   "7e844e2c5c486378"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.LVNormTailAffineNeedle", "1c40894ddffca423"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "41a634707409f6f4"}

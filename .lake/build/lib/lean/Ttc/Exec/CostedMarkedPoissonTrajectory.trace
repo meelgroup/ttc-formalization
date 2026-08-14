@@ -1,0 +1,57 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["6387841581a21197.olean"],
+  "m": false,
+  "i": "a86c25a34e03af07.ilean",
+  "c": "06f0c10536fc5c6b.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedMarkedPoissonTrajectory.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedMarkedPoissonTrajectory.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedMarkedPoissonTrajectory.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedMarkedPoissonTrajectory.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedMarkedPoissonTrajectory.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CostedMarkedPoissonTrajectory.lean:121:0: 'Ttc.CostedMarkedPoissonTrajectory.finiteSamplerOfFine' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedMarkedPoissonTrajectory.lean:122:0: 'Ttc.CostedMarkedPoissonTrajectory.map_snd_levelZeroLaw_eq_countLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedMarkedPoissonTrajectory.lean:123:0: 'Ttc.CostedMarkedPoissonTrajectory.lintegral_fst_levelZeroLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedMarkedPoissonTrajectory.lean:124:0: 'Ttc.CostedMarkedPoissonTrajectory.map_forgetCost_trajectoryLaw_eq_trajLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedMarkedPoissonTrajectory.lean:125:0: 'Ttc.CostedMarkedPoissonTrajectory.lintegral_finitePrefixQueryCost_trajectoryLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CostedMarkedPoissonTrajectory:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CategoricalPoissonIdentification transitive imports (legacy)",
+         "0fc146d96330d388"],
+        ["Ttc.Exec.CategoricalPoissonIdentification:importAllArts",
+         "fa7721d0e84ed75c"],
+        ["Ttc.Exec.CostedInitialThinningTrajectory transitive imports (legacy)",
+         "f120eec63076f370"],
+        ["Ttc.Exec.CostedInitialThinningTrajectory:importAllArts",
+         "8f7f80ccf4ea1186"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedMarkedPoissonTrajectory.lean",
+   "b80206177fb55091"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CostedMarkedPoissonTrajectory", "18ff7e013e024294"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "a1703f51f0ddfdb1"}

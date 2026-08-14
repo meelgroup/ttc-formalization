@@ -1,0 +1,62 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["7d89e3040b67af5c.olean"],
+  "m": false,
+  "i": "154fb928e15afc6d.ilean",
+  "c": "b090901b4a14f185.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CanonicalOwnerRateCutoff.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CanonicalOwnerRateCutoff.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CanonicalOwnerRateCutoff.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CanonicalOwnerRateCutoff.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CanonicalOwnerRateCutoff.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:35:0: automatically included section variable(s) unused in theorem `Ttc.CanonicalOwnerRateCutoff.measurable_clippedRates`:\n  [Fintype I]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [Fintype I] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:84:8: `mul_le_mul_right'` has been deprecated: Use `mul_le_mul_left` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:204:0: 'Ttc.CanonicalOwnerRateCutoff.clippedPlugin_expectedSampleQueries_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:205:0: 'Ttc.CanonicalOwnerRateCutoff.lintegral_clippedPlugin_expectedSampleQueries_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:206:0: 'Ttc.CanonicalOwnerRateCutoff.lintegral_clippedPlugin_expectedSampleQueries_le_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:207:0: 'Ttc.CanonicalOwnerRateCutoff.clippedPlugin_trajectoryKernel_eq_of_mem' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:208:0: 'Ttc.CanonicalOwnerRateCutoff.compProd_inter_fst_preimage_eq_of_kernel_eq_on' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonicalOwnerRateCutoff.lean:209:0: 'Ttc.CanonicalOwnerRateCutoff.probability_accuracy_transfer_of_agree_on_good' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CanonicalOwnerRateCutoff:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.PolyHybridCanonicalFinal transitive imports (legacy)",
+         "fa2994082bb70301"],
+        ["Ttc.Exec.PolyHybridCanonicalFinal:importAllArts",
+         "e971c5f787f42777"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CanonicalOwnerRateCutoff.lean",
+   "99a4b2840f34499d"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CanonicalOwnerRateCutoff", "947fefa53d84ac50"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "ef60a4c772a0b982"}

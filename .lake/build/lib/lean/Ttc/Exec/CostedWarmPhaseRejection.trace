@@ -1,0 +1,69 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["537e733020c6cb39.olean"],
+  "m": false,
+  "i": "228a8fba529ffeb6.ilean",
+  "c": "fa15164bc07b8926.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedWarmPhaseRejection.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedWarmPhaseRejection.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedWarmPhaseRejection.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedWarmPhaseRejection.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedWarmPhaseRejection.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:111:0: automatically included section variable(s) unused in theorem `Ttc.CostedWarmPhaseRejection.prod_rejectWeight_eq_survivalIndicator`:\n  [MeasurableSpace E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [MeasurableSpace E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:170:25: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:574:6: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:578:42: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:587:0: 'Ttc.CostedWarmPhaseRejection.lintegral_stoppedQueryCost' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:588:0: 'Ttc.CostedWarmPhaseRejection.map_snd_warmPhaseCostLaw_eq_phaseLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:589:0: 'Ttc.CostedWarmPhaseRejection.lintegral_fst_warmPhaseCostLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedWarmPhaseRejection.lean:590:0: 'Ttc.CostedWarmPhaseRejection.six_mul_lintegral_warmPhaseCostLaw_le_eighty_mul_adjustable' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CostedWarmPhaseRejection:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.RawGaussianLazyStoppedExecution transitive imports (legacy)",
+         "8189e173d7606787"],
+        ["Ttc.Exec.RawGaussianLazyStoppedExecution:importAllArts",
+         "537376e002f824d9"],
+        ["Ttc.Volume.CVFreshRestartKernel transitive imports (legacy)",
+         "99afb0351a3d1ee8"],
+        ["Ttc.Volume.CVFreshRestartKernel:importAllArts", "e7bd6fcf30f70acb"],
+        ["Mathlib.Probability.Independence.Integration transitive imports (legacy)",
+         "773e0216486902c6"],
+        ["Mathlib.Probability.Independence.Integration:importAllArts",
+         "2d4f108b12f86d88"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedWarmPhaseRejection.lean",
+   "0f97c0c52a8a4b2f"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CostedWarmPhaseRejection", "4e0d9ddea8d94fb3"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "5c72e343b0a5d08c"}

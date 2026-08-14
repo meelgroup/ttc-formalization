@@ -1,0 +1,94 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["7982d409ee551835.olean"],
+  "m": false,
+  "i": "9f5f9df1fe480b21.ilean",
+  "c": "45f490d03240591b.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/ColdTruncation.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/ColdTruncation.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/ColdTruncation.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/ColdTruncation.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/ColdTruncation.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:702:0: 'Arlib.MarkovChains.convex_inter_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:703:0: 'Arlib.MarkovChains.measurableSet_inter_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:704:0: 'Arlib.MarkovChains.unitBall_subset_inter_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:705:0: 'Arlib.MarkovChains.norm_le_of_mem_inter_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:706:0: 'Arlib.MarkovChains.volume_inter_closedBall_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:707:0: 'Arlib.MarkovChains.volume_inter_closedBall_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:708:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_univ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:709:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_ne_top_of_univ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:710:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_norm_gt_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:711:0: 'Arlib.MarkovChains.le_lintegral_gaussianWeight_of_unitBall_subset' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:712:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_sdiff_le_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:713:0: 'Arlib.MarkovChains.tvLe_condOn_subset' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:714:0: 'Arlib.MarkovChains.tvLe_coolLaw_inter_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:715:0: 'Arlib.MarkovChains.mixesWithin_lazy_speedyMetropolisGaussian_coldStep_truncated' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:716:0: 'Arlib.MarkovChains.mixesWithin_lazy_speedyMetropolisGaussian_cold_truncated' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:717:0: 'Arlib.MarkovChains.coldTruncation_bound_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ColdTruncation.lean:718:0: 'Arlib.MarkovChains.coldTruncation_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.ColdTruncation:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.ColdPhaseRegime transitive imports (legacy)",
+         "5a37401823647a55"],
+        ["Arlib.MarkovChains.Continuous.ColdPhaseRegime:importAllArts",
+         "5390580b27c39ee6"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanRoute transitive imports (legacy)",
+         "4ac3e292f5ccf2bb"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanRoute:importAllArts",
+         "d1b22c4bee0be826"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/ColdTruncation.lean",
+   "d79b9fe1e419c4ce"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.ColdTruncation",
+   "cc90896bb93615e7"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "8e461ad3e589163e"}

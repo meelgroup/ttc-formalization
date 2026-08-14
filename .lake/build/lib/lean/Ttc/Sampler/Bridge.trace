@@ -1,0 +1,126 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["e0298dd195f13883.olean"],
+  "m": false,
+  "i": "0bf03ab883cf2415.ilean",
+  "c": "0a2384cdcabc0d92.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/Bridge.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/Bridge.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/Bridge.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/Bridge.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/Bridge.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1164:0: 'Ttc.card_eq_ncard_of_equiv' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1165:0: 'Ttc.almostUniform_of_ratio_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1166:0: 'Ttc.almostUniform_transport' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1167:0: 'Ttc.almostUniform_of_kv97' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1168:0: 'Ttc.almostUniform_of_kv97_density' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1169:0: 'Ttc.escape_of_mem_body' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1170:0: 'Ttc.exists_kv97_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1171:0: 'Ttc.almostUniform_of_kv97_window' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1172:0: 'Ttc.uniformOn_prodTent_window' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1173:0: 'Ttc.prodTent_window_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1174:0: 'Ttc.almostUniform_of_kv97_law' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1175:0: 'Ttc.KV97Sampler.volume_inflated_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1176:0: 'Ttc.KV97Sampler.volume_inflated_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1177:0: 'Ttc.prodTent_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1178:0: 'Ttc.TtcProb.volume_region_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1179:0: 'Ttc.TtcProb.lattice_ncard_pos_cube'' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1180:0: 'Ttc.TtcProb.exists_idx_enum' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1181:0: 'Ttc.TtcProb.epsPrime_le_five_eighths' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1182:0: 'Ttc.TtcProb.epsPrime_le_one_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1183:0: 'Ttc.TtcProb.theta_window_cube_of_kv97' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1184:0: 'Ttc.TtcProb.theta_window_cube_of_kv97_law' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1185:0: 'Ttc.TtcProb.lattice_finite_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1186:0: 'Ttc.TtcProb.samp_almostUniform_subtype' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1187:0: 'Ttc.TtcProb.samp_unif' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1188:0: 'Ttc.TtcProb.samp_almostUniform' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1189:0: 'Ttc.TtcProb.theta_lo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Bridge.lean:1190:0: 'Ttc.TtcProb.theta_hi' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Sampler.Bridge:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Lattice.PerCube transitive imports (legacy)", "c337fef494e066f2"],
+        ["Ttc.Lattice.PerCube:importAllArts", "53870d11ed1e4c78"],
+        ["Arlib.Lattice.Basic transitive imports (legacy)", "78059ef896057819"],
+        ["Arlib.Lattice.Basic:importAllArts", "e7c95b819297cdff"],
+        ["Arlib.Lattice.KV97.Corollary transitive imports (legacy)",
+         "024874e7ae55c490"],
+        ["Arlib.Lattice.KV97.Corollary:importAllArts", "e281cc2f6831927a"],
+        ["Arlib.MarkovChains.Continuous.PointwiseRoute transitive imports (legacy)",
+         "f71d56fe6e164a01"],
+        ["Arlib.MarkovChains.Continuous.PointwiseRoute:importAllArts",
+         "524432a63bd0a96d"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/Bridge.lean",
+   "17a24e01bba1291a"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Sampler.Bridge", "a67169964c19e841"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "c4dea5fa25ae0921"}

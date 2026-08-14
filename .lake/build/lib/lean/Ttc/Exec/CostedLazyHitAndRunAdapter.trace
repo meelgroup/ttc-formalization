@@ -1,0 +1,66 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["5e4f5ec402482045.olean"],
+  "m": false,
+  "i": "d65ee5fc7c94ef6c.ilean",
+  "c": "9a2feb2275f01cbd.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedLazyHitAndRunAdapter.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedLazyHitAndRunAdapter.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedLazyHitAndRunAdapter.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedLazyHitAndRunAdapter.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedLazyHitAndRunAdapter.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:276:0: 'Ttc.CostedLazyHitAndRunAdapter.map_snd_endpointLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:277:0: 'Ttc.CostedLazyHitAndRunAdapter.lintegral_fst_endpointLaw_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:278:0: 'Ttc.CostedLazyHitAndRunAdapter.map_snd_highDimHybridEndpointLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:279:0: 'Ttc.CostedLazyHitAndRunAdapter.expectedQueryKV97SamplerOfRealization' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:280:0: 'Ttc.CostedLazyHitAndRunAdapter.lintegral_fst_costedKV97Endpoint_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:281:0: 'Ttc.CostedLazyHitAndRunAdapter.expectedQueryKV97LazyHitAndRunSampler' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedLazyHitAndRunAdapter.lean:282:0: 'Ttc.CostedLazyHitAndRunAdapter.expectedQueryKV97HybridHighSampler' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CostedLazyHitAndRunAdapter:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.SequentialCostedKernel transitive imports (legacy)",
+         "06ae391f1c068dd3"],
+        ["Ttc.Exec.SequentialCostedKernel:importAllArts", "893074e509cc98d6"],
+        ["Ttc.Exec.KV97RoundedEndpointBridge transitive imports (legacy)",
+         "424a55460b074559"],
+        ["Ttc.Exec.KV97RoundedEndpointBridge:importAllArts",
+         "c76b610ede196975"],
+        ["Ttc.Sampler.ConstructHybridUncond transitive imports (legacy)",
+         "9505679f1e9a1728"],
+        ["Ttc.Sampler.ConstructHybridUncond:importAllArts",
+         "43d4afff5aaff275"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedLazyHitAndRunAdapter.lean",
+   "01e37f482a4d4887"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CostedLazyHitAndRunAdapter", "ab874aa0f80e2397"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "abf594fb998974bd"}

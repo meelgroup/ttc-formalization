@@ -1,0 +1,69 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["634f2cf09078931e.olean"],
+  "m": false,
+  "i": "6381fbfab35d91d9.ilean",
+  "c": "ae06ff50ad9630c2.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVScoreSeedExceptionalCost.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVScoreSeedExceptionalCost.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVScoreSeedExceptionalCost.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVScoreSeedExceptionalCost.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVScoreSeedExceptionalCost.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:201:0: 'Ttc.CVScoreSeedExceptionalCost.tvLe_seed_of_scoreSeedReference' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:202:0: 'Ttc.CVScoreSeedExceptionalCost.tvLe_bind_seed_of_scoreSeedReference' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:203:0: 'Ttc.CVScoreSeedExceptionalCost.bind_seed_badEvent_le_add' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:204:0: 'Ttc.CVScoreSeedExceptionalCost.tvLe_pi_scoreSeedReference' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:205:0: 'Ttc.CVScoreSeedExceptionalCost.tvLe_pi_scoreSeedReference_const' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:206:0: 'Ttc.CVScoreSeedExceptionalCost.standard_finiteRetry_nextPhase_badEvent_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:207:0: 'Ttc.CVScoreSeedExceptionalCost.standardShrink_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVScoreSeedExceptionalCost.lean:208:0: 'Ttc.CVScoreSeedExceptionalCost.standard_gaussianScoreSeedKernel_nextPhase_badEvent_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVScoreSeedExceptionalCost:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CVGaussianScoreSeedPhaseKernel transitive imports (legacy)",
+         "b0ed8d58714061ef"],
+        ["Ttc.Exec.CVGaussianScoreSeedPhaseKernel:importAllArts",
+         "79206e3690d63f00"],
+        ["Arlib.Probability.TVKernelHeterogeneous transitive imports (legacy)",
+         "8a4f2bce743cbc7e"],
+        ["Arlib.Probability.TVKernelHeterogeneous:importAllArts",
+         "313f56a666346aa4"],
+        ["Arlib.Probability.TVTensor transitive imports (legacy)",
+         "0a8084342c236346"],
+        ["Arlib.Probability.TVTensor:importAllArts", "1b8d82dd075fc621"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVScoreSeedExceptionalCost.lean",
+   "af1d7b2669b92437"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVScoreSeedExceptionalCost", "b681317c65adce17"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "e3e2f951f1a9845f"}

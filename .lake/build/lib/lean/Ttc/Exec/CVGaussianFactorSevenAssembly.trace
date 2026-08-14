@@ -1,0 +1,93 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["780b0eb977e57528.olean"],
+  "m": false,
+  "i": "c6b4b85f38cdeae8.ilean",
+  "c": "420c58db8349aee3.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGaussianFactorSevenAssembly.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGaussianFactorSevenAssembly.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGaussianFactorSevenAssembly.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGaussianFactorSevenAssembly.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGaussianFactorSevenAssembly.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:619:23: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:622:13: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:678:0: 'Ttc.CVGaussianFactorSevenAssembly.operational_phaseScore_sq_moment_le_factor' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:679:0: 'Ttc.CVGaussianFactorSevenAssembly.operational_phaseScore_sq_moment_le_seven' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:680:0: 'Ttc.CVGaussianFactorSevenAssembly.operational_path_phaseScore_memLp_and_sq_moment_le_factor' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:681:0: 'Ttc.CVGaussianFactorSevenAssembly.scoreAware_phaseScore_slack_seven' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:682:0: 'Ttc.CVGaussianFactorSevenAssembly.operational_path_phaseScore_scoreAware_active_seven' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:683:0: 'Ttc.CVGaussianFactorSevenAssembly.scalar_seven_to_streamAverage_six' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:684:0: 'Ttc.CVGaussianFactorSevenAssembly.clipped_sq_moment_le_eight_correctedRuntime_of_raw_six' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:685:0: 'Ttc.CVGaussianFactorSevenAssembly.clipped_streamAverage_sq_moment_le_eight_of_scalar_seven' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:686:0: 'Ttc.CVGaussianFactorSevenAssembly.corrected_independentStreams_accuracy_four_fifths_biasAware_of_scalarSeven' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:687:0: 'Ttc.CVGaussianFactorSevenAssembly.independentCosted_accuracy_of_pathAccuracy' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianFactorSevenAssembly.lean:688:0: 'Ttc.CVGaussianFactorSevenAssembly.guardedExpectedQueryVolumeAlgorithm_gaussianCapped_of_pathAccuracy' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVGaussianFactorSevenAssembly:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CVGaussianScoreAwareMoment transitive imports (legacy)",
+         "1d4a25c1bfac2302"],
+        ["Ttc.Exec.CVGaussianScoreAwareMoment:importAllArts",
+         "1c6a359ac66aef49"],
+        ["Ttc.Exec.CVGaussianScoreAwareIndependent transitive imports (legacy)",
+         "bbe4f78c0d58e658"],
+        ["Ttc.Exec.CVGaussianScoreAwareIndependent:importAllArts",
+         "5388e320689df855"],
+        ["Ttc.Exec.CVIndependentStreamBiasAccuracy transitive imports (legacy)",
+         "95616417ec7b4052"],
+        ["Ttc.Exec.CVIndependentStreamBiasAccuracy:importAllArts",
+         "e84aace92e685994"],
+        ["Ttc.Exec.CVCorrectedClippingArithmetic transitive imports (legacy)",
+         "ac415df125a361ab"],
+        ["Ttc.Exec.CVCorrectedClippingArithmetic:importAllArts",
+         "97785ba3f28c63dd"],
+        ["Ttc.Exec.CVGaussianGuardedExpectedVolume transitive imports (legacy)",
+         "30e6a7804f5aee75"],
+        ["Ttc.Exec.CVGaussianGuardedExpectedVolume:importAllArts",
+         "65b8ba2b6ddf91d3"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGaussianFactorSevenAssembly.lean",
+   "3d8e5db0148d32ac"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVGaussianFactorSevenAssembly", "19c34cfc14fa5a61"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "b417061b55df8bc4"}

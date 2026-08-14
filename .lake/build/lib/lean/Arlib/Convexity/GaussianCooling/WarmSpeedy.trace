@@ -1,0 +1,85 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["f9e7375ece365578.olean"],
+  "m": false,
+  "i": "d27867afcf2351d3.ilean",
+  "c": "19d9ec083401a183.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/WarmSpeedy.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/WarmSpeedy.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/WarmSpeedy.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/WarmSpeedy.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/WarmSpeedy.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:202:10: `mul_le_mul_right'` has been deprecated: Use `mul_le_mul_left` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:214:8: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:234:11: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:274:14: `mul_le_mul_right'` has been deprecated: Use `mul_le_mul_left` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:523:42: 'norm_num' tactic does nothing\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:523:42: this tactic is never executed\n\nNote: This linter can be disabled with `set_option linter.unreachableTactic false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:573:0: 'Arlib.GaussianCooling.exists_supported_on_shrunken_not_isWarm' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:574:0: 'Arlib.GaussianCooling.isWarm_ellGaussianProb_of_supported_on_shrunken' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:575:0: 'Arlib.GaussianCooling.isWarm_condOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:576:0: 'Arlib.GaussianCooling.half_le_lintegral_gaussianWeight_smul_set' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:577:0: 'Arlib.GaussianCooling.half_le_coolLaw_smul_set' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:578:0: 'Arlib.GaussianCooling.isWarm_condOn_coolLaw_ellGaussianProb' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:579:0: 'Arlib.GaussianCooling.tvLe_speedyRejection_coolLaw_of_mixing_warmStart' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:580:0: 'Arlib.GaussianCooling.tvLe_speedyRejection_coolLaw_of_mixing_warmStart_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.GaussianCooling.WarmSpeedy:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.GaussianCooling.PhaseSamplerTV transitive imports (legacy)",
+         "007f300d5a0ebbee"],
+        ["Arlib.Convexity.GaussianCooling.PhaseSamplerTV:importAllArts",
+         "ff7150cc828a9115"],
+        ["Arlib.Convexity.GaussianCooling.WarmChain transitive imports (legacy)",
+         "c704110876f0efd8"],
+        ["Arlib.Convexity.GaussianCooling.WarmChain:importAllArts",
+         "e33a93501450901c"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/WarmSpeedy.lean",
+   "ae4480d8d1a8ae2b"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.GaussianCooling.WarmSpeedy",
+   "9a3e49d3bf82cf34"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "d0edcd5cd325d3b6"}

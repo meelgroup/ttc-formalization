@@ -1,0 +1,104 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["1bdf015d2540f455.olean"],
+  "m": false,
+  "i": "cc38a6c0d929d45f.ilean",
+  "c": "de570e8867a8f7b1.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Witness/Inputs.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Witness/Inputs.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Witness/Inputs.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Witness/Inputs.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Witness/Inputs.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:367:0: Ttc.TwoCube.ttc_volume_inputs_two_cube : ∀ (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1),\n  0 < δ →\n    δ ≤ 1 →\n      1 - δ ≤ Ttc.TwoCube.twoAccD n hn ε (4 * δ / 5) hε0 hε1 ∧\n        ∀ (c : ℕ → Ttc.Space n)\n          (t :\n            ℕ →\n              Fin\n                  (Ttc.latticeCount (Ttc.TwoCube.MTT n hn ε (4 * δ / 5) hε0 hε1) (Ttc.TwoCube.twoForm n)\n                    (Ttc.TwoCube.rhoT n hn ε (4 * δ / 5) hε0 hε1)) →\n                ℕ)\n          (cVol cSample thr : ℕ),\n          ↑thr = (Ttc.TwoCube.parT n hn ε (4 * δ / 5) hε0 hε1).thresh →\n            Ttc.Terminates (Ttc.TwoCube.parT n hn ε (4 * δ / 5) hε0 hε1)\n                (Ttc.coveredOracles (Ttc.TwoCube.MTT n hn ε (4 * δ / 5) hε0 hε1) (Ttc.TwoCube.twoForm n)\n                  (Ttc.TwoCube.rhoT n hn ε (4 * δ / 5) hε0 hε1) (Ttc.TwoCube.volTd n hn ε (4 * δ / 5) hε0 hε1 c) t)\n                (Ttc.toDNFd (Ttc.TwoCube.twoForm n)) →\n              Ttc.runCost (Ttc.TwoCube.parT n hn ε (4 * δ / 5) hε0 hε1)\n                  (Ttc.coveredOracles (Ttc.TwoCube.MTT n hn ε (4 * δ / 5) hε0 hε1) (Ttc.TwoCube.twoForm n)\n                    (Ttc.TwoCube.rhoT n hn ε (4 * δ / 5) hε0 hε1) (Ttc.TwoCube.volTd n hn ε (4 * δ / 5) hε0 hε1 c) t)\n                  cVol cSample (Ttc.TwoCube.rhoT n hn ε (4 * δ / 5) hε0 hε1) (Ttc.toDNFd (Ttc.TwoCube.twoForm n)) ≤\n                List.length (Ttc.toDNFd (Ttc.TwoCube.twoForm n)) * (cVol + cSample * thr)",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:369:0: 'Ttc.TwoCube.toDNFd_twoForm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:370:0: 'Ttc.TwoCube.atomSet_atomsT' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:371:0: 'Ttc.TwoCube.ttcParams_congr' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:372:0: 'Ttc.TwoCube.inputParams_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:373:0: 'Ttc.TwoCube.cenD' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:374:0: 'Ttc.TwoCube.cenD_toDNF' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:375:0: 'Ttc.TwoCube.coeff_ne_zero_two_d' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:376:0: 'Ttc.TwoCube.ball_subset_two_d' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:377:0: 'Ttc.TwoCube.big_two_d' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:378:0: 'Ttc.TwoCube.sampTd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:379:0: 'Ttc.TwoCube.volTd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:380:0: 'Ttc.TwoCube.ratesTd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:381:0: 'Ttc.TwoCube.twoProbD' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:382:0: 'Ttc.TwoCube.twoProbD_def' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:383:0: 'Ttc.TwoCube.twoAccD' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:384:0: 'Ttc.TwoCube.ttc_volume_inputs_two_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:385:0: 'Ttc.TwoCube.twoProbD_eq_twoProb' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:386:0: 'Ttc.TwoCube.twoAccD_eq_twoAcc' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:387:0: 'Ttc.TwoCube.two_cube_inputs_acc_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:388:0: 'Ttc.TwoCube.ttc_volume_inputs_two_cube_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/Inputs.lean:389:0: 'Ttc.TwoCube.twoProbD_pos_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Witness.Inputs:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Inputs transitive imports (legacy)", "467e13dd2b1546e1"],
+        ["Ttc.Exec.Inputs:importAllArts", "a40396b64482c568"],
+        ["Ttc.Witness.TwoCube transitive imports (legacy)", "2e2d3e09b947a993"],
+        ["Ttc.Witness.TwoCube:importAllArts", "c598a7d207552504"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Witness/Inputs.lean",
+   "6ab45d76ed4f3ac5"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Witness.Inputs", "9c61a08a929e2a14"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9f7160fc8679568b"}

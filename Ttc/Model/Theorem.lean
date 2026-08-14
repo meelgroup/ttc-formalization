@@ -5,12 +5,15 @@ Released under Apache 2.0 license.
 import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Program
 import Ttc.Exec.PricedHeadline
+import Ttc.Exec.SamplePrice
 
 /-!
 # The main theorem: `thm:volumettc` + `thm:runtime` for `TTC(F, ε, δ)`
 
-The **statement layer**: one theorem, `Ttc.ttc_volume_estimate`, and nothing else — no
-definition, no auxiliary lemma, no proof to work through.  The accuracy half comes from
+The legacy statement-layer theorem is `Ttc.ttc_volume_estimate`.  The additional theorem
+`Ttc.ttc_volume_estimate_accounted` fixes its accounting defect by charging the concrete
+hit-and-miss/lazy-ball-walk run at the two prices actually proved for that run.  The
+accuracy half comes from
 `Ttc.ttc_volume_estimate_parametric` and the running-time half from
 `Ttc.PricedHeadline.all_ttc_cost_le_quartic`, both in `Ttc/Exec/PricedHeadline.lean`.
 
@@ -39,14 +42,15 @@ Audit path: `Model/`'s four files, `Ttc/Probability/`'s four, and `Ttc/Geometry/
 `#modelClosureOfType Ttc.ttc_volume_estimate` (`Audit/ClosureCheck`) fails the build if any
 constant in this theorem's *type* is defined outside them.
 
-## ⚠ The two prices are fixed — and they are not the run's own prices ⚠
+## ⚠ The legacy theorem's two prices are not the run's own prices ⚠
 
 `Ttc.ttc` executes neither oracle being priced: its bundle `Ttc.algOracles` is a closed
 term over `Ttc.mcVol` — hit-and-miss Monte Carlo — whose sampling law is the lazy ball
 walk.  `cVol`/`cSample` are unit multipliers in `Ttc.stepCost`, so substituting *any* pair
 of naturals yields a law of this shape; at `0` the charged cost is identically `0`.
 Charging `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` inside `Ttc.ttc` is a **modelling
-choice, not a costing of this run**.  The prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`)
+choice, not a costing of this run**.  Use `ttc_volume_estimate_accounted` for the repaired
+statement.  The prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`)
 and `Ttc.ttcSampPrice` (`Exec/SamplePrice`), and both are exponential in `n`.  Read the
 boxed warning at the head of `Ttc/Exec/PricedHeadline.lean` before quoting the running-time
 conjunct, and **note that nothing anywhere proves `TTC` runs in `O(m·n⁴)`**: the
@@ -74,6 +78,41 @@ namespace Ttc
 
 open MeasureTheory Set
 open Ttc.Monadic
+
+/-- The existing TTC execution charged at the two uniform prices that are actually proved
+for its hit-and-miss volume calls and lazy-ball-walk sample calls.  This does not change
+the estimator law; it repairs only the accounting coordinate. -/
+noncomputable def ttcAccounted {A : Type*} {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ) : Measure (ℝ × ℕ) :=
+  ttcCharged atoms φ ε δ (ttcVolPrice atoms φ ε δ) (ttcSampPrice atoms φ ε δ)
+
+/-- Final theorem for the run that this repository actually implements.
+
+Unlike the legacy `ttc_volume_estimate`, the second coordinate is charged using
+`ttcVolPrice` and `ttcSampPrice`, the proved uniform bounds for the concrete
+hit-and-miss/lazy-ball-walk oracle bundle.  The resulting expression is not claimed to be
+polynomial—those two prices are exponential—but accuracy and cost now refer to the same
+honestly accounted run. -/
+theorem ttc_volume_estimate_accounted {A : Type*} {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
+    (hφ : φ.IsPositive)
+    (hpos : 0 < volSol (atomSet atoms) φ) :
+    (1 - δ ≤
+      Pr[r ← ttcAccounted atoms φ ε δ;
+        r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
+    ∧
+    (All[r ← ttcAccounted atoms φ ε δ;
+      (r.2 : ℝ) ≤
+        ((toDNFd (preprocess atoms φ)).length : ℝ)
+          * (((ttcVolPrice atoms φ ε δ : ℕ) : ℝ) +
+            ((ttcSampPrice atoms φ ε δ : ℕ) : ℝ) *
+              (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
+                + 15 * (Real.log (15 / (2 * δ))
+                  + Real.log ((toDNFd (preprocess atoms φ)).length)) + 1))]) := by
+  simpa only [ttcAccounted] using
+    ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
+      (ttcVolPrice atoms φ ε δ) (ttcSampPrice atoms φ ε δ)
 
 /-- **`thm:volumettc` + `thm:runtime`, at two fixed per-call prices.**  `TTC` is run on
 `F = (atoms, φ)` at accuracy `ε` and confidence `δ`; both halves speak about the same run.
@@ -136,5 +175,6 @@ theorem ttc_volume_estimate {A : Type*} {n : ℕ}
         (PricedHeadline.cvPrice_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1) hcS⟩
 
 #print axioms ttc_volume_estimate
+#print axioms ttc_volume_estimate_accounted
 
 end Ttc

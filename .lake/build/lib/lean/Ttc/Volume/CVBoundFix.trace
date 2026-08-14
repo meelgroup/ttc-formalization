@@ -1,0 +1,91 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["a9469b29728b49df.olean"],
+  "m": false,
+  "i": "ee5ee865218d2140.ilean",
+  "c": "282cec41778a2b54.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVBoundFix.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVBoundFix.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVBoundFix.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVBoundFix.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVBoundFix.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:657:0: 'Ttc.CVGuard' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:658:0: 'Ttc.clampScore' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:659:0: 'Ttc.clampScore_of_guard' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:660:0: 'Ttc.clampScore_of_not_guard' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:661:0: 'Ttc.measurable_clampScore' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:662:0: 'Ttc.memLp_two_clampScore' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:663:0: 'Ttc.nontrivial_space' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:664:0: 'Ttc.volume_ball_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:665:0: 'Ttc.exists_admissible_volume_gt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:666:0: 'Ttc.no_uniform_score_bound_of_phases_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:667:0: 'Ttc.exists_no_uniform_score_bound_of_phases_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:668:0: 'Ttc.no_uniform_score_bound_concrete' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:669:0: 'Ttc.clampScore_eq_of_guard' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:670:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:671:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBound_est_of_guard' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:672:0: 'Ttc.oneRatio' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:673:0: 'Ttc.oneRatio_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVBoundFix.lean:674:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanGuardedBoundWitnessOnePhase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.CVBoundFix:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.CVInstantiate transitive imports (legacy)",
+         "49d48c9ed1f9b0bf"],
+        ["Ttc.Volume.CVInstantiate:importAllArts", "05010fea1e645c09"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVBoundFix.lean",
+   "e7e1bef7116d50ba"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.CVBoundFix", "29abc92cfece2e26"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "96e4ddf3cb5d1ae1"}

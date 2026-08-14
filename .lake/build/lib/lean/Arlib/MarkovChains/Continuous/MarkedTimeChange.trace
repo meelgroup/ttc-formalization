@@ -1,0 +1,54 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["0044b7102c3008ce.olean"],
+  "m": false,
+  "i": "cd1a40094f8438a2.ilean",
+  "c": "6bbadcd80ec0d0b7.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MarkedTimeChange.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MarkedTimeChange.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MarkedTimeChange.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MarkedTimeChange.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MarkedTimeChange.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MarkedTimeChange.lean:327:0: 'Arlib.MarkovChains.markedCount_markedTime' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MarkedTimeChange.lean:328:0: 'Arlib.MarkovChains.marked_at_markedTime_succ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MarkedTimeChange.lean:329:0: 'Arlib.MarkovChains.markedChain_markedCount' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MarkedTimeChange.lean:330:0: 'Arlib.MarkovChains.measurable_markedTime' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MarkedTimeChange.lean:331:0: 'Arlib.MarkovChains.measurable_markedChain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.MarkedTimeChange:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.TimeChange transitive imports (legacy)",
+         "0865562c3b2d399c"],
+        ["Arlib.MarkovChains.Continuous.TimeChange:importAllArts",
+         "5082e2996683ca1a"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MarkedTimeChange.lean",
+   "deb892de3a08a299"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.MarkedTimeChange",
+   "96a8c49190f89ec9"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "3764cf7f45247352"}

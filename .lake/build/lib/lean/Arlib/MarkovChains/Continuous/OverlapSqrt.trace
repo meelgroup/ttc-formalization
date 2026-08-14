@@ -1,0 +1,92 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["b7afc2506e4fce1e.olean"],
+  "m": false,
+  "i": "ca04deedc74c4432.ilean",
+  "c": "27c6eb7e6679fe57.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/OverlapSqrt.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/OverlapSqrt.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/OverlapSqrt.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/OverlapSqrt.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/OverlapSqrt.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:886:0: 'Arlib.MarkovChains.quarter_le_one_sub_inv_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:887:0: 'Arlib.MarkovChains.volume_lens_ge_min_ball_inter_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:888:0: 'Arlib.MarkovChains.kls_lemma35_at_sep_sqrt_dim_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:889:0: 'Arlib.MarkovChains.volume_ball_inter_le_of_ell_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:890:0: 'Arlib.MarkovChains.max_volume_ball_inter_le_of_ell_comparable' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:891:0: 'Arlib.MarkovChains.one_le_twelve_mul_speedyWalk_add_of_comparable' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:892:0: 'Arlib.MarkovChains.overlap_speedyWalk_sqrt_of_ell_comparable' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:893:0: 'Arlib.MarkovChains.overlap_speedyWalk_sqrt_of_ell_comparable_global' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:894:0: 'Arlib.MarkovChains.ell_ne_zero_of_volume_ball_inter_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:895:0: 'Arlib.MarkovChains.ell_le_of_densDist_ell_lt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:896:0: 'Arlib.MarkovChains.overlap_speedyWalk_sqrt_of_densDist_ell' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:897:0: 'Arlib.MarkovChains.conductance_speedyGaussian_ge_of_ell_comparable' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:898:0: 'Arlib.MarkovChains.exists_overlap_speedyWalk_sqrt_comparable_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:899:0: 'Arlib.MarkovChains.not_ell_le_of_volume_ball_inter_gap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/OverlapSqrt.lean:900:0: 'Arlib.MarkovChains.exists_ell_not_comparable_at_sqrt_dim_counterexample' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.OverlapSqrt:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.LensMin transitive imports (legacy)",
+         "5964dbb53702a459"],
+        ["Arlib.MarkovChains.Continuous.LensMin:importAllArts",
+         "ac7f15e50e18b2f0"],
+        ["Arlib.MarkovChains.Continuous.LensHalfspace transitive imports (legacy)",
+         "333c027724eda6e6"],
+        ["Arlib.MarkovChains.Continuous.LensHalfspace:importAllArts",
+         "085febf3cc24d317"],
+        ["Arlib.MarkovChains.Continuous.SpeedyOverlap transitive imports (legacy)",
+         "2d396d3ff327d1b1"],
+        ["Arlib.MarkovChains.Continuous.SpeedyOverlap:importAllArts",
+         "356598c44590177e"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/OverlapSqrt.lean",
+   "53491a026de1e1be"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.OverlapSqrt",
+   "690953ab04c831cd"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "c31ba5e45c1c9703"}

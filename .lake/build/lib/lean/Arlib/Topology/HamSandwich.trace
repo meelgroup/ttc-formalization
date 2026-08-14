@@ -1,0 +1,85 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["3e1cbce05d754f8d.olean"],
+  "m": false,
+  "i": "de8f3a7fad5c7382.ilean",
+  "c": "796b7a82fab78cc6.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Topology/HamSandwich.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Topology/HamSandwich.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Topology/HamSandwich.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Topology/HamSandwich.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Topology/HamSandwich.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:167:60: `ContinuousLinearMap.neg_apply` has been deprecated: Use `neg_apply` instead\n\nNote: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.neg_apply` to `neg_apply x`).",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:216:0: automatically included section variable(s) unused in theorem `Arlib.continuousAt_setIntegral_param`:\n  [NormedAddCommGroup E]\n  [NormedSpace ℝ E]\n  [BorelSpace E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:267:8: automatically included section variable(s) unused in theorem `_private.Arlib.Topology.HamSandwich.0.Arlib.cutFun_apply`:\n  [MeasurableSpace E]\n  [BorelSpace E]\n  [FiniteDimensional ℝ E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [MeasurableSpace E] [BorelSpace E] [FiniteDimensional ℝ E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:270:8: automatically included section variable(s) unused in theorem `_private.Arlib.Topology.HamSandwich.0.Arlib.cutFun_neg`:\n  [MeasurableSpace E]\n  [BorelSpace E]\n  [FiniteDimensional ℝ E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [MeasurableSpace E] [BorelSpace E] [FiniteDimensional ℝ E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:283:27: `ContinuousLinearMap.zero_apply` has been deprecated: Use `zero_apply` instead\n\nNote: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.zero_apply` to `zero_apply x`).",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:277:8: automatically included section variable(s) unused in theorem `_private.Arlib.Topology.HamSandwich.0.Arlib.cutFun_ne_zero`:\n  [MeasurableSpace E]\n  [BorelSpace E]\n  [FiniteDimensional ℝ E]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [MeasurableSpace E] [BorelSpace E] [FiniteDimensional ℝ E] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:467:58: `ContinuousLinearMap.zero_apply` has been deprecated: Use `zero_apply` instead\n\nNote: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.zero_apply` to `zero_apply x`).",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:476:58: `ContinuousLinearMap.zero_apply` has been deprecated: Use `zero_apply` instead\n\nNote: The updated constant is in a different namespace. Dot notation may need to be changed (e.g., from `x.zero_apply` to `zero_apply x`).",
+   "level": "warning"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:565:0: 'Arlib.measure_level_eq_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:566:0: 'Arlib.setIntegral_halfSpace_add_neg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:567:0: 'Arlib.continuousAt_setIntegral_param' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:568:0: 'Arlib.exists_halfSpace_bisecting_pair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:569:0: 'Arlib.exists_halfSpace_bisecting_pair_of_finrank' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:570:0: 'Arlib.exists_two_sided_halfSpace_signed' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Topology/HamSandwich.lean:571:0: 'Arlib.exists_two_sided_halfSpace_signed_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Topology.HamSandwich:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.LocalizationLemma transitive imports (legacy)",
+         "95fe5b60c5221b48"],
+        ["Arlib.Convexity.LocalizationLemma:importAllArts", "0e4eace7d3114c43"],
+        ["Arlib.Topology.OddMap transitive imports (legacy)",
+         "e4cf5032a135ddfe"],
+        ["Arlib.Topology.OddMap:importAllArts", "220032ae1d7ec3d0"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Topology/HamSandwich.lean",
+   "2ae0d4e1144f9fe5"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Topology.HamSandwich", "c3aeca9d7e6aef44"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "131b1a409f2976d3"}

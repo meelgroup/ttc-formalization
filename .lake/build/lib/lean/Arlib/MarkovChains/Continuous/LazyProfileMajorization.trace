@@ -1,0 +1,103 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["43bd23eeb0c693a2.olean"],
+  "m": false,
+  "i": "1f6cdf6ad8222ce9.ilean",
+  "c": "8333f8ecc04d525a.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/LazyProfileMajorization.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/LazyProfileMajorization.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/LazyProfileMajorization.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/LazyProfileMajorization.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:98:0: automatically included section variable(s) unused in theorem `Arlib.MarkovChains.lazyProfile_decomposition`:\n  [MeasurableSpace Omega]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [MeasurableSpace Omega] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:105:0: automatically included section variable(s) unused in theorem `Arlib.MarkovChains.lazyProfile_weights_mem_Icc`:\n  [MeasurableSpace Omega]\nconsider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:\n  omit [MeasurableSpace Omega] in theorem ...\n\nNote: This linter can be disabled with `set_option linter.unusedSectionVars false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:312:40: This simp argument is unused:\n  Pi.one_apply\n\nHint: Omit it from the simp argument list.\n  simp only [Set.indicator_of_mem hx,̵ ̵P̵i̵.̵o̵n̵e̵_̵a̵p̵p̵l̵y̵]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:338:6: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:360:4: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:517:0: 'Arlib.MarkovChains.integral_mul_le_setIntegral_of_between_superlevels' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:518:0: 'Arlib.MarkovChains.lazyProfile_decomposition' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:519:0: 'Arlib.MarkovChains.lazyProfile_weights_mem_Icc' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:520:0: 'Arlib.MarkovChains.integral_mul_le_average_setIntegrals_of_profile_decomposition' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:521:0: 'Arlib.MarkovChains.integral_mul_le_average_setIntegrals_of_weight_bounds' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:522:0: 'Arlib.MarkovChains.integral_mul_lazyProfile_le_average_setIntegrals' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:523:0: 'Arlib.MarkovChains.markovOp_indicator_eq_kernel_toReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:524:0: 'Arlib.MarkovChains.integral_lazyProfileLowerUpper_markovOp_indicator' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:525:0: 'Arlib.MarkovChains.markovOp_lazy_indicator_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:526:0: 'Arlib.MarkovChains.lazy_markovOp_indicator_profile_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:527:0: 'Arlib.MarkovChains.exists_weighted_bathtub_maximizer_euclidean' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:528:0: 'Arlib.MarkovChains.lazy_markovProfile_exactMass_curve_recursion' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:529:0: 'Arlib.MarkovChains.lazy_exactMass_curve_recursion' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:530:0: 'Arlib.MarkovChains.exists_lazy_exactMass_curve_recursion_euclidean' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean:531:0: 'Arlib.MarkovChains.exists_warm_lazy_ls_exactMass_oneStep' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.LazyProfileMajorization:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.EuclideanBathtub transitive imports (legacy)",
+         "e056a47092654773"],
+        ["Arlib.MarkovChains.Continuous.EuclideanBathtub:importAllArts",
+         "b8de1a578d359f76"],
+        ["Arlib.MarkovChains.Continuous.WarmLSOneStep transitive imports (legacy)",
+         "426553eb9613b9ee"],
+        ["Arlib.MarkovChains.Continuous.WarmLSOneStep:importAllArts",
+         "54760ab0f4f99c98"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/LazyProfileMajorization.lean",
+   "cd4228b528b7cb00"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.LazyProfileMajorization",
+   "253c7ed4e1f27143"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "4a354c1b57adaf90"}

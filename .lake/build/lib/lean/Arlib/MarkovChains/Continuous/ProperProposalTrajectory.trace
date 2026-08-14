@@ -1,0 +1,67 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["7679b7095b2fddc1.olean"],
+  "m": false,
+  "i": "e08b19b33cfa1664.ilean",
+  "c": "5d770091ff1f8b32.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/ProperProposalTrajectory.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/ProperProposalTrajectory.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/ProperProposalTrajectory.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/ProperProposalTrajectory.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:187:0: 'Arlib.MarkovChains.map_snd_properProposalGaussianLift_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:188:0: 'Arlib.MarkovChains.map_snd_properProposalGaussianLift' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:189:0: 'Arlib.MarkovChains.map_state_eval_pathMeasure_properProposalGaussianLift' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:190:0: 'Arlib.MarkovChains.properProposalGaussianLift_apply_false_singleton' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:191:0: 'Arlib.MarkovChains.properProposalGaussianLift_apply_true_prod' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:192:0: 'Arlib.MarkovChains.pathMeasure_properProposalGaussianLift_dirac_holdsUntil' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:193:0: 'Arlib.MarkovChains.tsum_pathMeasure_properProposalGaussianLift_dirac_holdsUntil' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean:194:0: 'Arlib.MarkovChains.lintegral_firstProperTime_pathMeasure_properProposalGaussianLift' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.ProperProposalTrajectory:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.ProperProposalGaussian transitive imports (legacy)",
+         "6a35279421850baa"],
+        ["Arlib.MarkovChains.Continuous.ProperProposalGaussian:importAllArts",
+         "df4fa54765a826f9"],
+        ["Arlib.MarkovChains.Continuous.MarkedTimeChange transitive imports (legacy)",
+         "3887d427514e5674"],
+        ["Arlib.MarkovChains.Continuous.MarkedTimeChange:importAllArts",
+         "0641a067e5d5471d"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/ProperProposalTrajectory.lean",
+   "90f221a0a7f8f6fc"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.ProperProposalTrajectory",
+   "38c0e340d640f3f7"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "5f24a32ba4a2349c"}

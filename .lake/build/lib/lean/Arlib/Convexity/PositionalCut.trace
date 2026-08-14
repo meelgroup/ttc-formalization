@@ -1,0 +1,142 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["c77aedac6e05e15c.olean"],
+  "m": false,
+  "i": "60343910beadaaa3.ilean",
+  "c": "d2af71f6f94989ee.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/PositionalCut.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/PositionalCut.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/PositionalCut.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/PositionalCut.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/PositionalCut.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:689:0: 'Arlib.apply_mem_Icc_of_mem_halfSpace_true' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:690:0: 'Arlib.apply_mem_Icc_of_mem_halfSpace_false' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:691:0: 'Arlib.exists_side_extent_halved' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:692:0: 'Arlib.exists_side_extent_halved_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:693:0: 'Arlib.le_of_setIntegral_halfSpace_true_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:694:0: 'Arlib.lt_of_setIntegral_halfSpace_false_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:695:0: 'Arlib.cut_level_lt_or_le_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:696:0: 'Arlib.not_two_sided_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:697:0: 'Arlib.sub_le_extent_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:698:0: 'Arlib.exists_cut_chain_extent_halved' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:699:0: 'Arlib.exists_cut_chain_extent_halved_volume' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:700:0: 'Arlib.one_le_two_pow_real' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:701:0: 'Arlib.one_div_two_pow_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:702:0: 'Arlib.one_div_two_pow_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:703:0: 'Arlib.one_div_two_pow_succ_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:704:0: 'Arlib.integral_icoConst_unit' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:705:0: 'Arlib.thinBox_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:706:0: 'Arlib.measurableSet_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:707:0: 'Arlib.convex_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:708:0: 'Arlib.thinBox_subset_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:709:0: 'Arlib.thinBox_succ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:710:0: 'Arlib.thinBox_inter_false' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:711:0: 'Arlib.integral_gapG_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:712:0: 'Arlib.integral_gapH_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:713:0: 'Arlib.integral_gapG_thinBox_false' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:714:0: 'Arlib.integral_gapH_thinBox_false' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:715:0: 'Arlib.two_sided_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:716:0: 'Arlib.snd_mem_Icc_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:717:0: 'Arlib.fst_mem_Icc_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:718:0: 'Arlib.hausdorffDist_thinBox_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:719:0: 'Arlib.tendsto_one_div_two_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:720:0: 'Arlib.tendsto_hausdorffDist_thinBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:721:0: 'Arlib.not_two_sided_fst_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:722:0: 'Arlib.one_le_extent_fst_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/PositionalCut.lean:723:0: 'Arlib.transverse_thin_chain_gapBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.PositionalCut:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.NeedleLimit transitive imports (legacy)",
+         "98579d09e716da52"],
+        ["Arlib.Convexity.NeedleLimit:importAllArts", "0be9e1d37abdb9cc"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/PositionalCut.lean",
+   "f9275c3430ea25c5"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.PositionalCut", "23ad7e6c4c5c404f"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "066c1e6314ef8b15"}

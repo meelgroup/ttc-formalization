@@ -1,0 +1,67 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["8f50c69d403fed2b.olean"],
+  "m": false,
+  "i": "ca27c6d4efc3a8df.ilean",
+  "c": "5144bb455683accc.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MetropolisMixingUncond.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MetropolisMixingUncond.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MetropolisMixingUncond.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MetropolisMixingUncond.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:527:0: 'Arlib.MarkovChains.mixesWithin_lazy_metropolisGaussian_at_operative_step_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:529:0: 'Arlib.MarkovChains.mixesWithin_lazy_metropolisGaussian_sqrt_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:530:0: 'Arlib.MarkovChains.mixesWithin_metropolisGaussian_at_operative_step_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:531:0: 'Arlib.MarkovChains.mixesWithin_metropolisGaussian_sqrt_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:532:0: 'Arlib.MarkovChains.exists_mixesWithin_lazy_metropolisGaussian_uncond_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:533:0: 'Arlib.GaussianCooling.mixesWithin_lazy_metropolisGaussian_coolLaw_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean:534:0: 'Arlib.GaussianCooling.abs_integral_phaseScore_sub_ratio_le_of_mixing_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.MetropolisMixingUncond:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.MetropolisMixing transitive imports (legacy)",
+         "f50325db3e342b05"],
+        ["Arlib.MarkovChains.Continuous.MetropolisMixing:importAllArts",
+         "2df18479a752f1a8"],
+        ["Arlib.Convexity.OneDimSharp transitive imports (legacy)",
+         "2967d03a2897ce71"],
+        ["Arlib.Convexity.OneDimSharp:importAllArts", "d4f68b874a0c42d3"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanRoute transitive imports (legacy)",
+         "4ac3e292f5ccf2bb"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanRoute:importAllArts",
+         "d1b22c4bee0be826"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MetropolisMixingUncond.lean",
+   "506af54e18679aa1"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.MetropolisMixingUncond",
+   "3e37b7b23b6599f3"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "2a718b187b4fb1c0"}

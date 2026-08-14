@@ -1,0 +1,128 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["9b8bc40c2f94719a.olean"],
+  "m": false,
+  "i": "df202b619c6bf45a.ilean",
+  "c": "d25eeb3939a06a45.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/OneDimSharp.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/OneDimSharp.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/OneDimSharp.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/OneDimSharp.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/OneDimSharp.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:682:5: Variable name `hS₁` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1251:0: 'Arlib.logConcaveOn_forall_le_or_forall_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1252:0: 'Arlib.logConcaveOn_exp_affine' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1253:0: 'Arlib.logConcaveOn_gaussianTilt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1254:0: 'Arlib.gaussian_domination_of_logConcave' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1255:0: 'Arlib.integral_Ioi_gaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1256:0: 'Arlib.integrableOn_Ioi_gaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1257:0: 'Arlib.intervalIntegral_gaussian_zero_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1258:0: 'Arlib.intervalIntegral_gaussian_right_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1259:0: 'Arlib.intervalIntegral_gaussian_left_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1260:0: 'Arlib.needle_tail_mass_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1261:0: 'Arlib.oneDim_isoperimetry_of_tailMass' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1262:0: 'Arlib.sqrt_two_div_pi_mul_sqrt_pi_div_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1263:0: 'Arlib.oneDim_isoperimetry_gaussianFactor_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1264:0: 'Arlib.log_two_le_sqrt_two_div_pi' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1265:0: 'Arlib.oneDim_isoperimetry_gaussianFactor_logTwo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1266:0: 'Arlib.gaussianRestricted_isoperimetry_openClosed_logTwo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1267:0: 'Arlib.gaussianIndicator_isoperimetry_measurable_logTwo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1268:0: 'Arlib.hiso_metropolisGaussian_sharp_sqrt_logTwo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1269:0: 'Arlib.conductance_metropolisGaussian_sharp_sqrt_ge_of_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1270:0: 'Arlib.oneDim_isoperimetry_gaussianFactor_sharp_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1271:0: 'Arlib.gaussianIndicator_isoperimetry_measurable_logTwo_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1272:0: 'Arlib.uniform_saturates_hensley' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1273:0: 'Arlib.tendsto_intervalIntegral_gaussian_atTop' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/OneDimSharp.lean:1274:0: 'Arlib.exists_gaussian_tails_gt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.OneDimSharp:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.IsoIndicator transitive imports (legacy)",
+         "be8a2f3cc1199458"],
+        ["Arlib.Convexity.IsoIndicator:importAllArts", "33b90ed1e8977f47"],
+        ["Arlib.MarkovChains.Continuous.MetropolisOverlapSqrt transitive imports (legacy)",
+         "2bc109297df2a63f"],
+        ["Arlib.MarkovChains.Continuous.MetropolisOverlapSqrt:importAllArts",
+         "5a64274bd9ff685f"],
+        ["Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral transitive imports (legacy)",
+         "48f7d048b7744116"],
+        ["Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral:importAllArts",
+         "f254d4b7720e22e2"],
+        ["Mathlib.Analysis.Complex.ExponentialBounds transitive imports (legacy)",
+         "629603e1727ec3d7"],
+        ["Mathlib.Analysis.Complex.ExponentialBounds:importAllArts",
+         "3b1fa2eb311bec10"],
+        ["Mathlib.Analysis.Real.Pi.Bounds transitive imports (legacy)",
+         "354770697876637b"],
+        ["Mathlib.Analysis.Real.Pi.Bounds:importAllArts",
+         "dd78da5aac8c2b8f"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/OneDimSharp.lean",
+   "c89401d9789ca44b"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.OneDimSharp", "2f9804245a620368"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "812493481620b0d3"}

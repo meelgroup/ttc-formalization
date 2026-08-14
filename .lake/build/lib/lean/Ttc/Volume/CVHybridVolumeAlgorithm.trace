@@ -1,0 +1,74 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["c09ecf6517c01fa0.olean"],
+  "m": false,
+  "i": "0734606447b63343.ilean",
+  "c": "46ac5fc0317e560e.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVHybridVolumeAlgorithm.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVHybridVolumeAlgorithm.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVHybridVolumeAlgorithm.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVHybridVolumeAlgorithm.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVHybridVolumeAlgorithm.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:94:38: This simp argument is unused:\n  guardedMix\n\nHint: Omit it from the simp argument list.\n  simp only [a, guardedAccuracy, guardedEta, guardedC, guardedS0, guardedJ, guardedM, guardedK,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲guardedR, g̵u̵a̵r̵d̵e̵d̵M̵i̵x̵,̵ ̵guardedSteps, guardedPhaseLaw, guardedRawRunLaw, guardedScore,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲guardedRawEstimator]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:94:50: This simp argument is unused:\n  guardedSteps\n\nHint: Omit it from the simp argument list.\n  simp only [a, guardedAccuracy, guardedEta, guardedC, guardedS0, guardedJ, guardedM, guardedK,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲guardedR, guardedMix, g̵u̵a̵r̵d̵e̵d̵S̵t̵e̵p̵s̵,̵ ̵guardedPhaseLaw, guardedRawRunLaw, guardedScore, guardedRawEstimator]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:94:64: This simp argument is unused:\n  guardedPhaseLaw\n\nHint: Omit it from the simp argument list.\n  simp only [a, guardedAccuracy, guardedEta, guardedC, guardedS0, guardedJ, guardedM, guardedK,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲guardedR, guardedMix, guardedSteps, g̵u̵a̵r̵d̵e̵d̵P̵h̵a̵s̵e̵L̵a̵w̵,̵guardedRawRunLaw, guardedScore, guardedRawEstimator]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:95:26: This simp argument is unused:\n  guardedScore\n\nHint: Omit it from the simp argument list.\n  simp only [a, guardedAccuracy, guardedEta, guardedC, guardedS0, guardedJ,\n  ̵  ̵ ̵ ̵ ̵ ̵ ̵ ̵guardedM, guardedK,\n  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲guardedR, guardedMix, guardedSteps, guardedPhaseLaw,\n  ̵  ̵ ̵ ̵ ̵ ̵ ̵ ̵guardedRawRunLaw, guardedS̵c̵o̵r̵e̵,̵ ̵g̵u̵a̵r̵d̵e̵d̵RawEstimator]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:92:26: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:95:61: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:129:24: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:134:24: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:165:0: 'Ttc.CVAdaptive.hybridRunLaw_correct' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:166:0: 'Ttc.CVAdaptive.hybridConcreteVolumeAlgorithm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVHybridVolumeAlgorithm.lean:167:0: 'Ttc.CVAdaptive.hybrid_reduces_to_cv_on_guard' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.CVHybridVolumeAlgorithm:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.CVGuardedVolumeAlgorithm transitive imports (legacy)",
+         "45a7aea4b3200bfc"],
+        ["Ttc.Volume.CVGuardedVolumeAlgorithm:importAllArts",
+         "237ce58b46b6447a"],
+        ["Ttc.Volume.MonteCarlo transitive imports (legacy)",
+         "5ba022e92ba5bf2a"],
+        ["Ttc.Volume.MonteCarlo:importAllArts", "2048015e921744c1"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVHybridVolumeAlgorithm.lean",
+   "2a4e234b6a9cb726"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.CVHybridVolumeAlgorithm", "57b5b3c5b1fe46f5"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "6ec7ac659da4e8d5"}

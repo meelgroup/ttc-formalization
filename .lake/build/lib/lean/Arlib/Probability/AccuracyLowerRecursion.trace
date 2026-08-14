@@ -1,0 +1,50 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["50e78172fc8fcc35.olean"],
+  "m": false,
+  "i": "b5febfdaf3d377b4.ilean",
+  "c": "70dc38f8021e31fd.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Probability/AccuracyLowerRecursion.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Probability/AccuracyLowerRecursion.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Probability/AccuracyLowerRecursion.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Probability/AccuracyLowerRecursion.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Probability/AccuracyLowerRecursion.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Probability/AccuracyLowerRecursion.lean:216:0: 'Arlib.GaussianCooling.integrable_accuracyU_mul_V_sq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/AccuracyLowerRecursion.lean:217:0: 'Arlib.GaussianCooling.integral_accuracyU_succ_ge_sub' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/AccuracyLowerRecursion.lean:218:0: 'Arlib.GaussianCooling.integral_accuracyU_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/AccuracyLowerRecursion.lean:219:0: 'Arlib.GaussianCooling.accuracyU_mean_and_secondMoment' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Probability.AccuracyLowerRecursion:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Probability.AccuracySecondMoment transitive imports (legacy)",
+         "ebd70b9917eb69eb"],
+        ["Arlib.Probability.AccuracySecondMoment:importAllArts",
+         "2b0adf25ec49a583"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Probability/AccuracyLowerRecursion.lean",
+   "68e2bb109000e428"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Probability.AccuracyLowerRecursion", "dad4f39594c9802f"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "0c554047953d8e65"}

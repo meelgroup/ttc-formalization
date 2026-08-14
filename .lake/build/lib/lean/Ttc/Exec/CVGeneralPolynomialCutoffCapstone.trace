@@ -1,0 +1,71 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["b52a35ea5c605ae0.olean"],
+  "m": false,
+  "i": "42be442b5a315336.ilean",
+  "c": "4e1cc63a0aae77db.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGeneralPolynomialCutoffCapstone.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGeneralPolynomialCutoffCapstone.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGeneralPolynomialCutoffCapstone.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGeneralPolynomialCutoffCapstone.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:380:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.continuingOneRunQueryEnvelope_eq_expanded' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:381:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.continuingUniformMixingDeadline_le_steps' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:382:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.generalizedRetry_parameter_bounds' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:383:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.generalizedRetryOneRunEnvelope_eq_eps_ten' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:384:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.generalizedOneRunCutoff_ratio' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:385:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.generalizedPublicExpectedBound_le_amplified' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:386:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.expectedQueryVolumeAlgorithmOfGeneralizedCertificates' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean:387:0: 'Ttc.CVGeneralPolynomialCutoffCapstone.expectedQueryVolumeAlgorithmOfConcreteGeneralizedCertificates' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVGeneralPolynomialCutoffCapstone:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CVConcreteAugmentedRetryCutoffBudget transitive imports (legacy)",
+         "50832578afa3ad36"],
+        ["Ttc.Exec.CVConcreteAugmentedRetryCutoffBudget:importAllArts",
+         "1e63d7b7ee972235"],
+        ["Ttc.Volume.CVCorrectedExplicitRadiusRuntime transitive imports (legacy)",
+         "45e87bea0e5812cb"],
+        ["Ttc.Volume.CVCorrectedExplicitRadiusRuntime:importAllArts",
+         "d16467b97f36531a"],
+        ["Ttc.Volume.ExpectedQueryBodyRegularization transitive imports (legacy)",
+         "ae5ef8af8f638c8d"],
+        ["Ttc.Volume.ExpectedQueryBodyRegularization:importAllArts",
+         "dea936e9f2ef67ce"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGeneralPolynomialCutoffCapstone.lean",
+   "3bc71c93aa9291c2"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVGeneralPolynomialCutoffCapstone",
+   "66eab4a0bdbcc007"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9abadc68dc3c2b94"}

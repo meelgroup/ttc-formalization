@@ -1,0 +1,132 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["10096bab519b0601.olean"],
+  "m": false,
+  "i": "c331afe6e441f217.ilean",
+  "c": "c4a56b1f3af9d14e.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/WarmStartGeneral.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/WarmStartGeneral.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/WarmStartGeneral.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/WarmStartGeneral.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/WarmStartGeneral.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:600:0: 'Arlib.MarkovChains.div_mul_div_cancel_mid' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:601:0: 'Arlib.MarkovChains.isWarm_uniformOn_inscribed' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:602:0: 'Arlib.MarkovChains.volume_div_volume_ball_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:603:0: 'Arlib.MarkovChains.isWarm_uniformOn_inscribed_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:604:0: 'Arlib.MarkovChains.uniformOn_inscribed_ne_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:605:0: 'Arlib.MarkovChains.volume_div_volume_ball_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:606:0: 'Arlib.MarkovChains.one_le_volume_div_volume_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:607:0: 'Arlib.MarkovChains.one_le_toReal_volume_div_volume_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:608:0: 'Arlib.MarkovChains.exists_nonstationary_warm_start_mixing_convex' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:609:0: 'Arlib.MarkovChains.volume_ball_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:610:0: 'Arlib.MarkovChains.volume_ball_one_lt_volume_ball_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:611:0: 'Arlib.MarkovChains.volume_ball_two_div_volume_ball_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:612:0: 'Arlib.MarkovChains.isWarm_uniformOn_ball_one_ball_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:613:0: 'Arlib.MarkovChains.uniformOn_ball_one_ne_uniformOn_ball_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:614:0: 'Arlib.MarkovChains.dist_le_four_of_mem_ball_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:615:0: 'Arlib.MarkovChains.exists_nonstationary_warm_start_mixing_ball_two' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:616:0: 'Arlib.MarkovChains.cubeA' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:617:0: 'Arlib.MarkovChains.cubeb' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:618:0: 'Arlib.MarkovChains.cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:619:0: 'Arlib.MarkovChains.mem_cube_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:620:0: 'Arlib.MarkovChains.measurableSet_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:621:0: 'Arlib.MarkovChains.convex_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:622:0: 'Arlib.MarkovChains.ball_half_subset_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:623:0: 'Arlib.MarkovChains.dist_le_of_mem_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:624:0: 'Arlib.MarkovChains.zero_mem_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:625:0: 'Arlib.MarkovChains.volume_cube_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:626:0: 'Arlib.MarkovChains.volume_cube_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:627:0: 'Arlib.MarkovChains.volume_ball_half_lt_volume_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:628:0: 'Arlib.MarkovChains.isWarm_uniformOn_ball_half_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:629:0: 'Arlib.MarkovChains.uniformOn_ball_half_ne_uniformOn_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/WarmStartGeneral.lean:630:0: 'Arlib.MarkovChains.exists_nonstationary_warm_start_mixing_cube' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.WarmStartGeneral:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.ConvexBodyMixing transitive imports (legacy)",
+         "8f88755ed7a76fa6"],
+        ["Arlib.MarkovChains.Continuous.ConvexBodyMixing:importAllArts",
+         "c83a7d6bc3eb4428"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/WarmStartGeneral.lean",
+   "0b5902ffee55f83f"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.WarmStartGeneral",
+   "b528619819f03f9e"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "65ff464926773817"}

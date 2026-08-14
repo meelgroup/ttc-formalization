@@ -1,0 +1,99 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["6e79710eee753cba.olean"],
+  "m": false,
+  "i": "7b5f78fe2db8a776.ilean",
+  "c": "65d9c17280680785.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/CrossRatioOneDim.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/CrossRatioOneDim.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/CrossRatioOneDim.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/CrossRatioOneDim.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/CrossRatioOneDim.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:612:0: 'Arlib.expAvg_le_expAvg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:613:0: 'Arlib.integral_const_mul_exp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:614:0: 'Arlib.exp_crossRatio_key' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:615:0: 'Arlib.crossRatio_algebra' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:616:0: 'Arlib.expLine_geom' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:617:0: 'Arlib.pos_of_lt_of_lt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:618:0: 'Arlib.expLine_le_of_mem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:619:0: 'Arlib.le_expLine_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:620:0: 'Arlib.le_expLine_of_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:621:0: 'Arlib.integral_eq_zero_of_eqOn_Ioo' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:622:0: 'Arlib.exists_pos_of_integral_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:623:0: 'Arlib.crossRatio_mul_le_crossRatio_integral' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:624:0: 'Arlib.integral_mul_integral_le_of_isLogConcave' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:625:0: 'Arlib.crossRatio_le_crossRatio_integral' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:626:0: 'Arlib.chordParam_Icc' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:627:0: 'Arlib.crossRatioDist_Icc' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/CrossRatioOneDim.lean:628:0: 'Arlib.crossRatioDist_le_crossRatio_integral' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.CrossRatioOneDim:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Mathlib.Analysis.SpecialFunctions.Integrals.Basic transitive imports (legacy)",
+         "865e6c388de98d58"],
+        ["Mathlib.Analysis.SpecialFunctions.Integrals.Basic:importAllArts",
+         "37aab9079435c489"],
+        ["Mathlib.Analysis.SpecialFunctions.Trigonometric.DerivHyp transitive imports (legacy)",
+         "f655247d4d17b372"],
+        ["Mathlib.Analysis.SpecialFunctions.Trigonometric.DerivHyp:importAllArts",
+         "ee0964076ef56fb3"],
+        ["Arlib.Convexity.CrossRatio transitive imports (legacy)",
+         "2ab437968affd39b"],
+        ["Arlib.Convexity.CrossRatio:importAllArts", "7536a0b38826ab7b"],
+        ["Arlib.Convexity.LogConcave transitive imports (legacy)",
+         "623e4ec3848918e7"],
+        ["Arlib.Convexity.LogConcave:importAllArts", "00aa80730bf281e5"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/CrossRatioOneDim.lean",
+   "07c74aad1519e485"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.CrossRatioOneDim", "c78d2372cb0589c9"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "be5702cb7230c1bf"}

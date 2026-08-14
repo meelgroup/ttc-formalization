@@ -1,0 +1,59 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["9952d4477959fa3c.olean"],
+  "m": false,
+  "i": "f04b3c63e051cfae.ilean",
+  "c": "bb21adaae0155df0.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVCorrectedAccuracy.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVCorrectedAccuracy.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVCorrectedAccuracy.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVCorrectedAccuracy.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVCorrectedAccuracy.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/CVCorrectedAccuracy.lean:354:0: 'Ttc.CVCorrected.measureReal_accuracyU_truncation_ne_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVCorrectedAccuracy.lean:355:0: 'Ttc.CVCorrected.measureReal_phase_truncation_ne_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVCorrectedAccuracy.lean:356:0: 'Ttc.CVCorrected.measureReal_accuracyU_notMem_relErr_prefixMean_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVCorrectedAccuracy.lean:357:0: 'Ttc.CVCorrected.corrected_lem_accuracy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVCorrectedAccuracy.lean:358:0: 'Ttc.CVCorrected.corrected_lem_accuracy_of_recursion' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVCorrectedAccuracy.lean:359:0: 'Ttc.CVCorrected.corrected_lem_accuracy_four_fifths' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.CVCorrectedAccuracy:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Probability.AccuracyLowerRecursion transitive imports (legacy)",
+         "63ca07cd466d4d3e"],
+        ["Arlib.Probability.AccuracyLowerRecursion:importAllArts",
+         "918396e8cdba320b"],
+        ["Ttc.Volume.CousinsVempala transitive imports (legacy)",
+         "32fbbef7a4c9d4b9"],
+        ["Ttc.Volume.CousinsVempala:importAllArts", "36685b8fac3a7e12"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVCorrectedAccuracy.lean",
+   "0684fe4d5559eec1"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.CVCorrectedAccuracy", "973b6fdf5f3fbcff"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "db34cf44ffed5951"}

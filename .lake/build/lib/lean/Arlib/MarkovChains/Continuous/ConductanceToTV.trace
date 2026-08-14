@@ -1,0 +1,97 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["39c16781899a4015.olean"],
+  "m": false,
+  "i": "e9da3c8ebf4b6fab.ilean",
+  "c": "d270456dcfaa8189.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/ConductanceToTV.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/ConductanceToTV.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/ConductanceToTV.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/ConductanceToTV.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/ConductanceToTV.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:528:0: 'Arlib.MarkovChains.sq_conductance_div_two_le_spectralGap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:529:0: 'Arlib.MarkovChains.tvLe_iterate_of_ofReal_le_conductance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:530:0: 'Arlib.MarkovChains.hasNonnegSpectrum_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:532:0: 'Arlib.MarkovChains.smallSets_nonempty_of_rayleighSet_nonempty' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:533:0: 'Arlib.MarkovChains.conductance_ne_top_of_rayleighSet_nonempty' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:534:0: 'Arlib.MarkovChains.rayleighSet_nonempty_of_smallSets_nonempty' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:535:0: 'Arlib.MarkovChains.rayleighSet_nonempty_iff_smallSets_nonempty' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:536:0: 'Arlib.MarkovChains.ls_of_hasNonnegSpectrum' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:537:0: 'Arlib.MarkovChains.ls_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:538:0: 'Arlib.MarkovChains.ofReal_half_le_conductance_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:539:0: 'Arlib.MarkovChains.lsThreshold_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:540:0: 'Arlib.MarkovChains.tvLe_iterate_of_exceptional_of_isReversible' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:541:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_of_exceptional' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:542:0: 'Arlib.MarkovChains.mixesWithin_of_conductance_of_smallSets' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:543:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:544:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_unitBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:545:0: 'Arlib.MarkovChains.ls_lazy_const_piHalf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/ConductanceToTV.lean:546:0: 'Arlib.MarkovChains.tvLe_iterate_const_piHalf_of_isReversible' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.ConductanceToTV:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.HitAndRunMixing transitive imports (legacy)",
+         "093d2262522d7a12"],
+        ["Arlib.MarkovChains.Continuous.HitAndRunMixing:importAllArts",
+         "096902e54bf5b036"],
+        ["Arlib.MarkovChains.Continuous.BallWalkConductance transitive imports (legacy)",
+         "c3010ada7475e307"],
+        ["Arlib.MarkovChains.Continuous.BallWalkConductance:importAllArts",
+         "1b8a1020b7cc9a0a"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/ConductanceToTV.lean",
+   "7e2758a31853b27f"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.ConductanceToTV",
+   "d0eec1d06e79b993"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "a68ba717d0f9f7ce"}

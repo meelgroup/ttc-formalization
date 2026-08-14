@@ -1,0 +1,84 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["68c3a30c16cf2231.olean"],
+  "m": false,
+  "i": "9b645e5b86144c7c.ilean",
+  "c": "0718e591136c82ba.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/ConcaveProfileIso.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/ConcaveProfileIso.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/ConcaveProfileIso.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/ConcaveProfileIso.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/ConcaveProfileIso.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:650:0: 'Arlib.logConcaveOn_concaveProfile_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:651:0: 'Arlib.LogConcaveOn.congr_on' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:652:0: 'Arlib.oneDim_isoperimetry_concaveProfile' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:653:0: 'Arlib.oneDim_isoperimetry_concaveRoot' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:654:0: 'Arlib.oneDim_isoperimetry_variance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:655:0: 'Arlib.isLogConcave_gaussian_shifted_real' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:656:0: 'Arlib.oneDim_isoperimetry_gaussianFactor' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:657:0: 'Arlib.oneDim_isoperimetry_gaussian_concaveProfile' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:658:0: 'Arlib.concaveOn_one_sub_sq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:659:0: 'Arlib.one_sub_sq_not_affine' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:660:0: 'Arlib.oneDim_isoperimetry_concaveProfile_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:661:0: 'Arlib.oneDim_isoperimetry_gaussian_concaveProfile_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/ConcaveProfileIso.lean:662:0: 'Arlib.oneDim_isoperimetry_gaussianFactor_unconditional' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.ConcaveProfileIso:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.OneDimIsoperimetry transitive imports (legacy)",
+         "620ca0440d69f065"],
+        ["Arlib.Convexity.OneDimIsoperimetry:importAllArts",
+         "9913b572a7c1fbf4"],
+        ["Arlib.Convexity.NeedleProfile transitive imports (legacy)",
+         "98579d09e716da52"],
+        ["Arlib.Convexity.NeedleProfile:importAllArts", "01cb9c6204829427"],
+        ["Arlib.Convexity.BrascampLieb1D transitive imports (legacy)",
+         "8a773bf09feaa0b9"],
+        ["Arlib.Convexity.BrascampLieb1D:importAllArts",
+         "c5b0db7673e6e6d3"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/ConcaveProfileIso.lean",
+   "002b5012a9f507f4"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.ConcaveProfileIso", "1405af04cfa0fe67"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "dd2053aa3f4e890e"}

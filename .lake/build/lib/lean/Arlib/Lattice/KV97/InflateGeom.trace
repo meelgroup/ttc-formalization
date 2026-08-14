@@ -1,0 +1,104 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["353372efd8a48598.olean"],
+  "m": false,
+  "i": "165fdd4591dafbd9.ilean",
+  "c": "10c5726c39128001.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Lattice/KV97/InflateGeom.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Lattice/KV97/InflateGeom.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Lattice/KV97/InflateGeom.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Lattice/KV97/InflateGeom.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Lattice/KV97/InflateGeom.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:507:0: 'Arlib.KV97.closedBall_subset_inflate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:508:0: 'Arlib.KV97.ball_subset_inflate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:509:0: 'Arlib.KV97.dist_homothety_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:510:0: 'Arlib.KV97.dist_le_of_mem_inflate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:511:0: 'Arlib.KV97.convex_inflate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:512:0: 'Arlib.KV97.measurableSet_inflate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:513:0: 'Arlib.KV97.inflateGeom' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:514:0: 'Arlib.KV97.mixesWithin_lazy_ballWalk_inflate_of_body' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:515:0: 'Arlib.KV97.inflated_eq_inflate' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:516:0: 'Arlib.KV97.ball_subset_inflated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:517:0: 'Arlib.KV97.dist_le_of_mem_inflated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:518:0: 'Arlib.KV97.mixesWithin_lazy_ballWalk_inflated_of_body' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:519:0: 'Arlib.KV97.boxA' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:520:0: 'Arlib.KV97.boxB' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:521:0: 'Arlib.KV97.mem_box_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:522:0: 'Arlib.KV97.ball_subset_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:523:0: 'Arlib.KV97.dist_le_of_mem_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:524:0: 'Arlib.KV97.mem_cube_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:525:0: 'Arlib.KV97.exists_mixing_inflate_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:526:0: 'Arlib.KV97.exists_mixing_inflate_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Lattice/KV97/InflateGeom.lean:527:0: 'Arlib.KV97.exists_mixing_inflate_box_shifted' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Lattice.KV97.InflateGeom:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Lattice.KV97.Inflate transitive imports (legacy)",
+         "82c9e694122046ab"],
+        ["Arlib.Lattice.KV97.Inflate:importAllArts", "ab00d5830e09d528"],
+        ["Arlib.MarkovChains.Continuous.ConvexBodyMixing transitive imports (legacy)",
+         "8f88755ed7a76fa6"],
+        ["Arlib.MarkovChains.Continuous.ConvexBodyMixing:importAllArts",
+         "c83a7d6bc3eb4428"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Lattice/KV97/InflateGeom.lean",
+   "b7ecdbb2bdcd6ecc"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Lattice.KV97.InflateGeom", "9bc6409625f2d67a"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9e84b1380a704d1f"}

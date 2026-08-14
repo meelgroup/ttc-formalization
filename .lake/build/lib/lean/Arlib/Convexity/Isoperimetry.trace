@@ -1,0 +1,125 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["f06922b7d2a4fffb.olean"],
+  "m": false,
+  "i": "57b11aec18dec7a2.ilean",
+  "c": "80e440af93ce7886.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/Isoperimetry.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/Isoperimetry.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/Isoperimetry.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/Isoperimetry.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/Isoperimetry.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:583:0: 'Arlib.setDist_smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:584:0: 'Arlib.setDist_smul_div' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:585:0: 'Arlib.volume_smul_euclidean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:586:0: 'Arlib.volume_smul_cross_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:587:0: 'Arlib.mul_setDist_le_setDist_smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:588:0: 'Arlib.IsPartition3.smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:590:0: 'Arlib.LogConcaveDensity.measure_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:591:0: 'Arlib.LogConcaveDensity.uniform' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:592:0: 'Arlib.LogConcaveDensity.gaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:593:0: 'Arlib.setDist_comm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:594:0: 'Arlib.setDist_nonneg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:595:0: 'Arlib.inter_eq_empty_of_setDist_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:596:0: 'Arlib.disjoint_of_setDist_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:597:0: 'Arlib.le_setDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:598:0: 'Arlib.setDist_le_dist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:599:0: 'Arlib.densDist_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:600:0: 'Arlib.densDist_const_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:601:0: 'Arlib.isPartition3_self' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:602:0: 'Arlib.isPartition3_diff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:603:0: 'Arlib.IsPartition3.preimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:604:0: 'Arlib.IsLogConcave.comp_needleMap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:605:0: 'Arlib.IsPartition3.comp_needleMap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:606:0: 'Arlib.dist_needleMap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/Isoperimetry.lean:607:0: 'Arlib.setDist_le_norm_smul_setDist_preimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.Isoperimetry:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.LogConcave transitive imports (legacy)",
+         "623e4ec3848918e7"],
+        ["Arlib.Convexity.LogConcave:importAllArts", "00aa80730bf281e5"],
+        ["Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar transitive imports (legacy)",
+         "5b90fbfef9f6763b"],
+        ["Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar:importAllArts",
+         "34af014a0206d57f"],
+        ["Mathlib.MeasureTheory.Measure.WithDensity transitive imports (legacy)",
+         "99ea335c86eed8c5"],
+        ["Mathlib.MeasureTheory.Measure.WithDensity:importAllArts",
+         "aa91feb86732e2c2"],
+        ["Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace transitive imports (legacy)",
+         "ea482762bf5f081b"],
+        ["Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace:importAllArts",
+         "dcc75b61a5332ece"],
+        ["Mathlib.Analysis.InnerProductSpace.PiL2 transitive imports (legacy)",
+         "ce88cce5e66b8aa7"],
+        ["Mathlib.Analysis.InnerProductSpace.PiL2:importAllArts",
+         "9ce7549ed082a485"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/Isoperimetry.lean",
+   "1e55f46f6ed98dfd"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.Isoperimetry", "84d293ccff812158"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "f65176c2b170f5e2"}

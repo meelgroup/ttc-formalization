@@ -2,20 +2,17 @@ import Ttc.Exec.CVGaussianWarmFallbackScoreMoment
 import Ttc.Exec.CVGaussianScoreAwareMoment
 import Ttc.Exec.CVIndependentStreamMoments
 import Ttc.Exec.CVIndependentStreamBiasAccuracy
-import Ttc.Volume.CVCorrectedRuntime
+import Ttc.Exec.CVCorrectedClippingArithmetic
 
 /-!
-# Factor-eight Gaussian score and clipping bridge
+# Parametric Gaussian score and clipping bridge
 
 The corrected estimator needs a relative second-moment factor `1 + 8/k` *after*
-clipping.  A scalar factor `8` first becomes `1 + 7/k` after averaging `k`
-independent complete streams.  This file records the remaining clipping step with its
-honest numerical hypothesis: the truncation level must leave enough room to absorb the
-loss in the clipped mean.
-
-In particular, no claim is made here that the current choices
-`correctedAlpha m eps` and `correctedRuntimeSamples m eps` satisfy that room
-hypothesis; they do not in general, since the latter is just larger than the former.
+clipping.  The generic transport theorem below supports any scalar target.  It records
+both why scalar target `8` is insufficient for the current parameters (its empirical
+factor is `1 + 7/k`, whose clipping transfer needs extra room) and the working route:
+target `7` gives `1 + 6/k`, which the actual `correctedAlpha` and
+`correctedRuntimeSamples` arithmetic transports to `1 + 8/k`.
 -/
 
 namespace Ttc.CVGaussianFactorEightCapstone
@@ -26,6 +23,8 @@ open Ttc.CVIndependentStreamMoments
 open Ttc.CVIndependentStreamDependence
 open Ttc.CVGaussianWarmFallbackScoreMoment
 open Ttc.CVScoreSeedPhaseKernel
+open Ttc.CVCorrectedClippingArithmetic
+open Ttc.CVCorrected
 open scoped ENNReal Classical
 
 variable {n : Nat}
@@ -326,74 +325,6 @@ theorem integral_streamAverage_sq_le_eight
   simpa only [show (8 : Real) - 1 = 7 by norm_num] using
     integral_streamAverage_sq_le hk mu hg hL2 hmean hsq
 
-/-- A scalar factor `7` becomes `1 + 6/k` after independent averaging. -/
-theorem integral_streamAverage_sq_le_seven
-    {k : Nat} (hk : 0 < k) (mu : Measure Path) [IsProbabilityMeasure mu]
-    {g : Path → Real} (hg : Measurable g) (hL2 : MemLp g 2 mu)
-    {mean : Real} (hmean : ∫ x, g x ∂mu = mean)
-    (hsq : ∫ x, (g x) ^ 2 ∂mu ≤ 7 * mean ^ 2) :
-    ∫ omega, (streamAverage (k := k) g omega) ^ 2
-        ∂(independentStreamLaw mu) ≤
-      (1 + 6 / (k : Real)) * mean ^ 2 := by
-  simpa only [show (7 : Real) - 1 = 6 by norm_num] using
-    integral_streamAverage_sq_le hk mu hg hL2 hmean hsq
-
-/-- The extra `2/k` between the raw factor `1 + 6/k` and the corrected target
-`1 + 8/k` absorbs clipping whenever `k ≤ alpha + 2` and `alpha ≥ 10`. -/
-theorem six_over_clipping_sq_le_eight
-    {k alpha : Real} (hk : 8 ≤ k) (halpha : 10 ≤ alpha)
-    (hupper : k ≤ alpha + 2) :
-    (1 + 6 / k) / (1 - 1 / (2 * alpha)) ^ 2 ≤ 1 + 8 / k := by
-  have hk0 : 0 < k := by linarith
-  have ha0 : 0 < alpha := by linarith
-  have hd0 : 0 < 1 - 1 / (2 * alpha) := by
-    rw [sub_pos, div_lt_one (by positivity)]
-    linarith
-  rw [div_le_iff₀ (sq_pos_of_pos hd0)]
-  field_simp [ne_of_gt hk0, ne_of_gt ha0]
-  nlinarith [mul_nonneg (sub_nonneg.2 (show 0 ≤ alpha + 2 - k by linarith))
-      (show 0 ≤ 4 * alpha - 1 by linarith),
-    sq_nonneg (2 * alpha - 10)]
-
-/-- The repository's corrected truncation parameter is far above the small constant
-needed by `six_over_clipping_sq_le_eight`. -/
-theorem ten_le_correctedAlpha {m : Nat} {eps : Real}
-    (heps : 0 < eps) (heps1 : eps ≤ 1) :
-    10 ≤ Ttc.CVCorrected.correctedAlpha m eps := by
-  have he2 : 0 < eps ^ 2 := sq_pos_of_pos heps
-  have he2le : eps ^ 2 ≤ 1 := by nlinarith [sq_nonneg eps]
-  rw [Ttc.CVCorrected.correctedAlpha, le_div_iff₀ he2]
-  have hm : (1 : Real) ≤ (m : Real) + 1 := by positivity
-  nlinarith
-
-/-- Actual `correctedRuntimeSamples` arithmetic discharges the clipping-room
-inequality for the factor-seven route. -/
-theorem correctedRuntimeSamples_six_over_clipping_sq_le_eight
-    {m : Nat} {eps : Real} (heps : 0 < eps) (heps1 : eps ≤ 1) :
-    let k := Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps
-    let alpha := Ttc.CVCorrected.correctedAlpha m eps
-    (1 + 6 / (k : Real)) / (1 - 1 / (2 * alpha)) ^ 2 ≤
-      1 + 8 / (k : Real) := by
-  dsimp only
-  apply six_over_clipping_sq_le_eight
-  · have hk : 0 < Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps :=
-      Ttc.CVCorrectedRuntime.correctedRuntimeSamples_pos m eps
-    have halpha := ten_le_correctedAlpha (m := m) heps heps1
-    have hkUpper := Ttc.CVCorrectedRuntime.correctedRuntimeSamples_cast_lt
-      (m := m) heps
-    rw [Ttc.CVCorrected.correctedAlpha] at halpha hkUpper ⊢
-    exact_mod_cast (show 8 ≤ Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps by
-      by_contra h
-      have hkLe : Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps ≤ 7 := by omega
-      have hkCast : (Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps : Real) ≤ 7 := by
-        exact_mod_cast hkLe
-      have hbase : (10 : Real) ≤
-          100000 * ((m : Real) + 1) / eps ^ 2 := halpha
-      linarith)
-  · exact ten_le_correctedAlpha heps heps1
-  · exact (Ttc.CVCorrectedRuntime.correctedRuntimeSamples_cast_lt
-      (m := m) heps).le
-
 /-- Numerical room needed to turn the raw empirical factor `1 + 7/k` into the
 post-clipping factor `1 + 8/k`.
 
@@ -493,6 +424,105 @@ theorem clipped_sq_moment_le_eight_of_raw_seven
         gcongr
         exact seven_over_clipping_sq_le_eight hkR hroom
 
+/-- The clipping bridge at the *actual* corrected runtime parameters.
+
+Here a scalar factor `7` has already become the raw empirical factor `1 + 6/k`.
+The current choices `k = correctedRuntimeSamples m eps` and
+`alpha = correctedAlpha m eps` then yield the required clipped factor `1 + 8/k`
+without any additional numerical premise.
+-/
+theorem correctedRuntime_clipped_sq_moment_le_eight_of_raw_six
+    {Ω : Type*} [MeasurableSpace Ω] {mu : Measure Ω} [IsProbabilityMeasure mu]
+    {m : Nat} {eps : Real} {Wbar V : Ω → Real}
+    (heps : 0 < eps) (heps1 : eps ≤ 1)
+    (hW0 : ∀ omega, 0 ≤ Wbar omega) (hWm : Measurable Wbar)
+    (hWint : Integrable Wbar mu)
+    (hW2int : Integrable (fun omega ↦ (Wbar omega) ^ 2) mu)
+    (hWEpos : 0 < ∫ omega, Wbar omega ∂mu)
+    (hrawSecond : ∫ omega, (Wbar omega) ^ 2 ∂mu ≤
+      (1 + 6 / (Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps : Real)) *
+        (∫ omega, Wbar omega ∂mu) ^ 2)
+    (hVdef : ∀ omega, V omega = min (Wbar omega)
+      (Ttc.CVCorrected.correctedAlpha m eps * ∫ z, Wbar z ∂mu)) :
+    Integrable (fun omega ↦ (V omega) ^ 2) mu ∧
+      ∫ omega, (V omega) ^ 2 ∂mu ≤
+        (1 + 8 / (Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps : Real)) *
+          (∫ omega, V omega ∂mu) ^ 2 := by
+  let k : Nat := Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps
+  let alpha : Real := Ttc.CVCorrected.correctedAlpha m eps
+  have hk8Nat : 8 ≤ k := by
+    simpa only [k] using eight_le_correctedRuntimeSamples (m := m) heps heps1
+  have hkR : (8 : Real) ≤ (k : Real) := by exact_mod_cast hk8Nat
+  have hk0 : (0 : Real) < (k : Real) := by linarith
+  have ha0 : 0 < alpha := by
+    dsimp only [alpha]
+    exact Ttc.CVCorrected.correctedAlpha_pos heps
+  have hVeq : V = fun omega ↦ min (Wbar omega)
+      (alpha * ∫ z, Wbar z ∂mu) := by
+    funext omega
+    simpa only [alpha] using hVdef omega
+  have hthreshold0 : 0 ≤ alpha * ∫ z, Wbar z ∂mu :=
+    mul_nonneg ha0.le hWEpos.le
+  have hV0 : ∀ omega, 0 ≤ V omega := fun omega ↦ by
+    rw [hVeq]
+    exact le_min (hW0 omega) hthreshold0
+  have hVm : Measurable V := by
+    rw [hVeq]
+    exact hWm.min measurable_const
+  have hVW : ∀ omega, V omega ≤ Wbar omega := fun omega ↦ by
+    rw [hVeq]
+    exact min_le_left _ _
+  have hV2int : Integrable (fun omega ↦ (V omega) ^ 2) mu := by
+    refine Integrable.mono' hW2int (hVm.pow_const 2).aestronglyMeasurable ?_
+    filter_upwards with omega
+    rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+    exact (sq_le_sq₀ (hV0 omega) (hW0 omega)).2 (hVW omega)
+  constructor
+  · exact hV2int
+  · have hc2 : 1 + 6 / (k : Real) ≤ 2 := by
+      have hdiv : 6 / (k : Real) ≤ 1 := (div_le_one hk0).2 (by linarith)
+      linarith
+    have hlower :
+        (1 - 1 / (2 * alpha)) * (∫ omega, Wbar omega ∂mu) ≤
+          ∫ omega, V omega ∂mu := by
+      have h := expect_trunc_ge_half ha0 hW0 hWm hWint hW2int hWEpos
+        (by simpa only [k] using hrawSecond) hc2
+      rw [hVeq]
+      exact h
+    have hd0 : 0 < 1 - 1 / (2 * alpha) := by
+      simpa only [alpha] using
+        (correctedRuntime_clippingDenominator_pos (m := m) heps heps1)
+    have hVsecond : ∫ omega, (V omega) ^ 2 ∂mu ≤
+        ∫ omega, (Wbar omega) ^ 2 ∂mu :=
+      integral_mono hV2int hW2int fun omega ↦
+        (sq_le_sq₀ (hV0 omega) (hW0 omega)).2 (hVW omega)
+    have hmean : ∫ omega, Wbar omega ∂mu ≤
+        (∫ omega, V omega ∂mu) / (1 - 1 / (2 * alpha)) := by
+      rw [le_div_iff₀ hd0]
+      simpa [mul_comm] using hlower
+    have hmean0 : 0 ≤ ∫ omega, Wbar omega ∂mu := hWEpos.le
+    have hVmean0 : 0 ≤ ∫ omega, V omega ∂mu := integral_nonneg hV0
+    calc
+      ∫ omega, (V omega) ^ 2 ∂mu ≤
+          ∫ omega, (Wbar omega) ^ 2 ∂mu := hVsecond
+      _ ≤ (1 + 6 / (k : Real)) *
+          (∫ omega, Wbar omega ∂mu) ^ 2 := by
+        simpa only [k] using hrawSecond
+      _ ≤ (1 + 6 / (k : Real)) *
+          ((∫ omega, V omega ∂mu) / (1 - 1 / (2 * alpha))) ^ 2 := by
+        gcongr
+      _ = ((1 + 6 / (k : Real)) /
+          (1 - 1 / (2 * alpha)) ^ 2) *
+            (∫ omega, V omega ∂mu) ^ 2 := by field_simp
+      _ ≤ (1 + 8 / (k : Real)) *
+          (∫ omega, V omega ∂mu) ^ 2 := by
+        gcongr
+        simpa only [k, alpha] using
+          (correctedRuntime_six_over_clipping_sq_le_eight (m := m) heps heps1)
+      _ = (1 + 8 /
+          (Ttc.CVCorrectedRuntime.correctedRuntimeSamples m eps : Real)) *
+            (∫ omega, V omega ∂mu) ^ 2 := by rfl
+
 #print axioms operational_phaseScore_sq_moment_le_factor
 #print axioms operational_phaseScore_sq_moment_le_eight
 #print axioms operational_path_phaseScore_memLp_and_sq_moment_le_factor
@@ -501,5 +531,7 @@ theorem clipped_sq_moment_le_eight_of_raw_seven
 #print axioms integral_streamAverage_sq_le_eight
 #print axioms seven_over_clipping_sq_le_eight
 #print axioms clipped_sq_moment_le_eight_of_raw_seven
+#print axioms operational_path_phaseScore_scoreAware_active_seven
+#print axioms correctedRuntime_clipped_sq_moment_le_eight_of_raw_six
 
 end Ttc.CVGaussianFactorEightCapstone

@@ -1,0 +1,60 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["9871d056d8e2b5a0.olean"],
+  "m": false,
+  "i": "42fc221a03f1a03e.ilean",
+  "c": "7af82d33652aa373.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVSourceOneRunFromCostedPhases.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVSourceOneRunFromCostedPhases.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVSourceOneRunFromCostedPhases.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVSourceOneRunFromCostedPhases.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVSourceOneRunFromCostedPhases.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVSourceOneRunFromCostedPhases.lean:300:0: 'Ttc.CVSourceOneRunFromCostedPhases.expected_costedPhaseOneRunQueries_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVSourceOneRunFromCostedPhases.lean:301:0: 'Ttc.CVSourceOneRunFromCostedPhases.expected_costedPhaseOneRunQueries_le_of_phaseMeans' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVSourceOneRunFromCostedPhases.lean:302:0: 'Ttc.CVSourceOneRunFromCostedPhases.measureReal_costedPhaseOneRun_success' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVSourceOneRunFromCostedPhases.lean:303:0: 'Ttc.CVSourceOneRunFromCostedPhases.sourceOneRunCertificate_of_costedPhases' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVSourceOneRunFromCostedPhases.lean:304:0: 'Ttc.CVSourceOneRunFromCostedPhases.sourcePublicOneRunCertificates_of_costedPhases' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVSourceOneRunFromCostedPhases.lean:305:0: 'Ttc.CVSourceOneRunFromCostedPhases.expectedQueryVolumeAlgorithmOfCostedPhases' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVSourceOneRunFromCostedPhases:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CostedPathwisePhaseLumping transitive imports (legacy)",
+         "9c9cfa85a051866c"],
+        ["Ttc.Exec.CostedPathwisePhaseLumping:importAllArts",
+         "0bfb2f5654f40f57"],
+        ["Ttc.Exec.CVSourcePolynomialCutoffCapstone transitive imports (legacy)",
+         "9c18419858d1d777"],
+        ["Ttc.Exec.CVSourcePolynomialCutoffCapstone:importAllArts",
+         "a52155a38fc9703d"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVSourceOneRunFromCostedPhases.lean",
+   "4bad61dc787e6c38"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVSourceOneRunFromCostedPhases", "41cab22b47cf3861"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "f9ff23a6f48a6035"}

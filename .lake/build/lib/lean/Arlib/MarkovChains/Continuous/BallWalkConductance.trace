@@ -1,0 +1,123 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["8d9e23eeac5ef3f7.olean"],
+  "m": false,
+  "i": "b76e4d9bd812d70c.ilean",
+  "c": "97c95b42521452b5.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/BallWalkConductance.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/BallWalkConductance.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/BallWalkConductance.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/BallWalkConductance.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/BallWalkConductance.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:613:40: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1024:2: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1043:4: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1065:4: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1412:2: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1469:0: 'Arlib.MarkovChains.midpoint_ball_subset_inter_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1470:0: 'Arlib.MarkovChains.volume_ball_le_volume_inter_ball_add' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1471:0: 'Arlib.MarkovChains.ell_le_ballWalk_add_ballWalk_compl' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1472:0: 'Arlib.MarkovChains.lt_dist_of_ballWalk_lt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1473:0: 'Arlib.MarkovChains.mul_measure_add_measure_le_mul_flow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1474:0: 'Arlib.MarkovChains.conductance_ballWalk_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1475:0: 'Arlib.MarkovChains.ofReal_le_ell_unitBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1476:0: 'Arlib.MarkovChains.neg_integral_sq_le_pairing_self' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1477:0: 'Arlib.MarkovChains.hasNonnegSpectrum_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1478:0: 'Arlib.MarkovChains.isReversible_and_hasNonnegSpectrum_lazy_ballWalk' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1479:0: 'Arlib.MarkovChains.conductanceOn_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1480:0: 'Arlib.MarkovChains.conductance_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1481:0: 'Arlib.MarkovChains.conductance_div_two_le_conductance_lazy' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1482:0: 'Arlib.MarkovChains.exists_volume_inter_ball_pos_lt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1483:0: 'Arlib.MarkovChains.exists_smallSet_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1484:0: 'Arlib.MarkovChains.rayleighSet_nonempty_of_smallSet' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1485:0: 'Arlib.MarkovChains.mixesWithin_lazy_ballWalk' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1486:0: 'Arlib.MarkovChains.mixesWithin_lazy_ballWalk_unitBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/BallWalkConductance.lean:1487:0: 'Arlib.MarkovChains.theorem2_of_lazy_ballWalk' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.BallWalkConductance:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.BallWalk transitive imports (legacy)",
+         "cfd14076c9e2bcf8"],
+        ["Arlib.MarkovChains.Continuous.BallWalk:importAllArts",
+         "75f78a0792efdefb"],
+        ["Arlib.MarkovChains.Continuous.L2Mixing transitive imports (legacy)",
+         "f494f4cd6480bc54"],
+        ["Arlib.MarkovChains.Continuous.L2Mixing:importAllArts",
+         "9ae02e569601456c"],
+        ["Arlib.MarkovChains.Continuous.PointwiseRoute transitive imports (legacy)",
+         "f71d56fe6e164a01"],
+        ["Arlib.MarkovChains.Continuous.PointwiseRoute:importAllArts",
+         "524432a63bd0a96d"],
+        ["Mathlib.Analysis.Normed.Affine.AddTorsor transitive imports (legacy)",
+         "809df1c9e9551aae"],
+        ["Mathlib.Analysis.Normed.Affine.AddTorsor:importAllArts",
+         "c1422cf595ce8fc3"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/BallWalkConductance.lean",
+   "f25a20e2b7fd970f"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.BallWalkConductance",
+   "1fd72df5ad8e3f77"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "4038a5cf6f1d92c7"}

@@ -1,0 +1,73 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["b7327a8b8be44b50.olean"],
+  "m": false,
+  "i": "2b1e95ccc35ebc8f.ilean",
+  "c": "a45f4075d9638881.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:758:0: 'Arlib.MarkovChains.two_mul_log_two_le_sqrt_natCast' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:759:0: 'Arlib.MarkovChains.four_mul_isoStep_div_sigma_le_quarter' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:760:0: 'Arlib.MarkovChains.isoStep_conductance_le_inv_160' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:761:0: 'Arlib.MarkovChains.ofReal_div_mul_div_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:762:0: 'Arlib.MarkovChains.measure_sdiff_add_measure_sdiff_le_flow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:763:0: 'Arlib.MarkovChains.measure_le_flow_of_le_two_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:765:0: 'Arlib.MarkovChains.conductance_speedyGaussian_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:767:0: 'Arlib.MarkovChains.speedyGaussian_params_satisfiable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean:768:0: 'Arlib.MarkovChains.exists_conductance_speedyGaussian_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.SpeedyConductanceSharp:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.SpeedyWalk transitive imports (legacy)",
+         "82af66ffd8b00215"],
+        ["Arlib.MarkovChains.Continuous.SpeedyWalk:importAllArts",
+         "3fbec1cb94638564"],
+        ["Arlib.Convexity.SharpIsoperimetry transitive imports (legacy)",
+         "d0f2ffa37443d480"],
+        ["Arlib.Convexity.SharpIsoperimetry:importAllArts", "064850d10b539c93"],
+        ["Mathlib.Analysis.Complex.ExponentialBounds transitive imports (legacy)",
+         "629603e1727ec3d7"],
+        ["Mathlib.Analysis.Complex.ExponentialBounds:importAllArts",
+         "3b1fa2eb311bec10"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/SpeedyConductanceSharp.lean",
+   "91c6ced62f144673"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.SpeedyConductanceSharp",
+   "c7f028b8b97c6db7"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "ddf9000f362aa4a6"}

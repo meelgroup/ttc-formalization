@@ -1,0 +1,78 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["15de7e1e7c88ef16.olean"],
+  "m": false,
+  "i": "765a3ed192c6395b.ilean",
+  "c": "5591662236909dd4.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:339:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.map_snd_randomFallbackCostedKernel' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:340:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.lintegral_fst_randomFallbackCostedKernel' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:341:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.map_snd_gaussianWarmFallbackCostedPhaseKernel' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:342:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.lintegral_stepMean_gaussianWarmFallbackCostedPhaseKernel' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:343:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.lintegral_stepMean_gaussianWarmFallbackCostedPhaseKernel_le_referenceEnvelope' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:344:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.map_snd_costedStateWarmFallbackSchedule' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:345:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.costedStateWarmFallbackRefinement' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:346:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.map_independentStatePaths_warmFallbackCostedLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean:347:0: 'Ttc.CVGaussianWarmFallbackCostedPhaseKernel.lintegral_independentWarmFallbackQueryCost_le_phaseBounds' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVGaussianWarmFallbackCostedPhaseKernel:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CVGaussianWarmFallbackPhaseKernel transitive imports (legacy)",
+         "13d7a4816513a202"],
+        ["Ttc.Exec.CVGaussianWarmFallbackPhaseKernel:importAllArts",
+         "3aadbc77feaf938c"],
+        ["Ttc.Exec.CVGaussianWarmFallbackOperational transitive imports (legacy)",
+         "587593085b8a4b8d"],
+        ["Ttc.Exec.CVGaussianWarmFallbackOperational:importAllArts",
+         "4a72d94504e09017"],
+        ["Ttc.Exec.CVConcreteAugmentedRetryCutoffBudget transitive imports (legacy)",
+         "50832578afa3ad36"],
+        ["Ttc.Exec.CVConcreteAugmentedRetryCutoffBudget:importAllArts",
+         "1e63d7b7ee972235"],
+        ["Ttc.Exec.CVIndependentStreamGeneralizedCertificate transitive imports (legacy)",
+         "af7da3df0966f21a"],
+        ["Ttc.Exec.CVIndependentStreamGeneralizedCertificate:importAllArts",
+         "76599ec62e7c4e4b"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGaussianWarmFallbackCostedPhaseKernel.lean",
+   "256b3558e29040cd"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVGaussianWarmFallbackCostedPhaseKernel",
+   "6c757c3bc1f1d9e2"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "2674e4e3d311689e"}

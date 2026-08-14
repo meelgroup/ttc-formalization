@@ -1,0 +1,104 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["74f016fe721fb3ba.olean"],
+  "m": false,
+  "i": "ac78895bd4bb5375.ilean",
+  "c": "742b4dbf6bf4497f.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/WeightedIsoBook.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/WeightedIsoBook.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/WeightedIsoBook.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/WeightedIsoBook.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/WeightedIsoBook.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1059:0: 'Arlib.chordLow_pos_of_notMem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1060:0: 'Arlib.one_le_crossRatioDist_of_notMem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1061:0: 'Arlib.chord_bound_of_notMem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1062:0: '_private.Arlib.Convexity.WeightedIsoBook.0.Arlib.norm_farPoint' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1063:0: 'Arlib.not_thm21_book' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1064:0: 'Arlib.false_of_hIso_of_thm21_binder' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1065:0: 'Arlib.hIso_measurable_of_thm21_sub' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1066:0: 'Arlib.hIso_book' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1067:0: 'Arlib.conductance_hitAndRun_ge_book' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1068:0: 'Arlib.needle_iso_masses' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1069:0: 'Arlib.integrableOn_weight_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1070:0: 'Arlib.setIntegral_weight_le_of_support' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1071:0: 'Arlib.setIntegral_le_setIntegral_weight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1072:0: 'Arlib.needle_iso_weight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1073:0: 'Arlib.needle_iso_of_chord_weight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1074:0: 'Arlib.continuous_bookMollifier' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1075:0: 'Arlib.bookMollifier_nonneg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1076:0: 'Arlib.bookMollifier_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1077:0: 'Arlib.bookMollifier_of_mem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1078:0: 'Arlib.infDist_lt_of_bookMollifier_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1079:0: 'Arlib.bookMollifier_disjoint' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/WeightedIsoBook.lean:1080:0: 'Arlib.tendsto_bookMollifier' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.WeightedIsoBook:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.CrossRatioIsoBridge transitive imports (legacy)",
+         "90e766e0a25982ed"],
+        ["Arlib.Convexity.CrossRatioIsoBridge:importAllArts",
+         "565409aa35f759c4"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/WeightedIsoBook.lean",
+   "d2aac5a40f182b03"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.WeightedIsoBook", "db4342d006cf5254"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "b64c86151c9a065b"}

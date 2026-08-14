@@ -1,0 +1,105 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["9c1e0179bf4051b2.olean"],
+  "m": false,
+  "i": "21ba4d30b409bffb.ilean",
+  "c": "0e50e244be5e64ae.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/HitAndRunStep.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/HitAndRunStep.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/HitAndRunStep.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/HitAndRunStep.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/HitAndRunStep.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:721:0: 'Arlib.lintegral_pow_Ioc' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:722:0: 'Arlib.toSphere_mul_le_volume_of_cone' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:723:0: 'Arlib.volume_closedBall_diff_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:724:0: 'Arlib.notMem_of_notMem_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:725:0: 'Arlib.toSphere_badDir_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:726:0: 'Arlib.toSphere_badDir_neg_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:727:0: 'Arlib.ofReal_le_volume_chordSet' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:728:0: 'Arlib.unifSphere_le_of_toSphere_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:729:0: 'Arlib.hitAndRunProposal_closedBall_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:730:0: 'Arlib.nonneg_of_mem_medianStepSet' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:731:0: 'Arlib.bddBelow_medianStepSet' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:732:0: 'Arlib.medianStepSet_nonempty' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:733:0: 'Arlib.medianStep_nonneg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:734:0: 'Arlib.le_medianStep' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:735:0: 'Arlib.hitAndRun_closedBall_le_of_lt_medianStep' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:736:0: 'Arlib.le_hitAndRun_closedBall_of_medianStep_lt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:737:0: 'Arlib.stepRadius_le_medianStep' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:738:0: 'Arlib.stepRadius_div_le_medianStep' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:739:0: 'Arlib.hitAndRunProposal_univ_eq_one_of_mem_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/HitAndRunStep.lean:740:0: 'Arlib.exists_stepRadius_le_medianStep_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.HitAndRunStep:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.StepLength transitive imports (legacy)",
+         "852b713009925113"],
+        ["Arlib.Convexity.StepLength:importAllArts", "aa695f2e2841952e"],
+        ["Arlib.MarkovChains.Continuous.HitAndRun transitive imports (legacy)",
+         "d2fcbaeeac39b37f"],
+        ["Arlib.MarkovChains.Continuous.HitAndRun:importAllArts",
+         "04af97729c795a05"],
+        ["Arlib.MarkovChains.Continuous.SphereCoord transitive imports (legacy)",
+         "3d0f285721ba3f15"],
+        ["Arlib.MarkovChains.Continuous.SphereCoord:importAllArts",
+         "88c941821c9243a2"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/HitAndRunStep.lean",
+   "d9d8583cdebe6e7c"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.HitAndRunStep", "27ecf10757703bd7"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "7cbb8bd20e7c2ba7"}

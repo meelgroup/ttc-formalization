@@ -2,7 +2,7 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
-import Ttc.Volume.Oracle
+import Ttc.Volume.ExpectedQueryOracle
 import Arlib.Probability.UniformOn
 import Mathlib.Analysis.Asymptotics.Defs
 
@@ -49,6 +49,21 @@ noncomputable def cvComplexityShape (n : ℕ) (R2 ε p : ℝ) : ℝ :=
     Real.log n ^ 2 * Real.log (1 / ε) ^ 2 *
       Real.log (n / ε) ^ 2 * Real.log (1 / p)
 
+/-- Globally valid version of the Theorem 1.1 query shape.  The paper states an
+asymptotic bound in the regime in which all logarithms are bounded away from zero.  A
+pointwise implementation contract must clip those logarithms: without the clipping the
+right hand side is zero in dimension one and tends to zero as `p` tends to one, although
+an implementation still has to perform a run. -/
+noncomputable def cvComplexityShapeClipped (n : ℕ) (R2 ε p : ℝ) : ℝ :=
+  (max (R2 * (n : ℝ) ^ 2) ((n : ℝ) ^ 3) / ε ^ 2) *
+    max 1 (Real.log n) ^ 2 * max 1 (Real.log (1 / ε)) ^ 2 *
+      max 1 (Real.log (n / ε)) ^ 2 * max 1 (Real.log (1 / p))
+
+theorem cvComplexityShapeClipped_nonneg (n : ℕ) (R2 ε p : ℝ)
+    (hR2 : 0 ≤ R2) : 0 ≤ cvComplexityShapeClipped n R2 ε p := by
+  unfold cvComplexityShapeClipped
+  positivity
+
 /-- `E_K(‖X‖²) = O(n)` with its hidden roundness constant exposed as `κ`.
 This pointwise form is what can be passed to a concrete dimension-indexed family. -/
 def CVWellRounded {n : ℕ} (K : Set (Space n)) (κ : ℝ) : Prop :=
@@ -79,6 +94,28 @@ structure CVTheorem11Implementation where
     1 ≤ n → 0 < ε → ε < 1 → 0 < p → p < 1 → CVAdmissible K R2 →
     (queryCost n K ε p : ℝ) ≤ runtimeConstant * cvComplexityShape n R2 ε p
 
+/-- Honest operational form of Cousins--Vempala Theorem 1.1.
+
+Membership-query rejection loops have random length, so their correct cost statement is
+an expectation of the query counter on the same probability space as the estimator.  The
+clipped logarithms make the paper's asymptotic display into a valid pointwise bound on its
+whole advertised input domain. -/
+structure CVTheorem11ExpectedImplementation where
+  algorithm : (n : ℕ) → ExpectedQueryVolumeAlgorithm n
+  runtimeConstant : ℝ
+  runtimeConstant_nonneg : 0 ≤ runtimeConstant
+  expectedBound_le : ∀ (n : ℕ) (K : Set (Space n)) (ε p R2 : ℝ),
+    1 ≤ n → 0 < ε → ε < 1 → 0 < p → p < 1 → CVAdmissible K R2 →
+    (algorithm n).expectedBound K ε p ≤
+      ENNReal.ofReal (runtimeConstant * cvComplexityShapeClipped n R2 ε p)
+
+/-- The old literal transcription collapses to zero in dimension one.  This explains why
+`CVTheorem11ExpectedImplementation` uses the globally clipped shape rather than silently
+claiming that a positive-cost execution satisfies the old contract. -/
+theorem cvComplexityShape_one (R2 ε p : ℝ) :
+    cvComplexityShape 1 R2 ε p = 0 := by
+  simp [cvComplexityShape]
+
 /-- The accuracy half of Theorem 1.1, projected from an implementation certificate.
 The moment bound is present through `CVAdmissible`, even though (as in the mathematics)
 it is needed only to obtain the advertised runtime and not to prove accuracy. -/
@@ -88,6 +125,39 @@ theorem CVTheorem11Implementation.correct (I : CVTheorem11Implementation)
     1 - p ≤ ((I.algorithm n).μ
       {ω | (I.algorithm n).est K ε p ω ∈ relErr ε (volume K).toReal}).toReal :=
   (I.algorithm n).correct K ε p hε hp hp1 hK.1 hK.2.1 hK.2.2.2.1
+
+/-- Any inhabitant of the old literal contract is forced to report zero queries in
+dimension one.  This is a formal, not merely documentary, obstruction to using that
+contract for the operational rejection sampler. -/
+theorem CVTheorem11Implementation.queryCost_eq_zero_dim_one
+    (I : CVTheorem11Implementation) (K : Set (Space 1)) (ε p R2 : ℝ)
+    (hε : 0 < ε) (hε1 : ε < 1) (hp : 0 < p) (hp1 : p < 1)
+    (hK : CVAdmissible K R2) : I.queryCost 1 K ε p = 0 := by
+  have hle := I.queryCost_le 1 K ε p R2 (by omega) hε hε1 hp hp1 hK
+  rw [cvComplexityShape_one, mul_zero] at hle
+  have heq : (I.queryCost 1 K ε p : ℝ) = 0 :=
+    le_antisymm hle (Nat.cast_nonneg _)
+  exact_mod_cast heq
+
+/-- Accuracy projection from the honest expected-query implementation. -/
+theorem CVTheorem11ExpectedImplementation.correct
+    (I : CVTheorem11ExpectedImplementation)
+    (n : ℕ) (K : Set (Space n)) (ε p R2 : ℝ)
+    (hε : 0 < ε) (hp : 0 < p) (hp1 : p < 1) (hK : CVAdmissible K R2) :
+    1 - p ≤ ((I.algorithm n).μ
+      {ω | (I.algorithm n).est K ε p ω ∈ relErr ε (volume K).toReal}).toReal :=
+  (I.algorithm n).accuracy K ε p hε hp hp1 hK.1 hK.2.1 hK.2.2.2.1
+
+/-- Expected membership-query conclusion, about the very same coins as the estimator. -/
+theorem CVTheorem11ExpectedImplementation.expectedQueryCost_le
+    (I : CVTheorem11ExpectedImplementation)
+    (n : ℕ) (K : Set (Space n)) (ε p R2 : ℝ)
+    (hn : 1 ≤ n) (hε : 0 < ε) (hε1 : ε < 1)
+    (hp : 0 < p) (hp1 : p < 1) (hK : CVAdmissible K R2) :
+    (∫⁻ ω, (I.algorithm n).queryCost K ε p ω ∂(I.algorithm n).μ) ≤
+      ENNReal.ofReal (I.runtimeConstant * cvComplexityShapeClipped n R2 ε p) :=
+  (I.algorithm n).expectedQueryCost_le K ε p |>.trans
+    (I.expectedBound_le n K ε p R2 hn hε hε1 hp hp1 hK)
 
 /-- The order-notation form of the well-rounded runtime, for a fixed accuracy,
 confidence, and explicit roundness constant `κ`.  A caller chooses `cost n` from an
@@ -104,5 +174,9 @@ theorem cvWellRoundedRuntimeOrder_of_bound (cost : ℕ → ℝ) (κ ε p C : ℝ
     (h : ∀ n, ‖cost n‖ ≤ C * ‖cvComplexityShape n (κ * n) ε p‖) :
     CVWellRoundedRuntimeOrder cost κ ε p := by
   exact IsBigO.of_bound C (Filter.Eventually.of_forall h)
+
+#print axioms CVTheorem11ExpectedImplementation.correct
+#print axioms CVTheorem11ExpectedImplementation.expectedQueryCost_le
+#print axioms CVTheorem11Implementation.queryCost_eq_zero_dim_one
 
 end Ttc

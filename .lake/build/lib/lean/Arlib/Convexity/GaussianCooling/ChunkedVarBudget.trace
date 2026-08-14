@@ -1,0 +1,74 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["f27ebbd340623ebd.olean"],
+  "m": false,
+  "i": "6122792a419b96e9.ilean",
+  "c": "b90cc0d81af09494.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/ChunkedVarBudget.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/ChunkedVarBudget.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/ChunkedVarBudget.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/ChunkedVarBudget.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:706:0: 'Arlib.GaussianCooling.Chunked.adaptiveChunkStart_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:707:0: 'Arlib.GaussianCooling.Chunked.adaptiveChunkStart_succ_eq_mul' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:708:0: 'Arlib.GaussianCooling.Chunked.adaptiveChunkRate_lt_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:709:0: 'Arlib.GaussianCooling.Chunked.two_le_adaptiveChunkCool' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:710:0: 'Arlib.GaussianCooling.Chunked.pow_two_mul_le_adaptiveChunkStart' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:711:0: 'Arlib.GaussianCooling.Chunked.prod_adaptiveChunkVar_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:712:0: 'Arlib.GaussianCooling.Chunked.prod_adaptiveChunkVar_le_exp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:713:0: 'Arlib.GaussianCooling.Chunked.prod_adaptiveChunkActualVar_le_exp' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean:714:0: 'Arlib.GaussianCooling.Chunked.adaptiveTotalPhases_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.GaussianCooling.ChunkedVarBudget:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.GaussianCooling.Schedule transitive imports (legacy)",
+         "c25bff2c67ed452f"],
+        ["Arlib.Convexity.GaussianCooling.Schedule:importAllArts",
+         "728146461b0d3f52"],
+        ["Arlib.Convexity.GaussianCooling.Variance transitive imports (legacy)",
+         "25f4c4058b50e145"],
+        ["Arlib.Convexity.GaussianCooling.Variance:importAllArts",
+         "f3e1937f663a763d"],
+        ["Arlib.Convexity.GaussianCooling.Chain transitive imports (legacy)",
+         "5d1f63c4d51e5e43"],
+        ["Arlib.Convexity.GaussianCooling.Chain:importAllArts",
+         "db7399141974ca21"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/ChunkedVarBudget.lean",
+   "f8c2662961da6d97"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.GaussianCooling.ChunkedVarBudget",
+   "e32435c8474a9958"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "f4f03921f3577950"}

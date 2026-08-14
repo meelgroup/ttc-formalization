@@ -1,0 +1,78 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["ae7d0e01426dd57b.olean"],
+  "m": false,
+  "i": "30d7cdef8e394e76.ilean",
+  "c": "4353135899ae2e68.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:46:5: Variable name `j` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:46:35: Variable name `l` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:312:11: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:491:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.map_snd_terminalCoordinateCostLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:492:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.six_mul_lintegral_terminalCoordinateCostLaw_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:493:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.map_packed_terminal_state' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:494:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.six_mul_lintegral_packedTerminal_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:495:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.terminalWarm_restart_quarters' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:496:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.isWarm_terminalWarmStart' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:497:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.six_mul_lintegral_terminalCoordinateCostLaw_le_concrete' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:498:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.map_snd_terminalCoordinateCostLaw_concrete' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean:499:0: 'Ttc.CostedAdaptiveTerminalPhaseAssembly.packedTerminal_cost_and_state_concrete' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CostedAdaptiveTerminalPhaseAssembly:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CostedAdaptiveTerminalWarmQ transitive imports (legacy)",
+         "5919ab9c52cc4879"],
+        ["Ttc.Exec.CostedAdaptiveTerminalWarmQ:importAllArts",
+         "1cb70adf0c6bfd63"],
+        ["Ttc.Exec.CostedPackedJointLaw transitive imports (legacy)",
+         "64538418f6ba0c89"],
+        ["Ttc.Exec.CostedPackedJointLaw:importAllArts", "a3ea543fed634be6"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CostedAdaptiveTerminalPhaseAssembly.lean",
+   "0025268cabc65e07"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CostedAdaptiveTerminalPhaseAssembly",
+   "41f62d56daf29e13"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "cd8cef0ef13d41ba"}

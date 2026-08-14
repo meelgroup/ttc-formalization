@@ -1,0 +1,68 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["58f7117b771f5b03.olean"],
+  "m": false,
+  "i": "8ada277dd18fb4d1.ilean",
+  "c": "2791ba4b6f2a6083.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVFreshRestartKernel.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVFreshRestartKernel.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVFreshRestartKernel.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVFreshRestartKernel.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVFreshRestartKernel.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:323:0: 'Ttc.CVFreshRestartKernel.freshSpeedyRestartKernel_apply_eq_condOn_withDensity' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:324:0: 'Ttc.CVFreshRestartKernel.freshSpeedyRestartKernel_apply_eq_firstAcceptedPoint' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:325:0: 'Ttc.CVFreshRestartKernel.tvLe_freshSpeedyRestartKernel_apply' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:326:0: 'Ttc.CVFreshRestartKernel.freshConditionMapLaw_toMeasure_of_ne_zero' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:327:0: 'Ttc.CVFreshRestartKernel.freshTwoStageSpeedyRestartKernel_apply_eq' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:328:0: 'Ttc.CVFreshRestartKernel.tvLe_freshTwoStageSpeedyRestartKernel_apply' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:329:0: 'Ttc.CVFreshRestartKernel.freshRestart_conditionedHistory_factorization' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:330:0: 'Ttc.CVFreshRestartKernel.freshSpeedyRestart_conditionedHistory_factorization' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVFreshRestartKernel.lean:331:0: 'Ttc.CVFreshRestartKernel.freshTwoStageSpeedyRestart_conditionedHistory_factorization' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.CVFreshRestartKernel:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.CVPathwisePhaseKernel transitive imports (legacy)",
+         "f6fad4d2195e76a8"],
+        ["Ttc.Volume.CVPathwisePhaseKernel:importAllArts", "c17f36a4c1c84d89"],
+        ["Mathlib.MeasureTheory.Measure.ProbabilityMeasure transitive imports (legacy)",
+         "da8c00d3cc0e04d6"],
+        ["Mathlib.MeasureTheory.Measure.ProbabilityMeasure:importAllArts",
+         "5c07a93b590392c9"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVFreshRestartKernel.lean",
+   "890af40f4491a72e"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.CVFreshRestartKernel", "9304aaf37cb173a3"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9d7208808714bea9"}

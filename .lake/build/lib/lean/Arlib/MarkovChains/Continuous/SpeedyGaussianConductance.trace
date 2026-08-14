@@ -1,0 +1,92 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["39fd18b0bebd1078.olean"],
+  "m": false,
+  "i": "5d843600f4d0a4e0.ilean",
+  "c": "bc8863e2c1f4b96b.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:582:0: 'Arlib.MarkovChains.ell_mul_gaussianWeight_eq_ofReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:583:0: 'Arlib.MarkovChains.integrableOn_ell_mul_gaussianWeightReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:584:0: 'Arlib.MarkovChains.ellGaussianMeasure_eq_ofReal_setIntegral' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:585:0: 'Arlib.MarkovChains.hpi_ellGaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:586:0: 'Arlib.MarkovChains.ell_toReal_pos_of_convex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:587:0: 'Arlib.MarkovChains.hiso_speedyMetropolisGaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:588:0: 'Arlib.MarkovChains.mul_volume_le_speedyMetropolisGaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:589:0: 'Arlib.MarkovChains.one_le_twenty_mul_speedyMetropolisGaussian_add_of_comparable' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:590:0: 'Arlib.MarkovChains.acceptance_floor_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:591:0: 'Arlib.MarkovChains.acceptance_floor_of_cv' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:592:0: 'Arlib.MarkovChains.hoverlap_speedyMetropolisGaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:593:0: 'Arlib.MarkovChains.ellGaussianMeasure_univ_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:594:0: 'Arlib.MarkovChains.integral_ellGaussianIndicator_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean:595:0: 'Arlib.MarkovChains.conductance_speedyMetropolisGaussian_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.SpeedyGaussianConductance:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.SpeedyGaussian transitive imports (legacy)",
+         "ece8bdf9867f505b"],
+        ["Arlib.MarkovChains.Continuous.SpeedyGaussian:importAllArts",
+         "544489c1ced56a94"],
+        ["Arlib.MarkovChains.Continuous.OverlapSqrt transitive imports (legacy)",
+         "97ac04eac59c4d29"],
+        ["Arlib.MarkovChains.Continuous.OverlapSqrt:importAllArts",
+         "64dd1dfea31ff67d"],
+        ["Arlib.MarkovChains.Continuous.MetropolisConductanceSharp transitive imports (legacy)",
+         "5deec3f4b1c7f023"],
+        ["Arlib.MarkovChains.Continuous.MetropolisConductanceSharp:importAllArts",
+         "d6397d68cd777dc1"],
+        ["Arlib.Convexity.IsoWeighted transitive imports (legacy)",
+         "929cb52ced0275e9"],
+        ["Arlib.Convexity.IsoWeighted:importAllArts", "87f232b1db97c155"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/SpeedyGaussianConductance.lean",
+   "a61b54c26ac46067"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.SpeedyGaussianConductance",
+   "d74753344beb3a82"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "468e09a06be71e35"}

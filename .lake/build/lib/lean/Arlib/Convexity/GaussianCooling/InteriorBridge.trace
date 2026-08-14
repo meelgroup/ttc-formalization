@@ -1,0 +1,64 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["e9df019b92210bff.olean"],
+  "m": false,
+  "i": "9fb3145886c95a82.ilean",
+  "c": "fbcef5a82a38ec58.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/InteriorBridge.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/InteriorBridge.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/InteriorBridge.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/InteriorBridge.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/InteriorBridge.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:75:10: `Set.diff_eq_empty` has been deprecated: Use `Set.sdiff_eq_empty` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:144:0: 'Arlib.GaussianCooling.interior_ae_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:145:0: 'Arlib.GaussianCooling.restrict_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:146:0: 'Arlib.GaussianCooling.volume_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:147:0: 'Arlib.GaussianCooling.chain_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:148:0: 'Arlib.GaussianCooling.coolLaw_interior' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/InteriorBridge.lean:149:0: 'Arlib.GaussianCooling.interior_admissible' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.GaussianCooling.InteriorBridge:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.GaussianCooling.PhaseVar transitive imports (legacy)",
+         "748344d97be45d50"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar:importAllArts",
+         "4f43cc313e92c7b5"],
+        ["Mathlib.Analysis.Convex.Measure transitive imports (legacy)",
+         "cb5e346914f11734"],
+        ["Mathlib.Analysis.Convex.Measure:importAllArts",
+         "92ea8c4535cd7b86"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/InteriorBridge.lean",
+   "f2bb583d17cc2f00"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.GaussianCooling.InteriorBridge",
+   "0a7bb29d6649a2ec"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "e977073e9715418b"}

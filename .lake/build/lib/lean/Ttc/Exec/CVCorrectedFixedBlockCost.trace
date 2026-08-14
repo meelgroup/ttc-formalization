@@ -1,0 +1,71 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["1f9d6f6b6ae81322.olean"],
+  "m": false,
+  "i": "31b73bb22f3ec22a.ilean",
+  "c": "66a7eba869c57e36.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVCorrectedFixedBlockCost.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVCorrectedFixedBlockCost.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVCorrectedFixedBlockCost.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVCorrectedFixedBlockCost.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVCorrectedFixedBlockCost.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:130:14: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:143:5: Variable name `j` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:143:45: Variable name `l` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:225:8: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:350:0: 'Ttc.CVCorrectedFixedBlockCost.source_fixed_succ_not_ambientEligible' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:351:0: 'Ttc.CVCorrectedFixedBlockCost.sourceFigureProperSteps_fixed' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:352:0: 'Ttc.CVCorrectedFixedBlockCost.map_snd_fixedCoordinateCostLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:353:0: 'Ttc.CVCorrectedFixedBlockCost.six_mul_lintegral_packedFixedBlock_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVCorrectedFixedBlockCost.lean:354:0: 'Ttc.CVCorrectedFixedBlockCost.six_mul_lintegral_correctedHybridBlock_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVCorrectedFixedBlockCost:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CostedAmbientGaussianRejection transitive imports (legacy)",
+         "48d22ec7b6209459"],
+        ["Ttc.Exec.CostedAmbientGaussianRejection:importAllArts",
+         "23dca4b08fc4a792"],
+        ["Ttc.Exec.CostedPackedWarmSchedule transitive imports (legacy)",
+         "2789689d04c07344"],
+        ["Ttc.Exec.CostedPackedWarmSchedule:importAllArts", "65b6f9e86561c200"],
+        ["Ttc.Volume.CVHybridSchedule transitive imports (legacy)",
+         "a065a056f42ae9fe"],
+        ["Ttc.Volume.CVHybridSchedule:importAllArts", "9beaf5c1edae0268"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVCorrectedFixedBlockCost.lean",
+   "a8421dba8858330d"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVCorrectedFixedBlockCost", "c2c1684f908edf39"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "3668601ae2529c05"}

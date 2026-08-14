@@ -1,0 +1,62 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["a862fd3b64708dc6.olean"],
+  "m": false,
+  "i": "c123ee796a784918.ilean",
+  "c": "a1a9b27dca83db9d.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/HitAndRunBackendUncond.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/HitAndRunBackendUncond.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/HitAndRunBackendUncond.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/HitAndRunBackendUncond.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/HitAndRunBackendUncond.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:211:18: Variable name `hR` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:341:18: Variable name `hR` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:418:0: 'Ttc.diam_le_two_mul_of_subset_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:419:0: 'Ttc.hrBallDeadline_eq_contract' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:420:0: 'Ttc.tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:421:0: 'Ttc.tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond_ballOne_dim1100' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackendUncond.lean:422:0: 'Ttc.tvLe_iterate_hitAndRun_at_contract_shape_uncond_of_plainLS' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Sampler.HitAndRunBackendUncond:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.HitAndRunMixingUncond transitive imports (legacy)",
+         "6f0ce4d5bc71cba0"],
+        ["Arlib.MarkovChains.Continuous.HitAndRunMixingUncond:importAllArts",
+         "c2646c11c2789253"],
+        ["Ttc.Sampler.HitAndRunBackend transitive imports (legacy)",
+         "9e38451142ef04b1"],
+        ["Ttc.Sampler.HitAndRunBackend:importAllArts", "85f994153f37c2f2"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/HitAndRunBackendUncond.lean",
+   "d69d815eaffe61ea"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Sampler.HitAndRunBackendUncond", "445d80793a860e3e"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "c4a56467be52fbf2"}

@@ -1,0 +1,78 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["d54814e609b6564a.olean"],
+  "m": false,
+  "i": "461156d5e6dbe2ae.ilean",
+  "c": "1007714cf38fed81.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/PricedHeadline.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/PricedHeadline.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/PricedHeadline.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/PricedHeadline.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/PricedHeadline.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:458:0: 'Ttc.ttc_volume_estimate_parametric' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:459:0: 'Ttc.PricedHeadline.one_le_cvL' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:460:0: 'Ttc.PricedHeadline.cvKappa_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:461:0: 'Ttc.PricedHeadline.cvKappa_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:462:0: 'Ttc.PricedHeadline.deltaPrime_le_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:463:0: 'Ttc.PricedHeadline.one_le_canonRfac' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:464:0: 'Ttc.PricedHeadline.cvPrice_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:465:0: 'Ttc.PricedHeadline.zero_le_volFac' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:466:0: 'Ttc.PricedHeadline.cvPrice_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:467:0: 'Ttc.PricedHeadline.all_ttc_cost_le_quartic' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/PricedHeadline.lean:468:0: 'Ttc.PricedHeadline.all_ttc_cost_le_quartic_at_run' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.PricedHeadline:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Monadic.Program transitive imports (legacy)", "e349921d3112c4a0"],
+        ["Ttc.Monadic.Program:importAllArts", "e9f059bf7965fda3"],
+        ["Ttc.Exec.SampPriceHR transitive imports (legacy)",
+         "c421ca037aa29501"],
+        ["Ttc.Exec.SampPriceHR:importAllArts", "a0d79492e3bfc3ea"],
+        ["Ttc.Exec.CoolDrawPrice transitive imports (legacy)",
+         "d775df273fcf273e"],
+        ["Ttc.Exec.CoolDrawPrice:importAllArts", "fac334e875f82323"],
+        ["Ttc.Exec.PolyComplexity transitive imports (legacy)",
+         "8e3ad1fefd0e58d8"],
+        ["Ttc.Exec.PolyComplexity:importAllArts", "e08aa63d91e30f23"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/PricedHeadline.lean",
+   "570c1d9d83a409e3"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.PricedHeadline", "f06aea3bde753dee"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "be7fa0048703d887"}

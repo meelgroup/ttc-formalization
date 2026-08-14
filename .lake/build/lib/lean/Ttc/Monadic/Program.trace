@@ -1,0 +1,116 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["e5ceb1d13945ee44.olean"],
+  "m": false,
+  "i": "526af6f9c4d64aff.ilean",
+  "c": "ace8b9cbdf66ad6b.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Monadic/Program.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Monadic/Program.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Monadic/Program.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Monadic/Program.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Monadic/Program.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Monadic/Program.lean:579:0: 'Ttc.ttcLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:580:0: 'Ttc.ttcLaw_def' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:581:0: 'Ttc.instIsProbabilityMeasureTtcLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:582:0: 'Ttc.ttcPair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:583:0: 'Ttc.ttcPair_def' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:584:0: 'Ttc.countablyDetermined_ttcPair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:585:0: 'Ttc.measurable_ttcPair' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:586:0: 'Ttc.ttcPairLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:587:0: 'Ttc.ttcPairLaw_def' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:588:0: 'Ttc.instIsProbabilityMeasureTtcPairLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:589:0: 'Ttc.ttcPairLaw_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:590:0: 'Ttc.PrR_ttcPairLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:591:0: 'Ttc.PrR_ttcPairLaw_fst' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:592:0: 'Ttc.ttc_accuracy_pairLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:593:0: 'Ttc.measurableSet_vanish' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:594:0: 'Ttc.trajLaw_iInter_compl_vanish' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:595:0: 'Ttc.ttcTrajKernel_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:596:0: 'Ttc.ae_ttcLaw_ttcTerminates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:597:0: 'Ttc.ttcPairLaw_cost_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:598:0: 'Ttc.ttcPairLaw_cost_le_of_terminates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:599:0: 'Ttc.all_ttcPairLaw_cost_le_of_terminates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:600:0: 'Ttc.all_ttcPairLaw_cost_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Monadic/Program.lean:601:0: 'Ttc.all_ttcPairLaw_iff_atoms' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Monadic.Program:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Monadic.MeasurePr transitive imports (legacy)",
+         "19e6ecb5293d8607"],
+        ["Ttc.Monadic.MeasurePr:importAllArts", "8254966eb721a4a5"],
+        ["Ttc.Monadic.Pair transitive imports (legacy)", "1b0019b196064cff"],
+        ["Ttc.Monadic.Pair:importAllArts", "151c9154d69ca6bd"],
+        ["Ttc.Process.Truncation transitive imports (legacy)",
+         "56d73cb64a95e40d"],
+        ["Ttc.Process.Truncation:importAllArts", "16fc26bd20b5eaac"],
+        ["Ttc.Sampler.RatesNonneg transitive imports (legacy)",
+         "87dcc73e04914540"],
+        ["Ttc.Sampler.RatesNonneg:importAllArts", "22e4633c6c383ae8"],
+        ["Ttc.Exec.Complexity transitive imports (legacy)", "2374c86fd0d5d760"],
+        ["Ttc.Exec.Complexity:importAllArts", "7ebe22b7f426469c"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Monadic/Program.lean",
+   "e7d461acd8cbb474"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Monadic.Program", "0f87729f9273ed49"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9722c1a73a37af93"}

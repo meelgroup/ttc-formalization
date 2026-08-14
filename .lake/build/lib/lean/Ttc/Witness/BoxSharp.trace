@@ -1,0 +1,240 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["8aed669a8ecb5b60.olean"],
+  "m": false,
+  "i": "56eedb205c091a76.ilean",
+  "c": "7e7d3f664b8c518c.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Witness/BoxSharp.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Witness/BoxSharp.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Witness/BoxSharp.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Witness/BoxSharp.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Witness/BoxSharp.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:890:0: 'Ttc.Box.toReal_nonneg_any' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:891:0: 'Ttc.Box.ttc_volume_box_accuracy_is_trivial' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:892:0: 'Ttc.Box.bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:893:0: 'Ttc.Box.sol_eq_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:894:0: 'Ttc.Box.region_eq_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:895:0: 'Ttc.Box.isBounded_sol_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:896:0: 'Ttc.Box.coeff_ne_zero_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:897:0: 'Ttc.Box.ball_subset_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:898:0: 'Ttc.Box.latFiniteOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:899:0: 'Ttc.Box.latNonemptyOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:900:0: 'Ttc.Box.ncard_lat_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:901:0: 'Ttc.Box.latticeCount_eq_ncard' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:902:0: 'Ttc.Box.latticeCount_pos_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:903:0: 'Ttc.Box.volume_bxOf_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:904:0: 'Ttc.Box.volume_bxOf_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:905:0: 'Ttc.Box.bxOffsetOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:906:0: 'Ttc.Box.smul_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:907:0: 'Ttc.Box.bxBodyOf_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:908:0: 'Ttc.Box.one_le_cOf_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:909:0: 'Ttc.Box.one_le_kappaOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:910:0: 'Ttc.Box.bxInflatedOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:911:0: 'Ttc.Box.roundBox_subset_bxInflatedOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:912:0: 'Ttc.Box.setIntegral_prodTent_bxInflatedOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:913:0: 'Ttc.Box.dbx_sideOf_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:914:0: 'Ttc.Box.ball_subset_dbxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:915:0: 'Ttc.Box.volume_bxInflatedOf_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:916:0: 'Ttc.Box.volume_bxInflatedOf_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:917:0: 'Ttc.Box.volume_bxInflatedOf_toReal_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:918:0: 'Ttc.Box.bxLawOf_isProb' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:919:0: 'Ttc.Box.integral_prodTent_bxUniformOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:920:0: 'Ttc.Box.dilFiniteOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:921:0: 'Ttc.Box.smpOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:922:0: 'Ttc.Box.samplerOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:923:0: 'Ttc.Box.parS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:924:0: 'Ttc.Box.parS_eps' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:925:0: 'Ttc.Box.parS_delta' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:926:0: 'Ttc.Box.parS_epsPrime' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:927:0: 'Ttc.Box.parS_eta' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:928:0: 'Ttc.Box.parS_m' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:929:0: 'Ttc.Box.parS_r' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:930:0: 'Ttc.Box.parS_epsPrime_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:931:0: 'Ttc.Box.parS_epsPrime_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:932:0: 'Ttc.Box.parS_thresh_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:933:0: 'Ttc.Box.sideS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:934:0: 'Ttc.Box.one_le_sideS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:935:0: 'Ttc.Box.sideS_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:936:0: 'Ttc.Box.thresh_le_sideS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:937:0: 'Ttc.Box.gamS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:938:0: 'Ttc.Box.gamS_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:939:0: 'Ttc.Box.rhoS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:940:0: 'Ttc.Box.LvalS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:941:0: 'Ttc.Box.sideS_le_LvalS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:942:0: 'Ttc.Box.lattice_lo_bxS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:943:0: 'Ttc.Box.epsPrime_thresh_le_volumeS' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:944:0: 'Ttc.Box.vlOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:945:0: 'Ttc.Box.thOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:946:0: 'Ttc.Box.sum_thOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:947:0: 'Ttc.Box.hasLatticeEnum_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:948:0: 'Ttc.Box.latticeEnum_mem_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:949:0: 'Ttc.Box.theta_eq_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:950:0: 'Ttc.Box.gen_mem_bxOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:951:0: 'Ttc.Box.ttc_volume_box_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:952:0: 'Ttc.Box.ttc_volume_box_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:953:0: 'Ttc.Box.AtParams' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:954:0: 'Ttc.Box.atParams_of' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:955:0: 'Ttc.Box.atParams_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:956:0: 'Ttc.Box.exists_two_ttc_volume_instances' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Witness/BoxSharp.lean:957:0: 'Ttc.Box.exists_two_ttc_volume_instances_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Witness.BoxSharp:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Endgoal transitive imports (legacy)", "9798675efcce8e4d"],
+        ["Ttc.Exec.Endgoal:importAllArts", "ecb35cb57dfc1dd7"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Witness/BoxSharp.lean",
+   "5181dc939e0756ec"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Witness.BoxSharp", "ffddecfa0483d2cd"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "c6de667041ba9034"}

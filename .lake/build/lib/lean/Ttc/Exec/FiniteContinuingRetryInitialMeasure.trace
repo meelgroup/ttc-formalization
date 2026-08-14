@@ -1,0 +1,57 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["6035241de82c8384.olean"],
+  "m": false,
+  "i": "4bbc9782c4ac52ec.ilean",
+  "c": "1dab4df2ba27d3ee.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/FiniteContinuingRetryInitialMeasure.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/FiniteContinuingRetryInitialMeasure.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/FiniteContinuingRetryInitialMeasure.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/FiniteContinuingRetryInitialMeasure.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean:305:11: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean:312:7: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean:323:0: 'Ttc.FiniteContinuingRetryInitialMeasure.survival_mul_proposalOf_apply' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean:324:0: 'Ttc.FiniteContinuingRetryInitialMeasure.survivalOf_succ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean:325:0: 'Ttc.FiniteContinuingRetryInitialMeasure.acceptedOutputEvent_eq_sum_of' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean:326:0: 'Ttc.FiniteContinuingRetryInitialMeasure.tvLe_cutoffOutput_of_accepted_initialLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.FiniteContinuingRetryInitialMeasure:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.FiniteContinuingRetryGeneralDecomposition transitive imports (legacy)",
+         "e7362b680af2f634"],
+        ["Ttc.Exec.FiniteContinuingRetryGeneralDecomposition:importAllArts",
+         "9ce4e24aee85715e"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/FiniteContinuingRetryInitialMeasure.lean",
+   "8dcce927bded679d"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.FiniteContinuingRetryInitialMeasure",
+   "b7555ed2f9d749f5"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9da1d2f11534ab1c"}

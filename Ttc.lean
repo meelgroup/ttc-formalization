@@ -746,11 +746,15 @@ import Ttc.Exec.CVGaussianScoreAwareMoment
 import Ttc.Exec.CVGaussianScoreAwareIndependent
 import Ttc.Exec.CVCorrectedClippingBias
 import Ttc.Exec.CVIndependentStreamBiasAccuracy
+import Ttc.Exec.CVCorrectedClippingArithmetic
+import Ttc.Exec.CVGaussianFactorEightCapstone
+import Ttc.Exec.CVGaussianFactorSevenAssembly
 import Ttc.Exec.CVGaussianCappedCostedSchedule
 import Ttc.Exec.CVGaussianCappedCostEnvelope
 import Ttc.Exec.CVGaussianCappedExpectedVolume
 import Ttc.Exec.CVGuardedGeneralizedPublic
 import Ttc.Exec.CVGaussianGuardedExpectedVolume
+import Ttc.Exec.CVGaussianGuardedPolynomialRuntime
 import Ttc.Exec.CVGaussianKilledRetryWarm
 import Ttc.Exec.FiniteContinuingRetryProjectedZeroSafe
 import Ttc.Exec.CVGaussianWarmFallbackZeroSafe
@@ -768,5 +772,8 @@ import Ttc.Exec.CostedCanonicalOwnerTTCPlugin
 import Ttc.Exec.ConcreteHybridCanonicalOwnerSampler
 import Ttc.Exec.ConcreteHybridCanonicalOwnerPoly
 import Ttc.Exec.ConcreteHybridCanonicalOwnerMeasurable
+import Ttc.Exec.PolyHybridCanonicalCertificate
+import Ttc.Exec.PolyHybridCanonicalFinal
+import Ttc.Exec.CanonicalOwnerRateCutoff
 import Ttc.Exec.PolySamplerAccuracyGeneric
 import Ttc.Exec.PolyHybridAccuracy

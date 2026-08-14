@@ -1,0 +1,57 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["0b3a36099c227ea0.olean"],
+  "m": false,
+  "i": "27a2f5a0fd478df2.ilean",
+  "c": "6ef9da36bf718fa3.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean:212:10: This simp argument is unused:\n  mem_sphere\n\nHint: Omit it from the simp argument list.\n  simp [m̵e̵m̵_̵s̵p̵h̵e̵r̵e̵,̵ ̵dist_zero_right, hz] at hnorm\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean:212:22: This simp argument is unused:\n  dist_zero_right\n\nHint: Omit it from the simp argument list.\n  simp [mem_sphere, d̵i̵s̵t̵_̵z̵e̵r̵o̵_̵r̵i̵g̵h̵t̵,̵ ̵hz] at hnorm\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean:274:0: 'Arlib.MarkovChains.PolytopeHitAndRunExecution.finiteFacetHitAndRun_eq_hitAndRun' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean:276:0: 'Arlib.MarkovChains.PolytopeHitAndRunExecution.intervalKernel_apply' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean:277:0: 'Arlib.MarkovChains.PolytopeHitAndRunExecution.finiteFacetProposal_apply' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean:278:0: 'Arlib.MarkovChains.PolytopeHitAndRunExecution.finiteFacetProposal_eq_hitAndRunProposal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.PolytopeHitAndRunExecution:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.PolytopeChord transitive imports (legacy)",
+         "0076adf8139bd798"],
+        ["Arlib.MarkovChains.Continuous.PolytopeChord:importAllArts",
+         "bfa7a9d81497eb4d"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/PolytopeHitAndRunExecution.lean",
+   "340c9a7ac4e255a5"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.PolytopeHitAndRunExecution",
+   "88fbb66cc3cfb1af"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "be2abed5de8fd8d6"}

@@ -1,0 +1,111 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["e2de9b3accd88b08.olean"],
+  "m": false,
+  "i": "2439f2e4f5d7d53c.ilean",
+  "c": "a0cbe428e2d36cc0.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Probability/DeltaIndependence.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Probability/DeltaIndependence.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Probability/DeltaIndependence.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Probability/DeltaIndependence.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Probability/DeltaIndependence.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:814:0: 'Arlib.GaussianCooling.NuIndep.mono' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:815:0: 'Arlib.GaussianCooling.NuIndep.symm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:816:0: 'Arlib.GaussianCooling.nuIndep_zero_iff_indepFun' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:817:0: 'Arlib.GaussianCooling.measureReal_inter_add_compl_inter' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:818:0: 'Arlib.GaussianCooling.nuIndep_of_approx_product' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:819:0: 'Arlib.GaussianCooling.nuIndep_compProd_of_tvLe' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:820:0: 'Arlib.GaussianCooling.indepFun_compProd_const' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:821:0: 'Arlib.GaussianCooling.abs_measureReal_sub_le_of_inter_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:822:0: 'Arlib.GaussianCooling.NuIndep.of_coupling' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:823:0: 'Arlib.GaussianCooling.delta_ind_a' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:824:0: 'Arlib.GaussianCooling.delta_ind_a_bar' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:825:0: 'Arlib.GaussianCooling.delta_ind_b' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:826:0: 'Arlib.GaussianCooling.delta_ind_b_tuple' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:827:0: 'Arlib.GaussianCooling.delta_ind_c' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:828:0: 'Arlib.GaussianCooling.delta_ind_c_paper' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:829:0: 'Arlib.GaussianCooling.integrable_min_const' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:830:0: 'Arlib.GaussianCooling.expect_trunc_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:831:0: 'Arlib.GaussianCooling.expect_trunc_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:832:0: 'Arlib.GaussianCooling.expect_trunc_ge_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:833:0: 'Arlib.GaussianCooling.expect_trunc_ge_half_of_seven_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:834:0: 'Arlib.GaussianCooling.abs_integral_indicator_mul_sub_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Probability/DeltaIndependence.lean:835:0: 'Arlib.GaussianCooling.abs_integral_indicator_mul_sub_le'' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Probability.DeltaIndependence:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.GaussianCooling.Estimator transitive imports (legacy)",
+         "5bcdb2836be0c299"],
+        ["Arlib.Convexity.GaussianCooling.Estimator:importAllArts",
+         "218d53b972ba4cce"],
+        ["Arlib.Probability.TV transitive imports (legacy)",
+         "c83018d9e0a7a4f8"],
+        ["Arlib.Probability.TV:importAllArts", "f2dcdf6cb327760c"],
+        ["Mathlib.Probability.Kernel.Composition.MeasureCompProd transitive imports (legacy)",
+         "1782e1449341002b"],
+        ["Mathlib.Probability.Kernel.Composition.MeasureCompProd:importAllArts",
+         "a30bcaaf3085bcbb"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Probability/DeltaIndependence.lean",
+   "8b96467b86cce37e"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Probability.DeltaIndependence", "8d89fbe95ad4561e"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "cf271ca48bd506d2"}

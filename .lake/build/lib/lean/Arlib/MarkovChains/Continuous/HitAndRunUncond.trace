@@ -1,0 +1,77 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["253b439a7b2d6cf2.olean"],
+  "m": false,
+  "i": "1afce4cb90873f93.ilean",
+  "c": "53d19bae7989db56.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/HitAndRunUncond.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/HitAndRunUncond.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/HitAndRunUncond.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/HitAndRunUncond.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/HitAndRunUncond.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:498:0: 'Arlib.MarkovChains.lsThreshold_anti' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:499:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_param' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:500:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_of_param' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:501:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_of_param_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:502:0: 'Arlib.MarkovChains.ofReal_le_conductance_hitAndRun_of_unitBall_param' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:503:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_unitBall_param' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:504:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_unitBall_of_param' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:505:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_unitBall_of_param_eq' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:506:0: 'Arlib.MarkovChains.tvLe_hitAndRun_lemma41_uncond_max' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/HitAndRunUncond.lean:507:0: 'Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_unitBall_8000' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.HitAndRunUncond:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.ConductanceToTV transitive imports (legacy)",
+         "03541d689ab5c8b0"],
+        ["Arlib.MarkovChains.Continuous.ConductanceToTV:importAllArts",
+         "f6794be16f1994cc"],
+        ["Arlib.MarkovChains.Continuous.HitAndRunConductanceParam transitive imports (legacy)",
+         "5b8e1423ab4617af"],
+        ["Arlib.MarkovChains.Continuous.HitAndRunConductanceParam:importAllArts",
+         "aa65127f7fb89171"],
+        ["Arlib.MarkovChains.Continuous.SphereCap transitive imports (legacy)",
+         "6000bb829f51b9bb"],
+        ["Arlib.MarkovChains.Continuous.SphereCap:importAllArts",
+         "69fe6df70702feb6"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/HitAndRunUncond.lean",
+   "cbed628025d2199c"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.HitAndRunUncond",
+   "012dd2eee07e4089"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "fe725a94dedcf984"}

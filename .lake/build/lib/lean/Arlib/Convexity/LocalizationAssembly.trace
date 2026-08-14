@@ -1,0 +1,131 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["0a769c2c09956974.olean"],
+  "m": false,
+  "i": "0e4547ad81aed739.ilean",
+  "c": "e8390779967aeaf7.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/LocalizationAssembly.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/LocalizationAssembly.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/LocalizationAssembly.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/LocalizationAssembly.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/LocalizationAssembly.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:452:6: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:823:2: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:827:4: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1001:0: 'Arlib.pencilFun_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1002:0: 'Arlib.pencilFun_eq_pencilLevel' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1003:0: 'Arlib.pencilFun_add_pi' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1004:0: 'Arlib.pencilLevel_add_pi' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1005:0: 'Arlib.pencilFun_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1006:0: 'Arlib.continuous_pencilMass' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1007:0: 'Arlib.exists_pencil_bisecting' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1008:0: 'Arlib.exists_flat_cut_zero_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1009:0: 'Arlib.notMem_interior_halfSpace' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1010:0: 'Arlib.notMem_interior_of_subset_halfSpace' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1011:0: 'Arlib.exists_flat_cut_chain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1012:0: 'Arlib.notMem_interior_of_pencil_cut' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1013:0: 'Arlib.interior_nonempty_of_setIntegral_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1014:0: 'Arlib.convex_three_mem' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1015:0: 'Arlib.pencil_solve' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1016:0: 'Arlib.inner_single_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1017:0: 'Arlib.inner_single_one_self' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1018:0: 'Arlib.inner_single_one_ne' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1019:0: 'Arlib.pencilFun_single_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1020:0: 'Arlib.exists_mem_coords' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1021:0: 'Arlib.minor_eq_of_pencil_exhaustion' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1022:0: 'Arlib.collinear_of_minor_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1023:0: 'Arlib.exists_flat_cut_chain_collinear' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1024:0: 'Arlib.exists_flat_cut_chain_collinear_ball' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1025:0: 'Arlib.lt_setIntegral_of_perturbed' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationAssembly.lean:1026:0: 'Arlib.needleIntegral_eq_zero_and_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.LocalizationAssembly:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Mathlib.Analysis.Normed.Affine.AddTorsorBases transitive imports (legacy)",
+         "09ae1b2501a3900f"],
+        ["Mathlib.Analysis.Normed.Affine.AddTorsorBases:importAllArts",
+         "d40160771f09fa6e"],
+        ["Arlib.Topology.HamSandwich transitive imports (legacy)",
+         "469c141e79fbb473"],
+        ["Arlib.Topology.HamSandwich:importAllArts", "b74878f8e796e57e"],
+        ["Arlib.Convexity.NeedleProfile transitive imports (legacy)",
+         "98579d09e716da52"],
+        ["Arlib.Convexity.NeedleProfile:importAllArts", "01cb9c6204829427"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/LocalizationAssembly.lean",
+   "b18621df33465076"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.LocalizationAssembly", "8d47d41588f9b7fc"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "5dfd42a6ac00115a"}

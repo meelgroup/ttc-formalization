@@ -1,0 +1,73 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["6e08ed8106dbb60b.olean"],
+  "m": false,
+  "i": "e858b7080d3511b8.ilean",
+  "c": "e4a4ddd4193003c0.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:588:0: 'Arlib.MarkovChains.metropolisAccept_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:589:0: 'Arlib.MarkovChains.mul_volume_le_setLIntegral_metropolisDensity' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:590:0: 'Arlib.MarkovChains.mul_volume_le_metropolisGaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:591:0: 'Arlib.MarkovChains.metropolisGaussian_overlap_of_convex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:592:0: 'Arlib.MarkovChains.integrableOn_gaussianWeightReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:593:0: 'Arlib.MarkovChains.withDensity_gaussianWeight_eq_ofReal_setIntegral' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:594:0: 'Arlib.MarkovChains.uniformOn_gaussianWeight_eq_div' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:595:0: 'Arlib.MarkovChains.integral_gaussianIndicator_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:596:0: 'Arlib.MarkovChains.conductance_metropolisGaussian_sharp_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean:597:0: 'Arlib.MarkovChains.exists_conductance_metropolisGaussian_sharp_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.MetropolisConductanceSharp:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.MetropolisConductance transitive imports (legacy)",
+         "2cb4584c4b09c14a"],
+        ["Arlib.MarkovChains.Continuous.MetropolisConductance:importAllArts",
+         "aa98667d8595dfea"],
+        ["Arlib.MarkovChains.Continuous.StarPolar transitive imports (legacy)",
+         "c79835547f9e378a"],
+        ["Arlib.MarkovChains.Continuous.StarPolar:importAllArts",
+         "364d0825523664a3"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MetropolisConductanceSharp.lean",
+   "21445c2b6a55106c"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.MetropolisConductanceSharp",
+   "897291082249e27c"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9f2b2a054af4b41e"}

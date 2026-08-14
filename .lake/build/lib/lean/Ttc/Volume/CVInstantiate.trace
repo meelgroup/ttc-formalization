@@ -1,0 +1,72 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["3f8257d5154df260.olean"],
+  "m": false,
+  "i": "f2de984a20fcca6f.ilean",
+  "c": "b8b71e80f096f47b.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVInstantiate.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVInstantiate.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/CVInstantiate.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVInstantiate.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/CVInstantiate.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:647:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfSchedule' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:648:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfSchedule_discharged' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:649:0: 'Ttc.integral_natRunCoord' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:650:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRuns' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:651:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsWitness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:652:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:653:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMean_est' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/CVInstantiate.lean:654:0: 'Ttc.VolumeAlgorithm.cousinsVempalaOfRunsApproxMeanWitness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.CVInstantiate:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.CousinsVempala transitive imports (legacy)",
+         "32fbbef7a4c9d4b9"],
+        ["Ttc.Volume.CousinsVempala:importAllArts", "36685b8fac3a7e12"],
+        ["Arlib.Convexity.GaussianCooling.Chain transitive imports (legacy)",
+         "5d1f63c4d51e5e43"],
+        ["Arlib.Convexity.GaussianCooling.Chain:importAllArts",
+         "db7399141974ca21"],
+        ["Arlib.Convexity.GaussianCooling.Schedule transitive imports (legacy)",
+         "c25bff2c67ed452f"],
+        ["Arlib.Convexity.GaussianCooling.Schedule:importAllArts",
+         "728146461b0d3f52"],
+        ["Arlib.Probability.RunPlumbing transitive imports (legacy)",
+         "09f9d96d4e604a49"],
+        ["Arlib.Probability.RunPlumbing:importAllArts", "f4d7f9167a961573"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/CVInstantiate.lean",
+   "b7565c499b5d433d"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.CVInstantiate", "8bbffa8b4d0b6545"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "d5175a5a0b85913f"}

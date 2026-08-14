@@ -1,0 +1,77 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["89d92a4bc044804b.olean"],
+  "m": false,
+  "i": "937a67428cceed0e.ilean",
+  "c": "c573068bb3819260.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGaussianGuardedExpectedVolume.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGaussianGuardedExpectedVolume.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CVGaussianGuardedExpectedVolume.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGaussianGuardedExpectedVolume.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CVGaussianGuardedExpectedVolume.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:33:23: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:36:13: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:53:23: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:56:13: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:173:23: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:176:13: Variable name `a` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:203:0: 'Ttc.CVGaussianGuardedExpectedVolume.gaussianClosedRawLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:204:0: 'Ttc.CVGaussianGuardedExpectedVolume.gaussianClosedRaw_expected_le_of_operational' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CVGaussianGuardedExpectedVolume.lean:205:0: 'Ttc.CVGaussianGuardedExpectedVolume.guardedExpectedQueryVolumeAlgorithm_gaussianCapped' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CVGaussianGuardedExpectedVolume:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CVGuardedGeneralizedPublic transitive imports (legacy)",
+         "759f0cc144d336de"],
+        ["Ttc.Exec.CVGuardedGeneralizedPublic:importAllArts",
+         "e176d597fefc1d67"],
+        ["Ttc.Exec.CVGaussianCappedExpectedVolume transitive imports (legacy)",
+         "c14a971b0d1283bc"],
+        ["Ttc.Exec.CVGaussianCappedExpectedVolume:importAllArts",
+         "5f5e24d2a0466b49"],
+        ["Ttc.Exec.CVGaussianAdaptiveIndependentOperational transitive imports (legacy)",
+         "293738abbfda0c6f"],
+        ["Ttc.Exec.CVGaussianAdaptiveIndependentOperational:importAllArts",
+         "d86fc444432fdd3c"],
+        ["Ttc.Exec.CVGaussianWarmFallbackScoreMoment transitive imports (legacy)",
+         "aecce4f62d13e3c6"],
+        ["Ttc.Exec.CVGaussianWarmFallbackScoreMoment:importAllArts",
+         "bbb70afa47611ef7"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CVGaussianGuardedExpectedVolume.lean",
+   "39fea8ed7573643b"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CVGaussianGuardedExpectedVolume", "cba7e73d9e042ee1"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "af720f42774ef222"}

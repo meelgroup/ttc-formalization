@@ -1,0 +1,108 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["e92fdaf0ac358ccb.olean"],
+  "m": false,
+  "i": "ce21fd88016c6193.ilean",
+  "c": "6938a06f2a650526.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MixingSqrt.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MixingSqrt.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/MixingSqrt.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MixingSqrt.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/MixingSqrt.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:552:0: 'Arlib.MarkovChains.log_two_div_dim_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:553:0: 'Arlib.MarkovChains.log_two_div_dim_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:554:0: 'Arlib.MarkovChains.log_two_div_dim_sqrt_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:555:0: 'Arlib.MarkovChains.log_two_div_dim_sqrt_le_one' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:556:0: 'Arlib.MarkovChains.dim_mul_sq_log_two_div_dim_sqrt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:557:0: 'Arlib.MarkovChains.stepCount_new_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:558:0: 'Arlib.MarkovChains.stepCount_old_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:559:0: 'Arlib.MarkovChains.stepCount_old_eq_dim_mul_new' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:560:0: 'Arlib.MarkovChains.two_mul_log_sqrt_div_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:561:0: 'Arlib.MarkovChains.mixesWithin_of_conductance_of_stepCount' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:562:0: 'Arlib.MarkovChains.mixesWithin_lazy_of_conductance_of_stepCount' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:563:0: 'Arlib.MarkovChains.mixesWithin_of_conductance_sqrt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:564:0: 'Arlib.MarkovChains.mixesWithin_lazy_of_conductance_sqrt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:565:0: 'Arlib.MarkovChains.conductanceMixingTime_at_operative_step_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:566:0: 'Arlib.MarkovChains.conductanceMixingTime_at_operative_step_old_le' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:567:0: 'Arlib.MarkovChains.mixesWithin_at_operative_step' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:568:0: 'Arlib.MarkovChains.mixesWithin_at_operative_step_old_route' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:569:0: 'Arlib.MarkovChains.mixesWithin_lazy_at_operative_step' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:570:0: 'Arlib.MarkovChains.mixesWithin_lazy_at_operative_step_old_route' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:571:0: 'Arlib.MarkovChains.conductanceMixingTime_old_le_dim_mul_new' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:572:0: 'Arlib.MarkovChains.dim_mul_conductanceMixingTime_new_sub_one_le_old' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/MixingSqrt.lean:573:0: 'Arlib.MarkovChains.mixesWithin_at_operative_step_const_piHalf' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.MixingSqrt:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.ConductanceToTV transitive imports (legacy)",
+         "03541d689ab5c8b0"],
+        ["Arlib.MarkovChains.Continuous.ConductanceToTV:importAllArts",
+         "f6794be16f1994cc"],
+        ["Arlib.MarkovChains.Continuous.DeltaCap transitive imports (legacy)",
+         "3bd76ca6b3e8dfaa"],
+        ["Arlib.MarkovChains.Continuous.DeltaCap:importAllArts",
+         "b989ec24a0542807"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/MixingSqrt.lean",
+   "dcdf79b01fb53dae"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.MixingSqrt", "e883aebc1ea73690"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "b8b9977858a79835"}

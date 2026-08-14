@@ -1,0 +1,87 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["a59438e3137337df.olean"],
+  "m": false,
+  "i": "2ef39d07b5a3c921.ilean",
+  "c": "fa342da4c9a9d3ba.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/AmbientGaussianRejection.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/AmbientGaussianRejection.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Volume/AmbientGaussianRejection.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/AmbientGaussianRejection.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Volume/AmbientGaussianRejection.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:438:0: 'Ttc.CV.ambientGaussianMeasure_univ' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:439:0: 'Ttc.CV.isProbabilityMeasure_ambientGaussianProb' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:440:0: 'Ttc.CV.condOn_ambientGaussianProb_eq_coolLaw_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:441:0: 'Ttc.CV.condOn_ambientGaussianProb_eq_coolLaw' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:442:0: 'Ttc.CV.ambientGaussianProb_acceptance_ge_of_chernoff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:443:0: 'Ttc.CV.ambientGaussianProb_acceptance_ge_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:444:0: 'Ttc.CV.ambientGaussian_rejection_terminates_ae' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:445:0: 'Ttc.CV.expected_ambientGaussian_rejection_rounds_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:446:0: 'Ttc.CV.ambientGaussian_rejection_terminates_ae_of_cold' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:447:0: 'Ttc.CV.expected_ambientGaussian_rejection_rounds_le_two' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:448:0: 'Ttc.CV.map_firstAcceptedDraw_eq_condOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:449:0: 'Ttc.CV.map_firstAcceptedDraw_ambientGaussian_eq_coolLaw_of_cold' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Volume/AmbientGaussianRejection.lean:450:0: 'Ttc.CV.expected_ambientGaussian_phase_rejection_rounds_le_two' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Volume.AmbientGaussianRejection:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Volume.AdaptiveChunkEndpoints transitive imports (legacy)",
+         "8e0ece74e090dd5b"],
+        ["Ttc.Volume.AdaptiveChunkEndpoints:importAllArts", "7b855c0544e2d549"],
+        ["Arlib.Probability.RejectionRounds transitive imports (legacy)",
+         "fa313d5afe1acaa1"],
+        ["Arlib.Probability.RejectionRounds:importAllArts", "d507f177c76eeaed"],
+        ["Arlib.MarkovChains.Continuous.PointwiseRoute transitive imports (legacy)",
+         "f71d56fe6e164a01"],
+        ["Arlib.MarkovChains.Continuous.PointwiseRoute:importAllArts",
+         "524432a63bd0a96d"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanRoute transitive imports (legacy)",
+         "4ac3e292f5ccf2bb"],
+        ["Arlib.Convexity.GaussianCooling.PhaseMeanRoute:importAllArts",
+         "d1b22c4bee0be826"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Volume/AmbientGaussianRejection.lean",
+   "e19ecbd5420d4fa7"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Volume.AmbientGaussianRejection", "9ed2b46cb9876705"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "89710cd96b57fade"}

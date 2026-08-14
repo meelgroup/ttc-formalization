@@ -1,0 +1,138 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["c336605d8b3dd8ec.olean"],
+  "m": false,
+  "i": "8c31dd48eba10fed.ilean",
+  "c": "fca24ed79c96fdc5.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/LocalizationTransport.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/LocalizationTransport.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/LocalizationTransport.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/LocalizationTransport.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/LocalizationTransport.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:906:0: 'Arlib.abs_setIntegral_sub_measure_mul_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:907:0: 'Arlib.exists_forall_abs_sub_le_of_chain_collapse' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:908:0: 'Arlib.le_apply_of_chain_collapse' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:909:0: 'Arlib.apply_le_of_chain_collapse' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:910:0: 'Arlib.apply_eq_zero_of_chain_collapse' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:911:0: 'Arlib.exists_ne_mem_iInter_of_chain' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:912:0: 'Arlib.forall_lt_of_sign_separated' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:913:0: 'Arlib.exists_ne_mem_iInter_of_chain_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:914:0: 'Arlib.collinear_image_linearMap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:915:0: 'Arlib.preimage_toLp_eq_image_ofLp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:916:0: 'Arlib.image_toLp_preimage_toLp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:917:0: 'Arlib.preimage_ofLp_preimage_toLp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:918:0: 'Arlib.measurableEmbedding_toLp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:919:0: 'Arlib.measurableSet_preimage_toLp_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:920:0: 'Arlib.isCompact_preimage_toLp_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:921:0: 'Arlib.convex_preimage_toLp_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:922:0: 'Arlib.collinear_preimage_toLp_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:923:0: 'Arlib.volume_preimage_toLp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:924:0: 'Arlib.setIntegral_preimage_toLp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:925:0: 'Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:926:0: 'Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean_of_sep' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:927:0: 'Arlib.setIntegral_eq_zero_of_odd' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:928:0: 'Arlib.collinear_of_subset_axis' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:929:0: 'Arlib.volume_symmetricBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:930:0: 'Arlib.neg_preimage_symmetricBox' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:931:0: 'Arlib.volume_subBox_quarter' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:932:0: 'Arlib.collinear_iInter_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:933:0: 'Arlib.le_setIntegral_min_sq_coord' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:934:0: 'Arlib.exists_chain_euclidean_of_sep_data' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/LocalizationTransport.lean:935:0: 'Arlib.exists_needleIntegral_eq_zero_and_pos_of_compact_chain_euclidean_of_sep_witness' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.LocalizationTransport:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.NeedleSlabChain transitive imports (legacy)",
+         "945e58c2c3f1e5ce"],
+        ["Arlib.Convexity.NeedleSlabChain:importAllArts", "82aa133b2200b51f"],
+        ["Arlib.Convexity.NeedleLimit transitive imports (legacy)",
+         "98579d09e716da52"],
+        ["Arlib.Convexity.NeedleLimit:importAllArts", "0be9e1d37abdb9cc"],
+        ["Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace transitive imports (legacy)",
+         "ea482762bf5f081b"],
+        ["Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace:importAllArts",
+         "dcc75b61a5332ece"],
+        ["Mathlib.Analysis.SpecialFunctions.Integrals.Basic transitive imports (legacy)",
+         "865e6c388de98d58"],
+        ["Mathlib.Analysis.SpecialFunctions.Integrals.Basic:importAllArts",
+         "37aab9079435c489"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/LocalizationTransport.lean",
+   "b82febc305877b12"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.LocalizationTransport", "38d335f94ddc3a65"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "6c6dfcfaaab9572d"}

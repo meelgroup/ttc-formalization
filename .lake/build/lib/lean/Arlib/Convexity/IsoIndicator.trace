@@ -1,0 +1,89 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["46a402f65c6c4d03.olean"],
+  "m": false,
+  "i": "ece592df4ed46eb5.ilean",
+  "c": "44d451db1da88fcd.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/IsoIndicator.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/IsoIndicator.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/IsoIndicator.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/IsoIndicator.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/IsoIndicator.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:482:5: Variable name `hS₁` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1024:0: 'Arlib.convexOn_infDist_of_convex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1025:0: 'Arlib.isLogConcave_exp_neg_infDist' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1026:0: 'Arlib.one_sub_exp_neg_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1027:0: 'Arlib.densDist_exp_div_le_of_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1028:0: 'Arlib.densDist_exp_div_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1029:0: 'Arlib.norm_sub_ge_of_densDist_gaussianIndicator' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1030:0: 'Arlib.norm_sub_ge_of_mem_thickening' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1031:0: 'Arlib.integrable_gaussianWeightReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1032:0: 'Arlib.tendsto_setIntegral_expNegInfDist_mul_gaussian' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1033:0: 'Arlib.setIntegral_indicator_closure_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1034:0: 'Arlib.exists_disjoint_open_enlargement_gaussianIndicator' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1035:0: 'Arlib.gaussianIndicator_isoperimetry_measurable' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1036:0: 'Arlib.metric_threshold_lt_openClosed_threshold' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1037:0: 'Arlib.hiso_metropolisGaussian_sharp_sqrt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/IsoIndicator.lean:1038:0: 'Arlib.gaussianIndicator_isoperimetry_measurable_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.IsoIndicator:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.IsoOpenClosed transitive imports (legacy)",
+         "cc46c21d2cbb42b7"],
+        ["Arlib.Convexity.IsoOpenClosed:importAllArts", "38ebb17c468ce3ea"],
+        ["Arlib.MarkovChains.Continuous.MetropolisGaussian transitive imports (legacy)",
+         "b0c694292979f87f"],
+        ["Arlib.MarkovChains.Continuous.MetropolisGaussian:importAllArts",
+         "91738632726a2209"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/IsoIndicator.lean",
+   "ecd9369672ea8206"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.IsoIndicator", "fe697a7d91d1bda4"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "1adbf122f9b8516d"}

@@ -1,0 +1,82 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["648189ce4e7f0a29.olean"],
+  "m": false,
+  "i": "34d31736e8faa626.ilean",
+  "c": "bbdd35c8de30e09a.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/PhaseMeanRoute.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/GaussianCooling/PhaseMeanRoute.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/PhaseMeanRoute.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/GaussianCooling/PhaseMeanRoute.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:639:0: 'Arlib.GaussianCooling.coolWeight_eq_gaussianWeightReal' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:640:0: 'Arlib.GaussianCooling.coolLaw_eq_uniformOn_gaussianWeight' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:641:0: 'Arlib.GaussianCooling.mixesWithin_coolLaw_of_uniformOn' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:642:0: 'Arlib.GaussianCooling.mixesWithin_lazy_metropolisGaussian_coolLaw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:643:0: 'Arlib.GaussianCooling.abs_integral_phaseScore_sub_ratio_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:644:0: 'Arlib.GaussianCooling.abs_integral_phaseScore_sub_ratio_le_of_mixing' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:645:0: 'Arlib.GaussianCooling.isProbabilityMeasure_coolMix' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:646:0: 'Arlib.GaussianCooling.tvLe_coolMix' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:647:0: 'Arlib.GaussianCooling.integral_phaseScore_coolMix' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:648:0: 'Arlib.GaussianCooling.exists_tvLe_coolLaw_integral_phaseScore_ne' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:649:0: 'Arlib.GaussianCooling.exists_markovKernel_mixesWithin_coolLaw_exact' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:650:0: 'Arlib.GaussianCooling.exists_coolLaw_uniformOn_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean:651:0: 'Arlib.GaussianCooling.exists_phaseMean_negative_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.GaussianCooling.PhaseMeanRoute:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.GaussianCooling.PhaseVar transitive imports (legacy)",
+         "748344d97be45d50"],
+        ["Arlib.Convexity.GaussianCooling.PhaseVar:importAllArts",
+         "4f43cc313e92c7b5"],
+        ["Arlib.MarkovChains.Continuous.MetropolisMixing transitive imports (legacy)",
+         "f50325db3e342b05"],
+        ["Arlib.MarkovChains.Continuous.MetropolisMixing:importAllArts",
+         "2df18479a752f1a8"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/GaussianCooling/PhaseMeanRoute.lean",
+   "12322fcd889ccee2"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.GaussianCooling.PhaseMeanRoute",
+   "7b5c673ba7f4fa63"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "a7d115647bb8cf29"}

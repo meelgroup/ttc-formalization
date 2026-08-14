@@ -1,0 +1,130 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["5b7add54bb192250.olean"],
+  "m": false,
+  "i": "5aaed508b8d833de.ilean",
+  "c": "777b37b4a5a12c82.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/LambdaBoundGaussian.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/LambdaBoundGaussian.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/LambdaBoundGaussian.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/LambdaBoundGaussian.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:621:0: 'Arlib.MarkovChains.measurableSet_smul_set' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:622:0: 'Arlib.MarkovChains.mem_smul_set_iff_of_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:623:0: 'Arlib.MarkovChains.lintegral_comp_smul_euclidean' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:624:0: 'Arlib.MarkovChains.gaussianWeightReal_smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:625:0: 'Arlib.MarkovChains.gaussianWeight_smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:626:0: 'Arlib.MarkovChains.gaussianWeightReal_mono_variance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:627:0: 'Arlib.MarkovChains.gaussianWeight_mono_variance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:628:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_smul_set' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:629:0: 'Arlib.MarkovChains.smul_subset_of_convex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:630:0: 'Arlib.MarkovChains.ball_smul_subset_of_convex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:631:0: 'Arlib.MarkovChains.ell_eq_one_of_mem_smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:632:0: 'Arlib.MarkovChains.gaussian_lambda_bound_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:633:0: 'Arlib.MarkovChains.gaussian_lambda_bound' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:634:0: 'Arlib.MarkovChains.avgLocalConductance_gaussian_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:635:0: 'Arlib.MarkovChains.one_sub_pow_le_exp_neg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:636:0: 'Arlib.MarkovChains.homothety_constant_at_operative_step' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:637:0: 'Arlib.MarkovChains.one_sub_mul_le_one_sub_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:638:0: 'Arlib.MarkovChains.homothety_constant_at_operative_step_lower' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:639:0: 'Arlib.MarkovChains.volume_supNormCube_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:640:0: 'Arlib.MarkovChains.volume_supNormCube_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:641:0: 'Arlib.MarkovChains.exists_gaussian_lambda_bound_instance' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:642:0: 'Arlib.MarkovChains.gaussianWeight_ge_on_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:643:0: 'Arlib.MarkovChains.lintegral_gaussianWeight_smul_cube_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:644:0: 'Arlib.MarkovChains.ell_eq_one_iff_ball_subset' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:645:0: 'Arlib.MarkovChains.isClosed_supNormCube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:646:0: 'Arlib.MarkovChains.ball_subset_cube_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:647:0: 'Arlib.MarkovChains.smul_supNormCube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:648:0: 'Arlib.MarkovChains.ell_eq_one_setOf_cube' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean:649:0: 'Arlib.MarkovChains.lintegral_ell_eq_one_cube_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.LambdaBoundGaussian:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.EllFloor transitive imports (legacy)",
+         "95f27f29282256ee"],
+        ["Arlib.MarkovChains.Continuous.EllFloor:importAllArts",
+         "a52759558375a691"],
+        ["Arlib.MarkovChains.Continuous.MetropolisGaussian transitive imports (legacy)",
+         "b0c694292979f87f"],
+        ["Arlib.MarkovChains.Continuous.MetropolisGaussian:importAllArts",
+         "91738632726a2209"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/LambdaBoundGaussian.lean",
+   "aaacb4a90a4da9c2"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.LambdaBoundGaussian",
+   "5d6c8e3294516d39"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "e90e2ea6994c67d0"}

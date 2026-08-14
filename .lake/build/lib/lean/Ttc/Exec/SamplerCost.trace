@@ -1,0 +1,170 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["42cb76adf48f8919.olean"],
+  "m": false,
+  "i": "feb2d4f7aa82937c.ilean",
+  "c": "6ecbed473faac497.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/SamplerCost.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/SamplerCost.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/SamplerCost.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/SamplerCost.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/SamplerCost.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:107:30: Variable name `hε0` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:138:27: Variable name `hε0` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:245:19: Variable name `hκ0` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:915:0: 'Ttc.SamplerCost.corlinf_lower_expand' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:916:0: 'Ttc.SamplerCost.corlinf_lower_relax' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:917:0: 'Ttc.SamplerCost.corlinf_upper_seven' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:918:0: 'Ttc.SamplerCost.corlinf_upper_relax' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:919:0: 'Ttc.SamplerCost.corlinf_condition_ratio' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:920:0: 'Ttc.SamplerCost.corlinf_rounds_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:921:0: 'Ttc.SamplerCost.exp_le_one_add_two_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:922:0: 'Ttc.SamplerCost.one_add_div_pow_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:923:0: 'Ttc.SamplerCost.corlinf_inflation_pow' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:924:0: 'Ttc.SamplerCost.corlinf_kappa_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:925:0: 'Ttc.SamplerCost.kappa_le_of_corrected_c' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:926:0: 'Ttc.SamplerCost.corlinf_kappa_div_gamma' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:927:0: 'Ttc.SamplerCost.paper_escape_constant_unsupported' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:928:0: 'Ttc.SamplerCost.corrected_escape_constant' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:929:0: 'Ttc.SamplerCost.corlinf_upper_with_nu' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:930:0: 'Ttc.SamplerCost.sqrt_add_sqrt_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:931:0: 'Ttc.SamplerCost.sqrt_four_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:934:0: 'Ttc.SamplerCost.stepOpCharge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:935:0: 'Ttc.SamplerCost.samplePrice' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:936:0: 'Ttc.SamplerCost.drawOpCharge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:937:0: 'Ttc.SamplerCost.worstTol' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:938:0: 'Ttc.SamplerCost.stepsPrice' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:939:0: 'Ttc.SamplerCost.drawWork' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:940:0: 'Ttc.SamplerCost.hitAndRunTheorem11Threshold_le_of' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:941:0: 'Ttc.SamplerCost.hitAndRunTheorem11Steps_le_of' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:942:0: 'Ttc.SamplerCost.worstTol_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:943:0: 'Ttc.SamplerCost.drawWork_le_samplePrice' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:946:0: 'Ttc.SamplerCost.expected_draws_le_three_halves' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:947:0: 'Ttc.SamplerCost.expected_loop_ops_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:950:0: 'Ttc.SamplerCost.hitAndRunBackend' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:951:0: 'Ttc.SamplerCost.hitAndRunBackend_samplePrice' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:952:0: 'Ttc.SamplerCost.backendCost_le_ttcComplexity_hitAndRun' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:955:0: 'Ttc.SamplerCost.logArg_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:956:0: 'Ttc.SamplerCost.log_logArg_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:957:0: 'Ttc.SamplerCost.stepsPrice_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:958:0: 'Ttc.SamplerCost.samplePrice_le_quartic' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:959:0: 'Ttc.SamplerCost.isBigO_samplePrice_quartic' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:960:0: 'Ttc.SamplerCost.isBigO_samplePrice_quintic' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/SamplerCost.lean:963:0: 'Ttc.SamplerCost.exists_nondegenerate_price' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.SamplerCost:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.CostedBackend transitive imports (legacy)",
+         "8e3ad1fefd0e58d8"],
+        ["Ttc.Exec.CostedBackend:importAllArts", "a925697fc3d691f3"],
+        ["Ttc.Sampler.HitAndRunTheorem11 transitive imports (legacy)",
+         "a754da50277859a6"],
+        ["Ttc.Sampler.HitAndRunTheorem11:importAllArts", "966ebd4472726b61"],
+        ["Arlib.Probability.RejectionRounds transitive imports (legacy)",
+         "fa313d5afe1acaa1"],
+        ["Arlib.Probability.RejectionRounds:importAllArts",
+         "d507f177c76eeaed"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/SamplerCost.lean",
+   "f78ac793b994dfa1"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.SamplerCost", "3daaf860426099af"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "9b1540bf20da1baf"}

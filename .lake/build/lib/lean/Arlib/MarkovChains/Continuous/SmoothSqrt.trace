@@ -1,0 +1,146 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["55a957367d218a07.olean"],
+  "m": false,
+  "i": "35e67efafa56a4bd.ilean",
+  "c": "3c6e1b76e9c7870b.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/SmoothSqrt.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/SmoothSqrt.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/MarkovChains/Continuous/SmoothSqrt.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/SmoothSqrt.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/MarkovChains/Continuous/SmoothSqrt.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:244:42: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:304:36: Variable name `hz` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:437:42: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:478:8: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:596:10: `Set.diff_eq` has been deprecated: Use `Set.sdiff_eq` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:597:10: `MeasureTheory.measure_inter_add_diff` has been deprecated: Use `MeasureTheory.measure_inter_add_sdiff` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:670:4: `push_neg` has been deprecated. Prefer using `push Not` instead.\nIf you'd rather continue using `push_neg` in your project, you can implement it as follows:\n```\nopen Lean.Parser.Tactic in\nmacro \"push_neg\" cfg:optConfig loc:(location)? : tactic =>\n  `(tactic| push $cfg:optConfig Not $[$loc]?)\n```",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:683:49: `Set.diff_subset` has been deprecated: Use `Set.sdiff_subset` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:702:10: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:708:60: `MeasureTheory.measure_inter_add_diff` has been deprecated: Use `MeasureTheory.measure_inter_add_sdiff` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:714:18: `Set.diff_subset` has been deprecated: Use `Set.sdiff_subset` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:775:50: `mul_le_mul_left'` has been deprecated: Use `mul_le_mul_right` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:799:8: `mul_le_mul_right'` has been deprecated: Use `mul_le_mul_left` instead",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:859:22: try 'simp' instead of 'simpa'\n\nNote: This linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:873:0: 'Arlib.MarkovChains.convex_ell_superlevel' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:874:0: 'Arlib.MarkovChains.convex_goodPoints' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:875:0: 'Arlib.MarkovChains.inner_nearest_le_zero' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:876:0: 'Arlib.MarkovChains.volume_ball_inter_le_cap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:877:0: 'Arlib.MarkovChains.ell_le_cap' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:878:0: 'Arlib.MarkovChains.thickening_subset_smul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:879:0: 'Arlib.MarkovChains.volume_shell_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:880:0: 'Arlib.MarkovChains.sqrt_two_mul_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:881:0: 'Arlib.MarkovChains.exp_sub_one_le_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:882:0: 'Arlib.MarkovChains.thickening_pow_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:883:0: 'Arlib.MarkovChains.lintegral_rpow_neg_half' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:884:0: 'Arlib.MarkovChains.volume_compl_superlevel_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:885:0: 'Arlib.MarkovChains.lintegral_ell_compl_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:886:0: 'Arlib.MarkovChains.ell_add_ell_compl' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:887:0: 'Arlib.MarkovChains.lintegral_ell_compl_comm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:888:0: 'Arlib.MarkovChains.isSmooth_sqrt_of_ball_subset' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:889:0: 'Arlib.MarkovChains.volume_goodPoints_ge' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:890:0: 'Arlib.MarkovChains.pow_one_sub_le' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:891:0: 'Arlib.MarkovChains.smoothSqrt_le_smoothBall_mul' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:892:0: 'Arlib.MarkovChains.smoothSqrt_le_half_smoothBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/MarkovChains/Continuous/SmoothSqrt.lean:893:0: 'Arlib.MarkovChains.isSmooth_sqrt_witness' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.MarkovChains.Continuous.SmoothSqrt:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.EllLogConcave transitive imports (legacy)",
+         "8492aa5699399f82"],
+        ["Arlib.Convexity.EllLogConcave:importAllArts", "31ba085fc4363285"],
+        ["Arlib.MarkovChains.Continuous.EllFloor transitive imports (legacy)",
+         "95f27f29282256ee"],
+        ["Arlib.MarkovChains.Continuous.EllFloor:importAllArts",
+         "a52759558375a691"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/MarkovChains/Continuous/SmoothSqrt.lean",
+   "70a9270ad92fdd8d"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.MarkovChains.Continuous.SmoothSqrt", "5f37cfd89f280943"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "30e73a833583c483"}

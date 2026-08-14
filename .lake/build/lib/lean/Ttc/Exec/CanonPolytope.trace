@@ -1,0 +1,129 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["b3f40740e3215d59.olean"],
+  "m": false,
+  "i": "347994a0de2875ef.ilean",
+  "c": "bb2f23b8320b90e1.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CanonPolytope.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CanonPolytope.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Exec/CanonPolytope.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CanonPolytope.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Exec/CanonPolytope.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:889:0: 'Ttc.canonAm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:890:0: 'Ttc.canonBv' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:891:0: 'Ttc.canonRfac' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:892:0: 'Ttc.canonDm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:893:0: 'Ttc.mem_canon_body_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:894:0: 'Ttc.mem_halfspace_iff_inner' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:895:0: 'Ttc.lit_holds_iff_inner' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:896:0: 'Ttc.mem_region_halfspace_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:897:0: 'Ttc.mem_smul_region_iff' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:898:0: 'Ttc.canon_body_eq_smul_region' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:899:0: 'Ttc.canon_body_one_eq_region' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:900:0: 'Ttc.canon_smul_region_subset_body' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:901:0: 'Ttc.isBounded_smul_region' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:902:0: 'Ttc.canon_dist_le_canonDm' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:903:0: 'Ttc.smul_body' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:904:0: 'Ttc.body_comp_equiv' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:905:0: 'Ttc.ttc_volume_endToEnd_canon' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:906:0: 'Ttc.canonSampD' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:909:0: 'Ttc.Box.bxCanonSampD' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:910:0: 'Ttc.Box.bxCanonSampler' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:911:0: 'Ttc.Box.bxCanonSampD_almostUniform' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:912:0: 'Ttc.Box.sum_rates_ge_of_almostUniform' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:913:0: 'Ttc.Box.big_canon_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:914:0: 'Ttc.Box.bxCanonRates_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:915:0: 'Ttc.Box.ttc_volume_endToEnd_canon_box_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:916:0: 'Ttc.Box.bxCanonSampD_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:917:0: 'Ttc.Box.AtParamsCanon' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:918:0: 'Ttc.Box.atParamsCanon_of' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:919:0: 'Ttc.Box.canon_box_lintegral_pos_ne_top' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:920:0: 'Ttc.Box.exists_two_ttc_volume_endToEnd_canon_instances' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Exec/CanonPolytope.lean:925:0: @Ttc.ttc_volume_endToEnd_canon : ∀ {A : Type u_1} {n : ℕ} (atoms : A → Ttc.LinAtom n) (φ : Ttc.BForm A) (ε δ : ℝ)\n  (hε0 : 0 < ε) (hε1 : ε ≤ 1),\n  0 < δ →\n    δ ≤ 1 →\n      ∀ (hn : 1 ≤ n) (M : A → Set (Ttc.Space n)),\n        (M = fun a ↦ (atoms a).halfspace) →\n          ∀ (toDNF : Ttc.BForm A → Ttc.DNF A),\n            Ttc.IsDNFOf (toDNF φ) φ →\n              (toDNF φ).IsPositive →\n                ∀ (hm : 1 ≤ Nat.card { c // c ∈ toDNF φ }) (hr : 1 ≤ Nat.card (Ttc.FacetIndex (toDNF φ)))\n                  (P : Ttc.Params),\n                  P = Ttc.ttcParams (toDNF φ) n ε δ hε0 hε1 hn hm hr →\n                    ↑(List.length (toDNF φ)) ≤ ↑P.m →\n                      Bornology.IsBounded (Ttc.sol M φ) →\n                        (∀ (j : Ttc.FacetIndex (toDNF φ)), (atoms (↑j.snd).atom).coeff ≠ 0) →\n                          ∀ (cen : { c // c ∈ toDNF φ } → Ttc.Space n) (gammaHat : ℝ),\n                            0 < gammaHat →\n                              (∀ (i : { c // c ∈ toDNF φ }), Metric.ball (cen i) gammaHat ⊆ Ttc.region M ↑i) →\n                                (∀ c ∈ Ttc.mcGood M (toDNF φ) cen gammaHat P.epsPrime P.deltaPrime,\n                                    (1 - P.epsPrime) * P.thresh / 8 ≤\n                                      ∑ s,\n                                        Ttc.rates M φ (toDNF φ) (P.precision gammaHat)\n                                          (Ttc.e2eSampD M (toDNF φ) (P.precision gammaHat) P.epsPrime\n                                            (Ttc.canonRfac (toDNF φ)) (Ttc.canonAm atoms (toDNF φ))\n                                            (Ttc.canonBv atoms (toDNF φ) (Ttc.latticeScale (P.precision gammaHat))) cen\n                                            gammaHat (Ttc.canonDm M (toDNF φ) (P.precision gammaHat)))\n                                          (Ttc.mcVol M (toDNF φ) cen gammaHat P.epsPrime P.deltaPrime c) s) →\n                                  1 - δ - δ / 4 ≤\n                                      (∫⁻ (c : ℕ → EuclideanSpace ℝ (Fin n)),\n                                          (Ttc.trajLaw\n                                              (Ttc.rates M φ (toDNF φ) (P.precision gammaHat)\n                                                (Ttc.e2eSampD M (toDNF φ) (P.precision gammaHat) P.epsPrime\n                                                  (Ttc.canonRfac (toDNF φ)) (Ttc.canonAm atoms (toDNF φ))\n                                                  (Ttc.canonBv atoms (toDNF φ)\n                                                    (Ttc.latticeScale (P.precision gammaHat)))\n                                                  cen gammaHat (Ttc.canonDm M (toDNF φ) (P.precision gammaHat)))\n                                                (Ttc.mcVol M (toDNF φ) cen gammaHat P.epsPrime P.deltaPrime c)))\n                                            {t |\n                                              Ttc.ttcOutput P\n                                                  (Ttc.coveredOracles M φ (P.precision gammaHat)\n                                                    (Ttc.mcVol M (toDNF φ) cen gammaHat P.epsPrime P.deltaPrime c))\n                                                  toDNF (P.precision gammaHat) φ t ∈\n                                                Ttc.relErr ε (Ttc.volSol M φ)} ∂Ttc.MonteCarlo.coins n).toReal ∧\n                                    ∀ (c : ℕ → Ttc.Space n)\n                                      (t : ℕ → Fin (Ttc.latticeCount M φ (P.precision gammaHat)) → ℕ)\n                                      (cVol cSample thr : ℕ),\n                                      ↑thr = P.thresh →\n                                        Ttc.Terminates P\n                                            (Ttc.coveredOracles M φ (P.precision gammaHat)\n                                              (Ttc.mcVol M (toDNF φ) cen gammaHat P.epsPrime P.deltaPrime c) t)\n                                            (toDNF φ) →\n                                          Ttc.runCost P\n                                              (Ttc.coveredOracles M φ (P.precision gammaHat)\n                                                (Ttc.mcVol M (toDNF φ) cen gammaHat P.epsPrime P.deltaPrime c) t)\n                                              cVol cSample (P.precision gammaHat) (toDNF φ) ≤\n                                            List.length (toDNF φ) * (cVol + cSample * thr)",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Exec.CanonPolytope:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.EndToEnd transitive imports (legacy)", "130d66cb7c7a9786"],
+        ["Ttc.Exec.EndToEnd:importAllArts", "c37822cc62e5b9fe"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Exec/CanonPolytope.lean",
+   "fd933566c142b2af"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Exec.CanonPolytope", "b5ccf32400c6f32d"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "a4bb32ef59b783e9"}

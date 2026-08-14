@@ -1,0 +1,139 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["da779723c217eeea.olean"],
+  "m": false,
+  "i": "425311a66600416d.ilean",
+  "c": "c491f9a5b9842bfa.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/HitAndRunBackend.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/HitAndRunBackend.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/HitAndRunBackend.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/HitAndRunBackend.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/HitAndRunBackend.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:489:18: Variable name `hR` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:645:18: Variable name `hR` is not explicitly referenced.\n\nThe binding can be removed (if unused) or named `_` (if used implicitly).\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "level": "warning"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:835:0: 'Ttc.lvThreshold_eq_hitAndRunTheorem11Threshold' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:836:0: 'Ttc.lvThreshold_le_hitAndRunTheorem11Threshold' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:837:0: 'Ttc.lvThreshold_unit_div_eq' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:838:0: 'Ttc.hdom_of_contract' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:839:0: 'Ttc.measurable_invChart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:840:0: 'Ttc.chart_comp_invChart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:841:0: 'Ttc.invChart_comp_chart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:842:0: 'Ttc.closedBall_one_subset_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:843:0: 'Ttc.chartPreimage_subset_closedBall' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:844:0: 'Ttc.convex_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:845:0: 'Ttc.isClosed_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:846:0: 'Ttc.inradius_le_circumradius' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:847:0: 'Ttc.chordSet_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:848:0: 'Ttc.setOf_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:849:0: 'Ttc.uniformOn_preimage_mul_right' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:850:0: 'Ttc.hitAndRunProposal_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:851:0: 'Ttc.hitAndRunProposal_univ_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:852:0: 'Ttc.map_hitAndRun_chart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:853:0: 'Ttc.preimage_chart_preimage_invChart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:854:0: 'Ttc.preimage_invChart_preimage_chart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:855:0: 'Ttc.map_chart_map_invChart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:856:0: 'Ttc.uniformOn_chartPreimage_apply' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:857:0: 'Ttc.hdom_chartPreimage' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:858:0: 'Ttc.tvLe_of_tvLe_chart' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:859:0: 'Ttc.tvLe_iterate_hitAndRun_at_contract_shape' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:860:0: 'Ttc.hitAndRunTheorem11Input_of_binders' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:861:0: 'Ttc.tvLe_iterate_lazy_hitAndRun_at_contract_shape' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:862:0: 'Ttc.preimage_chart_id' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/HitAndRunBackend.lean:863:0: 'Ttc.tvLe_iterate_hitAndRun_ballTwo_dim2' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Sampler.HitAndRunBackend:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.MarkovChains.Continuous.ConductanceToTV transitive imports (legacy)",
+         "03541d689ab5c8b0"],
+        ["Arlib.MarkovChains.Continuous.ConductanceToTV:importAllArts",
+         "f6794be16f1994cc"],
+        ["Arlib.MarkovChains.Continuous.SpeedyAffine transitive imports (legacy)",
+         "e2b2637e92060fc7"],
+        ["Arlib.MarkovChains.Continuous.SpeedyAffine:importAllArts",
+         "9caa483a04fb3ec9"],
+        ["Ttc.Sampler.HitAndRunTheorem11 transitive imports (legacy)",
+         "a754da50277859a6"],
+        ["Ttc.Sampler.HitAndRunTheorem11:importAllArts",
+         "966ebd4472726b61"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/HitAndRunBackend.lean",
+   "a07ae51e2d81e927"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Sampler.HitAndRunBackend", "79f8aa32ce52f342"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "ba3b0f1d379ce54d"}

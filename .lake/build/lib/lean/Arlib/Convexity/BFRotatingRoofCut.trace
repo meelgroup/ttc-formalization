@@ -1,0 +1,74 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["af8340b64cdd10b3.olean"],
+  "m": false,
+  "i": "ac5cb6155956c886.ilean",
+  "c": "c707969cbbc90b03.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/BFRotatingRoofCut.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/BFRotatingRoofCut.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Arlib/Convexity/BFRotatingRoofCut.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/BFRotatingRoofCut.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Arlib/Convexity/BFRotatingRoofCut.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:333:0: 'Arlib.measurableSet_profileBody_coordinateSimplex' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:334:0: 'Arlib.setIntegral_axis_profileBody_coordinateSimplex_of_support' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:335:0: 'Arlib.volume_coordinateSimplex_toReal_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:336:0: 'Arlib.setIntegral_axis_inter_simplexRoof' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:337:0: 'Arlib.roofCutProfile_constraints_of_ambient' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:338:0: 'Arlib.halfSpace_roofCLM_true_of_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:339:0: 'Arlib.halfSpace_roofCLM_false_of_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:340:0: 'Arlib.halfSpace_roofCLM_true_of_neg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:341:0: 'Arlib.halfSpace_roofCLM_false_of_neg' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:342:0: 'Arlib.roofCLM_true_constraints_of_ambient' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Arlib/Convexity/BFRotatingRoofCut.lean:343:0: 'Arlib.roofCLM_false_constraints_of_ambient' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Arlib.Convexity.BFRotatingRoofCut:deps",
+   [["deps",
+     [["ttc/Arlib:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Arlib.Convexity.BFAffineCoreAttainment transitive imports (legacy)",
+         "a671814c67f5f803"],
+        ["Arlib.Convexity.BFAffineCoreAttainment:importAllArts",
+         "fbc523b514690669"],
+        ["Arlib.Convexity.SignedCut transitive imports (legacy)",
+         "4c160affdd167433"],
+        ["Arlib.Convexity.SignedCut:importAllArts", "9393ee1728dfd4cf"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Arlib/Convexity/BFRotatingRoofCut.lean",
+   "4b9b1ea86a11c542"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Arlib.Convexity.BFRotatingRoofCut", "3d3eb63a1213b8f6"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "b56f073156f4d051"}

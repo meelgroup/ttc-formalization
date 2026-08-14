@@ -1,0 +1,120 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["2d64c15998f94816.olean"],
+  "m": false,
+  "i": "6175c962c99e6556.ilean",
+  "c": "cd4724cacb6c06bd.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean /home/devel/.elan/toolchains/leanprover--lean4---v4.32.0/bin/lean /home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/Rates.lean -o /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/Rates.olean -i /home/devel/Documents/kr-25-ssm/lean/.lake/build/lib/lean/Ttc/Sampler/Rates.ilean -c /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/Rates.c --setup /home/devel/Documents/kr-25-ssm/lean/.lake/build/ir/Ttc/Sampler/Rates.setup.json --json",
+   "level": "trace"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:515:0: 'Ttc.cubeOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:516:0: 'Ttc.cubeOf_spec' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:517:0: 'Ttc.exists_cube_mem_of_mem_sol' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:518:0: 'Ttc.cubeAt' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:519:0: 'Ttc.cubeAt_spec' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:520:0: 'Ttc.rates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:523:0: 'Ttc.theta_eq_rates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:524:0: 'Ttc.rates_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:525:0: 'Ttc.sum_rates_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:526:0: 'Ttc.pos_of_almostUniform' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:527:0: 'Ttc.finite_sol_lattice_of_hasLatticeEnum' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:528:0: 'Ttc.finite_region_lattice' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:529:0: 'Ttc.rates_pos_of_almostUniform' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:532:0: 'Ttc.exists_lattice_point_region' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:533:0: 'Ttc.exists_enum_mem_region' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:534:0: 'Ttc.gen_mem_of_enum' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:535:0: 'Ttc.gen_mem_of_geometry' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:538:0: 'Ttc.ttc_volume_rates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:541:0: 'Ttc.Box.rates_eq_thOf' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:542:0: 'Ttc.Box.smpOf_pos' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:543:0: 'Ttc.Box.rates_pos_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:544:0: 'Ttc.Box.sum_rates_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:545:0: 'Ttc.Box.big_rates_box' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:546:0: 'Ttc.Box.ttc_volume_box_rates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:547:0: 'Ttc.Box.atParams_rates' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"},
+  {"message":
+   "Ttc/Sampler/Rates.lean:548:0: 'Ttc.Box.atParams_rates_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]",
+   "level": "info"}],
+ "inputs":
+ [["Ttc.Sampler.Rates:deps",
+   [["deps",
+     [["ttc/Ttc:extraDep", [["@ttc:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ttc.Exec.Endgoal transitive imports (legacy)", "9798675efcce8e4d"],
+        ["Ttc.Exec.Endgoal:importAllArts", "ecb35cb57dfc1dd7"],
+        ["Ttc.Findings.CubeLattice transitive imports (legacy)",
+         "527a5dc3fc8a5425"],
+        ["Ttc.Findings.CubeLattice:importAllArts", "d0cf7bfc4cdebadd"],
+        ["Ttc.Witness.BoxSharp transitive imports (legacy)",
+         "203df08af6995dd9"],
+        ["Ttc.Witness.BoxSharp:importAllArts", "f12009d1c8756ffc"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.32.0, commit 8c9756b28d64dab099da31a4c09229a9e6a2ef35",
+   "5d4a267a1ba5cafb"],
+  ["/home/devel/Documents/kr-25-ssm/lean/Ttc/Sampler/Rates.lean",
+   "e6807a947b940f1c"],
+  ["options",
+   [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"],
+    ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
+  ["isModule: false", "feefd2a0d3a1847e"],
+  ["Module.name: Ttc.Sampler.Rates", "6a53e7c1ffca7769"],
+  ["Package.id?: (some ttc)", "e31ba5828dcb1571"],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "d7ed909ed3ca3a91"}
