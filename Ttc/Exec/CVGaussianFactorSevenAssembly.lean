@@ -416,12 +416,12 @@ theorem corrected_independentStreams_accuracy_four_fifths_biasAware_of_scalarSev
     {m : Nat} {P : Nat → Kernel X X} [∀ i, IsMarkovKernel (P i)]
     {Q : Nat → Kernel Seed X} [∀ i, IsMarkovKernel (Q i)]
     {seed : X → Seed} {mu0 : Measure X} [IsProbabilityMeasure mu0]
-    {etaInner beta requested : Real}
+    {etaInner beta gamma requested : Real}
     (g : Nat → (Nat → X) → Real)
     (V W : Nat →
       (Fin (correctedRuntimeSamples m etaInner) → Nat → X) → Real)
     (heta : 0 < etaInner) (heta1 : etaInner ≤ 1)
-    (hbeta : 0 ≤ beta)
+    (hbeta : 0 ≤ beta) (hgamma : 0 ≤ gamma)
     (hbudget : etaInner + beta + etaInner * beta ≤ requested)
     (hg : ∀ j, Measurable (g j))
     (hgL2 : ∀ j, MemLp (g j) 2 (inhomogeneousPathMeasure P mu0))
@@ -473,13 +473,14 @@ theorem corrected_independentStreams_accuracy_four_fifths_biasAware_of_scalarSev
     (initialNormalizer volumeTarget : Real)
     (hinit : 0 ≤ initialNormalizer) (hvolume : 0 ≤ volumeTarget)
     (hclipBudget :
-      (m : Real) / (2 * correctedAlpha m etaInner) ≤ beta)
+      (m : Real) / (2 * correctedAlpha m etaInner) + gamma +
+        ((m : Real) / (2 * correctedAlpha m etaInner)) * gamma ≤ beta)
     (hrawTelescope : initialNormalizer *
       prefixMean
         (independentPathLaw (correctedRuntimeSamples m etaInner) P mu0)
         (fun j ↦ streamAverage
-          (k := correctedRuntimeSamples m etaInner) (g j)) m =
-      volumeTarget) :
+          (k := correctedRuntimeSamples m etaInner) (g j)) m ∈
+      Ttc.relErr gamma volumeTarget) :
     4 / 5 ≤
       (independentPathLaw (correctedRuntimeSamples m etaInner) P mu0).real
         {omega | initialNormalizer * phaseProduct W m omega ∈
@@ -544,10 +545,10 @@ theorem corrected_independentStreams_accuracy_four_fifths_biasAware_of_scalarSev
     simpa only [k] using h
   have hclip : ClippedPrefixTarget pathLaw V m
       initialNormalizer volumeTarget beta := by
-    apply clippedPrefixTarget_of_rawSecondMoment
+    apply clippedPrefixTarget_of_rawSecondMoment_approx
       (mu := pathLaw) (V := V) (Wbar := Wbar)
       (k := (k : Real)) (alpha := correctedAlpha m etaInner)
-      hk8 halpha0 halpha1 hinit hvolume hclipBudget
+      hk8 halpha0 halpha1 hinit hvolume hgamma hclipBudget
       (by simpa only [k, Wbar] using hWbar0)
       hWbarm hWint hW2int
       (by simpa only [k, pathLaw, Wbar] using hWbarEpos)

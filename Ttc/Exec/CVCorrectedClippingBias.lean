@@ -17,6 +17,52 @@ def ClippedPrefixTarget (mu : Measure Ω) (V : Nat → Ω → Real) (m : Nat)
   initialNormalizer * Arlib.GaussianCooling.prefixMean mu V m ∈
     Ttc.relErr beta volumeTarget
 
+/-- A product of operational phase means telescopes approximately.
+
+Unlike `integral_prod_mem_relErr_of_budget`, no independence premise is needed here:
+`prefixMean` is already the deterministic product of the individual expectations. -/
+theorem prefixMean_mem_relErr_of_phaseMeans_budget
+    {mu : Measure Ω} {Wbar : Nat → Ω → Real} {A : Nat → Real}
+    {m : Nat} {eta gamma : Real} (hm : 0 < m) (heta : 0 ≤ eta)
+    (hgamma : gamma ≤ 1) (hbudget : 2 * (m : Real) * eta ≤ gamma)
+    (hApos : ∀ i, 0 < A i)
+    (hmean : ∀ i : Fin m, ∫ omega, Wbar ((i : Nat) + 1) omega ∂mu ∈
+      Set.Icc
+        ((1 - eta) * (A ((i : Nat) + 1) / A (i : Nat)))
+        ((1 + eta) * (A ((i : Nat) + 1) / A (i : Nat)))) :
+    A 0 * prefixMean mu Wbar m ∈ Ttc.relErr gamma (A m) := by
+  have heta1 : eta ≤ 1 := le_one_of_budget hm heta hgamma hbudget
+  have hprod := prod_mem_Icc (ι := Fin m)
+    (x := fun i => ∫ omega, Wbar ((i : Nat) + 1) omega ∂mu)
+    (r := fun i => A ((i : Nat) + 1) / A (i : Nat)) heta1
+    (fun i => (div_pos (hApos _) (hApos _)).le) hmean
+  have htelescope := prod_fin_telescope (fun i => (hApos i).ne') m
+  rw [Fintype.card_fin, htelescope] at hprod
+  have hsym := two_sub_pow_one_add_le_pow_one_sub heta heta1 m
+  have hbias := phaseBias_le heta hgamma hbudget
+  have hratio0 : 0 ≤ A m / A 0 := (div_pos (hApos m) (hApos 0)).le
+  have hprod' :
+      (∏ i : Fin m, ∫ omega, Wbar ((i : Nat) + 1) omega ∂mu) ∈
+        Ttc.relErr gamma (A m / A 0) := by
+    constructor
+    · calc
+        (1 - gamma) * (A m / A 0) ≤
+            (2 - (1 + eta) ^ m) * (A m / A 0) :=
+          mul_le_mul_of_nonneg_right (by linarith) hratio0
+        _ ≤ (1 - eta) ^ m * (A m / A 0) :=
+          mul_le_mul_of_nonneg_right hsym hratio0
+        _ ≤ _ := hprod.1
+    · exact hprod.2.trans
+        (mul_le_mul_of_nonneg_right (by linarith) hratio0)
+  have hprefix : prefixMean mu Wbar m =
+      ∏ i : Fin m, ∫ omega, Wbar ((i : Nat) + 1) omega ∂mu := by
+    unfold prefixMean
+    exact (Fin.prod_univ_eq_prod_range
+      (fun j => ∫ omega, Wbar (j + 1) omega ∂mu) m).symm
+  rw [hprefix]
+  have hscaled := scale_mem_relErr (hApos 0).le hprod' rfl
+  convert hscaled using 1 <;> field_simp [(hApos 0).ne']
+
 /-- Per-phase clipping loss `theta` compounds to at most `m*theta` in the product of
 means.  This is the quantitative core needed to prove `ClippedPrefixTarget`. -/
 theorem prefixMean_clipped_mem_relErr
@@ -122,6 +168,73 @@ theorem clippedPrefixTarget_of_rawSecondMoment
   dsimp [theta]
   simpa [one_div, div_eq_mul_inv] using hbeta
 
+/-- Operational version of `clippedPrefixTarget_of_rawSecondMoment`.
+
+The sampled phase means need not telescope exactly.  If their raw product is within
+relative error `gamma` of the target, clipping contributes `m/(2*alpha)` and the two
+errors compose multiplicatively.  This is the form needed by an actual mixed Markov
+execution; using an equality here would identify the sampled phase law with its ideal
+cooling target. -/
+theorem clippedPrefixTarget_of_rawSecondMoment_approx
+    {mu : Measure Ω} [IsProbabilityMeasure mu] {V Wbar : Nat → Ω → Real}
+    {m : Nat} {k alpha initialNormalizer volumeTarget beta gamma : Real}
+    (hk : 8 ≤ k) (halpha : 0 < alpha) (halpha1 : 1 ≤ alpha)
+    (hinit : 0 ≤ initialNormalizer) (hvolume : 0 ≤ volumeTarget)
+    (hgamma : 0 ≤ gamma)
+    (hbeta : (m : Real) / (2 * alpha) + gamma +
+      ((m : Real) / (2 * alpha)) * gamma ≤ beta)
+    (hW0 : ∀ j omega, 0 ≤ Wbar j omega)
+    (hWm : ∀ j, Measurable (Wbar j))
+    (hWint : ∀ j, Integrable (Wbar j) mu)
+    (hW2int : ∀ j, Integrable (fun omega ↦ (Wbar j omega) ^ 2) mu)
+    (hWEpos : ∀ j, 0 < ∫ omega, Wbar j omega ∂mu)
+    (hrawSecond : ∀ j, ∫ omega, (Wbar j omega) ^ 2 ∂mu ≤
+      (1 + 8 / k) * (∫ omega, Wbar j omega ∂mu) ^ 2)
+    (hVdef : ∀ j omega, V j omega = min (Wbar j omega)
+      (alpha * ∫ z, Wbar j z ∂mu))
+    (hrawTarget : initialNormalizer * prefixMean mu Wbar m ∈
+      Ttc.relErr gamma volumeTarget) :
+    ClippedPrefixTarget mu V m initialNormalizer volumeTarget beta := by
+  let theta : Real := 1 / (2 * alpha)
+  have htheta0 : 0 ≤ theta := by dsimp [theta]; positivity
+  have htheta1 : theta ≤ 1 := by
+    dsimp [theta]
+    rw [div_le_one (by positivity)]
+    linarith
+  have hprefix := prefixMean_clipped_mem_relErr (mu := mu) (V := V) (Wbar := Wbar)
+    (m := m) htheta0 htheta1
+    (fun j _ ↦ (hWEpos (j + 1)).le)
+    (fun j _ ↦ by
+      have heq : (∫ omega, V (j + 1) omega ∂mu) =
+          ∫ omega, min (Wbar (j + 1) omega)
+            (alpha * ∫ z, Wbar (j + 1) z ∂mu) ∂mu :=
+        integral_congr_ae (Filter.Eventually.of_forall (hVdef (j + 1)))
+      rw [heq]
+      simpa only [theta] using
+        (expect_trunc_ge_half halpha (hW0 (j + 1))
+          (hWm (j + 1)) (hWint (j + 1)) (hW2int (j + 1))
+          (hWEpos (j + 1)) (hrawSecond (j + 1)) (by
+            have hk0 : (0 : Real) < k := by linarith
+            have : 8 / k ≤ 1 := (div_le_one hk0).2 hk
+            linarith)))
+    (fun j _ ↦ by
+      have heq : (∫ omega, V (j + 1) omega ∂mu) =
+          ∫ omega, min (Wbar (j + 1) omega)
+            (alpha * ∫ z, Wbar (j + 1) z ∂mu) ∂mu :=
+        integral_congr_ae (Filter.Eventually.of_forall (hVdef (j + 1)))
+      rw [heq]
+      exact expect_trunc_le (mul_nonneg halpha.le (hWEpos (j + 1)).le)
+        (hW0 (j + 1)) (hWm (j + 1)) (hWint (j + 1)))
+  have hscaled : initialNormalizer * prefixMean mu V m ∈
+      Ttc.relErr ((m : Real) * theta)
+        (initialNormalizer * prefixMean mu Wbar m) :=
+    scale_mem_relErr hinit hprefix rfl
+  have hcomposed := relErr_trans
+    (mul_nonneg (Nat.cast_nonneg m) htheta0) hgamma hvolume hscaled hrawTarget
+  apply relErr_mono _ hvolume hcomposed
+  dsimp [theta]
+  simpa [one_div, div_eq_mul_inv] using hbeta
+
 /-- Compose the corrected estimator's concentration about its clipped proxy with the
 clipping/telescoping bias.  This replaces the false exact-prefix identity in the older
 public wrapper. -/
@@ -145,7 +258,9 @@ theorem four_fifths_scaled_of_clippedPrefixTarget
     (relErr_trans heta hbeta hvolume hscaled hbias)
 
 #print axioms four_fifths_scaled_of_clippedPrefixTarget
+#print axioms prefixMean_mem_relErr_of_phaseMeans_budget
 #print axioms prefixMean_clipped_mem_relErr
 #print axioms clippedPrefixTarget_of_rawSecondMoment
+#print axioms clippedPrefixTarget_of_rawSecondMoment_approx
 
 end Ttc.CVCorrectedClippingBias

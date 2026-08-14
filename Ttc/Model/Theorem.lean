@@ -17,6 +17,44 @@ accuracy half comes from
 `Ttc.ttc_volume_estimate_parametric` and the running-time half from
 `Ttc.PricedHeadline.all_ttc_cost_le_quartic`, both in `Ttc/Exec/PricedHeadline.lean`.
 
+The newer same-law operational replacement is the J-free theorem
+`Ttc.TTCSourceSharpOperationalTheorem.ttc_volume_estimate_operational_sourceSharp_fullTrajectory`
+(built from
+`Ttc.TTCSourceSharpOperationalFinal.sourceSharpCappedPolyHybridTTC_fullTrajectory`). It cannot be
+imported back into this model-layer module without creating the dependency cycle
+`Model -> Exec -> Model`; it is exported by `Ttc.lean`.  Its second conjunct integrates
+the run's actual recorded volume queries and the complete sampling-trajectory query
+cost as its literal `.2` coordinate and uses the source CV `eps^-2` envelope plus
+the concrete capped hybrid-sampler envelope.  Unlike the legacy theorem,
+it does not identify those costs with `r.2` of `Ttc.ttc`: it deliberately states the
+bound for the different operational law that actually executes the certified oracles.
+Its remaining `SourcePublicOneRunCertificates` argument is visible rather than hidden.
+The reference-path alternative in `Ttc/Exec/CVSourceReferenceTVCapstone.lean` avoids an
+expected-cost premise for the operational path, but its final concrete Gaussian schedule
+and public-parameter arithmetic must still be instantiated before the certificate can be
+removed from the headline.
+
+In particular, the present corrected sequential estimator cannot simply be substituted
+into the source runtime claim: it requires a per-phase sample count proportional to the
+number of phases, and the machine-checked lower-bound audit in
+`Ttc/Exec/CVGaussianScoreAwareConcretePhaseWitness.lean` shows that its resulting phase
+sum can exceed every fixed source envelope.  The source-sharp exact-law variance product
+is formalized separately, but turning it into an operational sequential oracle requires
+a sharper history-dependence argument than the current uniform corrected recursion.
+
+Compared with `sections/analysis.tex`'s `thm:runtime`, the checked operational theorem is
+an expected query-accounting result, not yet a derivation of the paper's
+`O(m n^5 rho^2 r_max)` machine-time bound.  Its volume summand has the source
+`eps^-2` query shape; obtaining the displayed paper term additionally requires the
+radial comparison `R2 <= rho^2` and charging one body-membership query by an
+`O(n*r_i)` facet scan.  Its sampling summand retains the clipped Poisson intensities and
+no checked operational theorem currently reduces those intensities to `Threshold` or
+to `n^5*rho^2*r_i`.  `Ttc.TTCRuntimePaperArithmetic.paperRuntimeEnvelope` separately
+machine-checks the deterministic unsuppressed expression from `thm:runtime` and its
+reduction to the advertised quintic shape once the two operational comparison
+inequalities are supplied.  Exact-real arithmetic, random generation, and preprocessing
+are outside this query-cost model.
+
 Both conjuncts speak about **the same run**, drawn from the one measure
 
     ttc atoms φ ε δ : Measure (ℝ × ℕ)

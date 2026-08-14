@@ -335,9 +335,14 @@ noncomputable def expectedQueryKV97Sampler
     (i : {c : Cube A // c ∈ D})
     (hmarg : Measure.map Prod.snd xi = law i)
     (hpos : 0 < roundedMeasure (law i) (integerAcceptance M rho i.val)) :
-    ExpectedQueryFineSampler (kv97SampMeasure M rho law i) := by
-  rw [kv97SampMeasure, ← hmarg]
-  exact expectedQueryFineSampler xi M rho i.val (by simpa [hmarg] using hpos)
+    ExpectedQueryFineSampler (kv97SampMeasure M rho law i) :=
+  let S := expectedQueryFineSampler xi M rho i.val (by simpa [hmarg] using hpos)
+  { law := S.law
+    probability := S.probability
+    stateMarginal := S.stateMarginal.trans (by
+      simpa only [kv97SampMeasure, hmarg])
+    expectedQueries := S.expectedQueries
+    expectedQueries_eq := S.expectedQueries_eq }
 
 section KV97Acceptance
 
