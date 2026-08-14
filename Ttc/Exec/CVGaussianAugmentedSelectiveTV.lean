@@ -67,6 +67,82 @@ theorem sampleFrom_augmentedRetryStateKernel_eq_marginalOf
     (augmentedGaussianRetrySchedule K hK delta s c hdelta hc steps)
     (Measure.map augmentedEmbedding rho) L
 
+/-- The unresolved mass itself obeys the significant-survival bound used inside the
+selective-TV argument.  Keeping this statement explicit lets a warm random fallback
+pay only `survival * Mfb`, rather than the full fallback warmness `Mfb`. -/
+theorem augmentedSurvivalOf_le_eta_add_pow
+    {K : Set (State n)} (hK : MeasurableSet K)
+    {delta s c : Real} (hdelta : 0 < delta) (hc : c ≠ 0)
+    (steps : Nat → Nat) (rho : Measure (ScoreSeed n)) [IsProbabilityMeasure rho]
+    {eta r : ENNReal}
+    (hs0 : ∀ j, augmentedSurvivalOf K hK delta s c hdelta hc steps rho j ≠ 0)
+    (hr : r ≤ 1)
+    (hreject : ∀ j, eta ≤ augmentedSurvivalOf K hK delta s c hdelta hc steps rho j →
+      augmentedProposalOf K hK delta s c hdelta hc steps rho j
+        (costedCombinedAccept K c s)ᶜ ≤ r)
+    (L : Nat) :
+    augmentedSurvivalOf K hK delta s c hdelta hc steps rho L ≤ eta + r ^ L := by
+  let candidate := phaseCandidate K hK delta s hdelta steps
+  let A := costedCombinedAccept K c s
+  let marginal := fun j ↦ embeddedMarginal candidate A
+    (measurableSet_costedCombinedAccept hK hc) rejectedNext measurable_rejectedNext
+    (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+    roundQueryCost measurable_roundQueryCost augmentedEmbedding rho j
+  letI : ∀ j, IsProbabilityMeasure (marginal j) := fun j ↦
+    isProbabilityMeasure_embeddedMarginal candidate A
+      (measurableSet_costedCombinedAccept hK hc) rejectedNext measurable_rejectedNext
+      (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+      roundQueryCost measurable_roundQueryCost augmentedEmbedding
+      measurable_augmentedEmbedding rho j
+  let proposal := fun j ↦ embeddedProposal candidate A
+    (measurableSet_costedCombinedAccept hK hc) rejectedNext measurable_rejectedNext
+    (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+    roundQueryCost measurable_roundQueryCost augmentedEmbedding rho j
+  have hproposal : ∀ j, IsProbabilityMeasure (proposal j) := by
+    intro j
+    dsimp only [proposal, embeddedProposal, Ttc.CVSequentialPhaseSampler.sampleFromKernel]
+    letI : IsProbabilityMeasure
+        (condOn (marginal j) Ttc.FiniteContinuingRetry.runningStates) :=
+      Arlib.isProbabilityMeasure_condOn _ (by
+        simpa only [marginal, augmentedMarginalOf, augmentedSurvivalOf,
+          embeddedSurvival, candidate, A] using hs0 j) (measure_ne_top _ _)
+    letI : IsProbabilityMeasure
+        ((condOn (marginal j) Ttc.FiniteContinuingRetry.runningStates).map current) :=
+      Measure.isProbabilityMeasure_map measurable_current.aemeasurable
+    infer_instance
+  letI : ∀ j, IsProbabilityMeasure (proposal j) := hproposal
+  let surv : Nat → ENNReal := fun j ↦ embeddedSurvival candidate A
+    (measurableSet_costedCombinedAccept hK hc) rejectedNext measurable_rejectedNext
+    (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+    roundQueryCost measurable_roundQueryCost augmentedEmbedding rho j
+  have hbase : surv 0 ≤ 1 := prob_le_one
+  have hmono : ∀ j, surv (j + 1) ≤ surv j := by
+    intro j
+    dsimp only [surv]
+    rw [embeddedSurvival_succ candidate A (measurableSet_costedCombinedAccept hK hc)
+      rejectedNext measurable_rejectedNext
+      (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+      roundQueryCost measurable_roundQueryCost augmentedEmbedding
+      measurable_augmentedEmbedding rho j (by
+        simpa only [candidate, A, augmentedSurvivalOf] using hs0 j)]
+    exact (mul_le_mul_left' prob_le_one _).trans_eq (mul_one _)
+  have hcontract : ∀ j, eta ≤ surv j → surv (j + 1) ≤ r * surv j := by
+    intro j hj
+    dsimp only [surv] at hj ⊢
+    rw [embeddedSurvival_succ candidate A (measurableSet_costedCombinedAccept hK hc)
+      rejectedNext measurable_rejectedNext
+      (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+      roundQueryCost measurable_roundQueryCost augmentedEmbedding
+      measurable_augmentedEmbedding rho j (by
+        simpa only [candidate, A, augmentedSurvivalOf] using hs0 j)]
+    simpa only [proposal, candidate, A, augmentedProposalOf, mul_comm] using
+      mul_le_mul_left'
+        (hreject j (by simpa only [candidate, A, augmentedSurvivalOf] using hj))
+        (surv j)
+  have hmain := Ttc.ContinuingRejectionSignificant.survival_le_eta_add_pow
+    surv hbase hr hmono hcontract L
+  simpa only [surv, candidate, A, augmentedSurvivalOf] using hmain
+
 /-- The actual augmented candidate at a significant retry is close to the ideal point/coin
 candidate.  Only the seed/current marginal is used by the walk. -/
 theorem tvLe_augmentedProposalOf_at_significant

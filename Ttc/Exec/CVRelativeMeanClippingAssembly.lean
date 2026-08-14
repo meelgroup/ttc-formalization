@@ -65,7 +65,7 @@ theorem relativeScoreAwareMixError_mean_le
     (heps : 0 < eps) (heps1 : eps <= 1)
     (hsigma : forall j, 0 < sigmaSq j)
     (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
-    (hC1 : forall i, 1 < C i) (hC2 : forall i, C i <= 2) (i : Nat) :
+    (hC1 : forall i, 1 < C i) (i : Nat) :
     Real.exp (R ^ 2 / (2 * sigmaSq i)) *
         (scoreAwareMixError m k eps
           (relativePhaseSlack chainLength sigmaSq K C)
@@ -98,23 +98,27 @@ theorem relativeScoreAwareMixError_mean_le
     change d * (e ^ 2 * (1 + 2 * (2 * C i - 1))) <= (C i - 1) * r ^ 2 at hmoment
     convert hmoment using 1 <;> ring
   have hmul := mul_le_mul_of_nonneg_left hmoment' hd0
-  have hright : d * ((C i - 1) * r ^ 2) <= (3 * b) * (1 * r ^ 2) := by
-    exact mul_le_mul hdb
-      (mul_le_mul_of_nonneg_right (by linarith [hC2 i]) (sq_nonneg r))
+  have hright : d * ((C i - 1) * r ^ 2) <=
+      (3 * b) * ((C i - 1) * r ^ 2) := by
+    exact mul_le_mul_of_nonneg_right hdb
       (mul_nonneg (sub_nonneg.2 (hC1 i).le) (sq_nonneg r))
-      (mul_nonneg (by norm_num) hb0.le)
-  have hthree : 3 * (e * d) ^ 2 <= 3 * b * r ^ 2 := by
+  have hcoeff : 3 * (C i - 1) <= (7 / 5 : Real) * (4 * C i - 1) := by
+    nlinarith [hC1 i]
+  have hbrr : 0 <= b * r ^ 2 := mul_nonneg hb0.le (sq_nonneg r)
+  have hweighted : (4 * C i - 1) * (e * d) ^ 2 <=
+      (4 * C i - 1) * (((7 / 5 : Real) * b) * r ^ 2) := by
     calc
-      3 * (e * d) ^ 2 <= (4 * C i - 1) * (e * d) ^ 2 := by
-        gcongr
-        linarith [hC1 i]
-      _ = d * (d * (e ^ 2 * (4 * C i - 1))) := by ring
+      (4 * C i - 1) * (e * d) ^ 2 =
+          d * (d * (e ^ 2 * (4 * C i - 1))) := by ring
       _ <= d * ((C i - 1) * r ^ 2) := hmul
-      _ <= (3 * b) * (1 * r ^ 2) := hright
-      _ = 3 * b * r ^ 2 := by ring
+      _ <= (3 * b) * ((C i - 1) * r ^ 2) := hright
+      _ = (3 * (C i - 1)) * (b * r ^ 2) := by ring
+      _ <= ((7 / 5 : Real) * (4 * C i - 1)) * (b * r ^ 2) :=
+        mul_le_mul_of_nonneg_right hcoeff hbrr
+      _ = (4 * C i - 1) * (((7 / 5 : Real) * b) * r ^ 2) := by ring
   have hsq : (e * d) ^ 2 <= ((7 / 5 : Real) * b) * r ^ 2 := by
-    have hbrr : 0 <= b * r ^ 2 := mul_nonneg hb0.le (sq_nonneg r)
-    nlinarith
+    have hfac : 0 < 4 * C i - 1 := by linarith [hC1 i]
+    nlinarith [hweighted]
   have hsqrtSq : scoreAwareMeanEta m k eps ^ 2 = (7 / 5 : Real) * b := by
     unfold scoreAwareMeanEta
     rw [Real.sq_sqrt]
@@ -142,7 +146,7 @@ theorem operational_relative_meanError
         (relativePhaseBoundSq R sigmaSq C)) j)
     (heps : 0 < eps) (heps1 : eps <= 1) (hsigma : forall j, 0 < sigmaSq j)
     (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
-    (hC1 : forall i, 1 < C i) (hC2 : forall i, C i <= 2) :
+    (hC1 : forall i, 1 < C i) :
     forall i : Fin m,
       Real.exp (R ^ 2 / (2 * sigmaSq (i : Nat))) *
           (hop.mixError (i : Nat)).toReal <=
@@ -153,7 +157,7 @@ theorem operational_relative_meanError
   rw [hmixError i, activeReferenceMixError]
   by_cases hi : (i : Nat) + 1 < m
   · rw [if_pos hi]
-    exact relativeScoreAwareMixError_mean_le heps heps1 hsigma hball hfin hC1 hC2 i
+    exact relativeScoreAwareMixError_mean_le heps heps1 hsigma hball hfin hC1 i
   · rw [if_neg hi, ENNReal.toReal_zero, mul_zero]
     exact mul_nonneg (scoreAwareMeanEta_nonneg _ _ _)
       (div_nonneg (chain_pos hsigma hball hfin _).le
@@ -284,7 +288,7 @@ theorem relative_clippedPrefixTarget
     (hfin : volume K ≠ ⊤) (hKR : K ⊆ closedBall (0 : State n) R)
     (htarget : forall i, Measure.map Prod.fst (hop.tau i) =
       coolLaw chainLength sigmaSq K i)
-    (hC1 : forall i, 1 < C i) (hC2 : forall i, C i <= 2)
+    (hC1 : forall i, 1 < C i)
     (hWint : forall j, Integrable
       (fun omega => streamAverage (k := k)
         (positiveScalarPhaseFamilyChainLength (Seed := Seed)
@@ -336,7 +340,7 @@ theorem relative_clippedPrefixTarget
     simpa only [gamma] using
       scoreAwareMeanGamma_le_one_of_correctedRuntimeSamples_le heps heps1 hkCorrected
   have hmeanError := operational_relative_meanError hop hmixError heps heps1
-    hsigma hball hfin hC1 hC2
+    hsigma hball hfin hC1
   have hraw0 := operational_rawPrefix_mem_relErr_chainLength hop hk hsigma hK hKc
     hball hfin hKR (scoreAwareMeanEta_nonneg _ _ _) hgamma1
     (by simp [gamma, scoreAwareMeanGamma]) htarget hmeanError hm
@@ -402,7 +406,7 @@ theorem relative_weighted_accuracy_four_fifths
     (hfin : volume K ≠ ⊤) (hKR : K ⊆ closedBall (0 : State n) R)
     (htarget : forall i, Measure.map Prod.fst (hop.tau i) =
       coolLaw chainLength sigmaSq K i)
-    (hC1 : forall i, 1 < C i) (hC2 : forall i, C i <= 2)
+    (hC1 : forall i, 1 < C i)
     (hWint : forall j, Integrable
       (fun omega => streamAverage (k := k)
         (positiveScalarPhaseFamilyChainLength (Seed := Seed)
@@ -474,7 +478,7 @@ theorem relative_weighted_accuracy_four_fifths
     (positiveScalarPhaseFamilyChainLength (Seed := Seed)
       chainLength sigmaSq K j)
   have hclip0 := relative_clippedPrefixTarget V hop hmixError heps heps1 hm
-    hkCorrected hsigma hK hKc hball hfin hKR htarget hC1 hC2 hWint hW2int
+    hkCorrected hsigma hK hKc hball hfin hKR htarget hC1 hWint hW2int
     hWEpos hrawSecond hVdef initialNormalizer volumeTarget hinit hvolume
     hinitChain htargetChain
   have hclip : ClippedPrefixTarget

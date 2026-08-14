@@ -832,3 +832,14 @@ import Ttc.Exec.TTCFullTrajectoryQueryCost
 import Ttc.Exec.TTCRuntimePaperArithmetic
 import Ttc.Exec.TTCOperationalPaperBridge
 import Ttc.Exec.TTCUnconditionalExplicitRuntime
+import Ttc.Exec.CVRadialLogEnvelope
+import Ttc.Exec.TTCCVExpectedImplementation
+import Ttc.Exec.CVHotRefreshHonestRuntime
+import Ttc.Exec.CVCappedRadialLogExpectedImplementation
+import Ttc.Exec.CVCappedRadialLogInterface
+import Ttc.Exec.CVSourceWeightedMeanRepair
+import Ttc.Exec.CVColdHotScoreSeedSchedule
+import Ttc.Exec.CVColdOperationalKernel
+import Ttc.Exec.CVColdOperationalPairTV
+import Ttc.Exec.CVColdCrossPhaseWarm
+import Ttc.Exec.CVGaussianHybridWeightedCertificate

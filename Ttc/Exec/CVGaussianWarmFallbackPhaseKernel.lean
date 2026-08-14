@@ -101,6 +101,40 @@ theorem isWarm_seed_randomFallback
         · exact hfb T hT
     _ = (Macc + Mfb) * piNext T := by rw [one_mul, add_mul]
 
+/-- Sharp seed-projected warmness for random fallback.  Unlike
+`isWarm_seed_randomFallback`, this version retains the unresolved survival mass in
+front of the fallback warmness constant.  This is essential when the independently
+sampleable fallback has a large normalizer ratio: choosing enough retries makes the
+product of survival and that ratio constant. -/
+theorem isWarm_seed_randomFallback_survival
+    (mu : Measure (RetryState (State n) (ScoreSeed n))) [IsProbabilityMeasure mu]
+    (fallback : Measure (ScoreSeed n)) [IsProbabilityMeasure fallback]
+    (piNext : Measure (State n)) {Macc Mfb : ENNReal}
+    (hacc : IsWarm Macc
+      (Measure.map Prod.snd (acceptedOutputSubmeasure mu)) piNext)
+    (hfb : IsWarm Mfb (Measure.map Prod.snd fallback) piNext) :
+    IsWarm
+      (Macc + mu Ttc.FiniteContinuingRetry.runningStates * Mfb)
+      (Measure.map Prod.snd
+        (sampleFromKernel (randomFallbackKernel fallback) mu)) piNext := by
+  rw [sampleFrom_randomFallbackKernel mu fallback,
+    Measure.map_add (acceptedOutputSubmeasure mu)
+      (mu Ttc.FiniteContinuingRetry.runningStates • fallback) measurable_snd,
+    Measure.map_smul]
+  intro T hT
+  rw [Measure.add_apply, Measure.smul_apply]
+  calc
+    Measure.map Prod.snd (acceptedOutputSubmeasure mu) T +
+        mu Ttc.FiniteContinuingRetry.runningStates * Measure.map Prod.snd fallback T ≤
+      Macc * piNext T +
+        mu Ttc.FiniteContinuingRetry.runningStates * (Mfb * piNext T) := by
+          gcongr
+          exact hacc T hT
+          exact hfb T hT
+    _ = (Macc + mu Ttc.FiniteContinuingRetry.runningStates * Mfb) * piNext T := by
+      rw [add_mul]
+      ac_rfl
+
 /-- Phase-level form of the preceding seed warmness assembly. -/
 theorem isWarm_seed_sampleFrom_gaussianWarmFallbackPhaseKernel
     {K : Set (State n)} (hK : MeasurableSet K) (delta s c : Real)
@@ -138,6 +172,48 @@ theorem isWarm_seed_sampleFrom_gaussianWarmFallbackPhaseKernel
     fallback rho]
   exact isWarm_seed_randomFallback mu fallback piNext hacc hfb
 
+/-- Phase-level sharp fallback warmness retaining the exact unresolved survival
+probability. -/
+theorem isWarm_seed_sampleFrom_gaussianWarmFallbackPhaseKernel_survival
+    {K : Set (State n)} (hK : MeasurableSet K) (delta s c : Real)
+    (hdelta : 0 < delta) (hc : c ≠ 0) (steps : Nat → Nat) (L : Nat)
+    (fallback : Measure (ScoreSeed n)) [IsProbabilityMeasure fallback]
+    (rho : Measure (State n)) [IsProbabilityMeasure rho]
+    (piNext : Measure (State n)) {Macc Mfb : ENNReal}
+    (hacc : IsWarm Macc
+      (Measure.map Prod.snd
+        (acceptedOutputSubmeasure
+          (augmentedMarginalOf K hK delta s c hdelta hc steps
+            (Measure.map (seedEmbedding c) rho) L))) piNext)
+    (hfb : IsWarm Mfb (Measure.map Prod.snd fallback) piNext) :
+    IsWarm
+      (Macc +
+        (augmentedMarginalOf K hK delta s c hdelta hc steps
+          (Measure.map (seedEmbedding c) rho) L)
+            Ttc.FiniteContinuingRetry.runningStates * Mfb)
+      (Measure.map Prod.snd
+        (sampleFromKernel
+          (gaussianWarmFallbackPhaseKernel K hK delta s c hdelta hc steps L fallback)
+          rho)) piNext := by
+  let rhoPair := Measure.map (seedEmbedding c) rho
+  letI : IsProbabilityMeasure rhoPair :=
+    Measure.isProbabilityMeasure_map (measurable_seedEmbedding c).aemeasurable
+  let mu := augmentedMarginalOf K hK delta s c hdelta hc steps rhoPair L
+  haveI : IsProbabilityMeasure mu :=
+    isProbabilityMeasure_embeddedMarginal
+      (phaseCandidate K hK delta s hdelta steps)
+      (Ttc.FiniteContinuingRetryGaussian.costedCombinedAccept K c s)
+      (Ttc.FiniteContinuingRetryGaussian.measurableSet_costedCombinedAccept hK hc)
+      Ttc.FiniteContinuingRetryGaussian.rejectedNext
+      Ttc.FiniteContinuingRetryGaussian.measurable_rejectedNext
+      (augmentedAcceptedOutput c) (measurable_augmentedAcceptedOutput c)
+      Ttc.FiniteContinuingRetryGaussian.roundQueryCost
+      Ttc.FiniteContinuingRetryGaussian.measurable_roundQueryCost
+      augmentedEmbedding measurable_augmentedEmbedding rhoPair L
+  rw [sampleFrom_gaussianWarmFallbackPhaseKernel hK delta s c hdelta hc steps L
+    fallback rho]
+  exact isWarm_seed_randomFallback_survival mu fallback piNext hacc hfb
+
 /-- The repository's adaptive cold restart fits the unresolved branch at every phase.
 Its warm constant may grow geometrically, but only its logarithm enters the mixing
 deadline. -/
@@ -163,7 +239,9 @@ theorem isWarm_seed_coldScoreSeedFallback_adaptive
 
 #print axioms sampleFrom_gaussianWarmFallbackPhaseKernel
 #print axioms isWarm_seed_randomFallback
+#print axioms isWarm_seed_randomFallback_survival
 #print axioms isWarm_seed_sampleFrom_gaussianWarmFallbackPhaseKernel
+#print axioms isWarm_seed_sampleFrom_gaussianWarmFallbackPhaseKernel_survival
 #print axioms isWarm_seed_coldScoreSeedFallback_adaptive
 
 end Ttc.CVGaussianWarmFallbackPhaseKernel
