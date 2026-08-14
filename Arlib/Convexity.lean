@@ -62,6 +62,8 @@ import Arlib.Convexity.LocalizationIndicator
 import Arlib.Convexity.WeightedIsoBook
 import Arlib.Convexity.IsoConcaveWeight
 import Arlib.Convexity.LocalizationNeedleInBody
+import Arlib.Convexity.ProductLocalization
+import Arlib.Convexity.UniformPowerExp
 import Arlib.Convexity.ChordContinuity
 import Arlib.Convexity.HitAndRunIsoFree
 import Arlib.Convexity.HitAndRunConductanceUncond
@@ -98,6 +100,14 @@ import Arlib.Convexity.GaussianCooling.WarmSpeedy
 import Arlib.Convexity.GaussianCooling.InteriorBridge
 import Arlib.Convexity.GaussianCooling.PhaseInduction
 import Arlib.Convexity.GaussianCooling.PhaseSamplerTVTruncated
+import Arlib.Convexity.GaussianCooling.ColdWarmStart
+import Arlib.Convexity.GaussianCooling.ColdBallStart
+import Arlib.Convexity.GaussianCooling.PhaseSamplerTVTruncatedRelative
+import Arlib.Convexity.GaussianCooling.LogConcaveProfileVariance
+import Arlib.Convexity.GaussianCooling.ChunkedVarBudget
+import Arlib.Convexity.GaussianCooling.ChunkedSchedule
+import Arlib.Convexity.GaussianCooling.AdaptiveRestartTruncatedFourAll
+import Arlib.Probability.TVCoupling
 
 /-!
 # Arlib.Convexity
