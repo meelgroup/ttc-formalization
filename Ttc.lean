@@ -849,3 +849,9 @@ import Ttc.Exec.CVSlowRadiusQCanonicalOperational
 import Ttc.Exec.CVSlowSourceTargetTVAccuracy
 import Ttc.Exec.CVSlowCanonicalRetainedReference
 import Ttc.Exec.CVSlowCanonicalRobustCertificate
+import Ttc.Exec.CVPhasewiseRadiusTail
+import Ttc.Exec.CVRAwareGlobalRadius
+import Ttc.Exec.CVScoreAwareHalfMeanBudget
+import Ttc.Exec.CVSlowGaussianPhaseMoment
+import Ttc.Exec.CVSlowCanonicalRuntimeComparison
+import Ttc.Exec.CVSlowCanonicalPhaseMomentPackage

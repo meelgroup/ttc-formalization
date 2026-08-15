@@ -3,6 +3,8 @@ import Ttc.Exec.CVSlowSourceTargetTVAccuracy
 import Ttc.Exec.CVSlowGlobalRadiusTailBudget
 import Ttc.Exec.CVConcreteAugmentedRetryCutoffBudget
 import Ttc.Exec.CVGaussianHybridWeightedCertificate
+import Ttc.Exec.CVRAwareGlobalRadius
+import Ttc.Exec.CVScoreAwareHalfMeanBudget
 
 /-! Target-TV robust accuracy composed with the canonical slow retained certificate. -/
 
@@ -23,11 +25,15 @@ open Ttc.CVHeterogeneousHistoryReference Ttc.CVHeterogeneousRetainedPathLaw
 open Ttc.CVSourceReferenceTVCapstone Ttc.CVSlowRadiusQReferencePhaseTV
 open Ttc.CVCorrected Ttc.CVGaussianScoreAwareMeanBudget
 open Ttc.CVGaussianScoreAwareParameters Ttc.CVIndependentStreamMoments
+open Ttc.CVGaussianFactorSevenAssembly
+open Ttc.CVGaussianWarmFallbackCappedOperational
 open Ttc.CVWeightedIndependentStreamAccuracy Ttc.CVRelativeMeanClippingAssembly
 open Ttc.CVSlowGlobalRadiusTailBudget
 open Ttc.CVConcreteAugmentedRetryCutoffBudget
 open Ttc.CVGaussianHybridWeightedCertificate
 open Ttc.CVCorrectedClippingArithmetic
+open Ttc.CVRAwareGlobalRadius
+open Ttc.CVScoreAwareHalfMeanBudget
 open scoped ENNReal Classical BigOperators
 
 variable {n : Nat}
@@ -153,19 +159,21 @@ certificate constructor, there is no opaque `haccuracy`: accuracy is derived fro
 local-target TV theorem and the weighted clipping/moment hypotheses. -/
 theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
     (hn : 21 ≤ n) (m k : Nat) (hm : 0 < m) (hk : 1 ≤ k)
-    {q eps beta requested R : Real} (hq4 : 4 ≤ q)
+    {q eps beta requested R meanTailFloor : Real} (hq4 : 4 ≤ q)
     (heps : 0 < eps) (heps1 : eps ≤ 1) (hbeta : 0 ≤ beta)
     (haccuracyBudget : eps + beta + eps * beta ≤ requested)
     {K : Set (State n)} (hK : MeasurableSet K) (hKc : Convex Real K)
     (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
     (hKR : K ⊆ closedBall (0 : State n) R)
+    (hmeanTailFloor : 0 < meanTailFloor)
+    (hqRAware : q = rAwareGlobalRadiusQ n R (slowSourceInitialVariance n) meanTailFloor)
     (hrad : ∀ i, 1 ≤ q * Real.sqrt
       (slowSourceSigmaSq n (slowSourceInitialVariance n) i) * Real.sqrt n)
     (slack boundSq : Nat → Real) (hslack : ∀ i, 0 < slack i)
     (hbound : ∀ i, 0 < boundSq i) (scoreScale : Real)
     {Q : Nat → Kernel (State n) (ScoreSeed n)} [∀ i, IsMarkovKernel (Q i)]
     (hQ : Q = slowCanonicalActiveSchedule (by omega : 1 ≤ n) (m + 1) k
-      (q := q) (eps := eps) (s0 := slowSourceInitialVariance n)
+      (q := q) (eps := eps / 2) (s0 := slowSourceInitialVariance n)
       (lt_of_lt_of_le (by norm_num) hq4)
       (by unfold slowSourceInitialVariance; positivity) K hK scoreScale
       slowReferenceWarm slack boundSq)
@@ -177,15 +185,20 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
       (slowInitialPair n) V m eps)
     (htau : ∀ i, i < m → hop.tau i =
       slowLocalPairReference (m + 1) n q (slowSourceInitialVariance n) K i)
-    (hmeanError : ∀ i : Fin m,
-      (hop.mixError (i : Nat) + slowTargetError n q m (i : Nat)).toReal *
-          Real.exp (R ^ 2 /
-            (2 * slowSourceSigmaSq n (slowSourceInitialVariance n) (i : Nat))) ≤
-        scoreAwareMeanEta m k eps *
-          (chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K
-              ((i : Nat) + 1) /
-            chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K (i : Nat)))
-    {C factor : Nat → Real} (hC1 : ∀ i, 1 < C i)
+    {C factor : Nat → Real}
+    (hmixError : ∀ j, hop.mixError j = activeReferenceMixError (m + 1)
+      (scoreAwareMixError (m + 1) k (eps / 2) slack boundSq) j)
+    (hslackDef : slack = fun j ↦ phaseMomentSlackSeven m
+      (slowSourceSigmaSq n (slowSourceInitialVariance n)) K C j / 2)
+    (hboundDef : boundSq = phaseScoreTransportBoundSqSeven R
+      (slowSourceSigmaSq n (slowSourceInitialVariance n)))
+    (hC7 : ∀ i, C i < 7)
+    (hmeanTailBudget : ∀ i : Fin m, meanTailFloor ≤
+      (scoreAwareMeanEta m k eps *
+        (chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K
+            ((i : Nat) + 1) /
+          chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K (i : Nat))) / 2)
+    (hC1 : ∀ i, 1 < C i)
     (hWint : ∀ j, Integrable
       (fun omega ↦ streamAverage (k := k)
         (positiveScalarPhaseFamilyChainLength (Seed := State n)
@@ -226,11 +239,11 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
     {runtimeConstant : Real} (T L : Nat)
     (hsteps : ∀ i, i < m → slowCanonicalSteps slowReferenceWarm n q
       (slowSourceInitialVariance n) K
-      (scoreAwareRetries (m + 1) k eps slack boundSq)
-      (scoreAwareEta (m + 1) k eps slack boundSq)
-      (scoreAwareZeta (m + 1) k eps slack boundSq) i 0 ≤ T)
+      (scoreAwareRetries (m + 1) k (eps / 2) slack boundSq)
+      (scoreAwareEta (m + 1) k (eps / 2) slack boundSq)
+      (scoreAwareZeta (m + 1) k (eps / 2) slack boundSq) i 0 ≤ T)
     (hretries : ∀ i, i < m →
-      scoreAwareRetries (m + 1) k eps slack boundSq i ≤ L)
+      scoreAwareRetries (m + 1) k (eps / 2) slack boundSq i ≤ L)
     (hscalar : (k : ENNReal) * (m : ENNReal) * ENNReal.ofReal
         (10 * (L : Real) * (T : Real) * (2 * Real.exp 1)) ≤
       Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryBudget
@@ -239,7 +252,7 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
       SourceReferenceTVOneRunCertificate
         (@independentHeterogeneousRetainedPathLaw _ _ _ _ k
           (slowCanonicalCostedActiveSchedule (by omega : 1 ≤ n) (m + 1) k
-            (q := q) (eps := eps) (s0 := slowSourceInitialVariance n)
+            (q := q) (eps := eps / 2) (s0 := slowSourceInitialVariance n)
             (lt_of_lt_of_le (by norm_num) hq4)
             (by unfold slowSourceInitialVariance; positivity) K hK scoreScale
             slowReferenceWarm slack boundSq)
@@ -261,7 +274,7 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
   subst Q
   subst V
   let Qc := slowCanonicalActiveSchedule (by omega : 1 ≤ n) (m + 1) k
-      (q := q) (eps := eps) (s0 := slowSourceInitialVariance n)
+      (q := q) (eps := eps / 2) (s0 := slowSourceInitialVariance n)
       (lt_of_lt_of_le (by norm_num) hq4)
       (by unfold slowSourceInitialVariance; positivity) K hK scoreScale
       slowReferenceWarm slack boundSq
@@ -272,6 +285,13 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
   have halpha : 2 ≤ correctedAlpha m eps := by
     have ha := correctedAlpha_ge_hundred_thousand (m := m) heps heps1
     linarith
+  have hW0 : ∀ j omega, 0 ≤ Wbar j omega := by
+    intro j omega
+    unfold Wbar streamAverage Ttc.CVEst.avgOf streamScore
+    apply div_nonneg
+    · exact Finset.sum_nonneg fun l _ ↦
+        positiveScalarPhaseFamilyChainLength_nonneg j (omega l)
+    · positivity
   have hstats : ∀ j,
       Measurable (slowClippedPositiveEmpiricalFamily m k eps Qc (slowInitialPair n)
         (slowSourceSigmaSq n (slowSourceInitialVariance n)) K j) ∧
@@ -291,8 +311,7 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
             (slowSourceSigmaSq n (slowSourceInitialVariance n)) K j z) ^ 2 ∂pathLaw) := by
     intro j
     apply clippedStatistic_caps_of_rawSecond halpha
-      (positiveEmpirical_nonneg (Seed := State n) (k := k) (m := m)
-        (sigmaSq := slowSourceSigmaSq n (slowSourceInitialVariance n)) (K := K) j)
+      (hW0 j)
       (measurable_streamAverage
         (measurable_positiveScalarPhaseFamilyChainLength hK j))
       (by simpa only [Wbar, pathLaw] using hWint j)
@@ -309,9 +328,7 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
       ((hstats j).1.pow_const 2).aestronglyMeasurable ?_
     filter_upwards with omega
     rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
-    apply sq_le_sq₀ (hstats j).2.1
-      (positiveEmpirical_nonneg (Seed := State n) (k := k) (m := m)
-        (sigmaSq := slowSourceSigmaSq n (slowSourceInitialVariance n)) (K := K) j omega) |>.2
+    apply (sq_le_sq₀ ((hstats j).2.1 omega) (hW0 j omega)).2
     exact min_le_left _ _
   have htargetTV := tvLe_map_fst_tau_fullCoolLaw_slowTargetError hop
     (by omega : 1 ≤ n) (lt_of_lt_of_le (by norm_num) hq4)
@@ -319,8 +336,45 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
     (fun i hi ↦ hrad i) (fun i hi ↦
       (htau i hi).trans (slowLocalPairReference_succ_length_eq m n q
         (slowSourceInitialVariance n) K hi))
+  have hmeanMix : ∀ i : Fin m,
+      (hop.mixError (i : Nat)).toReal * Real.exp (R ^ 2 /
+          (2 * slowSourceSigmaSq n (slowSourceInitialVariance n) (i : Nat))) ≤
+        (scoreAwareMeanEta m k eps *
+          (chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K
+              ((i : Nat) + 1) /
+            chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K (i : Nat))) / 2 := by
+    intro i
+    rw [hmixError (i : Nat), activeReferenceMixError,
+      if_pos (by omega : (i : Nat) + 1 < m + 1), hslackDef, hboundDef]
+    simpa only [mul_comm] using scoreAwareMixError_succ_halfSlack_mean_le_half
+      (m := m) (k := k) (chainLength := m) (eps := eps) (R := R)
+      (sigmaSq := slowSourceSigmaSq n (slowSourceInitialVariance n))
+      (K := K) (C := C) (i := i)
+      heps heps1
+      (slowSourceSigmaSq_pos (by omega : 1 ≤ n)
+        (by unfold slowSourceInitialVariance; positivity))
+      hball hfin (fun j ↦ by linarith [hC1 j]) hC7
+  have hmeanError : ∀ i : Fin m,
+      (hop.mixError (i : Nat) + slowTargetError n q m (i : Nat)).toReal *
+          Real.exp (R ^ 2 /
+            (2 * slowSourceSigmaSq n (slowSourceInitialVariance n) (i : Nat))) ≤
+        scoreAwareMeanEta m k eps *
+          (chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K
+              ((i : Nat) + 1) /
+            chain m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K (i : Nat)) := by
+    have hs0 : 0 < slowSourceInitialVariance n := by
+      unfold slowSourceInitialVariance
+      positivity
+    intro i
+    have hc := mix_add_slowTargetError_rAware_scaled_le (by omega : 1 ≤ n)
+      hs0 hmeanTailFloor i.isLt
+      (hop.mixError_ne_top i) (hmeanMix i) (hmeanTailBudget i)
+    rw [← hqRAware] at hc
+    exact hc
   have haccuracy := relative_weighted_accuracy_four_fifths_sourceSharp_of_targetTV
-    V (fun j omega ↦ streamAverage (k := k)
+    (slowClippedPositiveEmpiricalFamily m k eps Qc (slowInitialPair n)
+      (slowSourceSigmaSq n (slowSourceInitialVariance n)) K)
+    (fun j omega ↦ streamAverage (k := k)
       (positiveScalarPhaseFamilyChainLength (Seed := State n)
         m (slowSourceSigmaSq n (slowSourceInitialVariance n)) K j) omega)
     hop heps heps1 hm (by omega : 0 < k) hbeta haccuracyBudget
@@ -343,7 +397,7 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
   have haccuracy' : 4 / 5 ≤
       (independentPathLaw k (stateScheduleFromSeed
         (slowCanonicalActiveSchedule (by omega : 1 ≤ n) (m + 1) k
-          (q := q) (eps := eps) (s0 := slowSourceInitialVariance n)
+          (q := q) (eps := eps / 2) (s0 := slowSourceInitialVariance n)
           (lt_of_lt_of_le (by norm_num) hq4)
           (by unfold slowSourceInitialVariance; positivity) K hK scoreScale
           slowReferenceWarm slack boundSq)) (slowInitialPair n)).real
@@ -354,16 +408,17 @@ theorem exists_sourceReferenceTVOneRunCertificate_slowCanonical_of_weightedData
     simpa only [gaussianScorePrefixReadout_independentPathScorePrefixCurrent,
       Ttc.relErr] using haccuracy
   have herror : (k : ENNReal) * (∑ i ∈ range m,
-      slowCanonicalRetainedError m k eps slack boundSq i) ≤
+      slowCanonicalRetainedError m k (eps / 2) slack boundSq i) ≤
       ENNReal.ofReal (1 / 40 : Real) :=
     aggregate_slowCanonicalRetainedError_le_globalRadius
-      (by omega : 1 ≤ n) heps heps1 hslack hbound
+      (by omega : 1 ≤ n) (by positivity) (by linarith) hslack hbound
   have hbudget : (k : ENNReal) * (∑ i ∈ range m,
-      slowCanonicalRetainedCost n m k q eps K slack boundSq i) ≤
+      slowCanonicalRetainedCost n m k q (eps / 2) K slack boundSq i) ≤
       Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryBudget
         runtimeConstant n R requested :=
     (aggregate_slowCanonicalRetainedCost_le_uniform hsteps hretries).trans hscalar
-  exact exists_sourceReferenceTVOneRunCertificate_slowCanonical hn m k hk hq4 heps heps1
+  exact exists_sourceReferenceTVOneRunCertificate_slowCanonical hn m k hk hq4
+    (by positivity) (by linarith)
     hK hKc hball hfin slack boundSq hslack hbound scoreScale
     (gaussianScorePrefixReadout m m k
       (slowSourceSigmaSq n (slowSourceInitialVariance n)) K initialNormalizer)

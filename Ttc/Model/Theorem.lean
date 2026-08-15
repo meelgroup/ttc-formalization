@@ -85,26 +85,31 @@ unconditional executable theorem.  Removing this final range caveat requires eit
 checked padding reduction to dimension 21 or a separately costed low-dimensional oracle.
 
 The remaining CV-to-TTC assembly obligation is now explicit rather than an opaque
-certificate hypothesis. For every phase `i`, the truncation/transition error `e_i` must
+certificate hypothesis. The local score-aware mixing budget is run at `eps/2`, reserving
+half the mean budget for truncation. For every phase `i`, the truncation/transition error `e_i` must
 satisfy the scaled moment-budget inequality
 
 `e_i * exp(R^2/(2*sigma_i))^2 * (1+2*T_i)
   <= (T_i-C_i) * (chain(i+1)/chain(i))^2`.
 
-The current global tail selector proves only the unscaled aggregate
-`k * sum_i e_i <= 1/40`; it does not yet prove these phasewise inequalities. Closing
-this requires the paper's radius choice (equivalently an `R`-aware phasewise selector),
-followed by the scalar comparison of the resulting deadline sum with the capped radial
-runtime envelope. Until that bridge is supplied, the public capped interface correctly
-remains parameterized by a certified implementation object rather than claiming a fully
-instantiated TTC oracle.
+`CVPhasewiseRadiusTail.phasewise_tail_le_of_amplification` and
+`CVRAwareGlobalRadius.slowTargetError_rAware_scaled_le` now provide the required
+R-aware selector and phasewise target-tail estimate, and
+`CVScoreAwareHalfMeanBudget` combines it with the local half-budget estimate. The
+`CVSlowGaussianPhaseMoment` now proves the exact factor-two Gaussian score moment for the
+slow schedule, `CVSlowCanonicalPhaseMomentPackage` packages the phasewise target-TV and
+clipping transport, and `CVSlowCanonicalRuntimeComparison` proves the literal
+retry/deadline scalar bound. The resulting runtime is the explicit
+`cvSlowCanonicalCappedRadialShape`, which includes the slow schedule's multiplier. It is
+not definitionally equal to the smaller paper-shaped envelope.
 
 Compared with `sections/analysis.tex`'s `thm:runtime`, the checked operational theorem is
 an expected query-accounting result, not yet a derivation of the paper's
-`O(m n^5 rho^2 r_max)` machine-time bound.  With a supplied capped implementation its CV
-call term has the honest shape
+`O(m n^5 rho^2 r_max)` machine-time bound.  With a supplied slow-canonical implementation its CV
+call term has the honest base shape
 `cvComplexityShapeClipped * sourceLogFactor(max 1 R2)^2 * max 1 n`, retaining the
-single `eps^-2` factor inside `cvComplexityShapeClipped`, plus confidence amplification
+single `eps^-2` factor inside `cvComplexityShapeClipped`, multiplied by the explicit
+`cvSlowCanonicalCappedRadialShape` schedule factor, plus confidence amplification
 and the finite sum over TTC calls.  The unconditional explicit accounting in
 `Ttc/Exec/TTCUnconditionalExplicitRuntime.lean` eliminates the former per-call, rate-cap,
 endpoint-price, `rho`, `rMax`, and `Threshold` premises.  Its volume summand has the source

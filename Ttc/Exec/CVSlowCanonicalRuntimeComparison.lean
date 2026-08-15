@@ -175,9 +175,30 @@ theorem slowCanonicalRetainedScalar_le_publicShape
       exact le_mul_of_one_le_left
         (zero_le_one.trans (le_max_left _ _)) hshape
 
+/-- ENNReal form consumed directly by retained-history one-run certificates. -/
+theorem slowCanonicalRetainedScalar_ennreal_le_publicShape
+    {n m k : Nat} (hn : 1 ≤ n) {R2 eps p s0 N : Real}
+    (hR2 : 0 ≤ R2) (heps : 0 < eps) (heps1 : eps < 1)
+    (hs0 : 0 < s0)
+    (hgeom0 : 0 ≤ slowCanonicalGeometryEnvelope n m k eps N)
+    (hpayload0 : 0 ≤ slowCanonicalDeadlinePayload m k eps (Real.sqrt R2) s0) :
+    (k : ENNReal) * (m : ENNReal) * ENNReal.ofReal
+        (10 * (slowCanonicalRetriesCap m k eps (Real.sqrt R2) s0 : Real) *
+          (slowCanonicalDeadlineCap n m k eps (Real.sqrt R2) s0 N : Real) *
+          (2 * Real.exp 1)) ≤
+      ENNReal.ofReal (cvSlowCanonicalCappedRadialShape n m k R2 eps p s0 N) := by
+  have hreal := slowCanonicalRetainedScalar_le_publicShape
+    (n := n) (m := m) (k := k) (p := p) hn hR2 heps heps1 hs0 hgeom0 hpayload0
+  have hk0 : (0 : Real) ≤ k := by positivity
+  have hm0 : (0 : Real) ≤ m := by positivity
+  rw [← ENNReal.ofReal_natCast k, ← ENNReal.ofReal_natCast m,
+    ← ENNReal.ofReal_mul hk0, ← ENNReal.ofReal_mul (mul_nonneg hk0 hm0)]
+  exact ENNReal.ofReal_le_ofReal hreal
+
 #print axioms slowCanonicalRetriesCap_cast_le_realEnvelope
 #print axioms slowCanonicalDeadlineCap_cast_le_realEnvelope
 #print axioms slowCanonicalRetainedScalar_le_realEnvelope
 #print axioms slowCanonicalRetainedScalar_le_publicShape
+#print axioms slowCanonicalRetainedScalar_ennreal_le_publicShape
 
 end Ttc.CVSlowCanonicalRuntimeComparison

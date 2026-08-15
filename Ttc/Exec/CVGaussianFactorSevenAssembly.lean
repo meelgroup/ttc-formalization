@@ -275,6 +275,31 @@ theorem scalar_seven_to_streamAverage_six
   rw [hmean]
   exact integral_streamAverage_sq_le_seven hk mu hg hL2 rfl hsq
 
+/-! A small arithmetic wrapper used by the slow canonical certificate. -/
+
+/-- If the scalar second-moment factor is seven, then averaging at least six
+independent samples gives the raw factor two.  This is deliberately stated
+without any clipping hypotheses, so it can be applied before the clipping
+caps are constructed. -/
+theorem scalar_seven_to_streamAverage_two_of_six_le
+    {k : Nat} (hk : 0 < k) (hk6 : 6 ≤ k)
+    (mu : Measure Path) [IsProbabilityMeasure mu]
+    {g : Path → Real} (hg : Measurable g) (hL2 : MemLp g 2 mu)
+    (hsq : ∫ x, (g x) ^ 2 ∂mu ≤
+      7 * (∫ x, g x ∂mu) ^ 2) :
+    ∫ omega, (streamAverage (k := k) g omega) ^ 2
+        ∂(independentStreamLaw mu) ≤
+      2 * (∫ omega, streamAverage (k := k) g omega
+          ∂(independentStreamLaw mu)) ^ 2 := by
+  have h := scalar_seven_to_streamAverage_six hk mu hg hL2 hsq
+  have hkR : (0 : Real) < k := by exact_mod_cast hk
+  have hcoef : (1 : Real) + 6 / (k : Real) ≤ 2 := by
+    have hdiv : (6 : Real) / (k : Real) ≤ 1 := by
+      apply (div_le_one hkR).2
+      exact_mod_cast hk6
+    linarith
+  exact h.trans (mul_le_mul_of_nonneg_right hcoef (sq_nonneg _))
+
 /-- At the literal corrected runtime parameters, clipping a raw empirical factor
 `1 + 6/k` gives the estimator-required factor `1 + 8/k`. -/
 theorem clipped_sq_moment_le_eight_correctedRuntime_of_raw_six
