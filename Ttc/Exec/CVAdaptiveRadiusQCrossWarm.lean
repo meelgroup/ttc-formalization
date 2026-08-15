@@ -106,6 +106,18 @@ theorem gaussianNext_radiusQ_ratio_le_sqrt_pow
 noncomputable def adaptiveRadiusQWarmFactor (n : Nat) (cc : Real) : ENNReal :=
   ENNReal.ofReal (2 * cc ^ n)
 
+/-- A phase rate at most one half makes the adjustable-radius warmth factor
+exponential only in the dimension; consequently it contributes linearly inside the
+mixing logarithm. -/
+theorem adaptiveRadiusQWarmFactor_le_pow_two
+    {cc : Real} (hcc0 : 0 ≤ cc) (hcc32 : cc ≤ 3 / 2) :
+    adaptiveRadiusQWarmFactor n cc ≤ ENNReal.ofReal ((2 : Real) ^ (n + 1)) := by
+  have hpow : cc ^ n ≤ (2 : Real) ^ n :=
+    pow_le_pow_left₀ hcc0 (hcc32.trans (by norm_num)) n
+  rw [adaptiveRadiusQWarmFactor, pow_succ]
+  apply ENNReal.ofReal_le_ofReal
+  nlinarith [pow_nonneg (show (0 : Real) ≤ 2 by norm_num) n]
+
 theorem map_standardShrink_coolLaw_radiusQ_compl_eq_zero
     (hn : 1 ≤ n) {q : Real} (hq : 0 < q)
     {sigmaSq : Nat → Real} (hsigma : ∀ j, 0 < sigmaSq j)
@@ -328,6 +340,7 @@ theorem isWarm_standardScaledTruncated_ellGaussianProb_radiusQ_hybrid
     (radiusQDelta_le_n n q _)
 
 #print axioms gaussianNext_radiusQ_ratio_le_sqrt_pow
+#print axioms adaptiveRadiusQWarmFactor_le_pow_two
 #print axioms isWarm_standardScaledTruncated_ellGaussianProb_radiusQ_ratio
 #print axioms isWarm_standardScaledTruncated_ellGaussianProb_radiusQ_hybrid
 

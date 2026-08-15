@@ -1,5 +1,6 @@
 import Ttc.Exec.CVHybridRadiusQFallbackSchedule
 import Ttc.Exec.CVAdaptiveRadiusQCrossWarm
+import Ttc.Exec.CVAdaptiveRadiusQAcceptedWarm
 import Ttc.Exec.CVIndependentRefreshSeedLaws
 import Ttc.Exec.CVGaussianColdHotRecursiveStep
 
@@ -14,9 +15,12 @@ open MeasureTheory ProbabilityTheory Metric Set
 open Arlib Arlib.MarkovChains Arlib.GaussianCooling
 open Ttc.CVHybridSchedule Ttc.CVAdaptiveRadiusQPrimitives
 open Ttc.CVAdaptiveRadiusQCrossWarm
+open Ttc.CVAdaptiveRadiusQAcceptedWarm
 open Ttc.CVHybridRadiusQFallbackSchedule
 open Ttc.CVIndependentRefreshSeedLaws
 open Ttc.FiniteContinuingRetryRandomFallback
+open Ttc.CVGaussianWarmFallbackPhaseKernel
+open Ttc.CVSequentialPhaseSampler
 open scoped ENNReal Classical
 
 variable {n : Nat}
@@ -158,6 +162,62 @@ theorem isWarm_seed_hybridRadiusQFallback_next
   simpa only [hybridRadiusQFallbackFactor, hybridRadiusQSeedTarget, Knext] using
     (isWarm_hotRefresh_ellGaussianProb hn hKm hKc' hKb hKtop hs
       (radiusQDelta_pos hn hq hs) (radiusQDelta_le_n n q _))
+
+/-- Exact actual-seed recurrence step for the selected global radius. -/
+theorem isWarm_seed_hybridRadiusQWarmFallbackKernel_step
+    (hn : 1 ≤ n) {m : Nat} {q N s0 : Real} (hq : 0 < q)
+    (hN : 0 < N) (hs0 : 0 < s0)
+    {K : Set (State n)} (hK : MeasurableSet K) (hKc : Convex Real K)
+    (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    (steps : Nat → Nat → Nat) (retries : Nat → Nat) (scoreScale : Real)
+    {i : Nat} (hi : i + 1 < m)
+    (hrate0 : 0 ≤ phaseRate n N s0 i)
+    (hrad : 1 ≤ q * Real.sqrt (sigmaSq n N s0 i) * Real.sqrt n)
+    (hradNext : 1 ≤ q * Real.sqrt (sigmaSq n N s0 (i + 1)) * Real.sqrt n)
+    (rho : Measure (State n)) [IsProbabilityMeasure rho] {M : ENNReal}
+    (hwarm : IsWarm M rho (hybridRadiusQSeedTarget n q N s0 K i)) :
+    IsWarm
+      (hybridRadiusQAcceptedFactor n N s0 retries i * M +
+        hybridRadiusQFallbackFactor n q N s0 K i)
+      (Measure.map Prod.snd
+        (sampleFromKernel
+          (sourceHybridRadiusQWarmFallbackSchedule hn q hq hN hs0 K hK
+            steps retries scoreScale i) rho))
+      (hybridRadiusQSeedTarget n q N s0 K (i + 1)) := by
+  letI : ∀ j, IsProbabilityMeasure (hybridRadiusQFallback n N s0 scoreScale j) :=
+    fun j ↦ isProbabilityMeasure_hybridRadiusQFallback hn hN hs0 scoreScale j
+  let c : Real := 1 - 1 / (2 * (n : Real))
+  have hc : c ≠ 0 := by
+    have hnR : (1 : Real) ≤ n := by exact_mod_cast hn
+    have hhalf : 1 / (2 * (n : Real)) ≤ 1 / 2 := by
+      rw [div_le_div_iff₀ (by positivity) (by norm_num)]
+      linarith
+    dsimp only [c]
+    linarith
+  have hacc := isWarm_seed_acceptedOutputSubmeasure_radiusQ_hybrid
+    hn hq hN hs0 hK hKc hball hfin hi hrate0 hrad hwarm
+      (steps i) (retries i)
+  have hfb := isWarm_seed_hybridRadiusQFallback_next hn hq hN hs0 hK hKc hball
+    hfin i hradNext scoreScale
+  have hstep := isWarm_seed_sampleFrom_gaussianWarmFallbackPhaseKernel
+    (measurableSet_radiusQBody hK)
+    (radiusQDelta n q (sigmaSq n N s0 i)) (sigmaSq n N s0 i) c
+    (radiusQDelta_pos hn hq (sigmaSq_pos hn hN hs0 i)) hc
+    (steps i) (retries i) (hybridRadiusQFallback n N s0 scoreScale i) rho
+    (hybridRadiusQSeedTarget n q N s0 K (i + 1)) hacc hfb
+  apply hstep.mono
+  apply add_le_add _ le_rfl
+  calc
+    (retries i : ENNReal) *
+          ((16 * adaptiveRadiusQWarmFactor n (1 + phaseRate n N s0 i)) * M) =
+        ((retries i : ENNReal) *
+          (16 * adaptiveRadiusQWarmFactor n (1 + phaseRate n N s0 i))) * M := by
+            ac_rfl
+    _ ≤ hybridRadiusQAcceptedFactor n N s0 retries i * M := by
+      apply mul_le_mul_right'
+      exact le_max_right _ _
+
+#print axioms isWarm_seed_hybridRadiusQWarmFallbackKernel_step
 
 #print axioms isWarm_seed_hybridRadiusQFallback_next
 
