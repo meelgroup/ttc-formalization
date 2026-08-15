@@ -219,6 +219,72 @@ theorem operational_rawPrefix_mem_relErr_chainLength
   simpa only [empiricalPhaseFamily, independentPathLaw, scalarLaw, g] using
     (havg ▸ hmean)
 
+/-! TV-robust version for a truncated target family.  The target law carried by the
+operational sampler need only be TV-close to the full cooling law; the per-phase error
+budget is charged additively with the sampler's own mixing error. -/
+theorem operational_rawPrefix_mem_relErr_chainLength_of_targetTV
+    {Seed : Type*} [MeasurableSpace Seed]
+    {k m chainLength : Nat} {Q : Nat -> Kernel Seed (State n × Seed)}
+    [forall i, IsMarkovKernel (Q i)]
+    {mu0 : Measure (State n × Seed)} [IsProbabilityMeasure mu0]
+    {V : Nat -> (Fin k -> Nat -> State n × Seed) -> Real} {eps : Real}
+    (hop : IndependentStreamOperational k (stateScheduleFromSeed Q) Q Prod.snd
+      mu0 V m eps) (hk : 0 < k)
+    {sigmaSq : Nat -> Real} (hsigma : forall j, 0 < sigmaSq j)
+    {K : Set (State n)} (hK : MeasurableSet K) (hKc : Convex Real K)
+    (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R eta gamma : Real} (hKR : K ⊆ closedBall (0 : State n) R)
+    (heta : 0 <= eta) (hgamma : gamma <= 1)
+    (hbudget : 2 * (m : Real) * eta <= gamma)
+    {targetError : Nat -> ENNReal}
+    (htargetTV : forall i, TVLe (Measure.map Prod.fst (hop.tau i))
+      (coolLaw chainLength sigmaSq K i) (targetError i))
+    (htargetError : forall i, targetError i ≠ ⊤)
+    (herror : forall i : Fin m,
+      (hop.mixError (i : Nat) + targetError (i : Nat)).toReal *
+          Real.exp (R ^ 2 / (2 * sigmaSq (i : Nat))) <=
+        eta * (chain chainLength sigmaSq K ((i : Nat) + 1) /
+          chain chainLength sigmaSq K (i : Nat)))
+    (hm : 0 < m) :
+    chain chainLength sigmaSq K 0 *
+        prefixMean (independentPathLaw k (stateScheduleFromSeed Q) mu0)
+          (empiricalPhaseFamily (Seed := Seed) k chainLength sigmaSq K) m ∈
+      Ttc.relErr gamma (chain chainLength sigmaSq K m) := by
+  apply prefixMean_mem_relErr_of_phaseMeans_budget hm heta hgamma hbudget
+    (by
+      intro i
+      exact chain_pos hsigma hball hfin i)
+  intro i
+  let scalarLaw := inhomogeneousPathMeasure (stateScheduleFromSeed Q) mu0
+  let g := scalarPhaseScore (Seed := Seed) chainLength sigmaSq K (i : Nat)
+  have hg : Measurable g := measurable_scalarPhaseScore hK i
+  have htv0 := tvLe_operational_score_eval_succ hop (i : Nat)
+  have htv : TVLe
+      (Measure.map (fun omega : Nat -> State n × Seed =>
+        (omega ((i : Nat) + 1)).1) scalarLaw)
+      (coolLaw chainLength sigmaSq K (i : Nat))
+      (hop.mixError (i : Nat) + targetError (i : Nat)) := by
+    exact htv0.trans (htargetTV (i : Nat))
+  have hmean : ∫ omega, g omega ∂scalarLaw ∈ Ttc.relErr eta
+      (chain chainLength sigmaSq K ((i : Nat) + 1) /
+        chain chainLength sigmaSq K (i : Nat)) := by
+    apply integral_phaseScore_interior_mem_Icc_of_tvLe hsigma hKc hball hfin hKR
+      (measurable_fst.comp (measurable_pi_apply ((i : Nat) + 1))) htv
+      (ENNReal.add_ne_top.2 ⟨hop.mixError_ne_top (i : Nat),
+        htargetError (i : Nat)⟩)
+    simpa only [mul_comm] using herror i
+  have hgInt : Integrable g scalarLaw := by
+    apply Integrable.of_bound hg.aestronglyMeasurable
+      (Real.exp (R ^ 2 / (2 * sigmaSq (i : Nat))))
+    filter_upwards with omega
+    dsimp only [g, scalarPhaseScore]
+    rw [Real.norm_eq_abs, abs_of_nonneg
+      (phaseScore_nonneg chainLength sigmaSq (interior K) (i : Nat) _)]
+    exact phaseScore_le hsigma (interior_subset.trans hKR) (i : Nat) _
+  have havg := integral_streamAverage hk scalarLaw hg hgInt
+  simpa only [empiricalPhaseFamily, independentPathLaw, scalarLaw, g] using
+    (havg ▸ hmean)
+
 /-- Positive dummy at index zero, with an explicit cooling-chain length. -/
 noncomputable def positiveScalarPhaseFamilyChainLength {Seed : Type*}
     (chainLength : Nat) (sigmaSq : Nat -> Real) (K : Set (State n)) :

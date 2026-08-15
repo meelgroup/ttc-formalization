@@ -1,5 +1,6 @@
 import Ttc.Exec.CVSourceWeightedClipping
 import Ttc.Exec.CVGaussianFactorSevenAssembly
+import Ttc.Exec.CVGaussianWarmFallbackScoreMoment
 
 /-!
 # Source-weighted operational Gaussian moments
@@ -21,6 +22,7 @@ open Ttc.CVGaussianFactorSevenAssembly Ttc.CVGaussianScoreAwareParameters
 open Ttc.CVIndependentStreamDependence Ttc.CVScoreSeedPhaseKernel
 open Ttc.CVSourceWeightedClipping Ttc.CVHybridSchedule
 open Ttc.CVGaussianWarmFallbackCappedOperational
+open Ttc.CVGaussianWarmFallbackScoreMoment
 open scoped ENNReal
 
 variable {n : Nat}
@@ -108,7 +110,119 @@ theorem operational_path_phaseScore_scoreAware_relative
     (relativePhaseBoundSq_pos (R := R) (sigmaSq := sigmaSq) hC1) i
   exact h.trans_eq (by unfold relativePhaseSlack; ring)
 
-/-- Averaging `2*k` source-relative scalar scores recovers exactly the source empirical
+/-! ## TV-robust target variants
+
+The operational sampler may target a truncated Gaussian law rather than the full
+`coolLaw`.  The next-score TV estimate compares the actual law with `hop.tau`; the
+additional target-TV premise below spends the truncation budget by the triangle
+inequality before applying the bounded-observable moment transport theorem.
+-/
+
+theorem operational_path_phaseScore_memLp_and_sq_moment_le_factor_of_targetTV
+    {Seed : Type*} [MeasurableSpace Seed]
+    {k mPhases chainLength : Nat}
+    {Q : Nat -> Kernel Seed (State n × Seed)} [forall i, IsMarkovKernel (Q i)]
+    {mu0 : Measure (State n × Seed)} [IsProbabilityMeasure mu0]
+    {V : Nat -> (Fin k -> Nat → State n × Seed) -> Real} {eta : Real}
+    (hop : IndependentStreamOperational k (stateScheduleFromSeed Q)
+      Q Prod.snd mu0 V mPhases eta)
+    {sigmaSq : Nat -> Real} {i : Nat} {K : Set (State n)}
+    (hsigma : forall j, 0 < sigmaSq j) (hKc : Convex Real K)
+    (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R : Real} (hKR : K ⊆ closedBall (0 : State n) R)
+    {targetError : ENNReal}
+    (htargetTV : TVLe (Measure.map Prod.fst (hop.tau i))
+      (coolLaw chainLength sigmaSq K i) targetError)
+    (htargetError : targetError ≠ ⊤)
+    {C T : Real} (hC0 : 0 ≤ C) (hCT : C ≤ T)
+    (hexact : ∫ x, phaseScore chainLength sigmaSq (interior K) i x ^ 2
+        ∂(coolLaw chainLength sigmaSq K i) ≤
+      C * (∫ x, phaseScore chainLength sigmaSq (interior K) i x
+        ∂(coolLaw chainLength sigmaSq K i)) ^ 2)
+    (hslack : (hop.mixError i + targetError).toReal *
+        (Real.exp (R ^ 2 / (2 * sigmaSq i)) ^ 2 * (1 + 2 * T)) ≤
+      (T - C) *
+        (chain chainLength sigmaSq K (i + 1) /
+          chain chainLength sigmaSq K i) ^ 2) :
+    let pathLaw := inhomogeneousPathMeasure (stateScheduleFromSeed Q) mu0
+    let g := fun omega : Nat → State n × Seed =>
+      phaseScore chainLength sigmaSq (interior K) i (omega (i + 1)).1
+    MemLp g 2 pathLaw ∧
+      (∫ omega, (g omega) ^ 2 ∂pathLaw) ≤
+        T * (∫ omega, g omega ∂pathLaw) ^ 2 := by
+  dsimp only
+  let pathLaw := inhomogeneousPathMeasure (stateScheduleFromSeed Q) mu0
+  let X : (Nat → State n × Seed) → State n :=
+    fun omega => (omega (i + 1)).1
+  have hfm := measurable_phaseScore (m := chainLength)
+    (σsq := sigmaSq) (K := interior K) isOpen_interior.measurableSet i
+  have hbound : ∀ x, |phaseScore chainLength sigmaSq (interior K) i x| ≤
+      Real.exp (R ^ 2 / (2 * sigmaSq i)) := by
+    intro x
+    rw [abs_of_nonneg (phaseScore_nonneg chainLength sigmaSq (interior K) i x)]
+    exact phaseScore_le hsigma (interior_subset.trans hKR) i x
+  constructor
+  · exact memLp_pathScore_of_bounded hfm hbound i
+  · have htv0 := tvLe_operational_score_eval_succ hop i
+    have htv : TVLe (Measure.map X pathLaw)
+        (coolLaw chainLength sigmaSq K i)
+        (hop.mixError i + targetError) := by
+      exact htv0.trans htargetTV
+    exact operational_phaseScore_sq_moment_le_factor hsigma hKc hball hfin hKR
+      (by fun_prop) htv
+      (ENNReal.add_ne_top.2 ⟨hop.mixError_ne_top i, htargetError⟩)
+      hC0 hCT hexact hslack
+
+theorem operational_path_phaseScore_scoreAware_relative_of_targetTV
+    {Seed : Type*} [MeasurableSpace Seed]
+    {k mPhases chainLength : Nat}
+    {Q : Nat -> Kernel Seed (State n × Seed)} [forall i, IsMarkovKernel (Q i)]
+    {mu0 : Measure (State n × Seed)} [IsProbabilityMeasure mu0]
+    {V : Nat -> (Fin k -> Nat -> State n × Seed) -> Real} {eta : Real}
+    (hop : IndependentStreamOperational k (stateScheduleFromSeed Q)
+      Q Prod.snd mu0 V mPhases eta)
+    {sigmaSq : Nat -> Real} {K : Set (State n)} {C : Nat -> Real}
+    {targetError : Nat -> ENNReal}
+    (hsigma : forall j, 0 < sigmaSq j) (hKc : Convex Real K)
+    (hball : ball (0 : State n) 1 ⊆ K) (hfin : volume K ≠ ⊤)
+    {R : Real} (hKR : K ⊆ closedBall (0 : State n) R)
+    (htargetTV : forall i, TVLe (Measure.map Prod.fst (hop.tau i))
+      (coolLaw chainLength sigmaSq K i) (targetError i))
+    (htargetError : forall i, targetError i ≠ ⊤)
+    (hC1 : forall i, 1 < C i)
+    (hexact : forall i,
+      ∫ x, phaseScore chainLength sigmaSq (interior K) i x ^ 2
+          ∂(coolLaw chainLength sigmaSq K i) <=
+        C i * (∫ x, phaseScore chainLength sigmaSq (interior K) i x
+          ∂(coolLaw chainLength sigmaSq K i)) ^ 2)
+    (hslack : forall i,
+      (hop.mixError i + targetError i).toReal *
+          (Real.exp (R ^ 2 / (2 * sigmaSq i)) ^ 2 *
+            (1 + 2 * (2 * C i - 1))) <=
+        (C i - 1) *
+          (chain chainLength sigmaSq K (i + 1) /
+            chain chainLength sigmaSq K i) ^ 2)
+    {i : Nat} (hi : i + 1 < mPhases) :
+    let pathLaw := inhomogeneousPathMeasure (stateScheduleFromSeed Q) mu0
+    let g := fun omega : Nat → State n × Seed =>
+      phaseScore chainLength sigmaSq (interior K) i (omega (i + 1)).1
+    MemLp g 2 pathLaw ∧
+      (∫ omega, (g omega) ^ 2 ∂pathLaw) ≤
+        (2 * C i - 1) * (∫ omega, g omega ∂pathLaw) ^ 2 := by
+  have hslack' : (hop.mixError i + targetError i).toReal *
+      (Real.exp (R ^ 2 / (2 * sigmaSq i)) ^ 2 *
+        (1 + 2 * (2 * C i - 1))) <=
+      (2 * C i - 1 - C i) *
+        (chain chainLength sigmaSq K (i + 1) /
+          chain chainLength sigmaSq K i) ^ 2 := by
+    convert hslack i using 1 <;> ring
+  have h := operational_path_phaseScore_memLp_and_sq_moment_le_factor_of_targetTV
+    (C := C i) (T := 2 * C i - 1) hop hsigma hKc hball hfin hKR
+      (htargetTV i) (htargetError i)
+      (by linarith [hC1 i]) (by linarith [hC1 i]) (hexact i) hslack'
+  simpa only [sub_eq_add_neg] using h
+
+/-! Averaging `2*k` source-relative scalar scores recovers exactly the source empirical
 phase factor at sample count `k`. -/
 theorem relativeScalar_to_doubledStreamAverage_sourceFactor
     {Path : Type*} [MeasurableSpace Path]

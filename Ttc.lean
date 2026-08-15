@@ -843,3 +843,9 @@ import Ttc.Exec.CVColdOperationalKernel
 import Ttc.Exec.CVColdOperationalPairTV
 import Ttc.Exec.CVColdCrossPhaseWarm
 import Ttc.Exec.CVGaussianHybridWeightedCertificate
+import Ttc.Exec.CVSlowFullScoreTarget
+import Ttc.Exec.CVSlowRadiusQRecursiveOperational
+import Ttc.Exec.CVSlowRadiusQCanonicalOperational
+import Ttc.Exec.CVSlowSourceTargetTVAccuracy
+import Ttc.Exec.CVSlowCanonicalRetainedReference
+import Ttc.Exec.CVSlowCanonicalRobustCertificate

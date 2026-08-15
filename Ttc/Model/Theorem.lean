@@ -84,6 +84,21 @@ is not an operational membership-query algorithm and is not used to claim an
 unconditional executable theorem.  Removing this final range caveat requires either a
 checked padding reduction to dimension 21 or a separately costed low-dimensional oracle.
 
+The remaining CV-to-TTC assembly obligation is now explicit rather than an opaque
+certificate hypothesis. For every phase `i`, the truncation/transition error `e_i` must
+satisfy the scaled moment-budget inequality
+
+`e_i * exp(R^2/(2*sigma_i))^2 * (1+2*T_i)
+  <= (T_i-C_i) * (chain(i+1)/chain(i))^2`.
+
+The current global tail selector proves only the unscaled aggregate
+`k * sum_i e_i <= 1/40`; it does not yet prove these phasewise inequalities. Closing
+this requires the paper's radius choice (equivalently an `R`-aware phasewise selector),
+followed by the scalar comparison of the resulting deadline sum with the capped radial
+runtime envelope. Until that bridge is supplied, the public capped interface correctly
+remains parameterized by a certified implementation object rather than claiming a fully
+instantiated TTC oracle.
+
 Compared with `sections/analysis.tex`'s `thm:runtime`, the checked operational theorem is
 an expected query-accounting result, not yet a derivation of the paper's
 `O(m n^5 rho^2 r_max)` machine-time bound.  With a supplied capped implementation its CV

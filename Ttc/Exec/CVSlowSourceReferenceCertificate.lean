@@ -168,7 +168,7 @@ theorem isWarm_slowRetainedSeedTarget
     (hn : 2 ≤ n) {m : Nat} {q : Real} (hq4 : 4 ≤ q)
     {K : Set (State n)} (hK : MeasurableSet K) (hKc : Convex Real K)
     (hball : ball (0 : State n) 1 ⊆ K)
-    {i : Nat} (hi : i + 1 < m) :
+    {i : Nat} (hi : i < m) :
     IsWarm slowReferenceWarm (slowRetainedSeedTarget m n q K i)
       (slowRadiusQSeedTarget n q (slowSourceInitialVariance n) K i) := by
   cases i with
@@ -353,8 +353,8 @@ theorem slowActive_phaseSeedTV
       rw [← ENNReal.ofReal_one]
       apply ENNReal.ofReal_le_ofReal
       nlinarith [Real.one_le_exp (show (0 : Real) ≤ 1 by norm_num)]
-    have hwarm := isWarm_slowRetainedSeedTarget (by omega : 2 ≤ n)
-      hq4 hK hKc hball hi
+    have hwarm := isWarm_slowRetainedSeedTarget (m := m) (i := i) (by omega : 2 ≤ n)
+      hq4 hK hKc hball (by omega)
     have h := tvLe_bind_radiusQWarmFallbackCostedKernelOfSigma_nextSeed
       (m := m) hn (lt_of_lt_of_le (by norm_num) hq4)
       (slowSourceSigmaSq n (slowSourceInitialVariance n))
@@ -415,8 +415,8 @@ theorem slowActive_phaseCost
   by_cases hi : i + 1 < m
   · unfold slowActiveCostedSchedule slowPhaseCostBound
     simp only [costedActiveReferenceTailSchedule, if_pos hi]
-    have hwarm := isWarm_slowRetainedSeedTarget (by omega : 2 ≤ n)
-      hq4 hK hKc hball hi
+    have hwarm := isWarm_slowRetainedSeedTarget (m := m) (i := i) (by omega : 2 ≤ n)
+      hq4 hK hKc hball (by omega)
     have h := radiusQCostedOfSigma_referenceCost_le_of_warm
       (by omega : 2 ≤ n) (lt_of_lt_of_le (by norm_num) hq4)
       (slowSourceSigmaSq n (slowSourceInitialVariance n))
