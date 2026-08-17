@@ -1,5 +1,10 @@
 # End-to-end formalisation of TTC by discharging its oracles
 
+> **Superseded as the live plan (2026-08-17) by [`RUNTIME-ENDGAME.md`](RUNTIME-ENDGAME.md).**
+> Phases 0–5 below are done or dead, and the accuracy half of `thm:volumettc` is
+> finished. The remaining work is the runtime half, and it is scoped there. Keep this
+> file for history.
+
 ## THE ENDGOAL — read this first
 
 Everything below serves one target: **the capstone must take the algorithm's own

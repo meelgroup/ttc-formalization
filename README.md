@@ -530,6 +530,11 @@ the proofs.
 
 ## Where this is against the end goal
 
+> **The live plan is [`RUNTIME-ENDGAME.md`](RUNTIME-ENDGAME.md)** (2026-08-17). It records
+> that the accuracy half is finished unconditionally, that the runtime half is reduced to a
+> single object (Cousins–Vempala Theorem 1.1 as a one-run certificate), and what the
+> ordered lemma list to close it is. `END-TO-END-PLAN.md` is history.
+
 [`END-TO-END-PLAN.md`](END-TO-END-PLAN.md) opens with the target, and the README
 should state it plainly: **the capstone must eventually take `(M, φ, ε, δ)` as
 its inputs**, following `ApproxNFA.approxNFA_countNFA` (in the sibling `nfalean`
