@@ -287,4 +287,167 @@ theorem rpow_neg_le_add_tsum_indicator {n : ℕ} (hn : 0 < n) {t : ℝ≥0∞} (
               then ENNReal.ofReal (Real.sqrt 2 ^ (j + 2)) else 0) := by rw [if_pos hlt]
         _ ≤ _ := ENNReal.le_tsum j
 
+/-- The `k`-th dyadic threshold is realised by the shrink parameter `δ·2^{-(k+1)}`. -/
+theorem dyadicThreshold_eq_div_pow (n k : ℕ) {δ : ℝ} (hδ : 0 < δ) :
+    dyadicThreshold n (k + 1) = ((δ * ((1:ℝ) / 2) ^ (k + 1)) / δ) ^ n := by
+  unfold dyadicThreshold
+  have h : (δ * ((1:ℝ) / 2) ^ (k + 1)) / δ = ((1:ℝ) / 2) ^ (k + 1) := by
+    field_simp
+  rw [h, ← pow_mul, mul_comm (k + 1) n]
+
+/-- **The single-band bound.**  Each dyadic band contributes at most
+`a · n·δ·2^{-(k+1)} · mu K`. -/
+theorem lintegral_indicator_ell_lt_le
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K) (hKc : Convex ℝ K)
+    (hball : ball (0 : EuclideanSpace ℝ (Fin n)) 1 ⊆ K)
+    {mu : Measure (EuclideanSpace ℝ (Fin n))} (hshrink : MeasureShrinks mu K)
+    (hKtop : mu K ≠ ⊤)
+    {δ : ℝ} (hδ0 : 0 < δ) (hδ1 : δ < 1) (k : ℕ) (a : ℝ≥0∞) :
+    ∫⁻ x in K, (if ell K δ x < ENNReal.ofReal (dyadicThreshold n (k + 1)) then a else 0) ∂mu
+      ≤ a * (ENNReal.ofReal ((n : ℝ) * (δ * ((1:ℝ) / 2) ^ (k + 1))) * mu K) := by
+  classical
+  set lam : ℝ := δ * ((1:ℝ) / 2) ^ (k + 1) with hlamdef
+  have hlam0 : 0 < lam := by positivity
+  have hhalf : ((1:ℝ) / 2) ^ (k + 1) ≤ 1 := pow_le_one₀ (by norm_num) (by norm_num)
+  have hlamδ : lam ≤ δ := by
+    rw [hlamdef]
+    nlinarith
+  have hlam1 : lam < 1 := lt_of_le_of_lt hlamδ hδ1
+  set S : Set (EuclideanSpace ℝ (Fin n)) :=
+    {y | ell K δ y < ENNReal.ofReal (dyadicThreshold n (k + 1))} with hSdef
+  have hSmeas : MeasurableSet S := measurableSet_lt (measurable_ell hK δ) measurable_const
+  have hind : ∀ x, (if ell K δ x < ENNReal.ofReal (dyadicThreshold n (k + 1)) then a else 0)
+      = S.indicator (fun _ => a) x := by
+    intro x
+    simp only [hSdef, Set.indicator_apply, Set.mem_setOf_eq]
+  calc ∫⁻ x in K, (if ell K δ x < ENNReal.ofReal (dyadicThreshold n (k + 1)) then a else 0) ∂mu
+      = ∫⁻ x in K, S.indicator (fun _ => a) x ∂mu := lintegral_congr fun x => hind x
+    _ = a * mu (K ∩ S) := by
+        rw [lintegral_indicator hSmeas, setLIntegral_const,
+          Measure.restrict_apply hSmeas, Set.inter_comm]
+    _ ≤ a * (ENNReal.ofReal ((n : ℝ) * lam) * mu K) := by
+        refine mul_le_mul_left' ?_ a
+        have hset : K ∩ S = {x ∈ K | ell K δ x < ENNReal.ofReal ((lam / δ) ^ n)} := by
+          rw [hSdef, dyadicThreshold_eq_div_pow n k hδ0]
+          rfl
+        rw [hset]
+        exact measure_lt_ell_le_mul hK hKc hball hshrink hKtop hlam0 hlam1 hlamδ
+
+/-! ### The geometric series that closes the estimate -/
+
+theorem sqrt_two_div_two_lt_one : Real.sqrt 2 / 2 < 1 := by
+  nlinarith [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2), Real.sqrt_nonneg 2]
+
+theorem band_pow_eq (k : ℕ) :
+    Real.sqrt 2 ^ (k + 2) * ((1:ℝ) / 2) ^ (k + 1) = (Real.sqrt 2 / 2) ^ k := by
+  have hs : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  calc Real.sqrt 2 ^ (k + 2) * ((1:ℝ) / 2) ^ (k + 1)
+      = (Real.sqrt 2 ^ k * Real.sqrt 2 ^ 2) * (((1:ℝ) / 2) ^ k * ((1:ℝ) / 2) ^ 1) := by
+        rw [← pow_add, ← pow_add]
+    _ = (Real.sqrt 2 ^ k * ((1:ℝ) / 2) ^ k) * (Real.sqrt 2 ^ 2 * ((1:ℝ) / 2) ^ 1) := by ring
+    _ = (Real.sqrt 2 * ((1:ℝ) / 2)) ^ k * (2 * ((1:ℝ) / 2)) := by rw [mul_pow, hs, pow_one]
+    _ = (Real.sqrt 2 / 2) ^ k := by ring_nf
+
+theorem tsum_band_le : (∑' k : ℕ, (Real.sqrt 2 / 2) ^ k) ≤ 4 := by
+  have hr0 : (0:ℝ) ≤ Real.sqrt 2 / 2 := by positivity
+  have hr1 : Real.sqrt 2 / 2 < 1 := sqrt_two_div_two_lt_one
+  rw [tsum_geometric_of_lt_one hr0 hr1]
+  have hq : Real.sqrt 2 / 2 ≤ 3 / 4 := by
+    nlinarith [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2), Real.sqrt_nonneg 2]
+  have hden : (1:ℝ) / 4 ≤ 1 - Real.sqrt 2 / 2 := by linarith
+  rw [inv_le_comm₀ (by linarith) (by norm_num)]
+  linarith
+
+/-! ### The fractional moment -/
+
+/-- **The fractional moment of the inverse local conductance is an absolute constant.**
+
+    `∫_K ell^{-1/(2n)} dmu  ≤  4 · mu K`
+
+for convex `K ⊇ ball 0 1` and `δ ≤ 1/(2n)`, with no hypothesis on the weight beyond
+`MeasureShrinks`.  The exponent `1/(2n)` is one half of the critical exponent `1/n` at which
+the layer bound's tail `θ^{1/n}` stops being integrable, and the constant is absolute
+precisely because the dyadic base is `2^n`. -/
+theorem lintegral_ell_rpow_neg_le
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K) (hKc : Convex ℝ K)
+    (hball : ball (0 : EuclideanSpace ℝ (Fin n)) 1 ⊆ K)
+    {mu : Measure (EuclideanSpace ℝ (Fin n))} (hshrink : MeasureShrinks mu K)
+    (hKtop : mu K ≠ ⊤)
+    (hn : 0 < n) {δ : ℝ} (hδ0 : 0 < δ) (hδn : δ ≤ 1 / (2 * (n : ℝ))) :
+    ∫⁻ x in K, (ell K δ x) ^ (-(1 / (2 * (n : ℝ)))) ∂mu ≤ ENNReal.ofReal 6 * mu K := by
+  classical
+  have hnR : (0:ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hn1 : (1:ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hnδ : (n : ℝ) * δ ≤ 1 / 2 := by
+    have := mul_le_mul_of_nonneg_left hδn (le_of_lt hnR)
+    calc (n:ℝ) * δ ≤ (n:ℝ) * (1 / (2 * (n:ℝ))) := this
+      _ = 1 / 2 := by field_simp
+  have hδ1 : δ < 1 := by nlinarith
+  have hmeas : ∀ k : ℕ, Measurable (fun x : EuclideanSpace ℝ (Fin n) =>
+      (if ell K δ x < ENNReal.ofReal (dyadicThreshold n (k + 1))
+        then ENNReal.ofReal (Real.sqrt 2 ^ (k + 2)) else 0)) := by
+    intro k
+    exact Measurable.ite (measurableSet_lt (measurable_ell hK δ) measurable_const)
+      measurable_const measurable_const
+  calc ∫⁻ x in K, (ell K δ x) ^ (-(1 / (2 * (n : ℝ)))) ∂mu
+      ≤ ∫⁻ x in K, (ENNReal.ofReal (Real.sqrt 2) +
+          ∑' k : ℕ, (if ell K δ x < ENNReal.ofReal (dyadicThreshold n (k + 1))
+            then ENNReal.ofReal (Real.sqrt 2 ^ (k + 2)) else 0)) ∂mu :=
+        lintegral_mono fun x => rpow_neg_le_add_tsum_indicator hn (ell_le_one K δ x)
+    _ = ENNReal.ofReal (Real.sqrt 2) * mu K +
+          ∑' k : ℕ, ∫⁻ x in K, (if ell K δ x < ENNReal.ofReal (dyadicThreshold n (k + 1))
+            then ENNReal.ofReal (Real.sqrt 2 ^ (k + 2)) else 0) ∂mu := by
+        rw [lintegral_add_left measurable_const, lintegral_tsum
+          (fun k => (hmeas k).aemeasurable), setLIntegral_const]
+    _ ≤ ENNReal.ofReal (Real.sqrt 2) * mu K +
+          ∑' k : ℕ, ENNReal.ofReal ((1:ℝ) / 2 * (Real.sqrt 2 / 2) ^ k) * mu K := by
+        refine add_le_add le_rfl (ENNReal.tsum_le_tsum fun k => ?_)
+        refine le_trans (lintegral_indicator_ell_lt_le hK hKc hball hshrink hKtop
+          hδ0 hδ1 k (ENNReal.ofReal (Real.sqrt 2 ^ (k + 2)))) ?_
+        rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity)]
+        refine mul_le_mul_right' (ENNReal.ofReal_le_ofReal ?_) _
+        calc Real.sqrt 2 ^ (k + 2) * ((n:ℝ) * (δ * ((1:ℝ)/2) ^ (k + 1)))
+            = ((n:ℝ) * δ) * (Real.sqrt 2 ^ (k + 2) * ((1:ℝ)/2) ^ (k + 1)) := by ring
+          _ = ((n:ℝ) * δ) * (Real.sqrt 2 / 2) ^ k := by rw [band_pow_eq]
+          _ ≤ ((1:ℝ)/2) * (Real.sqrt 2 / 2) ^ k := by
+              exact mul_le_mul_of_nonneg_right hnδ (by positivity)
+    _ ≤ ENNReal.ofReal 6 * mu K := by
+        rw [ENNReal.tsum_mul_right, ← add_mul]
+        refine mul_le_mul_right' ?_ _
+        have hsummable : Summable (fun k : ℕ => (1:ℝ) / 2 * (Real.sqrt 2 / 2) ^ k) :=
+          (summable_geometric_of_lt_one (by positivity) sqrt_two_div_two_lt_one).mul_left _
+        rw [← ENNReal.ofReal_tsum_of_nonneg (fun k => by positivity) hsummable,
+          ← ENNReal.ofReal_add (by positivity) (by
+            exact tsum_nonneg fun k => by positivity)]
+        refine ENNReal.ofReal_le_ofReal ?_
+        have hts : (∑' k : ℕ, (1:ℝ) / 2 * (Real.sqrt 2 / 2) ^ k)
+            = (1:ℝ) / 2 * ∑' k : ℕ, (Real.sqrt 2 / 2) ^ k :=
+          tsum_mul_left
+        rw [hts]
+        have h2 : Real.sqrt 2 ≤ 3 / 2 := by
+          nlinarith [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2), Real.sqrt_nonneg 2]
+        linarith [tsum_band_le]
+
+/-! ### Axiom audit -/
+
+section AxiomCheck
+
+#print axioms ofReal_div_pow_le_ell_of_ball_subset
+#print axioms ball_subset_of_mem_smul_of_convex
+#print axioms ofReal_div_pow_le_ell_of_mem_smul
+#print axioms measure_lt_ell_le_of_measureShrinks
+#print axioms one_sub_one_sub_pow_le
+#print axioms measure_lt_ell_le_mul
+#print axioms dyadicThreshold_pos
+#print axioms dyadicThreshold_le_one
+#print axioms rpow_neg_le_add_tsum_indicator
+#print axioms dyadicThreshold_eq_div_pow
+#print axioms lintegral_indicator_ell_lt_le
+#print axioms sqrt_two_div_two_lt_one
+#print axioms band_pow_eq
+#print axioms tsum_band_le
+#print axioms lintegral_ell_rpow_neg_le
+
+end AxiomCheck
+
 end Arlib.MarkovChains
