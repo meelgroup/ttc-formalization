@@ -21,13 +21,16 @@ Nothing new about the walk is needed.  What is new is only that the fractional m
 finite, which is `LocalConductanceMoment.lean`.
 -/
 import Ttc.Exec.AdjustableLazyProperProposalCost
+import Ttc.Exec.CVGaussianAugmentedExpectedCost
 import Arlib.MarkovChains.Continuous.LocalConductanceMoment
 import Arlib.MarkovChains.Continuous.WarmHolder
 
 namespace Ttc.CVHolderRetryCost
 
-open MeasureTheory Metric
+open MeasureTheory Metric ProbabilityTheory
 open Arlib.MarkovChains
+open Ttc.CVGaussianAugmentedExpectedCost Ttc.CVGaussianAugmentedSelectiveTV
+open Ttc.FiniteContinuingRetry Ttc.FiniteContinuingRetryGaussianAugmentedPhase
 open Ttc.AdjustableLazyProperCost
 open scoped ENNReal
 
@@ -179,7 +182,7 @@ theorem lintegral_stepCost_rpow_le
   have hfirst : 3 * ∫⁻ x, stepCost K delta (sigma ^ 2) x ∂pi ≤ 10 := by
     have h := three_mul_sum_lintegral_le_ten_mul_adjustable hn hq hK hKc hball hdelta hsigma
       hdeltan hdeltaq hR hRsigma hKR (M := 1) (mu := pi) (Arlib.IsWarm.refl pi) 1
-    simpa [stepCost, Finset.sum_range_one, Arlib.MarkovChains.iterate_zero, hpidef] using h
+    simpa [stepCost, Finset.sum_range_one, iterate_zero, hpidef] using h
   -- (5) `∫ ℓ⁻¹ dπ ≤ ∫ stepCost dπ`, because `acc ≤ 1`
   have hinvle : ∫⁻ x, (ell K delta x)⁻¹ ∂pi ≤ ∫⁻ x, stepCost K delta (sigma ^ 2) x ∂pi := by
     refine lintegral_mono fun x => ?_
@@ -209,6 +212,127 @@ theorem lintegral_stepCost_rpow_le
           _ ≤ 8 * 10 := mul_le_mul_left' hfirst 8
           _ = 80 := by norm_num
 
+/-! ## The pointwise identification of a round mean with the `δ_x`-started walk
+
+`lintegral_fst_combinedRoundCostedKernel` is an identity **pointwise in `x`**, and the
+execution it lands on accepts `Measure.dirac x`, which is a probability measure.  So the
+unnormalised round law never reaches the cost decomposition; only the outer Hölder step sees
+it, and there its mass is exactly the quantity the lever wants. -/
+
+open Ttc.FiniteContinuingRetryExpectedCost Ttc.FiniteContinuingRetryGaussian
+open Ttc.CVCombinedContinuingRetryPhaseTV
+open Ttc.RawGaussianLazyStoppedExecution Ttc.LazyProperCost
+
+/-- **A round's query mean, started at `x`, is at most half the `δ_x`-started walk cost.** -/
+theorem candidateMean_le_half_roundMean
+    {K : Set (State n)} (hK : MeasurableSet K) (delta s : Real) (hdelta : 0 < delta)
+    (steps : Nat → Nat) (j : Nat) (x : State n) :
+    candidateMean (phaseCandidate K hK delta s hdelta steps) roundQueryCost j x
+      ≤ (2 : ℝ≥0∞)⁻¹ * ∑ i ∈ Finset.range (steps j),
+          ∫⁻ y, stepCost K delta s y
+            ∂(iterate
+              (lazy (speedyMetropolisGaussian K delta s))
+              (Measure.dirac x) i) := by
+  have h1 : candidateMean (phaseCandidate K hK delta s hdelta steps) roundQueryCost j x
+      = ∫⁻ omega, actualMembershipQueryCount (steps j) omega
+          ∂(lazyRawStoppedExecution K hK delta s hdelta (Measure.dirac x)) := by
+    unfold candidateMean phaseCandidate roundQueryCost
+    exact lintegral_fst_combinedRoundCostedKernel hK delta s hdelta (steps j) x
+  rw [h1, expected_actualMembershipQueryCount_eq_existing hK delta s hdelta
+    (Measure.dirac x) (steps j)]
+  exact lintegral_lazyProperTotalCost_le_half_exitMeanSum hK delta s
+    (Measure.dirac x) (steps j)
+
+/-- The per-step cost is measurable. -/
+theorem measurable_stepCost {K : Set (State n)} (hK : MeasurableSet K) (delta s : Real) :
+    Measurable (stepCost K delta s) :=
+  ((measurable_ell hK delta).mul (measurable_speedyMetropolisMove hK delta s)).inv
+
+/-! ## The retry-cost bound at the Hölder envelope
+
+This is the replacement for `Ttc.CVGaussianAugmentedExpectedCost`'s
+`six_mul_augmentedRetryQueryMean_le_ten_sum`, whose conclusion `∑_j 10·(stepsⱼ·M)` carries the
+factor `L` that the truth does not. -/
+
+/-- **The augmented retry chain's expected query cost, at the Hölder envelope.**
+
+    `∫ accumulatedCost  ≤  ½ · (M·(t^p·80))^{1/p} · (L·η^{1/q} + (1 − r^{1/q})⁻¹)`
+
+versus the existing `∑_{j<L} 10·(stepsⱼ·M)`, which is `≈ 10·L·t·M`.  The factor `L` has become
+`L·η^{1/q} + (1 − r^{1/q})⁻¹`, whose second term is `O(q) = O(n)` for `r` bounded away from `1`
+and whose first is negligible once `η` is exponentially small.
+
+`eta` and `r` are binders, exactly as they are throughout the retry chain. -/
+theorem holder_augmentedRetryQueryMean_le
+    (hn : 2 ≤ n) {q : Real} (hq : 1 < q)
+    {K : Set (State n)} (hK : MeasurableSet K) (hKc : Convex Real K)
+    (hball : ball (0 : State n) 1 ⊆ K) (hKvol : volume K ≠ ⊤)
+    {delta sigma R c : Real} (hdelta : 0 < delta) (hsigma : 0 < sigma) (hc : c ≠ 0)
+    (hdeltan : delta ≤ 1 / (2 * (n : Real)))
+    (hdeltaq : delta ≤ sigma / (max 8 (2 * q) * Real.sqrt n))
+    (hR : 0 ≤ R) (hRsigma : R ≤ q * sigma * Real.sqrt n)
+    (hKR : ∀ x, x ∈ K → ‖x‖ ≤ R)
+    (steps : Nat → Nat)
+    (rho : Measure (Ttc.CVGaussianAugmentedExpectedCost.ScoreSeed n))
+    [IsProbabilityMeasure rho]
+    (pi : Measure (State n)) [IsProbabilityMeasure pi]
+    (hpi : pi = ellGaussianProb K delta (sigma ^ 2))
+    (M : ℝ≥0∞) (L t : Nat)
+    (hwarm : ∀ j, j < L → Arlib.IsWarm M
+      (runningCurrent
+        (augmentedMarginalOf K hK delta (sigma ^ 2) c hdelta hc steps rho j)) pi)
+    (hsteps : ∀ j, j < L → steps j ≤ t)
+    {eta r : ℝ≥0∞}
+    (hs : ∀ j, j < L →
+      (runningCurrent
+        (augmentedMarginalOf K hK delta (sigma ^ 2) c hdelta hc steps rho j)) Set.univ
+        ≤ eta + r ^ j) :
+    (∫⁻ z, accumulatedCost z
+      ∂(augmentedMarginalOf K hK delta (sigma ^ 2) c hdelta hc steps rho L))
+      ≤ (2 : ℝ≥0∞)⁻¹ *
+          ((M * ((t : ℝ≥0∞) ^ holderP n * 80)) ^ (1 / holderP n) *
+            ((L : ℝ≥0∞) * eta ^ (1 / holderQ n) + (1 - r ^ (1 / holderQ n))⁻¹)) := by
+  have hn0 : 0 < n := by omega
+  have hs2 : (0:Real) < sigma ^ 2 := by positivity
+  have hwmeas : Measurable (stepCost K delta (sigma ^ 2)) := measurable_stepCost hK delta _
+  have hinv : Kernel.Invariant
+      (lazy (speedyMetropolisGaussian K delta (sigma ^ 2))) pi := by
+    rw [hpi]
+    exact (isReversible_lazy
+      (isReversible_speedyMetropolisGaussian_prob hK delta (sigma ^ 2))).invariant
+  have hA : ∫⁻ y, (stepCost K delta (sigma ^ 2) y) ^ holderP n ∂pi ≤ 80 := by
+    rw [hpi]
+    exact lintegral_stepCost_rpow_le hn hq hK hKc hball hKvol hdelta hsigma hdeltan
+      hdeltaq hR hRsigma hKR
+  rw [augmentedRetryQueryMean_eq_sum_running hK delta (sigma ^ 2) c hdelta hc steps rho L]
+  have hbound := sum_lintegral_roundMean_le_holder
+    (P := lazy (speedyMetropolisGaussian K delta (sigma ^ 2)))
+    (pi := pi) hinv hwmeas (holderP_conjugate hn0) hA hwarm hs hsteps
+  refine le_trans ?_ (mul_le_mul_left' hbound _)
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun j _ => ?_
+  calc ∫⁻ x, candidateMean (phaseCandidate K hK delta (sigma ^ 2) hdelta steps)
+          roundQueryCost j x
+          ∂(runningCurrent
+            (augmentedMarginalOf K hK delta (sigma ^ 2) c hdelta hc steps rho j))
+      ≤ ∫⁻ x, ((2 : ℝ≥0∞)⁻¹ * ∑ i ∈ Finset.range (steps j),
+          ∫⁻ y, stepCost K delta (sigma ^ 2) y
+            ∂(iterate
+              (lazy (speedyMetropolisGaussian K delta (sigma ^ 2)))
+              (Measure.dirac x) i))
+          ∂(runningCurrent
+            (augmentedMarginalOf K hK delta (sigma ^ 2) c hdelta hc steps rho j)) :=
+        lintegral_mono fun x =>
+          candidateMean_le_half_roundMean hK delta (sigma ^ 2) hdelta steps j x
+    _ = (2 : ℝ≥0∞)⁻¹ * ∫⁻ x, (∑ i ∈ Finset.range (steps j),
+          ∫⁻ y, stepCost K delta (sigma ^ 2) y
+            ∂(iterate
+              (lazy (speedyMetropolisGaussian K delta (sigma ^ 2)))
+              (Measure.dirac x) i))
+          ∂(runningCurrent
+            (augmentedMarginalOf K hK delta (sigma ^ 2) c hdelta hc steps rho j)) := by
+        rw [lintegral_const_mul' _ _ (by norm_num)]
+
 /-! ### Axiom audit -/
 
 section AxiomCheck
@@ -219,6 +343,9 @@ section AxiomCheck
 #print axioms ellGaussianProb_absolutelyContinuous
 #print axioms ae_stepCost_le_two_mul_inv_ell
 #print axioms lintegral_stepCost_rpow_le
+#print axioms candidateMean_le_half_roundMean
+#print axioms measurable_stepCost
+#print axioms holder_augmentedRetryQueryMean_le
 
 end AxiomCheck
 

@@ -1449,13 +1449,25 @@ payoff quoted without its price, and the route it named does not work. Full anal
    makes the first moment of `ℓ⁻¹` trivial and the second moment a *first* moment of `ℓ⁻¹`
    under Lebesgue, which the averaged-conductance hypothesis does not control. Do not build
    Route B without first pricing `Q`.
-4. **Route C is live and its mathematics is proved.** Hölder at `p = 1 + 1/(2n)` against the
-   warm density needs only a *fractional* moment of `ℓ⁻¹`, and never touches `Q`.
-   `Arlib/MarkovChains/Continuous/LocalConductanceMoment.lean` (22 theorems),
-   `Arlib/MarkovChains/Continuous/WarmHolder.lean` (5), `Ttc/Exec/CVHolderRetryCost.lean` (6)
-   — all zero `sorry`, all `[propext, Classical.choice, Quot.sound]`. The headline is
-   `Ttc.CVHolderRetryCost.lintegral_stepCost_rpow_le`: `∫ ((ℓ·acc)⁻¹)^{1+1/(2n)} dπ ≤ 80`, an
-   absolute constant, where at `p = 1` the same integral is the *existing* `10/3`.
+4. **Route C is live and its mathematics is proved, all the way to the retry chain.** Hölder
+   at `p = 1 + 1/(2n)` against the warm density needs only a *fractional* moment of `ℓ⁻¹`, and
+   never touches `Q`. `Arlib/MarkovChains/Continuous/LocalConductanceMoment.lean` (22
+   theorems), `Arlib/MarkovChains/Continuous/WarmHolder.lean` (9),
+   `Ttc/Exec/CVHolderRetryCost.lean` (9) — all zero `sorry`, all
+   `[propext, Classical.choice, Quot.sound]`. Two headlines:
+
+   * `Ttc.CVHolderRetryCost.lintegral_stepCost_rpow_le`: `∫ ((ℓ·acc)⁻¹)^{1+1/(2n)} dπ ≤ 80`,
+     an absolute constant, where at `p = 1` the same integral is the *existing* `10/3`.
+   * `Ttc.CVHolderRetryCost.holder_augmentedRetryQueryMean_le`: the actual retry chain's
+     expected query cost is `≤ ½·(M·(t^p·80))^{1/p}·(L·η^{1/q} + (1 − r^{1/q})⁻¹)`, against the
+     existing `six_mul_augmentedRetryQueryMean_le_ten_sum`'s `∑_{j<L} 10·(stepsⱼ·M) ≈
+     10·L·t·M`. **The factor `L` is gone.**
+
+   The obstacle that looked worst — `lintegral_lazyProperTotalCost_le_half_exitMeanSum`
+   demanding `[IsProbabilityMeasure mu]` while `runningCurrentⱼ` is unnormalised — dissolved:
+   `lintegral_fst_combinedRoundCostedKernel` is an identity *pointwise in `x`*, landing on
+   `Measure.dirac x`, so the unnormalised law never reaches the decomposition. Only the outer
+   Hölder step sees it, and there its mass `sⱼ` is exactly what the lever wants.
 5. **The honest price, which the old plan omitted.** `Lenv` goes from `ρ²` to
    `min(ρ², O(n))` — the Hölder conjugate `q ≈ 2n` is intrinsic, coming from
    `ℓ ≳ (u/δ)^n`, i.e. from local conductance genuinely being exponentially small in `n` at a
@@ -1464,9 +1476,12 @@ payoff quoted without its price, and the route it named does not work. Full anal
    not a free `ρ²`.**
 
 **Nothing above changes the operative complexity.** It stays `Õ(m n⁶ρ⁸/ε⁴)` until a *fourth
-capstone* states the Hölder envelope. Arlib theorems and a cost lemma certify mathematics;
-only a capstone certifies TTC's runtime. The two remaining steps, and why the second is the
-long pole, are in `PLAN-RETRYENV.md` §5.
+capstone* states the Hölder envelope. A cost lemma about `augmentedMarginalOf` certifies a
+bound on that chain's expected queries; only a capstone certifies **TTC's** runtime, and
+between the two sits the envelope rewire (`slowUniformRetainedRealEnvelope` →
+`perPhaseLenv` → capstone) plus the law-layer mirror that every previous capstone has needed.
+That is the one remaining step, and it is engineering rather than mathematics; see
+`PLAN-RETRYENV.md` §5.
 
 ---
 

@@ -26,7 +26,7 @@ import Mathlib.MeasureTheory.Integral.MeanInequalities
 
 namespace Arlib.MarkovChains
 
-open MeasureTheory
+open MeasureTheory ProbabilityTheory
 open scoped ENNReal
 
 variable {Om : Type*} [MeasurableSpace Om]
@@ -177,6 +177,152 @@ theorem lintegral_rpow_sum_le {ν : Measure Om} {g : ℕ → Om → ℝ≥0∞}
         _ = ∑ i ∈ Finset.range (t + 1), (∫⁻ x, g i x ^ p ∂ν) ^ (1 / p) :=
             (Finset.sum_range_succ _ _).symm
 
+/-! ## Averaging the `δ_x`-started chain
+
+The `L^p(π)` norm of a `t`-step round mean is controlled by the one-step cost's, but the
+round mean is a function *of the starting point*, so the bridge is: averaging the chain
+started at `δ_x` over `x ∼ μ` is the chain started at `μ`. -/
+
+/-- `∫ (∫ f d(iterate P δ_x i)) dμ = ∫ f d(iterate P μ i)`. -/
+theorem lintegral_lintegral_iterate_dirac {P : Kernel Om Om} [IsMarkovKernel P]
+    (i : ℕ) (μ : Measure Om) [IsProbabilityMeasure μ] :
+    ∀ {f : Om → ℝ≥0∞}, Measurable f →
+      ∫⁻ x, (∫⁻ y, f y ∂(iterate P (Measure.dirac x) i)) ∂μ
+        = ∫⁻ y, f y ∂(iterate P μ i) := by
+  induction i with
+  | zero =>
+      intro f hf
+      simp only [iterate_zero]
+      exact lintegral_congr fun x => lintegral_dirac' x hf
+  | succ i ih =>
+      intro f hf
+      have hg : Measurable fun z => ∫⁻ y, f y ∂(P z) := hf.lintegral_kernel
+      have key : ∀ (ν : Measure Om), IsProbabilityMeasure ν →
+          ∫⁻ y, f y ∂(iterate P ν (i + 1))
+            = ∫⁻ z, (∫⁻ y, f y ∂(P z)) ∂(iterate P ν i) := by
+        intro ν _
+        show ∫⁻ y, f y ∂(step P (iterate P ν i)) = _
+        rw [step]
+        exact Measure.lintegral_bind (Kernel.aemeasurable P) hf.aemeasurable
+      calc ∫⁻ x, (∫⁻ y, f y ∂(iterate P (Measure.dirac x) (i + 1))) ∂μ
+          = ∫⁻ x, (∫⁻ z, (∫⁻ y, f y ∂(P z)) ∂(iterate P (Measure.dirac x) i)) ∂μ :=
+            lintegral_congr fun x => key (Measure.dirac x) inferInstance
+        _ = ∫⁻ z, (∫⁻ y, f y ∂(P z)) ∂(iterate P μ i) := ih hg
+        _ = ∫⁻ y, f y ∂(iterate P μ (i + 1)) := (key μ inferInstance).symm
+
+/-- The `δ_x`-started `i`-step mean is a measurable function of `x`. -/
+theorem measurable_lintegral_iterate_dirac {P : Kernel Om Om} [IsMarkovKernel P] (i : ℕ) :
+    ∀ {f : Om → ℝ≥0∞}, Measurable f →
+      Measurable fun x => ∫⁻ y, f y ∂(iterate P (Measure.dirac x) i) := by
+  induction i with
+  | zero =>
+      intro f hf
+      have heq : (fun x => ∫⁻ y, f y ∂(iterate P (Measure.dirac x) 0)) = f := by
+        funext x
+        simp only [iterate_zero]
+        exact lintegral_dirac' x hf
+      rw [heq]
+      exact hf
+  | succ i ih =>
+      intro f hf
+      have hg : Measurable fun z => ∫⁻ y, f y ∂(P z) := hf.lintegral_kernel
+      have heq : (fun x => ∫⁻ y, f y ∂(iterate P (Measure.dirac x) (i + 1)))
+          = fun x => ∫⁻ z, (∫⁻ y, f y ∂(P z)) ∂(iterate P (Measure.dirac x) i) := by
+        funext x
+        rw [iterate_succ, step]
+        exact Measure.lintegral_bind (Kernel.aemeasurable P) hf.aemeasurable
+      rw [heq]
+      exact ih hg
+
+/-- **The `L^p(π)` norm of a `t`-step round mean.**  If the round mean started at `x` is the
+sum of the `δ_x`-started kernel iterates of a one-step cost `w`, then its `L^p(π)` norm is at
+most `t · ‖w‖_{L^p(π)}` — Minkowski over the `t` steps, then Jensen and invariance for each.
+
+This is the step that turns the one-step bound `LocalConductanceMoment` supplies into the
+`L^p(π)` hypothesis that `sum_lintegral_le_of_isWarm_holder` consumes. -/
+theorem lintegral_rpow_roundMean_le
+    {P : Kernel Om Om} [IsMarkovKernel P] {pi : Measure Om} [IsProbabilityMeasure pi]
+    (hinv : Kernel.Invariant P pi) {w : Om → ℝ≥0∞} (hw : Measurable w)
+    {p q : ℝ} (hpq : p.HolderConjugate q) (t : ℕ) :
+    (∫⁻ x, (∑ i ∈ Finset.range t,
+        ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi) ^ (1 / p)
+      ≤ (t : ℝ≥0∞) * (∫⁻ y, w y ^ p ∂pi) ^ (1 / p) := by
+  have hp0 : 0 < p := hpq.pos
+  have hp1 : 1 ≤ p := (Real.holderConjugate_iff.1 hpq).1.le
+  have hmeas : ∀ i : ℕ, AEMeasurable
+      (fun x => ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) pi :=
+    fun i => (measurable_lintegral_iterate_dirac i hw).aemeasurable
+  have hstep : ∀ i : ℕ,
+      (∫⁻ x, (∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi) ^ (1 / p)
+        ≤ (∫⁻ y, w y ^ p ∂pi) ^ (1 / p) := by
+    intro i
+    refine ENNReal.rpow_le_rpow ?_ (by positivity)
+    calc ∫⁻ x, (∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi
+        ≤ ∫⁻ x, (∫⁻ y, w y ^ p ∂(iterate P (Measure.dirac x) i)) ∂pi :=
+          lintegral_mono fun x =>
+            rpow_lintegral_le_lintegral_rpow (ν := iterate P (Measure.dirac x) i)
+              hw.aemeasurable hpq
+      _ = ∫⁻ y, w y ^ p ∂(iterate P pi i) :=
+          lintegral_lintegral_iterate_dirac i pi (hw.pow_const p)
+      _ = ∫⁻ y, w y ^ p ∂pi := by rw [iterate_invariant hinv i]
+  calc (∫⁻ x, (∑ i ∈ Finset.range t,
+          ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi) ^ (1 / p)
+      ≤ ∑ i ∈ Finset.range t,
+          (∫⁻ x, (∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi) ^ (1 / p) :=
+        lintegral_rpow_sum_le hmeas hp1 t
+    _ ≤ ∑ _i ∈ Finset.range t, (∫⁻ y, w y ^ p ∂pi) ^ (1 / p) :=
+        Finset.sum_le_sum fun i _ => hstep i
+    _ = (t : ℝ≥0∞) * (∫⁻ y, w y ^ p ∂pi) ^ (1 / p) := by
+        rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+
+/-- **The lever, at a retry loop over a walk.**  Combining the three pieces: each round's
+mean is `t` kernel iterates of the one-step cost `w`; its `L^p(π)` norm is `t·‖w‖_p`; and
+Hölder against the warm density turns the sum over rounds into `L·η^{1/q} + (1 − r^{1/q})⁻¹`
+instead of `L`.
+
+    `∑_{j<L} ∫ (∑_{i<stepsⱼ} P^i w) dμⱼ  ≤  (M·(t^p·A))^{1/p} · (L·η^{1/q} + (1 − r^{1/q})⁻¹)`
+
+for any per-round deadlines `stepsⱼ ≤ t`, which is the shape the retry chain actually has —
+`retrySteps i j` varies with the round.
+
+The naive bound, `lintegral_le_of_isWarm` summed, gives `L·M·t·∫w dπ`.  The gain is the
+factor `L`; the price is that `A` bounds `∫w^p dπ` rather than `∫w dπ`. -/
+theorem sum_lintegral_roundMean_le_holder
+    {P : Kernel Om Om} [IsMarkovKernel P] {pi : Measure Om} [IsProbabilityMeasure pi]
+    (hinv : Kernel.Invariant P pi) {w : Om → ℝ≥0∞} (hw : Measurable w)
+    {p q : ℝ} (hpq : p.HolderConjugate q)
+    {A : ℝ≥0∞} (hA : ∫⁻ y, w y ^ p ∂pi ≤ A)
+    {M : ℝ≥0∞} {mu : ℕ → Measure Om} {L : ℕ} (hwarm : ∀ j, j < L → IsWarm M (mu j) pi)
+    {eta r : ℝ≥0∞} (hs : ∀ j, j < L → mu j Set.univ ≤ eta + r ^ j)
+    {steps : ℕ → ℕ} {t : ℕ} (hsteps : ∀ j, j < L → steps j ≤ t) :
+    ∑ j ∈ Finset.range L,
+        ∫⁻ x, (∑ i ∈ Finset.range (steps j),
+          ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ∂(mu j)
+      ≤ (M * ((t : ℝ≥0∞) ^ p * A)) ^ (1 / p) *
+          ((L : ℝ≥0∞) * eta ^ (1 / q) + (1 - r ^ (1 / q))⁻¹) := by
+  have hp0 : 0 < p := hpq.pos
+  have hmeas : ∀ m : ℕ, Measurable fun x : Om =>
+      ∑ i ∈ Finset.range m, ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i) :=
+    fun m => Finset.measurable_sum _ fun i _ => measurable_lintegral_iterate_dirac i hw
+  have hAt : ∫⁻ x, (∑ i ∈ Finset.range t,
+      ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi ≤ (t : ℝ≥0∞) ^ p * A := by
+    have h := lintegral_rpow_roundMean_le hinv hw hpq t
+    have hraise := ENNReal.rpow_le_rpow h hp0.le
+    rw [← ENNReal.rpow_mul, one_div, inv_mul_cancel₀ hp0.ne', ENNReal.rpow_one,
+      ENNReal.mul_rpow_of_nonneg _ _ hp0.le, ← ENNReal.rpow_mul,
+      inv_mul_cancel₀ hp0.ne', ENNReal.rpow_one] at hraise
+    refine hraise.trans ?_
+    exact mul_le_mul_left' hA _
+  -- each round's mean is majorised by the `t`-step mean, so one `A` serves every round
+  have hAj : ∀ j, j < L → ∫⁻ x, (∑ i ∈ Finset.range (steps j),
+      ∫⁻ y, w y ∂(iterate P (Measure.dirac x) i)) ^ p ∂pi ≤ (t : ℝ≥0∞) ^ p * A := by
+    intro j hj
+    refine le_trans (lintegral_mono fun x => ?_) hAt
+    refine ENNReal.rpow_le_rpow ?_ hp0.le
+    exact Finset.sum_le_sum_of_subset (Finset.range_mono (hsteps j hj))
+  exact sum_lintegral_le_of_isWarm_holder hwarm (fun j => (hmeas (steps j)).aemeasurable) hpq
+    hAj hs
+
 /-! ### Axiom audit -/
 
 section AxiomCheck
@@ -186,6 +332,10 @@ section AxiomCheck
 #print axioms sum_lintegral_le_of_isWarm_holder
 #print axioms rpow_lintegral_le_lintegral_rpow
 #print axioms lintegral_rpow_sum_le
+#print axioms lintegral_lintegral_iterate_dirac
+#print axioms measurable_lintegral_iterate_dirac
+#print axioms lintegral_rpow_roundMean_le
+#print axioms sum_lintegral_roundMean_le_holder
 
 end AxiomCheck
 

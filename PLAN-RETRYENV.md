@@ -211,22 +211,45 @@ worth asking before settling for the `min`.**
    80`, an absolute constant.** This is the `L^p(π)` hypothesis the lever needs, and it is
    the whole content of the route: at `p = 1` the same integral is the *existing* `10/3`, and
    the fractional moment says the `p`-th costs only a bounded factor more.
-7. ⬜ **The retry-cost lemma** — apply `sum_lintegral_le_of_isWarm_holder` to
-   `lintegral_accumulatedCost_embeddedMarginal`'s exact identity. Two obstacles, both known:
-   * `candidateMeanⱼ` is a `t`-step mean, so its `L^p(π)` norm needs Minkowski over kernel
-     iterates plus invariance (`Kernel.Invariant (lazy (speedyMetropolisGaussian …))
-     (ellGaussianProb …)`, already proved at `SpeedyGaussian.lean:484`); Jensen and Minkowski
-     are in place for this.
-   * `lintegral_lazyProperTotalCost_le_half_exitMeanSum` carries `[IsProbabilityMeasure mu]`
-     while `runningCurrentⱼ` is **unnormalised** with mass `sⱼ`. Normalising at `νⱼ := sⱼ⁻¹ •
-     μⱼ` and warmness `M/sⱼ` lands at the same `M^{1/p}·sⱼ^{1/q}`, since
-     `sⱼ·(M/sⱼ)^{1/p} = M^{1/p}·sⱼ^{1/q}`; it needs `iterate P (c • μ) = c • iterate P μ`.
-8. ⬜ Rewire `slowUniformRetainedRealEnvelope` (`CVSlowEffectiveOverhead.lean:873`), then
+7. ✅ **The lever with the round-mean structure**, `sum_lintegral_roundMean_le_holder`:
+
+   ```
+   ∑_{j<L} ∫ (∑_{i<t} P^i w) dμⱼ  ≤  (M·(t^p·A))^{1/p} · (L·η^{1/q} + (1 − r^{1/q})⁻¹)
+   ```
+
+   versus the naive `L·M·t·∫w dπ`. Built from `lintegral_rpow_roundMean_le` (Minkowski over
+   the `t` steps, then Jensen and invariance for each), which in turn needed
+   `lintegral_lintegral_iterate_dirac` — *averaging the `δ_x`-started chain over `x ∼ μ` is
+   the chain started at `μ`* — and `measurable_lintegral_iterate_dirac`.
+
+   The `[IsProbabilityMeasure mu]` obstacle **dissolved**: the cost decomposition
+   `lintegral_lazyProperTotalCost_le_half_exitMeanSum` is applied at `mu := Measure.dirac x`,
+   which is a probability measure, so the unnormalised `runningCurrentⱼ` never reaches it.
+   Only the *outer* Hölder step sees `μⱼ`, and there its mass is exactly what we want.
+8. ✅ **Instantiated at the augmented retry chain**,
+   `Ttc.CVHolderRetryCost.holder_augmentedRetryQueryMean_le`:
+
+   ```
+   ∫ accumulatedCost  ≤  ½ · (M·(t^p·80))^{1/p} · (L·η^{1/q} + (1 − r^{1/q})⁻¹)
+   ```
+
+   versus the existing `six_mul_augmentedRetryQueryMean_le_ten_sum`'s `∑_{j<L} 10·(stepsⱼ·M)`,
+   which is `≈ 10·L·t·M`. **The factor `L` is gone**, replaced by `L·η^{1/q} + (1 −
+   r^{1/q})⁻¹`.
+
+   `candidateMean_le_half_roundMean` is the bridge, and the identity it needs is genuinely
+   pointwise in `x`: `lintegral_fst_combinedRoundCostedKernel` lands on
+   `lazyRawStoppedExecution … (Measure.dirac x)`, which **is** a probability measure, so the
+   unnormalised round law never reaches the cost decomposition. Both sides run at the *lazy*
+   kernel — the un-lazy `three_mul_…` variant is used only at `t = 1`, where `iterate P μ 0 =
+   μ` makes the choice of kernel irrelevant.
+9. ⬜ Rewire `slowUniformRetainedRealEnvelope` (`CVSlowEffectiveOverhead.lean:873`), then
    `perPhaseLenv`, then a **fourth capstone**.
 
-**Where the honest stopping point is.** Steps 1–6 are the mathematics, and they are done and
-axiom-clean. Steps 7–8 are the engineering, and step 8 is the known long pole: the recorded
+**Where the honest stopping point is.** Steps 1–8 are the mathematics, and they are done and
+axiom-clean — the lever is now a proved statement about the *actual retry chain's* expected
+query cost, not just about an abstract sum. Step 9 is the engineering, and it is the known long pole: the recorded
 warning in `RUNTIME-ENDGAME.md` — *any* new capstone must mirror the law layer again — applies,
 and this one additionally threads `η`, `r` and the survival hypothesis to call sites that today
-receive only `hwarm`. Until step 8 lands, **the operative complexity is unchanged at
+receive only `hwarm`. Until step 9 lands, **the operative complexity is unchanged at
 `Õ(m n⁶ρ⁸/ε⁴)`**: Arlib and the cost lemma certify mathematics, not TTC's runtime.
