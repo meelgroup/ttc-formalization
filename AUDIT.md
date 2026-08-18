@@ -1218,6 +1218,61 @@ two feasibility constraints: the first-moment layer, which the frontier agent re
 `perPhaseMixError_succ_mean_le_half`, and the **radial tail**, which is what blocks. A cost
 comparison is not a feasibility check, and this route needed both.
 
+### KLS scoping result, 2026-08-18 — the question dissolves, and P4 is worth `n` only
+
+Scoped before dispatching work, after mis-scoping `hLem41` by not surveying. Two corrections to
+what this file said an hour earlier, both decided by reading the definitions:
+
+**1. P4 is worth a factor `n`, NOT `n·rho^2`.** On the other `min` branch
+`delta = sqrt s / (max 8 (2q) * sqrt n)`, the variance **does** cancel in `s/delta^2` — but
+`q^2 = 16 + 4 log(20A)/n` with `A ~ exp(R^2/(2 s0))/(20 b)` is `16 + Theta(rho^2)`, and on that
+branch `q^2` enters the deadline **multiplicatively** through `max(8, 2q)^2`. So
+
+```
+delta = 1/(2n)                         deadline = Theta(s * P * n^3)   = n^3 rho^4
+delta = sqrt s/(max 8 (2q) sqrt n)     deadline = Theta(max(8,2q)^2 * n^2 * P) = n^2 rho^4
+```
+
+`s` cancels exactly (independently confirmed by `AdjustableRadiusSampler.lean:86-92`, which is
+that algebraic identity, and by `AdjustableRadiusGaussian.lean`'s docstring at `:14-17`), and the
+`rho` exponent is **unchanged**. So the earlier claim in this file — that the last `n` and the
+last `rho^2` are one obstruction — is **wrong on the `rho^2` half**. Its justification ("`q`
+enters only as `log F`, paid once") holds on the `1/(2n)` branch, where `q` appears only through
+the truncation radius; it fails on the other branch. Switching branches recovers `n` and **no**
+`rho^2`.
+
+**2. The local-conductance floor is not what blocks the branch switch.** The mixing/conductance
+chain takes **no** local-conductance input at all: `conductance_speedyMetropolisGaussian_ge_uncond_adjustable`
+(`Arlib/MarkovChains/Continuous/AdjustableRadiusGaussian.lean:238`) has hypotheses `21 <= n`,
+`1 < q`, positivity, `delta <= sigma/(max 8 (2q) sqrt n)`, measurable/convex/nonzero-volume `K`
+and a radius bound — **no `hell`, no `hiso`** — and its step binder is already the `sqrt n`
+branch. Verified by reading the statement. Moreover the averaged bound the KLS route would supply
+**already exists unconditionally at `delta ~ 1/sqrt n`**:
+`Arlib.isSmooth_sqrt_of_ball_subset` (`Arlib/Convexity/SmoothSqrt.lean:620`), with no isotropy,
+well-roundedness or diameter hypothesis. Its only consumers are in `UniformSamplerSharp.lean`;
+nothing in the Gaussian chain uses it.
+
+**What actually forces `delta = 1/(2n)`** is the **speedy-to-target rejection map and the
+`IsWarm` transport riding on it**. `map_combinedOutput_condOn_ellGaussianProb_eq_coolLaw`
+(`Ttc/Exec/CVIdealCombinedAccepted.lean:121`) is an **equality of measures**, `rw`-consumed into
+an `IsWarm` hypothesis at `CVGaussianAdaptiveAcceptedWarm.lean:161`. `IsWarm` is an `L-infinity`
+density-ratio bound; an averaged argument yields only TV, and **this repository already contains a
+machine-checked refutation of that weakening**: `Arlib.exists_supported_on_shrunken_not_isWarm`
+(`Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:102`) — a Dirac supported on the shrunken body
+with `forall M, not IsWarm M`, `M = infinity` included. Verified by reading it.
+
+**The one decision-relevant experiment**, before any implementation work: can `IsWarm` for the
+accepted output be obtained from anything weaker than measure equality on `c . K`? If not, the
+whole L1-L4 chain (a Gaussian-weighted deficit bound, a TV version of the shrunken-body equality,
+and the two halves of the `1/8`) is wasted effort. The `1/8` itself is `(1/2) * (1/4)` and **both**
+halves rest on exactness. A replacement floor in `[1/16, 1/8]` re-threads mechanically; below
+`1/16` it additionally forces a generic replacement for `isWarm_condOn_sixteenth`
+(`Ttc/Exec/CVGaussianAcceptedWarm.lean:53`), whose `1/16` is baked into its proof.
+
+Note this makes P4 **not** comparable to localization-for-indicators in kind: nothing in Mathlib
+is missing here (unlike `hLov`/KLS97 Cor 4.6, AUDIT section 0m, which needs boundary Hausdorff
+measure). It is new analysis plus one architectural unknown, not a capability gap.
+
 ### Why the `delta = 1/(2n)` cap cannot simply be relaxed (P4), 2026-08-18
 
 Investigated because the cap is the single largest avoidable term in the development: on the
@@ -1267,7 +1322,7 @@ cannot shed.
   `log_ratio_sq_le_scoreAwareRetries_mul_payload` shows it is structural to the TV
   accounting, not an artefact of a lossy bound. One `ρ²` is recoverable by the L²(π)
   cost-side route planned in `RUNTIME-ENDGAME.md`.
-* **One factor `n`, and it is the same obstruction as the last `ρ²`.** `Tenv ∝ n³` via
+* **One factor `n` — and, CORRECTED 2026-08-18, this is NOT the same obstruction as the last `ρ²`.** `Tenv ∝ n³` via
   `σ_m · n / δ_Q²` with `δ_Q = 1/(2n)` — the `radiusQDelta` `min` resolving to `1/(2n)`
   rather than `√σ/(max 8 (2q)√n)`. On the other branch `σ/δ² = q²n` is both `ρ`-free
   and one power of `n` cheaper. This is a local-conductance question: research.
