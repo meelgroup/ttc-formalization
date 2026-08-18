@@ -1469,9 +1469,42 @@ shrunken body has to retain a constant fraction of the mass, i.e. `cⁿ = Θ(1)`
 `c = 1 − Θ(1/√n)`, whose shrunken body carries `(1 − 1/(2√n))ⁿ ≈ e^{−√n/2}` — exponentially
 little.  **That is P4's tightness finding, and this is what it was really about.**
 
+**Branch A, taken seriously and settled — the binding constraint is the cost, not the mass.**
+The mass argument above says `ell ≡ 1` on the shrunken body needs `δ ≤ λ`.  But `ell ≡ 1` is
+not actually required: this session proved
+`Arlib.MarkovChains.ball_subset_of_mem_smul_of_convex` and
+`ofReal_div_pow_le_ell_of_ball_subset` (`LocalConductanceMoment.lean`), which compose to
+
+```
+x ∈ (1−λ)·K,  λ ≤ δ   ⟹   ell K δ x  ≥  (λ/δ)ⁿ
+```
+
+so one *can* keep `λ = Θ(1/n)` for the mass and still raise `δ` to branch A's `σ/(c√n)`,
+paying `ell ≥ (λ/δ)ⁿ` instead of `ell = 1`.  The deadline only sees `log M`
+(`adjustableSpeedyDeadlineExpression`), and the share floors `scoreAwareShare` /
+`slowSharpFloor6` do **not** depend on `M` at all — both checked.  On that accounting the
+trade looks favourable: `1/δ²` falls by `n`, `log M` rises by `n·log(δ/λ)`, and branch A wins
+whenever `ρ² ≳ log n`.
+
+**That accounting is wrong, and this is the sharp reason branch A fails.**  The warm constant
+does not enter only as `log M`.  It enters the *query cost* **multiplicatively**:
+`six_mul_augmentedRetryQueryMean_le_ten_sum` concludes `∑_{j<L} 10·(stepsⱼ · M)`, and `M` is
+the constant from `isWarm_ellGaussianProb_of_supported_on_shrunken` — which is stated "with the
+same constant" precisely because `ell ≡ 1` makes the speedy-vs-Gaussian transfer free.  Once
+`ell ≥ (λ/δ)ⁿ` instead of `ell = 1`, that transfer costs `1/inf ell ≤ (δ/λ)ⁿ`, so
+
+```
+M  ↦  M · (δ/λ)ⁿ ,   and at branch A's  δ/λ = Θ(√n) :   M ↦ M · n^{n/2}.
+```
+
+A factor `n` saved in the deadline against `n^{n/2}` paid in the cost.  **Branch A is settled:
+blocked, and blocked by the cost's multiplicative warmness, not by the shrunken body's mass.**
+
 **Conclusion, stated as a settlement rather than a gap.**  `n⁶` is what *this construction*
 gives.  `n⁵` is not reachable by tightening any estimate in it; it requires replacing the
-warm-start mechanism, because the mechanism itself is what pins `δ = Θ(1/n)`.  The two
+warm-start mechanism, because that mechanism is what makes `ell ≡ 1` — and `ell ≡ 1` is what
+keeps the warm constant `M` out of the cost multiplicatively.  Any replacement has to deliver
+a warm constant that is `O(1)` *without* routing through `ell ≡ 1` on a shrunken body.  The two
 candidate replacements are already on record and both are research: KLS97-style truncation to
 `{ell ≥ 3/4}`, or an `ell`-carrying seed using `ell(c·x) ≥ cⁿ·ell(x) ≥ ell(x)/2` (see the
 `IsWarm` subsection above).  Note both are the *same knot* as the `IsWarm` blocker: the
