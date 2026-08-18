@@ -23,6 +23,7 @@ toward the origin costs at most the Jacobian.  Lebesgue satisfies it with equali
 radially non-increasing density — the Gaussian in particular — satisfies it.
 -/
 import Arlib.MarkovChains.Continuous.BallWalk
+import Arlib.MarkovChains.Continuous.MetropolisGaussian
 
 namespace Arlib.MarkovChains
 
@@ -428,6 +429,148 @@ theorem lintegral_ell_rpow_neg_le
           nlinarith [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2), Real.sqrt_nonneg 2]
         linarith [tsum_band_le]
 
+/-! ## 4. Discharging `MeasureShrinks`
+
+Per `CLAUDE.md` §11, a theorem whose hypothesis nothing satisfies certifies nothing.  These
+two instances are what make §3 non-vacuous. -/
+
+/-- **Lebesgue measure shrinks exactly**, with equality — this is `addHaar_smul`. -/
+theorem measureShrinks_volume (K : Set (EuclideanSpace ℝ (Fin n))) :
+    MeasureShrinks (volume : Measure (EuclideanSpace ℝ (Fin n))) K := by
+  intro c hc0 _
+  have h := Measure.addHaar_smul (volume : Measure (EuclideanSpace ℝ (Fin n))) c K
+  rw [finrank_euclideanSpace_fin] at h
+  rw [h, abs_of_nonneg (by positivity : (0:ℝ) ≤ c ^ n)]
+
+/-- **Shrinking toward the origin scales the integral by exactly the Jacobian.**  This is
+`map_addHaar_smul` in `lintegral` form. -/
+theorem lintegral_smul_set_eq {c : ℝ} (hc : c ≠ 0)
+    {g : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hg : Measurable g) (hcpos : 0 < c) :
+    ∫⁻ x, g x ∂(volume : Measure (EuclideanSpace ℝ (Fin n)))
+      = ENNReal.ofReal (c ^ n) * ∫⁻ y, g (c • y) ∂(volume : Measure (EuclideanSpace ℝ (Fin n))) := by
+  have hmap : ∫⁻ y, g (c • y) ∂(volume : Measure (EuclideanSpace ℝ (Fin n)))
+      = ∫⁻ x, g x ∂(Measure.map (fun y : EuclideanSpace ℝ (Fin n) => c • y) volume) :=
+    (lintegral_map hg (measurable_const_smul c)).symm
+  rw [hmap, Measure.map_addHaar_smul (volume : Measure (EuclideanSpace ℝ (Fin n))) hc,
+    finrank_euclideanSpace_fin, lintegral_smul_measure, smul_eq_mul, ← mul_assoc,
+    ← ENNReal.ofReal_mul (by positivity), abs_of_nonneg (by positivity : (0:ℝ) ≤ (c ^ n)⁻¹),
+    mul_inv_cancel₀ (by positivity), ENNReal.ofReal_one, one_mul]
+
+/-- **Any weight that grows toward the origin shrinks well.**  The Gaussian weight
+`exp(-‖x‖²/2σ²)` is the instance this file is built for: shrinking moves every point closer
+to `0`, where the density is larger, so the only loss is the Jacobian. -/
+theorem measureShrinks_withDensity
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K) (hKc : Convex ℝ K)
+    (h0 : (0 : EuclideanSpace ℝ (Fin n)) ∈ K)
+    {w : EuclideanSpace ℝ (Fin n) → ℝ≥0∞} (hw : Measurable w)
+    (hmono : ∀ c : ℝ, 0 < c → c ≤ 1 → ∀ x, w x ≤ w (c • x)) :
+    MeasureShrinks ((volume.restrict K).withDensity w) K := by
+  intro c hc0 hc1
+  classical
+  have hcne : c ≠ 0 := hc0.ne'
+  have hsmulK : c • K ⊆ K := by
+    intro y hy
+    obtain ⟨k, hk, rfl⟩ := hy
+    have := hKc hk h0 hc0.le (by linarith : (0:ℝ) ≤ 1 - c) (by ring)
+    simpa using this
+  have hsmulmeas : MeasurableSet (c • K) := hK.const_smul₀ c
+  have hval : ∀ A : Set (EuclideanSpace ℝ (Fin n)), MeasurableSet A → A ⊆ K →
+      ((volume.restrict K).withDensity w) A = ∫⁻ x, A.indicator w x ∂volume := by
+    intro A hA hAK
+    rw [withDensity_apply _ hA, Measure.restrict_restrict hA,
+      Set.inter_eq_self_of_subset_left hAK, lintegral_indicator hA]
+  rw [hval K hK (subset_refl K), hval (c • K) hsmulmeas hsmulK]
+  have hind : Measurable ((c • K).indicator w) := hw.indicator hsmulmeas
+  rw [lintegral_smul_set_eq hcne hind hc0]
+  refine mul_le_mul_left' (lintegral_mono fun y => ?_) _
+  by_cases hy : y ∈ K
+  · have hcy : c • y ∈ c • K := ⟨y, hy, rfl⟩
+    rw [Set.indicator_of_mem hy, Set.indicator_of_mem hcy]
+    exact hmono c hc0 hc1 y
+  · rw [Set.indicator_of_notMem hy]
+    simp
+
+/-- The Gaussian weight grows under shrinking toward the origin. -/
+theorem gaussianWeight_le_smul {s : ℝ} (hs : 0 < s) {c : ℝ} (hc0 : 0 < c) (hc1 : c ≤ 1)
+    (x : EuclideanSpace ℝ (Fin n)) : gaussianWeight s x ≤ gaussianWeight s (c • x) := by
+  unfold gaussianWeight gaussianWeightReal
+  refine ENNReal.ofReal_le_ofReal (Real.exp_le_exp.2 ?_)
+  have hnorm : ‖c • x‖ = c * ‖x‖ := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos hc0]
+  rw [hnorm]
+  have hxn : (0:ℝ) ≤ ‖x‖ := norm_nonneg x
+  have hc2 : c ^ 2 ≤ 1 := by nlinarith
+  have hsq : (c * ‖x‖) ^ 2 ≤ ‖x‖ ^ 2 := by
+    have hexp : (c * ‖x‖) ^ 2 = c ^ 2 * ‖x‖ ^ 2 := by ring
+    rw [hexp]
+    nlinarith [sq_nonneg ‖x‖]
+  have h2s : (0:ℝ) < 2 * s := by linarith
+  gcongr
+
+/-! ## 5. The instance that matters, and non-vacuity -/
+
+/-- **The fractional moment bound at the speedy walk's own Gaussian weight.**  Every
+hypothesis of §3 is discharged: `MeasureShrinks` from `measureShrinks_withDensity` and
+`gaussianWeight_le_smul`, finiteness from `gaussianWeight ≤ 1`. -/
+theorem lintegral_ell_rpow_neg_gaussian_le
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K) (hKc : Convex ℝ K)
+    (hball : ball (0 : EuclideanSpace ℝ (Fin n)) 1 ⊆ K) (hKvol : volume K ≠ ⊤)
+    (hn : 0 < n) {δ s : ℝ} (hδ0 : 0 < δ) (hδn : δ ≤ 1 / (2 * (n : ℝ))) (hs : 0 < s) :
+    ∫⁻ x in K, (ell K δ x) ^ (-(1 / (2 * (n : ℝ))))
+        ∂((volume.restrict K).withDensity (gaussianWeight s))
+      ≤ ENNReal.ofReal 6 * ((volume.restrict K).withDensity (gaussianWeight s)) K := by
+  have hKtop : ((volume.restrict K).withDensity (gaussianWeight s)) K ≠ ⊤ := by
+    have hle : ((volume.restrict K).withDensity (gaussianWeight s)) K ≤ volume K := by
+      rw [withDensity_apply _ hK, Measure.restrict_restrict hK, Set.inter_self]
+      calc ∫⁻ x in K, gaussianWeight s x ≤ ∫⁻ _ in K, (1 : ℝ≥0∞) :=
+            lintegral_mono fun x => gaussianWeight_le_one hs x
+        _ = volume K := setLIntegral_one K
+    exact ne_top_of_le_ne_top hKvol hle
+  exact lintegral_ell_rpow_neg_le hK hKc hball
+    (measureShrinks_withDensity hK hKc (hball (mem_ball_self one_pos))
+      (measurable_gaussianWeight s) (fun c hc0 hc1 x => gaussianWeight_le_smul hs hc0 hc1 x))
+    hKtop hn hδ0 hδn
+
+/-- **Non-vacuity.**  The unit ball with `δ = 1/(2n)` satisfies every guard of every theorem
+above simultaneously, with the Gaussian-weighted measure genuinely positive and finite.  Per
+`CLAUDE.md` §11: without this, `MeasureShrinks` could be an unsatisfiable hypothesis and
+nothing here would certify anything. -/
+theorem exists_localConductanceMoment_witness (hn : 0 < n) {s : ℝ} (hs : 0 < s) :
+    ∃ (K : Set (EuclideanSpace ℝ (Fin n))) (δ : ℝ),
+      MeasurableSet K ∧ Convex ℝ K ∧ ball (0 : EuclideanSpace ℝ (Fin n)) 1 ⊆ K ∧
+        volume K ≠ ⊤ ∧ 0 < δ ∧ δ ≤ 1 / (2 * (n : ℝ)) ∧
+        MeasureShrinks ((volume.restrict K).withDensity (gaussianWeight s)) K ∧
+        0 < ((volume.restrict K).withDensity (gaussianWeight s)) K ∧
+        ((volume.restrict K).withDensity (gaussianWeight s)) K ≠ ⊤ := by
+  have hnR : (0:ℝ) < (n : ℝ) := by exact_mod_cast hn
+  refine ⟨ball (0 : EuclideanSpace ℝ (Fin n)) 1, 1 / (2 * (n : ℝ)),
+    measurableSet_ball, convex_ball _ _, subset_refl _, measure_ball_lt_top.ne,
+    by positivity, le_rfl, ?_, ?_, ?_⟩
+  · exact measureShrinks_withDensity measurableSet_ball (convex_ball _ _)
+      (mem_ball_self one_pos) (measurable_gaussianWeight s)
+      (fun c hc0 hc1 x => gaussianWeight_le_smul hs hc0 hc1 x)
+  · rw [withDensity_apply _ measurableSet_ball, Measure.restrict_restrict measurableSet_ball,
+      Set.inter_self, pos_iff_ne_zero]
+    intro hzero
+    rw [lintegral_eq_zero_iff (measurable_gaussianWeight s)] at hzero
+    have hball0 : (volume.restrict (ball (0 : EuclideanSpace ℝ (Fin n)) 1)) Set.univ = 0 := by
+      have hsub : (Set.univ : Set (EuclideanSpace ℝ (Fin n)))
+          ⊆ {x | gaussianWeight s x ≠ 0} := fun x _ => (gaussianWeight_pos s x).ne'
+      refine measure_mono_null hsub ?_
+      exact ae_iff.1 hzero
+    rw [Measure.restrict_apply_univ] at hball0
+    exact (measure_ball_pos volume (0 : EuclideanSpace ℝ (Fin n)) one_pos).ne' hball0
+  · have hle : ((volume.restrict (ball (0 : EuclideanSpace ℝ (Fin n)) 1)).withDensity
+        (gaussianWeight s)) (ball (0 : EuclideanSpace ℝ (Fin n)) 1)
+        ≤ volume (ball (0 : EuclideanSpace ℝ (Fin n)) 1) := by
+      rw [withDensity_apply _ measurableSet_ball,
+        Measure.restrict_restrict measurableSet_ball, Set.inter_self]
+      calc ∫⁻ x in ball (0 : EuclideanSpace ℝ (Fin n)) 1, gaussianWeight s x
+          ≤ ∫⁻ _ in ball (0 : EuclideanSpace ℝ (Fin n)) 1, (1 : ℝ≥0∞) :=
+            lintegral_mono fun x => gaussianWeight_le_one hs x
+        _ = volume (ball (0 : EuclideanSpace ℝ (Fin n)) 1) := setLIntegral_one _
+    exact ne_top_of_le_ne_top measure_ball_lt_top.ne hle
+
 /-! ### Axiom audit -/
 
 section AxiomCheck
@@ -447,6 +590,12 @@ section AxiomCheck
 #print axioms band_pow_eq
 #print axioms tsum_band_le
 #print axioms lintegral_ell_rpow_neg_le
+#print axioms measureShrinks_volume
+#print axioms lintegral_smul_set_eq
+#print axioms measureShrinks_withDensity
+#print axioms gaussianWeight_le_smul
+#print axioms lintegral_ell_rpow_neg_gaussian_le
+#print axioms exists_localConductanceMoment_witness
 
 end AxiomCheck
 

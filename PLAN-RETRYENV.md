@@ -108,31 +108,64 @@ Minkowski gives `‖f‖_p ≤ T·‖w‖_p = T·(∫ℓ^{-p}dπ)^{1/p}`. And ag
 — an `α`-th moment, not a first moment, of `ℓ⁻¹` under `γ`. **That is the whole point:
 choosing `α` small makes the unbounded quantity of §3 disappear.**
 
-**The `α`-th moment is bounded by an elementary convexity estimate.** For convex `K'` with
-`ball 0 1 ⊆ K'`, `x ∈ K'`, and `u := d(x, ∂K')`:
+**The `α`-th moment is bounded by an elementary convexity estimate — LANDED.**
+`Arlib/MarkovChains/Continuous/LocalConductanceMoment.lean`, 21 theorems, zero `sorry`, all
+`[propext, Classical.choice, Quot.sound]`. Three corrections to the sketch that was here
+first, each of which made the Lean easier or the constant better:
 
-* `conv({x} ∪ ball 0 1) ⊆ K'`, and `K' ⊇ ball x u`, so `ball x δ ∩ K'` contains a cone of
-  height `~δ` on a base of radius `~u`, giving `ℓ(x) ≳ (u/δ)^{n-1}/n`;
-* `(1-λ)K' ⊆ {u ≥ λ}` (since `(1-λ)K' + λ·ball 0 1 ⊆ K'`), so
-  `vol{u < λ} ≤ (1-(1-λ)ⁿ)·vol K' ≤ nλ·vol K'`.
+1. **A ball, not a cone.** For `u := d(x, ∂K') ≤ δ` we have `ball x u ⊆ K'` and so
+   `ell(x) ≥ (u/δ)^n` by plain ball-volume monotonicity
+   (`ofReal_div_pow_le_ell_of_ball_subset`) — no cone geometry, no `ball 0 1 ⊆ K` in that
+   lemma at all, and no measurability of `K`. The exponent is `n` rather than the cone's
+   `n-1`, which only moves `α` from `1/(2(n-1))` to `1/(2n)`.
+2. **The layer bound is `θ^{1/n}` with prefactor `nδ ≤ 1/2`.** `(1-λ)•K' ⊆ {u ≥ λ}` by
+   convexity (`ball_subset_of_mem_smul_of_convex` — the only place `ball 0 1 ⊆ K` is used),
+   and the shell `K' \ (1-λ)•K'` carries at most `1 - (1-λ)^n ≤ nλ` of the weight
+   (`measure_lt_ell_le_mul`). At `λ = δ·θ^{1/n}` and `δ ≤ 1/(2n)` the tail is `θ^{1/n}/2`.
+3. **The dyadic base is `2^n`, and that is the whole trick.** At base `2^n` the *crude*
+   per-band bound `mu(A_k) ≤ mu{ell < 2^{-nk}}` already sums to an absolute constant, so
+   there is no Abel summation and no layer-cake machinery — the pointwise inequality
+   `rpow_neg_le_add_tsum_indicator` plus `lintegral_tsum` is the entire proof. **At base `2`
+   the same argument loses a factor `n`**, which would have made the whole lever a wash;
+   this was worth getting right.
 
-Together: `γ({ℓ < θ})/γ(K') ≲ nδ·(nθ)^{1/(n-1)}`, and with `δ ≤ 1/(2n)` the prefactor is
-`≤ 1/2`. Integrating the tail,
+The result is `lintegral_ell_rpow_neg_le`:
 
 ```
-∫ ℓ^{-α} dγ/γ(K')  ≤  1 + A·α(n-1)/(1 − α(n-1))       for α(n-1) < 1
+∫_K ell^{-1/(2n)} dmu  ≤  6 · mu K
 ```
 
-so **`α := 1/(2(n-1))` gives an absolute constant**, and hence `p' = 1/α + 1 = 2n − 1`.
+for convex `K ⊇ ball 0 1` and `δ ≤ 1/(2n)`. The weight enters only through `MeasureShrinks
+mu K`, an inline hypothesis saying that shrinking toward the origin costs at most the
+Jacobian.
+
+**The weight hypothesis is discharged, twice.** The first draft of this plan proved the
+layer bound for *Lebesgue* and then asserted it for `γ_σ` — a claim whose sketch proved
+something else, exactly the failure mode `AUDIT.md` §11 is about. What is actually proved:
+`measureShrinks_volume` (Lebesgue, with equality, from `addHaar_smul`) and
+`measureShrinks_withDensity` (any weight non-decreasing under shrinking, via the
+change-of-variables `lintegral_smul_set_eq`), and `gaussianWeight_le_smul` supplies the
+Gaussian instance because `‖c•x‖ ≤ ‖x‖`. The usable form is
+`lintegral_ell_rpow_neg_gaussian_le`, with every hypothesis discharged, and
+`exists_localConductanceMoment_witness` exhibits the unit ball at `δ = 1/(2n)` satisfying
+every guard simultaneously with the weighted measure positive and finite.
 
 **The `sⱼ` factor.** With `sⱼ ≤ η + rʲ`
 (`ContinuingRejectionSelective.badWeights_add_survival_le_eta_add_pow`),
 
 ```
-∑ⱼ sⱼ^{1/p'}  ≤  L·η^{1/p'} + 1/(1 − r^{1/p'})  ≈  L·η^{1/(2n)} + 2n/(1−r)
+∑ⱼ sⱼ^{1/p'}  ≤  L·η^{1/p'} + 1/(1 − r^{1/p'})  ≈  L·η^{1/(2n)} + 2n/log(1/r)
 ```
 
 and `η ≈ share ≈ e^{−cρ²}`, so `η^{1/(2n)} = e^{−cρ²/(2n)}`.
+
+**`r` is a threaded binder, not a constant of the development** — checked at the source.
+`badWeights_add_survival_le_eta_add_pow` (`Ttc/Volume/ContinuingRejectionSelective.lean:146`)
+takes `r` with `hcontract : ∀ j, eta ≤ s j → s (j+1) ≤ r * s j`, and every call site receives
+it from `hreject` further up. So the new lemmas keep `r` as a binder too — the repo's own
+idiom — and inherit whatever the chain supplies. Note that `retriesCap = 16 ·
+explicitDyadicTailIndex(share)` forces `r ≤ 2^{-1/16}` for the existing TV budget to close at
+all, so `1/(1 − r^{1/p'}) = O(p')` is not in doubt; but nothing new depends on pinning it.
 
 ### What Route C buys, stated honestly
 

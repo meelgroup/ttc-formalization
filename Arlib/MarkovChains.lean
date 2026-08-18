@@ -87,6 +87,7 @@ import Arlib.MarkovChains.Continuous.ProperProposalGaussian
 import Arlib.MarkovChains.Continuous.ProperProposalStoppedTrajectory
 import Arlib.MarkovChains.Continuous.RadiusFourGaussian
 import Arlib.MarkovChains.Continuous.BallWalkWarmLSAdapter
+import Arlib.MarkovChains.Continuous.LocalConductanceMoment
 
 /-!
 # Arlib.MarkovChains
