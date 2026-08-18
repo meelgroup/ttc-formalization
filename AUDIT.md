@@ -1218,6 +1218,49 @@ two feasibility constraints: the first-moment layer, which the frontier agent re
 `perPhaseMixError_succ_mean_le_half`, and the **radial tail**, which is what blocks. A cost
 comparison is not a feasibility check, and this route needed both.
 
+### Why the `delta = 1/(2n)` cap cannot simply be relaxed (P4), 2026-08-18
+
+Investigated because the cap is the single largest avoidable term in the development: on the
+other branch of `radiusQDelta`'s `min` the variance **cancels**, making the per-phase deadline
+both `rho`-free and one power of `n` cheaper — worth `n·rho^2`. It is **not** an arbitrary
+constant, and relaxing it is not an engineering change. The chain, verified by reading it:
+
+1. `Arlib.MarkovChains.ell_eq_one_on_shrunken` (`Arlib/MarkovChains/Continuous/KLS97Shell.lean:111`)
+   — for `x` in the shrunken body `c·K` and `delta <= 1 - c`, the local conductance is
+   **exactly 1**, because `ball (c•y) (1-c) ⊆ K` by convexity together with `ball 0 1 ⊆ K`.
+2. `Ttc.CVIdealCombinedAccepted.eighth_le_ellGaussianProb_combinedAccept` (`:181`) consumes it at
+   the hard-coded `c = 1 - 1/(2n)`, with hypothesis `hdeltan : delta <= 1/(2n)` (`:185`), to
+   produce the `1/8` acceptance floor.
+3. `Ttc.CVHybridRadiusQOperationalLocalPair` (`:120`) is where the two meet: `hdeltan` comes from
+   `radiusQDelta_le_n`, and `hdeltaC : delta <= 1 - c` is *literally the same number*.
+
+**So `1/(2n)` in `radiusQDelta` and `1/(2n)` in `c` are one quantity, and the binding constraint
+is `c^n = Theta(1)`.** At `c = 1 - 1/(2n)`, `c^n -> e^{-1/2} ~ 0.607` — a constant, which is what
+makes `1/8` available. At the step size we want, `delta ~ 1/(2*sqrt n)`, we would need
+`c = 1 - 1/(2 sqrt n)` and then `c^n ~ e^{-sqrt n / 2}` — **exponentially small**, destroying the
+acceptance floor and everything downstream of it.
+
+`delta = O(1/n)` is therefore **tight for the shrunken-body technique**, not a lossy bound. The
+inradius is pinned at 1 by `ball 0 1 ⊆ K`, so there is no slack to exploit in the hot phases
+either: the body grows, but the inradius does not.
+
+**The two real routes, both research:**
+
+* **Average local conductance (KLS97 s-conductance).** Replace "`ell = 1` pointwise on a shrunken
+  body" with a bound on `∫ ell`, which stays near 1 at `delta ~ 1/sqrt n` because only a thin
+  boundary shell has `ell < 1`. This is the standard literature route and would give the `n`.
+* **Hit-and-run (Lovász–Vempala 2005).** No step size at all, so the whole `radiusQDelta` question
+  disappears. Already stated as `Arlib.MarkovChains.tvLe_iterate_hitAndRun_unitBall`
+  (`HitAndRunMixing.lean:944`) with three open binders — `hLem41` (spherical-cap estimate
+  `q2 < 3/8`), `hIso` (localization), `hLS` (lazy-vs-plain modelling fork). Ledger in §0h.
+
+**Recommendation: hit-and-run.** It subsumes the s-conductance route, and it is also the only one
+of the two that touches the residual `rho^4` — which is a *proved* lower bound for the ball-walk TV
+accounting (`CVRetryDeadlineSplit.log_ratio_sq_le_scoreAwareRetries_mul_payload`) but is a
+property of the walk, not of TTC. LV bound the conductance of every subset rather than needing an
+`s`-conductance argument, which is precisely what removes the polynomial dependence the ball walk
+cannot shed.
+
 ### What actually remains
 
 * **`ρ⁶`.** Of this, `ρ⁴` is a proved **lower bound** — `CVRetryDeadlineSplit`'s
