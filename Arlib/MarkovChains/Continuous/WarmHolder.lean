@@ -123,6 +123,60 @@ theorem sum_lintegral_le_of_isWarm_holder
           ((L : ℝ≥0∞) * eta ^ (1 / q) + (1 - r ^ (1 / q))⁻¹) :=
         mul_le_mul_left' (sum_rpow_le_of_le_add_pow hb0 hb1 hs) _
 
+/-! ## Jensen and Minkowski, in the form the `L^p(π)` bound needs
+
+To apply `sum_lintegral_le_of_isWarm_holder` one needs an `L^p(π)` bound on each `fⱼ`, and
+in a walk `fⱼ` is a sum of kernel iterates of the one-step cost.  These two lemmas reduce
+that to the one-step cost's own `L^p(π)` norm. -/
+
+/-- **Jensen for a probability measure**, `(∫w)^p ≤ ∫w^p`.  This is again Hölder against the
+constant `1`; `IsWarm.refl` supplies the trivial warmness. -/
+theorem rpow_lintegral_le_lintegral_rpow {ν : Measure Om} [IsProbabilityMeasure ν]
+    {w : Om → ℝ≥0∞} (hw : AEMeasurable w ν) {p q : ℝ} (hpq : p.HolderConjugate q) :
+    (∫⁻ y, w y ∂ν) ^ p ≤ ∫⁻ y, w y ^ p ∂ν := by
+  have hp0 : 0 < p := hpq.pos
+  have h := lintegral_le_of_isWarm_holder (IsWarm.refl ν) hw hpq
+  simp only [one_mul, measure_univ, ENNReal.one_rpow, mul_one] at h
+  calc (∫⁻ y, w y ∂ν) ^ p ≤ ((∫⁻ y, w y ^ p ∂ν) ^ (1 / p)) ^ p :=
+        ENNReal.rpow_le_rpow h hp0.le
+    _ = ∫⁻ y, w y ^ p ∂ν := by
+        rw [← ENNReal.rpow_mul, one_div, inv_mul_cancel₀ hp0.ne', ENNReal.rpow_one]
+
+/-- **Minkowski for a finite sum.**  `‖∑_{i<t} gᵢ‖_p ≤ ∑_{i<t} ‖gᵢ‖_p`, by induction on
+`ENNReal.lintegral_Lp_add_le`. -/
+theorem lintegral_rpow_sum_le {ν : Measure Om} {g : ℕ → Om → ℝ≥0∞}
+    (hg : ∀ i, AEMeasurable (g i) ν) {p : ℝ} (hp1 : 1 ≤ p) (t : ℕ) :
+    (∫⁻ x, (∑ i ∈ Finset.range t, g i x) ^ p ∂ν) ^ (1 / p)
+      ≤ ∑ i ∈ Finset.range t, (∫⁻ x, g i x ^ p ∂ν) ^ (1 / p) := by
+  have hp0 : 0 < p := lt_of_lt_of_le zero_lt_one hp1
+  induction t with
+  | zero =>
+      simp only [Finset.range_zero, Finset.sum_empty]
+      rw [ENNReal.zero_rpow_of_pos hp0, lintegral_zero,
+        ENNReal.zero_rpow_of_pos (by positivity)]
+  | succ t ih =>
+      have hsum : AEMeasurable (∑ i ∈ Finset.range t, g i) ν :=
+        Finset.aemeasurable_sum _ fun i _ => hg i
+      have hstep := ENNReal.lintegral_Lp_add_le (μ := ν) hsum (hg t) hp1
+      have hpt : (∫⁻ x, (∑ i ∈ Finset.range t, g i) x ^ p ∂ν)
+          = ∫⁻ x, (∑ i ∈ Finset.range t, g i x) ^ p ∂ν := by
+        refine lintegral_congr fun x => ?_
+        simp
+      calc (∫⁻ x, (∑ i ∈ Finset.range (t + 1), g i x) ^ p ∂ν) ^ (1 / p)
+          = (∫⁻ x, ((∑ i ∈ Finset.range t, g i) + g t) x ^ p ∂ν) ^ (1 / p) := by
+            congr 1
+            refine lintegral_congr fun x => ?_
+            congr 1
+            simp [Finset.sum_range_succ]
+        _ ≤ (∫⁻ x, (∑ i ∈ Finset.range t, g i) x ^ p ∂ν) ^ (1 / p)
+              + (∫⁻ x, g t x ^ p ∂ν) ^ (1 / p) := hstep
+        _ = (∫⁻ x, (∑ i ∈ Finset.range t, g i x) ^ p ∂ν) ^ (1 / p)
+              + (∫⁻ x, g t x ^ p ∂ν) ^ (1 / p) := by rw [hpt]
+        _ ≤ (∑ i ∈ Finset.range t, (∫⁻ x, g i x ^ p ∂ν) ^ (1 / p))
+              + (∫⁻ x, g t x ^ p ∂ν) ^ (1 / p) := add_le_add ih le_rfl
+        _ = ∑ i ∈ Finset.range (t + 1), (∫⁻ x, g i x ^ p ∂ν) ^ (1 / p) :=
+            (Finset.sum_range_succ _ _).symm
+
 /-! ### Axiom audit -/
 
 section AxiomCheck
@@ -130,6 +184,8 @@ section AxiomCheck
 #print axioms lintegral_le_of_isWarm_holder
 #print axioms sum_rpow_le_of_le_add_pow
 #print axioms sum_lintegral_le_of_isWarm_holder
+#print axioms rpow_lintegral_le_lintegral_rpow
+#print axioms lintegral_rpow_sum_le
 
 end AxiomCheck
 
