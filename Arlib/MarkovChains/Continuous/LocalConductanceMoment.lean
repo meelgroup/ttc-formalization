@@ -24,6 +24,8 @@ radially non-increasing density — the Gaussian in particular — satisfies it.
 -/
 import Arlib.MarkovChains.Continuous.BallWalk
 import Arlib.MarkovChains.Continuous.MetropolisGaussian
+import Arlib.MarkovChains.Continuous.SpeedyGaussian
+import Arlib.MarkovChains.Continuous.HoldingTime
 
 namespace Arlib.MarkovChains
 
@@ -571,6 +573,92 @@ theorem exists_localConductanceMoment_witness (hn : 0 < n) {s : ℝ} (hs : 0 < s
         _ = volume (ball (0 : EuclideanSpace ℝ (Fin n)) 1) := setLIntegral_one _
     exact ne_top_of_le_ne_top measure_ball_lt_top.ne hle
 
+/-! ## 6. The bridge to the speedy walk's own reference law
+
+`ellGaussianProb K δ σ²` has density `ℓ·γ/Z`, so an `ℓ^{-(1+α)}` moment against it is an
+`ℓ^{-α}` moment against `γ` — one power of `ℓ` is absorbed by the weighting.  The
+normalisation `Z` cancels on both sides, so this needs no hypothesis on it at all.
+
+The consumer's first moment `∫ ℓ⁻¹ dπ` is already bounded in the development: it is what
+`Ttc.AdjustableLazyProperCost.three_mul_sum_lintegral_le_ten_mul_adjustable` supplies at
+`t = 1`, `M = 1`, `mu = π`. -/
+
+/-- **The fractional moment against `ellGaussianProb`, relative to its first moment.**
+
+    `∫ ℓ^{-(1+1/(2n))} dπ  ≤  6 · ∫ ℓ⁻¹ dπ`
+
+The `ℓ`-weighting of `π` turns the left side into an `ℓ^{-1/(2n)}` moment against `γ` and the
+right side into a zeroth moment against `γ`, and `lintegral_ell_rpow_neg_le` compares those. -/
+theorem lintegral_ell_rpow_neg_ellGaussianProb_le
+    {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K) (hKc : Convex ℝ K)
+    (hball : ball (0 : EuclideanSpace ℝ (Fin n)) 1 ⊆ K) (hKvol : volume K ≠ ⊤)
+    (hn : 0 < n) {δ s : ℝ} (hδ0 : 0 < δ) (hδn : δ ≤ 1 / (2 * (n : ℝ))) (hs : 0 < s) :
+    ∫⁻ x, (ell K δ x) ^ (-(1 + 1 / (2 * (n : ℝ)))) ∂(ellGaussianProb K δ s)
+      ≤ ENNReal.ofReal 6 * ∫⁻ x, (ell K δ x)⁻¹ ∂(ellGaussianProb K δ s) := by
+  classical
+  set α : ℝ := 1 / (2 * (n : ℝ)) with hαdef
+  have hα0 : 0 < α := by
+    have : (0:ℝ) < (n : ℝ) := by exact_mod_cast hn
+    rw [hαdef]; positivity
+  have hLmeas : Measurable fun x : EuclideanSpace ℝ (Fin n) =>
+      (ell K δ x) ^ (-(1 + α)) := (measurable_ell hK δ).pow_const _
+  have hImeas : Measurable fun x : EuclideanSpace ℝ (Fin n) => (ell K δ x)⁻¹ :=
+    (measurable_ell hK δ).inv
+  have hAmeas : Measurable fun x : EuclideanSpace ℝ (Fin n) =>
+      (ell K δ x) ^ (-α) := (measurable_ell hK δ).pow_const _
+  have hwmeas : Measurable fun x : EuclideanSpace ℝ (Fin n) =>
+      ell K δ x * gaussianWeight s x := measurable_ell_mul_gaussianWeight hK δ s
+  have hγmeas : Measurable (gaussianWeight (n := n) s) := measurable_gaussianWeight s
+  -- both sides reduce to integrals against `volume.restrict K`
+  have hred : ∀ (g : EuclideanSpace ℝ (Fin n) → ℝ≥0∞), Measurable g →
+      ∫⁻ x, g x ∂(ellGaussianProb K δ s)
+        = (ellGaussianMeasure K δ s Set.univ)⁻¹ *
+            ∫⁻ x in K, g x * (ell K δ x * gaussianWeight s x) := by
+    intro g hg
+    rw [ellGaussianProb, lintegral_smul_measure, smul_eq_mul, ellGaussianMeasure,
+      lintegral_withDensity_eq_lintegral_mul _ hwmeas hg]
+    congr 1
+    refine lintegral_congr fun x => ?_
+    simp [mul_comm]
+  rw [hred _ hLmeas, hred _ hImeas, ← mul_assoc, mul_comm (ENNReal.ofReal 6) _, mul_assoc]
+  refine mul_le_mul_left' ?_ _
+  -- pointwise a.e. simplification of both integrands
+  have hne : ∀ᵐ x ∂(volume.restrict K), ell K δ x ≠ 0 := ae_restrict_ell_ne_zero hK hδ0
+  have hL : ∫⁻ x in K, (ell K δ x) ^ (-(1 + α)) * (ell K δ x * gaussianWeight s x)
+      = ∫⁻ x in K, (ell K δ x) ^ (-α) * gaussianWeight s x := by
+    refine lintegral_congr_ae ?_
+    filter_upwards [hne] with x hx
+    have htop : ell K δ x ≠ ⊤ := ((ell_le_one K δ x).trans_lt ENNReal.one_lt_top).ne
+    have hpow : (ell K δ x) ^ (-(1 + α)) * ell K δ x = (ell K δ x) ^ (-α) := by
+      have h1 : (-(1 + α)) + (1:ℝ) = -α := by ring
+      calc (ell K δ x) ^ (-(1 + α)) * ell K δ x
+          = (ell K δ x) ^ (-(1 + α)) * (ell K δ x) ^ (1:ℝ) := by rw [ENNReal.rpow_one]
+        _ = (ell K δ x) ^ ((-(1 + α)) + (1:ℝ)) := (ENNReal.rpow_add _ _ hx htop).symm
+        _ = (ell K δ x) ^ (-α) := by rw [h1]
+    rw [← mul_assoc, hpow]
+  have hI : ∫⁻ x in K, (ell K δ x)⁻¹ * (ell K δ x * gaussianWeight s x)
+      = ∫⁻ x in K, gaussianWeight s x := by
+    refine lintegral_congr_ae ?_
+    filter_upwards [hne] with x hx
+    have htop : ell K δ x ≠ ⊤ := ((ell_le_one K δ x).trans_lt ENNReal.one_lt_top).ne
+    rw [← mul_assoc, ENNReal.inv_mul_cancel hx htop, one_mul]
+  rw [hL, hI]
+  -- now it is exactly the §3 bound at the Gaussian weight
+  have hmom := lintegral_ell_rpow_neg_gaussian_le (n := n) hK hKc hball hKvol hn hδ0 hδn hs
+  have hmu : ∀ (g : EuclideanSpace ℝ (Fin n) → ℝ≥0∞), Measurable g →
+      ∫⁻ x in K, g x ∂((volume.restrict K).withDensity (gaussianWeight s))
+        = ∫⁻ x in K, g x * gaussianWeight s x := by
+    intro g hg
+    rw [restrict_withDensity hK, Measure.restrict_restrict hK, Set.inter_self,
+      lintegral_withDensity_eq_lintegral_mul _ hγmeas hg]
+    refine lintegral_congr fun x => ?_
+    simp [mul_comm]
+  have hK' : ((volume.restrict K).withDensity (gaussianWeight s)) K
+      = ∫⁻ x in K, gaussianWeight s x := by
+    rw [withDensity_apply _ hK, Measure.restrict_restrict hK, Set.inter_self]
+  rw [hmu _ hAmeas, hK'] at hmom
+  exact hmom
+
 /-! ### Axiom audit -/
 
 section AxiomCheck
@@ -596,6 +684,7 @@ section AxiomCheck
 #print axioms gaussianWeight_le_smul
 #print axioms lintegral_ell_rpow_neg_gaussian_le
 #print axioms exists_localConductanceMoment_witness
+#print axioms lintegral_ell_rpow_neg_ellGaussianProb_le
 
 end AxiomCheck
 
