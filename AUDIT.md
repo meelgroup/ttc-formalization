@@ -1218,6 +1218,68 @@ two feasibility constraints: the first-moment layer, which the frontier agent re
 `perPhaseMixError_succ_mean_le_half`, and the **radial tail**, which is what blocks. A cost
 comparison is not a feasibility check, and this route needed both.
 
+### The `IsWarm` experiment: BLOCKED, and why that verdict saved the program (2026-08-18)
+
+Run as a single decision experiment before any implementation, on the reasoning that if `IsWarm`
+could not be obtained from something weaker than measure equality on `c . K`, the whole L1-L4
+chain was wasted effort. File: `Arlib/Convexity/GaussianCooling/WarmTransportExperiment.lean`,
+6 declarations, `lake build` green at 2588 jobs, all `[propext, Classical.choice, Quot.sound]`.
+
+**The hypothesis was right about the lemma it named.** Warmness need never be transported: run the
+mixing chain on the measure that is warm and pay the gap additively. `Arlib.TVLe` already had
+everything — `TVLe.trans` (`Arlib/Probability/TV.lean:142`) and the hypothesis-free kernel
+pushforwards `MarkovChains.tvLe_step` / `tvLe_iterate` (`Warmness.lean:293`, `:303`) — so the
+transport lemma is one line:
+
+```lean
+theorem tvLe_iterate_of_isWarm_source … :
+    Arlib.TVLe (Arlib.MarkovChains.iterate P mu t) pi (eps + zeta) :=
+  (Arlib.MarkovChains.tvLe_iterate P hclose t).trans (hmix nu0 hwarm inferInstance)
+```
+
+And `map_combinedOutput_condOn_ellGaussianProb_eq_coolLaw` really can be dissolved at all 13 of
+its uses: the 4+ TV-side ones absorb the `+eps` inside the existing `zeta <= 1/16` and
+`32*zeta + (eta + contraction^L)` budget; the 4 warm-side ones go through the **delta-free**
+factorization `map_combinedOutput_condOn_proposal` (`CVIdealCombinedAccepted.lean:97`, no delta
+binder) plus `ell <= 1` plus `IsWarm.trans`, needing only the averaged deficit `Z >= 1 - eps`.
+
+**What blocks is one step later, and is a SECOND, independent use of `ell = 1` on `c . K`.**
+`isWarm_standardScaledRaw_coolLaw_succ_ellGaussianProb_ratio`
+(`Ttc/Exec/CVGaussianAdaptiveAcceptedWarm.lean:44`) turns its `hdeltan : delta <= 1/(2n)` into
+`hdc : delta <= 1 - c` and feeds
+`Arlib.GaussianCooling.isWarm_ellGaussianProb_of_supported_on_shrunken`
+(`Arlib/Convexity/GaussianCooling/WarmSpeedy.lean:149`, binder `hdc` at `:151`). Its conclusion
+puts `ellGaussianProb` in the **reference** slot — `ell` in the *denominator*. The next phase's
+warm start must be warm against the ell-weighted stationary law of the next phase's chain, and
+that reference is intrinsic: the mixing theorem's `hwarm` is against the kernel's own stationary
+measure, which at `delta ~ 1/sqrt n` *is* the deficient weighting.
+
+**Machine-checked no-go** for the algebraic escape (`ell` in a denominator, `top * 0 = 0`):
+
+```lean
+theorem not_exists_isWarm_transport_of_tvLe_reference :
+    not exists f : ENNReal -> ENNReal -> ENNReal,
+      forall mu nu nu' M eps, IsWarm M mu nu -> TVLe nu nu' eps -> IsWarm (f M eps) mu nu'
+```
+
+Witness `mu = dirac true`, `nu = eps*dirac true + (1-eps)*dirac false`, `nu' = dirac false`: the
+perturbation is arbitrarily small and the constant destroyed arbitrarily good, so the failure is
+not quantitative. A pointwise `ell >= const` on `c . K` would be needed instead, and (in prose,
+not formalised) that is false for legal `K` at `delta ~ 1/sqrt n` — points of `c . K` are only
+`1 - c = 1/(2n)` deep while the ball has radius `1/sqrt n`.
+
+**Two restructurings could clear it; both are separate programs, not additions.** A KLS97-style
+truncation restricting to `{ell >= 3/4}` and paying the volume deficit (already stubbed:
+`KLS97Shell.lean`, `PhaseSamplerTVTruncated.lean`); or an **ell-carrying seed** that never strips
+`ell` in the rejection step, where the pure-convexity bound `ell(c.x) >= c^n ell(x) >= ell(x)/2`
+matches the two `ell` factors with **no pointwise floor at all**. The second looks materially
+cheaper and is the one to scope if P4 is revisited.
+
+**Value of the experiment:** an OPEN verdict would have sent three agents to build the
+Gaussian-weighted deficit bound and both halves of the `1/8`, and they would have hit
+`CVGaussianAdaptiveAcceptedWarm.lean:88` at the end. This is what the experiment existed to
+prevent, and it is the pattern to repeat before any further P4 work.
+
 ### KLS scoping result, 2026-08-18 — the question dissolves, and P4 is worth `n` only
 
 Scoped before dispatching work, after mis-scoping `hLem41` by not surveying. Two corrections to
