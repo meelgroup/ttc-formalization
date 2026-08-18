@@ -1,126 +1,100 @@
-# Scope: a replacement warm start that does not route through `ell ≡ 1`
+# Scope: the KLS97 average-deficit bound — the one missing input, and the whole `n`
 
-The specification, from `AUDIT.md` §0g: deliver an `O(1)` warm constant for the phase-to-phase
-start **without** using `ell ≡ 1` on a shrunken body.  That is what pins `δ = Θ(1/n)`, and
-`δ = Θ(1/n)` is what costs the factor `n` between our `Õ(m n⁶ρ⁸/ε⁴)` and the paper's `n⁵`.
+**Superseded first draft.**  This file previously proposed replacing the phase-to-phase warm
+start with an `ell`-weighted-to-`ell`-weighted transfer, on the theory that `ell ≡ 1` on a
+shrunken body was our own device.  **That was wrong, and reading Cousins–Vempala settles it.**
+The shrunken body *is* in the paper; what is ours is the *pointwise* way we establish the
+conductance deficit on it.  The correct scope is below.
 
-Written 2026-08-18 from the source.
+## 0. What the paper actually proves
 
-## 0. Why `ell ≡ 1` is there at all — the diagnosis that suggests the fix
-
-The chain currently starts phase `i+1` from **`condOn (coolLaw i) (c·K)`**: the previous
-phase's law, which is an `ell`-*free* truncated Gaussian, conditioned onto the shrunken body.
-Its target is `ellGaussianProb K δ σ²`, whose density carries the extra factor `ell`
-(`WarmSpeedy.lean:59`, `:69–75`).
-
-So the transfer is between an `ell`-free law and an `ell`-weighted one, and the whole job of
-the shrunken body is to force `ell ≡ 1` on the support so the mismatch costs nothing —
-`isWarm_ellGaussianProb_of_supported_on_shrunken` is advertised as "*with the same
-constant*" for exactly that reason.  Without it the sup-ratio really is unbounded
-(`exists_supported_on_shrunken_not_isWarm`).
-
-**The mismatch is the problem, not the bound.**  If *both* ends of the transfer are
-`ell`-weighted, `ell` cancels in the density ratio and no shrunken body is needed.
-
-## 1. The proposal: transfer `ellGaussianProb i → ellGaussianProb (i+1)`
+Cousins–Vempala `lem:map-speedy-to-ball` (`1409.6011/vol3_journal.tex:942`) maps the speedy
+walk's law `∝ ℓ·f` to the target `∝ f` by rejection at shrink factor `c = 1 − 1/(2n)` — the
+same `c` we use — under the step-size hypothesis
 
 ```
-d(ellGaussianProb K δᵢ σᵢ²)      ell_{δᵢ}(x) · γ_{σᵢ}(x) / Zᵢ        ell_{δᵢ}(x)   γ_{σᵢ}(x)   Zᵢ₊₁
-──────────────────────────── =  ──────────────────────────────  =  ─────────── · ───────── · ────
-d(ellGaussianProb K δᵢ₊₁ σᵢ₊₁²)  ell_{δᵢ₊₁}(x) · γ_{σᵢ₊₁}(x) / Zᵢ₊₁   ell_{δᵢ₊₁}(x)  γ_{σᵢ₊₁}(x)   Zᵢ
+δ  ≤  min{σ,1} / (8 √(n log(n/ε)))                     ← branch A
 ```
 
-Three factors, each of which must be `O(1)`.
+and it imports exactly two facts, cited as "[18]":
 
-### (a) The `ell` ratio — `O(1)`, and the lemma is two lines
+1. `Q̂(cK) ≥ 1/2`;
+2. `∫_{μ_L ∩ cK} (1 − ℓ(x)) dx  ≤  ε · vol(μ_L ∩ cK)` — the **average** conductance deficit
+   over the shrunken body is small.
 
-The two `ell`s are at *different* `δ`, since `δ = radiusQDelta n q σ²` moves with the phase, so
-they do not cancel identically.  They are nonetheless comparable, by pure monotonicity:
+(`Arlib/MarkovChains/Continuous/KLS97Shell.lean` already records that CV's citation is to the
+wrong paper: [18] is KLS *1995*, which has no ball walk; the machinery is in KLS **1997**,
+RSA 11, whose theorem numbers match.)
 
-```
-ell K δ x  =  vol(B(x,δ) ∩ K) / vol(B(x,δ))
-           ≥  vol(B(x,δ') ∩ K) / ((δ/δ')ⁿ · vol(B(x,δ')))          for δ' ≤ δ
-           =  (δ'/δ)ⁿ · ell K δ' x
-```
+## 1. What we prove instead, and exactly what it costs
 
-— the numerator is monotone in `δ` and the denominator scales by `(δ/δ')ⁿ`.  **This is a
-strictly easier lemma than `ofReal_div_pow_le_ell_of_ball_subset`, which is already proved**
-(`LocalConductanceMoment.lean`), and it needs no convexity.
-
-And the constant is `O(1)` because the cooling schedule is slow.  `PhaseSchedule.lean:150–160`:
-`σᵢ₊₁² = σᵢ²(1 + α)` with `α = coolRate ≈ κ/(4(n+1)L) = Θ(1/(nL))`.  At branch A's
-`δ = √(σ²)/(max 8 (2q) · √n)`,
+`KLS97Shell.lean` proves **both facts outright**, with no external input — but only because it
+works at `δ ≤ 1 − c = 1/(2n)`, where the one-line convexity argument gives
 
 ```
-(δᵢ₊₁/δᵢ)ⁿ = (1 + α)^{n/2} = exp(Θ(1/L)) = Θ(1).
+x ∈ cK,  δ ≤ 1 − c   ⟹   ball x δ ⊆ K   ⟹   ℓ(x) = 1
 ```
 
-**The `ell` mismatch across one cooling step costs an absolute constant.**  This is the
-load-bearing observation, and it is the reason the proposal is worth doing.
+i.e. fact 2 **pointwise, at `ε = 0`** (`ell_eq_one_on_shrunken`,
+`lintegral_one_sub_ell_shrunken_eq_zero`), and fact 1 from the volume ratio
+`(1−1/(2n))ⁿ ≥ 1/2` (`half_le_one_sub_inv_two_mul_pow`, `half_le_speedy_shrunken`).
 
-### (b) The Gaussian ratio — existing
+That file's own docstring states the price, and it is precisely the gap this project has been
+chasing:
 
-`γ_{σᵢ}/γ_{σᵢ₊₁}` at one cooling step is the standard Gaussian-cooling bound the development
-already proves; it is where the `2e` in `isWarm_condOn_coolLaw_ellGaussianProb` comes from.
+> "Cousins–Vempala run at `δ ≤ min{σ,1}/(8√(n log(n/ε)))`, which is much *larger* than
+> `1/(2n)` … in that regime the deficit does not vanish and the KLS97 average-deficit bound is
+> genuinely needed.  What the regime here costs is a worse exponent, not polynomiality: …
+> at `δ = Θ(1/n)` it reads `O(σ²n³·log(M/ε))` instead of `O(σ²n²·log(M/ε))`."
 
-### (c) The normaliser ratio `Zᵢ₊₁/Zᵢ` — needs a lemma, expected `O(1)`
+**So the entire `n⁶` vs the paper's `n⁵` is this one substitution**, and it was recorded in the
+development before any of the present analysis.  The independent derivation in `AUDIT.md`
+§0g — branch A ⟶ `δ` ⟶ shrunken body ⟶ warm constant in the cost — lands on the same
+statement from the other end, which is a consistency check and nothing more.
 
-`Z = ∫_K ell·γ`.  Both factors move by `O(1)` per step by (a) and (b), so `Z` does too; but it
-is an integral ratio, not a pointwise one, and it deserves its own statement.
+## 2. The deliverable
 
-## 2. The composition obstacle, and why it is already solved
-
-The chain does not *have* `ellGaussianProb i` at phase `i+1`; it has the sampler's output,
-which is only `TVLe`-close to it.  Warmness does not transport across TV — that is
-`not_exists_isWarm_transport_of_tvLe_reference`
-(`Arlib/Convexity/GaussianCooling/WarmTransportExperiment.lean`), a machine-checked no-go from
-this development.
-
-But warmness **never needs to be transported**.  The same file proves
+Formalize **KLS97 fact 2 in its averaged form**:
 
 ```
-tvLe_iterate_of_isWarm_source :
-  (∀ ρ, IsWarm M ρ π → TVLe (iterate P ρ t) π ζ) → IsWarm M ν₀ π → TVLe μ ν₀ ε
-    → TVLe (iterate P μ t) π (ε + ζ)
+theorem lintegral_one_sub_ell_shrunken_le
+    (hK : convex, B_n ⊆ K)  (hδ : δ ≤ min σ 1 / (8 * √(n * log (n/ε))))
+    (hL : Convex ℝ μ_L) :
+    ∫⁻ x in μ_L ∩ (1 − 1/(2n)) • K, (1 − ell K δ x)  ≤  ofReal ε * volume (μ_L ∩ (1−1/(2n)) • K)
 ```
 
-— run the mixing chain against the law that *is* warm and pay the gap **additively**.  The
-earlier `IsWarm` experiment found this device sufficient at all 13 uses of the equality it was
-meant to replace, and found the residual blocker to be exactly the *second*, independent use of
-`ell ≡ 1` at `isWarm_ellGaussianProb_of_supported_on_shrunken`.  **This proposal removes that
-second use**, which is precisely what the experiment identified as the thing standing in the
-way.
+with fact 1 (`Q̂(cK) ≥ 1/2`) re-derived at the same `δ`, and then `radiusQDelta`'s `min`
+resolved to branch A downstream.
 
-## 3. What this buys, and what it does not
+## 3. Honest assessment of difficulty
 
-Removing `ell ≡ 1` removes the constraint `δ ≤ 1 − c` with `c = 1 − Θ(1/n)`, hence permits
-branch A, hence `Tenv : n³ → n²`, hence
+This is a **genuine convex-geometry theorem from KLS97**, not bookkeeping.  What makes it hard
+is what makes it true: at `δ = Θ(σ/√(n log))` the shrunken body's boundary layer is *thick*, so
+`1 − ℓ` is **not** pointwise small — the estimate is available only after integrating, and only
+because a convex body has little mass near a sharp corner.  The crude tail bound this
+development already has,
 
 ```
-Õ( m · n⁶ · ρ⁸ / ε⁴ )   →   Õ( m · n⁵ · ρ⁸ / ε⁴ )
+measure_lt_ell_le_mul :  mu {x ∈ K | ell < (λ/δ)ⁿ} ≤ ofReal (n·λ) · mu K
 ```
 
-matching the paper's `n` exponent.  It does **not** touch the `ρ` exponent: `ρ⁴` of the `ρ⁸` is
-a proved *lower* bound on this sampler's TV accounting (`CVRetryDeadlineSplit`), and one `ρ²`
-is the `retryEnv` lever, already proved as mathematics (`PLAN-RETRYENV.md`) and awaiting its
-rewire.
+(`LocalConductanceMoment.lean`, proved this session) integrates to `avg(1 − ℓ) ≲ nδ`, which at
+branch A's `δ` is `≈ σ√n/8` — **vacuous**.  So the existing machinery does not reach it, and
+the gap is not a matter of assembling what is here.
 
-## 4. Order of work, cheapest decisive step first
+What *is* here and relevant: `ell` monotonicity in the step
+(`ofReal_div_pow_mul_ell_le_ell`, proved this session), the layer bound and its
+`MeasureShrinks` abstraction, `avgLocalConductance` / `IsSmooth`
+(`BallWalk.lean:463`), and `SmoothSqrt.lean`'s `volume_shell_le`.  None of these is the KLS97
+estimate, and none of them combines to it.
 
-1. **`ell_mono_ratio`** — `(δ'/δ)ⁿ · ell K δ' x ≤ ell K δ x` for `δ' ≤ δ`.  Two lines, no
-   hypotheses beyond `0 < δ'`.  Do it first: it is the load-bearing new fact and it is nearly
-   free.
-2. **`ell_ratio_le_of_coolStep`** — instantiate (1) at `δᵢ₊₁/δᵢ = √(1+α)` and bound
-   `(1+α)^{n/2} ≤ e^{1/2}` from `coolRate`'s definition.  Small.
-3. **`isWarm_ellGaussianProb_succ`** — the (a)·(b)·(c) product, at an explicit `O(1)` constant.
-   This is the replacement for `isWarm_condOn_coolLaw_ellGaussianProb`, and (c) is the only
-   part needing genuinely new work.
-4. **Re-thread the phase chain** through `tvLe_iterate_of_isWarm_source` instead of the
-   `condOn (coolLaw i) (c·K)` start.  This is the large edit; `WarmSpeedy.lean`'s scope note
-   ("composing across phases … is not done here") marks exactly the seam.
-5. **Only then** move `radiusQDelta` to branch A and re-derive `Tenv`.
+## 4. Recommendation
 
-**Honest status of the estimate.**  Steps 1–2 are certain.  Step 3(c) is expected but unproved.
-Step 4 is the long pole and touches the accuracy/TV budget, which this document has *not*
-checked — the additive `ε` from `tvLe_iterate_of_isWarm_source` has to fit inside the existing
-per-phase budget, and whether it does is the first thing that could kill the route.
+Treat this as **one named external theorem to be formalized**, in the same category as
+`hIso`/localization — a piece of published convex geometry the development depends on and does
+not yet have — rather than as an engineering task.  Do not attempt it as a variation on the
+existing layer bound; the regimes are different and the existing bound is provably too weak
+there.
+
+Until it lands, `Õ(m n⁶ρ⁸/ε⁴)` is the honest figure, and the reason it is `n⁶` and not `n⁵` is
+one lemma, precisely identified.

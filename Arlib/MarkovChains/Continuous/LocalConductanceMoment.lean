@@ -103,6 +103,50 @@ theorem ofReal_div_pow_le_ell_of_mem_smul
   ofReal_div_pow_le_ell_of_ball_subset hlam0 hlamδ
     (ball_subset_of_mem_smul_of_convex hKc hball hlam0 hlam1 hx)
 
+/-- **Local conductance is monotone in the step, up to the Jacobian.**
+
+    `(δ'/δ)ⁿ · ell K δ' x  ≤  ell K δ x`     for `0 < δ' ≤ δ`
+
+The numerator `vol(B(x,δ) ∩ K)` only grows with `δ`, while the denominator grows by exactly
+`(δ/δ')ⁿ`.  No convexity, no measurability of `K`, no hypothesis on `x`.
+
+This is what lets a warm start compare `ellGaussianProb` at two *different* step sizes — the
+situation across one cooling step, where `δ` moves with `σ`.  Because the cooling schedule is
+slow (`σᵢ₊₁² = σᵢ²(1 + Θ(1/(nL)))`), the resulting constant `(δ/δ')ⁿ` is `Θ(1)`; see
+`PLAN-WARMSTART.md`. -/
+theorem ofReal_div_pow_mul_ell_le_ell {K : Set (EuclideanSpace ℝ (Fin n))} {δ δ' : ℝ}
+    (hδ' : 0 < δ') (hle : δ' ≤ δ) (x : EuclideanSpace ℝ (Fin n)) :
+    ENNReal.ofReal ((δ' / δ) ^ n) * ell K δ' x ≤ ell K δ x := by
+  have hδ : 0 < δ := lt_of_lt_of_le hδ' hle
+  have hV0 : volume (ball x δ) ≠ 0 := (measure_ball_pos volume x hδ).ne'
+  have hVtop : volume (ball x δ) ≠ ⊤ := measure_ball_lt_top.ne
+  have hV'0 : volume (ball x δ') ≠ 0 := (measure_ball_pos volume x hδ').ne'
+  have hV'top : volume (ball x δ') ≠ ⊤ := measure_ball_lt_top.ne
+  have hvδ : volume (ball x δ)
+      = ENNReal.ofReal (δ ^ n) * volume (ball (0 : EuclideanSpace ℝ (Fin n)) 1) := by
+    have h := Measure.addHaar_ball_of_pos
+      (volume : Measure (EuclideanSpace ℝ (Fin n))) x hδ
+    rwa [finrank_euclideanSpace_fin] at h
+  have hvδ' : volume (ball x δ')
+      = ENNReal.ofReal (δ' ^ n) * volume (ball (0 : EuclideanSpace ℝ (Fin n)) 1) := by
+    have h := Measure.addHaar_ball_of_pos
+      (volume : Measure (EuclideanSpace ℝ (Fin n))) x hδ'
+    rwa [finrank_euclideanSpace_fin] at h
+  have hpow : (δ' / δ) ^ n * δ ^ n = δ' ^ n := by
+    rw [div_pow, div_mul_cancel₀]
+    exact pow_ne_zero _ hδ.ne'
+  have hcv : ENNReal.ofReal ((δ' / δ) ^ n) * volume (ball x δ) = volume (ball x δ') := by
+    rw [hvδ, hvδ', ← mul_assoc, ← ENNReal.ofReal_mul (by positivity), hpow]
+  rw [ell_apply, ell_apply, ENNReal.le_div_iff_mul_le (Or.inl hV0) (Or.inl hVtop)]
+  calc ENNReal.ofReal ((δ' / δ) ^ n) *
+        (volume (ball x δ' ∩ K) / volume (ball x δ')) * volume (ball x δ)
+      = (volume (ball x δ' ∩ K) / volume (ball x δ')) *
+          (ENNReal.ofReal ((δ' / δ) ^ n) * volume (ball x δ)) := by ring
+    _ = (volume (ball x δ' ∩ K) / volume (ball x δ')) * volume (ball x δ') := by rw [hcv]
+    _ = volume (ball x δ' ∩ K) := ENNReal.div_mul_cancel hV'0 hV'top
+    _ ≤ volume (ball x δ ∩ K) :=
+        measure_mono (Set.inter_subset_inter_left _ (ball_subset_ball hle))
+
 /-! ## 2. The layer bound, for any weight that does not lose mass under shrinking -/
 
 /-- **`mu` does not lose more than the Jacobian when the body is shrunk toward the origin.**
@@ -664,6 +708,7 @@ theorem lintegral_ell_rpow_neg_ellGaussianProb_le
 section AxiomCheck
 
 #print axioms ofReal_div_pow_le_ell_of_ball_subset
+#print axioms ofReal_div_pow_mul_ell_le_ell
 #print axioms ball_subset_of_mem_smul_of_convex
 #print axioms ofReal_div_pow_le_ell_of_mem_smul
 #print axioms measure_lt_ell_le_of_measureShrinks
