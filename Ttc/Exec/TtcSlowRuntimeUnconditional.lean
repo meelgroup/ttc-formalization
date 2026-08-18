@@ -1,6 +1,7 @@
 import Ttc.Exec.TtcSlowRuntimeFinal
 import Ttc.Exec.TtcCallCircumAdmissible
 import Ttc.Exec.CVSlowActualSteps
+import Ttc.Exec.CVSlowRefreshSteps
 import Ttc.Exec.CVSlowActualCostEnvelope
 
 /-!
@@ -9,7 +10,7 @@ import Ttc.Exec.CVSlowActualCostEnvelope
 `Ttc/Exec/TtcSlowRuntimeFinal.lean` carries the same assembly with one residual hypothesis
 `SlowCostSideHypothesis`, because at the time it was written the *actual* (compounding
 actual-warmness) per-phase mixing deadline of the slow canonical schedule had no proved
-bound.  It now has one — `Ttc.CVSlowActualSteps.slowCanonicalSteps_actual_le` — and this
+bound.  It now has one — `Ttc.CVSlowActualSteps.slowCanonicalSteps_min_le` — and this
 file redoes the assembly with the residual discharged.  The old file stays as a record.
 
 Two things change with respect to the conditional assembly.
@@ -38,7 +39,7 @@ by `Ttc.CVSlowActualCostEnvelope.slowActualOverhead` at the two real envelopes
 * `slowUncLenv` — the actual per-run retry cap
   `Ttc.CVSlowActualSteps.slowActualRetriesCap`, and
 * `slowUncTenv` — the actual per-phase deadline envelope
-  `Ttc.CVSlowActualSteps.slowActualStepsEnvelope`, plus `2` for the ceiling.
+  `Ttc.CVSlowActualSteps.slowMinStepsEnvelope`, plus `2` for the ceiling.
 
 Both are the quantities the schedule's own analysis produces, so the frontier's `hsteps`
 and `hscalar` binders are discharged outright, and nothing is assumed.
@@ -81,8 +82,9 @@ open Ttc.CVSlowAccuracyStrict
 open Ttc.CVCorrectedRuntime (correctedRuntimeSamples correctedRuntimeSamples_pos)
 open Ttc.CVSlowUniformShareBounds (scoreAwareRetries_slowUniform_le)
 open Ttc.CVSourceReferenceTVCapstone
-open Ttc.CVSlowActualSteps (slowActualRetriesCap slowActualStepsEnvelope
-  slowCanonicalSteps_actual_le cast_slowActualStepsCap_le slowActualStepsEnvelope_nonneg)
+open Ttc.CVSlowActualSteps (slowActualRetriesCap)
+open Ttc.CVSlowRefreshSteps (slowMinStepsEnvelope slowCanonicalSteps_min_le
+  cast_slowMinStepsCap_le slowMinStepsEnvelope_nonneg)
 open Ttc.CVSlowActualCostEnvelope (slowActualOverhead one_le_slowActualOverhead
   slowActualOverhead_nonneg slowActual_hscalar)
 open Ttc.TtcCallCircumAdmissible (cvAdmCircum cvAdmCircum_imp_cvAdmissible
@@ -110,11 +112,11 @@ noncomputable def slowUncLenv (n : Nat) (R2 epsP : Real) : Real :=
     (Real.sqrt R2) : Real)
 
 /-- **The actual per-phase deadline envelope.**  This is
-`Ttc.CVSlowActualSteps.slowActualStepsEnvelope` — the deadline of the *compounding*
+`Ttc.CVSlowActualSteps.slowMinStepsEnvelope` — the deadline of the *compounding*
 actual-warm schedule — plus `2`, which pays for the ceiling and the `+ 1` of
-`Ttc.CVSlowActualSteps.slowCanonicalSteps_actual_le`. -/
+`Ttc.CVSlowActualSteps.slowCanonicalSteps_min_le`. -/
 noncomputable def slowUncTenv (n : Nat) (R2 epsP : Real) : Real :=
-  slowActualStepsEnvelope n (slowPhasesP n R2) (slowStreamsP n R2 epsP)
+  slowMinStepsEnvelope n (slowPhasesP n R2) (slowStreamsP n R2 epsP)
     (slowUncQ n R2 epsP) epsP (Real.sqrt R2) + 2
 
 /-! ## Step 2 — the overhead envelope and the effective runtime constant -/
@@ -204,7 +206,7 @@ theorem slowUncLenvAt_eq (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
 
 theorem slowUncTenvAt_eq (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
     slowUncTenvAt n a =
-      slowActualStepsEnvelope n (slowPhases n a) (slowStreams n a)
+      slowMinStepsEnvelope n (slowPhases n a) (slowStreams n a)
         (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
           (slowRadius n a))
         (slowEpsInt n a) (slowRadius n a) + 2 := by
@@ -221,8 +223,8 @@ theorem slowUncTenvAt_eq (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
 This is `Ttc.TtcSlowRuntimeFinal.exists_slowCertificate_of_valid` with its residual
 `SlowCostSideRealised` hypothesis replaced by the two proved facts
 
-* `Ttc.CVSlowActualSteps.slowCanonicalSteps_actual_le` — the frontier's `hsteps` at
-  `T := ⌈slowActualStepsEnvelope …⌉₊ + 1`, for the *actual* (compounding-warmness) schedule;
+* `Ttc.CVSlowActualSteps.slowCanonicalSteps_min_le` — the frontier's `hsteps` at
+  `T := ⌈slowMinStepsEnvelope …⌉₊ + 1`, for the *actual* (compounding-warmness) schedule;
 * `Ttc.CVSlowActualCostEnvelope.slowActual_hscalar` — the frontier's `hscalar` at the
   overhead built on exactly those two envelopes.
 
@@ -292,9 +294,9 @@ theorem exists_slowUncCertificate_of_valid
     lt_of_lt_of_le (by norm_num)
       (four_le_slowUniformQ hn1 (slowPhases n a) (slowStreams n a)
         (slowEpsInt n a) (slowRadius n a))
-  have hEnv0 : 0 ≤ slowActualStepsEnvelope n (slowPhases n a) (slowStreams n a)
+  have hEnv0 : 0 ≤ slowMinStepsEnvelope n (slowPhases n a) (slowStreams n a)
       (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a) (slowRadius n a))
-      (slowEpsInt n a) (slowRadius n a) := slowActualStepsEnvelope_nonneg hn1 heps
+      (slowEpsInt n a) (slowRadius n a) := slowMinStepsEnvelope_nonneg hn1 heps
   have hsteps : ∀ i, i < slowPhases n a →
       slowCanonicalSteps slowReferenceWarm n
         (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
@@ -310,11 +312,11 @@ theorem exists_slowUncCertificate_of_valid
           (slowUniformSlack n (slowPhases n a) (interior a.1))
           (slowUniformBoundSq n (slowRadius n a)))
         i 0 ≤
-      ⌈slowActualStepsEnvelope n (slowPhases n a) (slowStreams n a)
+      ⌈slowMinStepsEnvelope n (slowPhases n a) (slowStreams n a)
         (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
           (slowRadius n a))
         (slowEpsInt n a) (slowRadius n a)⌉₊ + 1 := fun i hi ↦
-    slowCanonicalSteps_actual_le hn1 (slowPhases n a) (slowStreams n a) hq0 heps
+    slowCanonicalSteps_min_le hn1 (slowPhases n a) (slowStreams n a) hq0 heps
       hK hball hfin hi
   -- the two real envelopes, and the casts the cost layer consumes
   have hLcast : (slowActualRetriesCap n (slowPhases n a) (slowStreams n a)
@@ -322,12 +324,12 @@ theorem exists_slowUncCertificate_of_valid
     le_of_eq (slowUncLenvAt_eq n a).symm
   have hLenv0 : (0 : Real) ≤ slowUncLenvAt n a := by
     rw [slowUncLenvAt_eq]; positivity
-  have hTcast : ((⌈slowActualStepsEnvelope n (slowPhases n a) (slowStreams n a)
+  have hTcast : ((⌈slowMinStepsEnvelope n (slowPhases n a) (slowStreams n a)
         (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
           (slowRadius n a))
         (slowEpsInt n a) (slowRadius n a)⌉₊ + 1 : Nat) : Real) ≤ slowUncTenvAt n a := by
     rw [slowUncTenvAt_eq]
-    exact cast_slowActualStepsCap_le n _ _ _ _ _ hEnv0
+    exact cast_slowMinStepsCap_le n _ _ _ _ _ hEnv0
   have hTenv0 : (0 : Real) ≤ slowUncTenvAt n a := by
     rw [slowUncTenvAt_eq]; linarith
   -- the cost side
@@ -335,7 +337,7 @@ theorem exists_slowUncCertificate_of_valid
     (m := slowPhases n a) (k := slowStreams n a)
     (L := slowActualRetriesCap n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
       (slowRadius n a))
-    (T := ⌈slowActualStepsEnvelope n (slowPhases n a) (slowStreams n a)
+    (T := ⌈slowMinStepsEnvelope n (slowPhases n a) (slowStreams n a)
       (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
         (slowRadius n a))
       (slowEpsInt n a) (slowRadius n a)⌉₊ + 1)
@@ -351,7 +353,7 @@ theorem exists_slowUncCertificate_of_valid
     hmoments.1 hmoments.2.1 hmoments.2.2.1 hmoments.2.2.2.1 hmoments.2.2.2.2
     (runtimeConstant := slowActualOverhead n (slowR2 n a) (slowEpsInt n a) a.2.2
       (slowUncLenvAt n a) (slowUncTenvAt n a))
-    (⌈slowActualStepsEnvelope n (slowPhases n a) (slowStreams n a)
+    (⌈slowMinStepsEnvelope n (slowPhases n a) (slowStreams n a)
       (slowUniformQ n (slowPhases n a) (slowStreams n a) (slowEpsInt n a)
         (slowRadius n a))
       (slowEpsInt n a) (slowRadius n a)⌉₊ + 1)

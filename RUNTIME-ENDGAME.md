@@ -247,6 +247,290 @@ Two further pieces the assembly needs, both landed:
 * `Ttc/Exec/CVSlowAccuracyStrict.lean` — `requested < 1` does **not** follow from
   `requested ≤ epsIn` at `epsIn = 1`; the half-accuracy run buys `≤ 11/16·epsIn`.
 
+### Closing the exponent gap — three levers, all three answered (2026-08-17, later)
+
+The capstone below is unconditional but its envelope carries the uniformly slow schedule's
+overhead. Three levers were investigated; each produced a machine-checked result, and two
+of them corrected a *lossy bound* rather than trading one design for another.
+
+**Lever 3 — the score transport bound was loose by a factor `n` in the exponent.**
+`coolRatio i x = coolWeight (i+1) x / coolWeight i x = exp(‖x‖²/2·(1/σᵢ − 1/σᵢ₊₁))`, which at
+rate `1/n` is `exp(‖x‖²/(2σᵢ(n+1)))`. The development's
+`phaseScoreTransportBoundSqSeven R σ i = exp(R²/(2σᵢ))²·15` **drops the `1/(n+1)` entirely** —
+at the cold end `exp(16nR²)` against a truth of `exp(8R²)`.
+`Ttc/Exec/CVSharpScoreTransport.lean` proves the sharp bound and carries it to the share
+floor: `1/(18·e^{16nR²}) → 1/(18·e^{16R²})`, the `n` gone from the exponent and the floor now
+`n`-free. Consequence: `q² = 16 + 64R²/n`, so the truncation radius is `O(1)` for `n ≳ R²`
+rather than `Θ(R)`.
+*Care taken:* the sharp bound is genuinely **false at the terminal phase** (`coolWeight m σ m = 1`,
+so the ratio really is `exp(‖x‖²/(2σᵢ))`); `coolRatio_le_of_last_of_sq_le` handles it separately
+(`R² ≤ σᵢ ⟹ ratio ≤ e^{1/2}`, and `e < 15`), so the sharp *value* dominates at every phase.
+
+**Lever 2 — the warmness recursion is genuine; its *bound* was not.**
+The hypothesis that the compounding is an accounting artifact is **false at the kernel level**:
+the phase kernel keeps accepted samples and refreshes only the unresolved branch, so warmness is
+inherited by running the chain. `CVWarmBudgetRecurrence.lean:13-15` records a prior author
+rejecting exactly that inference. An unconditional refresh would discard every accepted sample
+and the schedule would never advance.
+But `recursiveWarmBudget_le_product` bounds an **affine** recurrence `W_{i+1} = a_i W_i + f_i` by a
+**product** `W₀·∏(a_j+f_j)`, pushing the refresh normaliser `F` inside the phase product. Solving
+the affine recurrence directly gives `W_i ≤ A^i·(W₀ + i·F)` — **`F` paid once, not `m` times**.
+`Ttc/Exec/CVRefreshWarmRoute.lean`: payload `m·(n·log 4R + 1/(32s₀))` → `m·log A + log(m+1) +
+1/(32s₀) + n·log 4R`. Honest caveat, encoded in `log_slowWarmBudget_toReal_le_min`: the new
+envelope is *worse* at small `i`, so both are kept.
+
+**Lever 1 — the cooling rate was never pinned by the variance.**
+`phaseVarBudget n α = (n+1)·α²/(1−α²)` (`IndicatorVariance.lean:151`) is `Θ(n·α²)`, not `Θ(n·α)`.
+At `α = 1/√n` it is exactly `(n+1)/(n−1) ≤ 3` — a constant — and `variance_le_exp_indicator`
+requires only `0 ≤ α < 1`. `Ttc/Exec/CVFastRateSchedule.lean` proves the phase count
+`< 2√n·log(N/s₀) + 1` against the slow route's matching lower bound `≥ n·log(N/s₀)`, so
+`Θ(n log)` → `Θ(√n log)`, both sides machine-checked.
+*The honest accounting:* under exact provisioning the total `m·k` is **rate-invariant** — cutting
+`m` by `√n` raises the per-phase budget from `1/(n−1)` to `≈1`, so `k` rises by `√n`. The win is
+confined to costs that multiply `m` but not `m·k` (deadline payload, retry cap, refresh). But the
+repo's *current* `correctedRuntimeSamples m eps = ⌈10⁵(m+1)/ε²⌉+1` is `k ∝ m`, over-provisioned by
+`n` at rate `1/n` and exactly right at `1/√n`, so keeping it gives `m·k = Θ(n²L²/ε²) → Θ(nL²/ε²)`
+— an `n`-fold improvement **in the proved bound**.
+
+#### Making them operative — outcome per lever
+
+* **Lever 2 — OPERATIVE.** `Ttc/Exec/CVSlowRefreshSteps.lean` builds the refresh analogue of
+  `CVSlowActualSteps`, and `Ttc/Exec/TtcSlowRuntimeUnconditional.lean` now consumes
+  `slowMinStepsEnvelope = min (slowActualStepsEnvelope …) (slowRefreshStepsEnvelope …)` via
+  `slowCanonicalSteps_min_le`. The capstone is **still unconditional and still axiom-clean** at
+  the improved envelope.
+  *Why `min` and not the refresh form outright:* the refresh envelope does **not** dominate
+  unconditionally. Writing `A = (slowAcceptedCap L).toReal` and `F = (slowFallbackEnvelope …).toReal`,
+  refresh ≤ product iff `(m+1)·Aᵐ·F ≤ (A+F)ᵐ`, which **fails at `m = 0` and `m = 1`** (at `m = 1` it
+  demands `2AF ≤ A+F`, false for all `A,F ≥ 1` bar `A = F = 1`, and `A ≥ 32e` whenever `L ≥ 1`). It
+  holds in the operative regime where `F = e^{1/(32s₀)}(4 max 1 R)ⁿ` is exponential in `n`. The
+  `min` is unconditionally at least as good as the status quo and needs no extra hypothesis.
+* **Lever 1 — NOT WORTH DOING, and now machine-checked why.** The rate is not pinned by the
+  variance but by the **warm-factor layer**: `acceleratedSeedWarmFactor n (1+α) = 2·√(1+α)ⁿ`, and
+  the `2e` bound everything depends on requires `r ≤ 1/n`, discharged by `le_rfl` at two call
+  sites. `Ttc/Exec/CVRateGenericSchedule.lean` proves the lower bound
+  `2·exp(nα/4) ≤ acceleratedSeedWarmFactor n (1+α)` and that the `2e` bound is **false** at
+  `α = 1/√n` for `n ≥ 17`. Combining with the phase count, the trade-off cancels exactly:
+  `m · log(warm) ≈ (L/α)·(nα/4) = nL/4` — **rate-invariant**. So `α = 1/n` is not an unexamined
+  conservative choice; it is the point where `(1+α)ⁿ = O(1)`, and the schedule is already at the
+  right operating point. The audit also found the chain is ~40% parametric in `sigmaSq` and most
+  pinned lemmas need only positivity/monotonicity, so a rate change *would* be a re-instantiation —
+  it simply buys nothing.
+* **A finding that redirects the effort:** the exponential-in-`n` factors in `slowUniformBoundSq`
+  and the share floors come from the **initial variance** `s₀ = 1/(16n)`, not from the rate.
+  Changing `α` neither helps nor hurts there. `s₀`, not the cooling rate, is the thing to attack —
+  and lever 3 attacks exactly that term.
+
+**Lever 3 is not operative yet.** The frontier's `hboundDef`
+(`CVSlowCanonicalRobustCertificate.lean:193`) hard-codes the loose transport bound;
+`CVSlowActualSteps` consumes the product warm envelope; and the slow chain is instantiated at
+rate `1/n`. All three landed results are drop-in shaped, and the blocking work is re-deriving
+`operational_slowCanonical_phaseScore_factorSeven` at the sharp bound (with a case split at
+`i+1 = m`) and re-instantiating the phase-moment lemmas at the new rate.
+
+### The proved complexity, and what each lever moves (2026-08-17)
+
+**No `O(·)` theorem exists in the repository.** The machine-checked bound is the explicit
+expression below; the asymptotic column is hand arithmetic on machine-checked definitions and
+should be read as such.
+
+Per cube the bound is `800 · cvComplexityShapeClipped n ρ²ⱼ ε' δ' · slowUncOV n ρ²ⱼ ε' δ'`, summed
+over the DNF, plus `∑ᵢ polyGoodRateCapᵢ · canonicalHybridSamplerQueryBoundᵢ`. Writing
+`L := log(16nρ²)` and `mφ ≈ nL`, `k ≈ nL/ε²`:
+
+```
+overhead  =  k · mφ · 10 · Lenv · Tenv · 2e
+```
+
+| stage | `Lenv` | `Tenv` | overhead | total |
+|---|---|---|---|---|
+| before lever 2 | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
+| lever 2 (operative) | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
+| + P1 sharp (proved, not yet wired) | `ρ²` | `n³ρ⁴` | `n⁵L²ρ⁶/ε²` | `Õ(m n⁷ρ⁸/ε⁴)` |
+| + P2 per-phase (proved, not yet wired) | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁶ρ⁸/ε⁴)` |
+
+### P1 is OPERATIVE as of 2026-08-18
+
+`Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp`
+(`Ttc/Exec/TtcSlowRuntimeSharp.lean:621`), registered in `Ttc.lean`, `lake build Ttc`
+green at **9462 jobs**, `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+
+Independently verified by elaborating the type (not by trusting the agent's transcription):
+the binders are exactly `atoms phi eps delta` plus `h_eps_pos h_eps_le _ _ hn hphi hvol`
+— no oracle, certificate, implementation, or cost-side binder — and
+`TtcSlowRuntimeSharp.slowSharpImplementation` appears with **no arguments**, i.e. it is a
+closed term. So this is a second unconditional capstone, at the sharp share floor.
+
+What is machine-checked about the improvement, stated precisely: the agent proved
+`CVSharpSlowSteps.slowSharpStepsEnvelope_le_min` and
+`CVSharpUniformParameters.slowSharpRetriesCap_le_slowUniformRetriesCap`, both **conditional
+on `2 ≤ n` and `1 ≤ R`**, and both merely *cited* in the capstone docstring rather than used
+in its proof. The `n²` reading comes from the share-floor exponent going `8nR² → 8R²`; that
+is **not** formalised as a numeric factor anywhere. Do not write "we proved a factor `n²`"
+— write "we proved sharp ≤ loose, and the exponent drop is `8nR² → 8R²`".
+
+Deviation worth recording: the truncation radius is *not* sharpened (the sharp route touches
+slack and transport bound only), so `slowSharpQ` does not exist — the file reuses
+`TtcSlowRuntimeUnconditional.slowUncQ`, and the `64 * (max 1 eps)^2 * sourceLogFactor n ^ 2`
+prefix is verbatim, machine-confirmed by an `hrw … := rfl`.
+
+`CVSlowTotalFamilies.slowLaw` could **not** be reused: it writes `slowUniformSlack` (`…/2`)
+and `slowUniformBoundSq` inside the `slowCanonicalCostedActiveSchedule` term, and the sharp
+certificate is about the same term at `slowSharpSlack` (`…/6`) and `slowSharpBoundSq`. Those
+are genuinely different terms, so the law layer is mirrored locally in `TtcSlowRuntimeSharp`
+(`slowSharpLaw`, `slowSharpLaw_of_valid`, `slowSharpFinalLaw`, and the two kernel instances).
+Everything else — `slowOmega`, `slowCost`, `slowValue`, the `clipInput` family — is reused
+verbatim. **Any future P2 capstone will hit the same wall and must mirror the law again.**
+
+**Second correction, 2026-08-18.** The P2 row was first written as `n³L²ρ⁶/ε²` / `Õ(m n⁵ρ⁸/ε⁴)`,
+crediting P2 with a factor `n²`. It is `n¹`. P2 divides the *stream count* `k` by `n` and nothing
+else: its second effect — raising `blockShare` by `n/6` — is invisible, because the share floor is
+`min (blockShare) (exponential branch)` and the exponential branch `≈ e^{−16ρ²}` is the active one
+by an astronomical margin. So the honest ledger is
+
+```
+overhead = k · mφ · 10 · Lenv · Tenv · 2e
+baseline    (nL/ε²)·(nL)·(nρ²)·(n⁴ρ⁴) = n⁷L²ρ⁶/ε²   ⟹ Õ(m n⁹ρ⁸/ε⁴)
++ P1        (nL/ε²)·(nL)·( ρ²)·(n³ρ⁴) = n⁵L²ρ⁶/ε²   ⟹ Õ(m n⁷ρ⁸/ε⁴)
++ P1 + P2   ( L/ε²)·(nL)·( ρ²)·(n³ρ⁴) = n⁴L²ρ⁶/ε²   ⟹ Õ(m n⁶ρ⁸/ε⁴)
+```
+
+**Consequence, stated plainly: P1 + P2 do NOT reach the paper's `n⁵`.** They land at `n⁶`, one
+factor `n` short. Earlier claims in this file and in conversation that the `n` exponent would match
+after P1 and P2 were wrong.
+
+Where the residual `n` lives: `Tenv ∝ n³`, from `σ_m·n/δ_Q²` with `δ_Q = 1/(2n)` pinned by the
+ell-Gaussian tilt bound, multiplied by `mφ = nL`. That is the same `δ_Q` branch identified as **P4**
+below. So closing the last `n` and the last `ρ²` are the *same* obstruction — the `radiusQDelta`
+`min` resolving to `1/(2n)` rather than `√σ/(max 8 (2q)√n)` — and it is research, not engineering.
+
+**Correction to an earlier figure in this file's history:** the total was once quoted as
+`Õ(m n⁹ρ¹⁰/ε⁴)`. The `ρ` exponent is **8**, not 10 — one `ρ²` was double-counted by carrying the
+deadline payload factor twice. The `n` exponents and every gain figure are unaffected.
+
+**Lever 2's honest qualification.** It cut `Wlog` by `n`, but the payload is `Wlog + Elog` and
+`Elog ≈ nρ²` already dominated at large `ρ`. So the win is a full factor `n` in the *moderate-ρ*
+regime and essentially nothing at large `ρ` — which is exactly why P1, which attacks `Elog`,
+matters.
+
+**What P1 does and does not move.** Three factors of `n` drop — `Lenv`, the deadline payload, and
+`Tenv` through it. The truncation radius `q` is **not** improved: it comes from
+`slowCanonicalJointTailFloor`'s R-aware branch `1/(6·e^{8nρ²})`, a *different* object from the share
+floor, which P1 deliberately left untouched. `q` enters only as `log F`, paid once, so the effect is
+minor.
+
+Against the paper's `O(m n⁵ ρ² r_max)`: after P1 and P2 the `n` exponent matches, and the residual
+is `ρ⁶`. Of that, `ρ⁴` is proved **structural** to this sampler's TV accounting
+(`Ttc/Exec/CVRetryDeadlineSplit.lean`, a lower bound), and one `ρ²` is recoverable on the cost side
+by the L²(π) route planned below.
+
+### PLAN — the L²(π) route to one more `ρ²` (2026-08-17)
+
+`Ttc/Exec/CVRetryDeadlineSplit.lean` proves the `ρ⁴` in `retries × deadline` is **structural to
+the TV accounting** (a machine-checked *lower* bound, `log_ratio_sq_le_scoreAwareRetries_mul_payload`).
+But it also found that the `L` in the **cost** is loose for an independent reason, and that one is
+recoverable. This is the plan for it.
+
+#### The loss site, exactly
+
+`Ttc.FiniteContinuingRetryExpectedCost.lintegral_accumulatedCost_embeddedMarginal`
+(`Ttc/Exec/FiniteContinuingRetryExpectedCost.lean:139`) is an **exact identity**
+
+```
+∫⁻ accumulatedCost ∂(embeddedMarginal … L) = ∑_{j<L} ∫⁻ candidateMean j ∂(runningCurrent … j)
+```
+
+and `…_le` (`:147`) bounds each summand by `Arlib.MarkovChains.lintegral_le_of_isWarm`, i.e.
+`∫f dμⱼ ≤ M·∫f dπ ≤ M·T`, **discarding the survival mass `sⱼ := runningCurrentⱼ(univ)`**. Summing
+gives `L·M·T`. Since `∑ⱼ sⱼ = O(1)` (geometric decay, `ContinuingRejectionSelective.badWeights_add_survival_le_eta_add_pow`),
+the truth is `O(M·T)`. The gap is the factor `L ≈ ρ²`.
+
+**Why first-moment warmness cannot recover it** (already established): from `μ ≤ M·π` and
+`μ(univ) = s` alone, `∫f dμ ≤ s·M·∫f dπ` is **false** — take `μ = M·(π|_T)` with `π(T) = s/M` and
+`f = 1_T`: LHS `= s`, RHS `= s²`.
+
+#### Route A — try this first; it may make L² unnecessary
+
+If `candidateMean` is bounded **pointwise** by the round's deadline `T`, then no warmness and no
+Cauchy–Schwarz are needed at all:
+
+```
+∫⁻ candidateMean j ∂μⱼ ≤ T · μⱼ(univ) = T · sⱼ      ⟹     ∑ⱼ ≤ T · ∑ⱼ sⱼ = O(T)
+```
+
+**The decision question:** is `roundCost` bounded per round? `candidateMean candidate roundCost j x
+= ∫⁻ c, roundCost c ∂(candidate j x)`. If the walk runs a *fixed* number of steps per round, yes,
+and Route A is a few lines. If the cost is a random **time change** — the speedy walk's ball-walk
+step count, `≈ steps/ℓ(x)`, unbounded as `ℓ(x) → 0` — then no, and that is precisely why
+`lintegral_le_of_isWarm` was used. Check `Ttc.ConcreteHybridExpectedQuerySampler.hybridStepInspectionBound`
+and the `roundCost` actually supplied by the hybrid sampler **before** doing any L² work.
+
+Note `Arlib.MarkovChains.acceptance_floor_le_speedyMetropolisMove`
+(`Arlib/MarkovChains/Continuous/WastedStepsGaussian.lean:375`) already proves an acceptance floor
+for the Gaussian speedy walk. If that floor gives `ℓ ≥ c > 0` on the relevant set, `candidateMean`
+is bounded and **Route A wins outright**.
+
+#### Route B — the L²(π) bound, if Route A fails
+
+The correct substitute for `lintegral_le_of_isWarm`, in Cauchy–Schwarz form (stated squared so no
+`ENNReal` square roots are needed):
+
+```lean
+theorem sq_lintegral_le_of_isWarm_survival
+    {E : Type*} [MeasurableSpace E] {μ π : Measure E} [SigmaFinite π] [SigmaFinite μ]
+    {M : ENNReal} (hwarm : IsWarm M μ π) (hM : M ≠ ⊤)
+    {f : E → ENNReal} (hf : Measurable f) :
+    (∫⁻ x, f x ∂μ) ^ 2 ≤ (∫⁻ x, (f x) ^ 2 ∂π) * (M * μ Set.univ)
+```
+
+Proof, all ingredients in Mathlib:
+1. `IsWarm M μ π` gives `μ ≤ M • π`, hence `μ ≪ π`; let `g := μ.rnDeriv π` and
+   `μ = π.withDensity g` (`withDensity_rnDeriv_eq`).
+2. `g ≤ M` π-a.e., from `μ ≤ M • π`.
+3. `∫⁻ f dμ = ∫⁻ f·g dπ` (`lintegral_withDensity_eq_lintegral_mul`).
+4. Hölder at `p = q = 2` (`ENNReal.lintegral_mul_le_Lp_mul_Lq`): `(∫ fg)² ≤ (∫f²)(∫g²)`.
+5. `∫ g² dπ ≤ M·∫ g dπ = M·μ(univ)`, by step 2.
+
+Then the two supporting pieces:
+
+```lean
+theorem sum_sqrt_survival_le                      -- ∑ⱼ √sⱼ = O(1)
+    (hs : ∀ j, j < L → s j ≤ eta + r ^ j) (hr : r < 1) :
+    ∑ j ∈ Finset.range L, Real.sqrt (s j).toReal ≤
+      (L : Real) * Real.sqrt eta.toReal + 1 / (1 - Real.sqrt r)
+```
+— at `η ≈ share` and `L = 16⌈log₂(1/share)⌉` the term `L·√η ≈ log(1/share)·√share` is bounded by an
+absolute constant, so the whole sum is `O(1)`. Prove that as `mul_sqrt_log_inv_le` separately;
+it is where the win is actually banked.
+
+```lean
+theorem lintegral_accumulatedCost_le_l2 … :
+    ∫⁻ accumulatedCost ∂(embeddedMarginal … L) ≤
+      (∑ j ∈ Finset.range L, Real.sqrt ((M * s j).toReal)) *
+        Real.sqrt (∫⁻ x, (candidateMean … j x) ^ 2 ∂pi).toReal
+```
+
+#### The genuinely new mathematical content
+
+`∫⁻ (candidateMean)² dπ` — a **second-moment** bound on the per-state expected query count of the
+lazy speedy walk under its stationary measure. The repo has only the first moment
+(`Arlib/MarkovChains/Continuous/WastedSteps.lean`: `E_x[exit time] = 1/ℓ(x)` and the averaged
+`3·∑ ≤ 10·t·M`). Concretely this is `∫ ℓ^{-2} dπ`, where the existing bound is on `∫ ℓ^{-1} dπ`.
+**If the acceptance floor of `WastedStepsGaussian.lean:375` gives a uniform `ℓ ≥ c`, this is
+`≤ c^{-2}` and free — which again collapses to Route A.**
+
+#### Ordering, and what it buys
+
+1. Decide Route A vs B by reading the hybrid sampler's `roundCost` (cheap, decides everything).
+2. Route A: the `T·sⱼ` bound + `∑ⱼ sⱼ = O(1)`. Removes `hwarm` from the cost lemma entirely.
+3. Route B if needed: `sq_lintegral_le_of_isWarm_survival`, `sum_sqrt_survival_le`, then `∫ℓ^{-2}dπ`.
+4. Rewire `slowUniformRetainedRealEnvelope` (`CVSlowEffectiveOverhead.lean:873`), which is
+   `k·m·10·retryEnv·deadlineEnv·2e`, dropping the `retryEnv` factor; then `slowUncTenv` and the
+   capstone.
+
+Payoff: one factor `L ≈ ρ²` off the total, i.e. `Õ(m n⁷ρ⁸/ε⁴) → Õ(m n⁷ρ⁶/ε⁴)` after P1. It does
+**not** touch the TV-side `ρ⁴` lower bound, which stands.
+
 ### ✅ THE RUNTIME CAPSTONE IS UNCONDITIONAL (2026-08-17)
 
 `Ttc.TtcSlowRuntimeUnconditional.ttc_volume_runtime_unconditional`
