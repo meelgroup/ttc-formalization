@@ -345,7 +345,7 @@ overhead  =  k · mφ · 10 · Lenv · Tenv · 2e
 | stage | `Lenv` | `Tenv` | overhead | total |
 |---|---|---|---|---|
 | before lever 2 | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
-| lever 2 (operative) | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
+| lever 2 (was operative until P1) | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
 | + P1 sharp (wired) | `ρ²` | `n³ρ⁴` | `n⁵L²ρ⁶/ε²` | `Õ(m n⁷ρ⁸/ε⁴)` |
 | **+ P2 per-phase (wired, operative)** | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁶ρ⁸/ε⁴)` |
 
@@ -528,8 +528,10 @@ lazy speedy walk under its stationary measure. The repo has only the first momen
    `k·m·10·retryEnv·deadlineEnv·2e`, dropping the `retryEnv` factor; then `slowUncTenv` and the
    capstone.
 
-Payoff: one factor `L ≈ ρ²` off the total, i.e. `Õ(m n⁷ρ⁸/ε⁴) → Õ(m n⁷ρ⁶/ε⁴)` after P1. It does
-**not** touch the TV-side `ρ⁴` lower bound, which stands.
+Payoff: one factor `L ≈ ρ²` off the total. Restated at the current operative baseline
+(P1 + P2 both wired, 2026-08-18): `Õ(m n⁶ρ⁸/ε⁴) → Õ(m n⁶ρ⁶/ε⁴)`. It does **not** touch the
+TV-side `ρ⁴` lower bound, which stands. With P4 closed as tight and the KLS question
+dissolved (see AUDIT.md §0g), **this is the only priced reduction still standing.**
 
 ### ✅ THE RUNTIME CAPSTONE IS UNCONDITIONAL (2026-08-17)
 
