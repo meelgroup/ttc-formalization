@@ -689,7 +689,7 @@ theorem ttc_volume_box_at (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
           cVol cSample (rhoS n hn ε δ hε0 hε1) (Ttc.toDNF (boxForm n hn))
         ≤ (Ttc.toDNF (boxForm n hn)).length * (cVol + cSample * thr)) := by
   have hcpos : 0 < sideS n hn ε δ hε0 hε1 := sideS_pos hn hε0 hε1
-  exact ttc_volume (boxAtoms n (sideS n hn ε δ hε0 hε1)) (boxForm n hn) ε δ
+  exact ttc_volume_explicit (boxAtoms n (sideS n hn ε δ hε0 hε1)) (boxForm n hn) ε δ
     hε0 hε1 hδ0 hδ1 hn
     (fun a => (boxAtoms n (sideS n hn ε δ hε0 hε1) a).halfspace) rfl Ttc.toDNF
     (toDNF_isDNFOf _) (toDNF_isPositive (boxForm_isPositive hn))

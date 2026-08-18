@@ -580,7 +580,7 @@ section Invocations
 #modelClosure Ttc.ttcAlgOutput
 #modelClosure Ttc.ttcRun
 #modelClosure Ttc.ttc
--- #closureOfType Ttc.ttc_volume_estimate
-#modelClosureOfType Ttc.ttc_volume_estimate
+-- #closureOfType Ttc.ttc_volume
+#modelClosureOfType Ttc.ttc_volume
 
 end Invocations

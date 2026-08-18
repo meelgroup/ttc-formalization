@@ -76,47 +76,49 @@ description and recount.
   this sentence.  `AUDIT.md` §1h-iv lists them by group.
 
   **`Model/` is not a closed system, and no claim here should be read as saying
-  so.**  `Model/Theorem` imports `Monadic/MeasurePr` and `Monadic/Program`, hence
-  transitively the development, for the `Pr[…]`/`All[…]` notation it is stated in
-  and for the bridge lemma its proof applies; `Model/Prelude` imports `Arlib`; and
-  the exact set of files `Model/Pseudocode` pulls in has been re-cut more than once
-  in a day.  Read the import lines, not this docstring.  What *is* machine-checked,
-  and is the stronger claim anyway because it is about the **statement** rather
-  than about imports: every `Ttc` constant the headline's type transitively unfolds
-  to is defined under `Ttc/Model/` (see "the audit surface" below).
-* `Ttc.Model.Theorem`        — the one theorem, `Ttc.ttc_volume_estimate`: the
-                              guarantee over `TTC`'s own inputs `(atoms, φ, ε, δ)`
-                              at **nine binders** — `atoms φ ε δ hε0 hε1 hδ0 hδ1
-                              hn hφ hpos` — so 9 explicit and 11 raw (corrected
-                              2026-08-12; this entry used to say eleven-plus-two,
-                              which is now `Ttc.ttc_volume_estimate_parametric` in
-                              `Ttc/Exec/PricedHeadline.lean`, the same statement
-                              over `Ttc.ttcCharged` with the two per-call costs
-                              `cVol cSample` still free). The measure it is stated
-                              about takes **`TTC`'s own four inputs and nothing
-                              else**: `Ttc.ttc atoms φ ε δ`, a four-ary `def` equal
-                              by `rfl` to `Ttc.ttcCharged` at two fixed prices
-                              (`Ttc.ttc_def`). Those prices are the
-                              Cousins–Vempala and hit-and-run numbers, which are
-                              *not* prices this run is proved to pay — read
-                              `Ttc/Exec/PricedHeadline.lean`'s boxed warning before
-                              quoting the runtime conjunct. No interpretation,
-                              no parameter block, no converter, no oracle argument
-                              and no precision argument (the precision is
-                              `GetPrecision`'s output `P.precision gammaHat`).  Both
-                              conjuncts are stated over **one law on one space** —
-                              `Ttc.ttc` (`Model/Pseudocode`), the algorithm's own
-                              law on runs `p = (volume coins, trajectory)`, with no
-                              iterated integral — the accuracy one about the pair's
-                              first component, which is `Model/Pseudocode`'s
-                              transcription `Ttc.ttcRun` of `alg:ttc` at the
-                              bundle the run itself supplies.  The
-                              bundle version `Ttc.TtcProb.volume_estimate`, whose
-                              type names the *assumed* `T.O` and `T.ρ`, is
-                              `Ttc.Estimate`.  Which lemma discharged which former
-                              binder is tabulated in `Ttc.Exec.Inputs`; why the last
-                              one, `big`, **cannot** be discharged is proved in
-                              `Ttc.Exec.Regime`.
+  so.**  `Model/Theorem` imports `Ttc/Exec/` — it is the main theorem, so it sits
+  above the construction it is about; `Model/Prelude` imports `Arlib`; and the exact
+  set of files `Model/Pseudocode` pulls in has been re-cut more than once in a day.
+  Read the import lines, not this docstring.
+
+  **CORRECTED 2026-08-18.**  This paragraph used to add that every `Ttc` constant the
+  headline's type unfolds to is defined under `Ttc/Model/`, machine-checked by
+  `#modelClosureOfType`.  That was true of the old headline `Ttc.ttc_volume_estimate`
+  and is **deliberately false** of the main theorem that replaced it: the whole point
+  of `Ttc.ttc_volume_runtime` is that both conjuncts are about
+  `canonicalFullOperationalLaw`, an `Exec/`-layer law that actually executes the
+  constructed volume oracle.  The audit is retired, not silently dropped — see
+  `Ttc/Audit/ClosureCheck`.  The three `#modelClosure` checks on `Ttc.ttc` itself are
+  untouched and still pass, so the claim that *the algorithm* is model-layer stands.
+* `Ttc.Model.Theorem`        — **the main theorem of the paper**, and the only
+                              declaration in that file: `Ttc.ttc_volume`,
+                              `thm:volumettc` + `thm:runtime` in one statement about
+                              `Ttc.ttc` itself.  Nine binders — `atoms φ ε δ hε0 hε1
+                              hδ0 hδ1 hn hφ hpos`.  Both conjuncts are stated over
+                              **one law on one space**, `Ttc.ttc atoms φ ε δ`
+                              (`Model/Pseudocode`), which takes `TTC`'s own four
+                              inputs and nothing else — no interpretation, no
+                              parameter block, no oracle argument, no precision
+                              argument.  Accuracy is about `r.1`, charged cost about
+                              `r.2`.  The statement is written out in full (the audit
+                              surface); the proof is a reference to
+                              `Ttc.ttc_volume_estimate_parametric` and
+                              `Ttc.PricedHeadline.all_ttc_cost_le_quartic`.
+                              `#modelClosureOfType Ttc.ttc_volume` machine-checks that
+                              every `Ttc` constant its type unfolds to is defined under
+                              `Ttc/Model/`.
+
+                              ⚠ **The cost conjunct is charged at two fixed prices this
+                              run is not proved to pay**, so nothing there proves `TTC`
+                              runs in `O(m n⁴)`.  The repository's *proved* polynomial
+                              bound is a statement about a different object:
+                              `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase`,
+                              at `Õ(m · n⁶ · ρ⁸ / ε⁴)`, for the operational law that
+                              **actually executes** the constructed volume oracle, with
+                              no oracle, certificate, implementation or cost-side
+                              binder.  Carrying that back to `Ttc.ttc` is the
+                              accounting step this repository has not taken; see
+                              `AUDIT.md` §0g and §1e.
 * `Ttc.Exec.TheoremPoly`    — the same theorem with the two per-call prices
                               **discharged**: `Ttc.ttc_volume_estimate_quartic` has
                               the accuracy conjunct byte-identical to
@@ -439,7 +441,6 @@ import Ttc.Sampler.Interface
 import Ttc.TtcProb
 import Ttc.Access
 import Ttc.Estimate
-import Ttc.Model.Theorem
 import Ttc.Exec.TheoremPoly
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
@@ -906,4 +907,4 @@ import Ttc.Exec.TtcSlowRuntimeSharp
 import Ttc.Exec.CVPerPhaseFrontier
 import Ttc.Exec.TtcSlowRuntimePerPhase
 import Ttc.Exec.CVHolderRetryCost
-import Ttc.Theorem
+import Ttc.Model.Theorem

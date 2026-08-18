@@ -16,7 +16,7 @@ import Ttc.Dnf
 `ApproxNFA.approxNFA_countNFA` (`nfalean/ApproxNFA/Model/Theorem.lean:99`):
 
 ```lean
-theorem ttc_volume (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+theorem ttc_volume_explicit (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε : 0 < ε) … <every remaining obligation as an EXPLICIT NAMED HYPOTHESIS> :
     1 - δ ≤ (… the constructed space …) … ∧ <the runtime half>
 ```
@@ -269,7 +269,7 @@ docstring for the table and for the 28 residual binders.
 Both halves are one application of an existing result:
 `Ttc.TtcProb.volume_estimate_traj` and `Ttc.TtcProb.runtime` at
 `Ttc.canonicalTtcProb`. -/
-theorem ttc_volume
+theorem ttc_volume_explicit
     -- the algorithm's inputs
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     -- the FPRAS parameter range, and the ambient dimension
@@ -410,7 +410,7 @@ theorem ttc_volume_toDNF
       runCost P (coveredOracles M φ (P.precision gammaHat) vol t) cVol cSample
           (P.precision gammaHat) (toDNF φ)
         ≤ (toDNF φ).length * (cVol + cSample * thr)) :=
-  ttc_volume atoms φ ε δ hε0 hε1 hδ0 hδ1 hn M M_eq toDNF (toDNF_isDNFOf φ)
+  ttc_volume_explicit atoms φ ε δ hε0 hε1 hδ0 hδ1 hn M M_eq toDNF (toDNF_isDNFOf φ)
     (toDNF_isPositive hφ) hm hr P hP hbdd hcoeff cen gammaHat hgammaHat ball_subset
     vol volAlg volCoins volED_eq volCoins_good vol_pos θ sampD sampler theta_eq
     gen_mem big
@@ -631,7 +631,7 @@ instance of `Ttc/Witness/BoxProb.lean`: an axis-aligned box, its one-cube DNF, t
 exact volume oracle, and the Kannan–Vempala sampler — with the enumeration replaced
 by the canonical one `Ttc.ttc_volume` computes.  The proof is the 40-argument
 application; the conclusion it produces is recorded here so that the reader can see
-*which* instance of `Ttc.ttc_volume` was checked.
+*which* instance of `Ttc.ttc_volume_explicit` was checked.
 
 The box runs at `ε = δ = 1`, so `1 − δ = 0` and the accuracy half is trivially
 true as a *statement* — non-vacuity is about the hypotheses, not the conclusion. -/
@@ -657,7 +657,7 @@ theorem ttc_volume_box (n : ℕ) (hn : 1 ≤ n) :
             (vl n hn) t)
           cVol cSample (rho n hn) (Ttc.toDNF (boxForm n hn))
         ≤ (Ttc.toDNF (boxForm n hn)).length * (cVol + cSample * thr)) :=
-  ttc_volume (atm n hn) (boxForm n hn) 1 1 one_pos le_rfl one_pos le_rfl hn
+  ttc_volume_explicit (atm n hn) (boxForm n hn) 1 1 one_pos le_rfl one_pos le_rfl hn
     (fun a => (atm n hn a).halfspace) rfl Ttc.toDNF
     (boxProb n hn).isDNF (boxProb n hn).isPositive
     (one_le_card_cubes_box n hn) (one_le_card_facets_box n hn)
@@ -682,7 +682,7 @@ end Box
 Every declaration of this file, and every result it rests on, checked transitively
 (`CLAUDE.md` §4). Expect `[propext, Classical.choice, Quot.sound]` throughout. -/
 
-#print axioms ttc_volume
+#print axioms ttc_volume_explicit
 #print axioms Box.ttc_volume_box
 #print axioms Box.par_eq_ttcParams
 #print axioms ttc_volume_toDNF

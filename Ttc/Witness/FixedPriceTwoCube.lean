@@ -60,7 +60,7 @@ theorem ttc_volume_estimate_two_cube_fixed (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ
       (ttcVolPriceCVAlg (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ)
       (ttcSampPriceHR (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ) := by
   rw [ttcVolPriceCVAlg_model, ttcSampPriceHR_model]
-  exact (ttc_volume_estimate (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
+  exact (ttc_volume (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
     hε0 hε1 hδ0 hδ1 hn twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1)).1
 
 /-- The same at `(ε, δ) = (1/3, 9/10)` and `(1/2, 1/4)`, with the achieved bounds proved

@@ -336,7 +336,7 @@ theorem ttc_volume_rates
   subst hP
   have hle := hasLatticeEnum_of_isBounded (fun a => (atoms a).halfspace) φ
     ((ttcParams (toDNF φ) n ε δ hε0 hε1 hn hm hr).precision gammaHat) hbdd
-  exact ttc_volume atoms φ ε δ hε0 hε1 hδ0 hδ1 hn _ rfl toDNF isDNF isPositive hm hr _ rfl
+  exact ttc_volume_explicit atoms φ ε δ hε0 hε1 hδ0 hδ1 hn _ rfl toDNF isDNF isPositive hm hr _ rfl
     hbdd hcoeff cen gammaHat hgammaHat ball_subset vol volAlg volCoins volED_eq
     volCoins_good vol_pos _ sampD sampler
     (fun s => theta_eq_rates isDNF hle sampD vol s)
