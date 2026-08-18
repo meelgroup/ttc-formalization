@@ -243,8 +243,33 @@ worth asking before settling for the `min`.**
    unnormalised round law never reaches the cost decomposition. Both sides run at the *lazy*
    kernel — the un-lazy `three_mul_…` variant is used only at `t = 1`, where `iterate P μ 0 =
    μ` makes the choice of kernel irrelevant.
-9. ⬜ Rewire `slowUniformRetainedRealEnvelope` (`CVSlowEffectiveOverhead.lean:873`), then
-   `perPhaseLenv`, then a **fourth capstone**.
+9. ⬜ **The rewire — and it changes the envelope's *shape*, not a slot.**  This was
+   mis-scoped in the first draft of this plan and is worth stating precisely, because the
+   difference is hours of work.
+
+   `slowActualRetainedRealEnvelope m k Lenv Tenv = k·m·10·Lenv·Tenv·2e`
+   (`CVSlowActualCostEnvelope.lean:52`) is a **product**: `Lenv` is the *number of retries*
+   and `Tenv` the *steps per retry*.  The lever's whole content is that the total is much
+   less than that product.  So one cannot simply pass a smaller `Lenv`: the shape must
+   change from `Lenv·Tenv` to `(L·η^{1/q} + (1 − r^{1/q})⁻¹)·t`.
+
+   Concretely that means a Hölder variant of each link in the chain that currently carries
+   the conclusion `∑_{j<retries i} 10·(retryStepsᵢⱼ·M)`:
+
+   * `Ttc.CVGaussianAugmentedExpectedCost.six_mul_augmentedRetryQueryMean_le_ten_sum`
+     — **done**, as `holder_augmentedRetryQueryMean_le`;
+   * `CVColdOperationalKernel.coldGaussian_referenceCost_le` / `…_le_of_warm` /
+     `coldGaussian_stationaryReferenceCost_le` (`:365`, `:437`, `:474`, `:507`);
+   * `CVColdOperationalSeedReset.lean:309`, `CVColdOperationalTransition.lean:201`, `:419`;
+   * `CVGaussianHybridWeightedCertificate.lean:368`;
+
+   each of which additionally has to thread `η`, `r` and the survival hypothesis to call
+   sites that today receive only `hwarm`.  Then `perPhaseLenv`, then the law-layer mirror
+   (every capstone so far has needed one — P2 grew its file 546 → 1177 lines doing it), then
+   a **fourth capstone**.
+
+   Nothing about this is uncertain; it is bookkeeping at a scale that deserves its own
+   session.
 
 **Where the honest stopping point is.** Steps 1–8 are the mathematics, and they are done and
 axiom-clean — the lever is now a proved statement about the *actual retry chain's* expected
