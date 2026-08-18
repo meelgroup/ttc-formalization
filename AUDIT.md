@@ -1098,6 +1098,83 @@ much mathematics is left in each:
 The exponent arithmetic over the charged-cost model is unchanged by anything in
 §§0e–0f, and was already done before them.
 
+> **STALE as of 2026-08-18 — see §0g.** Items 1–3 of the list above are superseded:
+> the sampler-existence and hypothesis-applicability obligations are discharged along
+> the *slow canonical* route, and two unconditional runtime capstones now exist. Item 4
+> (the cost model carrying no complexity field) still stands and is still a design
+> decision, not a proof problem. The list is kept because §§0a–0f are a dated record.
+
+---
+
+## 0g. Two unconditional runtime capstones, and the honest complexity (2026-08-18)
+
+**The two capstones.** Both are about TTC's own inputs `(atoms, φ, ε, δ)`, both carry
+**no** oracle, certificate, implementation, or cost-side binder, and in both the
+implementation appears as a **closed term with no arguments**:
+
+| Capstone | `file:line` | Family |
+|---|---|---|
+| `Ttc.TtcSlowRuntimeUnconditional.ttc_volume_runtime_unconditional` | `Ttc/Exec/TtcSlowRuntimeUnconditional.lean:506` | uniform slack, `slowMinStepsEnvelope` |
+| `Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp` | `Ttc/Exec/TtcSlowRuntimeSharp.lean:621` | sharp slack (`…/6`), sharp transport bound |
+
+Residual input conditions on each: `0 < eps`, `eps ≤ 1`, `0 < delta`, `delta ≤ 1`,
+`21 ≤ n`, `phi.IsPositive`, `0 < volSol …`. `lake build Ttc` green at **9462 jobs**;
+`#print axioms` on both = `[propext, Classical.choice, Quot.sound]`.
+
+**How to re-check in two minutes** (do not trust this table):
+
+```
+lake build Ttc
+echo 'import Ttc
+#check @Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp
+#print axioms Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp' > /tmp/p.lean
+lake env lean /tmp/p.lean
+```
+
+Read only the printed **type**. The check that matters: `slowSharpImplementation`
+appears with no arguments. If it ever acquires one, the capstone has stopped being
+unconditional and this section is wrong.
+
+### The complexity, stated honestly
+
+Charged-cost, per polytope, `ρ` the aspect ratio, `L = log(16nρ²)` absorbed into `Õ`:
+
+| state | total |
+|---|---|
+| baseline | `Õ(m n⁹ ρ⁸ / ε⁴)` |
+| **P1 sharp — operative** | **`Õ(m n⁷ ρ⁸ / ε⁴)`** |
+| + P2 per-phase (proved, not wired) | `Õ(m n⁶ ρ⁸ / ε⁴)` |
+| paper `thm:runtime` | `O(m n⁵ ρ² r_max)` |
+
+**Three claims this section explicitly does NOT make**, each of which was asserted at
+some point during development and is false or unproved:
+
+1. **Not "P1 proves a factor `n²`".** What is machine-checked is `sharp ≤ loose`
+   (`CVSharpSlowSteps.slowSharpStepsEnvelope_le_min`,
+   `CVSharpUniformParameters.slowSharpRetriesCap_le_slowUniformRetriesCap`), both
+   **conditional on `2 ≤ n` and `1 ≤ R`**. The `n²` reading comes from the share-floor
+   exponent dropping `8nR² → 8R²`; that drop is *not* formalised as a numeric factor,
+   and the capstone's proof does not use either inequality — it cites them.
+2. **Not "P1 + P2 reach the paper's `n⁵`".** They reach `n⁶`. P2 is worth a factor `n`,
+   not `n²`: it divides the stream count `k` by `n`, and its second effect (raising
+   `blockShare` by `n/6`) is invisible because the share floor is
+   `min (blockShare) (exp branch)` and the exponential branch dominates the `min`.
+3. **Not "the charged cost is a runtime".** Item 4 of §0f's list is unchanged:
+   `Ttc.VolumeAlgorithm` still has no complexity field, so all charging happens
+   outside, in `Ttc.ttcPolyCost`. These are charged-cost statements.
+
+### What actually remains
+
+* **`ρ⁶`.** Of this, `ρ⁴` is a proved **lower bound** — `CVRetryDeadlineSplit`'s
+  `log_ratio_sq_le_scoreAwareRetries_mul_payload` shows it is structural to the TV
+  accounting, not an artefact of a lossy bound. One `ρ²` is recoverable by the L²(π)
+  cost-side route planned in `RUNTIME-ENDGAME.md`.
+* **One factor `n`, and it is the same obstruction as the last `ρ²`.** `Tenv ∝ n³` via
+  `σ_m · n / δ_Q²` with `δ_Q = 1/(2n)` — the `radiusQDelta` `min` resolving to `1/(2n)`
+  rather than `√σ/(max 8 (2q)√n)`. On the other branch `σ/δ² = q²n` is both `ρ`-free
+  and one power of `n` cheaper. This is a local-conductance question: research.
+* **`thm:decompose`** — still not formalised at all, still not planned.
+
 ---
 
 ## 0g. An unconditional polynomial-time uniform sampler — and why TTC is still not polynomial (2026-08-12)
