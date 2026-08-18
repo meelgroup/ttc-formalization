@@ -1430,6 +1430,59 @@ cannot shed.
   and one power of `n` cheaper. This is a local-conductance question: research.
 * **`thm:decompose`** — still not formalised at all, still not planned.
 
+### The `n⁴` vs `n⁶` exponent gap is SETTLED: it is the walk step size, and it is forced (2026-08-18)
+
+`Ttc/Model/Theorem.lean` charges `cvVolPriceAt`, bounded by `2⁴²·n⁴·volFac`
+(`PricedHeadline.cvPrice_le`).  The *proved* cost of the constructed oracle is `n⁶`-shaped.
+The gap is exactly **one factor `n²`**, and it is now located exactly, not estimated.
+
+**Where the `n`s are.**  `overhead = k · mφ · 10 · Lenv · Tenv · 2e`, and after P1 + P2 the
+`n`-carrying factors are `mφ ≈ nL` (one per cooling phase) and `Tenv` (the mixing deadline).
+`adjustableSpeedyDeadlineExpression` (`CVGaussianScoreAwareSharpScheduleBound.lean:69`) is
+
+```
+Tenv  ∝  σ² · n / (δ · log 2)²
+```
+
+so the deadline's `n`-exponent is decided by the walk step `δ = radiusQDelta n q s`
+(`CVAdaptiveRadiusQPrimitives.lean:24`), which is a `min` of two branches:
+
+| branch | `δ` | `σ²·n/δ²` | total |
+|---|---|---|---|
+| A | `√s / (max 8 (2q) · √n)` | `max(8,2q)² · n²` | `Õ(m n⁵ρ⁸/ε⁴)` — **the paper's `n`** |
+| B | `1 / (2n)` | `4σ² · n³` | `Õ(m n⁶ρ⁸/ε⁴)` — what we prove |
+
+Branch B is active whenever `σ ≥ 4/√n`, i.e. in every phase that matters.  **One factor `n`
+separates us from the paper's `n⁵`, and it is the step size — nothing else.**
+
+**Why branch B is forced, and it is not a slack estimate.**  `δ` cannot be raised, because the
+step must fit inside the shrunken body the warm start is read off:
+
+```
+Arlib.MarkovChains.half_le_speedyProb_shrunken   (MapSpeedyToTarget.lean:694)
+  hδn : δ ≤ 1/(2n)  ⟹  ofReal (1/2) ≤ condOn (ellGaussianMeasure K δ s) univ ((1 − 1/(2n)) • K)
+```
+
+The shrink factor is hardwired at `1 − 1/(2n)` and the hypothesis is exactly `δ ≤ 1 − c`.  The
+shrunken body has to retain a constant fraction of the mass, i.e. `cⁿ = Θ(1)`, which forces
+`1 − c = Θ(1/n)` and hence `δ = Θ(1/n)`.  Branch A would need `δ = Θ(1/√n)`, i.e.
+`c = 1 − Θ(1/√n)`, whose shrunken body carries `(1 − 1/(2√n))ⁿ ≈ e^{−√n/2}` — exponentially
+little.  **That is P4's tightness finding, and this is what it was really about.**
+
+**Conclusion, stated as a settlement rather than a gap.**  `n⁶` is what *this construction*
+gives.  `n⁵` is not reachable by tightening any estimate in it; it requires replacing the
+warm-start mechanism, because the mechanism itself is what pins `δ = Θ(1/n)`.  The two
+candidate replacements are already on record and both are research: KLS97-style truncation to
+`{ell ≥ 3/4}`, or an `ell`-carrying seed using `ell(c·x) ≥ cⁿ·ell(x) ≥ ell(x)/2` (see the
+`IsWarm` subsection above).  Note both are the *same knot* as the `IsWarm` blocker: the
+shrunken body is where `ell ≡ 1` on `c · K` was being used.
+
+**And the declared price is not merely unproved — it is `n²` optimistic.**  `Ttc.ttc` charges a
+per-call volume price bounded by `n⁴·volFac`; the constructed oracle is proved to cost `n⁶`-shaped
+per call.  So carrying the proved bound onto `Ttc.ttc` (`PLAN-ACCOUNTING.md`) would *raise* the
+headline exponent, and the `n⁴` presently in `Ttc/Model/Theorem.lean` should not be read as a
+runtime result for the real oracle even once that accounting step is done.
+
 ### The `retryEnv` lever: Route A dead, Route B priced, Route C live (2026-08-18)
 
 `RUNTIME-ENDGAME.md` advertised this as "one factor `L ≈ ρ²` off the total". That was a
