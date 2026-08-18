@@ -1143,7 +1143,7 @@ Charged-cost, per polytope, `ρ` the aspect ratio, `L = log(16nρ²)` absorbed i
 |---|---|
 | baseline | `Õ(m n⁹ ρ⁸ / ε⁴)` |
 | **P1 sharp — operative** | **`Õ(m n⁷ ρ⁸ / ε⁴)`** |
-| + P2 per-phase (proved, not wired) | `Õ(m n⁶ ρ⁸ / ε⁴)` |
+| + P2 per-phase — **BLOCKED, see below** | would be `Õ(m n⁶ ρ⁸ / ε⁴)` |
 | paper `thm:runtime` | `O(m n⁵ ρ² r_max)` |
 
 **Three claims this section explicitly does NOT make**, each of which was asserted at
@@ -1162,6 +1162,61 @@ some point during development and is false or unproved:
 3. **Not "the charged cost is a runtime".** Item 4 of §0f's list is unchanged:
    `Ttc.VolumeAlgorithm` still has no complexity field, so all charging happens
    outside, in `Ttc.ttcPolyCost`. These are charged-cost statements.
+
+### P2 is blocked, and the blocker is mathematical (2026-08-18)
+
+`CVPerPhaseFrontier` is proved, axiom-clean and committed, but
+**`exists_slowOneRunCertificate_canonical_perPhase` is unreachable at its own declared
+schedule**, so there is no third capstone and the operative figure stays at P1's `n⁷`.
+
+The binder that fails is `hphaseMoment` (`Ttc/Exec/CVPerPhaseFrontier.lean:1208`) — the
+only route to `factor := perPhaseFactor`, i.e. the binder the whole factor `n` is paid for
+by. Every proved way to it goes through
+`CVSharpFactorSeven.operational_path_phaseScore_memLp_and_sq_moment_le_factor_of_targetTV_bound`,
+whose `hslack` (`:357`) demands
+
+```
+(mixError i + targetError).toReal * (B² * (1 + 2T))  ≤  (T − C) * ratio²
+```
+
+Note the LHS carries **`mixError + targetError`**. What the declared schedule supplies is
+`CVGaussianScoreAwareParameters.scoreAwareMixError_mul_boundSq_le_slack` (`:123`):
+
+```
+mixError i * boundSq i  ≤  slack i
+```
+
+— **exactly tight, no divisor.** At `perPhaseSlack = (2/n)·ratio²` and
+`perPhaseBoundSqGen = E²·(3+8/n)`, the mixing error alone saturates the entire budget and
+the radial tail `targetError` has nowhere to go. The loose route declares
+`slowUniformSlack = phaseMomentSlackSeven/2` and the sharp route `slowSharpSlack = …/6`;
+**those divisors are precisely the headroom that pays for the tail.** `perPhaseSlack`
+declares the mixing slack at the full transport allowance `(C−1)·ratio²` with none.
+`CVPerPhaseMomentBundle`'s own Step 9 docstring (`:931–934`) admits this in advance.
+
+Verified here independently of the agent that reported it, by reading all four definitions.
+
+**Why the repair is not a one-token change.** A constant divisor `c` leaves
+`(1−1/c)·(2/n)·ratio²` for the tail — an `O(1/n)` allowance — while the available tail
+budget (`slowTargetError_rAware_scaled_le` + `slowCanonical_htailBudget`) is a **constant**
+fraction of `ratio²`. So a divisor alone works below a fixed `n` while the theorem
+quantifies over all `n ≥ 21`. The repair needs an `n`-aware mean-tail floor as well, i.e. a
+larger global truncation radius `q` at logarithmic cost. A second, independent gap also
+survives the slack repair: `CVPerPhaseFrontier` §3's step bound is at `slowScoreAwareSteps`
+(fixed warm) + `slowGlobalRadiusQ`, while §6 needs `slowCanonicalSteps` (compounding warm) +
+`slowUniformQ` — wrong deadline function and wrong radius.
+
+**A `def` hazard this created**, flagged per §11: `TtcSlowRuntimePerPhase.slowPerPhaseOV`
+and `slowPerPhaseOverhead` are *declared envelopes, not theorems about any run*, and
+`slowPerPhaseOV_le_slowSharpOV` compares two declared envelopes. All are green and
+axiom-clean and none of them bound a runtime. The file carries a boxed warning saying so.
+
+**What the estimate missed.** The trade quantification that authorised this route priced
+the `log(1/share)` cost of the tighter slack. It was right about that (the realised ratio
+`(9n+24)/36` is additive in `log n`, and negative at the sharp exponent). It did not price
+two feasibility constraints: the first-moment layer, which the frontier agent repaired with
+`perPhaseMixError_succ_mean_le_half`, and the **radial tail**, which is what blocks. A cost
+comparison is not a feasibility check, and this route needed both.
 
 ### What actually remains
 
