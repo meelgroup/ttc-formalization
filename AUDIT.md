@@ -1106,7 +1106,7 @@ The exponent arithmetic over the charged-cost model is unchanged by anything in
 
 ---
 
-## 0g. Two unconditional runtime capstones, and the honest complexity (2026-08-18)
+## 0g. Three unconditional runtime capstones, and the honest complexity (2026-08-18)
 
 **The two capstones.** Both are about TTC's own inputs `(atoms, φ, ε, δ)`, both carry
 **no** oracle, certificate, implementation, or cost-side binder, and in both the
@@ -1116,10 +1116,12 @@ implementation appears as a **closed term with no arguments**:
 |---|---|---|
 | `Ttc.TtcSlowRuntimeUnconditional.ttc_volume_runtime_unconditional` | `Ttc/Exec/TtcSlowRuntimeUnconditional.lean:506` | uniform slack, `slowMinStepsEnvelope` |
 | `Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp` | `Ttc/Exec/TtcSlowRuntimeSharp.lean:621` | sharp slack (`…/6`), sharp transport bound |
+| `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase` | `Ttc/Exec/TtcSlowRuntimePerPhase.lean:1094` | sharp slack **+ P2**: per-phase stream count, retry cap and `n`-aware radius |
 
 Residual input conditions on each: `0 < eps`, `eps ≤ 1`, `0 < delta`, `delta ≤ 1`,
-`21 ≤ n`, `phi.IsPositive`, `0 < volSol …`. `lake build Ttc` green at **9462 jobs**;
-`#print axioms` on both = `[propext, Classical.choice, Quot.sound]`.
+`21 ≤ n`, `phi.IsPositive`, `0 < volSol …` — **identical across all three**, including the
+dimension threshold. `lake build Ttc` green at **9464 jobs**; `#print axioms` on all three
+= `[propext, Classical.choice, Quot.sound]`.
 
 **How to re-check in two minutes** (do not trust this table):
 
@@ -1127,13 +1129,15 @@ Residual input conditions on each: `0 < eps`, `eps ≤ 1`, `0 < delta`, `delta �
 lake build Ttc
 echo 'import Ttc
 #check @Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp
-#print axioms Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp' > /tmp/p.lean
+#print axioms Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp
+#check @Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase
+#print axioms Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase' > /tmp/p.lean
 lake env lean /tmp/p.lean
 ```
 
-Read only the printed **type**. The check that matters: `slowSharpImplementation`
-appears with no arguments. If it ever acquires one, the capstone has stopped being
-unconditional and this section is wrong.
+Read only the printed **type**. The check that matters: `slowSharpImplementation` /
+`slowPerPhaseImplementation` appear with no arguments. If either ever acquires one, that
+capstone has stopped being unconditional and this section is wrong.
 
 ### The complexity, stated honestly
 
@@ -1142,8 +1146,8 @@ Charged-cost, per polytope, `ρ` the aspect ratio, `L = log(16nρ²)` absorbed i
 | state | total |
 |---|---|
 | baseline | `Õ(m n⁹ ρ⁸ / ε⁴)` |
-| **P1 sharp — operative** | **`Õ(m n⁷ ρ⁸ / ε⁴)`** |
-| + P2 per-phase — **BLOCKED, see below** | would be `Õ(m n⁶ ρ⁸ / ε⁴)` |
+| P1 sharp — wired | `Õ(m n⁷ ρ⁸ / ε⁴)` |
+| **P1 + P2 per-phase — operative** | **`Õ(m n⁶ ρ⁸ / ε⁴)`** |
 | paper `thm:runtime` | `O(m n⁵ ρ² r_max)` |
 
 **Three claims this section explicitly does NOT make**, each of which was asserted at
@@ -1163,11 +1167,36 @@ some point during development and is false or unproved:
    `Ttc.VolumeAlgorithm` still has no complexity field, so all charging happens
    outside, in `Ttc.ttcPolyCost`. These are charged-cost statements.
 
-### P2 is blocked, and the blocker is mathematical (2026-08-18)
+### P2 was blocked; the repair, and what it cost (2026-08-18)
 
-`CVPerPhaseFrontier` is proved, axiom-clean and committed, but
-**`exists_slowOneRunCertificate_canonical_perPhase` is unreachable at its own declared
-schedule**, so there is no third capstone and the operative figure stays at P1's `n⁷`.
+**Resolved — this subsection is kept as the record of *why* `perPhaseSlack` carries a `/6`
+divisor and an `n`-aware mean-tail floor.** As first declared,
+`exists_slowOneRunCertificate_canonical_perPhase` was unreachable at its own schedule; the
+diagnosis below is what the repair answers, and it is now discharged
+(`Ttc/Exec/CVPerPhaseFrontier.lean`: `perPhase_canonical_hphaseMoment`,
+`perPhase_canonical_hsteps`, `perPhase_mix_add_tail_transport_le`).
+
+**The repair, in two parts.** (A) `perPhaseSlack` divides the transport allowance by `6`,
+buying the tail a `(5/6)·(2/n)·ratio²` budget the original declaration had spent entirely on
+mixing. (B) `perPhaseMeanTailFloor` takes `min (scoreAwareMeanEta m k eps / 4)
+(1 / (6·n·exp(R²/(2·slowSourceInitialVariance n))))` — the `n`-aware floor the constant-divisor
+analysis below correctly predicted was also needed. The price is a larger truncation radius:
+`q²` grows by `4·log n / n`, i.e. additively in `log n` and *shrinking* relative to `q²`
+itself, which is why the factor `n` survives into the total. The §3-vs-§6 deadline/radius
+mismatch noted below was closed by routing the capstone through `perPhaseStepsEnvelope` and
+`perPhaseQEnv` rather than the score-aware pair.
+
+**What it did not cost: accuracy.** The two accuracy facts were pinned at
+`k := correctedRuntimeSamples` and monotonicity runs the wrong way for the smaller per-phase
+`k`, but both are true at **every** `k` — `CVGaussianScoreAwareMeanBudget.lean:131` bounds
+`correctedAlpha⁴ ≥ 1` and then spends the sample count to recover the factor, where
+`correctedAlpha⁴ ≥ correctedAlpha` gives the same bound with no constraint on `k`. The
+`k`-generic forms are `slowAccuracyRequested_half_lt_one_any` and
+`slowAccuracyRequested_half_le_any` (`Ttc/Exec/TtcSlowRuntimePerPhase.lean:484`, `:496`). So
+the per-phase route pays **nothing** in accuracy for its `n`-fold smaller stream count, and two
+shipped lemmas turned out stronger than their statements admitted.
+
+**The original diagnosis follows, unedited.**
 
 The binder that fails is `hphaseMoment` (`Ttc/Exec/CVPerPhaseFrontier.lean:1208`) — the
 only route to `factor := perPhaseFactor`, i.e. the binder the whole factor `n` is paid for
@@ -1206,10 +1235,21 @@ survives the slack repair: `CVPerPhaseFrontier` §3's step bound is at `slowScor
 (fixed warm) + `slowGlobalRadiusQ`, while §6 needs `slowCanonicalSteps` (compounding warm) +
 `slowUniformQ` — wrong deadline function and wrong radius.
 
-**A `def` hazard this created**, flagged per §11: `TtcSlowRuntimePerPhase.slowPerPhaseOV`
-and `slowPerPhaseOverhead` are *declared envelopes, not theorems about any run*, and
-`slowPerPhaseOV_le_slowSharpOV` compares two declared envelopes. All are green and
-axiom-clean and none of them bound a runtime. The file carries a boxed warning saying so.
+**A `def` hazard, now partly discharged**, flagged per §11 — the three cases differ and the
+file's boxed warning (`TtcSlowRuntimePerPhase.lean:50`) separates them:
+
+* `slowPerPhaseOV n R2 eps p` — **certified**. `ttc_volume_runtime_perPhase` bounds the real
+  run's expected query cost at exactly this constant. It is `slowPerPhaseOVGen` at the two
+  per-phase slots `perPhaseLenv` / `perPhaseTenv` **and at no other pair**.
+* `slowPerPhaseOVGen` and `slowPerPhaseOverhead … Lenv Tenv` — **declared only**, parametric in
+  `(Lenv, Tenv)`; nothing runs within them at an arbitrary pair.
+* `slowPerPhaseOV_le_slowSharpOV` **no longer exists**, and could not: once `slowPerPhaseOV`
+  sits at the per-phase envelopes the two routes run at different share floors, retry caps and
+  truncation radii, so the comparison is false as stated. Its content survives verbatim as
+  `slowPerPhaseOVGen_sharpEnv_le_slowSharpOV` (`:752`) at explicit *sharp* slots — a comparison
+  of two declared envelopes, not a runtime claim. The honest quantified payoff is
+  `nmul_slowPerPhaseRetained_le_three_slowActualRetained` (`:284`): factor `n/3` in the retained
+  scalar at a **common** `(Lenv, Tenv)`.
 
 **What the estimate missed.** The trade quantification that authorised this route priced
 the `log(1/share)` cost of the tighter slack. It was right about that (the realised ratio

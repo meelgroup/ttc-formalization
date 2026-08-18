@@ -2,183 +2,102 @@ import Ttc.Exec.TtcSlowRuntimeSharp
 import Ttc.Exec.CVPerPhaseFrontier
 
 /-!
-# The **per-phase** cost envelope for the slow canonical volume route — and the exact
-obstruction that keeps it from becoming a third unconditional runtime capstone
+# The **per-phase** unconditional TTC runtime capstone for the slow canonical volume route
 
-The intended deliverable of this file was `ttc_volume_runtime_perPhase`, the analogue of
-`Ttc.TtcSlowRuntimeSharp.ttc_volume_runtime_sharp` combining
+`Ttc/Exec/TtcSlowRuntimeSharp.lean` carries the same assembly at the **sharp** pair
 
-* **P1**, the sharp transport exponent (`Ttc.CVPerPhaseFrontier.perPhaseExpSharp`), and
-* **P2**, the `n`-aware per-phase stream count
-  (`Ttc.CVPerPhaseSamples.perPhaseRuntimeSamples`, a factor `n / 3` below
-  `Ttc.CVCorrectedRuntime.correctedRuntimeSamples`),
+* `slack := Ttc.CVSharpUniformParameters.slowSharpSlack n m K` (`… / 6`),
+* `boundSq := Ttc.CVSharpScoreTransport.slowSharpBoundSq n R`,
+* `k := Ttc.CVCorrectedRuntime.correctedRuntimeSamples (slowPhases n a) (slowEpsInt n a)`,
+* `q := Ttc.CVSlowCanonicalUniformParameters.slowUniformQ …`.
 
-with the **stated** envelope taken at the smaller stream count.  That capstone is **not**
-in this file, and it is not in this file for a mathematical reason, not a bookkeeping one.
-The reason is recorded in full below, because it is the load-bearing finding.
+This file redoes the assembly at the **combined P1 + P2** pair
 
-## What *is* proved here
+* `slack := Ttc.CVPerPhaseFrontier.perPhaseSlack n m K` — the `relativePhase` slack at
+  `C = 1 + 2/n`, divided by `6`,
+* `boundSq := Ttc.CVPerPhaseFrontier.perPhaseBoundSqGen n (perPhaseExpSharp n R)` — the
+  P1-sharp transport exponent `exp (R²/(2 σ_i (n+1)))`,
+* `k := Ttc.CVPerPhaseSamples.perPhaseRuntimeSamples n (slowPhases n a) (slowEpsInt n a)` —
+  the `n`-aware stream count, a factor `n / 3` below `correctedRuntimeSamples`
+  (`nmul_perPhaseStreamsP_le_three_slowStreamsP` below),
+* `q := Ttc.CVPerPhaseFrontier.perPhaseQ …` — the `n`-aware truncation radius the repaired
+  mean-tail floor forces (a `+ 4 log n / n` in `q²`, i.e. logarithmic).
 
-The whole *envelope* half of the mirror, which is where the `n` of P2 has to show up if the
-stated bound is to improve at all:
+## Main result
 
-* `perPhaseStreamsP` — the pinned stream count at the per-phase provisioning;
-* `n_le_slowPhasesP_add_one` — the phase-count side condition of the saving, discharged
-  outright, so that the two comparisons below assume nothing beyond `4 ≤ n` and
-  `0 < eps ≤ 1`;
-* `nmul_perPhaseStreamsP_le_three_slowStreamsP`,
-  `perPhaseStreamsP_lt_slowStreamsP` — the factor-`n` saving, quantified;
-* `slowPerPhaseOverhead` — `Ttc.CVSlowActualCostEnvelope.slowActualOverhead` with
-  `Ttc.CVSlowEffectiveOverhead.slowStreamsP` replaced by `perPhaseStreamsP`;
-* `slowPerPhaseOverhead_le_slowActualOverhead` and
-  `nmul_slowPerPhaseRetained_le_three_slowActualRetained` — the payoff, isolated: at the
-  *same* per-phase retry and deadline envelopes `(Lenv, Tenv)` the per-phase overhead is
-  below the sharp one, and the retained scalar it clips is smaller by the full factor
-  `n / 3`;
-* `slowPerPhase_hscalar` — the frontier's cost-side binder at that overhead;
-* `slowPerPhaseOV`, `slowPerPhaseEffective`, `one_le_slowPerPhaseOV`,
-  `slowPerPhaseEffective_le_slowPerPhaseOV` — the `OV` / `heff` pair in the exact shape
-  `Ttc.TtcShapedRuntime.implementationOfEffectiveCertificatesGen` consumes, and
-* `slowPerPhaseOV_le_slowSharpOV` — the relationship the capstone would have stated.
+`ttc_volume_runtime_perPhase` — the third unconditional runtime capstone.  There is no
+oracle binder, no certificate binder, no implementation binder and **no cost-side binder**;
+the volume subroutine is `slowPerPhaseImplementation.algorithm n`, which appears in the
+statement with no arguments.
 
-Everything here is unconditional and axiom-clean.  None of it needs the frontier.
+## Which envelope the capstone states
 
-## READ THIS BEFORE CITING `slowPerPhaseOV` — it is NOT a runtime bound
+The capstone's cost envelope is `slowPerPhaseOV`, which differs from
+`Ttc.TtcSlowRuntimeSharp.slowSharpOV` in **three** places, all of them per-phase:
 
-`slowPerPhaseOV` and `slowPerPhaseOverhead` are **declarations of an envelope, not
-theorems about any run.**  No law in this repository is proved to have expected cost under
-them, because the certificate that would establish that is exactly what is blocked below.
-They are the envelope the *repaired* capstone would state.
+* the stream count of the retained-scalar envelope is `perPhaseStreamsP`, not
+  `Ttc.CVSlowEffectiveOverhead.slowStreamsP` (this is `slowPerPhaseOverhead`);
+* the retry envelope slot is `perPhaseLenv`, i.e.
+  `Ttc.CVPerPhaseFrontier.perPhaseRetriesCapAt` at the per-phase share floor and the
+  per-phase stream count, not `Ttc.TtcSlowRuntimeSharp.slowSharpLenv`;
+* the deadline envelope slot is `perPhaseTenv`, i.e.
+  `Ttc.CVPerPhaseFrontier.perPhaseStepsEnvelope` at the `n`-aware radius `perPhaseQ`, not
+  `Ttc.TtcSlowRuntimeSharp.slowSharpTenv`.
 
-Two specific traps, both of which pass `#print axioms` and a green build:
+All three are the quantities the per-phase analysis itself produces, so the frontier's
+`hsteps`, `hretries` and `hscalar` binders are discharged outright and nothing is assumed.
 
-* the `Lenv` / `Tenv` slots of `slowPerPhaseOV` are still the **sharp** route's
-  (`Ttc.TtcSlowRuntimeSharp.slowSharpLenv`, `slowSharpTenv`), because no per-phase retry or
-  deadline chain exists against a correct schedule.  `slowPerPhaseOverhead` and
-  `slowPerPhase_hscalar` are fully parametric in `(Lenv, Tenv)` and survive the repair, but
-  the *instantiation* in `slowPerPhaseOV` does not;
-* `slowPerPhaseOV_le_slowSharpOV` is a comparison of two **declared** envelopes.  It says
-  the per-phase envelope is smaller.  It does **not** say anything runs within it.
+## READ THIS BEFORE CITING `slowPerPhaseOV` OR `slowPerPhaseOverhead`
 
-The honest one-line summary: **the operative complexity of this development is still the
-sharp route's, `Õ(m·n⁷·ρ⁸/ε⁴)`.**  Nothing in this file improves it.  Citing
-`slowPerPhaseOV_le_slowSharpOV` as evidence of a factor `n` in the *runtime* would be a
-misreading of exactly the kind `AUDIT.md` §11 exists to catch.
+The earlier version of this file carried a warning that `slowPerPhaseOV` was a *declared
+envelope, not a runtime bound*, because no per-phase retry or deadline chain existed
+against a schedule with a correct mixing slack.  That is no longer the situation, and the
+warning is replaced by the precise statement of what is and is not certified:
 
-## What blocks the capstone, precisely
+* **`slowPerPhaseOV n R2 eps p` — certified.**  `ttc_volume_runtime_perPhase` bounds the
+  expected query cost of the real run at exactly this constant (per cube, at that cube's
+  own interior circumradius squared).  It is `slowPerPhaseOVGen` at the two *per-phase*
+  envelope slots, and at no other pair.
+* **`slowPerPhaseOverhead n R2 epsP p Lenv Tenv` and `slowPerPhaseOVGen` — declared, at a
+  general `(Lenv, Tenv)`.**  They are parametric in the retry and deadline envelopes, and
+  nothing is claimed to run within them at an arbitrary pair.  Only the instantiation
+  `Lenv := perPhaseLenv`, `Tenv := perPhaseTenv` — that is, `slowPerPhaseOV` — is a
+  statement about a run.
+* **`slowPerPhaseOVGen_sharpEnv_le_slowSharpOV` — a comparison of two declared envelopes.**
+  It says that the per-phase *overhead* (the smaller stream count) beats the sharp one at
+  the sharp route's own `(Lenv, Tenv)`.  It is **not** `slowPerPhaseOV ≤ slowSharpOV`: the
+  capstone's `slowPerPhaseOV` sits at the per-phase envelopes, and no comparison of
+  `perPhaseLenv` with `slowSharpLenv` or of `perPhaseTenv` with `slowSharpTenv` is proved
+  here — the two chains run at different share floors and different truncation radii, and
+  relating them is a separate question this file does not answer.  So the honest summary of
+  the quantified payoff remains `nmul_slowPerPhaseRetained_le_three_slowActualRetained`: a
+  factor `n / 3` in the retained scalar **at a common `(Lenv, Tenv)`**.
 
-`Ttc.CVPerPhaseFrontier.exists_slowOneRunCertificate_canonical_perPhase`
-(`Ttc/Exec/CVPerPhaseFrontier.lean:1139`) carries the binder
+## What had to be mirrored, and what did not
 
-```
-hphaseMoment : ∀ j, ∫ (clipped j)² ≤ perPhaseFactor n m k j * (∫ clipped j)²
-```
+`Ttc.CVSlowTotalFamilies.slowLaw` writes the loose slack / transport pair *inside* the
+`slowCanonicalCostedActiveSchedule` term and pins the index type at
+`Ttc.CVSlowTotalFamilies.slowStreams`, so both the law and the four total families had to
+be mirrored here: `perPhaseStreams`, `perPhaseOmega`, `perPhaseCost`, `perPhaseValue`,
+`perPhaseLaw`, `perPhaseLaw_of_valid` and their clipped versions, together with the two
+Markov instances `perPhaseIsMarkovKernel_costedSchedule` / `_activeSchedule`.  This is one
+layer more than `Ttc.TtcSlowRuntimeSharp` needed, because that file reuses
+`Ttc.CVSlowTotalFamilies`' index type — which is only possible at the uniform stream count.
 
-(`Ttc/Exec/CVPerPhaseFrontier.lean:1208`).  It is exactly the binder the `n`-fold stream
-saving is paid for by, and it is the only route to `factor := perPhaseFactor`.  Every
-proved way to reach it goes through
-`Ttc.CVPerPhaseMomentBundle.operational_slowCanonical_clippedMoment_bundle_perPhase`, whose
-own scalar input is the operational per-phase second moment at
-`Ttc.CVPerPhaseMomentBundle.sharpTransportedFactor n m (i+1)`, i.e. through
-`Ttc.CVSharpFactorSeven.operational_path_phaseScore_memLp_and_sq_moment_le_factor_of_targetTV_bound`
-(`Ttc/Exec/CVSharpFactorSeven.lean:335`) whose `hslack` binder (`:357`) reads
+`Ttc.TtcSlowRuntimeFinal.clipInput` and the accuracy-clip arithmetic are reused verbatim.
 
-```
-(mixError i + targetError).toReal * (S i ^ 2 * (1 + 2 * T)) ≤ (T - C) * ratio ^ 2
-```
+## The one arithmetic fact the smaller stream count forced
 
-At `C := 1 + 2/n` and `T := 2 C - 1 = 1 + 4/n` — the per-phase pair — this is
-
-```
-(mixError + targetError) * S² * (3 + 8/n) ≤ (2/n) * ratio²           (interior index)
-(mixError + targetError) * S² * 7         ≤ 1     * ratio²           (terminal index)
-```
-
-while the **only** thing the declared schedule supplies is
-`Ttc.CVGaussianScoreAwareParameters.scoreAwareMixError_mul_boundSq_le_slack`
-(`Ttc/Exec/CVGaussianScoreAwareParameters.lean:123`),
-
-```
-mixError * boundSq ≤ slack,
-```
-
-which at `slack := Ttc.CVPerPhaseFrontier.perPhaseSlack n m K = (2/n)·ratio²`
-(`Ttc/Exec/CVPerPhaseFrontier.lean:160`) and
-`boundSq := perPhaseBoundSqGen n E = E²·(3 + 8/n)` (`:185`) is
-
-```
-mixError * E² * (3 + 8/n) ≤ (2/n) * ratio².
-```
-
-At the **terminal** index this is comfortable (`7 · (2/n)/(3 + 8/n) = 14/(3n+8) ≤ 1` iff
-`n ≥ 2`, free under `21 ≤ n`) — that is the arithmetic note the frontier left, and it
-re-derives.  At every **interior** index it is *exactly saturated*: the required and the
-available right-hand sides are literally the same number `(2/n)·ratio²`, and the required
-left-hand side is strictly larger than the available one, because
-
-1. it carries the radial tail `targetError` in addition to `mixError`, and
-2. at the P1-sharp exponent `S² ≤ 3 E²` is the only available link
-   (`Ttc.CVPerPhaseFrontier.perPhaseSharp_supData`, last conjunct), costing a further
-   factor `3`.
-
-Item 1 alone is fatal, at *both* exponent instantiations: `perPhaseStandard_supData` takes
-`S = E`, and the inequality still fails by exactly the tail term.
-
-The structural cause is visible by comparison.  The loose route declares
-`Ttc.CVSlowCanonicalUniformParameters.slowUniformSlack = phaseMomentSlackSeven … / 2` and
-the sharp route `Ttc.CVSharpUniformParameters.slowSharpSlack = phaseMomentSlackSeven … / 6`.
-Those divisors are not decoration: they are precisely the headroom that pays for the radial
-half `slowTargetError` (`Ttc.CVRAwareGlobalRadius.slowTargetError_rAware_scaled_le` feeding
-`Ttc.CVSlowCanonicalMomentBinders.slowCanonical_htailBudget`).  `perPhaseSlack` declares the
-mixing slack at the **full** transport allowance `(C - 1)·ratio²` with no divisor, so the
-schedule it defines has no room for the tail.  `Ttc.CVPerPhaseMomentBundle`'s own Step 9
-docstring says as much: "Only that slack inequality is left open, and it is a statement
-about the *mixing schedule* … Declaring it is the existing-file change this file
-deliberately does not make."
-
-`Ttc.CVPerPhaseFrontier.perPhaseSlack` is used nowhere outside
-`Ttc/Exec/CVPerPhaseFrontier.lean`, and both §5 and §6 of that file pin it (§5 through the
-binder `hslackDef : slack = perPhaseSlack n m K`), so the repair cannot be made from a new
-file: it is an edit to `CVPerPhaseFrontier`.
-
-**And the repair is not a one-token change.**  Dividing the declared slack by a constant
-`c` buys `mixError · S² · (3 + 8/n) ≤ (2/(cn))·ratio²`, leaving `(1 - 1/c)·(2/n)·ratio²`
-for the tail — an allowance of order `1/n`.  But the tail budget available is
-`slowTargetError · exp(R²/2σ) ≤ slowUniformMeanTailFloor` together with
-`slowCanonical_htailBudget`, which caps the tail's contribution at order `ratio²/30` — a
-**constant** fraction, not an `O(1/n)` one.  So a constant divisor fixes the interior index
-only for `n` below a fixed threshold, while the theorem quantifies over all `n ≥ 21`.  The
-per-phase route additionally needs an `n`-aware mean-tail floor, i.e. a larger global
-truncation radius `q` (logarithmic cost) so that `slowUniformMeanTailFloor` itself shrinks
-like `1/n`.  Both changes live in existing files.
-
-## A second, independent gap on the cost side
-
-Even with the slack repaired, §6's `hsteps` binder
-(`Ttc/Exec/CVPerPhaseFrontier.lean:1231`) is stated at
-`Ttc.CVSlowRadiusQCanonicalOperational.slowCanonicalSteps` — the *compounding-warmness*
-deadline — and at the mixing radius `slowUniformQ`.  §3's cap
-`Ttc.CVPerPhaseFrontier.slowScoreAwareSteps_perPhase_active_le` (`:631`) is stated at
-`Ttc.CVSlowSourceReferenceCertificate.slowScoreAwareSteps` — the *fixed-warm* deadline —
-and at `Ttc.CVSlowGlobalRadiusTailBudget.slowGlobalRadiusQ`.  Neither the deadline function
-nor the radius matches, so §3 does not discharge §6's `hsteps`.  What is needed is the
-per-phase analogue of the whole of `Ttc/Exec/CVSharpSlowSteps.lean` (a
-`slowCanonicalSteps_perPhase_le` built from `Ttc.CVSlowActualDeadline`'s bound-independent
-bridge, `Ttc.CVSlowWarmBudgetBound` / `Ttc.CVRefreshWarmRoute`, and §1's
-`perPhaseShareFloorGen_le_scoreAwareShare`).  That layer *is* mechanical and would close
-today — but it is pinned to `perPhaseSlack`, which the repair above must change, so
-building it now would build fifteen declarations against a schedule known to be wrong.  It
-is deliberately not built here.
-
-## Consequence for the `OV`
-
-Because no per-phase `hsteps` / `hretries` pair is available against a *correct* schedule,
-`slowPerPhaseOV` below keeps `Ttc.TtcSlowRuntimeSharp`'s own per-phase retry and deadline
-envelopes `slowSharpLenv`, `slowSharpTenv` in its two envelope slots, and differs from
-`Ttc.TtcSlowRuntimeSharp.slowSharpOV` in **exactly one place**: the stream count of the
-retained-scalar envelope.  That is the honest statement of what P2 buys once its schedule
-is repaired, and `slowPerPhaseOV_le_slowSharpOV` /
-`nmul_slowPerPhaseRetained_le_three_slowActualRetained` are its quantified form.
+`Ttc.CVSlowAccuracyStrict.slowAccuracyRequested_half_lt_one` and
+`Ttc.CVSlowCanonicalAccuracyBudget.slowAccuracyRequested_le_of_half` are stated at
+`k := correctedRuntimeSamples m eps` and are therefore unusable at the per-phase count.
+§4 below re-proves both **generically in `k`** — `scoreAwareMeanGamma_le_div_hundred` holds
+for *every* stream count, because `Ttc.CVCorrected.correctedNu m eps` divides by
+`correctedAlpha m eps ^ 4 ≥ (100000 (m+1) / eps²) ^ 4`, which already dominates the whole
+aggregate mean budget before a single sample is drawn.  The existing `k`-pinned proofs
+throw that factor away (`1 ≤ a ^ 4`) and spend the sample count instead; keeping it makes
+the bound `k`-free, and the per-phase route pays nothing in accuracy for its `n`-fold
+smaller `k`.
 -/
 
 set_option autoImplicit false
@@ -187,6 +106,7 @@ set_option maxHeartbeats 8000000
 namespace Ttc.TtcSlowRuntimePerPhase
 
 open MeasureTheory ProbabilityTheory Metric Set
+open Arlib Arlib.GaussianCooling
 open Ttc.CVSourcePolynomialCutoffCapstone (sourceLogFactor sourceOneRunQueryEnvelope
   sourceOneRunQueryBudget sourceLogFactor_pos)
 open Ttc.TtcCircumRadius (circumR circumR_nonneg)
@@ -199,9 +119,35 @@ open Ttc.CVSlowActualCostEnvelope (slowActualRetainedRealEnvelope
   slowActualRetainedRealEnvelope_nonneg slowActualRetainedRealEnvelope_mono
   slowActualRetainedScalar_le_realEnvelope slowActualOverhead
   one_le_slowActualOverhead slowActualOverhead_nonneg)
-open Ttc.TtcCallCircumAdmissible (cvAdmCircum)
-open Ttc.TtcSlowRuntimeFinal (one_le_sourceLogFactor)
+open Ttc.TtcCallCircumAdmissible (cvAdmCircum cvAdmCircum_imp_cvAdmissible
+  circumInterior_sq_le_of_cvAdmCircum cvAdmCircum_callBody)
+open Ttc.TtcSlowRuntimeFinal (clipInput clipInput_valid clipInput_eps_pos
+  one_le_sourceLogFactor sourceOneRunQueryBudget_clip_eps)
 open Ttc.TtcSlowRuntimeSharp (slowSharpLenv slowSharpTenv slowSharpOV)
+open Ttc.CVEffectiveTotalise (CVValidInput)
+open Ttc.CVSlowTotalFamilies
+open Ttc.CVSlowOneRunValid
+open Ttc.CVSlowCanonicalRetainedReference
+open Ttc.CVHeterogeneousRetainedPathLaw
+open Ttc.CVHeterogeneousHistoryReference
+open Ttc.CVSourceReferenceTVCapstone
+open Ttc.CVGaussianHybridWeightedCertificate (gaussianScorePrefixReadout
+  measurable_gaussianScorePrefixReadout)
+open Ttc.CVSlowFullBodySourceSchedule (slowSourceSigmaSq)
+open Ttc.CVSlowSourceReferenceCertificate (slowInitialPair slowReferenceWarm
+  slowSourceInitialVariance)
+open Ttc.CVSlowRadiusQCanonicalOperational (slowCanonicalSteps)
+open Ttc.CVGaussianScoreAwareParameters (scoreAwareRetries scoreAwareEta scoreAwareZeta)
+open Ttc.CVSlowCanonicalAccuracyBudget (slowAccuracyRequested
+  phase_div_two_correctedAlpha_le scoreAwareAccuracyBeta_nonneg)
+open Ttc.CVSlowAccuracyStrict (slowAccuracyRequested_half_pos
+  half_le_slowAccuracyRequested)
+open Ttc.CVCorrected (correctedAlpha correctedAlpha_pos correctedNu correctedNu_nonneg
+  one_le_correctedAlpha)
+open Ttc.CVGaussianBlockRetryParameters (blockShare blockShare_pos)
+open Ttc.CVGaussianScoreAwareMeanBudget (scoreAwareMeanEta scoreAwareMeanGamma
+  scoreAwareAccuracyBeta scoreAwareMeanGamma_nonneg)
+open Ttc.CVPerPhaseFrontier
 open scoped ENNReal Classical BigOperators
 
 /-! ## Step 1 — the pinned stream count at the per-phase provisioning
@@ -419,50 +365,360 @@ theorem slowPerPhase_hscalar
     ← ENNReal.ofReal_mul hk0, ← ENNReal.ofReal_mul (mul_nonneg hk0 hm0)]
   exact ENNReal.ofReal_le_ofReal (hover.trans hcore)
 
-/-! ## Step 4 — the `OV` and the `heff` pair
+/-! ## Step 4 — the realised accuracy at an arbitrary stream count
 
-`Ttc.TtcSlowRuntimeSharp.slowSharpOV n R2 eps p` is
+`Ttc.CVSlowAccuracyStrict.slowAccuracyRequested_half_lt_one` and
+`Ttc.CVSlowCanonicalAccuracyBudget.slowAccuracyRequested_le_of_half` are the two facts the
+final weakening needs, and both are stated at `k := correctedRuntimeSamples m eps`.  At the
+`n`-aware stream count they are unavailable, and they cannot be obtained by monotonicity:
+the aggregate mean budget grows as `k` shrinks.
 
-```
-64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
-  slowActualOverhead n R2 (min eps 1 / 2) p
-    (slowSharpLenv n R2 (min eps 1 / 2)) (slowSharpTenv n R2 (min eps 1 / 2)).
-```
+They are nevertheless true at **every** `k`, and the reason is that the existing proofs are
+lossy at exactly one step.  `Ttc.CVCorrected.correctedNu m eps =
+eps² / (100000 · correctedAlpha m eps ^ 4 · (m+1))` with
+`correctedAlpha m eps = 100000 (m+1) / eps² ≥ 100000 (m+1)`; the canonical proof bounds
+`correctedAlpha ^ 4` below by `1` and recovers the missing factor from
+`k ≥ 100000 (m+1) / eps²`.  Keeping `correctedAlpha ^ 4 ≥ correctedAlpha ≥ 100000 (m+1)`
+instead gives the *same* final bound `blockShare ≤ eps² / (8·10¹⁰ (m+1)²)` with no
+constraint on `k` at all. -/
 
-`slowPerPhaseOV` below is that expression with `slowActualOverhead` replaced by
-`slowPerPhaseOverhead` — i.e. with the **smaller stream count in the envelope** — and with
-every other slot, including the two per-phase envelopes, untouched.  See the module
-docstring for why the two envelope slots are still the sharp route's: no per-phase
-`hsteps` / `hretries` pair exists against a schedule with a correct mixing slack, so
-substituting the per-phase caps here would advertise an envelope nothing proves. -/
+/-- **The aggregate mean bias is negligible at every stream count.**  `k`-generic form of
+`Ttc.CVGaussianScoreAwareMeanBudget.scoreAwareMeanGamma_corrected_le_div_hundred`. -/
+theorem scoreAwareMeanGamma_le_div_hundred (m k : Nat) {eps : Real}
+    (heps : 0 < eps) (heps1 : eps ≤ 1) :
+    scoreAwareMeanGamma m k eps ≤ eps / 100 := by
+  have hx0 : (0 : Real) ≤ (m : Real) := Nat.cast_nonneg m
+  have hk0 : (0 : Real) ≤ (k : Real) := Nat.cast_nonneg k
+  have hm1 : (0 : Real) < (m : Real) + 1 := by linarith
+  have hk1 : (1 : Real) ≤ (k : Real) + 1 := by linarith
+  have he2 : eps ^ 2 ≤ 1 := by nlinarith
+  have ha1 : (1 : Real) ≤ correctedAlpha m eps := one_le_correctedAlpha heps heps1
+  have halow : 100000 * ((m : Real) + 1) ≤ correctedAlpha m eps := by
+    unfold correctedAlpha
+    rw [le_div_iff₀ (by positivity : (0 : Real) < eps ^ 2)]
+    nlinarith
+  have hA3 : (1 : Real) ≤ correctedAlpha m eps ^ 3 := by
+    nlinarith [mul_nonneg (sub_nonneg.2 ha1)
+      (show (0 : Real) ≤ correctedAlpha m eps ^ 2 + correctedAlpha m eps + 1 by positivity)]
+  have ha4 : correctedAlpha m eps ≤ correctedAlpha m eps ^ 4 := by
+    nlinarith [mul_nonneg (le_trans zero_le_one ha1) (sub_nonneg.2 hA3)]
+  have haden : 100000 * ((m : Real) + 1) ≤ correctedAlpha m eps ^ 4 := halow.trans ha4
+  have hb0 : (0 : Real) ≤ blockShare m k eps := (blockShare_pos heps).le
+  have hbase : (80000000000 : Real) * ((m : Real) + 1) ^ 2 ≤
+      100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1) * 8 := by
+    nlinarith [haden, hm1]
+  have hC0 : (0 : Real) ≤ 100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1) * 8 := by
+    positivity
+  have hstep : (80000000000 : Real) * ((m : Real) + 1) ^ 2 ≤
+      (100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1)) * (8 * ((k : Real) + 1)) := by
+    calc (80000000000 : Real) * ((m : Real) + 1) ^ 2
+        ≤ 100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1) * 8 := hbase
+      _ = (100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1) * 8) * 1 := by ring
+      _ ≤ (100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1) * 8) * ((k : Real) + 1) :=
+          mul_le_mul_of_nonneg_left hk1 hC0
+      _ = (100000 * correctedAlpha m eps ^ 4 * ((m : Real) + 1)) *
+            (8 * ((k : Real) + 1)) := by ring
+  have hb : blockShare m k eps ≤ eps ^ 2 / (80000000000 * ((m : Real) + 1) ^ 2) := by
+    unfold blockShare correctedNu
+    rw [div_div]
+    exact div_le_div_of_nonneg_left (sq_nonneg eps) (by positivity) hstep
+  have hetaSq : (scoreAwareMeanEta m k eps) ^ 2 = (7 / 5 : Real) * blockShare m k eps := by
+    unfold scoreAwareMeanEta
+    rw [Real.sq_sqrt]
+    exact mul_nonneg (by norm_num) hb0
+  have hgamma0 := scoreAwareMeanGamma_nonneg m k eps
+  have hsmall : 4 * (m : Real) ^ 2 * ((7 / 5 : Real) * blockShare m k eps) ≤
+      eps ^ 2 / 10000 := by
+    calc
+      4 * (m : Real) ^ 2 * ((7 / 5 : Real) * blockShare m k eps) ≤
+          4 * ((m : Real) + 1) ^ 2 *
+            ((7 / 5 : Real) * (eps ^ 2 / (80000000000 * ((m : Real) + 1) ^ 2))) := by
+        gcongr
+        nlinarith
+      _ = (28 / 400000000000 : Real) * eps ^ 2 := by
+        field_simp [show ((m : Real) + 1) ≠ 0 by positivity]
+        <;> ring
+      _ ≤ eps ^ 2 / 10000 := by
+        have := sq_nonneg eps
+        nlinarith
+  have hgammaSq : (scoreAwareMeanGamma m k eps) ^ 2 ≤ (eps / 100) ^ 2 := by
+    calc
+      (scoreAwareMeanGamma m k eps) ^ 2 =
+          4 * (m : Real) ^ 2 * ((7 / 5 : Real) * blockShare m k eps) := by
+        rw [scoreAwareMeanGamma, mul_pow, mul_pow, hetaSq]
+        ring
+      _ ≤ eps ^ 2 / 10000 := hsmall
+      _ = (eps / 100) ^ 2 := by ring
+  nlinarith [sq_nonneg (scoreAwareMeanGamma m k eps + eps / 100)]
 
-/-- **The overhead envelope of the combined P1 + P2 route**, at the sharp per-phase retry
-and deadline envelopes.  Identical to `Ttc.TtcSlowRuntimeSharp.slowSharpOV` except for the
-stream count of the retained-scalar envelope. -/
-noncomputable def slowPerPhaseOV (n : Nat) (R2 eps p : Real) : Real :=
+/-- **The score-aware allowance costs at most a quarter of the accuracy, at every stream
+count.**  `k`-generic form of
+`Ttc.CVSlowCanonicalAccuracyBudget.scoreAwareAccuracyBeta_canonical_le`. -/
+theorem scoreAwareAccuracyBeta_le_quarter (m k : Nat) {eps : Real}
+    (heps : 0 < eps) (heps1 : eps ≤ 1) :
+    scoreAwareAccuracyBeta m k eps ≤ eps / 4 := by
+  have htheta : (m : Real) / (2 * correctedAlpha m eps) ≤ eps ^ 2 / 200000 :=
+    phase_div_two_correctedAlpha_le m heps
+  have halpha : 0 < correctedAlpha m eps := correctedAlpha_pos heps
+  have htheta0 : 0 ≤ (m : Real) / (2 * correctedAlpha m eps) :=
+    div_nonneg (Nat.cast_nonneg _) (by positivity)
+  have hgamma : scoreAwareMeanGamma m k eps ≤ eps / 8 := by
+    have := scoreAwareMeanGamma_le_div_hundred m k heps heps1
+    linarith
+  have hgamma0 : 0 ≤ scoreAwareMeanGamma m k eps := scoreAwareMeanGamma_nonneg m k eps
+  have hprod : ((m : Real) / (2 * correctedAlpha m eps)) * scoreAwareMeanGamma m k eps ≤
+      (eps ^ 2 / 200000) * (eps / 8) :=
+    mul_le_mul htheta hgamma hgamma0 (by positivity)
+  have hsq : eps ^ 2 ≤ eps := by nlinarith
+  have hcube : eps ^ 2 * eps ≤ eps := by nlinarith
+  unfold scoreAwareAccuracyBeta
+  calc
+    (m : Real) / (2 * correctedAlpha m eps) + scoreAwareMeanGamma m k eps +
+        ((m : Real) / (2 * correctedAlpha m eps)) * scoreAwareMeanGamma m k eps ≤
+        eps ^ 2 / 200000 + eps / 8 + (eps ^ 2 / 200000) * (eps / 8) := by
+      gcongr
+    _ ≤ eps / 4 := by nlinarith
+
+/-- **The realised accuracy is strictly below one, at every stream count.**  `k`-generic
+form of `Ttc.CVSlowAccuracyStrict.slowAccuracyRequested_half_lt_one`. -/
+theorem slowAccuracyRequested_half_lt_one_any (m k : Nat) {epsIn : Real}
+    (heps : 0 < epsIn) (heps1 : epsIn ≤ 1) :
+    slowAccuracyRequested m k (epsIn / 2) < 1 := by
+  have hhalf : (0 : Real) < epsIn / 2 := by linarith
+  have hb := scoreAwareAccuracyBeta_le_quarter m k (eps := epsIn / 2) hhalf (by linarith)
+  have hb0 := scoreAwareAccuracyBeta_nonneg m k hhalf
+  unfold slowAccuracyRequested
+  nlinarith
+
+/-- **The realised accuracy meets the external request, at every stream count.**
+`k`-generic form of
+`Ttc.CVSlowCanonicalAccuracyBudget.slowAccuracyRequested_le_of_half`. -/
+theorem slowAccuracyRequested_half_le_any (m k : Nat) {epsIn : Real}
+    (heps : 0 < epsIn) (heps1 : epsIn ≤ 1) :
+    slowAccuracyRequested m k (epsIn / 2) ≤ epsIn := by
+  have hhalf : (0 : Real) < epsIn / 2 := by linarith
+  have hb := scoreAwareAccuracyBeta_le_quarter m k (eps := epsIn / 2) hhalf (by linarith)
+  have hb0 := scoreAwareAccuracyBeta_nonneg m k hhalf
+  unfold slowAccuracyRequested
+  nlinarith
+
+/-! ## Step 5 — the four total families at the per-phase stream count
+
+`Ttc.CVSlowTotalFamilies.slowOmega` is `Fin (slowStreams n a) → …`, so it is pinned at the
+uniform stream count and cannot be reused.  These are its four families verbatim with
+`slowStreams` replaced by `perPhaseStreams`. -/
+
+/-- The per-phase stream count at a concrete input. -/
+noncomputable def perPhaseStreams (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) : Nat :=
+  perPhaseRuntimeSamples n (slowPhases n a) (slowEpsInt n a)
+
+theorem perPhaseStreams_pos (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    0 < perPhaseStreams n a := perPhaseRuntimeSamples_pos _ _ _
+
+theorem perPhaseStreams_eq (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseStreams n a = perPhaseStreamsP n (slowR2 n a) (slowEpsInt n a) := rfl
+
+/-- **The index type of one per-phase run**: `perPhaseStreams n a` independent
+heterogeneous retained histories. -/
+abbrev perPhaseOmega (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) : Type :=
+  Fin (perPhaseStreams n a) → HeterogeneousHistoryState (Ttc.Space n) (Ttc.Space n)
+
+/-- The recorded query cost of one per-phase run. -/
+noncomputable def perPhaseCost (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseOmega n a → ENNReal :=
+  fun omega ↦ ∑ j, (omega j).1.1
+
+/-- The volume estimate one per-phase run reports. -/
+noncomputable def perPhaseValue (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseOmega n a → Real :=
+  fun omega ↦ gaussianScorePrefixReadout (slowPhases n a) (slowPhases n a)
+    (perPhaseStreams n a) (slowSourceSigmaSq n (slowSourceInitialVariance n))
+    (interior a.1)
+    (chain (slowPhases n a) (slowSourceSigmaSq n (slowSourceInitialVariance n))
+      (interior a.1) 0)
+    (independentStoredScorePrefixCurrent (slowPhases n a) omega)
+
+theorem measurable_perPhaseCost (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Measurable (perPhaseCost n a) := by
+  unfold perPhaseCost
+  apply Finset.measurable_sum
+  intro j _hj
+  exact measurable_fst.comp (measurable_fst.comp (measurable_pi_apply j))
+
+theorem measurable_perPhaseValue (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Measurable (perPhaseValue n a) :=
+  (measurable_gaussianScorePrefixReadout _).comp
+    (measurable_independentStoredScorePrefixCurrent _)
+
+/-! ## Step 6 — the law family at the per-phase pair -/
+
+/-- The canonical **seed** schedule at the per-phase pair is Markov. -/
+theorem perPhaseIsMarkovKernel_activeSchedule {n : Nat}
+    (hn : 21 ≤ n) {eps R R2 : Real} {K : Set (Ttc.Space n)} (hK : MeasurableSet K)
+    (hKc : Convex Real K) (hball : ball (0 : Ttc.Space n) 1 ⊆ K) (i : Nat) :
+    IsMarkovKernel (slowCanonicalActiveSchedule (by omega : 1 ≤ n)
+      (slowCanonicalPhases n R2 + 1)
+      (perPhaseRuntimeSamples n (slowCanonicalPhases n R2) eps)
+      (q := perPhaseQ n (slowCanonicalPhases n R2)
+        (perPhaseRuntimeSamples n (slowCanonicalPhases n R2) eps) eps R)
+      (eps := eps / 2) (s0 := slowSourceInitialVariance n)
+      (perPhase_canonical_hq0 hn R2 eps R) (canonical_hs0 hn) K hK 0 slowReferenceWarm
+      (perPhaseSlack n (slowCanonicalPhases n R2) K)
+      (perPhaseBoundSqGen n (perPhaseExpSharp n R)) i) := by
+  letI : ∀ j, IsProbabilityMeasure (slowStationaryTail n
+      (perPhaseQ n (slowCanonicalPhases n R2)
+        (perPhaseRuntimeSamples n (slowCanonicalPhases n R2) eps) eps R)
+      (slowSourceInitialVariance n) K j) := fun j ↦
+    perPhase_canonical_isProbabilityMeasure_slowStationaryTail hn hK hKc hball j
+  infer_instance
+
+/-- The canonical **costed** active schedule at the per-phase pair is Markov, at the
+parameter choices of `Ttc.CVSlowTotalFamilies` and the per-phase stream count. -/
+theorem perPhaseIsMarkovKernel_costedSchedule {n : Nat}
+    {a : Ttc.CVAdaptive.VolumeInput n} (h : CVValidInput a) (hn : 21 ≤ n) (i : Nat) :
+    IsMarkovKernel (slowCanonicalCostedActiveSchedule (n := n) (by omega : 1 ≤ n)
+      (slowPhases n a + 1) (perPhaseStreams n a)
+      (q := perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (slowRadius n a))
+      (eps := slowEpsInt n a / 2) (s0 := slowSourceInitialVariance n)
+      (perPhase_canonical_hq0 hn (slowR2 n a) (slowEpsInt n a) (slowRadius n a))
+      (canonical_hs0 hn) (interior a.1) (measurableSet_slowBody n a) 0 slowReferenceWarm
+      (perPhaseSlack n (slowPhases n a) (interior a.1))
+      (perPhaseBoundSqGen n (perPhaseExpSharp n (slowRadius n a))) i) := by
+  letI : ∀ j, IsProbabilityMeasure (slowStationaryTail n
+      (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (slowRadius n a))
+      (slowSourceInitialVariance n) (interior a.1) j) := fun j ↦
+    perPhase_canonical_isProbabilityMeasure_slowStationaryTail hn
+      (measurableSet_slowBody n a) (convex_slowBody h) (ball_subset_slowBody h) j
+  infer_instance
+
+/-- **The law of one run at the per-phase pair, totalised.** -/
+noncomputable def perPhaseLaw (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Measure (perPhaseOmega n a) :=
+  if h : CVValidInput a ∧ 21 ≤ n then
+    @independentHeterogeneousRetainedPathLaw _ _ _ _ (perPhaseStreams n a)
+      (slowCanonicalCostedActiveSchedule (n := n) (by omega : 1 ≤ n)
+        (slowPhases n a + 1) (perPhaseStreams n a)
+        (q := perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+          (slowRadius n a))
+        (eps := slowEpsInt n a / 2) (s0 := slowSourceInitialVariance n)
+        (perPhase_canonical_hq0 h.2 (slowR2 n a) (slowEpsInt n a) (slowRadius n a))
+        (canonical_hs0 h.2) (interior a.1) (measurableSet_slowBody n a) 0 slowReferenceWarm
+        (perPhaseSlack n (slowPhases n a) (interior a.1))
+        (perPhaseBoundSqGen n (perPhaseExpSharp n (slowRadius n a))))
+      (fun i ↦ perPhaseIsMarkovKernel_costedSchedule h.1 h.2 i)
+      (slowInitialPair n) (slowPhases n a)
+  else Measure.dirac (Classical.arbitrary _)
+
+/-- **The unfolding of `perPhaseLaw` on the guarded branch.** -/
+theorem perPhaseLaw_of_valid {n : Nat} {a : Ttc.CVAdaptive.VolumeInput n}
+    (h : CVValidInput a) (hn : 21 ≤ n) :
+    perPhaseLaw n a =
+      @independentHeterogeneousRetainedPathLaw _ _ _ _ (perPhaseStreams n a)
+        (slowCanonicalCostedActiveSchedule (n := n) (by omega : 1 ≤ n)
+          (slowPhases n a + 1) (perPhaseStreams n a)
+          (q := perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+            (slowRadius n a))
+          (eps := slowEpsInt n a / 2) (s0 := slowSourceInitialVariance n)
+          (perPhase_canonical_hq0 hn (slowR2 n a) (slowEpsInt n a) (slowRadius n a))
+          (canonical_hs0 hn) (interior a.1) (measurableSet_slowBody n a) 0
+          slowReferenceWarm
+          (perPhaseSlack n (slowPhases n a) (interior a.1))
+          (perPhaseBoundSqGen n (perPhaseExpSharp n (slowRadius n a))))
+        (fun i ↦ perPhaseIsMarkovKernel_costedSchedule h hn i)
+        (slowInitialPair n) (slowPhases n a) :=
+  dif_pos ⟨h, hn⟩
+
+/-- The four total families at the clipped input. -/
+abbrev perPhaseFinalOmega (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) : Type :=
+  perPhaseOmega n (clipInput a)
+
+noncomputable def perPhaseFinalLaw (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Measure (perPhaseFinalOmega n a) := perPhaseLaw n (clipInput a)
+
+noncomputable def perPhaseFinalCost (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseFinalOmega n a → ENNReal := perPhaseCost n (clipInput a)
+
+noncomputable def perPhaseFinalValue (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseFinalOmega n a → Real := perPhaseValue n (clipInput a)
+
+theorem measurable_perPhaseFinalCost (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Measurable (perPhaseFinalCost n a) := measurable_perPhaseCost n (clipInput a)
+
+theorem measurable_perPhaseFinalValue (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Measurable (perPhaseFinalValue n a) := measurable_perPhaseValue n (clipInput a)
+
+/-! ## Step 7 — the two per-phase envelopes
+
+These are the slots the earlier version of this file had to borrow from
+`Ttc.TtcSlowRuntimeSharp`.  They are now the per-phase route's own: the retry cap of
+`Ttc.CVPerPhaseFrontier.scoreAwareRetries_perPhase_le` and the deadline envelope of
+`Ttc.CVPerPhaseFrontier.slowCanonicalSteps_perPhase_le`, both at the `n`-aware stream count
+and, for the deadline, at the `n`-aware truncation radius `perPhaseQ`.  The exponent bound
+`B := exp (8 R²)` is `Ttc.CVPerPhaseFrontier.perPhaseExpSharp_le` — dimension-free, exactly
+as on the sharp route. -/
+
+/-- The mixing parameter the per-phase schedule runs at, as a function of the declared
+squared radius alone. -/
+noncomputable def perPhaseQEnv (n : Nat) (R2 epsP : Real) : Real :=
+  perPhaseQ n (slowPhasesP n R2) (perPhaseStreamsP n R2 epsP) epsP (Real.sqrt R2)
+
+/-- **The per-phase per-run retry envelope.**  The cap of
+`Ttc.CVPerPhaseFrontier.scoreAwareRetries_perPhase_le` at the schedule's `(m+1, epsP/2)`. -/
+noncomputable def perPhaseLenv (n : Nat) (R2 epsP : Real) : Real :=
+  (perPhaseRetriesCapAt n (slowPhasesP n R2) (perPhaseStreamsP n R2 epsP) epsP
+    (Real.exp (8 * Real.sqrt R2 ^ 2)) : Real)
+
+/-- **The per-phase per-phase deadline envelope.**  This is
+`Ttc.CVPerPhaseFrontier.perPhaseStepsEnvelope` — the deadline of the compounding
+actual-warm schedule at the per-phase share floor and the `n`-aware radius — plus `2`,
+which pays for the ceiling and the `+ 1` of
+`Ttc.CVPerPhaseFrontier.slowCanonicalSteps_perPhase_le`. -/
+noncomputable def perPhaseTenv (n : Nat) (R2 epsP : Real) : Real :=
+  perPhaseStepsEnvelope n (slowPhasesP n R2) (perPhaseStreamsP n R2 epsP)
+    (perPhaseQEnv n R2 epsP) epsP (Real.exp (8 * Real.sqrt R2 ^ 2)) + 2
+
+/-! ## Step 8 — the `OV` and the `heff` pair -/
+
+/-- The overhead envelope of the combined P1 + P2 route, **parametric** in the retry and
+deadline envelopes.  Nothing is claimed to run within it at a general `(Lenv, Tenv)`. -/
+noncomputable def slowPerPhaseOVGen (n : Nat) (R2 eps p Lenv Tenv : Real) : Real :=
   64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
-    slowPerPhaseOverhead n R2 (min eps 1 / 2) p
-      (slowSharpLenv n R2 (min eps 1 / 2)) (slowSharpTenv n R2 (min eps 1 / 2))
+    slowPerPhaseOverhead n R2 (min eps 1 / 2) p Lenv Tenv
+
+/-- **The cost envelope `ttc_volume_runtime_perPhase` states.**  `slowPerPhaseOVGen` at the
+two **per-phase** envelope slots of Step 7 — the retry cap and the deadline envelope the
+per-phase analysis itself produces — and at the per-phase stream count inside
+`slowPerPhaseOverhead`.  It differs from `Ttc.TtcSlowRuntimeSharp.slowSharpOV` in all three
+of those places. -/
+noncomputable def slowPerPhaseOV (n : Nat) (R2 eps p : Real) : Real :=
+  slowPerPhaseOVGen n R2 eps p (perPhaseLenv n R2 (min eps 1 / 2))
+    (perPhaseTenv n R2 (min eps 1 / 2))
 
 /-- The per-input effective runtime constant, at the interior circumradius — the radius
 `Ttc.TtcCallCircumAdmissible.cvAdmCircum` declares. -/
-noncomputable def slowPerPhaseEffective (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) : Real :=
+noncomputable def slowPerPhaseEffective (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Real :=
   slowPerPhaseOV n ((circumR (interior a.1)) ^ 2) a.2.1 a.2.2
 
-theorem one_le_slowPerPhaseOV (n : Nat) (R2 eps p : Real) : 1 ≤ slowPerPhaseOV n R2 eps p := by
-  unfold slowPerPhaseOV
+theorem one_le_slowPerPhaseOVGen (n : Nat) (R2 eps p Lenv Tenv : Real) :
+    1 ≤ slowPerPhaseOVGen n R2 eps p Lenv Tenv := by
+  unfold slowPerPhaseOVGen
   have h1 : (1 : Real) ≤ (max 1 eps) ^ 2 := by
     have := le_max_left (1 : Real) eps
     nlinarith
   have h2 : (1 : Real) ≤ sourceLogFactor n ^ 2 := by
     have := one_le_sourceLogFactor (n : Real)
     nlinarith
-  have h3 : (1 : Real) ≤ slowPerPhaseOverhead n R2 (min eps 1 / 2) p
-      (slowSharpLenv n R2 (min eps 1 / 2)) (slowSharpTenv n R2 (min eps 1 / 2)) :=
+  have h3 : (1 : Real) ≤ slowPerPhaseOverhead n R2 (min eps 1 / 2) p Lenv Tenv :=
     one_le_slowPerPhaseOverhead _ _ _ _ _ _
   have h64 : (1 : Real) ≤ 64 * (max 1 eps) ^ 2 := by nlinarith
   have h641 : (1 : Real) ≤ 64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 := by nlinarith
   nlinarith
+
+theorem one_le_slowPerPhaseOV (n : Nat) (R2 eps p : Real) : 1 ≤ slowPerPhaseOV n R2 eps p :=
+  one_le_slowPerPhaseOVGen _ _ _ _ _ _
 
 theorem slowPerPhaseOV_nonneg (n : Nat) (R2 eps p : Real) : 0 ≤ slowPerPhaseOV n R2 eps p :=
   zero_le_one.trans (one_le_slowPerPhaseOV n R2 eps p)
@@ -479,16 +735,24 @@ theorem slowPerPhaseEffective_le_slowPerPhaseOV
   show slowPerPhaseOV n ((circumR (interior K)) ^ 2) eps p ≤ slowPerPhaseOV n R2 eps p
   rw [hK.2]
 
-/-! ## Step 5 — the relationship the capstone would have stated -/
+/-! ## Step 9 — the pre-repair comparison, preserved
 
-/-- **`slowPerPhaseOV ≤ slowSharpOV`.**  The two differ in exactly one argument — the
-stream count of the retained-scalar envelope — and
+The earlier version of this file stated `slowPerPhaseOV ≤ slowSharpOV` because its
+`slowPerPhaseOV` sat at the **sharp** route's `(Lenv, Tenv)`; the only difference between
+the two was the stream count of the retained-scalar envelope.  Now that `slowPerPhaseOV`
+sits at the per-phase envelopes, that comparison is a statement about
+`slowPerPhaseOVGen` at the sharp slots, and it is preserved verbatim under that name.  It
+is **not** a comparison of the capstone's envelope with the sharp capstone's: see the
+module docstring. -/
+
+/-- **`slowPerPhaseOVGen` at the sharp envelopes is below `slowSharpOV`.**  The two differ
+in exactly one argument — the stream count of the retained-scalar envelope — and
 `nmul_slowPerPhaseRetained_le_three_slowActualRetained` says that argument is smaller by
-the factor `n / 3`.  The hypothesis `hnm` is the phase-count side condition of
-`Ttc.CVPerPhaseSamples.perPhaseRuntimeSamples_saving`. -/
-theorem slowPerPhaseOV_le_slowSharpOV
+the factor `n / 3`. -/
+theorem slowPerPhaseOVGen_sharpEnv_le_slowSharpOV
     {n : Nat} {R2 eps p : Real} (hn : 4 ≤ n) (heps : 0 < eps) :
-    slowPerPhaseOV n R2 eps p ≤ slowSharpOV n R2 eps p := by
+    slowPerPhaseOVGen n R2 eps p (slowSharpLenv n R2 (min eps 1 / 2))
+        (slowSharpTenv n R2 (min eps 1 / 2)) ≤ slowSharpOV n R2 eps p := by
   have hb0 : (0 : Real) < min eps 1 / 2 := by
     have : (0 : Real) < min eps 1 := lt_min heps (by norm_num)
     linarith
@@ -514,8 +778,352 @@ theorem slowPerPhaseOV_le_slowSharpOV
     have h1 : (0 : Real) ≤ (max 1 eps) ^ 2 := sq_nonneg _
     have h2 : (0 : Real) ≤ sourceLogFactor n ^ 2 := sq_nonneg _
     positivity
-  unfold slowPerPhaseOV slowSharpOV
+  unfold slowPerPhaseOVGen slowSharpOV
   exact mul_le_mul_of_nonneg_left hover hpre
+
+/-! ## Step 10 — the same parameters at a concrete input -/
+
+/-- `perPhaseLenv` at the input's own declared data. -/
+noncomputable def perPhaseLenvAt (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) : Real :=
+  perPhaseLenv n (slowR2 n a) (slowEpsInt n a)
+
+/-- `perPhaseTenv` at the input's own declared data. -/
+noncomputable def perPhaseTenvAt (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) : Real :=
+  perPhaseTenv n (slowR2 n a) (slowEpsInt n a)
+
+theorem sqrt_slowR2' (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Real.sqrt (slowR2 n a) = slowRadius n a :=
+  Real.sqrt_sq (circumR_nonneg _)
+
+theorem perPhaseLenvAt_eq (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseLenvAt n a =
+      (perPhaseRetriesCapAt n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (Real.exp (8 * slowRadius n a ^ 2)) : Real) := by
+  unfold perPhaseLenvAt perPhaseLenv
+  rw [sqrt_slowR2']
+  rfl
+
+theorem perPhaseTenvAt_eq (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    perPhaseTenvAt n a =
+      perPhaseStepsEnvelope n (slowPhases n a) (perPhaseStreams n a)
+        (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+          (slowRadius n a))
+        (slowEpsInt n a) (Real.exp (8 * slowRadius n a ^ 2)) + 2 := by
+  unfold perPhaseTenvAt perPhaseTenv perPhaseQEnv
+  rw [sqrt_slowR2']
+  rfl
+
+/-- The realised accuracy of the per-phase run. -/
+noncomputable def perPhaseRealisedAccuracy (n : Nat) (a : Ttc.CVAdaptive.VolumeInput n) :
+    Real :=
+  slowAccuracyRequested (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+
+/-! ## Step 11 — the producer, with every binder discharged at the per-phase pair
+
+`Ttc.CVPerPhaseFrontier.exists_slowOneRunCertificate_canonical_perPhase` with
+
+* `(E, S)` from `Ttc.CVPerPhaseFrontier.perPhaseSharp_supData` at the P1-sharp exponent;
+* the five estimator-moment binders from
+  `Ttc.CVPerPhaseFrontier.perPhase_canonical_momentBinders_sharp`, whose `hnm` is
+  `n_le_slowPhasesP_add_one` above;
+* `hsteps` from `Ttc.CVPerPhaseFrontier.perPhase_canonical_hsteps`;
+* `hretries` from `Ttc.CVPerPhaseFrontier.scoreAwareRetries_perPhase_le`;
+* `hscalar` from `slowPerPhase_hscalar` above.
+
+Nothing is assumed. -/
+
+/-- **The one-run certificate on a valid input of accuracy at most one, at the per-phase
+pair.** -/
+theorem exists_slowPerPhaseCertificate_of_valid
+    {n : Nat} (hn : 21 ≤ n) {a : Ttc.CVAdaptive.VolumeInput n}
+    (h : CVValidInput a) (heps1 : a.2.1 ≤ 1) :
+    ∃ r : Measure (perPhaseOmega n a),
+      SourceReferenceTVOneRunCertificate (perPhaseLaw n a) r (perPhaseCost n a)
+        (perPhaseValue n a)
+        (slowPerPhaseOverhead n (slowR2 n a) (slowEpsInt n a) a.2.2
+          (perPhaseLenvAt n a) (perPhaseTenvAt n a))
+        n (circumR (interior a.1)) (perPhaseRealisedAccuracy n a)
+        ((1 - perPhaseRealisedAccuracy n a) * (volume (interior a.1)).toReal)
+        ((1 + perPhaseRealisedAccuracy n a) * (volume (interior a.1)).toReal) := by
+  have hn1 : 1 ≤ n := by omega
+  obtain ⟨hK, hKc, hball, hfin, hvolEq, hKR, hRR⟩ :=
+    Ttc.CVValidInteriorBridge.validInput_interior_facts h h.isBounded
+  have heps : (0 : Real) < slowEpsInt n a := by
+    have := h.1; unfold slowEpsInt; linarith
+  have heps1' : slowEpsInt n a ≤ 1 := by unfold slowEpsInt; linarith
+  have hB0 : (0 : Real) < Real.exp (8 * circumR (interior a.1) ^ 2) := Real.exp_pos _
+  haveI : IsProbabilityMeasure (slowInitialPair n) :=
+    canonical_isProbabilityMeasure_slowInitialPair hn
+  haveI hprob : ∀ j, IsProbabilityMeasure (slowStationaryTail n
+      (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (circumR (interior a.1)))
+      (slowSourceInitialVariance n) (interior a.1) j) := fun j ↦
+    perPhase_canonical_isProbabilityMeasure_slowStationaryTail hn hK hKc hball j
+  haveI hmk := fun i ↦ perPhaseIsMarkovKernel_costedSchedule (a := a) h hn i
+  haveI hQmk : ∀ i, IsMarkovKernel (slowCanonicalActiveSchedule (n := n) hn1
+      (slowCanonicalPhases n (slowR2 n a) + 1)
+      (perPhaseRuntimeSamples n (slowCanonicalPhases n (slowR2 n a)) (slowEpsInt n a))
+      (q := perPhaseQ n (slowCanonicalPhases n (slowR2 n a))
+        (perPhaseRuntimeSamples n (slowCanonicalPhases n (slowR2 n a)) (slowEpsInt n a))
+        (slowEpsInt n a) (circumR (interior a.1)))
+      (eps := slowEpsInt n a / 2) (s0 := slowSourceInitialVariance n)
+      (perPhase_canonical_hq0 hn (slowR2 n a) (slowEpsInt n a) (circumR (interior a.1)))
+      (canonical_hs0 hn) (interior a.1) hK 0 slowReferenceWarm
+      (perPhaseSlack n (slowCanonicalPhases n (slowR2 n a)) (interior a.1))
+      (perPhaseBoundSqGen n (perPhaseExpSharp n (circumR (interior a.1)))) i) := fun i ↦
+    perPhaseIsMarkovKernel_activeSchedule hn (R2 := slowR2 n a)
+      (eps := slowEpsInt n a) (R := circumR (interior a.1)) hK hKc hball i
+  -- the `(E, S)` data of the combined P1 + P2 family
+  obtain ⟨hE0, hS0, hSbound, hSloose, hSE⟩ :=
+    perPhaseSharp_supData (n := n) hn1 (slowPhases n a) hKR
+      (perPhase_canonical_hR2 hn (le_refl (slowR2 n a)))
+  -- the five estimator-moment binders
+  have hmoments := perPhase_canonical_momentBinders_sharp hn
+    (eps := slowEpsInt n a) (R := circumR (interior a.1)) (R2 := slowR2 n a)
+    heps heps1' (n_le_slowPhasesP_add_one hn1 (slowR2 n a)) (le_refl _)
+    hK hKc hball hfin hKR rfl
+  -- the per-phase deadline
+  have hsteps := perPhase_canonical_hsteps hn
+    (eps := slowEpsInt n a) (R := circumR (interior a.1)) (R2 := slowR2 n a)
+    heps heps1' hK hball hfin
+  -- the per-phase retry cap
+  have hretries : ∀ i,
+      scoreAwareRetries (slowPhases n a + 1) (perPhaseStreams n a) (slowEpsInt n a / 2)
+        (perPhaseSlack n (slowPhases n a) (interior a.1))
+        (perPhaseBoundSqGen n (perPhaseExpSharp n (circumR (interior a.1)))) i ≤
+      perPhaseRetriesCapAt n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (Real.exp (8 * circumR (interior a.1) ^ 2)) := fun i ↦
+    scoreAwareRetries_perPhase_le hn1 (by linarith : (0 : Real) < slowEpsInt n a / 2)
+      (fun j ↦ perPhaseExpSharp_pos j) (fun j ↦ perPhaseExpSharp_le hn1 j)
+      hK hball hfin i
+  -- the two real envelopes, and the casts the cost layer consumes
+  have hEnv0 : 0 ≤ perPhaseStepsEnvelope n (slowPhases n a) (perPhaseStreams n a)
+      (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (circumR (interior a.1)))
+      (slowEpsInt n a) (Real.exp (8 * circumR (interior a.1) ^ 2)) :=
+    perPhaseStepsEnvelope_nonneg hn1 heps heps1' hB0
+  have hLcast : (perPhaseRetriesCapAt n (slowPhases n a) (perPhaseStreams n a)
+      (slowEpsInt n a) (Real.exp (8 * circumR (interior a.1) ^ 2)) : Real) ≤ perPhaseLenvAt n a :=
+    le_of_eq (perPhaseLenvAt_eq n a).symm
+  have hLenv0 : (0 : Real) ≤ perPhaseLenvAt n a := by
+    rw [perPhaseLenvAt_eq]; positivity
+  have hTcast : ((⌈perPhaseStepsEnvelope n (slowPhases n a) (perPhaseStreams n a)
+        (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+          (circumR (interior a.1)))
+        (slowEpsInt n a) (Real.exp (8 * circumR (interior a.1) ^ 2))⌉₊ + 1 : Nat) : Real) ≤
+      perPhaseTenvAt n a := by
+    rw [perPhaseTenvAt_eq]
+    exact cast_perPhaseStepsCap_le n _ _ _ _ _ hEnv0
+  have hTenv0 : (0 : Real) ≤ perPhaseTenvAt n a := by
+    rw [perPhaseTenvAt_eq]
+    have h2 : (0 : Real) ≤ perPhaseStepsEnvelope n (slowPhases n a) (perPhaseStreams n a)
+        (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+          (slowRadius n a))
+        (slowEpsInt n a) (Real.exp (8 * slowRadius n a ^ 2)) := hEnv0
+    linarith
+  -- the cost side
+  have hscalar := slowPerPhase_hscalar n hn1
+    (m := slowPhases n a) (k := perPhaseStreams n a)
+    (L := perPhaseRetriesCapAt n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+      (Real.exp (8 * circumR (interior a.1) ^ 2)))
+    (T := ⌈perPhaseStepsEnvelope n (slowPhases n a) (perPhaseStreams n a)
+      (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (circumR (interior a.1)))
+      (slowEpsInt n a) (Real.exp (8 * circumR (interior a.1) ^ 2))⌉₊ + 1)
+    (R := circumR (interior a.1)) (requested := perPhaseRealisedAccuracy n a) (R2 := slowR2 n a)
+    (epsP := slowEpsInt n a) (p := a.2.2)
+    (Lenv := perPhaseLenvAt n a) (Tenv := perPhaseTenvAt n a)
+    (slowAccuracyRequested_half_pos (slowPhases n a) (perPhaseStreams n a) h.1)
+    (slowAccuracyRequested_half_lt_one_any (slowPhases n a) (perPhaseStreams n a)
+      h.1 heps1)
+    (le_refl _) (le_refl _) hLcast hTcast hLenv0 hTenv0
+  obtain ⟨r, hr⟩ := exists_slowOneRunCertificate_canonical_perPhase hn
+    (eps := slowEpsInt n a) (R := circumR (interior a.1)) (R2 := slowR2 n a)
+    heps heps1' hK hKc hball hfin hE0 hS0 hSbound hSloose hSE rfl
+    hmoments.1 hmoments.2.1 hmoments.2.2.1 hmoments.2.2.2.1 hmoments.2.2.2.2
+    (runtimeConstant := slowPerPhaseOverhead n (slowR2 n a) (slowEpsInt n a) a.2.2
+      (perPhaseLenvAt n a) (perPhaseTenvAt n a))
+    (⌈perPhaseStepsEnvelope n (slowPhases n a) (perPhaseStreams n a)
+      (perPhaseQ n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+        (circumR (interior a.1)))
+      (slowEpsInt n a) (Real.exp (8 * circumR (interior a.1) ^ 2))⌉₊ + 1)
+    (perPhaseRetriesCapAt n (slowPhases n a) (perPhaseStreams n a) (slowEpsInt n a)
+      (Real.exp (8 * circumR (interior a.1) ^ 2)))
+    (fun i hi ↦ hsteps i hi) (fun i _ ↦ hretries i) hscalar
+  refine ⟨r, ?_⟩
+  rw [perPhaseLaw_of_valid h hn]
+  exact hr
+
+/-! ## Step 12 — the weakening -/
+
+/-- **The per-phase certificate at the consumer's parameters.** -/
+theorem exists_slowPerPhaseFinalCertificate
+    {n : Nat} (hn : 21 ≤ n) {a : Ttc.CVAdaptive.VolumeInput n} (h : CVValidInput a) :
+    ∃ r : Measure (perPhaseFinalOmega n a),
+      SourceReferenceTVOneRunCertificate (perPhaseFinalLaw n a) r (perPhaseFinalCost n a)
+        (perPhaseFinalValue n a) (slowPerPhaseEffective n a) n (circumR (interior a.1))
+        a.2.1 ((1 - a.2.1) * (volume a.1).toReal)
+        ((1 + a.2.1) * (volume a.1).toReal) := by
+  have hn1 : 1 ≤ n := by omega
+  have hb0 : (0 : Real) < min a.2.1 1 := clipInput_eps_pos h
+  have hb1 : min a.2.1 1 ≤ 1 := min_le_right _ _
+  have hR0 : (0 : Real) ≤ circumR (interior a.1) := circumR_nonneg _
+  obtain ⟨r, hr⟩ := exists_slowPerPhaseCertificate_of_valid hn (clipInput_valid h) hb1
+  refine ⟨r, hr.weaken_of_subset ?_ ?_⟩
+  · -- the budget
+    have hrc0 : (0 : Real) ≤ slowPerPhaseOverhead n (slowR2 n (clipInput a))
+        (slowEpsInt n (clipInput a)) a.2.2
+        (perPhaseLenvAt n (clipInput a)) (perPhaseTenvAt n (clipInput a)) :=
+      slowPerPhaseOverhead_nonneg _ _ _ _ _ _
+    have hreq0 : 0 < perPhaseRealisedAccuracy n (clipInput a) :=
+      slowAccuracyRequested_half_pos (slowPhases n (clipInput a))
+        (perPhaseStreams n (clipInput a)) hb0
+    have hhalf : min a.2.1 1 / 2 ≤ perPhaseRealisedAccuracy n (clipInput a) :=
+      half_le_slowAccuracyRequested (slowPhases n (clipInput a))
+        (perPhaseStreams n (clipInput a)) hb0
+    have habs := Ttc.CVBudgetEpsAbsorb.sourceOneRunQueryBudget_absorb
+      (rc := slowPerPhaseOverhead n (slowR2 n (clipInput a))
+        (slowEpsInt n (clipInput a)) a.2.2
+        (perPhaseLenvAt n (clipInput a)) (perPhaseTenvAt n (clipInput a)))
+      (R := circumR (interior a.1)) (R' := circumR (interior a.1))
+      (e := perPhaseRealisedAccuracy n (clipInput a)) (eps := min a.2.1 1) (n := n)
+      hrc0 hn1 hb0 hb1 hreq0 hhalf hR0 (le_refl _)
+    have hclip := sourceOneRunQueryBudget_clip_eps (n := n)
+      (rc := 64 * slowPerPhaseOverhead n (slowR2 n (clipInput a))
+        (slowEpsInt n (clipInput a)) a.2.2
+        (perPhaseLenvAt n (clipInput a)) (perPhaseTenvAt n (clipInput a)))
+      (R := circumR (interior a.1)) (eps := a.2.1) (by positivity) h.1
+    have hrw : slowPerPhaseEffective n a =
+        64 * (max 1 a.2.1) ^ 2 * sourceLogFactor n ^ 2 *
+          slowPerPhaseOverhead n (slowR2 n (clipInput a)) (slowEpsInt n (clipInput a))
+            a.2.2 (perPhaseLenvAt n (clipInput a))
+            (perPhaseTenvAt n (clipInput a)) := rfl
+    have hconst : 64 * slowPerPhaseOverhead n (slowR2 n (clipInput a))
+          (slowEpsInt n (clipInput a)) a.2.2
+          (perPhaseLenvAt n (clipInput a)) (perPhaseTenvAt n (clipInput a)) *
+          (max 1 a.2.1) ^ 2 * sourceLogFactor n ^ 2 ≤ slowPerPhaseEffective n a :=
+      le_of_eq (by rw [hrw]; ring)
+    have hcore : (0 : Real) ≤
+        max (circumR (interior a.1) ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / a.2.1 ^ 2 *
+          sourceLogFactor n ^ 2 * sourceLogFactor (1 / a.2.1) ^ 2 *
+          sourceLogFactor ((n : Real) / a.2.1) ^ 2 := by
+      have h0 : (0 : Real) ≤
+          max (circumR (interior a.1) ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) :=
+        le_max_of_le_right (by positivity)
+      have h1 : (0 : Real) ≤ sourceLogFactor (1 / a.2.1) := (sourceLogFactor_pos _).le
+      have h2 : (0 : Real) ≤ sourceLogFactor ((n : Real) / a.2.1) :=
+        (sourceLogFactor_pos _).le
+      have h3 : (0 : Real) ≤ sourceLogFactor n := (sourceLogFactor_pos _).le
+      have h4 : (0 : Real) ≤
+          max (circumR (interior a.1) ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) /
+            a.2.1 ^ 2 := by positivity
+      positivity
+    exact habs.trans (hclip.trans
+      (Ttc.CVSourceReferenceWeaken.sourceOneRunQueryBudget_mono_constant hconst hcore))
+  · -- the accepted output window
+    have hle : perPhaseRealisedAccuracy n (clipInput a) ≤ a.2.1 :=
+      (slowAccuracyRequested_half_le_any (slowPhases n (clipInput a))
+        (perPhaseStreams n (clipInput a)) hb0 hb1).trans (min_le_left _ _)
+    exact Ttc.CVSourceReferenceWeaken.Icc_relErr_subset hle ENNReal.toReal_nonneg
+      (Ttc.CVValidInteriorBridge.toReal_volume_interior_eq_of_convex h.2.2.2.1)
+
+/-! ## Step 13 — the `H` binder and the implementation -/
+
+/-- **The `H` binder of `Ttc.TtcShapedRuntime.ttc_runtime_of_effectiveCertificatesGen`**,
+at `radialR := fun n K ↦ circumR (interior K)`, **with no residual hypothesis.** -/
+theorem slowPerPhaseCertificate_H :
+    ∀ n, 21 ≤ n → ∀ a : Ttc.CVAdaptive.VolumeInput n, CVValidInput a →
+      ∃ r : Measure (perPhaseFinalOmega n a),
+        SourceReferenceTVOneRunCertificate (perPhaseFinalLaw n a) r
+          (perPhaseFinalCost n a) (perPhaseFinalValue n a) (slowPerPhaseEffective n a) n
+          (circumR (interior a.1)) a.2.1 ((1 - a.2.1) * (volume a.1).toReal)
+          ((1 + a.2.1) * (volume a.1).toReal) :=
+  fun _ hn _ h ↦ exists_slowPerPhaseFinalCertificate hn h
+
+/-- **The TTC volume implementation built from the slow canonical route at the combined
+P1 + P2 slack / transport / stream-count / radius choice**, with no residual hypothesis. -/
+noncomputable def slowPerPhaseImplementation :
+    Ttc.CVShaped.CVShapedExpectedImplementation cvAdmCircum
+      (Ttc.TtcShapedRuntime.shapeOf slowPerPhaseOV) :=
+  Ttc.TtcShapedRuntime.implementationOfEffectiveCertificatesGen cvAdmCircum
+    cvAdmCircum_imp_cvAdmissible (fun _ K ↦ circumR (interior K))
+    circumInterior_sq_le_of_cvAdmCircum slowPerPhaseOV one_le_slowPerPhaseOV
+    slowPerPhaseEffective slowPerPhaseEffective_nonneg slowPerPhaseEffective_le_slowPerPhaseOV
+    perPhaseFinalOmega perPhaseFinalLaw perPhaseFinalCost perPhaseFinalValue
+    measurable_perPhaseFinalCost measurable_perPhaseFinalValue slowPerPhaseCertificate_H
+
+section Capstone
+
+open Ttc.CVShaped
+open Ttc.TtcShapedRuntime
+open Ttc.TTCCVExpectedImplementation
+open Ttc.ConcreteHybridCanonicalOwnerPoly
+open Ttc.CostedCanonicalOwnerTTCPlugin
+open Ttc.TTCSourceSharpOperationalFinal
+open Ttc.TTCSourceSharpOperationalTheorem
+
+variable {A : Type*}
+
+/-- **TTC's accuracy and query cost, from the slow canonical volume construction at the
+combined P1 + P2 pair — unconditionally.**
+
+There is no oracle binder, no certificate binder, no implementation binder and **no
+cost-side binder**: the volume subroutine is `slowPerPhaseImplementation.algorithm n`,
+built here out of the slow canonical Gaussian-cooling construction run at
+`Ttc.CVPerPhaseFrontier.perPhaseSlack`,
+`Ttc.CVPerPhaseFrontier.perPhaseBoundSqGen n (perPhaseExpSharp n R)`, the `n`-aware stream
+count `Ttc.CVPerPhaseSamples.perPhaseRuntimeSamples` and the `n`-aware truncation radius
+`Ttc.CVPerPhaseFrontier.perPhaseQ`; the two conjuncts are about the one law
+`canonicalFullOperationalLaw V P` that executes it.
+
+**The cost envelope.**  The volume term is the per-cube sum of
+`cvComplexityShapeClipped * slowPerPhaseOV`, each cube taken at **its own interior
+circumradius squared**, where
+
+  `slowPerPhaseOV n R2 eps p = 64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
+      slowPerPhaseOverhead n R2 (min eps 1 / 2) p
+        (perPhaseLenv n R2 (min eps 1 / 2)) (perPhaseTenv n R2 (min eps 1 / 2))`
+
+and `slowPerPhaseOverhead` is `Ttc.CVSlowActualCostEnvelope.slowActualOverhead` at the
+**per-phase stream count** `perPhaseStreamsP`.  All three per-phase substitutions — stream
+count, retry cap, deadline envelope — are inside the envelope this theorem states; see the
+module docstring for the precise scope of what is and is not certified.
+
+It is **not** the paper's `O(m · n^5 · rho^2 · r_max)` exponents, and no constant here is
+pretending to be one: what is proved is a bound at this explicit shape. -/
+theorem ttc_volume_runtime_perPhase
+    {n : Nat} (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
+    (h_eps_pos : 0 < eps) (h_eps_le : eps ≤ 1)
+    (h_delta_pos : 0 < delta) (h_delta_le : delta ≤ 1)
+    (hn : 21 ≤ n) (hphi : phi.IsPositive)
+    (hvol : 0 < volSol (atomSet atoms) phi) :
+    let deltaRun := 4 * delta / 5
+    let hn1 : 1 ≤ n := le_trans (by norm_num) hn
+    let I := slowPerPhaseImplementation
+    let V := I.algorithm n
+    letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
+    let P := canonicalCappedPolyHybridPlugin atoms phi eps deltaRun V
+      h_eps_pos h_eps_le hn1 hphi hvol
+    (1 - delta ≤ (canonicalFullOperationalLaw V P).real
+      {r | r.1 ∈ relErr eps (volSol (atomSet atoms) phi)}) ∧
+    ((∫⁻ r, r.2 ∂canonicalFullOperationalLaw V P) ≤
+      shapedVolumeQueryEnvelopeAt I atoms phi eps deltaRun
+        (fun j ↦ (circumR (interior (callBody atoms phi eps deltaRun j))) ^ 2) +
+        canonicalCappedSampleQueryEnvelope atoms phi eps deltaRun) :=
+  ttc_runtime_of_effectiveCertificatesGen cvAdmCircum cvAdmCircum_imp_cvAdmissible
+    (fun _ K ↦ circumR (interior K)) circumInterior_sq_le_of_cvAdmCircum
+    slowPerPhaseOV one_le_slowPerPhaseOV slowPerPhaseEffective slowPerPhaseEffective_nonneg
+    slowPerPhaseEffective_le_slowPerPhaseOV perPhaseFinalOmega perPhaseFinalLaw
+    perPhaseFinalCost perPhaseFinalValue
+    measurable_perPhaseFinalCost measurable_perPhaseFinalValue
+    slowPerPhaseCertificate_H
+    atoms phi eps delta
+    (fun j ↦ (circumR (interior (callBody atoms phi eps (4 * delta / 5) j))) ^ 2)
+    h_eps_pos h_eps_le h_delta_pos h_delta_le hn hphi hvol
+    (fun j ↦ cvAdmCircum_callBody atoms phi eps (4 * delta / 5)
+      h_eps_pos h_eps_le (le_trans (by norm_num) hn) hphi hvol j)
+
+end Capstone
 
 section AxiomCheck
 
@@ -530,16 +1138,39 @@ section AxiomCheck
 #print axioms slowPerPhaseOverhead
 #print axioms one_le_slowPerPhaseOverhead
 #print axioms slowPerPhaseOverhead_nonneg
-#print axioms slowPerPhaseOV_nonneg
-#print axioms slowPerPhaseEffective
-#print axioms slowPerPhaseEffective_nonneg
 #print axioms nmul_slowPerPhaseRetained_le_three_slowActualRetained
 #print axioms slowPerPhaseOverhead_le_slowActualOverhead
 #print axioms slowPerPhase_hscalar
+#print axioms scoreAwareMeanGamma_le_div_hundred
+#print axioms scoreAwareAccuracyBeta_le_quarter
+#print axioms slowAccuracyRequested_half_lt_one_any
+#print axioms slowAccuracyRequested_half_le_any
+#print axioms perPhaseStreams
+#print axioms measurable_perPhaseCost
+#print axioms measurable_perPhaseValue
+#print axioms perPhaseIsMarkovKernel_activeSchedule
+#print axioms perPhaseIsMarkovKernel_costedSchedule
+#print axioms perPhaseLaw
+#print axioms perPhaseLaw_of_valid
+#print axioms perPhaseQEnv
+#print axioms perPhaseLenv
+#print axioms perPhaseTenv
+#print axioms slowPerPhaseOVGen
 #print axioms slowPerPhaseOV
 #print axioms one_le_slowPerPhaseOV
+#print axioms slowPerPhaseOV_nonneg
+#print axioms slowPerPhaseEffective
+#print axioms slowPerPhaseEffective_nonneg
 #print axioms slowPerPhaseEffective_le_slowPerPhaseOV
-#print axioms slowPerPhaseOV_le_slowSharpOV
+#print axioms slowPerPhaseOVGen_sharpEnv_le_slowSharpOV
+#print axioms perPhaseLenvAt_eq
+#print axioms perPhaseTenvAt_eq
+#print axioms perPhaseRealisedAccuracy
+#print axioms exists_slowPerPhaseCertificate_of_valid
+#print axioms exists_slowPerPhaseFinalCertificate
+#print axioms slowPerPhaseCertificate_H
+#print axioms slowPerPhaseImplementation
+#print axioms ttc_volume_runtime_perPhase
 
 end AxiomCheck
 

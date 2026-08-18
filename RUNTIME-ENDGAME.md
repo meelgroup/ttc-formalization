@@ -346,8 +346,8 @@ overhead  =  k · mφ · 10 · Lenv · Tenv · 2e
 |---|---|---|---|---|
 | before lever 2 | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
 | lever 2 (operative) | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
-| + P1 sharp (proved, not yet wired) | `ρ²` | `n³ρ⁴` | `n⁵L²ρ⁶/ε²` | `Õ(m n⁷ρ⁸/ε⁴)` |
-| + P2 per-phase (proved, not yet wired) | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁶ρ⁸/ε⁴)` |
+| + P1 sharp (wired) | `ρ²` | `n³ρ⁴` | `n⁵L²ρ⁶/ε²` | `Õ(m n⁷ρ⁸/ε⁴)` |
+| **+ P2 per-phase (wired, operative)** | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁶ρ⁸/ε⁴)` |
 
 ### P1 is OPERATIVE as of 2026-08-18
 
