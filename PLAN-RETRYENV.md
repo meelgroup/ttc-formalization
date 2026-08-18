@@ -194,17 +194,39 @@ bodies TTC actually calls on (`callBody`, boxes cut by the DNF) it may be far be
 general convex bound. **That is the one open geometric question in this lever, and it is
 worth asking before settling for the `min`.**
 
-## 5. Build order
+## 5. Build order — status
 
-1. `ell_ge_of_dist_boundary` — the cone estimate `ℓ(x) ≥ c·(u/δ)^{n-1}/n`. New; elementary.
-2. `volume_lt_dist_boundary_le` — `vol{u < λ} ≤ nλ·vol K'` from `(1-λ)K' ⊆ {u ≥ λ}`.
-3. `lintegral_ell_rpow_neg_le` — the `α`-th moment bound, `α = 1/(2(n-1))`.
-4. `lintegral_le_of_isWarm_holder` — Hölder replacement for `lintegral_le_of_isWarm`, in
-   `Arlib/MarkovChains/Continuous/`; Mathlib's `ENNReal.lintegral_mul_le_Lp_mul_Lq`.
-5. `sum_survival_rpow_le` — `∑ⱼ sⱼ^{1/p'} ≤ L·η^{1/p'} + 1/(1−r^{1/p'})`.
-6. `lintegral_accumulatedCost_embeddedMarginal_le_holder` — the replacement for `…_le`.
-7. Rewire `slowUniformRetainedRealEnvelope` (`CVSlowEffectiveOverhead.lean:873`), then
-   `perPhaseLenv`, then the capstone.
+1. ✅ `ofReal_div_pow_le_ell_of_ball_subset` — the ball estimate. *(A ball, not a cone.)*
+2. ✅ `measure_lt_ell_le_mul` — the layer bound, weight-generic via `MeasureShrinks`.
+3. ✅ `lintegral_ell_rpow_neg_le` — `∫_K ell^{-1/(2n)} dmu ≤ 6·mu K`, and
+   `lintegral_ell_rpow_neg_gaussian_le` / `exists_localConductanceMoment_witness` discharging
+   and witnessing the weight hypothesis.
+4. ✅ `lintegral_ell_rpow_neg_ellGaussianProb_le` — the bridge to the speedy walk's own
+   reference law, stated *relative to its first moment* so the normalisation cancels.
+5. ✅ `lintegral_le_of_isWarm_holder`, `sum_rpow_le_of_le_add_pow`,
+   `sum_lintegral_le_of_isWarm_holder` — the lever, abstractly
+   (`Arlib/MarkovChains/Continuous/WarmHolder.lean`). Plus `rpow_lintegral_le_lintegral_rpow`
+   (Jensen) and `lintegral_rpow_sum_le` (Minkowski).
+6. ✅ `Ttc.CVHolderRetryCost.lintegral_stepCost_rpow_le` — **`∫ ((ell·acc)⁻¹)^{1+1/(2n)} dπ ≤
+   80`, an absolute constant.** This is the `L^p(π)` hypothesis the lever needs, and it is
+   the whole content of the route: at `p = 1` the same integral is the *existing* `10/3`, and
+   the fractional moment says the `p`-th costs only a bounded factor more.
+7. ⬜ **The retry-cost lemma** — apply `sum_lintegral_le_of_isWarm_holder` to
+   `lintegral_accumulatedCost_embeddedMarginal`'s exact identity. Two obstacles, both known:
+   * `candidateMeanⱼ` is a `t`-step mean, so its `L^p(π)` norm needs Minkowski over kernel
+     iterates plus invariance (`Kernel.Invariant (lazy (speedyMetropolisGaussian …))
+     (ellGaussianProb …)`, already proved at `SpeedyGaussian.lean:484`); Jensen and Minkowski
+     are in place for this.
+   * `lintegral_lazyProperTotalCost_le_half_exitMeanSum` carries `[IsProbabilityMeasure mu]`
+     while `runningCurrentⱼ` is **unnormalised** with mass `sⱼ`. Normalising at `νⱼ := sⱼ⁻¹ •
+     μⱼ` and warmness `M/sⱼ` lands at the same `M^{1/p}·sⱼ^{1/q}`, since
+     `sⱼ·(M/sⱼ)^{1/p} = M^{1/p}·sⱼ^{1/q}`; it needs `iterate P (c • μ) = c • iterate P μ`.
+8. ⬜ Rewire `slowUniformRetainedRealEnvelope` (`CVSlowEffectiveOverhead.lean:873`), then
+   `perPhaseLenv`, then a **fourth capstone**.
 
-Steps 1–3 are the crux and are self-contained: if the cone estimate does not formalise, the
-route dies there and nothing downstream is wasted.
+**Where the honest stopping point is.** Steps 1–6 are the mathematics, and they are done and
+axiom-clean. Steps 7–8 are the engineering, and step 8 is the known long pole: the recorded
+warning in `RUNTIME-ENDGAME.md` — *any* new capstone must mirror the law layer again — applies,
+and this one additionally threads `η`, `r` and the survival hypothesis to call sites that today
+receive only `hwarm`. Until step 8 lands, **the operative complexity is unchanged at
+`Õ(m n⁶ρ⁸/ε⁴)`**: Arlib and the cost lemma certify mathematics, not TTC's runtime.

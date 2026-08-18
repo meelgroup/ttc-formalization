@@ -1422,13 +1422,51 @@ cannot shed.
 
 * **`ρ⁶`.** Of this, `ρ⁴` is a proved **lower bound** — `CVRetryDeadlineSplit`'s
   `log_ratio_sq_le_scoreAwareRetries_mul_payload` shows it is structural to the TV
-  accounting, not an artefact of a lossy bound. One `ρ²` is recoverable by the L²(π)
-  cost-side route planned in `RUNTIME-ENDGAME.md`.
+  accounting, not an artefact of a lossy bound. One `ρ²` is recoverable on the cost side —
+  see the next subsection, which corrects both the route and its advertised price.
 * **One factor `n` — and, CORRECTED 2026-08-18, this is NOT the same obstruction as the last `ρ²`.** `Tenv ∝ n³` via
   `σ_m · n / δ_Q²` with `δ_Q = 1/(2n)` — the `radiusQDelta` `min` resolving to `1/(2n)`
   rather than `√σ/(max 8 (2q)√n)`. On the other branch `σ/δ² = q²n` is both `ρ`-free
   and one power of `n` cheaper. This is a local-conductance question: research.
 * **`thm:decompose`** — still not formalised at all, still not planned.
+
+### The `retryEnv` lever: Route A dead, Route B priced, Route C live (2026-08-18)
+
+`RUNTIME-ENDGAME.md` advertised this as "one factor `L ≈ ρ²` off the total". That was a
+payoff quoted without its price, and the route it named does not work. Full analysis in
+`PLAN-RETRYENV.md`; the load-bearing findings:
+
+1. **Route A (a pointwise cost bound) is dead.** `roundQueryCost` is a sum of
+   `Arlib.MarkovChains.properProposalWaitCost` terms, and that is a **tail-sum geometric
+   waiting time** with no pointwise bound. The plan's escape hatch — "if
+   `acceptance_floor_le_speedyMetropolisMove` gives `ℓ ≥ c`, Route A wins outright" — is a
+   **conflation**: that floor bounds the *Metropolis acceptance factor*, not the local
+   conductance, and it takes `hstuck` (i.e. `ℓ(x) > 0`) as an input rather than proving it.
+2. **Mass-scaled warmness is dead**, by the counterexample the plan itself records: warmness
+   bounds the density, not the mass.
+3. **Route B (the L²(π) route) reduces exactly to `Q = (∫_K ℓ⁻¹ dγ)/(∫_K ℓ dγ)`** — the
+   quantity the speedy walk was *invented to avoid*. The `ℓ`-weighting of the reference law
+   makes the first moment of `ℓ⁻¹` trivial and the second moment a *first* moment of `ℓ⁻¹`
+   under Lebesgue, which the averaged-conductance hypothesis does not control. Do not build
+   Route B without first pricing `Q`.
+4. **Route C is live and its mathematics is proved.** Hölder at `p = 1 + 1/(2n)` against the
+   warm density needs only a *fractional* moment of `ℓ⁻¹`, and never touches `Q`.
+   `Arlib/MarkovChains/Continuous/LocalConductanceMoment.lean` (22 theorems),
+   `Arlib/MarkovChains/Continuous/WarmHolder.lean` (5), `Ttc/Exec/CVHolderRetryCost.lean` (6)
+   — all zero `sorry`, all `[propext, Classical.choice, Quot.sound]`. The headline is
+   `Ttc.CVHolderRetryCost.lintegral_stepCost_rpow_le`: `∫ ((ℓ·acc)⁻¹)^{1+1/(2n)} dπ ≤ 80`, an
+   absolute constant, where at `p = 1` the same integral is the *existing* `10/3`.
+5. **The honest price, which the old plan omitted.** `Lenv` goes from `ρ²` to
+   `min(ρ², O(n))` — the Hölder conjugate `q ≈ 2n` is intrinsic, coming from
+   `ℓ ≳ (u/δ)^n`, i.e. from local conductance genuinely being exponentially small in `n` at a
+   sharp corner. So the total becomes `Õ(m · n⁶ · ρ⁶ · min(ρ², n) / ε⁴)`: strictly better when
+   `ρ² > n`, never worse, worst case `Õ(m n⁷ρ⁶/ε⁴)`. **It trades one `ρ²` for one `n`. It is
+   not a free `ρ²`.**
+
+**Nothing above changes the operative complexity.** It stays `Õ(m n⁶ρ⁸/ε⁴)` until a *fourth
+capstone* states the Hölder envelope. Arlib theorems and a cost lemma certify mathematics;
+only a capstone certifies TTC's runtime. The two remaining steps, and why the second is the
+long pole, are in `PLAN-RETRYENV.md` §5.
 
 ---
 
