@@ -6,6 +6,7 @@ import Ttc.Monadic.MeasurePr
 import Ttc.Monadic.Program
 import Ttc.Exec.PricedHeadline
 import Ttc.Exec.SamplePrice
+import Ttc.Exec.TtcSlowRuntimePerPhase
 
 /-!
 # The main theorem of the paper
@@ -63,6 +64,7 @@ namespace Ttc
 
 open MeasureTheory Set
 open Ttc.Monadic
+open scoped ENNReal BigOperators Classical
 
 /-- **`thm:volumettc` + `thm:runtime`, at two fixed per-call prices.**  `TTC` is run on
 `F = (atoms, φ)` at accuracy `ε` and confidence `δ`; both halves speak about the same run.
@@ -147,6 +149,60 @@ theorem ttc_volume {A : Type*} {n : ℕ}
                   + 1))]) :=
   ⟨(ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _).1,
     (ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _).2⟩
+
+/-- **`thm:volumettc` + `thm:runtime`, at the oracles the paper actually specifies.**
+
+`Ttc.ttc_volume` above is about `Ttc.ttc`, whose volume oracle is `Ttc.mcVol` — hit-and-miss
+Monte Carlo — and whose sampler is the lazy ball walk.  Those are *reference* oracles: correct,
+and exponential in `n`, as its own statement now shows.
+
+This is the same guarantee for the constructed ones:
+
+* **volume** — `slowPerPhaseImplementation.algorithm n`, the Cousins–Vempala Gaussian-cooling
+  estimator (`sections/analysis.tex`, `cor:vol`);
+* **sampling** — `Ttc.kv97HybridKernel`: hit-and-run at `1100 ≤ n` (`cor:linf`), lazy ball
+  walk below.
+
+Both conjuncts are about the one law that executes them.  No oracle, certificate,
+implementation or cost binder; axioms `[propext, Classical.choice, Quot.sound]`.
+
+⚠ **Three things this is not.**
+
+1. **Not the paper's number.**  The envelope is `Õ(m·n⁴·ρ⁶/ε²)` in *membership-query* units,
+   not `O(m·n⁵·ρ²·r_max)`, and the two are not in the same units until the `⌈n·rfac⌉₊` charge
+   of `ttc_volume_runtime_perPhase_ops` is applied.  The `ρ` exponent is unsettled.  See
+   `lean/PLAN-SHAPE.md` §5.
+2. **Not uniform in the dimension.**  At `1100 ≤ n` the sampler is hit-and-run and the
+   transition bound is polynomial.  For `21 ≤ n < 1100` it is the ball walk's own bound, with
+   `4 ^ n` and a `(radius ratio)^(4n)`; `n` is bounded there, so that is a constant and not an
+   asymptotic obstruction — but an astronomical one.  Proved in both directions in
+   `Ttc/Exec/SamplerEnvelopeShape.lean`.  Removing it is one lemma: `lean/PLAN-SPHERECAP.md`.
+3. **Not inside the four-file audit surface.**  Its statement names the construction — 637
+   constants across 108 modules — so `#modelClosureOfType` does not hold of it and is not
+   claimed.  `Ttc.ttc_volume` keeps that promise for accuracy. -/
+theorem ttc_volume_runtime {A : Type*} {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
+    (hn : 21 ≤ n) (hφ : φ.IsPositive)
+    (hpos : 0 < volSol (atomSet atoms) φ) :
+    let deltaRun := 4 * δ / 5
+    let hn1 : 1 ≤ n := le_trans (by norm_num) hn
+    let I := Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation
+    let V := I.algorithm n
+    letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
+    let P := Ttc.TTCSourceSharpOperationalFinal.canonicalCappedPolyHybridPlugin
+      atoms φ ε deltaRun V hε0 hε1 hn1 hφ hpos
+    (1 - δ ≤ (Ttc.TTCSourceSharpOperationalTheorem.canonicalFullOperationalLaw V P).real
+      {r | r.1 ∈ relErr ε (volSol (atomSet atoms) φ)}) ∧
+    ((∫⁻ r, r.2 ∂Ttc.TTCSourceSharpOperationalTheorem.canonicalFullOperationalLaw V P) ≤
+      Ttc.CVShaped.shapedVolumeQueryEnvelopeAt I atoms φ ε deltaRun
+          (fun j ↦ (Ttc.TtcCircumRadius.circumR (interior
+            (Ttc.TTCCVExpectedImplementation.callBody atoms φ ε deltaRun j))) ^ 2) +
+        Ttc.TTCSourceSharpOperationalFinal.canonicalCappedSampleQueryEnvelope
+          atoms φ ε deltaRun) :=
+  Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
+
+#print axioms ttc_volume_runtime
 
 #print axioms ttc_volume
 
