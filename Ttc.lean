@@ -906,5 +906,6 @@ import Ttc.Exec.CVPerPhaseMomentBundle
 import Ttc.Exec.TtcSlowRuntimeSharp
 import Ttc.Exec.CVPerPhaseFrontier
 import Ttc.Exec.TtcSlowRuntimePerPhase
+import Ttc.Exec.SamplerEnvelopeShape
 import Ttc.Exec.CVHolderRetryCost
 import Ttc.Model.Theorem
