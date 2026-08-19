@@ -152,37 +152,96 @@ stop pretending to *meet* that contract with an overhead when what we have is a 
   budget family behind `ofCapped`/`CVCappedRadialLogExpectedImplementation`.  Determine whether
   it carries the same weakening, and whether it is on the operative path at all.
 
-## 5.  Ledger — and a units audit that must accompany it
+## 5.  Ledger, and the units audit — **DONE 2026-08-19**
 
 Per cube, `800 · cvComplexityShapeClipped n ρ²ⱼ ε' δ' · slowPerPhaseOV n ρ²ⱼ ε' δ'`
-becomes `800 · max 1 (log(1/δ')) · slowPerPhaseOV n ρ²ⱼ ε' δ'`:
+became `800 · max 1 (log(1/δ')) · slowPerPhaseOV n ρ²ⱼ ε' δ'`:
 
 ```
 Õ(m · n⁶ · ρ⁸ / ε⁴)   ⟶   Õ(m · n⁴ · ρ⁶ / ε²)
 ```
 
-**That is below the paper's `n⁵` in the `n` exponent, and that is a reason for suspicion, not
-celebration.**  `RUNTIME-ENDGAME.md` has miscredited a factor twice already (§"Second
-correction, 2026-08-18").  Before any such number is written anywhere:
+Units are unchanged by the edit, so that ratio is exact.  What follows is the audit of what
+those units *are*.
 
-1. **Redo the comparison in matched units.**  Our `cost` counts what
-   `SourceReferenceTVOneRunCertificate.reference_expected_queries` counts — expected
-   *membership queries*.  The paper's `O(m·n⁵·ρ²·r_max)` carries `r_max` as an explicit
-   operations factor, and `AUDIT.md`'s own decomposition of the paper
-   (`m·r_max·(n³ρ²∨n⁴)/ε² + n⁵ρ²·Thresh`) is the comparable form.  A query count and an
-   operation count are not the same exponent.
-2. **Do not reuse the "one factor `n` short of the paper" framing.**  That narrative was
-   computed with the shape artifact in it and goes stale with this fix.
+### 5.1  What the paper counts
 
-### A correction this forces
+`sections/analysis.tex:54–64`, `thm:runtime`: TTC "runs in **time** `O(m n⁵ ρ² r_max)`".  Its
+proof charges, per loop iteration,
 
-`AUDIT.md`'s section *"The `n⁴` vs `n⁶` exponent gap is SETTLED: it is the walk step size, and
-it is forced"* becomes **wrong as stated**.  The gap was the step size **times this
-weakening**.  When this lands, that section must be superseded in the same explicit way
-`PLAN-WARMSTART` marks its own superseded drafts — not quietly edited.
+* volume: `O( max(n³R²/γ², n⁴)/ε² · r )` **time**, and
+* sampling: `O( n⁵ r R²/γ² )` **time per sample**, at most `Threshold` samples,
 
-`PLAN-WARMSTART`'s payoff line must also be recomputed afterwards: the KLS97 item is worth a
-factor `n` off whatever the ledger reads *after* this change.
+and the `O(·)` "suppresses factors that are polynomial in `1/ε`, poly-logarithmic in `1/δ`,
+`m`, `n`, and **warm-starting costs** for sampling".
+
+So the paper's unit is **arithmetic operations**, and the facet count `r` is *inside* each
+per-cube price.  Note the volume price factors as
+
+```
+r · max(n³ρ², n⁴)/ε²  =  (n · r) · max(n²ρ², n³)/ε²
+                          ↑         ↑
+                    ops per query   CV Theorem 1.1's oracle-call count
+```
+
+— i.e. the paper charges `n·r` operations per membership query, which is exactly this repo's
+own `Ttc.CoolCost.coolStepOpCharge n rfac = ⌈n · rfac⌉₊`.
+
+### 5.2  What our capstone counts — and a units defect in the bound itself
+
+`ttc_volume_runtime_perPhase`'s second conjunct is
+`∫⁻ r, r.2 ≤ shapedVolumeQueryEnvelopeAt … + canonicalCappedSampleQueryEnvelope …`.
+**The two summands are not in the same unit.**
+
+* The **volume** summand bounds `Ttc.ExpectedQueryVolumeAlgorithm.expectedBound` — expected
+  **membership-oracle queries**.  `Ttc.cvComplexityShape`'s own docstring: *"It counts
+  membership-oracle operations, not machine instructions."*  There is **no facet factor** in
+  it.
+* The **sampler** summand is
+  `∑ᵢ polyGoodRateCapᵢ · canonicalHybridSamplerQueryBoundᵢ`, and
+  `canonicalHybridSamplerQueryBound = 8·(hybridTransitionBound · hybridStepInspectionBound n rfac + 1)`
+  with `Ttc.ConcreteHybridExpectedQuerySampler.hybridStepInspectionBound n facetCount =
+  facetCount / 2` (for `1100 ≤ n`).  That is a **facet-inspection** count — steps × facets —
+  so the facet factor **is** included.
+
+A membership query on a polytope is `r` facet inspections, so the right-hand side adds a
+query count to an `r`-times-finer count.  **Consequence: `Õ(m·n⁴·ρ⁶/ε²)` is the volume
+summand alone, in query units.  It is not a total, in any single unit.**  This is a defect in
+the shape of the bound, not something introduced by this change — but the change is what made
+it visible, and nothing in this repository should quote a "total complexity" until it is
+fixed.
+
+### 5.3  The licensed comparison
+
+Converting the volume summand to the paper's unit by its own `n·r_max` ops-per-query:
+
+| | volume term, in **time** |
+|---|---|
+| ours | `Õ(m · n⁵ · ρ⁶ · r_max / ε²)` |
+| paper (`thm:runtime` total, which its sampling term dominates) | `O(m · n⁵ · ρ² · r_max)` |
+
+**The `n` exponent matches at `n⁵`.  We are `ρ⁴` above the paper.**  The `ε⁻²` is not a
+discrepancy — the paper's own displayed expression carries it and its `O(·)` suppresses it.
+
+Against the paper's *volume* term alone (`r·max(n³ρ², n⁴)/ε²`) we are worse by `n²ρ⁴`
+(when `ρ² ≥ n`) or `nρ⁶` (when `ρ² ≤ n`).
+
+### 5.4  What is **not** established
+
+* **The sampler summand's asymptotics are not computed.**  `hybridTransitionBound ≈
+  2⁶⁶·n²·(Rout/rin)²·log(8·Mw/ε²)` steps and `polyGoodRateCap i = (1+ε')·vol(region i)` is a
+  Poisson *rate*, not a sample count.  Until that term is converted and bounded, **no total
+  runtime for TTC may be stated**, and the table above is a volume-term comparison only.
+* The `log Mw` inside `hybridTransitionBound` is a warm-start factor.  The paper's `O(·)`
+  suppresses warm-starting costs explicitly; ours does not.  Any comparison that treats the
+  two conventions as the same is wrong.
+
+### 5.5  Consequences for existing text
+
+* Every "one factor `n` short of the paper" claim predates this audit and compared a **query
+  count** to a **time**.  All are stale.
+* `AUDIT.md`'s superseded "SETTLED" section is doubly wrong: wrong about the step size being
+  the only factor, and wrong in units.
 
 ## 6.  Verified facts this plan may assert
 
@@ -211,8 +270,14 @@ factor `n` off whatever the ledger reads *after* this change.
 - [x] Re-run the four closure audits — all pass, counts unchanged (109 / 157 / 208 / 212).
 - [x] Update `RUNTIME-ENDGAME.md`'s ledger table and supersede `AUDIT.md` §"SETTLED".
 - [x] Recompute `PLAN-WARMSTART`'s payoff line.
-- [ ] **The units audit of §5 — still not done.**  Until it is, no comparison between this
-      bound and the paper's `O(m·n⁵·ρ²·r_max)` may be stated anywhere.
+- [x] **The units audit of §5 — done.**  Paper counts time with `r` inside; we count
+      membership queries on the volume side and *facet inspections* on the sampler side.
+      Converted at `n·r_max` ops/query, our volume term is `Õ(m·n⁵·ρ⁶·r_max/ε²)` against the
+      paper's `O(m·n⁵·ρ²·r_max)`: **`n` matches, `ρ⁴` worse.**
+- [ ] **NEW, from the audit: the capstone's two summands are in different units** (§5.2), so
+      no *total* may be quoted.  Convert `canonicalCappedSampleQueryEnvelope` to query units
+      (divide by `hybridStepInspectionBound`), or the volume summand to inspections, and bound
+      the sampler term's asymptotics.  Until then the headline figure is a volume-term figure.
 - [ ] The free `log²n`: `clip_eps` is the origin of the `64·(max 1 eps)²·sourceLogFactor n ²`
       prefix in the four `OV`s, and with the shape gone that inflation buys nothing.  Recorded
       in its docstring; deliberately not bundled.

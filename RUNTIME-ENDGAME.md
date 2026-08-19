@@ -367,11 +367,30 @@ reads
 Õ(m n⁶ρ⁸/ε⁴)  ⟶  Õ(m n⁴ρ⁶/ε²)
 ```
 
-**State this only as a factor removal.**  The units are unchanged, so the ratio is exact; but
-**no comparison with the paper's `O(m·n⁵·ρ²·r_max)` may be quoted anywhere** — ours counts
-what the certificate's `reference_expected_queries` counts and the paper's counts operations
-with `r_max` explicit, and the units audit (`PLAN-SHAPE.md` §5) is **not done**.  Every
-"one factor `n` short of the paper" statement in this file predates the removal and is stale.
+**State this only as a factor removal.**  The units are unchanged, so the ratio is exact.
+
+### Units audit (done 2026-08-19, `PLAN-SHAPE.md` §5)
+
+Two findings, and the second is the important one.
+
+1. **The licensed comparison.**  The paper counts *time* with the facet count `r` inside each
+   per-cube price, at `n·r` operations per membership query.  Our volume term counts
+   *membership queries*.  Converting at `n·r_max`:
+
+   | | volume term, in time |
+   |---|---|
+   | ours | `Õ(m·n⁵·ρ⁶·r_max/ε²)` |
+   | paper `thm:runtime` | `O(m·n⁵·ρ²·r_max)` |
+
+   **`n` matches at `n⁵`; we are `ρ⁴` above.**  Every "one factor `n` short of the paper"
+   statement in this file predates this and compared a query count to a time — all stale.
+
+2. **`Õ(m·n⁴·ρ⁶/ε²)` is the volume summand alone, not a total.**  The capstone's two summands
+   are in *different units*: the volume envelope excludes the facet factor (queries), while
+   `canonicalCappedSampleQueryEnvelope` includes it — `hybridStepInspectionBound n rfac =
+   rfac/2` counts *facet inspections*.  A query is `r` inspections, so the right-hand side
+   adds two incommensurable counts.  **No total runtime for TTC may be quoted from this file
+   until that is fixed and the sampler term's asymptotics are computed.**
 
 ### P1 is OPERATIVE as of 2026-08-18
 
