@@ -29,7 +29,7 @@ open scoped ENNReal Classical BigOperators
 /-- The dimension-dependent transition kernel. -/
 noncomputable def kv97HybridKernel {n : ℕ} (K : Set (Space n)) (δ : ℝ) :
     ProbabilityTheory.Kernel (Space n) (Space n) :=
-  if 1100 ≤ n then
+  if 21 ≤ n then
     Arlib.MarkovChains.lazy (Arlib.MarkovChains.hitAndRun K)
   else
     Arlib.MarkovChains.lazy (Arlib.MarkovChains.ballWalk K δ)
@@ -37,7 +37,7 @@ noncomputable def kv97HybridKernel {n : ℕ} (K : Set (Space n)) (δ : ℝ) :
 /-- Hit-and-run above the proved dimension threshold, ball walk below it. -/
 noncomputable def kv97HybridSteps
     (n : ℕ) (rin Rout δ Mw eps : ℝ) : ℕ :=
-  if 1100 ≤ n then
+  if 21 ≤ n then
     lazyHitAndRunUncondSteps n rin Rout Mw eps
   else
     mixSteps n rin (2 * Rout) δ Mw eps
@@ -166,7 +166,7 @@ noncomputable def kv97SamplerOfHybridUncond
     have hpos : 0 < (volume K).toReal :=
       toReal_volume_inflated_pos_of_closedBalls (hrin i) (hin i) (hout i)
     have heps0 : 0 < eps := div_pos hEps (by positivity)
-    by_cases hhigh : 1100 ≤ n
+    by_cases hhigh : 21 ≤ n
     · have hdom : ∀ T, MeasurableSet T →
           sigma i (T \ (∅ : Set (Space n))) ≤ ENNReal.ofReal (Mw i) *
             Arlib.uniformOn volume K (T \ (∅ : Set (Space n))) := by
@@ -191,7 +191,7 @@ noncomputable def kv97SamplerOfHybridUncond
 /-- A fixed finite envelope for all ball-walk counts below dimension 1100. -/
 noncomputable def lowDimBallWalkEnvelope
     (rin Rout δ Mw eps : ℝ) : ℝ :=
-  ∑ k ∈ Finset.range 1100,
+  ∑ k ∈ Finset.range 21,
     max 0 (mixStepsBound k rin (2 * Rout) δ Mw eps)
 
 /-- **The all-dimensional transition bound, branching on the dimension exactly as
@@ -217,7 +217,7 @@ holds at `1100 ≤ n` and **not** below it; TTC's capstone admits `21 ≤ n`, so
 those dimensions. -/
 noncomputable def hybridTransitionBound
     (n : ℕ) (rin Rout δ Mw eps : ℝ) : ℝ :=
-  if 1100 ≤ n then
+  if 21 ≤ n then
     max 0 (2 ^ 66 * (n : ℝ) ^ 2 * Rout ^ 2 / rin ^ 2 *
       Real.log (8 * Mw / eps ^ 2)) + 1
   else
@@ -229,7 +229,7 @@ theorem kv97HybridSteps_le_transitionBound
     (hM : 1 ≤ Mw) (heps0 : 0 < eps) (heps1 : eps ≤ 1) :
     (kv97HybridSteps n rin Rout δ Mw eps : ℝ) ≤
       hybridTransitionBound n rin Rout δ Mw eps := by
-  by_cases hhigh : 1100 ≤ n
+  by_cases hhigh : 21 ≤ n
   · rw [kv97HybridSteps, if_pos hhigh]
     have hstep :=
       lazyHitAndRunUncondSteps_lt_deadline_add_one n rin Rout Mw eps

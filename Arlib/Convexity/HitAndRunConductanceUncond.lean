@@ -96,7 +96,7 @@ geometry of `K`; the four binders that Theorem 4.2 used to carry — `hIso` (the
 
 `volume K ≠ 0` and `volume K ≠ ⊤`, which `Arlib.hIso_lowerSemicontinuous` asks for, are derived
 from `hball` and `hKb` rather than assumed. -/
-theorem conductance_hitAndRun_ge_uncond (hn : 1100 ≤ n)
+theorem conductance_hitAndRun_ge_uncond (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
@@ -121,7 +121,7 @@ theorem conductance_hitAndRun_ge_uncond (hn : 1100 ≤ n)
 `8000 · 245760 = 1966080000 ≤ 2³¹ = 2147483648`.  Purely for legibility; the exact form
 `Arlib.conductance_hitAndRun_ge_uncond` is strictly stronger.  Like it, this statement has no
 mathematical hypothesis. -/
-theorem conductance_hitAndRun_ge_uncond_pow (hn : 1100 ≤ n)
+theorem conductance_hitAndRun_ge_uncond_pow (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)

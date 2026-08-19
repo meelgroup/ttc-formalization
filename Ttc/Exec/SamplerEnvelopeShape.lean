@@ -111,19 +111,19 @@ theorem lowDimBallWalkEnvelope_le
     (hrin : 0 < rin) (hRout : 0 ≤ Rout) (hMw : 1 ≤ Mw)
     (heps : 0 < eps) (heps1 : eps ≤ 1) :
     Ttc.lowDimBallWalkEnvelope rin Rout δ Mw eps ≤
-      1100 * max 0 (Ttc.mixStepsBound 1099 rin (2 * Rout) δ Mw eps) := by
+      21 * max 0 (Ttc.mixStepsBound 20 rin (2 * Rout) δ Mw eps) := by
   have hDm : (0 : Real) ≤ 2 * Rout := by linarith
   unfold Ttc.lowDimBallWalkEnvelope
   calc
-    ∑ k ∈ Finset.range 1100, max 0 (Ttc.mixStepsBound k rin (2 * Rout) δ Mw eps)
-        ≤ ∑ _k ∈ Finset.range 1100,
-            max 0 (Ttc.mixStepsBound 1099 rin (2 * Rout) δ Mw eps) := by
+    ∑ k ∈ Finset.range 21, max 0 (Ttc.mixStepsBound k rin (2 * Rout) δ Mw eps)
+        ≤ ∑ _k ∈ Finset.range 21,
+            max 0 (Ttc.mixStepsBound 20 rin (2 * Rout) δ Mw eps) := by
           refine Finset.sum_le_sum ?_
           intro k hk
-          have hk' : k ≤ 1099 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hk)
+          have hk' : k ≤ 20 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hk)
           exact max_le_max le_rfl
             (mixStepsBound_mono_dim hk' hrin hDm hMw heps heps1)
-    _ = 1100 * max 0 (Ttc.mixStepsBound 1099 rin (2 * Rout) δ Mw eps) := by
+    _ = 21 * max 0 (Ttc.mixStepsBound 20 rin (2 * Rout) δ Mw eps) := by
           rw [Finset.sum_const, Finset.card_range]
           norm_num
 
@@ -138,7 +138,7 @@ each branch is an *equality*, not merely a bound. -/
 `4^1099 · (radius ratio)^4396`, pure overhead at a dimension where the walk being priced is
 hit-and-run.  This equality is what replaces the old decomposition inequality. -/
 theorem hybridTransitionBound_of_high
-    {n : Nat} (hn : 1100 ≤ n) (rin Rout δ Mw eps : Real) :
+    {n : Nat} (hn : 21 ≤ n) (rin Rout δ Mw eps : Real) :
     Ttc.hybridTransitionBound n rin Rout δ Mw eps
       = max 0 (2 ^ 66 * (n : Real) ^ 2 * Rout ^ 2 / rin ^ 2 *
           Real.log (8 * Mw / eps ^ 2)) + 1 := by
@@ -147,7 +147,7 @@ theorem hybridTransitionBound_of_high
 
 /-- **Low branch: the ball walk's own bound at dimension `n`.** -/
 theorem hybridTransitionBound_of_low
-    {n : Nat} (hn : ¬ 1100 ≤ n) (rin Rout δ Mw eps : Real) :
+    {n : Nat} (hn : ¬ 21 ≤ n) (rin Rout δ Mw eps : Real) :
     Ttc.hybridTransitionBound n rin Rout δ Mw eps
       = max 0 (Ttc.mixStepsBound n rin (2 * Rout) δ Mw eps) + 1 := by
   unfold Ttc.hybridTransitionBound
@@ -169,7 +169,7 @@ Removing it means establishing hit-and-run below dimension `1100`.  The threshol
 artefact of `Arlib.MarkovChains.unifSphere_cap_le`'s union bound, not of its statement — see
 that file, and `lean/PLAN-SPHERECAP.md`. -/
 theorem mixStepsBound_le_hybridTransitionBound_of_low
-    {n : Nat} (hn : ¬ 1100 ≤ n) {rin Rout δ Mw eps : Real} :
+    {n : Nat} (hn : ¬ 21 ≤ n) {rin Rout δ Mw eps : Real} :
     max 0 (Ttc.mixStepsBound n rin (2 * Rout) δ Mw eps)
       ≤ Ttc.hybridTransitionBound n rin Rout δ Mw eps := by
   rw [hybridTransitionBound_of_low hn]
@@ -196,14 +196,14 @@ The composite `8 · (ofReal T · w + 1)` is monotone in `T`, and
 low-dimensional term is present in the *actual* per-cube envelope at every dimension and every
 cube.  It is not an artefact of the way the sum over cubes is bounded. -/
 theorem samplerShape_lowDim_le
-    {n : Nat} (hn : ¬ 1100 ≤ n) {rin Rout δ Mw eps : Real} (w : ENNReal) :
+    {n : Nat} (hn : ¬ 21 ≤ n) {rin Rout δ Mw eps : Real} (w : ENNReal) :
     8 * (ENNReal.ofReal (max 0 (Ttc.mixStepsBound n rin (2 * Rout) δ Mw eps)) * w + 1)
       ≤ 8 * (ENNReal.ofReal (Ttc.hybridTransitionBound n rin Rout δ Mw eps) * w + 1) :=
   samplerShape_mono (mixStepsBound_le_hybridTransitionBound_of_low hn) w
 
 /-- **The decomposition, transferred — UPPER bound.** -/
 theorem samplerShape_eq_of_high
-    {n : Nat} (hn : 1100 ≤ n) {rin Rout δ Mw eps : Real} (w : ENNReal) :
+    {n : Nat} (hn : 21 ≤ n) {rin Rout δ Mw eps : Real} (w : ENNReal) :
     8 * (ENNReal.ofReal (Ttc.hybridTransitionBound n rin Rout δ Mw eps) * w + 1)
       = 8 * (ENNReal.ofReal
             (max 0 (2 ^ 66 * (n : Real) ^ 2 * Rout ^ 2 / rin ^ 2 *
@@ -223,7 +223,7 @@ repeat that identification here, this statement takes the `nu` slot and its two 
 explicit binders: `hshape` says what the per-cube bound is at that `nu`, and the caller
 discharges it exactly as `TTCSourceSharpOperationalFinal` does. -/
 theorem canonicalHybridSamplerQueryBound_eq_of_high
-    {n : Nat} (hn : 1100 ≤ n)
+    {n : Nat} (hn : 21 ≤ n)
     {B : ENNReal} {w : ENNReal} {rin Rout δ Mw nu : Real}
     (hshape : B = 8 * (ENNReal.ofReal (Ttc.hybridTransitionBound n rin Rout δ Mw nu) * w + 1)) :
     B = 8 * (ENNReal.ofReal
@@ -235,7 +235,7 @@ theorem canonicalHybridSamplerQueryBound_eq_of_high
 /-- **The low-dimensional term is in the per-cube bound — LOWER, and hypothesis-free apart
 from the shape equation.** -/
 theorem lowDim_le_canonicalHybridSamplerQueryBound
-    {n : Nat} (hn : ¬ 1100 ≤ n)
+    {n : Nat} (hn : ¬ 21 ≤ n)
     {B : ENNReal} {w : ENNReal} {rin Rout δ Mw nu : Real}
     (hshape : B = 8 * (ENNReal.ofReal (Ttc.hybridTransitionBound n rin Rout δ Mw nu) * w + 1)) :
     8 * (ENNReal.ofReal (max 0 (Ttc.mixStepsBound n rin (2 * Rout) δ Mw nu)) * w + 1) ≤ B := by

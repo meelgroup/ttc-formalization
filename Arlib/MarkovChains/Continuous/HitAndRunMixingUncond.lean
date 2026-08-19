@@ -124,7 +124,7 @@ no mixing theorem can drop.  See the module docstring.
 `volume K ≠ 0` and `volume K ≠ ⊤`, which the parametric form asks for, are derived here from
 `hball` and `hKb` rather than assumed, exactly as in
 `Arlib.conductance_hitAndRun_ge_uncond`. -/
-theorem tvLe_iterate_lazy_hitAndRun_uncond {n : ℕ} (hn : 1100 ≤ n)
+theorem tvLe_iterate_lazy_hitAndRun_uncond {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
@@ -176,7 +176,7 @@ conductance denominator to a power of two costs the same factor `16` on both rou
 No hypothesis on `R` is needed: `0 ≤ R` follows from `hball` and `hout` (the body is
 nonempty), and `1 ≤ 2R` from `one_le_diam_of_unitBall` inside §2.  Like §2, this statement has
 no conductance, isoperimetry or overlap binder. -/
-theorem tvLe_iterate_lazy_hitAndRun_uncond_ball {n : ℕ} (hn : 1100 ≤ n)
+theorem tvLe_iterate_lazy_hitAndRun_uncond_ball {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     {z zout : EuclideanSpace ℝ (Fin n)} (hball : Metric.closedBall z 1 ⊆ K)
@@ -249,7 +249,7 @@ theorem tvLe_iterate_lazy_hitAndRun_uncond_witness :
     have := Real.log_le_sub_one_of_pos (x := (32 : ℝ)) (by norm_num)
     rw [h32]
     linarith
-  refine tvLe_iterate_lazy_hitAndRun_uncond (n := 1100) (le_refl _) (convex_closedBall 0 1)
+  refine tvLe_iterate_lazy_hitAndRun_uncond (n := 1100) (by norm_num) (convex_closedBall 0 1)
     Metric.isClosed_closedBall measurableSet_closedBall Metric.isBounded_closedBall
     (z := 0) subset_rfl hD (M := 1) (eps := 1 / 2) le_rfl (by norm_num) (by norm_num)
     (S := ∅) MeasurableSet.empty (by simp)

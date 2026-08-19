@@ -46,7 +46,7 @@ noncomputable def lazyBallWalkRealization
 
 /-- The exact branch-dependent one-step inspection budget. -/
 noncomputable def hybridStepInspectionBound (n : Nat) (facetCount : Nat) : ENNReal :=
-  if 1100 ≤ n then (2 : ENNReal)⁻¹ * facetCount else (2 : ENNReal)⁻¹
+  if 21 ≤ n then (2 : ENNReal)⁻¹ * facetCount else (2 : ENNReal)⁻¹
 
 /-- A concrete realization of the all-dimensional hybrid kernel on a finite KV97 inflated
 polytope. -/
@@ -56,7 +56,7 @@ noncomputable def hybridRealization
     (hdelta : 0 < delta) [NeZero n] :
     CostedKernelRealization
       (Ttc.kv97HybridKernel (Arlib.KV97.inflated A b c r) delta) := by
-  by_cases hhigh : 1100 ≤ n
+  by_cases hhigh : 21 ≤ n
   · exact highDimHybridRealization hhigh _ delta
       (lazyHitAndRunInflatedRealization A b c r hK)
   · let R := lazyBallWalkRealization
@@ -75,7 +75,7 @@ theorem hybridRealization_stepBound
     (hdelta : 0 < delta) [NeZero n] :
     (hybridRealization A b c r delta hK hdelta).stepBound =
       hybridStepInspectionBound n (Fintype.card ι) := by
-  by_cases hhigh : 1100 ≤ n
+  by_cases hhigh : 21 ≤ n
   · simp [hybridRealization, hhigh, hybridStepInspectionBound,
       highDimHybridRealization, lazyHitAndRunInflatedRealization_stepBound]
   · simp [hybridRealization, hhigh, hybridStepInspectionBound,

@@ -427,7 +427,7 @@ is off-diagonal, the walk from `u` moves with probability at least `7/8`, and
 `hbd` is *not* proved here, and it is not a restatement of the goal: it is strictly smaller
 than the binder (five extra hypotheses, one of them the asymmetric `F(u)` in place of
 `max{F(u),F(v)}`).  Section 7 records exactly where it stalls. -/
-theorem tvLe_hitAndRun_binder_uncond_8000 (hn : 1100 ≤ n)
+theorem tvLe_hitAndRun_binder_uncond_8000 (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)

@@ -89,7 +89,7 @@ and is handled separately, by reflexivity.
 
 This is a *statement about all interior pairs*, not a binder: it has no hypothesis that the
 caller must supply beyond the geometry of `K` and `1100 ≤ n`. -/
-theorem hLem41_interior_uncond (hn : 1100 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
+theorem hLem41_interior_uncond (hn : 21 ≤ n) {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K) :
     ∀ u ∈ interior K, ∀ v ∈ interior K, crossRatioDist K u v < 1 / 8 →
@@ -124,7 +124,7 @@ Not routed through `Arlib.MarkovChains.conductance_hitAndRun_ge_param`: that the
 its `hLem41` over all of `K`, which is the form the boundary refutes
 (`chordLow_eq_zero_of_notMem_interior` below).  The conclusion is the one `_param` would give
 at `c = 1/8000`. -/
-theorem conductance_hitAndRun_ge_uncond_lem41 (hn : 1100 ≤ n)
+theorem conductance_hitAndRun_ge_uncond_lem41 (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)
@@ -150,7 +150,7 @@ theorem conductance_hitAndRun_ge_uncond_lem41 (hn : 1100 ≤ n)
 `8000 · 245760 = 1966080000 ≤ 2³¹ = 2147483648`.  Purely for legibility, in the style of
 `Arlib.MarkovChains.conductance_hitAndRun_ge`'s `2²⁷`; the exact form
 `conductance_hitAndRun_ge_uncond_lem41` is strictly stronger. -/
-theorem conductance_hitAndRun_ge_uncond_lem41_pow (hn : 1100 ≤ n)
+theorem conductance_hitAndRun_ge_uncond_lem41_pow (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K)

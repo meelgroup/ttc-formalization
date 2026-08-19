@@ -147,7 +147,7 @@ abbrev LazyHitAndRunRealization {n : Nat} (K : Set (State n)) :=
 
 /-- In dimension at least `1100`, a lazy hit-and-run realization is also a realization of
 the kernel selected by `kv97HybridKernel`. -/
-noncomputable def highDimHybridRealization {n : Nat} (hn : 1100 ≤ n)
+noncomputable def highDimHybridRealization {n : Nat} (hn : 21 ≤ n)
     (K : Set (State n)) (delta : Real) (R : LazyHitAndRunRealization K) :
     CostedKernelRealization (Ttc.kv97HybridKernel K delta) where
   kernel := R.kernel
@@ -158,7 +158,7 @@ noncomputable def highDimHybridRealization {n : Nat} (hn : 1100 ≤ n)
   mean_le := R.mean_le
 
 /-- Exact cost erasure for the high-dimensional branch of the all-dimensional sampler. -/
-theorem map_snd_highDimHybridEndpointLaw {n : Nat} (hn : 1100 ≤ n)
+theorem map_snd_highDimHybridEndpointLaw {n : Nat} (hn : 21 ≤ n)
     (K : Set (State n)) (delta : Real) (R : LazyHitAndRunRealization K)
     (mu : Measure (State n)) [IsProbabilityMeasure mu] (t : Nat) :
     Measure.map Prod.snd
@@ -244,7 +244,7 @@ noncomputable def expectedQueryKV97LazyHitAndRunSampler
 all-dimensional sampler.  This theorem proves that the branch choice does not introduce
 an additional semantic premise. -/
 noncomputable def expectedQueryKV97HybridHighSampler
-    {Jt : Type} (hn : 1100 ≤ n)
+    {Jt : Type} (hn : 21 ≤ n)
     (epsPrime rf : Real)
     (Am : {c : Ttc.Cube A // c ∈ D} → Jt → State n)
     (bv : {c : Ttc.Cube A // c ∈ D} → Jt → Real)

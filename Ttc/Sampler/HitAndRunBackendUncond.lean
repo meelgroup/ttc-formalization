@@ -204,7 +204,7 @@ What remains is exactly what the brief allows to remain, and no more:
 The `r → 1` normalisation is free: `Ttc.map_hitAndRun_chart` makes hit-and-run equivariant
 under the similarity `z ↦ r • z + zin`, `Arlib.MarkovChains.map_lazy_of_map_kernel` lifts
 that through `lazy`, and `Ttc.tvLe_of_tvLe_chart` transports the conclusion back. -/
-theorem tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond {n : ℕ} (hn : 1100 ≤ n)
+theorem tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKm : MeasurableSet K) (hKc : Convex ℝ K) (hKcl : IsClosed K)
     {zin zout : EuclideanSpace ℝ (Fin n)} {r R : ℝ}
@@ -287,7 +287,7 @@ theorem tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond_ballOne_dim1100 :
     have := Real.log_le_sub_one_of_pos (x := (32 : ℝ)) (by norm_num)
     linarith
   have hlog0 : (0 : ℝ) ≤ Real.log 32 := Real.log_nonneg (by norm_num)
-  refine tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond (n := 1100) (le_refl _)
+  refine tvLe_iterate_lazy_hitAndRun_at_contract_shape_uncond (n := 1100) (by norm_num)
     measurableSet_closedBall (convex_closedBall 0 1) Metric.isClosed_closedBall
     (zin := 0) (zout := 0) (r := 1) (R := 1) one_pos zero_le_one subset_rfl subset_rfl
     (M := 1) (eps := 1 / 2) le_rfl (by norm_num) (by norm_num)
@@ -334,7 +334,7 @@ independent — see the module docstring, "The contract question":
 
 So this theorem is deliberately **not** named `hitAndRunTheorem11Input_of_...`: it does not
 construct one, and no single fact does. -/
-theorem tvLe_iterate_hitAndRun_at_contract_shape_uncond_of_plainLS {n : ℕ} (hn : 1100 ≤ n)
+theorem tvLe_iterate_hitAndRun_at_contract_shape_uncond_of_plainLS {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKm : MeasurableSet K) (hKc : Convex ℝ K) (hKcl : IsClosed K)
     {zin zout : EuclideanSpace ℝ (Fin n)} {r R : ℝ}

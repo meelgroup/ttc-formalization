@@ -8,6 +8,7 @@ import Mathlib.MeasureTheory.Integral.Layercake
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 
 /-!
 # The spherical-cap estimate: `σ{θ : √n·|⟨θ,w⟩| > |w|} ≤ 9/25`, and Lemma 4.1 with no hypotheses
@@ -747,6 +748,556 @@ theorem pow_contraction_le {m : ℕ} (hm : 1099 ≤ m) : (0.994 : ℝ) ^ m ≤ 0
 
 end Numerics
 
+section CapSlice
+
+open Real
+open scoped Real
+
+/-! ## The exact cross-section, and the cap bound from dimension 21
+
+⚠ **This section supersedes the Gaussian union bound above.**  That route proves the same
+`9/25` only from `n ≥ 1100`, and §2 of `lean/PLAN-SPHERECAP.md` shows the threshold cannot be
+lowered by retuning it: at `n = 21` the best `(c, λ)` gives `≈ 0.57` against a target of
+`0.36`.  The obstruction is that the union bound never sees the *shape* of the cross-section,
+only a tail and a Chernoff factor.
+
+What is done here instead is to compute the cross-section exactly.  Slicing the unit ball of
+`Fin (m+1) → ℝ` along coordinate `0` (`volume_slice`, a `Fubini` step through
+`MeasureTheory.volume_preserving_piFinSuccAbove`), the slice at height `s` is an `m`-ball of
+radius `√(1-s²)` and the cone's slice is an `m`-ball of radius `√(m s²)`, so the whole ratio
+collapses to a one-dimensional integral.  Three elementary estimates finish it:
+
+* **Bernoulli** `(1-s²)^{m/2} ≥ 1 - (m/2)s²` for the numerator (`chord_ge`);
+* the **exact** cone term `((m/(m+1))^{m/2})·(m+1)⁻¹` (`integral_spike`), bounded by
+  `e^{-1/2}·e^{1/42} ≤ 0.6215` (`coneFactor_le`);
+* the **Wallis pairing** `k·P_k·P_{k-1} = 2π` (`P_pairing`) together with `P` antitone, giving
+  `P_{m+1}² ≤ 2π/(m+1)` (`P_sq_le`) for the denominator — no Gamma function, no Beta
+  distribution, and in particular **not** the `Γ→Β` bridge that `PLAN-SPHERECAP.md` §3 scopes
+  as "the work".  Mathlib's `integral_sin_pow` recursion is the whole input.
+
+The chain yields `cap ≤ 9/25` from `n ≥ 15`; it is stated at `n ≥ 21` — TTC's own floor —
+because the margin at 15 is `0.0015` before rational rounding and the rounding here spends
+about `0.008` of it.  The true cap fraction is `0.3293` at `n = 21`, so the bound is honest
+but not sharp; the statement itself is true from `n = 6` on and false for `n ≤ 4`, so *some*
+dimension hypothesis is mandatory. -/
+
+/-! ## §1  The Wallis integrals -/
+
+noncomputable def P (k : ℕ) : ℝ := ∫ x in (0:ℝ)..π, Real.sin x ^ k
+
+theorem P_zero : P 0 = π := by simp [P]
+
+theorem P_one : P 1 = 2 := by simp [P, integral_sin]; norm_num
+
+theorem P_succ_succ (k : ℕ) : P (k + 2) = ((k : ℝ) + 1) / ((k : ℝ) + 2) * P k := by
+  unfold P; rw [integral_sin_pow]; simp
+
+theorem P_pairing (k : ℕ) : ((k : ℝ) + 1) * P (k + 1) * P k = 2 * π := by
+  induction k with
+  | zero => rw [P_zero, P_one]; push_cast; ring
+  | succ j ih =>
+      have h := P_succ_succ j
+      push_cast at *
+      rw [show j + 1 + 1 = j + 2 from rfl, h]
+      field_simp
+      nlinarith [ih]
+
+theorem P_pos (k : ℕ) : 0 < P k := integral_sin_pow_pos k
+
+theorem P_anti : Antitone P := integral_sin_pow_antitone
+
+theorem P_sq_le (m : ℕ) : P (m + 1) ^ 2 ≤ 2 * π / ((m : ℝ) + 1) := by
+  have hp := P_pairing m
+  have hle : P (m + 1) ≤ P m := P_anti (Nat.le_succ m)
+  have hpos := P_pos (m + 1)
+  have hm : (0:ℝ) < (m : ℝ) + 1 := by positivity
+  rw [le_div_iff₀ hm]
+  have hstep : P (m + 1) * P (m + 1) ≤ P (m + 1) * P m :=
+    mul_le_mul_of_nonneg_left hle hpos.le
+  nlinarith [hstep, hp, hm]
+
+/-! ## §2  The two profile functions -/
+
+noncomputable def chord (m : ℕ) (s : ℝ) : ℝ := (Real.sqrt (1 - s ^ 2)) ^ m
+noncomputable def spike (m : ℕ) (s : ℝ) : ℝ := (Real.sqrt ((m : ℝ) * s ^ 2)) ^ m
+noncomputable def s0 (m : ℕ) : ℝ := Real.sqrt (1 / ((m : ℝ) + 1))
+
+theorem chord_nonneg (m : ℕ) (s : ℝ) : 0 ≤ chord m s := by unfold chord; positivity
+theorem spike_nonneg (m : ℕ) (s : ℝ) : 0 ≤ spike m s := by unfold spike; positivity
+theorem continuous_chord (m : ℕ) : Continuous (chord m) := by unfold chord; fun_prop
+theorem continuous_spike (m : ℕ) : Continuous (spike m) := by unfold spike; fun_prop
+
+theorem s0_pos (m : ℕ) : 0 < s0 m := Real.sqrt_pos.2 (by positivity)
+theorem s0_sq (m : ℕ) : (s0 m) ^ 2 = 1 / ((m : ℝ) + 1) := Real.sq_sqrt (by positivity)
+
+theorem s0_le_one (m : ℕ) : s0 m ≤ 1 := by
+  have h := s0_sq m
+  have hle : (1:ℝ) / ((m : ℝ) + 1) ≤ 1 := by
+    rw [div_le_one (by positivity)]
+    have : (0:ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m
+    linarith
+  nlinarith [s0_pos m, h, hle]
+
+theorem chord_cos (m : ℕ) {x : ℝ} (hx : x ∈ uIcc (0:ℝ) π) :
+    chord m (Real.cos x) = Real.sin x ^ m := by
+  rw [uIcc_of_le Real.pi_pos.le] at hx
+  have hs : 0 ≤ Real.sin x := Real.sin_nonneg_of_mem_Icc hx
+  unfold chord
+  rw [show (1 : ℝ) - Real.cos x ^ 2 = Real.sin x ^ 2 by
+    have := Real.sin_sq_add_cos_sq x; linarith, Real.sqrt_sq hs]
+
+/-- **`∫_{-1}^{1}(√(1-s²))^m ds = ∫_0^π sinᵐ⁺¹`**, by `s = cos θ`. -/
+theorem integral_chord (m : ℕ) : (∫ s in (-1:ℝ)..1, chord m s) = P (m + 1) := by
+  have hderiv : ∀ x ∈ uIcc (0:ℝ) π, HasDerivAt Real.cos (-Real.sin x) x :=
+    fun x _ => Real.hasDerivAt_cos x
+  have hcont : ContinuousOn (fun x : ℝ => -Real.sin x) (uIcc (0:ℝ) π) := by fun_prop
+  have hsub := intervalIntegral.integral_comp_smul_deriv hderiv hcont (continuous_chord m)
+  rw [Real.cos_zero, Real.cos_pi] at hsub
+  have hL : (∫ x in (0:ℝ)..π, (-Real.sin x) • (chord m ∘ Real.cos) x)
+      = ∫ x in (0:ℝ)..π, -(Real.sin x ^ (m + 1)) := by
+    refine intervalIntegral.integral_congr (fun x hx => ?_)
+    simp only [Function.comp_apply, smul_eq_mul]
+    rw [chord_cos m hx]; ring
+  rw [hL, intervalIntegral.integral_neg] at hsub
+  have hflip : (∫ x in (1:ℝ)..(-1), chord m x) = -∫ x in (-1:ℝ)..1, chord m x :=
+    intervalIntegral.integral_symm (-1) 1
+  rw [hflip] at hsub
+  have hP : P (m + 1) = ∫ x in (0:ℝ)..π, Real.sin x ^ (m + 1) := rfl
+  rw [hP]; linarith
+
+/-! ## §3  Slicing the ball -/
+
+noncomputable def unitVol (m : ℕ) : ℝ≥0∞ := volume {y : Fin m → ℝ | ∑ j, y j ^ 2 < 1}
+
+theorem unitVol_ne_top (m : ℕ) : unitVol m ≠ ⊤ := by
+  have hsub : {y : Fin m → ℝ | ∑ j, y j ^ 2 < 1}
+      ⊆ Set.univ.pi fun _ : Fin m => Set.Ioo (-1 : ℝ) 1 := by
+    intro y hy j _
+    simp only [Set.mem_setOf_eq] at hy
+    have hj : y j ^ 2 ≤ ∑ i, y i ^ 2 :=
+      Finset.single_le_sum (f := fun i => y i ^ 2) (fun i _ => sq_nonneg _) (Finset.mem_univ j)
+    have h1 : y j ^ 2 < 1 := lt_of_le_of_lt hj hy
+    constructor <;> nlinarith
+  refine ne_of_lt (lt_of_le_of_lt (measure_mono hsub) ?_)
+  rw [volume_pi_pi]
+  simp only [Real.volume_Ioo, sub_neg_eq_add, Finset.prod_const, Finset.card_univ,
+    Fintype.card_fin]
+  exact ENNReal.pow_lt_top ENNReal.ofReal_lt_top
+
+theorem volume_sqLt_eq {m : ℕ} (hm : m ≠ 0) {R : ℝ} (hR : 0 ≤ R) :
+    volume {x : Fin m → ℝ | ∑ i, x i ^ 2 < R ^ 2}
+      = ENNReal.ofReal (R ^ m) * unitVol m := by
+  have h := volume_cone_inter_sqLt (C := Set.univ) (n := m) hm
+    (fun r hr => smul_univ_eq m hr) hR
+  simpa [unitVol] using h
+
+theorem volume_sqLt_sqrt {m : ℕ} (hm : m ≠ 0) (c : ℝ) :
+    volume {y : Fin m → ℝ | ∑ j, y j ^ 2 < c}
+      = ENNReal.ofReal ((Real.sqrt c) ^ m) * unitVol m := by
+  rcases le_or_gt 0 c with hc | hc
+  · have hsq : (Real.sqrt c) ^ 2 = c := Real.sq_sqrt hc
+    rw [← hsq, volume_sqLt_eq hm (Real.sqrt_nonneg c), hsq]
+  · have hempty : {y : Fin m → ℝ | ∑ j, y j ^ 2 < c} = ∅ := by
+      ext y
+      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_lt]
+      exact le_trans hc.le (Finset.sum_nonneg fun j _ => sq_nonneg (y j))
+    rw [hempty, measure_empty, Real.sqrt_eq_zero_of_nonpos hc.le, zero_pow hm,
+      ENNReal.ofReal_zero, zero_mul]
+
+theorem sqrt_min_pow (m : ℕ) (a b : ℝ) :
+    (Real.sqrt (min a b)) ^ m = min ((Real.sqrt a) ^ m) ((Real.sqrt b) ^ m) := by
+  rcases le_total a b with h | h
+  · rw [min_eq_left h, min_eq_left (pow_le_pow_left₀ (Real.sqrt_nonneg a)
+      (Real.sqrt_le_sqrt h) m)]
+  · rw [min_eq_right h, min_eq_right (pow_le_pow_left₀ (Real.sqrt_nonneg b)
+      (Real.sqrt_le_sqrt h) m)]
+
+theorem sum_sq_cons {m : ℕ} (s : ℝ) (y : Fin m → ℝ) :
+    ∑ i, (Fin.cons s y : Fin (m + 1) → ℝ) i ^ 2 = s ^ 2 + ∑ j, y j ^ 2 := by
+  rw [Fin.sum_univ_succ]; simp
+
+/-- **Lebesgue measure on `Fin (m+1) → ℝ`, sliced along coordinate `0`.** -/
+theorem volume_slice {m : ℕ} {S : Set (Fin (m + 1) → ℝ)} (hS : MeasurableSet S) :
+    volume S = ∫⁻ s : ℝ, volume {y : Fin m → ℝ | Fin.cons s y ∈ S} := by
+  have hmp := MeasureTheory.volume_preserving_piFinSuccAbove (fun _ : Fin (m + 1) => ℝ) 0
+  set e := MeasurableEquiv.piFinSuccAbove (fun _ : Fin (m + 1) => ℝ) 0 with he
+  set T : Set (ℝ × (Fin m → ℝ)) := e.symm ⁻¹' S with hT
+  have hTm : MeasurableSet T := e.symm.measurable hS
+  have hpre : e ⁻¹' T = S := by rw [hT, ← Set.preimage_comp]; simp
+  have h1 : volume S = volume T := by
+    rw [← hpre, hmp.measure_preimage hTm.nullMeasurableSet]
+  rw [h1, MeasureTheory.Measure.volume_eq_prod, Measure.prod_apply hTm]
+  congr 1
+  funext s
+  congr 1
+  ext y
+  simp [hT, he, MeasurableEquiv.piFinSuccAbove, Fin.insertNthEquiv_zero, Fin.consEquiv]
+
+theorem sliceBallVol {m : ℕ} (hm : m ≠ 0) :
+    volume {x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < 1}
+      = (∫⁻ s : ℝ, ENNReal.ofReal (chord m s)) * unitVol m := by
+  rw [volume_slice (measurableSet_sqLt (m + 1) 1),
+    ← lintegral_mul_const' _ _ (unitVol_ne_top m)]
+  congr 1
+  funext s
+  have hset : {y : Fin m → ℝ | (Fin.cons s y : Fin (m+1) → ℝ) ∈
+      {x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < 1}}
+      = {y : Fin m → ℝ | ∑ j, y j ^ 2 < 1 - s ^ 2} := by
+    ext y; simp only [Set.mem_setOf_eq, sum_sq_cons]; constructor <;> intro h <;> linarith
+  rw [hset, volume_sqLt_sqrt hm]
+  rfl
+
+theorem sliceConeVol {m : ℕ} (hm : m ≠ 0) :
+    volume ({x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < ((m : ℝ) + 1) * x 0 ^ 2}
+        ∩ {x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < 1})
+      = (∫⁻ s : ℝ, ENNReal.ofReal (min (spike m s) (chord m s))) * unitVol m := by
+  have hms : MeasurableSet ({x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < ((m : ℝ) + 1) * x 0 ^ 2}
+      ∩ {x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < 1}) := by
+    refine MeasurableSet.inter ?_ (measurableSet_sqLt (m + 1) 1)
+    have h1 : Continuous fun x : Fin (m + 1) → ℝ => ∑ i, x i ^ 2 := by fun_prop
+    have h2 : Continuous fun x : Fin (m + 1) → ℝ => ((m : ℝ) + 1) * x 0 ^ 2 := by fun_prop
+    exact measurableSet_lt h1.measurable h2.measurable
+  rw [volume_slice hms, ← lintegral_mul_const' _ _ (unitVol_ne_top m)]
+  congr 1
+  funext s
+  have hset : {y : Fin m → ℝ | (Fin.cons s y : Fin (m+1) → ℝ) ∈
+      ({x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < ((m : ℝ) + 1) * x 0 ^ 2}
+        ∩ {x : Fin (m + 1) → ℝ | ∑ i, x i ^ 2 < 1})}
+      = {y : Fin m → ℝ | ∑ j, y j ^ 2 < min ((m : ℝ) * s ^ 2) (1 - s ^ 2)} := by
+    ext y
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq, sum_sq_cons, Fin.cons_zero, lt_min_iff]
+    constructor
+    · rintro ⟨h1, h2⟩; exact ⟨by nlinarith, by linarith⟩
+    · rintro ⟨h1, h2⟩; exact ⟨by nlinarith, by linarith⟩
+  rw [hset, volume_sqLt_sqrt hm, sqrt_min_pow]
+  rfl
+
+
+/-! ## §4  Integrability and the passage to real integrals -/
+
+theorem chord_eq_zero {m : ℕ} (hm : m ≠ 0) {s : ℝ} (hs : s ∉ Set.Ioc (-1 : ℝ) 1) :
+    chord m s = 0 := by
+  have h : 1 - s ^ 2 ≤ 0 := by
+    simp only [Set.mem_Ioc, not_and_or, not_lt, not_le] at hs
+    rcases hs with h | h
+    · nlinarith
+    · nlinarith
+  unfold chord
+  rw [Real.sqrt_eq_zero_of_nonpos h, zero_pow hm]
+
+theorem integrable_chord {m : ℕ} (hm : m ≠ 0) : Integrable (chord m) := by
+  have hsupp : Function.support (chord m) ⊆ Set.Icc (-1 : ℝ) 1 := by
+    intro s hs
+    by_contra hc
+    exact hs (chord_eq_zero hm (fun h => hc ⟨le_of_lt h.1, h.2⟩))
+  exact (continuous_chord m).integrable_of_hasCompactSupport
+    (HasCompactSupport.of_support_subset_isCompact isCompact_Icc hsupp)
+
+theorem integrable_min {m : ℕ} (hm : m ≠ 0) :
+    Integrable (fun s => min (spike m s) (chord m s)) := by
+  refine Integrable.mono (integrable_chord hm)
+    (((continuous_spike m).min (continuous_chord m)).aestronglyMeasurable) ?_
+  filter_upwards with s
+  rw [Real.norm_eq_abs, Real.norm_eq_abs,
+    abs_of_nonneg (le_min (spike_nonneg m s) (chord_nonneg m s)),
+    abs_of_nonneg (chord_nonneg m s)]
+  exact min_le_right _ _
+
+theorem lintegral_chord {m : ℕ} (hm : m ≠ 0) :
+    (∫⁻ s : ℝ, ENNReal.ofReal (chord m s)) = ENNReal.ofReal (∫ s in (-1 : ℝ)..1, chord m s) := by
+  rw [intervalIntegral.integral_of_le (by norm_num : (-1 : ℝ) ≤ 1),
+    MeasureTheory.setIntegral_eq_integral_of_forall_compl_eq_zero (fun s hs => chord_eq_zero hm hs),
+    ← MeasureTheory.ofReal_integral_eq_lintegral_ofReal (integrable_chord hm)
+      (Filter.Eventually.of_forall (chord_nonneg m))]
+
+theorem lintegral_min {m : ℕ} (hm : m ≠ 0) :
+    (∫⁻ s : ℝ, ENNReal.ofReal (min (spike m s) (chord m s)))
+      = ENNReal.ofReal (∫ s : ℝ, min (spike m s) (chord m s)) :=
+  (MeasureTheory.ofReal_integral_eq_lintegral_ofReal (integrable_min hm)
+    (Filter.Eventually.of_forall (fun s => le_min (spike_nonneg m s) (chord_nonneg m s)))).symm
+
+/-! ## §5  Where the cone sits inside the ball -/
+
+theorem spike_le_chord_iff {m : ℕ} (hm : m ≠ 0) (s : ℝ) :
+    spike m s ≤ chord m s ↔ ((m : ℝ) + 1) * s ^ 2 ≤ 1 := by
+  unfold spike chord
+  rw [pow_le_pow_iff_left₀ (Real.sqrt_nonneg _) (Real.sqrt_nonneg _) hm]
+  rcases le_or_gt 0 (1 - s ^ 2) with hc | hc
+  · rw [Real.sqrt_le_sqrt_iff hc]
+    constructor <;> intro h <;> nlinarith
+  · rw [Real.sqrt_eq_zero_of_nonpos hc.le]
+    have hs1 : 1 < s ^ 2 := by linarith
+    have hm1 : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast Nat.one_le_iff_ne_zero.2 hm
+    constructor
+    · intro h
+      have h0 : Real.sqrt ((m : ℝ) * s ^ 2) = 0 := le_antisymm h (Real.sqrt_nonneg _)
+      have h2 : (m : ℝ) * s ^ 2 ≤ 0 := by
+        by_contra hpos
+        exact absurd h0 (ne_of_gt (Real.sqrt_pos.2 (lt_of_not_ge hpos)))
+      nlinarith
+    · intro h; nlinarith
+
+theorem chord_sub_min {m : ℕ} (hm : m ≠ 0) (s : ℝ) :
+    chord m s - min (spike m s) (chord m s)
+      = Set.indicator {t : ℝ | ((m : ℝ) + 1) * t ^ 2 ≤ 1}
+          (fun t => chord m t - spike m t) s := by
+  by_cases h : s ∈ {t : ℝ | ((m : ℝ) + 1) * t ^ 2 ≤ 1}
+  · rw [Set.indicator_of_mem h, min_eq_left ((spike_le_chord_iff hm s).2 h)]
+  · rw [Set.indicator_of_notMem h,
+      min_eq_right (le_of_not_ge (fun hle => h ((spike_le_chord_iff hm s).1 hle)))]
+    ring
+
+theorem crossover_eq (m : ℕ) :
+    {t : ℝ | ((m : ℝ) + 1) * t ^ 2 ≤ 1} = Set.Icc (-(s0 m)) (s0 m) := by
+  have hden : (0 : ℝ) < (m : ℝ) + 1 := by positivity
+  ext t
+  simp only [Set.mem_setOf_eq, Set.mem_Icc]
+  rw [← abs_le, ← Real.sqrt_sq_eq_abs]
+  constructor
+  · intro h
+    have h2 : t ^ 2 ≤ 1 / ((m : ℝ) + 1) := by rw [le_div_iff₀ hden]; linarith
+    calc Real.sqrt (t ^ 2) ≤ Real.sqrt (1 / ((m : ℝ) + 1)) := Real.sqrt_le_sqrt h2
+      _ = s0 m := rfl
+  · intro h
+    have h2 : t ^ 2 ≤ 1 / ((m : ℝ) + 1) := by
+      nlinarith [Real.sq_sqrt (sq_nonneg t), s0_sq m,
+        pow_le_pow_left₀ (Real.sqrt_nonneg (t ^ 2)) h 2]
+    rw [le_div_iff₀ hden] at h2; linarith
+
+/-! ## §6  The two integral estimates -/
+
+theorem chord_ge {m : ℕ} (hm : 2 ≤ m) {s : ℝ} (hs : s ^ 2 ≤ 1) :
+    1 - (m : ℝ) / 2 * s ^ 2 ≤ chord m s := by
+  have hu : (0 : ℝ) ≤ 1 - s ^ 2 := by linarith
+  have hrw : chord m s = (1 - s ^ 2) ^ ((m : ℝ) / 2) := by
+    unfold chord
+    rw [Real.sqrt_eq_rpow, ← Real.rpow_natCast ((1 - s ^ 2) ^ ((1 : ℝ) / 2)) m,
+      ← Real.rpow_mul hu]
+    ring_nf
+  rw [hrw]
+  have hp : (1 : ℝ) ≤ (m : ℝ) / 2 := by
+    have : (2 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+    linarith
+  have hb := one_add_mul_self_le_rpow_one_add (s := -(s ^ 2)) (by nlinarith) hp
+  have he : (1 : ℝ) + -(s ^ 2) = 1 - s ^ 2 := by ring
+  rw [he] at hb
+  linarith [hb]
+
+theorem integral_chord_ge {m : ℕ} (hm : 2 ≤ m) :
+    2 * s0 m - (m : ℝ) / 3 * (s0 m) ^ 3 ≤ ∫ s in (-(s0 m))..(s0 m), chord m s := by
+  have hle : (-(s0 m)) ≤ s0 m := by linarith [s0_pos m]
+  have hpoly : (∫ s in (-(s0 m))..(s0 m), (1 - (m : ℝ) / 2 * s ^ 2))
+      = 2 * s0 m - (m : ℝ) / 3 * (s0 m) ^ 3 := by
+    have h1 : IntervalIntegrable (fun _ : ℝ => (1:ℝ)) volume (-(s0 m)) (s0 m) :=
+      intervalIntegrable_const
+    have h2 : IntervalIntegrable (fun s : ℝ => (m : ℝ) / 2 * s ^ 2) volume (-(s0 m)) (s0 m) :=
+      (continuous_const.mul (continuous_pow 2)).intervalIntegrable _ _
+    rw [intervalIntegral.integral_sub h1 h2, intervalIntegral.integral_const_mul, integral_pow]
+    simp only [intervalIntegral.integral_const, smul_eq_mul, mul_one]
+    ring
+  rw [← hpoly]
+  refine intervalIntegral.integral_mono_on hle
+    ((continuous_const.sub (continuous_const.mul (continuous_pow 2))).intervalIntegrable _ _)
+    ((continuous_chord m).intervalIntegrable _ _) (fun s hs => ?_)
+  refine chord_ge hm ?_
+  have h1 : s ^ 2 ≤ (s0 m) ^ 2 := by
+    rcases hs with ⟨ha, hb⟩; nlinarith [s0_pos m]
+  have h2 := s0_le_one m
+  nlinarith [s0_pos m]
+
+theorem integral_spike (m : ℕ) :
+    (∫ s in (-(s0 m))..(s0 m), spike m s)
+      = 2 * (Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))) ^ m * s0 m / ((m : ℝ) + 1) := by
+  have hden : (0 : ℝ) < (m : ℝ) + 1 := by positivity
+  have hfac : ∀ s : ℝ, spike m s = (Real.sqrt (m : ℝ)) ^ m * |s| ^ m := by
+    intro s
+    unfold spike
+    rw [Real.sqrt_mul (Nat.cast_nonneg m), Real.sqrt_sq_eq_abs, mul_pow]
+  simp only [hfac]
+  rw [intervalIntegral.integral_const_mul]
+  have habs : (∫ s in (-(s0 m))..(s0 m), |s| ^ m)
+      = 2 * (s0 m) ^ (m + 1) / ((m : ℝ) + 1) := by
+    have hsplit : (∫ s in (-(s0 m))..(s0 m), |s| ^ m)
+        = (∫ s in (-(s0 m))..(0:ℝ), |s| ^ m) + ∫ s in (0:ℝ)..(s0 m), |s| ^ m := by
+      refine (intervalIntegral.integral_add_adjacent_intervals ?_ ?_).symm <;>
+        exact (continuous_abs.pow m).intervalIntegrable _ _
+    have hneg : (∫ s in (-(s0 m))..(0:ℝ), |s| ^ m) = ∫ s in (0:ℝ)..(s0 m), |s| ^ m := by
+      have h := intervalIntegral.integral_comp_neg (a := -(s0 m)) (b := (0:ℝ))
+        (f := fun s : ℝ => |s| ^ m)
+      simpa using h
+    have hpos : (∫ s in (0:ℝ)..(s0 m), |s| ^ m) = ∫ s in (0:ℝ)..(s0 m), s ^ m := by
+      refine intervalIntegral.integral_congr (fun s hs => ?_)
+      rw [uIcc_of_le (s0_pos m).le] at hs
+      rw [abs_of_nonneg hs.1]
+    rw [hsplit, hneg, hpos, integral_pow]
+    simp only [zero_pow (Nat.succ_ne_zero m), sub_zero]
+    ring
+  rw [habs]
+  have hX : (Real.sqrt (m : ℝ)) ^ m * (s0 m) ^ m
+      = (Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))) ^ m := by
+    rw [← mul_pow]
+    congr 1
+    unfold s0
+    rw [← Real.sqrt_mul (Nat.cast_nonneg m)]
+    congr 1
+    field_simp
+  rw [pow_succ]
+  field_simp
+  nlinarith [hX, s0_pos m]
+
+/-! ## §7  The numerals -/
+
+theorem exp_neg_half_le : Real.exp (-(1/2 : ℝ)) ≤ 0.6066 := by
+  have he : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+  have hsq : Real.exp ((1:ℝ)/2) ^ 2 = Real.exp 1 := by
+    rw [← Real.exp_nat_mul]; norm_num
+  have hpos : 0 < Real.exp ((1:ℝ)/2) := Real.exp_pos _
+  have hlb : (1.64853 : ℝ) < Real.exp ((1:ℝ)/2) := by nlinarith [hsq, he, hpos]
+  rw [show -(1/2 : ℝ) = -((1:ℝ)/2) by ring, Real.exp_neg, inv_le_iff_one_le_mul₀ hpos]
+  nlinarith [hlb]
+
+theorem exp_inv_fortytwo_le : Real.exp ((1:ℝ)/42) ≤ 42/41 := by
+  have h := Real.add_one_le_exp (-(1/42 : ℝ))
+  have hpos : 0 < Real.exp (-(1/42 : ℝ)) := Real.exp_pos _
+  have h41 : (41/42 : ℝ) ≤ Real.exp (-(1/42 : ℝ)) := by linarith
+  rw [show ((1:ℝ)/42) = -(-(1/42 : ℝ)) by ring, Real.exp_neg, inv_le_iff_one_le_mul₀ hpos]
+  nlinarith [h41]
+
+theorem coneFactor_le {m : ℕ} (hm : 20 ≤ m) :
+    (Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))) ^ m ≤ 0.6215 := by
+  have hm0 : (20 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  have hden : (0 : ℝ) < (m : ℝ) + 1 := by linarith
+  have hb := Real.add_one_le_exp (-(1 / ((m : ℝ) + 1)))
+  have hfrac : (m : ℝ) / ((m : ℝ) + 1) ≤ Real.exp (-(1 / ((m : ℝ) + 1))) := by
+    have hr : (m : ℝ) / ((m : ℝ) + 1) = -(1 / ((m : ℝ) + 1)) + 1 := by field_simp; ring
+    rw [hr]; linarith
+  have hs : Real.sqrt ((m : ℝ) / ((m : ℝ) + 1)) ≤ Real.exp (-(1 / (2 * ((m : ℝ) + 1)))) := by
+    calc Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))
+        ≤ Real.sqrt (Real.exp (-(1 / ((m : ℝ) + 1)))) := Real.sqrt_le_sqrt hfrac
+      _ = Real.exp (-(1 / (2 * ((m : ℝ) + 1)))) := by
+          have h2 : Real.exp (-(1 / ((m : ℝ) + 1)))
+              = (Real.exp (-(1 / (2 * ((m : ℝ) + 1))))) ^ 2 := by
+            rw [← Real.exp_nat_mul]; congr 1; push_cast; field_simp
+          rw [h2, Real.sqrt_sq (Real.exp_pos _).le]
+  have hpow : (Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))) ^ m
+      ≤ Real.exp (-((m : ℝ) / (2 * ((m : ℝ) + 1)))) := by
+    calc (Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))) ^ m
+        ≤ (Real.exp (-(1 / (2 * ((m : ℝ) + 1))))) ^ m :=
+          pow_le_pow_left₀ (Real.sqrt_nonneg _) hs m
+      _ = Real.exp (-((m : ℝ) / (2 * ((m : ℝ) + 1)))) := by
+          rw [← Real.exp_nat_mul]; congr 1; field_simp
+  refine hpow.trans ?_
+  have hexp : -((m : ℝ) / (2 * ((m : ℝ) + 1))) ≤ -(1/2 : ℝ) + (1:ℝ)/42 := by
+    rw [neg_le, show -(-(1/2 : ℝ) + (1:ℝ)/42) = (1:ℝ)/2 - (1:ℝ)/42 by ring,
+      show (1:ℝ)/2 - (1:ℝ)/42 = 10/21 by norm_num, le_div_iff₀ (by positivity)]
+    nlinarith [hm0]
+  calc Real.exp (-((m : ℝ) / (2 * ((m : ℝ) + 1))))
+      ≤ Real.exp (-(1/2 : ℝ) + (1:ℝ)/42) := Real.exp_le_exp.2 hexp
+    _ = Real.exp (-(1/2 : ℝ)) * Real.exp ((1:ℝ)/42) := Real.exp_add _ _
+    _ ≤ 0.6066 * (42/41) := by
+        have h1 := exp_neg_half_le
+        have h2 := exp_inv_fortytwo_le
+        have hp1 : 0 < Real.exp (-(1/2 : ℝ)) := Real.exp_pos _
+        have hp2 : 0 < Real.exp ((1:ℝ)/42) := Real.exp_pos _
+        nlinarith [h1, h2, hp1, hp2]
+    _ ≤ 0.6215 := by norm_num
+
+
+/-! ## §8  The cap bound, assembled -/
+
+/-- **The core estimate.**  Below the crossover height the ball beats the cone by at least
+`16/25` of the ball's whole cross-sectional mass. -/
+theorem key {m : ℕ} (hm : 20 ≤ m) :
+    (16/25 : ℝ) * P (m + 1) ≤ ∫ s in (-(s0 m))..(s0 m), (chord m s - spike m s) := by
+  have hm2 : 2 ≤ m := le_trans (by norm_num) hm
+  have hmR : (20 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  have hden : (0 : ℝ) < (m : ℝ) + 1 := by positivity
+  have hs0 := s0_pos m
+  have hs0sq := s0_sq m
+  set X := (Real.sqrt ((m : ℝ) / ((m : ℝ) + 1))) ^ m with hXdef
+  have hX0 : 0 ≤ X := by positivity
+  have hXle : X ≤ 0.6215 := coneFactor_le hm
+  set B : ℝ := 1 - (m : ℝ) / (6 * ((m : ℝ) + 1)) - X / ((m : ℝ) + 1) with hBdef
+  have hBeq : B = (5 * (m : ℝ) + 6 - 6 * X) / (6 * ((m : ℝ) + 1)) := by
+    rw [hBdef]; field_simp; ring
+  have hB : (0.8116 : ℝ) ≤ B := by
+    rw [hBeq, le_div_iff₀ (by positivity)]
+    nlinarith [hmR, hXle]
+  have hlow : 2 * s0 m * B ≤ ∫ s in (-(s0 m))..(s0 m), (chord m s - spike m s) := by
+    have hsplit : (∫ s in (-(s0 m))..(s0 m), (chord m s - spike m s))
+        = (∫ s in (-(s0 m))..(s0 m), chord m s) - ∫ s in (-(s0 m))..(s0 m), spike m s :=
+      intervalIntegral.integral_sub ((continuous_chord m).intervalIntegrable _ _)
+        ((continuous_spike m).intervalIntegrable _ _)
+    rw [hsplit, integral_spike, ← hXdef]
+    have hc := integral_chord_ge hm2
+    have harith : 2 * s0 m * B
+        = (2 * s0 m - (m : ℝ) / 3 * (s0 m) ^ 3) - 2 * X * s0 m / ((m : ℝ) + 1) := by
+      rw [hBdef, show (s0 m) ^ 3 = s0 m * (s0 m) ^ 2 by ring, hs0sq]
+      field_simp; ring
+    rw [harith]; linarith [hc]
+  refine le_trans ?_ hlow
+  have hP := P_pos (m + 1)
+  have hPsq := P_sq_le m
+  have hpi : π < 3.15 := Real.pi_lt_d2
+  have hA : (0 : ℝ) ≤ 16 / 25 * P (m + 1) := by positivity
+  have hB0 : (0 : ℝ) ≤ 2 * s0 m * B := by nlinarith [hs0, hB]
+  rw [← pow_le_pow_iff_left₀ hA hB0 (by norm_num : (2:ℕ) ≠ 0)]
+  have h1 : ((16 / 25 : ℝ) * P (m + 1)) ^ 2 = 256 / 625 * P (m + 1) ^ 2 := by ring
+  have h2 : (2 * s0 m * B) ^ 2 = 4 * (s0 m) ^ 2 * B ^ 2 := by ring
+  rw [h1, h2, hs0sq]
+  have hcore : (512 / 625 : ℝ) * π ≤ 4 * B ^ 2 := by nlinarith [hpi, hB]
+  have hNinv : (0 : ℝ) < 1 / ((m : ℝ) + 1) := by positivity
+  calc (256 / 625 : ℝ) * P (m + 1) ^ 2
+      ≤ 256 / 625 * (2 * π / ((m : ℝ) + 1)) := by nlinarith [hPsq]
+    _ = (1 / ((m : ℝ) + 1)) * (512 / 625 * π) := by ring
+    _ ≤ (1 / ((m : ℝ) + 1)) * (4 * B ^ 2) := by nlinarith [hcore, hNinv]
+    _ = 4 * (1 / ((m : ℝ) + 1)) * B ^ 2 := by ring
+
+/-- **The real-integral form of the cap bound.** -/
+theorem integral_min_le {m : ℕ} (hm : 20 ≤ m) :
+    (∫ s : ℝ, min (spike m s) (chord m s)) ≤ 9 / 25 * ∫ s in (-1:ℝ)..1, chord m s := by
+  have hm0 : m ≠ 0 := by omega
+  have hs0 := s0_pos m
+  have hchordR : (∫ s : ℝ, chord m s) = ∫ s in (-1:ℝ)..1, chord m s := by
+    rw [intervalIntegral.integral_of_le (by norm_num : (-1:ℝ) ≤ 1),
+      MeasureTheory.setIntegral_eq_integral_of_forall_compl_eq_zero
+        (fun s hs => chord_eq_zero hm0 hs)]
+  have hdiff : (∫ s : ℝ, (chord m s - min (spike m s) (chord m s)))
+      = ∫ s in (-(s0 m))..(s0 m), (chord m s - spike m s) := by
+    have hpt : (fun s : ℝ => chord m s - min (spike m s) (chord m s))
+        = Set.indicator (Set.Icc (-(s0 m)) (s0 m)) (fun t => chord m t - spike m t) := by
+      funext s
+      rw [chord_sub_min hm0 s, crossover_eq m]
+    rw [hpt, MeasureTheory.integral_indicator measurableSet_Icc,
+      MeasureTheory.integral_Icc_eq_integral_Ioc,
+      ← intervalIntegral.integral_of_le (by linarith : (-(s0 m)) ≤ s0 m)]
+  have hlin : (∫ s : ℝ, (chord m s - min (spike m s) (chord m s)))
+      = (∫ s : ℝ, chord m s) - ∫ s : ℝ, min (spike m s) (chord m s) :=
+    MeasureTheory.integral_sub (integrable_chord hm0) (integrable_min hm0)
+  have hk := key hm
+  rw [← integral_chord m] at hk
+  rw [hdiff] at hlin
+  rw [hchordR] at hlin
+  linarith [hk, hlin]
+
+/-- **The cone occupies at most `9/25` of the unit ball, from dimension `21` on.** -/
+theorem volume_cone_le_of_21 {n : ℕ} [NeZero n] (hn : 21 ≤ n) :
+    volume ({x : Fin n → ℝ | ∑ i, x i ^ 2 < (n : ℝ) * x 0 ^ 2}
+        ∩ {x : Fin n → ℝ | ∑ i, x i ^ 2 < 1})
+      ≤ ENNReal.ofReal (9 / 25) * volume {x : Fin n → ℝ | ∑ i, x i ^ 2 < 1} := by
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
+  have hm : 20 ≤ m := by omega
+  have hm0 : m ≠ 0 := by omega
+  have hcast : ((m + 1 : ℕ) : ℝ) = (m : ℝ) + 1 := by push_cast; ring
+  rw [hcast, sliceConeVol hm0, sliceBallVol hm0, lintegral_chord hm0, lintegral_min hm0,
+    ← mul_assoc]
+  refine mul_le_mul_right' ?_ (unitVol m)
+  rw [← ENNReal.ofReal_mul (by norm_num)]
+  refine ENNReal.ofReal_le_ofReal ?_
+  exact integral_min_le hm
+
+end CapSlice
+
 /-! ## The cap estimate -/
 
 section Main
@@ -827,17 +1378,16 @@ theorem lintegral_gauss_cone_le_ratio {m : ℕ} (hm : 1099 ≤ m) :
     nlinarith [h1, h2, mul_nonneg hSm (sub_nonneg.2 hmain)]
   exact hfinal
 
-/-- **The cone occupies at most `9/25` of the unit ball.** -/
-theorem volume_cone_le {n : ℕ} [NeZero n] (hn : 1100 ≤ n) :
+/-- **The cone occupies at most `9/25` of the unit ball**, from dimension `21` on.
+
+⚠ **The threshold was `1100` until 2026-08-19.**  It is now `21`, and the proof is the exact
+cross-section computation of `section CapSlice` rather than the Gaussian union bound: see that
+section's docstring for why retuning the union bound could not get here. -/
+theorem volume_cone_le {n : ℕ} [NeZero n] (hn : 21 ≤ n) :
     volume ({x : Fin n → ℝ | ∑ i, x i ^ 2 < (n : ℝ) * x 0 ^ 2}
         ∩ {x : Fin n → ℝ | ∑ i, x i ^ 2 < 1})
-      ≤ ENNReal.ofReal (9 / 25) * volume {x : Fin n → ℝ | ∑ i, x i ^ 2 < 1} := by
-  refine volume_cone_inter_le_of_lintegral_le (by omega) (fun r hr => smul_cone_eq n hr) ?_
-  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
-  have hm : 1099 ≤ m := by omega
-  have hcast : ((m + 1 : ℕ) : ℝ) = (m : ℝ) + 1 := by push_cast; ring
-  simp only [hcast]
-  exact lintegral_gauss_cone_le_ratio hm
+      ≤ ENNReal.ofReal (9 / 25) * volume {x : Fin n → ℝ | ∑ i, x i ^ 2 < 1} :=
+  volume_cone_le_of_21 hn
 
 /-- **The spherical-cap estimate.**  For `n ≥ 1100` the set of directions `θ` with
 `√n·|⟨θ, w⟩| > |w|` — the paper's `A₂`, the cap it bounds by the (incorrect) `1/6` — has
@@ -846,7 +1396,7 @@ normalised surface measure at most `9/25 = 0.36`.
 The true value decreases from `1/2` at `n = 2` to `2(1 − Φ(1)) = 0.31731…`; the bound `0.36`
 is therefore honest but not sharp, and the threshold `1100` is an artifact of the union bound
 used in the proof, not of the statement (which is true from `n = 5` on). -/
-theorem unifSphere_cap_le {n : ℕ} (hn : 1100 ≤ n) (w : EuclideanSpace ℝ (Fin n)) :
+theorem unifSphere_cap_le {n : ℕ} (hn : 21 ≤ n) (w : EuclideanSpace ℝ (Fin n)) :
     unifSphere n {θ : sphere (0 : EuclideanSpace ℝ (Fin n)) 1 |
         ‖w‖ < Real.sqrt n * |⟪(θ : EuclideanSpace ℝ (Fin n)), w⟫|}
       ≤ ENNReal.ofReal (9 / 25) := by
@@ -878,7 +1428,7 @@ theorem unifSphere_cap_le {n : ℕ} (hn : 1100 ≤ n) (w : EuclideanSpace ℝ (F
 
 /-- **The cap hypothesis `hcap` of `tvLe_hitAndRun_lemma41`, discharged at `q₂ = 9/25`.**
 This is the shape the capstone consumes. -/
-theorem hitAndRun_almostOrthogonal_le_nine_twentyfifths {n : ℕ} (hn : 1100 ≤ n)
+theorem hitAndRun_almostOrthogonal_le_nine_twentyfifths {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))} (hK : MeasurableSet K)
     (u v : EuclideanSpace ℝ (Fin n)) :
     hitAndRun K u {x : EuclideanSpace ℝ (Fin n) |
@@ -893,7 +1443,7 @@ theorem hitAndRun_almostOrthogonal_le_nine_twentyfifths {n : ℕ} (hn : 1100 ≤
 mass at least `1/8000`.  (The paper claims `1/500`; see the module docstring of
 `HitAndRunOverlap.lean` for why no rounding recovers it, and this file's docstring for why
 `1/8000` rather than the `1/1892` that a sharp cap bound would give.) -/
-theorem tvLe_hitAndRun_lemma41_uncond {n : ℕ} (hn : 1100 ≤ n)
+theorem tvLe_hitAndRun_lemma41_uncond {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K) {u v : EuclideanSpace ℝ (Fin n)}

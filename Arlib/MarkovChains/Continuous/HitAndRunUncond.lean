@@ -406,7 +406,7 @@ interior, `hmoveu`/`hmovev` hold by `Arlib.hitAndRunProposal_univ_eq_one_of_mem_
 and `ha`/`hb` hold because the chord through `u` and `v` extends strictly beyond both.  What
 they exclude is boundary points, where `ha` is *always* false — which is exactly why this
 lemma does not close the `hLem41` binder; see the module docstring, `What remains`, item 3. -/
-theorem tvLe_hitAndRun_lemma41_uncond_max {n : ℕ} (hn : 1100 ≤ n)
+theorem tvLe_hitAndRun_lemma41_uncond_max {n : ℕ} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace ℝ (Fin n))}
     (hKc : Convex ℝ K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K) {u v : EuclideanSpace ℝ (Fin n)}

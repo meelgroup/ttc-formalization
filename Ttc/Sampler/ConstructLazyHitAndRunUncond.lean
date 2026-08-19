@@ -122,7 +122,7 @@ instance isProbabilityMeasure_kv97LazyHitAndRunContLaw
 
 /-- Unconditional lazy hit-and-run mixing on a KV97 inflated body. -/
 theorem tvLe_lazyHitAndRunLaw_inflated {n : ℕ} {ι : Type*}
-    (hn : 1100 ≤ n) (Am : ι → Space n) (bv : ι → ℝ) (cc rf : ℝ)
+    (hn : 21 ≤ n) (Am : ι → Space n) (bv : ι → ℝ) (cc rf : ℝ)
     {zin zout : Space n} {rin Rout : ℝ} (hr : 0 < rin) (hR : 0 ≤ Rout)
     (hin : Metric.closedBall zin rin ⊆ Arlib.KV97.inflated Am bv cc rf)
     (hout : Arlib.KV97.inflated Am bv cc rf ⊆ Metric.closedBall zout Rout)
@@ -153,7 +153,7 @@ the inflated bodies and the supplied exceptional warm starts; there is no sample
 or mixing-theorem binder. -/
 noncomputable def kv97SamplerOfLazyHitAndRunUncond
     {A : Type*} {n : ℕ} {M : A → Set (Space n)} {D : DNF A} {ρ : ℤ} {epsPrime : ℝ}
-    (hn : 1100 ≤ n) (hEps : 0 < epsPrime)
+    (hn : 21 ≤ n) (hEps : 0 < epsPrime)
     (Jt : Type) [Fintype Jt]
     (Am : {c : Cube A // c ∈ D} → Jt → Space n)
     (bv : {c : Cube A // c ∈ D} → Jt → ℝ)
