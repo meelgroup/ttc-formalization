@@ -8,6 +8,13 @@ import Ttc.Runtime
 /-!
 # `Exec/Coverage`: the coverage test, constructed — and the construction shown harmless
 
+⚠ **The binder counts and binder names in this docstring are history.**  They describe the
+headline at the rung of the ladder this file was written for — the file path it cites,
+`Model/Endgoal.lean`, has not existed for some time.  The current headline is
+`Ttc.ttc_volume` (`Model/Theorem`) at ten binders: `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.
+What this file *proves* is unaffected; only the account of which statement consumes it is
+out of date.
+
 `Ttc.ttc_volume` (`Model/Endgoal.lean`) carries the implementation's membership
 test as **four** binders:
 

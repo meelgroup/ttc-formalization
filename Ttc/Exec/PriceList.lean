@@ -43,9 +43,11 @@ ttcVolPrice atoms φ ε δ
 ```
 
 Every name in it is defined under `Ttc/Model/` — `Ttc.algGamma`, `Ttc.algAtoms`,
-`Ttc.algBlock`, `Ttc.preprocess`, `Ttc.sol`, `Ttc.atomSet` — which is what lets
-`Ttc.ttc_volume` carry it in its *statement* without breaking
-`#modelClosureOfType`.
+`Ttc.algBlock`, `Ttc.preprocess`, `Ttc.sol`, `Ttc.atomSet` — which is what let the headline
+carry it in its *statement* without breaking `#modelClosureOfType`.  ⚠ No statement carries
+it now: the fixed-price headline was deleted on 2026-08-19, and `Ttc.ttc_volume` is stated at
+the constructed oracles and is not closure-checked.  The vocabulary property is still true
+and still recorded; nothing depends on it any more.
 
 **It is exponential in `n`, and must not be read otherwise.**  The `(…)ⁿ` is the
 hit-and-miss estimator's rejection factor: sampling uniformly from a ball of radius `R`

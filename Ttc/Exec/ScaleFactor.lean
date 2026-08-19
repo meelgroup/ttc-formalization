@@ -7,7 +7,7 @@ import Ttc.Exec.Inputs
 /-!
 # `Exec/ScaleFactor`: the dilation that makes `hvol` automatic
 
-`Ttc.ttc_volume` carries a hypothesis
+The headline used to carry, at the rung this file was written for, a hypothesis
 
 ```
 hvol : P.thresh / 4 ≤ volSol (atomSet atoms) φ

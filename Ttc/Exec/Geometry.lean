@@ -11,6 +11,13 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 /-!
 # `Exec/Geometry`: the inscribed ball and the lattice enumeration, constructed
 
+⚠ **The binder counts and binder names in this docstring are history.**  They describe the
+headline at the rung of the ladder this file was written for — the file path it cites,
+`Model/Endgoal.lean`, has not existed for some time.  The current headline is
+`Ttc.ttc_volume` (`Model/Theorem`) at ten binders: `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.
+What this file *proves* is unaffected; only the account of which statement consumes it is
+out of date.
+
 `Ttc.ttc_volume` (`Model/Endgoal.lean`) carries **37 residual binders**.  Eleven of
 them are geometry and enumeration:
 

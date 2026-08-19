@@ -15,7 +15,7 @@ full-dimensional — is *not* dischargeable, and cannot be removed without resta
 `thm:decomposition` up to null sets.**  This file proves the verdict rather than
 asserting it: it lands the measure-theoretic half of the argument (dropping the
 degenerate cubes is invisible to `Ttc.volSol`), and then an explicit input on which
-every other hypothesis of `Ttc.ttc_volume` holds, `Ttc.volSol` is *positive*,
+every other hypothesis of the headline-with-`hint` holds, `Ttc.volSol` is *positive*,
 `hint` fails, and the repair that the measure-theoretic half suggests provably destroys
 `Ttc.IsDNFOf`.
 
@@ -183,7 +183,7 @@ theorem volSol_eq_toReal_biUnion_nondegenCubes (atoms : A → LinAtom n) {φ : B
 
 Dimension `1`, four atoms, `F = (x ≤ 0 ∧ −x ≤ 0) ∨ (x ≤ 1 ∧ −x ≤ 1)`.  The first
 disjunct denotes the point `{0}` and the second the interval `[−1, 1]`, so `Sol(F)` is
-`[−1, 1]`.  Every hypothesis of `Ttc.ttc_volume` other than `hint` holds, and
+`[−1, 1]`.  Every hypothesis of the headline-with-`hint` other than `hint` holds, and
 `Vol(F) > 0`; `hint` fails at the first cube. -/
 
 /-- The witness atoms: `x ≤ 0`, `−x ≤ 0`, `x ≤ 1`, `−x ≤ 1`. -/
@@ -305,7 +305,7 @@ theorem interior_region_fatCube_nonempty :
     (interior (region (atomSet degAtoms) fatCube)).Nonempty :=
   interior_nonempty_of_ball_subset one_pos ball_subset_region_fatCube
 
-/-! ### The other hypotheses of `Ttc.ttc_volume`, checked -/
+/-! ### The other hypotheses of the headline-with-`hint`, checked -/
 
 /-- `hφ`: the witness formula is negation-free. -/
 theorem degForm_isPositive : degForm.IsPositive := ⟨⟨trivial, trivial⟩, trivial, trivial⟩
@@ -355,7 +355,7 @@ theorem degForm_hint_fails :
   intro h
   exact (h ⟨thinCube, thinCube_mem⟩).ne_empty interior_region_thinCube
 
-/-- **`hint` is not derivable from the other hypotheses of `Ttc.ttc_volume`.**
+/-- **`hint` is not derivable from the headline's other hypotheses.**
 
 The witness formula is negation-free, its solution set is bounded, no atom has a zero
 normal, and its volume is positive — every input condition the theorem carries besides

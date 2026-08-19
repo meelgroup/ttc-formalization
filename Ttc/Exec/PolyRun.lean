@@ -12,12 +12,14 @@ import Ttc.Monadic.Program
 /-!
 # `Exec/PolyRun`: `TTC` *run* on the polynomial oracles
 
-`Ttc.ttc` (`Model/Pseudocode.lean:816`) is the algorithm at the **hit-and-miss Monte
-Carlo** volume estimator and the **lazy ball walk**, with the two per-call prices
-`cVol`, `cSample` left as binders.  `Ttc.ttc_volume` (`Model/Theorem.lean:93`)
-is its *unconditional* accuracy result, and `Ttc.ttc_volume`
-(`Exec/TheoremPoly`, deleted 2026-08-19) priced those binders — but only by **hypothesis**:
-nothing there says the run executes a polynomial oracle.
+⚠ **Read the next paragraph as history.**  `Ttc.ttc` used to be the algorithm at the
+**hit-and-miss Monte Carlo** volume estimator and the **lazy ball walk**, with the two
+per-call prices `cVol`, `cSample` left as binders; the headline was its *unconditional*
+accuracy result, and `Exec/TheoremPoly` priced those binders — but only by **hypothesis**:
+nothing there said the run executed a polynomial oracle.  Since 2026-08-19 `Ttc.ttc`
+executes the Cousins–Vempala estimator and the hit-and-run / ball-walk hybrid, there are no
+price binders anywhere, and `Exec/TheoremPoly` is deleted.  What this file supplies is still
+what it always was: the run with `vol` taken from a supplied `VolumeAlgorithm`.
 
 This file is **additive**.  It builds, beside `Ttc.ttc` and changing nothing about it,
 a second program `Ttc.ttcPoly` whose oracle bundle is Cousins–Vempala (an arbitrary

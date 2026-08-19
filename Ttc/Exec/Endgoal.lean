@@ -69,6 +69,13 @@ bundle `Ttc.coveredOracles`.  Note in particular that the index type is now pinn
 > numbers are right; they count different things.  Audit passes have twice
 > flagged this as a discrepancy, so: 38 raw = 36 explicit + 2 implicit.
 
+⚠ **The binder counts and binder names in this docstring are history.**  They describe the
+headline at the rung of the ladder this file was written for — the file path it cites,
+`Model/Endgoal.lean`, has not existed for some time.  The current headline is
+`Ttc.ttc_volume` (`Model/Theorem`) at ten binders: `atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`.
+What this file *proves* is unaffected; only the account of which statement consumes it is
+out of date.
+
 `Ttc.ttc_volume` has **36 binders**: 4 inputs (`atoms, φ, ε, δ`), 4 *definitional*
 (`M`/`M_eq` and `P`/`hP` — each pins a datum to a canonical closed term and exists
 only to keep the type short; inlining them would replace ~20 occurrences of

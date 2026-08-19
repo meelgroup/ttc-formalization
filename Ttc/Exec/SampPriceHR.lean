@@ -41,11 +41,18 @@ import Ttc.Exec.SampleDischarge
 ## What this file adds
 
 `Ttc.SamplerCost.samplePrice n γ R M ε' rfac` (`Exec/SamplerCost`) prices one hit-and-run
-draw as a function of six *free* parameters.  `Ttc.ttc_volume` cannot carry such a
-thing *as a named constant*: its statement may only mention constants defined under
-`Ttc/Model/`, `Ttc/Probability/` or `Ttc/Geometry/` (`Ttc.Audit.auditSurface`, enforced by
-`#modelClosureOfType`).  This file removes the six binders by instantiating each at the
-run's **own** data, exactly as `Exec/SamplePrice` does for the ball walk.
+draw as a function of six *free* parameters.  A statement could not carry such a thing *as a
+named constant* while the headline was closure-checked: it might mention only constants
+defined under `Ttc/Model/`, `Ttc/Probability/` or `Ttc/Geometry/` (`Ttc.Audit.auditSurface`,
+enforced by `#modelClosureOfType`).  This file removes the six binders by instantiating each
+at the run's **own** data, exactly as `Exec/SamplePrice` did for the ball walk.
+
+⚠ **That constraint no longer applies to the headline**, and this section is kept as the
+record of why the file is shaped the way it is.  Since 2026-08-19 `Ttc.ttc_volume` is stated
+at the constructed oracles and `#modelClosureOfType` is not claimed of it; what is still
+checked is `#modelClosure Ttc.ttcAlgOutput`, the specification.  Instantiating at the run's
+own data remains the right shape for a price — it is what makes the number a function of the
+algorithm's inputs rather than of six free choices — but it is no longer forced by an audit.
 
 (This paragraph used to explain how the headline carried the price: first as free geometry
 binders, then as a surface-side copy `Ttc.hrSampPriceAt` charged inside a four-ary
@@ -260,9 +267,10 @@ Every `Ttc` constant below is defined under `Ttc/Model/` or `Ttc/Geometry/` — 
 `Ttc.algPrec`, `Ttc.algGamma`, `Ttc.algScale`, `Ttc.algAtoms`, `Ttc.latticeScale`,
 `Ttc.toDNFd`, `Ttc.preprocess`, `Ttc.sol`, `Ttc.atomSet`, `Ttc.volSol`, `Ttc.Space`,
 `Ttc.canonRfac` — the only non-`Ttc` names being Mathlib's and `Arlib.KV97.kappaOf`/`cOf`.
-That is what would let `Ttc.ttc_volume` carry this expression in its *statement*
-without `#modelClosureOfType` (`Audit/ClosureCheck`) going red, exactly as it carries
-`Ttc.ttcVolPrice`'s and `Ttc.ttcSampPrice`'s bodies.  Note what is **absent**:
+That is what *would* let a closure-checked statement carry this expression — the property is
+still true of the vocabulary below, and still worth recording, even though the headline is no
+longer checked against it (2026-08-19) and `Ttc.ttcVolPrice`/`Ttc.ttcSampPrice` are no longer
+carried by any statement.  Note what is **absent**:
 `Ttc.SamplerCost.samplePrice`, `Ttc.hitAndRunTheorem11Steps` and
 `Ttc.hitAndRunTheorem11Threshold` all live outside the audit surface, and unfolding them is
 the whole point of this lemma.

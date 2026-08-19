@@ -9,7 +9,7 @@ import Ttc.Model.Pseudocode
 /-!
 # The inscribed ball, constructed rather than supplied
 
-`Ttc.ttc_volume` (`Model/Theorem.lean`) currently carries **four** binders
+The headline used to carry, at the rung this file was written for, **four** binders
 for the inscribed ball that `alg:prec` line 86 obtains from an LP,
 `γ̂ ← MaxInscribedBall(Pⁱ)`:
 

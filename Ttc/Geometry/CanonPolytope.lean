@@ -29,12 +29,16 @@ bound on what may go here: **definitions only, no `Prop`s, and nothing that is n
 geometry determined by the formula**.  Every *property* of these objects continues to be
 proved outside the surface.
 
-The statement of `Ttc.ttc_volume` now mentions `Ttc.canonRfac` **explicitly**
-(corrected 2026-08-12; this used to say it mentioned none of them, which was true until
-the headline's two prices were fixed, `Ttc.canonRfac` appearing in the guard on the
-running-time conjunct).  That is precisely why the five have to be
-inside the audit surface rather than merely reachable through `Ttc.ttc`'s body, and
-`#modelClosureOfType` on the headline stays green because they are.
+⚠ **Why the five are here is no longer the reason this section used to give.**  It used to
+be that `Ttc.ttc_volume`'s *statement* mentioned `Ttc.canonRfac` explicitly, so the five had
+to be inside the audit surface rather than merely reachable through `Ttc.ttc`'s body, and
+`#modelClosureOfType` on the headline stayed green because they were.  Since 2026-08-19 the
+headline is stated at the constructed oracles and is not closure-checked at all.
+
+They stay here because the check that *is* live still reaches them: `Ttc.ttcAlgOutput`'s
+closure — the specification, `#modelClosure Ttc.ttcAlgOutput` in `Ttc/Audit/ClosureCheck.lean`
+— contains all five, so moving any of them out of the three surface directories fails the
+build exactly as before.  The filing is unchanged; only the argument for it is.
 -/
 
 namespace Ttc

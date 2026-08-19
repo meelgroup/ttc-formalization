@@ -8,8 +8,10 @@ import Ttc.Exec.Inputs
 /-!
 # `hφ` and `hbdd` are logically independent
 
-**Verdict: neither of `Ttc.ttc_volume`'s two conditions on the input
-formula implies the other, and this file machine-checks both directions.**
+**Verdict: neither of the headline's two conditions on the input formula implies the other,
+and this file machine-checks both directions.**  (`hφ` survives in `Ttc.ttc_volume` today;
+`hbdd` was discharged by `Ttc/Exec/BddFromPos.lean`.  The independence is a fact about the
+two conditions, not about one theorem's binder list, so it is unaffected.)
 
 `Ttc.ttc_volume` (`Model/Theorem.lean`) takes
 

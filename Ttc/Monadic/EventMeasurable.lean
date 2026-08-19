@@ -69,8 +69,8 @@ preimage, measurable or not (`Ttc.CountablyDetermined.measurableSet_preimage`).
 ## What is *not* claimed
 
 Nothing here is assumed.  In particular no measurability hypothesis is added to any
-statement: `Ttc.ttc_accuracy_single_measure` has exactly
-`Ttc.ttc_volume`'s binders.
+statement: `Ttc.ttc_accuracy_single_measure` has exactly the binders the headline had when
+it was written.
 
 One correction to the picture the spike left: the headline's event depends on the
 volume coins `c` as well as on the trajectory, so

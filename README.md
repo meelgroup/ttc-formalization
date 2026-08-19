@@ -1,5 +1,65 @@
 # A Lean 4 formalisation of *Efficient Volume Computation for SMT Formulas*
 
+> ## ⚠ Current state, 2026-08-19 — read this before the body
+>
+> The repository has **one algorithm and one theorem**, both at the oracles the paper
+> specifies.
+>
+> * **`Ttc.ttc atoms φ ε δ`** (`lean/Ttc/Model/Theorem.lean`) is the law of one run at
+>   Cousins–Vempala Gaussian cooling for volume
+>   (`TtcSlowRuntimePerPhase.slowPerPhaseImplementation.algorithm n`) and the hit-and-run /
+>   ball-walk hybrid for sampling (`canonicalCappedPolyHybridPlugin`).  A draw
+>   `r : ℝ × ℝ≥0∞` is one execution: `r.1` the estimate, `r.2` the membership queries spent.
+>   It is total, via a junk branch off the side condition `Ttc.TtcInputs`.
+> * **`Ttc.ttc_volume`** is the only theorem in that file: accuracy in the probability monad
+>   (`1 - δ ≤ Pr[r ← ttc …; r.1 ∈ relErr ε (volSol …)]`) and **expected** query cost
+>   (`∫⁻ r, r.2 ≤ volume envelope + sampler envelope`), ten binders, axioms
+>   `[propext, Classical.choice, Quot.sound]`.
+>
+> **Deleted, not weakened:** the reference-oracle chain — hit-and-miss Monte Carlo for volume,
+> the lazy ball walk charged at a fixed per-call price for sampling — together with
+> `Exec/{PricedHeadline,SamplePrice,TheoremPoly,RuntimeMN4,SampPricePoly,SpeedySamplerChain,
+> OperationalSpeedySamplerAudit}` and `Witness/FixedPriceTwoCube`.  There are no price binders
+> anywhere and nothing is charged at a number it is not proved to pay.
+>
+> **Four things to carry into the body, which predates this change:**
+>
+> 1. **The cost conjunct is an expectation in membership-query units**, at `Õ(m·n⁴·ρ⁶/ε²)` —
+>    *not* the paper's `O(m·n⁵·ρ²·r_max)`, and not in the same units until the `⌈n·rfac⌉₊`
+>    charge of `ttc_volume_runtime_perPhase_ops` is applied.  See `PLAN-SHAPE.md` §5 and
+>    `PAPER-CLAIMS.md`.
+> 2. **It is not uniform in the dimension.**  At `1100 ≤ n` the sampler is hit-and-run.  For
+>    `21 ≤ n < 1100` it is the ball walk, with `4 ^ n` — bounded, so a constant rather than an
+>    asymptotic obstruction, but an astronomical one.  This is now machine-checked, not
+>    asserted: `#inClosure Ttc.mixSteps in Ttc.ttc` in `Ttc/Audit/ClosureCheck.lean` fails the
+>    build if the ball walk ever silently leaves.  `PLAN-SPHERECAP.md` scopes the one lemma
+>    that removes it.
+> 3. **The four-file audit surface no longer covers the headline, deliberately.**  Naming the
+>    constructed oracles reaches 637 constants across 108 modules.  What is still checked, and
+>    still fails the build on drift, is `#modelClosure Ttc.ttcAlgOutput` — the *specification*.
+>    A reader checking what the algorithm *is* need not leave `Model/`; a reader checking what
+>    was proved about *running* it must read the construction.  `Ttc/Audit/ClosureCheck.lean`
+>    argues the trade in place.
+> 4. **Non-vacuity, both new and both required reading (`CLAUDE.md` §11).**
+>    `Ttc.EnvelopeFinite.ttc_volume_bound_ne_top` proves the cost bound is not `⊤` — in
+>    `ℝ≥0∞` it would otherwise hold of every run — and `Ttc/Witness/FullTwoCube.lean` exhibits
+>    data meeting all ten binders at `n = 21`.
+>
+> **`Ttc.ttc` is defined in `Model/Theorem`, not `Model/Pseudocode`.**  `Ttc/Exec/` imports
+> `Pseudocode` (it is built against `algIndex`, `algAtoms`, `algBlock`), so `Pseudocode` cannot
+> name the construction without a cycle.  `Pseudocode` states `alg:ttc` with the oracle bundle
+> as an argument and chooses no oracle; `Theorem`, the only `Model/` file downstream of the
+> construction, fills it in.
+>
+> **Everything below this box predates 2026-08-19.**  It names declarations that no longer
+> exist — `ttc_volume_estimate` and its `_parametric` / `_quartic` variants, `ttcCharged`,
+> `ttcRun`, `algOracles`, `cvVolPriceAt`, `hrSampPriceAt` — and describes an architecture with
+> two headlines and two oracle pairs.  Read it as the record of how the development got here,
+> not as a description of what is in it.  The `.lean` docstrings *were* brought up to date and
+> are the current source of truth.
+
+
+
 Machine-checked, `sorry`-free, axiom-clean formalisation of the analysis of the
 `TTC` algorithm (Shaw, Sarkar, Meel), following the methodology in
 [`CLAUDE.md`](CLAUDE.md).

@@ -367,11 +367,16 @@ theorem ttcVolPriceCVAlg_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (h
 
 /-! ## §6  The same natural in `Ttc/Model/` vocabulary
 
-`Ttc.ttcSampPriceHR_model` (`Ttc/Exec/SampPriceHR.lean`) is the pattern: restate the price with
-every `Ttc/Exec/` constant unfolded, by `rfl`, so that the expression can appear in a
-*statement* — `#modelClosureOfType` (`Ttc/Audit/ClosureCheck.lean:285`) fails the build if a
-constant in the capstone's type is defined outside `Ttc/Model/`, `Ttc/Probability/` or
-`Ttc/Geometry/`.
+`Ttc.ttcSampPriceHR_model` (`Ttc/Exec/SampPriceHR.lean`) is the pattern: restate the price
+with every `Ttc/Exec/` constant unfolded, by `rfl`, so that the expression *could* appear in a
+closure-checked statement — `#modelClosureOfType` fails the build if a constant in the type it
+is applied to is defined outside `Ttc/Model/`, `Ttc/Probability/` or `Ttc/Geometry/`.
+
+⚠ It is applied to no headline now.  Since 2026-08-19 `Ttc.ttc_volume` is stated at the
+constructed oracles, which cannot be closure-checked, and this price is charged to nothing
+(module docstring, item 1).  The unfolded form below is kept because it is the honest
+statement of what the price *is* in the algorithm's own vocabulary, which is worth having
+whether or not an audit consumes it.
 
 The six `Ttc/Exec/` constants that must go are `Ttc.CVCost.cvVolumeOpsPrice`,
 `Ttc.CVCost.cvRuns`, `Ttc.CVCost.cvSamplesPerPhase`, `Ttc.CoolCost.coolDrawPrice`,
