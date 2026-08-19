@@ -16,31 +16,40 @@ already reduces the sampler sum, with no premises, to
 What was missing — and what `lean/PLAN-SHAPE.md` §5.7 records was got *wrong* by hand — is the
 size of the endpoint cap.  This file supplies the part of that which is pure arithmetic.
 
-## The point of the file
+## The point of the file, and what has changed twice under it
 
-`Ttc.hybridTransitionBound` is **not** its high-dimensional summand.  Its definition
-(`Ttc/Sampler/ConstructHybridUncond.lean:199`) is
+⚠ **Read this section as history.**  When it was written, `Ttc.hybridTransitionBound` added
+`Ttc.lowDimBallWalkEnvelope` **unconditionally** — a uniform envelope covering both branches,
+summing `Ttc.mixStepsBound k` over every `k < 1100`, so the bound contained a term of degree
+≈ 4400 in the radius ratio with a `4^1099` constant *even where the walk being priced was
+hit-and-run*.  The lemmas below were written to make that visible as a checked inequality
+rather than a reading of a definition, and the lower bounds are what proved it was real.
 
-    max 0 (2^66 · n^2 · Rout^2 / rin^2 · log (8·Mw/eps^2))  +  1  +  lowDimBallWalkEnvelope …
+Two changes since, both on 2026-08-19:
 
-and the third summand is added **unconditionally**: it is a uniform envelope covering both the
-hit-and-run branch (`21 ≤ n`) and the ball-walk branch, not a term that switches off in high
-dimension.  `Ttc.lowDimBallWalkEnvelope` sums `Ttc.mixStepsBound k` over `k < 1100`, and
-`mixStepsBound` carries `4^k` and `((γ+Dm)/γ)^(4k)`.  So the envelope contains a term that is
-**constant in `n` but polynomial in the radius ratio of degree ≈ 4400, with a `4^1099`
-constant**.
+1. `Ttc.hybridTransitionBound` now **branches** rather than adding a uniform envelope, so each
+   branch prices its own walk and nothing else.
+2. The branch point moved from `1100` to `21`, because the spherical-cap estimate
+   `Arlib.MarkovChains.unifSphere_cap_le` now holds from `n ≥ 21`.
 
-`Ttc.SamplerEnvelopeShape.lowDimBallWalkEnvelope_le` below makes that visible as a checked
-inequality rather than a reading of a definition.  It is deliberately not asymptotic notation:
-the constants are the point.
+Together those mean the ball-walk term is gone from every dimension TTC's capstone admits.
+The lemmas below still hold and are still worth keeping — `lowDimBallWalkEnvelope_le` and the
+`_of_low` family now describe the `n < 21` branch, which no theorem in this development
+reaches — but the *finding* they were written to record no longer applies to the run.
 
-## What is **not** here
+## What is **not** here — and is now next door
 
-No bound of the form `canonicalHybridSamplerQueryBound ≤ rMax · n^5 · rho^2`.  That is the
-premise `hprice` of
-`Ttc.TTCOperationalPaperBridge.canonicalCappedSampleQueryEnvelope_le_paperSampling_of_cube`,
-and **this development cannot discharge it at large radius ratio** — the low-dimensional term
-above exceeds it.  See `AUDIT.md` and `PLAN-SHAPE.md` §5.7.
+This section used to read: "No bound of the form
+`canonicalHybridSamplerQueryBound ≤ rMax · n^5 · rho^2` … **this development cannot discharge
+it at large radius ratio** — the low-dimensional term above exceeds it."
+
+That was true and is no longer.  With the branch at `21` the low-dimensional term is not in
+the bound at any dimension the capstone admits, and
+`Ttc/Exec/SamplerPolyEnvelope.lean` supplies the polynomial: per cube
+`canonicalHybridSamplerQueryBound ≤ 8·((2⁶⁶·n²·ρ²·L + 1)·w + 1)`, and summed,
+`canonicalCappedSampleQueryEnvelope_le_poly` — with `ρ²` and `L` `Finset.sup`s over the run's
+own cubes, so no geometry binder.  What is still *not* anywhere is a polynomial form for the
+**volume** half; that is `PLAN-SHAPE.md` §5's unsettled `ρ` exponent.
 -/
 
 namespace Ttc.SamplerEnvelopeShape
