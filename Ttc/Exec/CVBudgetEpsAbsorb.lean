@@ -141,13 +141,13 @@ theorem sourceOneRunQueryEnvelope_eps_absorb
           exact mul_le_mul_of_nonneg_right hc4 h4
       _ = 64 * (A / eps ^ 2 * sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
             sourceLogFactor ((n : Real) / eps) ^ 2) := by ring
+  -- ⚠ The `hcore` computation above is what the *shaped* envelope needed: it moved the
+  -- accuracy from the internal `e` to the public `eps` at the cost of the factor `64`.
+  -- The budget no longer carries the shape, so the absorption is now `rc ≤ 64 · rc`;
+  -- `hcore` is retained because it is the honest record of where the `64` came from.
+  -- See `lean/PLAN-SHAPE.md`.
   unfold sourceOneRunQueryEnvelope
-  calc rc * (A / e ^ 2 * sourceLogFactor n ^ 2 * sourceLogFactor (1 / e) ^ 2 *
-        sourceLogFactor ((n : Real) / e) ^ 2)
-      ≤ rc * (64 * (A / eps ^ 2 * sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-          sourceLogFactor ((n : Real) / eps) ^ 2)) := mul_le_mul_of_nonneg_left hcore hrc
-    _ = 64 * rc * (A / eps ^ 2 * sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-          sourceLogFactor ((n : Real) / eps) ^ 2) := by ring
+  linarith
 
 /-! ## The budget step -/
 

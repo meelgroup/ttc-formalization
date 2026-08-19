@@ -36,11 +36,20 @@ noncomputable def sourceRadialLogOneRunQueryCore
     (runtimeConstant : Real) (n : Nat) (radius eps N : Real) : Real :=
   sourceOneRunQueryCore runtimeConstant n radius eps * sourceLogFactor N ^ 2
 
-/-- Accuracy-dependent honest one-run envelope.  There remains exactly one `eps^-2`
-factor, inherited from the weighted estimator sample count. -/
+set_option linter.unusedVariables false in
+/-- **The radial-log one-run budget scalar.**
+
+⚠ This was `sourceRadialLogOneRunQueryCore … / eps²` — the source core with the two terminal
+chunk logarithms, divided by the estimator's `eps²`.  It is now the scalar alone, in step
+with `Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope`; the two must agree in
+form, because `sourceOneRunQueryEnvelope_effective_eq_radialLog` is what lets this family
+reuse the generic cutoff and median implementation.  See `lean/PLAN-SHAPE.md`.
+
+`sourceRadialLogOneRunQueryCore` itself is unchanged and is still the shaped quantity
+`Ttc.CVHotRefreshHonestRuntime` compares against. -/
 noncomputable def sourceRadialLogOneRunQueryEnvelope
     (runtimeConstant : Real) (n : Nat) (radius eps N : Real) : Real :=
-  sourceRadialLogOneRunQueryCore runtimeConstant n radius eps N / eps ^ 2
+  runtimeConstant * sourceLogFactor N ^ 2
 
 noncomputable def sourceRadialLogOneRunQueryBudget
     (runtimeConstant : Real) (n : Nat) (radius eps N : Real) : ENNReal :=
@@ -67,9 +76,8 @@ theorem sourceRadialLogOneRunQueryEnvelope_nonneg
     {runtimeConstant : Real} (hconstant : 0 ≤ runtimeConstant)
     (n : Nat) (radius eps N : Real) :
     0 ≤ sourceRadialLogOneRunQueryEnvelope runtimeConstant n radius eps N := by
-  unfold sourceRadialLogOneRunQueryEnvelope sourceRadialLogOneRunQueryCore
-  unfold sourceOneRunQueryCore
-  exact div_nonneg (by positivity) (sq_nonneg eps)
+  unfold sourceRadialLogOneRunQueryEnvelope
+  positivity
 
 /-! ## The actual terminal index, twice -/
 
@@ -255,28 +263,27 @@ theorem sourceRadialLogAmplifiedQueryEnvelope_le
   have hfactor : 8 * Real.log (1 / p) + 2 ≤ 10 * Lp := by
     have := le_max_right (1 : Real) (Real.log (1 / p))
     linarith
-  have hold := sourceOneRunQueryEnvelope_le_of_sq_le (n := n)
-    hconstant hradius heps
+  have hbase1' : (1 : Real) ≤
+      (max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2) *
+        sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
+          sourceLogFactor ((n : Real) / eps) ^ 2 := by
+    simpa only [sourceLogFactor] using hbase1
   have hrun : sourceRadialLogOneRunQueryEnvelope runtimeConstant n radius eps N ≤
       runtimeConstant *
         ((max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2) *
           sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
             sourceLogFactor ((n : Real) / eps) ^ 2) * LR ^ 2 := by
-    unfold sourceRadialLogOneRunQueryEnvelope sourceRadialLogOneRunQueryCore
+    unfold sourceRadialLogOneRunQueryEnvelope
+    have hLR0 : (0 : Real) ≤ LR ^ 2 := by positivity
     calc
-      sourceOneRunQueryCore runtimeConstant n radius eps * LN ^ 2 / eps ^ 2 =
-          sourceOneRunQueryEnvelope runtimeConstant n radius eps * LN ^ 2 := by
-            rw [sourceOneRunQueryEnvelope_eq_core_div]
-            field_simp [heps.ne']
-      _ ≤ (runtimeConstant *
-          (max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
-            sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-              sourceLogFactor ((n : Real) / eps) ^ 2)) * LN ^ 2 := by gcongr
+      runtimeConstant * sourceLogFactor N ^ 2 = runtimeConstant * LN ^ 2 := rfl
+      _ ≤ runtimeConstant * LR ^ 2 := by gcongr
       _ ≤ runtimeConstant *
-          ((max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2) *
-            sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-              sourceLogFactor ((n : Real) / eps) ^ 2) * LR ^ 2 := by
-            gcongr
+            ((max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2) *
+              sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
+                sourceLogFactor ((n : Real) / eps) ^ 2) * LR ^ 2 :=
+        mul_le_mul_of_nonneg_right
+          (le_mul_of_one_le_right hconstant hbase1') hLR0
   have hmain1 : 1 ≤
       ((max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2) *
         sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
@@ -334,8 +341,7 @@ theorem sourceOneRunQueryEnvelope_effective_eq_radialLog
         n radius eps =
       sourceRadialLogOneRunQueryEnvelope runtimeConstant n radius eps N := by
   unfold radialLogEffectiveRuntime sourceOneRunQueryEnvelope
-    sourceRadialLogOneRunQueryEnvelope sourceRadialLogOneRunQueryCore
-    sourceOneRunQueryCore
+    sourceRadialLogOneRunQueryEnvelope
   ring
 
 theorem sourceOneRunQueryBudget_effective_eq_radialLog

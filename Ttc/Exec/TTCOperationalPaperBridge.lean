@@ -311,26 +311,9 @@ precisely factors which `analysis.tex` places under big-O suppression.
 theorem sourceAmplifiedQueryEnvelope_counterexample :
     4 < sourceAmplifiedQueryEnvelope 1000 1 0 (1 / 2) (1 / 2) := by
   have hlog : 0 ≤ Real.log (2 : Real) := Real.log_nonneg (by norm_num)
-  unfold sourceAmplifiedQueryEnvelope sourceOneRunQueryEnvelope sourceLogFactor
-  norm_num [Real.log_one]
-  have hmax : (1 : Real) ≤ max 1 (Real.log 2) := le_max_left _ _
-  have hsq : (1 : Real) ≤ max 1 (Real.log 2) ^ 2 := by nlinarith
-  have hsqsq : (1 : Real) ≤
-      max 1 (Real.log 2) ^ 2 * max 1 (Real.log 2) ^ 2 :=
-    by simpa using mul_le_mul hsq hsq (by norm_num) (by positivity)
-  have hfactor : (2 : Real) ≤ 8 * Real.log 2 + 2 := by linarith
-  have hrun : (4000 : Real) ≤
-      1000 * (4 * max 1 (Real.log 2) ^ 2 * max 1 (Real.log 2) ^ 2) := by
-    nlinarith
-  have hinner : (80020 : Real) ≤
-      20 * (1000 * (4 * max 1 (Real.log 2) ^ 2 *
-        max 1 (Real.log 2) ^ 2) + 1) := by nlinarith
-  calc
-    (4 : Real) < 2 * 80020 := by norm_num
-    _ ≤ (8 * Real.log 2 + 2) *
-        (20 * (1000 * (4 * max 1 (Real.log 2) ^ 2 *
-          max 1 (Real.log 2) ^ 2) + 1)) := by
-      exact mul_le_mul hfactor hinner (by norm_num) (by positivity)
+  unfold sourceAmplifiedQueryEnvelope sourceOneRunQueryEnvelope
+  norm_num
+  nlinarith [hlog]
 
 #print axioms card_cubeIndex_eq_length
 #print axioms canonicalFacetCount_eq_algBlock

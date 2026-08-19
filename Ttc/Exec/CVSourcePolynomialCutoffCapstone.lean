@@ -45,13 +45,25 @@ open scoped ENNReal Classical
 display into a globally nonnegative explicit expression. -/
 noncomputable def sourceLogFactor (x : Real) : Real := max 1 (Real.log x)
 
-/-- The paper's one-run membership-query shape, before confidence amplification.
-Here `R` is the square-root of the second radial moment, so the first term is `R^2*n^2`. -/
+set_option linter.unusedVariables false in
+/-- **The one-run query budget scalar.**  This is the `runtimeConstant` itself: the whole
+content of a one-run bound is the scalar a construction proves its expected query count is
+under, and the `(n, R, eps)` slots are retained only so that every consumer's signature is
+unchanged.
+
+⚠ **This used to be `runtimeConstant * cvBaseClipped n R eps`** — Cousins–Vempala's own
+Theorem 1.1 expression, multiplied in.  That factor was never earned: every discharge site
+proves `expected queries ≤ runtimeConstant` and then reaches this envelope through
+`Ttc.CVSlowEffectiveOverhead.le_sourceOneRunQueryEnvelope_of_le`, whose entire content was
+`le_mul_of_one_le_right` at `1 ≤ cvBaseClipped`.  See `lean/PLAN-SHAPE.md`.
+
+The paper-contract layer is untouched: `Ttc.cvComplexityShapeClipped` and
+`Ttc.CVTheorem11Implementation` still state Theorem 1.1's expression, and
+`Ttc.CVSourceTheorem11Arithmetic.sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped`
+still proves this budget fits it. -/
 noncomputable def sourceOneRunQueryEnvelope
     (runtimeConstant : Real) (n : Nat) (R eps : Real) : Real :=
-  runtimeConstant * (max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
-    sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-      sourceLogFactor ((n : Real) / eps) ^ 2)
+  runtimeConstant
 
 theorem sourceLogFactor_pos (x : Real) : 0 < sourceLogFactor x := by
   unfold sourceLogFactor

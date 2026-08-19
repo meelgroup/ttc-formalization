@@ -15,19 +15,6 @@ namespace Ttc.CVSourceTheorem11Arithmetic
 open MeasureTheory
 open Ttc.CVSourcePolynomialCutoffCapstone
 
-/-- The source one-run shape is monotone in the supplied squared radial scale. -/
-theorem sourceOneRunQueryEnvelope_le_of_sq_le
-    {runtimeConstant R R2 eps : Real} {n : Nat}
-    (hconstant : 0 ≤ runtimeConstant) (hR : R ^ 2 ≤ R2)
-    (heps : 0 < eps) :
-    sourceOneRunQueryEnvelope runtimeConstant n R eps ≤
-      runtimeConstant *
-        (max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
-          sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-            sourceLogFactor ((n : Real) / eps) ^ 2) := by
-  unfold sourceOneRunQueryEnvelope
-  gcongr
-
 /-- The non-confidence part of the clipped CV complexity is at least one. -/
 theorem one_le_cvBaseClipped
     {n : Nat} {R2 eps : Real} (hn : 1 ≤ n) (hR2 : 0 ≤ R2)
@@ -70,6 +57,67 @@ theorem one_le_cvBaseClipped
           max 1 (Real.log ((n : Real) / eps)) ^ 2 :=
       le_mul_of_one_le_right (mul_nonneg (mul_nonneg hmax0 hlogn0) hloge0) hlogne
 
+/-- **The confidence factor** — the only part of Cousins–Vempala's Theorem 1.1 expression
+that a one-run budget genuinely has to be multiplied by.
+
+`Ttc.CVSourcePolynomialCutoffCapstone.sourceAmplifiedQueryEnvelope` is
+`(8·log(1/p) + 2) · (20 · (oneRun + 1))`: the `log(1/p)` is confidence amplification by
+repeated runs and is *earned*.  Everything else in `Ttc.cvComplexityShapeClipped` was reached
+only through `1 ≤ cvBaseClipped` — see `lean/PLAN-SHAPE.md`. -/
+noncomputable def cvConfidenceShape :
+    (n : Nat) → Real → Real → Real → Real :=
+  fun _n _R2 _eps p ↦ max 1 (Real.log (1 / p))
+
+theorem cvConfidenceShape_nonneg (n : Nat) (R2 eps p : Real) :
+    0 ≤ cvConfidenceShape n R2 eps p := by
+  unfold cvConfidenceShape
+  exact le_trans zero_le_one (le_max_left _ _)
+
+/-- **The amplified budget against the confidence factor alone.**
+
+The companion of `sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped`, with the base
+shape deleted.  Same `calc`, same universal constant `200·(rc + 1)`; the base shape is not
+needed because the one-run budget no longer carries it.  Unlike that lemma this needs no
+`hn`, `hR2`, `hR` or `heps1`. -/
+theorem sourceAmplifiedQueryEnvelope_le_confidence
+    {runtimeConstant R R2 eps p : Real} {n : Nat}
+    (hconstant : 0 ≤ runtimeConstant) (hp : 0 < p) (hp1 : p < 1) :
+    sourceAmplifiedQueryEnvelope runtimeConstant n R eps p ≤
+      (200 * (runtimeConstant + 1)) * cvConfidenceShape n R2 eps p := by
+  have hlogp : 0 ≤ Real.log (1 / p) := by
+    apply Real.log_nonneg
+    rw [le_div_iff₀ hp]
+    simpa using hp1.le
+  have hL1 : (1 : Real) ≤ max 1 (Real.log (1 / p)) := le_max_left _ _
+  have hfactor : 8 * Real.log (1 / p) + 2 ≤ 10 * max 1 (Real.log (1 / p)) := by
+    have hlogle : Real.log (1 / p) ≤ max 1 (Real.log (1 / p)) := le_max_right _ _
+    linarith
+  unfold cvConfidenceShape sourceAmplifiedQueryEnvelope sourceOneRunQueryEnvelope
+  calc
+    (8 * Real.log (1 / p) + 2) * (20 * (runtimeConstant + 1))
+        ≤ (10 * max 1 (Real.log (1 / p))) * (20 * (runtimeConstant + 1)) :=
+          mul_le_mul_of_nonneg_right hfactor (by linarith)
+    _ = (200 * (runtimeConstant + 1)) * max 1 (Real.log (1 / p)) := by ring
+
+/-- **The one-run budget scalar sits under the paper's one-run shape.**
+
+⚠ Before `PLAN-SHAPE`, `Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope` *was*
+that shape, and this was monotonicity in the radial scale, proved by `gcongr` alone.  It is
+now the strictly weaker `runtimeConstant ≤ runtimeConstant · (the shape)`, which is
+`one_le_cvBaseClipped` — and which therefore needs `1 ≤ n`, `0 ≤ R2` and `eps < 1`, the three
+binders this statement did not previously carry.  Both call sites already have them. -/
+theorem sourceOneRunQueryEnvelope_le_of_sq_le
+    {runtimeConstant R R2 eps : Real} {n : Nat}
+    (hconstant : 0 ≤ runtimeConstant) (hn : 1 ≤ n) (hR2 : 0 ≤ R2)
+    (_hR : R ^ 2 ≤ R2) (heps : 0 < eps) (heps1 : eps < 1) :
+    sourceOneRunQueryEnvelope runtimeConstant n R eps ≤
+      runtimeConstant *
+        (max (R2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
+          sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
+            sourceLogFactor ((n : Real) / eps) ^ 2) := by
+  unfold sourceOneRunQueryEnvelope sourceLogFactor
+  exact le_mul_of_one_le_right hconstant (one_le_cvBaseClipped hn hR2 heps heps1)
+
 /-- The amplified source envelope fits the clipped public Theorem 1.1 shape with one
 universal numerical loss. -/
 theorem sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped
@@ -102,7 +150,7 @@ theorem sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped
   have hrun : sourceOneRunQueryEnvelope runtimeConstant n R eps ≤
       runtimeConstant * B := by
     simpa only [B, sourceLogFactor] using
-      sourceOneRunQueryEnvelope_le_of_sq_le hconstant hR heps
+      sourceOneRunQueryEnvelope_le_of_sq_le hconstant hn hR2 hR heps heps1
   have hsource0 : 0 ≤ sourceOneRunQueryEnvelope runtimeConstant n R eps :=
     sourceOneRunQueryEnvelope_nonneg hconstant n R eps
   calc

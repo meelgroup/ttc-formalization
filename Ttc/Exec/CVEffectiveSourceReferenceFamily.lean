@@ -18,7 +18,7 @@ explicit schedule overhead which is *not* a squared radial logarithm, so no choi
 
 This file makes the effective runtime an arbitrary function of the input.  Everything
 downstream then follows: the resulting expected-query algorithm meets the shape
-`cvComplexityShapeClipped * OV` for any overhead envelope `OV` dominating the effective
+`cvConfidenceShape * OV` for any overhead envelope `OV` dominating the effective
 constant, and `Ttc.CVShaped.ttc_volume_estimate_of_cvShapedExpectedImplementation`
 transports that to TTC.
 
@@ -28,7 +28,7 @@ transports that to TTC.
   the expected-cost one stated at `sourceOneRunQueryBudget (effective a) …`.
 * `expectedQueryVolumeAlgorithmOfEffectiveSourceReferenceTVCertificates` — the oracle.
 * `cvShapedExpectedImplementationOfEffectiveFamily` — the shape-generic implementation,
-  at `shape = cvComplexityShapeClipped * OV` and `runtimeConstant = 400 * (rc + 1)`.
+  at `shape = cvConfidenceShape * OV` and `runtimeConstant = 400 * (rc + 1)`.
 * `EffectiveSourcePublicReferenceTVCertificates.ofRadialLog` — the existing radial-log
   certificate family is the instance at
   `effective a := radialLogEffectiveRuntime runtimeConstant (radialN a.1)`, so this file
@@ -187,7 +187,7 @@ theorem effectiveSourceReferencePublicExpectedBound_le
     (heps : 0 < eps) (heps1 : eps < 1) (hp : 0 < p) (hp1 : p < 1) :
     effectiveSourceReferencePublicExpectedBound effective radialR K eps p ≤
       ENNReal.ofReal
-        ((400 * (effective (K, eps, p) + 1)) * cvComplexityShapeClipped n R2 eps p) := by
+        ((400 * (effective (K, eps, p) + 1)) * cvConfidenceShape n R2 eps p) := by
   have hbase : effectiveSourceReferencePublicExpectedBound effective radialR K eps p ≤
       2 * ENNReal.ofReal
         (sourceAmplifiedQueryEnvelope (effective (K, eps, p)) n (radialR K) eps p) := by
@@ -197,19 +197,19 @@ theorem effectiveSourceReferencePublicExpectedBound_le
     exact sourcePublicExpectedBound_le_polynomial heff radialR K hp hp1
   refine hbase.trans ?_
   have hstep : sourceAmplifiedQueryEnvelope (effective (K, eps, p)) n (radialR K) eps p ≤
-      (200 * (effective (K, eps, p) + 1)) * cvComplexityShapeClipped n R2 eps p :=
-    sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped heff hn hR2 hradius
-      heps heps1 hp hp1
+      (200 * (effective (K, eps, p) + 1)) * cvConfidenceShape n R2 eps p :=
+    Ttc.CVSourceTheorem11Arithmetic.sourceAmplifiedQueryEnvelope_le_confidence
+      (R2 := R2) heff hp hp1
   calc
     (2 : ENNReal) * ENNReal.ofReal
         (sourceAmplifiedQueryEnvelope (effective (K, eps, p)) n (radialR K) eps p)
         ≤ 2 * ENNReal.ofReal
           ((200 * (effective (K, eps, p) + 1)) *
-            cvComplexityShapeClipped n R2 eps p) := by
+            cvConfidenceShape n R2 eps p) := by
           gcongr
     _ = ENNReal.ofReal
           ((400 * (effective (K, eps, p) + 1)) *
-            cvComplexityShapeClipped n R2 eps p) := by
+            cvConfidenceShape n R2 eps p) := by
           rw [show ((2 : ENNReal)) = ENNReal.ofReal (2 : Real) by
                 simp [ENNReal.ofReal_ofNat],
             ← ENNReal.ofReal_mul (by norm_num)]
@@ -244,7 +244,7 @@ noncomputable def cvShapedExpectedImplementationOfEffectiveFamily
     (hcert : ∀ n, EffectiveSourcePublicReferenceTVCertificates n (effective n)
       (radialR n) (Omega n) (actual n) (reference n) (cost n) (value n)) :
     CVShapedExpectedImplementation Adm
-      (fun n R2 eps p ↦ cvComplexityShapeClipped n R2 eps p * OV n R2 eps p) where
+      (fun n R2 eps p ↦ cvConfidenceShape n R2 eps p * OV n R2 eps p) where
   algorithm n :=
     expectedQueryVolumeAlgorithmOfEffectiveSourceReferenceTVCertificates n
       (effective n) (radialR n) (Omega n) (actual n) (reference n) (cost n)
@@ -257,8 +257,8 @@ noncomputable def cvShapedExpectedImplementationOfEffectiveFamily
         unfold cvSecondMoment
         exact integral_nonneg (fun _ ↦ sq_nonneg _)
       exact hm0.trans (hAdm n K R2 hK).2.2.2.2
-    have hshape0 : 0 ≤ cvComplexityShapeClipped n R2 eps p :=
-      cvComplexityShapeClipped_nonneg n R2 eps p hR20
+    have hshape0 : 0 ≤ cvConfidenceShape n R2 eps p :=
+      cvConfidenceShape_nonneg n R2 eps p
     change effectiveSourceReferencePublicExpectedBound (effective n) (radialR n) K eps p ≤ _
     refine (effectiveSourceReferencePublicExpectedBound_le (radialR n) K
       (heff0 n (K, eps, p)) hn hR20 (hrad n K R2 hK) heps heps1 hp hp1).trans ?_
@@ -269,12 +269,12 @@ noncomputable def cvShapedExpectedImplementationOfEffectiveFamily
       have h1 := heff n K eps p R2 hK
       nlinarith [hconstant, hOV1, hOV0]
     calc
-      (400 * (effective n (K, eps, p) + 1)) * cvComplexityShapeClipped n R2 eps p
+      (400 * (effective n (K, eps, p) + 1)) * cvConfidenceShape n R2 eps p
           ≤ (400 * ((runtimeConstant + 1) * OV n R2 eps p)) *
-            cvComplexityShapeClipped n R2 eps p := by
+            cvConfidenceShape n R2 eps p := by
             gcongr
       _ = (400 * (runtimeConstant + 1)) *
-            (cvComplexityShapeClipped n R2 eps p * OV n R2 eps p) := by ring
+            (cvConfidenceShape n R2 eps p * OV n R2 eps p) := by ring
 
 /-- **The dimension-guarded implementation.**
 
@@ -311,7 +311,7 @@ noncomputable def cvShapedExpectedImplementationOfEffectiveFamilyTwentyOne
     (hcert : ∀ n, 21 ≤ n → EffectiveSourcePublicReferenceTVCertificates n (effective n)
       (radialR n) (Omega n) (actual n) (reference n) (cost n) (value n)) :
     CVShapedExpectedImplementation Adm
-      (fun n R2 eps p ↦ cvComplexityShapeClipped n R2 eps p * OV n R2 eps p) where
+      (fun n R2 eps p ↦ cvConfidenceShape n R2 eps p * OV n R2 eps p) where
   algorithm n :=
     if h : 21 ≤ n then
       expectedQueryVolumeAlgorithmOfEffectiveSourceReferenceTVCertificates n
@@ -327,8 +327,8 @@ noncomputable def cvShapedExpectedImplementationOfEffectiveFamilyTwentyOne
           unfold cvSecondMoment
           exact integral_nonneg (fun _ ↦ sq_nonneg _)
         exact hm0.trans (hAdm n K R2 hK).2.2.2.2
-      have hshape0 : 0 ≤ cvComplexityShapeClipped n R2 eps p :=
-        cvComplexityShapeClipped_nonneg n R2 eps p hR20
+      have hshape0 : 0 ≤ cvConfidenceShape n R2 eps p :=
+        cvConfidenceShape_nonneg n R2 eps p
       simp only [dif_pos h21]
       change effectiveSourceReferencePublicExpectedBound (effective n) (radialR n) K eps p ≤ _
       refine (effectiveSourceReferencePublicExpectedBound_le (radialR n) K
@@ -340,11 +340,11 @@ noncomputable def cvShapedExpectedImplementationOfEffectiveFamilyTwentyOne
         have h1 := heff n K eps p R2 hK
         nlinarith [hconstant, hOV1, hOV0]
       calc
-        (400 * (effective n (K, eps, p) + 1)) * cvComplexityShapeClipped n R2 eps p
+        (400 * (effective n (K, eps, p) + 1)) * cvConfidenceShape n R2 eps p
             ≤ (400 * ((runtimeConstant + 1) * OV n R2 eps p)) *
-              cvComplexityShapeClipped n R2 eps p := by gcongr
+              cvConfidenceShape n R2 eps p := by gcongr
         _ = (400 * (runtimeConstant + 1)) *
-              (cvComplexityShapeClipped n R2 eps p * OV n R2 eps p) := by ring
+              (cvConfidenceShape n R2 eps p * OV n R2 eps p) := by ring
     · simp [dif_neg h21,
         Ttc.ExpectedQueryVolumeAlgorithm.exactExpected_expectedBound]
 

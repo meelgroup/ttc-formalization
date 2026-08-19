@@ -577,8 +577,8 @@ theorem doubledEstimator_innerHundred_coldHotPhaseSum_le_sourceBudget
     (hcoldHotShape :
       20000 * weightedSampleNumerator dim cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant dim radius eps) :
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant) :
     let k := estimatorSamples dim cold hotChunks (eps / 100)
     (2 * k : ENNReal) * ∑ i ∈ Finset.range (cold + hot),
         coldHotPhaseMean cold hot coldMean hotMean i ≤
@@ -601,7 +601,7 @@ theorem doubledEstimator_innerHundred_coldHotPhaseSum_le_sourceBudget
       Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope
         runtimeConstant dim radius eps := by
     rw [sum_coldHotPhaseMeanReal]
-    rw [sourceOneRunQueryEnvelope_eq_core_div]
+    unfold Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope
     norm_num only [Nat.cast_mul, Nat.cast_ofNat]
     have hepsSq : 0 < eps ^ 2 := sq_pos_of_pos heps
     calc
@@ -616,8 +616,7 @@ theorem doubledEstimator_innerHundred_coldHotPhaseSum_le_sourceBudget
             ∑ i ∈ Finset.range hot, hotMean i)) / eps ^ 2 := by
         field_simp [ne_of_gt heps]
         <;> ring
-      _ ≤ sourceOneRunQueryCore runtimeConstant dim radius eps / eps ^ 2 :=
-        div_le_div_of_nonneg_right hcoldHotShape hepsSq.le
+      _ ≤ runtimeConstant := hcoldHotShape
   simpa only [Nat.cast_mul, Nat.cast_ofNat, k] using
     (coldHotPhaseSum_le_sourceBudget_of_real runtimeConstant dim (2 * k)
       cold hot radius eps coldMean hotMean hcold hhot hreal)
@@ -906,8 +905,8 @@ theorem exists_sourceReferenceTVOneRunCertificate_gaussianFinite_coldHot
     (hcoldHotShape :
       20000 * weightedSampleNumerator dim cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant dim radius eps)
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant)
     (readout :
       (Fin (2 * estimatorSamples dim cold hotChunks (eps / 100)) →
         ((Finset.Iic (cold + hot) → State n) × State n)) → Real)
@@ -1000,8 +999,8 @@ theorem exists_sourceReferenceTVOneRunCertificate_gaussianFinite_weightedProduct
     (hcoldHotShape :
       20000 * weightedSampleNumerator dim cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant dim radius eps)
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant)
     (initialNormalizer : Real) {lo hi : Real}
     (herror :
       (2 * estimatorSamples dim cold hotChunks (eps / 100) : ENNReal) *
@@ -1077,8 +1076,8 @@ theorem exists_sourceReferenceTVOneRunCertificate_operationalColdHot_weightedPro
     (hcoldHotShape :
       20000 * weightedSampleNumerator dim cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant dim radius eps)
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant)
     (initialNormalizer : Real) {lo hi : Real}
     (herror :
       (2 * estimatorSamples dim cold hotChunks (eps / 100) : ENNReal) *
@@ -1223,8 +1222,8 @@ theorem exists_sourceReferenceTVOneRunCertificate_operationalGaussianColdHot
     (hcoldHotShape :
       20000 * weightedSampleNumerator n cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant n radius eps)
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant)
     (initialNormalizer : Real) {lo hi : Real}
     (herror :
       (2 * estimatorSamples n cold hotChunks (eps / 100) : ENNReal) *
@@ -1321,8 +1320,8 @@ theorem exists_sourceReferenceTVOneRunCertificate_operationalColdHot_sourceSharp
     (hcoldHotShape :
       20000 * weightedSampleNumerator dim cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant dim radius eps)
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant)
     (herror :
       (2 * estimatorSamples dim cold hotChunks (eps / 100) : ENNReal) *
           (∑ i ∈ Finset.range (cold + hot), e i) ≤

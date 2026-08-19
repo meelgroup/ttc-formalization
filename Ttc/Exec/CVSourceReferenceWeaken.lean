@@ -72,7 +72,7 @@ theorem sourceOneRunQueryBudget_mono_constant
       sourceLogFactor ((n : Real) / eps) ^ 2) :
     sourceOneRunQueryBudget rc n R eps ≤ sourceOneRunQueryBudget rc' n R eps := by
   unfold sourceOneRunQueryBudget sourceOneRunQueryEnvelope
-  exact ENNReal.ofReal_le_ofReal (mul_le_mul_of_nonneg_right h hcore)
+  exact ENNReal.ofReal_le_ofReal h
 
 /-- The source-shaped one-run budget is monotone in the radius. -/
 theorem sourceOneRunQueryBudget_mono_radius
@@ -83,7 +83,7 @@ theorem sourceOneRunQueryBudget_mono_radius
   have hlog : (0 : Real) ≤ sourceLogFactor n := (sourceLogFactor_pos _).le
   have hlog1 : (0 : Real) ≤ sourceLogFactor (1 / eps) := (sourceLogFactor_pos _).le
   have hlog2 : (0 : Real) ≤ sourceLogFactor ((n : Real) / eps) := (sourceLogFactor_pos _).le
-  gcongr
+  exact le_rfl
 
 /-- The source-shaped one-run budget is monotone in `1/eps`: shrinking the accuracy
 parameter can only increase the budget. -/

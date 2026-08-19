@@ -58,10 +58,22 @@ open Ttc.TTCSourceSharpOperationalFinal
 open Ttc.TTCSourceSharpOperationalTheorem
 open scoped ENNReal BigOperators Classical
 
-/-- The complexity shape a construction with overhead envelope `OV` meets: Cousins–Vempala's
-own Theorem 1.1 expression times the overhead.  No constant is pretending to absorb `OV`. -/
+/-- The complexity shape a construction with overhead envelope `OV` meets: the confidence
+factor `max 1 (log (1/p))` times the overhead.  No constant is pretending to absorb `OV`.
+
+⚠ **This used to be `cvComplexityShapeClipped n R2 eps p * OV n R2 eps p`** — Cousins–Vempala's
+whole Theorem 1.1 expression times the overhead.  That factor was never earned: the one-run
+budget reached it only through `1 ≤ cvBaseClipped`, and what every discharge site actually
+proves is `expected queries ≤ OV`.  The confidence factor is the part that *is* earned, by
+repeated runs.  See `lean/PLAN-SHAPE.md`.
+
+The paper-contract layer is untouched: `Ttc.cvComplexityShapeClipped` still states Theorem
+1.1's expression, and
+`Ttc.CVSourceTheorem11Arithmetic.sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped`
+still proves the amplified budget fits under it. -/
 noncomputable def shapeOf (OV : (n : Nat) → Real → Real → Real → Real) : ComplexityShape :=
-  fun n R2 eps p ↦ cvComplexityShapeClipped n R2 eps p * OV n R2 eps p
+  fun n R2 eps p ↦ Ttc.CVSourceTheorem11Arithmetic.cvConfidenceShape n R2 eps p *
+    OV n R2 eps p
 
 /-- **The implementation, from per-input certificates on the valid inputs only.** -/
 noncomputable def implementationOfEffectiveCertificates

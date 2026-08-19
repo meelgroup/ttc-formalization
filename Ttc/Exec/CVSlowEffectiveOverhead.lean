@@ -343,12 +343,21 @@ theorem one_le_sourceOneRunCore (n : Nat) (hn : 1 ≤ n) {R eps : Real}
   unfold sourceLogFactor
   exact one_le_cvBaseClipped hn (sq_nonneg R) heps heps1
 
+/-- **The step that used to introduce Cousins–Vempala's Theorem 1.1 expression.**
+
+Its proof was `le_mul_of_one_le_right hrc (one_le_sourceOneRunCore …)` — a `1 ≤ x`
+weakening, and the *only* thing standing between the proved bound `expected queries ≤ rc`
+and the shaped budget every discharge site concluded at.  Now that
+`Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope` is the scalar itself, this
+is `le_rfl`, and the factor is gone from the headline.  See `lean/PLAN-SHAPE.md`.
+
+The four binders are retained so that the nine call sites are unchanged. -/
 theorem le_sourceOneRunQueryEnvelope_of_le
-    {rc R eps : Real} {n : Nat} (hn : 1 ≤ n)
-    (heps : 0 < eps) (heps1 : eps < 1) (hrc : 0 ≤ rc) :
+    {rc R eps : Real} {n : Nat} (_hn : 1 ≤ n)
+    (_heps : 0 < eps) (_heps1 : eps < 1) (_hrc : 0 ≤ rc) :
     rc ≤ sourceOneRunQueryEnvelope rc n R eps := by
   unfold sourceOneRunQueryEnvelope
-  exact le_mul_of_one_le_right hrc (one_le_sourceOneRunCore n hn heps heps1)
+  exact le_rfl
 
 /-! ### Step 2 — the parameter selection as explicit functions of the input -/
 

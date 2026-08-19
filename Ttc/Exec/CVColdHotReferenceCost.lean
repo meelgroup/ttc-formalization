@@ -298,11 +298,21 @@ noncomputable def sourceOneRunQueryCore
       sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
         sourceLogFactor ((n : Real) / eps) ^ 2)
 
-theorem sourceOneRunQueryEnvelope_eq_core_div
+/-- **`core / eps²`, written out.**
+
+⚠ This replaces `sourceOneRunQueryEnvelope_eq_core_div`.  Before `PLAN-SHAPE`,
+`Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope` *was* `core / eps²`, and
+that identity was the bridge between this file's `core` layer and the public budget.  The
+budget no longer carries the shape, so the identity is false; what the `core` layer actually
+needs is only the expansion below, which mentions no budget at all. -/
+theorem sourceOneRunQueryCore_div_eq
     (runtimeConstant : Real) (n : Nat) (radius eps : Real) :
-    sourceOneRunQueryEnvelope runtimeConstant n radius eps =
-      sourceOneRunQueryCore runtimeConstant n radius eps / eps ^ 2 := by
-  unfold sourceOneRunQueryEnvelope sourceOneRunQueryCore
+    sourceOneRunQueryCore runtimeConstant n radius eps / eps ^ 2 =
+      runtimeConstant *
+        (max (radius ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
+          sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
+            sourceLogFactor ((n : Real) / eps) ^ 2) := by
+  unfold sourceOneRunQueryCore
   ring
 
 /-! ## Concrete source phase envelopes -/
@@ -548,8 +558,8 @@ theorem doubledEstimator_coldHotPhaseSum_le_sourceBudget
     (hcoldHotShape :
       2 * weightedSampleNumerator n cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant n radius eps) :
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant) :
     let k := estimatorSamples n cold hotChunks eps
     (2 * k : ENNReal) * ∑ i ∈ Finset.range (cold + hot),
         coldHotPhaseMean cold hot coldMean hotMean i ≤
@@ -572,7 +582,7 @@ theorem doubledEstimator_coldHotPhaseSum_le_sourceBudget
         coldHotPhaseMeanReal cold hot coldMean hotMean i) ≤
       sourceOneRunQueryEnvelope runtimeConstant n radius eps := by
     rw [sum_coldHotPhaseMeanReal]
-    rw [sourceOneRunQueryEnvelope_eq_core_div]
+    unfold sourceOneRunQueryEnvelope
     norm_num only [Nat.cast_mul, Nat.cast_ofNat]
     calc
       (2 : Real) * (k : Real) *
@@ -584,8 +594,7 @@ theorem doubledEstimator_coldHotPhaseSum_le_sourceBudget
       _ = (2 * weightedSampleNumerator n cold hotChunks *
         ((∑ i ∈ Finset.range cold, coldMean i) +
           ∑ i ∈ Finset.range hot, hotMean i)) / eps ^ 2 := by ring
-      _ ≤ sourceOneRunQueryCore runtimeConstant n radius eps / eps ^ 2 :=
-        div_le_div_of_nonneg_right hcoldHotShape hepsSq.le
+      _ ≤ runtimeConstant := hcoldHotShape
   have hfinal := coldHotPhaseSum_le_sourceBudget_of_real runtimeConstant n (2 * k)
     cold hot radius eps coldMean hotMean hcold hhot hreal
   simpa only [Nat.cast_mul, Nat.cast_ofNat] using hfinal
@@ -623,8 +632,8 @@ theorem exists_sourceReferenceTVOneRunCertificate_of_coldHotSeedPhases
     (hcoldHotShape :
       2 * weightedSampleNumerator dim cold hotChunks *
           ((∑ i ∈ Finset.range cold, coldMean i) +
-            ∑ i ∈ Finset.range hot, hotMean i) ≤
-        sourceOneRunQueryCore runtimeConstant dim radius eps)
+            ∑ i ∈ Finset.range hot, hotMean i) / eps ^ 2 ≤
+        runtimeConstant)
     (value :
       (Fin (2 * estimatorSamples dim cold hotChunks eps) →
         HeterogeneousHistoryState Score Seed) → Real)

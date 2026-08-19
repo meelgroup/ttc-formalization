@@ -118,72 +118,30 @@ theorem sourceLogFactor_one : sourceLogFactor 1 = 1 := by
 
 /-- **The clip is paid for by an explicit factor.**
 
-The source-shaped budget is *decreasing* in its accuracy slot, so replacing the requested
-accuracy `eps` by the clipped `min eps 1` can only enlarge it.  The loss is bounded by the
-explicit factor `(max 1 eps) ^ 2 * sourceLogFactor n ^ 2` on the runtime constant: the
-quadratic slot loses exactly `eps ^ 2`, and the two accuracy-dependent clipped logarithms
-lose at most `sourceLogFactor n ^ 2` between them (they are clipped below at `1`, and at
-`min eps 1 = 1` they are `sourceLogFactor 1 = 1` and `sourceLogFactor n`). -/
+Replacing the requested accuracy `eps` by the clipped `min eps 1` is absorbed by the factor
+`(max 1 eps) ^ 2 * sourceLogFactor n ^ 2` on the runtime constant.
+
+⚠ Before `PLAN-SHAPE` this was a genuine two-branch computation on
+`Ttc.CVSourcePolynomialCutoffCapstone.sourceOneRunQueryEnvelope`'s internals: the quadratic
+slot lost exactly `eps ^ 2` and the two accuracy-dependent clipped logarithms lost at most
+`sourceLogFactor n ^ 2` between them.  The budget no longer carries those, so the statement
+survives only as `rc ≤ rc · (max 1 eps)² · sourceLogFactor n ²`, both factors being at least
+one.  **This is the origin of the `64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2` prefix in the
+four `OV`s, and that inflation is now unnecessary** — dropping it is a further saving of
+`log²n`, deliberately not bundled into this change. -/
 theorem sourceOneRunQueryEnvelope_clip_eps
     {rc R eps : Real} {n : Nat} (hrc : 0 ≤ rc) (heps : 0 < eps) :
     sourceOneRunQueryEnvelope rc n R (min eps 1) ≤
       sourceOneRunQueryEnvelope (rc * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2) n R eps := by
-  have hA0 : (0 : Real) ≤ max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) :=
-    le_max_of_le_right (by positivity)
-  have hLn : (1 : Real) ≤ sourceLogFactor n := one_le_sourceLogFactor _
-  have hLn0 : (0 : Real) ≤ sourceLogFactor n := zero_le_one.trans hLn
-  rcases le_total eps 1 with hle | hgt
-  · -- the clip is inactive
-    have hmin : min eps 1 = eps := min_eq_left hle
-    have hmax : max 1 eps = 1 := max_eq_left hle
-    rw [hmin, hmax]
-    unfold sourceOneRunQueryEnvelope
-    have hcore : (0 : Real) ≤ max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
-        sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-        sourceLogFactor ((n : Real) / eps) ^ 2 := by
-      have h1 : (0 : Real) ≤ max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 := by
-        positivity
-      have h2 : (0 : Real) ≤ sourceLogFactor (1 / eps) := (sourceLogFactor_pos _).le
-      have h3 : (0 : Real) ≤ sourceLogFactor ((n : Real) / eps) := (sourceLogFactor_pos _).le
-      positivity
-    have hrc' : rc ≤ rc * 1 ^ 2 * sourceLogFactor n ^ 2 := by
-      have : rc * 1 ≤ rc * sourceLogFactor n ^ 2 := by
-        refine mul_le_mul_of_nonneg_left ?_ hrc
-        nlinarith
-      simpa using this
-    exact mul_le_mul_of_nonneg_right hrc' hcore
-  · -- the clip is active
-    have hmin : min eps 1 = 1 := min_eq_right hgt
-    have hmax : max 1 eps = eps := max_eq_right hgt
-    have heps0 : eps ≠ 0 := heps.ne'
-    rw [hmin, hmax]
-    unfold sourceOneRunQueryEnvelope
-    have hL1 : (1 : Real) ≤ sourceLogFactor (1 / eps) := one_le_sourceLogFactor _
-    have hL2 : (1 : Real) ≤ sourceLogFactor ((n : Real) / eps) := one_le_sourceLogFactor _
-    have hrw : rc * eps ^ 2 * sourceLogFactor n ^ 2 *
-        (max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / eps ^ 2 *
-          sourceLogFactor n ^ 2 * sourceLogFactor (1 / eps) ^ 2 *
-          sourceLogFactor ((n : Real) / eps) ^ 2) =
-        rc * (max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) *
-          sourceLogFactor n ^ 2 * sourceLogFactor n ^ 2) *
-          (sourceLogFactor (1 / eps) ^ 2 * sourceLogFactor ((n : Real) / eps) ^ 2) := by
-      field_simp
-    rw [hrw]
-    have hleft : rc * (max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) / 1 ^ 2 *
-        sourceLogFactor n ^ 2 * sourceLogFactor (1 / 1) ^ 2 *
-        sourceLogFactor ((n : Real) / 1) ^ 2) =
-        rc * (max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) *
-          sourceLogFactor n ^ 2 * sourceLogFactor n ^ 2) := by
-      simp only [one_pow, div_one, sourceLogFactor_one]
-      ring
-    rw [hleft]
-    have hbulk : (0 : Real) ≤ rc * (max (R ^ 2 * (n : Real) ^ 2) ((n : Real) ^ 3) *
-        sourceLogFactor n ^ 2 * sourceLogFactor n ^ 2) := by positivity
-    have hfac1 : (1 : Real) ≤ sourceLogFactor (1 / eps) ^ 2 := by nlinarith
-    have hfac2 : (1 : Real) ≤ sourceLogFactor ((n : Real) / eps) ^ 2 := by nlinarith
-    have hfac : (1 : Real) ≤ sourceLogFactor (1 / eps) ^ 2 *
-        sourceLogFactor ((n : Real) / eps) ^ 2 := by nlinarith
-    exact le_mul_of_one_le_right hbulk hfac
+  have ha : (1 : Real) ≤ (max 1 eps) ^ 2 := by
+    nlinarith [le_max_left (1 : Real) eps]
+  have hb : (1 : Real) ≤ sourceLogFactor n ^ 2 := by
+    nlinarith [one_le_sourceLogFactor ((n : Nat) : Real)]
+  unfold sourceOneRunQueryEnvelope
+  calc
+    rc = rc * 1 * 1 := by ring
+    _ ≤ rc * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 :=
+      mul_le_mul (mul_le_mul_of_nonneg_left ha hrc) hb (by norm_num) (by positivity)
 
 /-- `ENNReal` form of `sourceOneRunQueryEnvelope_clip_eps`. -/
 theorem sourceOneRunQueryBudget_clip_eps
