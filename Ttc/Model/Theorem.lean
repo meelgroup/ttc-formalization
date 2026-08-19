@@ -23,7 +23,9 @@ with the one theorem about it — `thm:volumettc` + `thm:runtime` in a single st
   truncation radius;
 * **sampling** — the hit-and-run / ball-walk hybrid carried by
   `Ttc.TTCSourceSharpOperationalFinal.canonicalCappedPolyHybridPlugin`: hit-and-run at
-  `1100 ≤ n` (`cor:linf`), the lazy ball walk below.
+  `21 ≤ n` (`cor:linf`), the lazy ball walk below.  Since `Ttc.ttc_volume` binds `21 ≤ n`,
+  the run it describes always takes the hit-and-run branch; the ball walk survives only as
+  the off-hypothesis branch that keeps `Ttc.ttc` total.
 
 Until 2026-08-19 this file also carried a second headline about a second `Ttc.ttc`, whose
 volume oracle was hit-and-miss Monte Carlo (`Ttc.mcVol`) and whose sampler was the lazy ball
@@ -60,12 +62,14 @@ would take Markov's inequality against a failure budget plus the existing
    units, not `O(m·n⁵·ρ²·r_max)`, and the two are not in the same units until the `⌈n·rfac⌉₊`
    charge of `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops` is applied.  The
    `ρ` exponent is unsettled.  See `lean/PLAN-SHAPE.md` §5 and `lean/PAPER-CLAIMS.md`.
-2. **Not uniform in the dimension.**  At `1100 ≤ n` the sampler is hit-and-run and the
-   transition bound is polynomial.  For `21 ≤ n < 1100` it is the ball walk's own bound, with
-   `4 ^ n` and a `(radius ratio) ^ (4 n)`; `n` is bounded there, so that is a constant rather
-   than an asymptotic obstruction — but an astronomical one.  Both directions are proved in
-   `Ttc/Exec/SamplerEnvelopeShape.lean`; removing it is one lemma, scoped in
-   `lean/PLAN-SPHERECAP.md`.
+2. **Not a practical bound, though it is now a uniform one.**  Until 2026-08-19 the sampler
+   was hit-and-run only at `1100 ≤ n`, and for `21 ≤ n < 1100` the proved transition bound was
+   the ball walk's own — `4 ^ n` times a `(radius ratio) ^ (4 n)`.  That hole is closed: the
+   spherical-cap estimate `Arlib.MarkovChains.unifSphere_cap_le` now holds from `n ≥ 21`
+   (proved by an exact cross-section computation rather than the union bound that forced
+   `1100`), so the sampler is hit-and-run at **every dimension this theorem admits** and the
+   transition bound is polynomial throughout.  What remains is the size of the constant:
+   `2 ^ 66 · n² · R²/r² · log(8 M/ε²)`.  Polynomial is not the same as runnable.
 3. **Not inside a four-file audit surface.**  Naming the constructed oracles *is* naming the
    construction: the statement below reaches 637 constants across 108 modules outside
    `Model/`, `Probability/` and `Geometry/`.  `#modelClosureOfType` does not hold of it and is

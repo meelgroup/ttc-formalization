@@ -1,5 +1,47 @@
 # `unifSphere_cap_le` below dimension 1100 — the one lemma that removes the hole
 
+> ## ✅ DONE, 2026-08-19 — and §3's route was not the one taken
+>
+> `Arlib.MarkovChains.unifSphere_cap_le` now carries `21 ≤ n`, axiom-clean, and the whole
+> chain moved with it: `tvLe_hitAndRun_lemma41_uncond`, six further `Arlib` thresholds, and
+> on the `Ttc` side `kv97HybridKernel`, `kv97HybridSteps`, `hybridTransitionBound`,
+> `hybridStepInspectionBound` and `lowDimBallWalkEnvelope`.  **TTC's sampler is hit-and-run at
+> every dimension `Ttc.ttc_volume` admits**, and the transition bound is polynomial
+> throughout.  The ball walk is kept as the `n < 21` branch so `Ttc.ttc` stays total.
+>
+> **§2 was right and load-bearing.**  Retuning the union bound is impossible; the table there
+> is correct and stopped a wasted attempt.
+>
+> **§3 was right about the obstruction and wrong about the remedy.**  It identifies the exact
+> density as the route and then proposes reaching it through a `Γ → Β` bridge — "**This is the
+> work**".  That bridge was never built and is not needed.  Slicing the *ball* along
+> coordinate `0` gives the cross-section directly: the slice at height `s` is an `m`-ball of
+> radius `√(1-s²)` and the cone's slice is an `m`-ball of radius `√(m s²)`, so
+> `vol(cone ∩ B)/vol(B)` collapses to a one-dimensional integral with no distribution theory
+> anywhere.  What replaced the bridge:
+>
+> | needed | supplied by |
+> | --- | --- |
+> | the slice decomposition | `MeasureTheory.volume_preserving_piFinSuccAbove` (Fubini), 15 lines |
+> | the numerator | Bernoulli, `one_add_mul_self_le_rpow_one_add` |
+> | the cone term | exact, then `e^{-1/2}·e^{1/42} ≤ 0.6215` |
+> | the denominator | Wallis pairing `k·P_k·P_{k-1} = 2π` + `P` antitone, from Mathlib's `integral_sin_pow` |
+>
+> The chain proves `cap ≤ 9/25` from **n ≥ 15**; it is *stated* at `n ≥ 21` because the margin
+> at 15 is `0.0015` before rational rounding and the rounding spends about `0.008`.  Chasing
+> the sharp threshold would buy nothing — TTC's floor is 21.
+>
+> **What this did not buy.**  The constant.  The hit-and-run transition bound is
+> `2^66 · n² · R²/r² · log(8M/ε²)`; polynomial in every parameter and not runnable.  Nor did
+> it touch the `ρ⁶` in the volume overhead (`PLAN-SHAPE.md` §5) or the warm start
+> (`PLAN-WARMSTART.md`).  The secondary payoff §0 predicted — a sharper cap constant, and
+> Lemma 4.1's `1 − 1/8000` improving toward `1 − 1/1892.8` — was **not** taken: the bound is
+> still stated at `9/25`, so the downstream numeral is unchanged.
+>
+> Everything below is the pre-2026-08-19 plan, kept because §2 is the argument that rules out
+> the obvious approach and is worth not rediscovering.
+
+
 **Target.**  `Arlib.MarkovChains.unifSphere_cap_le` currently carries `1100 ≤ n`.  Prove it at
 `n ≥ 21` (TTC's own floor), or at any threshold `≤ 21`.
 

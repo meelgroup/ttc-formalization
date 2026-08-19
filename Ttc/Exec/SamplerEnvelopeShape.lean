@@ -24,7 +24,7 @@ size of the endpoint cap.  This file supplies the part of that which is pure ari
     max 0 (2^66 · n^2 · Rout^2 / rin^2 · log (8·Mw/eps^2))  +  1  +  lowDimBallWalkEnvelope …
 
 and the third summand is added **unconditionally**: it is a uniform envelope covering both the
-hit-and-run branch (`1100 ≤ n`) and the ball-walk branch, not a term that switches off in high
+hit-and-run branch (`21 ≤ n`) and the ball-walk branch, not a term that switches off in high
 dimension.  `Ttc.lowDimBallWalkEnvelope` sums `Ttc.mixStepsBound k` over `k < 1100`, and
 `mixStepsBound` carries `4^k` and `((γ+Dm)/γ)^(4k)`.  So the envelope contains a term that is
 **constant in `n` but polynomial in the radius ratio of degree ≈ 4400, with a `4^1099`
@@ -102,7 +102,8 @@ theorem mixStepsBound_mono_dim
 it is at most `1100` copies of the term at `k = 1099`.
 
 ⚠ **Read the right-hand side.**  `Ttc.mixStepsBound 1099 rin (2·Rout) δ Mw eps` carries
-`16384 · 4^1099 · 1099^2 · (2·Rout)^2/δ^2 · ((rin + 2·Rout)/rin)^4396`.  With
+`16384 · 4^20 · 20^2 · (2·Rout)^2/δ^2 · ((rin + 2·Rout)/rin)^80` (it was `4^1099 … ^4396`
+until the threshold moved from `1100` to `21` on 2026-08-19).  With
 `(rin + 2·Rout)/rin` the radius ratio, this is a term of degree ≈ 4400 in that ratio and a
 constant of size `4^1099`.  It is **constant in the dimension `n`**, which is why the ambient
 `n`-exponent is unaffected — and why it is invisible to any accounting that looks only at `n`. -/
@@ -129,7 +130,7 @@ theorem lowDimBallWalkEnvelope_le
 
 /-! ### The two branches
 
-`Ttc.hybridTransitionBound` branches on `1100 ≤ n` exactly as `Ttc.kv97HybridSteps` does, so
+`Ttc.hybridTransitionBound` branches on `21 ≤ n` exactly as `Ttc.kv97HybridSteps` does, so
 each branch is an *equality*, not merely a bound. -/
 
 /-- **High branch: the hit-and-run polynomial, and nothing else.**

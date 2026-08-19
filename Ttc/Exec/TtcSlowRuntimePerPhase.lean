@@ -1143,7 +1143,7 @@ theorem ttc_volume_runtime_perPhase
   instructions"*);
 * `fullTrajectoryQueryCost` counts what the sampler realization records per step, and
   `Ttc.ConcreteHybridExpectedQuerySampler.hybridStepInspectionBound n rfac` is `rfac / 2` on
-  the hit-and-run branch (`1100 ≤ n`) — i.e. **facet inspections**, with the facet factor
+  the hit-and-run branch (`21 ≤ n`) — i.e. **facet inspections**, with the facet factor
   already in.
 
 A membership query on a polytope with `r` facets *is* `r` facet inspections, so the recorded

@@ -21,8 +21,8 @@ Each of the two summands is a finite sum of manifestly finite terms:
   `8 * (ENNReal.ofReal (…) * hybridStepInspectionBound … + 1)`, whose inspection factor is
   `2⁻¹ * facetCount` or `2⁻¹`.
 
-Nothing here bounds the envelope by anything small — the numbers involved are astronomical
-below dimension 1100 (see `Ttc/Exec/SamplerEnvelopeShape.lean`).  Finiteness is the weakest
+Nothing here bounds the envelope by anything small — it is polynomial in `n` at every
+dimension the headline admits (since 2026-08-19), but with a constant of `2 ^ 66`.  Finiteness is the weakest
 possible statement in this direction, and it is the one the cost conjunct needs in order to
 say anything at all (`CLAUDE.md` §11).
 -/

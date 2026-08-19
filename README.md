@@ -28,12 +28,8 @@
 >    *not* the paper's `O(m·n⁵·ρ²·r_max)`, and not in the same units until the `⌈n·rfac⌉₊`
 >    charge of `ttc_volume_runtime_perPhase_ops` is applied.  See `PLAN-SHAPE.md` §5 and
 >    `PAPER-CLAIMS.md`.
-> 2. **It is not uniform in the dimension.**  At `1100 ≤ n` the sampler is hit-and-run.  For
->    `21 ≤ n < 1100` it is the ball walk, with `4 ^ n` — bounded, so a constant rather than an
->    asymptotic obstruction, but an astronomical one.  This is now machine-checked, not
->    asserted: `#inClosure Ttc.mixSteps in Ttc.ttc` in `Ttc/Audit/ClosureCheck.lean` fails the
->    build if the ball walk ever silently leaves.  `PLAN-SPHERECAP.md` scopes the one lemma
->    that removes it.
+> 2. ~~**It is not uniform in the dimension.**~~ **Closed on 2026-08-19** — see the update
+>    box below.  The sampler is hit-and-run at every dimension the headline admits.
 > 3. **The four-file audit surface no longer covers the headline, deliberately.**  Naming the
 >    constructed oracles reaches 637 constants across 108 modules.  What is still checked, and
 >    still fails the build on drift, is `#modelClosure Ttc.ttcAlgOutput` — the *specification*.
@@ -50,6 +46,18 @@
 > name the construction without a cycle.  `Pseudocode` states `alg:ttc` with the oracle bundle
 > as an argument and chooses no oracle; `Theorem`, the only `Model/` file downstream of the
 > construction, fills it in.
+>
+> ## ⚠ Update, 2026-08-19 (later the same day): the `n < 1100` hole is closed
+>
+> Point 2 of the box above said the envelope "is not uniform in the dimension" — hit-and-run
+> at `1100 ≤ n`, the ball walk with its `4 ^ n` below.  **That is no longer true.**
+> `Arlib.MarkovChains.unifSphere_cap_le` now holds from `n ≥ 21`, proved by an exact
+> cross-section computation instead of the union bound that forced `1100`, so the sampler is
+> hit-and-run at every dimension `Ttc.ttc_volume` admits and the transition bound is
+> polynomial throughout.  `PLAN-SPHERECAP.md` records what was actually done, and why the
+> `Γ → Β` bridge it used to scope was unnecessary.
+>
+> The constant is untouched: `2 ^ 66 · n² · R²/r² · log(8M/ε²)`.  Polynomial, not runnable.
 >
 > **Everything below this box predates 2026-08-19.**  It names declarations that no longer
 > exist — `ttc_volume_estimate` and its `_parametric` / `_quartic` variants, `ttcCharged`,

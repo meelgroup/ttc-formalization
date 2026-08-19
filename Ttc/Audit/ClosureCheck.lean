@@ -139,12 +139,16 @@ it is the second one that says which oracle a run executes.  These checks measur
 **A fourth check was written and it failed, which is the useful part.**
 `#absentFromClosure Ttc.mixSteps in Ttc.ttc` throws: the lazy ball walk's step count *is*
 still behind `Ttc.ttc`.  That is not a leftover — it is the hybrid sampler's low-dimension
-branch.  `Ttc.hybridTransitionBound` is hit-and-run at `1100 ≤ n` and `Ttc.mixStepsBound`
-below it, so a run at `21 ≤ n < 1100` takes ball-walk steps by construction, with the `4 ^ n`
-that implies.  The check is therefore inverted below into `#inClosure`, which fails if that
-dependence ever silently disappears, and the fact it records is the same one
-`Ttc/Exec/SamplerEnvelopeShape.lean` proves in both directions and `lean/PLAN-SPHERECAP.md`
-scopes the removal of.
+branch, and `Ttc.ttc` is defined at every `n`, so the branch is part of the definition.
+
+⚠ **What that branch means changed on 2026-08-19.**  The threshold was `1100`, so a run at
+`21 ≤ n < 1100` — a dimension `Ttc.ttc_volume` admits — genuinely took ball-walk steps, with
+the `4 ^ n` that implies.  The spherical-cap estimate now holds from `n ≥ 21`, so
+`Ttc.hybridTransitionBound` is hit-and-run at `21 ≤ n` and the ball-walk branch is
+**unreachable under the headline's hypotheses**.  It remains in the closure because `Ttc.ttc`
+is total and the `if` is still there; it is no longer a walk any theorem here describes.  The
+check is inverted below into `#inClosure` so that the dependence cannot silently disappear
+without the build noticing.
 
 `#inClosure` also serves as the control on the two negative checks: a negative result from a
 walk that was looking in the wrong place would prove nothing, so the two positive checks —

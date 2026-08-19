@@ -188,7 +188,10 @@ noncomputable def kv97SamplerOfHybridUncond
 
 /-! ## Finite low-dimensional envelope -/
 
-/-- A fixed finite envelope for all ball-walk counts below dimension 1100. -/
+/-- A fixed finite envelope for all ball-walk counts below the hit-and-run threshold.
+
+⚠ The threshold was `1100` until 2026-08-19 and is now `21`, so this sums `21` terms rather
+than `1100` and its largest is `mixStepsBound 20`, not `mixStepsBound 1099`. -/
 noncomputable def lowDimBallWalkEnvelope
     (rin Rout δ Mw eps : ℝ) : ℝ :=
   ∑ k ∈ Finset.range 21,
@@ -209,12 +212,17 @@ genuinely there, from below, with no hypotheses.
 Since `Ttc.kv97HybridSteps` already branches, so does this: each branch prices its own walk
 and nothing else.
 
-**What this does not fix.**  On the low branch the bound is `Ttc.mixStepsBound n`, which is
-`4^n · ((γ+Dm)/γ)^(4n)`-shaped — genuinely exponential in `n`.  That is the ball walk's own
-bound at dimension `n`, not an artefact of the envelope.  So a *polynomial* transition bound
-holds at `1100 ≤ n` and **not** below it; TTC's capstone admits `21 ≤ n`, so for
-`21 ≤ n < 1100` the proved bound remains exponential until hit-and-run is established at
-those dimensions. -/
+**The threshold was `1100` until 2026-08-19, and is now `21`.**  While it was `1100`, this
+paragraph recorded a real hole: on the low branch the bound is `Ttc.mixStepsBound n`, which is
+`4^n · ((γ+Dm)/γ)^(4n)`-shaped — genuinely exponential in `n`, the ball walk's own bound at
+dimension `n` rather than an artefact of the envelope — and TTC's capstone admits `21 ≤ n`, so
+`21 ≤ n < 1100` was proved only at an exponential bound.
+
+`Arlib.MarkovChains.unifSphere_cap_le` now holds from `n ≥ 21`, so the hit-and-run branch
+covers every dimension the capstone admits and the low branch is unreachable there.  It is
+kept rather than removed so that this definition, and `Ttc.ttc` through it, stays total at
+every `n`; the exponential bound is still what it says for `n < 21`, where no theorem in this
+development claims anything. -/
 noncomputable def hybridTransitionBound
     (n : ℕ) (rin Rout δ Mw eps : ℝ) : ℝ :=
   if 21 ≤ n then
