@@ -194,13 +194,34 @@ noncomputable def lowDimBallWalkEnvelope
   ∑ k ∈ Finset.range 1100,
     max 0 (mixStepsBound k rin (2 * Rout) δ Mw eps)
 
-/-- The all-dimensional transition bound: the high-dimensional polynomial plus a finite,
-dimension-independent envelope for all 1099 positive low dimensions. -/
+/-- **The all-dimensional transition bound, branching on the dimension exactly as
+`Ttc.kv97HybridSteps` does.**
+
+⚠ **Until 2026-08-19 this was the high-dimensional polynomial `+ 1 +
+`Ttc.lowDimBallWalkEnvelope`, added *unconditionally*** — a single expression covering both
+branches.  That made it correct but ruinous: `Ttc.lowDimBallWalkEnvelope` sums
+`Ttc.mixStepsBound k` over every `k < 1100`, and `mixStepsBound` carries `4^k` and
+`((γ+Dm)/γ)^(4k)`, so at `k = 1099` the bound contained a term of order
+`4^1099 · (radius ratio)^4396` **even at `1100 ≤ n`, where the walk being priced is
+hit-and-run and that term is pure overhead**.  `Ttc.SamplerEnvelopeShape` proved it was
+genuinely there, from below, with no hypotheses.
+
+Since `Ttc.kv97HybridSteps` already branches, so does this: each branch prices its own walk
+and nothing else.
+
+**What this does not fix.**  On the low branch the bound is `Ttc.mixStepsBound n`, which is
+`4^n · ((γ+Dm)/γ)^(4n)`-shaped — genuinely exponential in `n`.  That is the ball walk's own
+bound at dimension `n`, not an artefact of the envelope.  So a *polynomial* transition bound
+holds at `1100 ≤ n` and **not** below it; TTC's capstone admits `21 ≤ n`, so for
+`21 ≤ n < 1100` the proved bound remains exponential until hit-and-run is established at
+those dimensions. -/
 noncomputable def hybridTransitionBound
     (n : ℕ) (rin Rout δ Mw eps : ℝ) : ℝ :=
-  max 0 (2 ^ 66 * (n : ℝ) ^ 2 * Rout ^ 2 / rin ^ 2 *
-    Real.log (8 * Mw / eps ^ 2)) + 1 +
-      lowDimBallWalkEnvelope rin Rout δ Mw eps
+  if 1100 ≤ n then
+    max 0 (2 ^ 66 * (n : ℝ) ^ 2 * Rout ^ 2 / rin ^ 2 *
+      Real.log (8 * Mw / eps ^ 2)) + 1
+  else
+    max 0 (mixStepsBound n rin (2 * Rout) δ Mw eps) + 1
 
 theorem kv97HybridSteps_le_transitionBound
     {n : ℕ} (hn : 1 ≤ n) {rin Rout δ Mw eps : ℝ}
@@ -213,25 +234,15 @@ theorem kv97HybridSteps_le_transitionBound
     have hstep :=
       lazyHitAndRunUncondSteps_lt_deadline_add_one n rin Rout Mw eps
     unfold hybridTransitionBound
-    exact le_trans hstep.le (le_add_of_nonneg_right (Finset.sum_nonneg fun _ _ => le_max_left _ _))
-  · have hlt : n < 1100 := by omega
-    rw [kv97HybridSteps, if_neg hhigh]
+    rw [if_pos hhigh]
+    exact hstep.le
+  · rw [kv97HybridSteps, if_neg hhigh]
     have hmix : (mixSteps n rin (2 * Rout) δ Mw eps : ℝ) ≤
         mixStepsBound n rin (2 * Rout) δ Mw eps :=
       mixSteps_le hn hrin (by positivity) hδ hM heps0 heps1
-    have hterm : max 0 (mixStepsBound n rin (2 * Rout) δ Mw eps) ≤
-        lowDimBallWalkEnvelope rin Rout δ Mw eps := by
-      unfold lowDimBallWalkEnvelope
-      exact Finset.single_le_sum
-        (fun k hk => le_max_left 0 (mixStepsBound k rin (2 * Rout) δ Mw eps))
-        (Finset.mem_range.2 hlt)
-    refine hmix.trans ((le_max_right 0 _).trans (hterm.trans ?_))
     unfold hybridTransitionBound
-    have hnonneg : 0 ≤ max 0 (2 ^ 66 * (n : ℝ) ^ 2 * Rout ^ 2 / rin ^ 2 *
-        Real.log (8 * Mw / eps ^ 2)) + 1 := by
-      linarith [le_max_left 0 (2 ^ 66 * (n : ℝ) ^ 2 * Rout ^ 2 / rin ^ 2 *
-        Real.log (8 * Mw / eps ^ 2))]
-    linarith
+    rw [if_neg hhigh]
+    linarith [le_max_right 0 (mixStepsBound n rin (2 * Rout) δ Mw eps)]
 
 section AxiomCheck
 
