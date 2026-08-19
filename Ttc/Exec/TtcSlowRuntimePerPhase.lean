@@ -1132,6 +1132,77 @@ theorem ttc_volume_runtime_perPhase
     (fun j ↦ cvAdmCircum_callBody atoms phi eps (4 * delta / 5)
       h_eps_pos h_eps_le (le_trans (by norm_num) hn) hphi hvol j)
 
+/-! ### The same run, in a single unit
+
+`Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase` bounds `∫⁻ r.2`, and
+`Ttc.CostedInitialThinningTrajectory.canonicalFullPolyQueryCost` is
+`ttcPolyVolumeQueryCost + fullTrajectoryQueryCost` — **two counts in two different units**:
+
+* `ttcPolyVolumeQueryCost` counts the volume oracle's **membership queries**, with no facet
+  factor (`Ttc.cvComplexityShape`: *"It counts membership-oracle operations, not machine
+  instructions"*);
+* `fullTrajectoryQueryCost` counts what the sampler realization records per step, and
+  `Ttc.ConcreteHybridExpectedQuerySampler.hybridStepInspectionBound n rfac` is `rfac / 2` on
+  the hit-and-run branch (`1100 ≤ n`) — i.e. **facet inspections**, with the facet factor
+  already in.
+
+A membership query on a polytope with `r` facets *is* `r` facet inspections, so the recorded
+sum is not a count of anything, and `∫⁻ r.2` is **not** a running time.  The theorem below
+repairs that by charging both components at the same rate.
+
+**The charge.**  `Ttc.CoolCost.coolStepOpCharge n rfac = ⌈n · rfac⌉₊` is this repository's
+own arithmetic price of one membership test on the canonical polytope: `rfac` facets, each an
+`n`-dimensional dot product.  It is also the paper's, which is visible in the way
+`sections/analysis.tex`'s volume price factors:
+
+    r · max(n³ρ², n⁴)/eps²  =  (n · r) · max(n²ρ², n³)/eps²
+
+— Cousins–Vempala's oracle-call count times `n · r` operations per call.
+
+**Why one charge covers both.**  A volume membership query costs at most `⌈n · rfac⌉₊`
+operations by definition of the charge; a single facet inspection costs `n`, and `n ≤ n · rfac`
+whenever `1 ≤ rfac`.  So **every** unit either component records costs at most
+`⌈n · rfac⌉₊` operations, and the operation count of the whole run is at most
+`⌈n · rfac⌉₊ · r.2`.  That is the quantity bounded below.
+
+⚠ **This is a costing convention, not a theorem about a machine.**  There is no operational
+cost model in this development against which "one membership test costs `⌈n · rfac⌉₊`
+operations" could be *proved*; it is the same convention the paper uses, made explicit here
+so that the two sides are comparable.  What is machine-checked below is only that the
+convention applied to the run is bounded by the convention applied to the envelope. -/
+
+/-- **The per-phase capstone's cost bound, converted to a single unit.**
+
+`⌈n · rfac⌉₊ · ∫⁻ r.2` — an upper bound on the run's arithmetic operations under the charge
+described above — is at most `⌈n · rfac⌉₊` times the envelope.  See the section docstring for
+why the unweighted `∫⁻ r.2` is not itself a running time. -/
+theorem ttc_volume_runtime_perPhase_ops
+    {n : Nat} (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
+    (h_eps_pos : 0 < eps) (h_eps_le : eps ≤ 1)
+    (h_delta_pos : 0 < delta) (h_delta_le : delta ≤ 1)
+    (hn : 21 ≤ n) (hphi : phi.IsPositive)
+    (hvol : 0 < volSol (atomSet atoms) phi) :
+    let deltaRun := 4 * delta / 5
+    let hn1 : 1 ≤ n := le_trans (by norm_num) hn
+    let I := slowPerPhaseImplementation
+    let V := I.algorithm n
+    letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
+    let P := canonicalCappedPolyHybridPlugin atoms phi eps deltaRun V
+      h_eps_pos h_eps_le hn1 hphi hvol
+    let w : ENNReal :=
+      ((⌈(n : Real) * canonRfac (toDNFd (preprocess atoms phi))⌉₊ : Nat) : ENNReal)
+    (∫⁻ r, w * r.2 ∂canonicalFullOperationalLaw V P) ≤
+      w * (shapedVolumeQueryEnvelopeAt I atoms phi eps deltaRun
+            (fun j ↦ (circumR (interior (callBody atoms phi eps deltaRun j))) ^ 2) +
+          canonicalCappedSampleQueryEnvelope atoms phi eps deltaRun) := by
+  intro deltaRun hn1 I V P w
+  have hcap := (ttc_volume_runtime_perPhase atoms phi eps delta h_eps_pos h_eps_le
+    h_delta_pos h_delta_le hn hphi hvol).2
+  rw [MeasureTheory.lintegral_const_mul _ measurable_snd]
+  exact mul_le_mul_left' hcap w
+
+#print axioms ttc_volume_runtime_perPhase_ops
+
 end Capstone
 
 section AxiomCheck
