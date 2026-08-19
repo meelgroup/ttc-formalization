@@ -236,6 +236,38 @@ Against the paper's *volume* term alone (`r·max(n³ρ², n⁴)/ε²`) we are wo
   suppresses warm-starting costs explicitly; ours does not.  Any comparison that treats the
   two conventions as the same is wrong.
 
+### 5.6  The fix, and the total (2026-08-19, commit `68592ae`)
+
+`Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops` charges both recorded components
+at one rate, `Ttc.CoolCost.coolStepOpCharge n rfac = ⌈n · rfac⌉₊`:
+
+* a volume membership query costs `⌈n · rfac⌉₊` operations, by definition of the charge;
+* one facet inspection costs `n`, and `n ≤ n · rfac` whenever `1 ≤ rfac`.
+
+So every unit either component records is at most `⌈n · rfac⌉₊` operations, and
+
+    (operations of the run)  ≤  ⌈n · rfac⌉₊ · ∫⁻ r.2  ≤  ⌈n · rfac⌉₊ · (volEnv + sampEnv).
+
+⚠ **A costing convention, not a theorem about a machine.**  There is no operational cost
+model here against which "one membership test costs `⌈n · rfac⌉₊` operations" could be
+*proved*.  It is the paper's own convention (§5.1), made explicit.  What is machine-checked is
+only that the convention applied to the run is under the convention applied to the envelope.
+
+**The total, in operations.**  Machine-checked for the volume half; **hand arithmetic** for
+the sampler half, and marked as such:
+
+| | operations |
+|---|---|
+| volume | `Õ(m·n⁴·ρ⁶/ε²)` queries × `n·r_max` = `Õ(m·n⁵·ρ⁶·r_max/ε²)` |
+| sampler *(hand)* | `Threshold · n²ρ²·log(8Mw/ε²) · r_max` inspections × `n` = `Õ(n³·ρ²·r_max/ε²)` |
+| **total** | **`Õ(m · n⁵ · ρ⁶ · r_max / ε²)`** — the volume half dominates |
+| paper `thm:runtime` | `O(m · n⁵ · ρ² · r_max)` |
+
+**`n` matches at `n⁵`.  We are `ρ⁴` above the paper.**  The `ε⁻²` is not a discrepancy; the
+paper's displayed expression carries it and its `O(·)` suppresses it.  The `log Mw` in the
+sampler half is a warm-start factor, which the paper's `O(·)` suppresses explicitly and ours
+does not.
+
 ### 5.5  Consequences for existing text
 
 * Every "one factor `n` short of the paper" claim predates this audit and compared a **query
@@ -274,10 +306,12 @@ Against the paper's *volume* term alone (`r·max(n³ρ², n⁴)/ε²`) we are wo
       membership queries on the volume side and *facet inspections* on the sampler side.
       Converted at `n·r_max` ops/query, our volume term is `Õ(m·n⁵·ρ⁶·r_max/ε²)` against the
       paper's `O(m·n⁵·ρ²·r_max)`: **`n` matches, `ρ⁴` worse.**
-- [ ] **NEW, from the audit: the capstone's two summands are in different units** (§5.2), so
-      no *total* may be quoted.  Convert `canonicalCappedSampleQueryEnvelope` to query units
-      (divide by `hybridStepInspectionBound`), or the volume summand to inspections, and bound
-      the sampler term's asymptotics.  Until then the headline figure is a volume-term figure.
+- [x] **The units mismatch of §5.2 is fixed** — `ttc_volume_runtime_perPhase_ops`
+      (`TtcSlowRuntimePerPhase.lean`) charges both components at `⌈n·rfac⌉₊` operations, which
+      dominates both a volume membership query and a facet inspection.  See §5.6.
+- [ ] The sampler summand's asymptotics are **hand-computed only** (§5.6) — `Threshold ·
+      n²ρ²·log(8Mw/ε²) · r_max` inspections.  Machine-check it, or stop quoting the total's
+      sampler half.
 - [ ] The free `log²n`: `clip_eps` is the origin of the `64·(max 1 eps)²·sourceLogFactor n ²`
       prefix in the four `OV`s, and with the shape gone that inflation buys nothing.  Recorded
       in its docstring; deliberately not bundled.

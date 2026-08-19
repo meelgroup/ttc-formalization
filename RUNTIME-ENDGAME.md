@@ -385,12 +385,17 @@ Two findings, and the second is the important one.
    **`n` matches at `n⁵`; we are `ρ⁴` above.**  Every "one factor `n` short of the paper"
    statement in this file predates this and compared a query count to a time — all stale.
 
-2. **`Õ(m·n⁴·ρ⁶/ε²)` is the volume summand alone, not a total.**  The capstone's two summands
-   are in *different units*: the volume envelope excludes the facet factor (queries), while
-   `canonicalCappedSampleQueryEnvelope` includes it — `hybridStepInspectionBound n rfac =
-   rfac/2` counts *facet inspections*.  A query is `r` inspections, so the right-hand side
-   adds two incommensurable counts.  **No total runtime for TTC may be quoted from this file
-   until that is fixed and the sampler term's asymptotics are computed.**
+2. **The summands were in different units; this is now fixed.**  The volume envelope excludes
+   the facet factor (queries) while `canonicalCappedSampleQueryEnvelope` includes it
+   (`hybridStepInspectionBound n rfac = rfac/2` counts *facet inspections*), so the
+   unweighted `∫⁻ r.2` counted nothing.  `ttc_volume_runtime_perPhase_ops` (commit `68592ae`)
+   charges both at `⌈n·rfac⌉₊`, which dominates a membership query and a facet inspection
+   alike, giving a bound in one unit.  It is a **costing convention** — the paper's own — not
+   a theorem about a machine; see `PLAN-SHAPE.md` §5.6.
+
+   **Total, in operations:** `Õ(m · n⁵ · ρ⁶ · r_max / ε²)`, the volume half dominating.
+   Against the paper's `O(m · n⁵ · ρ² · r_max)`: **`n` matches at `n⁵`, `ρ⁴` above.**
+   ⚠ The sampler half of that total is **hand arithmetic, not machine-checked**.
 
 ### P1 is OPERATIVE as of 2026-08-18
 
