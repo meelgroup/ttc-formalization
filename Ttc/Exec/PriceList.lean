@@ -260,6 +260,10 @@ noncomputable def ttcVolPrice : ℕ :=
         * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
       / ((algBlock atoms φ ε δ).epsPrime ^ 2 * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1
 
+/-- **The `Ttc/Model/` copy is this price**, by `rfl` — so a drift between them is a build
+error rather than a silent divergence (`CLAUDE.md` §13). -/
+theorem volPricePaidAt_eq : volPricePaidAt atoms φ ε δ = ttcVolPrice atoms φ ε δ := rfl
+
 theorem ttcVolPrice_def :
     ttcVolPrice atoms φ ε δ
       = ⌈((algGamma atoms φ ε δ)⁻¹

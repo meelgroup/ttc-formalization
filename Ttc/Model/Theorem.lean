@@ -89,38 +89,64 @@ theorem ttc_volume {A : Type*} {n : ℕ}
       Pr[r ← ttc atoms φ ε δ;
         r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    -- (running time) at any `(R, γ)` bounding the fixed sampling price quartically, almost
-    -- every run is charged at most `m·n⁴·(2⁴²·volFac + 2⁶²·rfac·(R²/γ²)·log(2R)·(Θ + 1))`
-    (∀ R γ : ℝ, 1 ≤ R → 0 < γ →
-      ((hrSampPriceAt atoms φ ε δ : ℕ) : ℝ)
-          ≤ 2 ^ 62 * (n : ℝ) ^ 4 * canonRfac (toDNFd (preprocess atoms φ))
-              * (R ^ 2 / γ ^ 2) * Real.log (2 * R) →
-      All[r ← ttc atoms φ ε δ;
-        (r.2 : ℝ) ≤
-          ((toDNFd (preprocess atoms φ)).length : ℝ) * (n : ℝ) ^ 4
-            * (2 ^ 42
-                  * ((canonRfac (toDNFd (preprocess atoms φ)) + 1)
-                      * Real.log (8 / (algBlock atoms φ ε δ).epsPrime ^ 2)
-                      * ((1 + Real.log (1 + (n : ℝ)
-                            * ((algGamma atoms φ ε δ)⁻¹
-                                * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                                    (preprocess atoms φ))) ^ 2)) ^ 4
-                          * Real.log (1 / (algBlock atoms φ ε δ).deltaPrime)
-                          / ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10) ^ 3))
-                + 2 ^ 62 * canonRfac (toDNFd (preprocess atoms φ)) * (R ^ 2 / γ ^ 2)
-                    * Real.log (2 * R)
-                    * (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
-                        + 15 * (Real.log (15 / (2 * δ))
-                            + Real.log ((toDNFd (preprocess atoms φ)).length))
-                        + 1))]) :=
+    -- (running time) almost every run is charged at most
+    -- `m · (C_vol + C_sample·(Θ + 1))`, at the two prices the run ACTUALLY pays.
+    -- Both are written out: `C_vol` is the coin count of `Ttc.mcVol`, the hit-and-miss
+    -- Monte-Carlo oracle `Ttc.algOracles` is built over, and `C_sample` is
+    -- `Ttc.mixStepsBound` at the run's own arguments.  BOTH ARE EXPONENTIAL IN `n` —
+    -- visible here as the `^ n` of the first and the `4 ^ n`, `^ (2 * n)`, `^ (4 * n)`
+    -- of the second.  Nothing is hidden behind a name.
+    (All[r ← ttc atoms φ ε δ;
+      (r.2 : ℝ) ≤
+        ((toDNFd (preprocess atoms φ)).length : ℝ)
+          * (((
+          ⌈((algGamma atoms φ ε δ)⁻¹
+                * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
+              / ((algBlock atoms φ ε δ).epsPrime ^ 2 * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1 : ℕ) : ℝ)
+              + ((
+          ⌈(Real.log ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+            algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
+            (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
+            (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
+            ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+            algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
+            (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
+            (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+            algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
+            latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
+            (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ) ^ 2 * ((1
+            + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+            algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
+            latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
+            (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)
+            ^ 2 * (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+            algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
+            latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
+            (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+            (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊ : ℕ) : ℝ)
+              * (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
+                  + 15 * (Real.log (15 / (2 * δ))
+                      + Real.log ((toDNFd (preprocess atoms φ)).length))
+                  + 1))]) :=
   ⟨(ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _).1,
-    fun R γ hR1 hγ0 hcS =>
-      PricedHeadline.all_ttc_cost_le_quartic atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _
-        (2 ^ 42) _ _ R γ (by norm_num)
-        (PricedHeadline.zero_le_volFac atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1)
-        (PricedHeadline.one_le_canonRfac atoms φ ε hε0 hε1 hn hφ hpos) hR1 hγ0
-        (PricedHeadline.cvPrice_le atoms φ ε δ hε0 hε1 hn hφ hpos hδ0 hδ1) hcS⟩
-
+    (ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _).2⟩
 
 #print axioms ttc_volume
 

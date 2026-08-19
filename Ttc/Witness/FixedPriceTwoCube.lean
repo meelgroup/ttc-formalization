@@ -57,10 +57,9 @@ are not prices this run is proved to pay. -/
 theorem ttc_volume_estimate_two_cube_fixed (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
     1 - δ ≤ twoAccFull n hn ε δ hε0 hε1
-      (ttcVolPriceCVAlg (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ)
-      (ttcSampPriceHR (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ) := by
-  rw [ttcVolPriceCVAlg_model, ttcSampPriceHR_model]
-  exact (ttc_volume (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
+      (volPricePaidAt (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ)
+      (sampPricePaidAt (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ) :=
+  (ttc_volume (atomsT n hn ε δ hε0 hε1) (twoForm n) ε δ
     hε0 hε1 hδ0 hδ1 hn twoForm_isPositive (twoVolPos n hn ε δ hε0 hε1)).1
 
 /-- The same at `(ε, δ) = (1/3, 9/10)` and `(1/2, 1/4)`, with the achieved bounds proved
@@ -70,11 +69,11 @@ theorem ttc_volume_estimate_two_cube_fixed_at (n : ℕ) (hn : 1 ≤ n)
     (hε₁ : (0 : ℝ) < 1/3) (hε₁' : (1/3 : ℝ) ≤ 1)
     (hε₂ : (0 : ℝ) < 1/2) (hε₂' : (1/2 : ℝ) ≤ 1) :
     ((0 : ℝ) < 1/10 ∧ (1/10 : ℝ) ≤ twoAccFull n hn (1/3) (9/10) hε₁ hε₁'
-        (ttcVolPriceCVAlg (atomsT n hn (1/3) (9/10) hε₁ hε₁') (twoForm n) (1/3) (9/10))
-        (ttcSampPriceHR (atomsT n hn (1/3) (9/10) hε₁ hε₁') (twoForm n) (1/3) (9/10)))
+        (volPricePaidAt (atomsT n hn (1/3) (9/10) hε₁ hε₁') (twoForm n) (1/3) (9/10))
+        (sampPricePaidAt (atomsT n hn (1/3) (9/10) hε₁ hε₁') (twoForm n) (1/3) (9/10)))
     ∧ ((0 : ℝ) < 3/4 ∧ (3/4 : ℝ) ≤ twoAccFull n hn (1/2) (1/4) hε₂ hε₂'
-        (ttcVolPriceCVAlg (atomsT n hn (1/2) (1/4) hε₂ hε₂') (twoForm n) (1/2) (1/4))
-        (ttcSampPriceHR (atomsT n hn (1/2) (1/4) hε₂ hε₂') (twoForm n) (1/2) (1/4))) := by
+        (volPricePaidAt (atomsT n hn (1/2) (1/4) hε₂ hε₂') (twoForm n) (1/2) (1/4))
+        (sampPricePaidAt (atomsT n hn (1/2) (1/4) hε₂ hε₂') (twoForm n) (1/2) (1/4))) := by
   refine ⟨⟨by norm_num, ?_⟩, ⟨by norm_num, ?_⟩⟩
   · have h := ttc_volume_estimate_two_cube_fixed n hn (1/3) (9/10) hε₁ hε₁'
       (by norm_num) (by norm_num)

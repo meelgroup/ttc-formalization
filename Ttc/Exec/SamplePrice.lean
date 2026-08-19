@@ -110,6 +110,9 @@ No `+ 1`: `Ttc.mixStepsBound` already contains one (module docstring).
 **Exponential in `n`.** -/
 noncomputable def ttcSampPrice : ℕ := ⌈ttcSampStepsPrice atoms φ ε δ⌉₊
 
+/-- **The `Ttc/Model/` copy is this price**, by `rfl`. -/
+theorem sampPricePaidAt_eq : sampPricePaidAt atoms φ ε δ = ttcSampPrice atoms φ ε δ := rfl
+
 theorem ttcSampPrice_def :
     ttcSampPrice atoms φ ε δ = ⌈ttcSampStepsPrice atoms φ ε δ⌉₊ := rfl
 

@@ -905,6 +905,70 @@ noncomputable def hrSampPriceAt : ℕ :=
     sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)))) ^ n)) ^ 2)⌋₊ + 1 + 2) *
     ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
 
+/-- **The volume price the run actually pays.**
+
+`Ttc.algOracles` is a closed term over `Ttc.mcVol` — hit-and-miss Monte Carlo — and this is
+the number of coins that oracle reads, at every cube.  `Ttc.ttcVolCoins_le_ttcVolPrice`
+(`Exec/PriceList`) is the lemma that proves it, and `Ttc.volPricePaidAt_eq` proves this copy
+equals `Ttc.ttcVolPrice` by `rfl` (`CLAUDE.md` §13).
+
+**Exponential in `n`**, and that is the honest cost of the oracle `Ttc.ttc` runs.  The
+polynomial `Ttc.cvVolPriceAt` beside it prices a *different* volume algorithm — the one
+`Ttc/Volume/CVEstimator.lean` is about — evaluated at these parameters, and is **not** a
+price this run pays. -/
+noncomputable def volPricePaidAt : ℕ :=
+  ⌈((algGamma atoms φ ε δ)⁻¹
+        * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
+      / ((algBlock atoms φ ε δ).epsPrime ^ 2 * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1
+
+/-- **The per-sample price the run actually pays.**
+
+`Ttc.mixStepsBound` at the run's own cube-free arguments — the chain length the sampler's law
+is defined by.  `Ttc.ttcSampleSteps_le_ttcSampPrice` (`Exec/SamplePrice`) proves it dominates
+the steps at every cube, and `Ttc.sampPricePaidAt_eq` proves this copy equals
+`Ttc.ttcSampPrice` by `rfl`.
+
+**Exponential in `n`** — it carries `4 ^ n` and a `(…)^(4n)` radius ratio. -/
+noncomputable def sampPricePaidAt : ℕ :=
+
+      ⌈(Real.log ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+        algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
+        (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
+        (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
+        ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+        algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
+        (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
+        (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+        algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
+        latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
+        (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ) ^ 2 * ((1
+        + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+        algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
+        latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
+        (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)
+        ^ 2 * (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
+        algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
+        latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
+        (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
+        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
+        (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊
+
 /-- **`TTC(F, ε, δ)` as one law, at the run's own four inputs and nothing else.**  This is
 the measure `Ttc.ttc_volume_estimate` is stated about: `Ttc.ttcCharged` with the two
 per-call charges fixed, so that neither appears as an argument.  `Ttc.ttc_def` is the
@@ -921,14 +985,15 @@ prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`) an
 warning at the head of `Ttc/Exec/PricedHeadline.lean` before quoting any running-time
 statement about this measure. -/
 noncomputable def ttc : MeasureTheory.Measure (ℝ × ℕ) :=
-  ttcCharged atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ)
+  ttcCharged atoms φ ε δ (volPricePaidAt atoms φ ε δ) (sampPricePaidAt atoms φ ε δ)
 
 /-- **The prices, from a lemma rather than from the statement.**  `Ttc.ttc` is
 `Ttc.ttcCharged` at the two fixed charges — by `rfl`, so the two are interchangeable
 wherever a price-parametric result is being applied. -/
 theorem ttc_def :
     ttc atoms φ ε δ
-      = ttcCharged atoms φ ε δ (cvVolPriceAt atoms φ ε δ) (hrSampPriceAt atoms φ ε δ) := rfl
+      = ttcCharged atoms φ ε δ (volPricePaidAt atoms φ ε δ) (sampPricePaidAt atoms φ ε δ) :=
+  rfl
 
 end Run
 
