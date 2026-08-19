@@ -45,7 +45,13 @@ above exceeds it.  See `AUDIT.md` and `PLAN-SHAPE.md` §5.7.
 
 namespace Ttc.SamplerEnvelopeShape
 
-open scoped BigOperators
+open MeasureTheory Set
+open Ttc.TTCSourceSharpOperationalFinal
+open Ttc.ConcreteHybridCanonicalOwnerPoly
+open Ttc.TTCUnconditionalExplicitRuntime
+open scoped ENNReal BigOperators Classical
+
+variable {A : Type*}
 
 /-- **`Ttc.mixStepsBound` is monotone in the dimension slot.**
 
@@ -240,6 +246,93 @@ theorem lowDim_le_canonicalHybridSamplerQueryBound
 
 #print axioms canonicalHybridSamplerQueryBound_le_decomposed
 #print axioms lowDim_le_canonicalHybridSamplerQueryBound
+
+/-! ## Step 4c — the per-cube bound at the run's own parameters, discharged
+
+The `nu` slot is written inline in `canonicalHybridSamplerQueryBound`.  Rather than transcribe
+it, the existential below lets unification supply it (`rfl`), leaving exactly the two goals
+`0 < nu` and `nu ≤ 1` at the inline term — which are the goals
+`Ttc.TTCSourceSharpOperationalFinal` already discharges (its lines 425–458) by rewriting
+`(algBlock …).r` to `Ttc.canonRfac (D atoms phi)` and appealing to `Ttc.ttcSampTol_pos` /
+`Ttc.ttcSampTol_le_one`. -/
+set_option maxHeartbeats 4000000 in
+theorem exists_canonicalHybridSamplerQueryBound_shape
+    {n : Nat} (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
+    (h_eps_pos : 0 < eps) (h_eps_le : eps ≤ 1) (hn : 1 ≤ n)
+    (hphi : phi.IsPositive) (hvol : 0 < Ttc.volSol (Ttc.atomSet atoms) phi)
+    (i : CubeIndex atoms phi) :
+    ∃ (nu : Real) (w : ENNReal),
+      canonicalHybridSamplerQueryBound atoms phi eps delta i
+        = 8 * (ENNReal.ofReal (Ttc.hybridTransitionBound n
+              (canonicalHybridInnerRadius atoms phi eps delta i)
+              (canonicalHybridOuterRadius atoms phi eps delta i)
+              (canonicalHybridStep atoms phi eps delta i)
+              (canonicalHybridWarm atoms phi eps delta i) nu) * w + 1)
+        ∧ 0 < nu ∧ nu ≤ 1 := by
+  refine ⟨_, _, rfl, ?_, ?_⟩
+  · have hPr : (Ttc.algBlock atoms phi eps delta).r =
+        (Nat.card (Ttc.FacetIndex (Ttc.ConcreteHybridCanonicalOwnerPoly.D atoms phi)) : Real) :=
+      Ttc.ttcBlock_r atoms phi eps delta h_eps_pos h_eps_le hn hphi hvol
+    have hrf : (Ttc.algBlock atoms phi eps delta).r =
+        Ttc.canonRfac (Ttc.ConcreteHybridCanonicalOwnerPoly.D atoms phi) := by rw [hPr, Ttc.canonRfac]
+    rw [hrf]
+    change 0 < Ttc.ttcSampTol atoms phi eps delta i
+    exact Ttc.ttcSampTol_pos atoms phi eps delta h_eps_pos h_eps_le hn hphi hvol i
+  · have hPr : (Ttc.algBlock atoms phi eps delta).r =
+        (Nat.card (Ttc.FacetIndex (Ttc.ConcreteHybridCanonicalOwnerPoly.D atoms phi)) : Real) :=
+      Ttc.ttcBlock_r atoms phi eps delta h_eps_pos h_eps_le hn hphi hvol
+    have hrf : (Ttc.algBlock atoms phi eps delta).r =
+        Ttc.canonRfac (Ttc.ConcreteHybridCanonicalOwnerPoly.D atoms phi) := by rw [hPr, Ttc.canonRfac]
+    rw [hrf]
+    change Ttc.ttcSampTol atoms phi eps delta i ≤ 1
+    exact Ttc.ttcSampTol_le_one atoms phi eps delta h_eps_pos h_eps_le hn hphi hvol i
+
+#print axioms exists_canonicalHybridSamplerQueryBound_shape
+
+/-! ## Step 3 — the sup over cubes, and the sum
+
+`Ttc.TTCUnconditionalExplicitRuntime.canonicalCappedSampleQueryEnvelope_le_explicitCaps`
+already reduces the sum to `(cube count) · rateThreshold · endpointCap`, with no premises.
+`endpointCap` is a `Finset.sup`, so a bound uniform in the cube closes it. -/
+
+/-- **The whole sampler envelope, closed at a uniform per-cube bound.**
+
+`T` must be uniform over cubes.  That is the same move the paper makes when it replaces every
+`R_i/γ_i` by `ρ` and every `r_i` by `r_max` (`sections/analysis.tex`, proof of `thm:runtime`),
+so it is the right shape — but it is a hypothesis here, not something discharged. -/
+theorem canonicalCappedSampleQueryEnvelope_le_uniform
+    {n : Nat} (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
+    {T : Real} {w : ENNReal}
+    (hT : ∀ i : CubeIndex atoms phi,
+      canonicalHybridSamplerQueryBound atoms phi eps delta i
+        ≤ 8 * (ENNReal.ofReal T * w + 1)) :
+    canonicalCappedSampleQueryEnvelope atoms phi eps delta ≤
+      ((Ttc.toDNFd (Ttc.preprocess atoms phi)).length : ENNReal) *
+        (canonicalRateThreshold atoms phi eps delta * (8 * (ENNReal.ofReal T * w + 1))) := by
+  refine (canonicalCappedSampleQueryEnvelope_le_explicitCaps atoms phi eps delta).trans ?_
+  gcongr
+  unfold canonicalEndpointInspectionCap
+  exact Finset.sup_le fun i _ ↦ hT i
+
+/-- **Every cube's contribution is under the whole envelope.**
+
+With `lowDim_le_canonicalHybridSamplerQueryBound` this carries the low-dimensional term all the
+way to the top-level sampler envelope, not merely to the per-cube bound: the sum is over
+nonnegative terms, so it dominates any one of them. -/
+theorem cube_le_canonicalCappedSampleQueryEnvelope
+    {n : Nat} (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
+    (i : CubeIndex atoms phi) :
+    (polyGoodRateCap atoms phi eps delta i : ENNReal) *
+        canonicalHybridSamplerQueryBound atoms phi eps delta i
+      ≤ canonicalCappedSampleQueryEnvelope atoms phi eps delta := by
+  unfold canonicalCappedSampleQueryEnvelope
+  exact Finset.single_le_sum (f := fun j ↦
+      (polyGoodRateCap atoms phi eps delta j : ENNReal) *
+        canonicalHybridSamplerQueryBound atoms phi eps delta j)
+    (fun j _ ↦ by simp) (Finset.mem_univ i)
+
+#print axioms canonicalCappedSampleQueryEnvelope_le_uniform
+#print axioms cube_le_canonicalCappedSampleQueryEnvelope
 
 #print axioms mixStepsBound_mono_dim
 #print axioms lowDimBallWalkEnvelope_le

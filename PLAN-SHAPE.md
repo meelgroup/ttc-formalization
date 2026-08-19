@@ -281,6 +281,10 @@ does not.
 Two errors in §5.6's sampler row, both found by reading the definitions the machine-check
 would have to unfold.
 
+**Both are now machine-checked** in `Ttc/Exec/SamplerEnvelopeShape.lean` (11 theorems,
+axiom-clean) — see §5.8.  What follows was originally a reading of the definitions; it is no
+longer only that.
+
 **(a) A dropped additive term.**  `Ttc.hybridTransitionBound` is **not**
 `2⁶⁶·n²·(Rout/rin)²·log(8·Mw/ε²)`.  Its definition
 (`Ttc/Sampler/ConstructHybridUncond.lean:199`) is
@@ -331,6 +335,46 @@ carries the premise `hprice : canonicalHybridSamplerQueryBound i ≤ ofReal (rMa
 construction cannot discharge that premise at large `ρ`** — the low-dimensional term exceeds
 `n⁵ρ²`.  That bridge is a theorem whose hypothesis this development does not satisfy, and the
 term above is why.
+
+### 5.8  The sampler envelope, machine-checked and closed (2026-08-19)
+
+`Ttc/Exec/SamplerEnvelopeShape.lean`, registered in `Ttc.lean`.  Eleven theorems, all
+axiom-clean, `lake build Ttc` green at 9468 jobs, four closure audits unchanged.
+
+| | |
+|---|---|
+| `mixStepsBound_mono_dim` | monotone in the dimension slot |
+| `lowDimBallWalkEnvelope_le` | `≤ 1100 ·` the `k = 1099` term |
+| `hybridTransitionBound_le` | the decomposition (**upper**) |
+| `mixStepsBound_1099_le_hybridTransitionBound` | the term is really there (**lower**) |
+| `samplerShape_mono` / `_lowDim_le` / `_le_decomposed` | transfer through `8·(ofReal T · w + 1)` |
+| `exists_canonicalHybridSamplerQueryBound_shape` | shape by `rfl`; `0 < nu`, `nu ≤ 1` discharged |
+| `canonicalHybridSamplerQueryBound_le_decomposed` / `lowDim_le_…` | per cube |
+| `canonicalCappedSampleQueryEnvelope_le_uniform` | **the envelope, closed** |
+| `cube_le_canonicalCappedSampleQueryEnvelope` | any cube's contribution `≤` the envelope |
+
+**The lower bound is the substantive one.**  `mixStepsBound_1099_le_hybridTransitionBound`
+takes **no hypotheses at all** — in particular not `1100 ≤ n`, where the walk being priced is
+hit-and-run and the low-dimensional ball-walk term is pure overhead.  An upper bound alone
+would have left open whether the `4^1099 · ρ^4396` term is an artefact of careless bounding.
+It is not: it is in the *definition* of the envelope, and composing with the last two rows
+carries it to the **top-level sampler envelope**, not merely to the per-cube bound.  Only
+changing `Ttc.hybridTransitionBound` itself — branching on `1100 ≤ n` instead of adding a
+uniform envelope — would remove it.
+
+**The closure, and its one hypothesis.**
+
+    canonicalCappedSampleQueryEnvelope  ≤  m · canonicalRateThreshold · 8·(ofReal T · w + 1)
+
+at any `T` bounding the transition bound **uniformly over cubes**.  That uniformity is a
+hypothesis, not something discharged here — and it is exactly the step the paper takes when it
+replaces every `R_i/γ_i` by `ρ` and every `r_i` by `r_max` (`sections/analysis.tex`, proof of
+`thm:runtime`).  So the shape is right; supplying `T` means taking that sup over the run's own
+per-cube geometry.
+
+**What this does not restore.**  The withdrawn total stays withdrawn.  These theorems pin the
+*shape* of the sampler envelope and prove the low-dimensional term is in it; they do not give a
+`ρ`-exponent for the total, and no `ρ`-comparison with the paper is licensed.
 
 ### 5.5  Consequences for existing text
 
