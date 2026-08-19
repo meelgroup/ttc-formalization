@@ -8,7 +8,7 @@ import Ttc.Coupling.Family
 /-!
 # `Monadic/Kernel`: the coin-indexed family of trajectory laws is measurable
 
-The headline `Ttc.ttc_volume_estimate` states its accuracy conjunct as an iterated
+The headline `Ttc.ttc_volume` states its accuracy conjunct as an iterated
 integral,
 
 ```

@@ -9,7 +9,7 @@ import Ttc.Monadic.Kernel
 /-!
 # `Monadic/EventMeasurable`: the headline's own event is measurable
 
-`Ttc.ttc_volume_estimate`'s accuracy conjunct is an iterated integral whose
+`Ttc.ttc_volume`'s accuracy conjunct is an iterated integral whose
 integrand is the trajectory law applied to
 
 ```
@@ -70,7 +70,7 @@ preimage, measurable or not (`Ttc.CountablyDetermined.measurableSet_preimage`).
 
 Nothing here is assumed.  In particular no measurability hypothesis is added to any
 statement: `Ttc.ttc_accuracy_single_measure` has exactly
-`Ttc.ttc_volume_estimate`'s binders.
+`Ttc.ttc_volume`'s binders.
 
 One correction to the picture the spike left: the headline's event depends on the
 volume coins `c` as well as on the trajectory, so
@@ -531,7 +531,7 @@ theorem measurable_ttcAlgOutput_of_traj (c : ℕ → Space n) :
   (countablyDetermined_ttcAlgOutput atoms φ ε δ c).measurable
 
 /-- **The headline's own event is measurable**, at every value of the volume coins
-`c`.  This is `Ttc.ttc_volume_estimate`'s accuracy conjunct's event, verbatim. -/
+`c`.  This is `Ttc.ttc_volume`'s accuracy conjunct's event, verbatim. -/
 theorem measurableSet_good_event (c : ℕ → Space n) :
     MeasurableSet {t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ |
       ttcAlgOutput atoms φ ε δ
@@ -575,7 +575,7 @@ theorem measurableSet_good_event_joint :
 
 /-- **The payoff: the headline's accuracy conjunct is one measure of one event.**
 
-The iterated integral of `Ttc.ttc_volume_estimate` — outer over the volume coins,
+The iterated integral of `Ttc.ttc_volume` — outer over the volume coins,
 inner the trajectory law at the rates that run produced — is the composition–product
 of the coin law with `Ttc.ttcTrajKernel`, applied to the *joint* good event.  No
 hypothesis: the measurability the rewrite needs is
@@ -596,7 +596,7 @@ theorem lintegral_good_event_eq_compProd :
 include hε0 hε1 hn hφ hpos in
 /-- **The headline's accuracy conjunct, over a single program.**
 
-`Ttc.ttc_volume_estimate`'s accuracy half (equivalently `Ttc.ttc_volume_api`'s),
+`Ttc.ttc_volume`'s accuracy half (equivalently `Ttc.ttc_volume_api`'s),
 with its iterated integral replaced by one measure — the composition–product of the
 volume coins with the coin-indexed trajectory kernel — applied to one event of one
 space.  Nothing is assumed: the rewrite is

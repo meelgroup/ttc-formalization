@@ -16,7 +16,7 @@ Bornology.IsBounded (sol (atomSet atoms) (pruneForm atoms φ))
 
 from `hφ : φ.IsPositive` and `hpos : 0 < volSol (atomSet atoms) φ` alone — no
 boundedness hypothesis anywhere in its statement or its proof.  So the `hbdd` binder
-of `Ttc.ttc_volume_estimate` is redundant *for the formula the algorithm is actually
+of `Ttc.ttc_volume` is redundant *for the formula the algorithm is actually
 handed*, and every consumer of `Ttc.pruneBdd` can be fed this instead.
 
 ## The four steps
@@ -257,7 +257,7 @@ No `hbdd` anywhere.  Every surviving cube has nonempty interior by construction
 solution set is the *finite* union of those regions (`Ttc.sol_pruneForm`), hence
 bounded.
 
-This makes `Ttc.ttc_volume_estimate`'s `hbdd` binder redundant: every consumer of
+This makes `Ttc.ttc_volume`'s `hbdd` binder redundant: every consumer of
 `Ttc.pruneBdd` can be handed this term instead. -/
 theorem isBounded_sol_pruneForm_of_volSol_pos (atoms : A → LinAtom n) {φ : BForm A}
     (hφ : φ.IsPositive) (hpos : 0 < volSol (atomSet atoms) φ) :

@@ -145,10 +145,11 @@ it over the cubes — `diam (region M i) ≤ diam (sol M φ)` for every cube, by
 modelled run can be *shown* to pay for one `Vol_ED` call.
 
 ⚠ **It is not what the headline carries** (corrected 2026-08-12; this paragraph used to
-say `Ttc.ttc_volume_estimate` carries it "in place of its old `cVol` binder", which was
+say `Ttc.ttc_volume` carries it "in place of its old `cVol` binder", which was
 false when written and is still false).  The headline's `cVol` slot is now fixed at the
 **Cousins–Vempala** operation price, which no lemma anywhere dominates `Ttc.ttcVolCoins`
-by; see the boxed warning in `Ttc/Exec/PricedHeadline.lean`.  `Ttc.ttcVolPrice` is the
+by; the boxed warning that said so was in `Ttc/Exec/PricedHeadline.lean`, deleted on
+2026-08-19 with the fixed-price headline.  `Ttc.ttcVolPrice` is the
 honest one and it is exponential in `n`.
 
 `Ttc.ttcSampleSteps` still has **no** uniform bound: `Ttc.mixStepsBound`
@@ -402,9 +403,9 @@ theorem mcVol_congr_of_agree (M : A → Set (Space n)) (D : DNF A)
 `Ttc.e2eBallWalkSteps` names that iterate count at `Ttc.e2eSampD`'s own arguments and
 `Ttc.e2eSampD_eq_ballWalk` checks, by `rfl`, that it is that count.
 
-Two things it is **not**.  It is not a count of anything `Ttc.ttcRun` does: the run's
+Two things it is **not**.  It is not a count of anything `Ttc.ttcEstimate` does: the run's
 `GenerateSamples` is the trajectory read-off `Ttc.trajGen`, and `Ttc.mixSteps` does not
-occur in `Ttc.ttcRun`'s definitional closure at all — it occurs in `Ttc.ttcRates`, the
+occur in `Ttc.ttcEstimate`'s definitional closure at all — it occurs in `Ttc.ttcRates`, the
 *law* the sample coins are drawn from.  And it is not the cost of a sample even under
 the convention: `Ttc.kv97SampD` is a rounding-then-rejection law, and the rejection
 rounds are not counted here or anywhere. -/

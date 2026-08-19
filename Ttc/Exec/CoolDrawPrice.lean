@@ -71,7 +71,7 @@ q := coolDrawPrice … (coolStepOpCharge n rfac)
 
 so **`kq = 3`, `Cq = 2²⁹`, `qFac = (rfac + 1)·log(8M/ε²)`** — the last line is literally the
 `hq : (q : ℝ) ≤ Cq · (n : ℝ) ^ kq · qFac` that `Ttc.cvVolumeOpsPrice_le_poly`
-(`Ttc/Exec/TheoremPoly.lean:182`) and `Ttc.isBigO_ttc_runtime_cv` (`:504`) consume, so the
+(`Exec/TheoremPoly`, deleted 2026-08-19) and `Ttc.isBigO_ttc_runtime_cv` used to consume, so the
 composition needs no glue, and it gives `kv = kq + 1 = 4`.  (The capstone
 `Ttc.PolyComplexity.ttcComplexity_le_poly` takes the *volume* bound `hcVol`, not `hq`;
 `Ttc.cvVolumeOpsPrice_le_poly` is what turns one into the other.)
@@ -315,7 +315,7 @@ theorem coolStepOpCharge_le {n : ℕ} {rfac : ℝ} (hn : 1 ≤ n) (hr : 0 ≤ rf
 
 This is the **derivation form**: the exponent `3` and the constant, as they fall out.
 `Ttc.CoolCost.coolDrawPrice_le_bridge` is the same bound re-associated into the capstone's
-exact `hq : (q : ℝ) ≤ Cq · (n : ℝ) ^ kq · qFac` shape (`Ttc/Exec/TheoremPoly.lean:182`) —
+exact `hq : (q : ℝ) ≤ Cq · (n : ℝ) ^ kq · qFac` shape (`Exec/TheoremPoly`, deleted) —
 quote *that* one when composing.  Either way `kq = 3`, hence `kv = kq + 1 = 4`.
 
 **The `n`-exponent is `3` only because `Cq` is `n`-free, and `Cq` is `n`-free only if
@@ -485,7 +485,7 @@ cvVolumeOpsPrice ≤ 2⁴²·(rfac+1)·log(8M/ε_draw²) · n⁴ · (L⁴·log(1
 `2⁴² = 2¹³·2²⁹`.  This is `Ttc.cvVolumeOpsPrice_le_poly`'s conclusion at `kq = 3`,
 `Cq = 2²⁹·(rfac+1)·log(8M/ε_draw²)`, `kv = 4` — reproved here directly from
 `Ttc.CVCost.cvVolumeOpsPrice_le` so that this file does not depend on
-`Ttc/Exec/TheoremPoly.lean`.
+`Ttc/Exec/TheoremPoly.lean` (deleted 2026-08-19).
 
 ⚠ The exponent `4` is `4` **only because `log M` is treated as `n`-free**, and because
 `hiso`, `hell`/`hfloor` are binders upstream.  Read the module docstring before quoting this. -/

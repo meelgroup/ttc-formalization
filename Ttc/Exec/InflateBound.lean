@@ -108,7 +108,7 @@ smaller by a uniform price:
 
 * `Ttc.kv97SampD`'s **rejection rounds are unbounded and uncounted**;
 * the **`while` loops of `alg:ttc` lines 32–42 are uncharged**;
-* `Ttc.mixSteps` **does not occur in `Ttc.ttcRun`'s definitional closure** — it enters
+* `Ttc.mixSteps` **does not occur in `Ttc.ttcEstimate`'s definitional closure** — it enters
   through `Ttc.ttcRates`, the *law*.  So this prices the chain the sampler's law is defined
   by, not steps the modelled run takes.
 

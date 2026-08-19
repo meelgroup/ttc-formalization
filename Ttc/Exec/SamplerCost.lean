@@ -29,9 +29,12 @@ import Arlib.Probability.RejectionRounds
 
 ## What this file adds, and what already existed
 
-`Ttc/Exec/PriceList.lean` + `Ttc/Exec/SamplePrice.lean` already carry a complete uniform
-price list for the **ball-walk** sampler (`Ttc.ttcSampPrice`), and `Ttc/Exec/Complexity.lean`
-composes it.  Two things that machinery does *not* have, and this file supplies:
+`Ttc/Exec/PriceList.lean` + `Ttc/Exec/SamplePrice.lean` carried a complete uniform price
+list for the **ball-walk** sampler (`Ttc.ttcSampPrice`), and `Ttc/Exec/Complexity.lean`
+composed it.  `Exec/SamplePrice` was deleted on 2026-08-19 with the reference-oracle
+apparatus, so `Ttc.ttcSampPrice` no longer exists; what survives of that machinery is the
+transition-counting model, and the paragraph below still describes what it does and does not
+charge for.  Two things that machinery does *not* have, and this file supplies:
 
 * it counts **chain transitions only** — "per-step arithmetic is free"
   (`Exec/SamplePrice` module docstring, `Exec/PriceList` §"what a number does not mean").

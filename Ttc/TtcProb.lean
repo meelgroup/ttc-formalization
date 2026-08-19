@@ -63,7 +63,8 @@ least one does, so the parameter is not an empty hypothesis.
 **Not part of the audit surface, and not the algorithm's own output.**  Its binders
 `Ω`, `O` and `toDNF` are exactly the `Ttc.TtcProb` fields of the same names, so it
 belongs with the hypothesis bundle it is measured against rather than with the
-pseudocode: `Ttc.ttcAlgOutput` and `Ttc.ttcRun` (`Model/Pseudocode`) are the
+pseudocode: `Ttc.ttcAlgOutput` (`Model/Pseudocode`) and `Ttc.ttcEstimate` (`Exec/Api`,
+the same term at the constructed bundle) are the
 algorithm at its *own* inputs and neither unfolds to this.  `Ttc.numlattice` is
 stated over it, and `Ttc.runCost` is what `thm:runtime` bounds over the same run. -/
 noncomputable def ttcOutput {A : Type*} {n : ℕ} {Ω : Type} (P : Params)

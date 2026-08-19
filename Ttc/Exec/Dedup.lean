@@ -103,7 +103,7 @@ it lives with the rest of the transcription in `Model/Pseudocode`, which this fi
 imports.  **Everything proved about it is here**, including the four basic
 properties `Ttc.mem_toDNFd`, `Ttc.toDNFd_isDNFOf`, `Ttc.exists_mem_toDNF` and
 `Ttc.toDNFd_ne_nil` that `Ttc.inputParams` needs: none of them is in the
-definitional closure of `Ttc.ttc` or of `Ttc.ttc_volume_estimate`'s statement, so
+definitional closure of `Ttc.ttc` or of `Ttc.ttc_volume`'s statement, so
 none of them belongs in the audit surface (`Ttc/Audit/ClosureCheck.lean` measures
 exactly that).  `Ttc.inputParams` itself is here too, for the same reason — the run
 reads the *total* block `Ttc.inputParamsTotal`, which is a function of the data

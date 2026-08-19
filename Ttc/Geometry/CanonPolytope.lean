@@ -29,7 +29,7 @@ bound on what may go here: **definitions only, no `Prop`s, and nothing that is n
 geometry determined by the formula**.  Every *property* of these objects continues to be
 proved outside the surface.
 
-The statement of `Ttc.ttc_volume_estimate` now mentions `Ttc.canonRfac` **explicitly**
+The statement of `Ttc.ttc_volume` now mentions `Ttc.canonRfac` **explicitly**
 (corrected 2026-08-12; this used to say it mentioned none of them, which was true until
 the headline's two prices were fixed, `Ttc.canonRfac` appearing in the guard on the
 running-time conjunct).  That is precisely why the five have to be

@@ -103,11 +103,14 @@ it exists now.
 now the infimum of the enclosing radii rather than a `Classical.choice`, so
 `Ttc.MonteCarlo.nSamp_roundBody_le` (`Volume/RadBound`) is an unconditional closed form,
 and `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) makes it uniform over the DNF's
-cubes.  ⚠ This paragraph used to add that `Ttc.ttc_volume_estimate` "carries that number
+cubes.  ⚠ This paragraph used to add that `Ttc.ttc_volume` "carries that number
 in place of its old `cVol` binder" — **false when written and still false** (corrected
 2026-08-12).  The headline now carries the *Cousins–Vempala* price in that slot, which is
 a modelling choice rather than a bound on `Ttc.ttcVolCoins`; `Ttc.ttcVolPrice` is the
-number this file's argument actually justifies.  See `Ttc/Exec/PricedHeadline.lean`.
+number this file's argument actually justifies.  The warning used to be spelled out in
+`Ttc/Exec/PricedHeadline.lean`, deleted on 2026-08-19 with the fixed-price headline; the
+surviving statement of what is and is not proved about cost is `Ttc.ttc_volume`
+(`Model/Theorem`).
 No uniform bound on `Ttc.mixCost` at the run's cubes is available — see
 `Exec/PriceList`'s docstring for the exact residue — so nothing dominates the headline's
 sampling slot either.  And

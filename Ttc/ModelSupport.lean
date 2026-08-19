@@ -56,15 +56,15 @@ Model/ProblemSetting` — and `Probability/Trajectory → ModelSupport`, the sam
 one directory over — adds one module holding four theorems and no definitions.
 
 *The machine check does not move.*  `Ttc/Audit/ClosureCheck.lean`'s `#modelClosure`
-walks the definitional closure of `Ttc.ttcAlgOutput`, `Ttc.ttcRun`, `Ttc.ttc` and of
-`Ttc.ttc_volume_estimate`'s *statement*, and demands every `Ttc` constant in it be
-defined inside `Ttc.Audit.auditSurface`.  **Nothing in this file is in any of those
-four closures**, so this file neither joins the surface nor needs to: a theorem is
-entered only through its type (`ConstantInfo.value? = none` for theorems in this Lean
-version), and `Ttc.algOracles`' two proof fields are lifted into anonymous
-`Ttc.algOracles._proof_1/_2`, which are themselves theorems.  The four counts and
-their "0 outside the surface" verdicts are exactly what they were before the move —
-re-measure with `#closureReport` rather than trusting this sentence.
+walks the definitional closure of `Ttc.ttcAlgOutput` — the specification, the one thing
+still checked since the headline moved to the constructed oracles on 2026-08-19 — and
+demands every `Ttc` constant in it be defined inside `Ttc.Audit.auditSurface`.  **Nothing in
+this file is in that closure**, so this file neither joins the surface nor needs to: a
+theorem is entered only through its type (`ConstantInfo.value? = none` for theorems in this
+Lean version), and the oracle bundle's two proof fields are lifted into anonymous
+`_proof_1/_2`, which are themselves theorems.  The count and its "0 outside the surface"
+verdict are exactly what they were before the move — re-measure with `#closureReport` rather
+than trusting this sentence.
 
 The honest summary: *what the headline means* is checked to be defined inside a named
 surface, and the build fails the moment that stops being true; *what the files in

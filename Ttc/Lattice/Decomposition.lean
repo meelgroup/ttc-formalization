@@ -12,7 +12,7 @@ The proof content behind `Model/ProblemSetting`. Three groups:
 
 * **The semantic vocabulary `Model/Prelude` does not need.** `Model/Prelude` is
   held to the measured keep-set of `Ttc.ttc` and of the *statement* of
-  `Ttc.ttc_volume_estimate`; these five names are outside it, and they are
+  `Ttc.ttc_volume`; these five names are outside it, and they are
   reproduced here unchanged in name, type and docstring. They are the set a
   literal denotes (`Ttc.litSet`), the four definitional-membership rewrites
   (`Ttc.mem_sol_iff`, `Ttc.mem_region_iff`, `Ttc.mem_intLattice`,

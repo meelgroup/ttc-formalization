@@ -122,7 +122,7 @@ elab "#closureOfType " id:ident : command => do
 
 ### Why it is two directories and not one
 
-`Ttc.ttc_volume_estimate` is a statement about `Ttc.ttc`, and `Ttc.ttc` is a
+`Ttc.ttc_volume` is a statement about `Ttc.ttc`, and `Ttc.ttc` is a
 `MeasureTheory.Measure (ℝ × ℕ)` — a *law*, not a number. So the ambient probability
 vocabulary is unavoidably part of what the headline's **type** unfolds to: the volume
 oracle's coin space, the ½-thinning kernel and the trajectory law it generates, and the
@@ -152,9 +152,9 @@ The one qualification, and it is deliberate: `Probability/Trajectory` also carri
 two `Prop`s `Ttc.trajThin_le` and `Ttc.card_trajGen` — the sub-multiset and cardinality
 contracts `Ttc.Oracles` demands of the read-offs defined beside them. They are not
 vocabulary, and they are here for a structural reason rather than a topical one: a
-theorem cannot be stated upstream of the definition it mentions, and `Ttc.algOracles`
-(`Model/Pseudocode`) consumes both at elaboration time, so they cannot go downstream
-either. Neither is visible to the walk below (a theorem is entered only through its
+theorem cannot be stated upstream of the definition it mentions, and the run's oracle
+bundle (`Ttc.ttcOracleBundle`, `Exec/Api`) consumes both at elaboration time, so they cannot
+go downstream either. Neither is visible to the walk below (a theorem is entered only through its
 type, and both are reached as `_proof_` fields), so admitting them changed no closure
 count. That bound — *`Prop`s only where a definition in this directory forces one, and
 only where the walk cannot see them* — is what keeps this from being an open door.
@@ -174,34 +174,32 @@ exactly two `Prop`s — the two oracle contracts named above), and `Ttc/Geometry
 convex-geometry data the sampler is applied at — `Ttc.facetOf`, `Ttc.canonAm`,
 `Ttc.canonBv`, `Ttc.canonDm`, `Ttc.canonRfac` — is *not* probability. ⚠ This paragraph used
 to add that it is "not vocabulary the statement is written in either", on the ground that
-`Ttc.ttc_volume_estimate` mentioned none of the five; **that stopped being true on
-2026-08-12**, when the headline's two prices were fixed; its type now names
-`Ttc.canonRfac` explicitly, in the guard on the running-time conjunct. `Ttc.ttc` reaches all five in any case, so they must
-be inside the surface or `#modelClosure Ttc.ttc` fails outright. They used to sit in `Model/Prelude` for that reason; they now sit in
-`Ttc/Geometry/CanonPolytope.lean`, and `auditSurface` names three directories instead of
-two.
+`Ttc.ttc_volume` mentioned none of the five; **that stopped being true on 2026-08-12**,
+when the headline's two prices were fixed, and it is moot now that the headline is stated
+outside the surface entirely.  They stay in `Ttc/Geometry/CanonPolytope.lean` — moved there
+from `Model/Prelude` — because `Ttc.ttcAlgOutput`'s closure still reaches them and
+`#modelClosure Ttc.ttcAlgOutput`, the one live check, would fail outright otherwise.  That is
+why `auditSurface` names three directories instead of two.
 
 The bound on what may go there is tighter than for `Ttc/Probability/`: **definitions only,
 no `Prop`s at all, and nothing that is not convex geometry determined by the formula.**
 `Ttc/Probability/` earns its two `Prop`s from a structural argument (a theorem cannot be
-stated upstream of the definition it mentions, and `Ttc.algOracles` consumes both at
+stated upstream of the definition it mentions, and the run's oracle bundle consumes both at
 elaboration time); no such argument applies here, and there is nothing in the directory
 that would need one. Every property of these five objects is proved outside the surface,
 as before.
 
-**A note on where the two fixed prices live.** `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt`
-— the two per-call charges `Ttc.ttc` is `Ttc.ttcCharged` *at* — are filed in
-`Model/Pseudocode`, beside `Ttc.stepCost`, `Ttc.runCost` and `Ttc.algCost`, and not in a
-fourth directory. They have to be inside the surface, because `Ttc.ttc`'s own definition
-names them and `#modelClosure Ttc.ttc` walks definition bodies; and `Model/`'s cost-model
-half is where the rest of the charging vocabulary already is.
+**A note on two prices that used to live inside the surface.**  Until 2026-08-19
+`Model/Pseudocode` carried `Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` — copies of two
+`Ttc/Exec/` prices — because `Ttc.ttc` was then defined as the algorithm *charged at* them,
+and `#modelClosure Ttc.ttc` walks definition bodies.  Copies are the case `CLAUDE.md` §13 is
+about, so two `rfl` bridges in `Exec/VolPriceCVAlg` proved each copy equalled the price it
+was named after, making drift a build error.
 
-They are copies of two `Ttc/Exec/` prices, and copies are the case `CLAUDE.md` §13 is about:
-a name must not stand in for the analysis it is named after. `Ttc.cvVolPriceAt_eq` and
-`Ttc.hrSampPriceAt_eq` (`Exec/VolPriceCVAlg`) prove each equals `Ttc.ttcVolPriceCVAlg` /
-`Ttc.ttcSampPriceHR` by `rfl`, so a drift in either copy is a build error rather than a
-silent divergence. What the two prices are *worth* — in particular that neither is a price
-`Ttc.ttc` is proved to pay — is stated outside the surface, in `Exec/PricedHeadline`.
+Both copies, both bridges and the charged `Ttc.ttc` are gone.  `Ttc.ttc` executes the two
+oracles now rather than paying a fixed number for calling them, and what bounds its cost is
+an envelope proved about the execution (`Model/Theorem`).  Nothing in the surface names a
+price, so the §13 hazard this paragraph existed to manage no longer arises here.
 -/
 
 namespace Ttc.Audit
@@ -320,198 +318,31 @@ from nfalean, and it is not incidental: `countNFAM` is a `PMF (ℝ × ℕ)` buil
 of `Ttc.run` over an assumed `Ttc.Oracles` bundle. Closing check 1 for the algorithm means
 making `alg:ttc` monadic, not moving a file.
 
-### `Ttc.ttc_volume_estimate` — the headline (`Model/Theorem`)
+### The three measurements that used to be here, and why they are gone
 
-Statement closure (a theorem, so only its *type* is entered): **206** `Ttc` constants, of
-which **0** are defined outside `Ttc/Model/` and `Ttc/Probability/`, and the ones matched by
-`forbidden` are every one of them *inside* that surface.  This is checked, not asserted:
-`#modelClosureOfType Ttc.ttc_volume_estimate` is enabled at the foot of this file and fails
-the build on drift.
+Three further sections measured `Ttc.ttc_volume`'s statement (206 constants, 0 outside),
+`Ttc.ttcRun` (157) and `Ttc.ttc` (207) — the algorithm with its oracle argument filled in,
+and the law of the pair `(estimate, cost)` — and recorded that `#modelClosure` passed on all
+three while `#closure` failed on the monadic-versus-oracle gap.
 
-The table below is the historical record of the four groups that *used* to be outside, kept
-because it documents what had to move and why.  It no longer describes the current state:
+All three measured objects were deleted on 2026-08-19.  `Ttc.ttcRun` and the fixed-price
+`Ttc.ttcCharged` are gone outright; `Ttc.ttc` still exists but is a **different object** — the
+law of a run at the constructed Cousins–Vempala volume estimator and the hit-and-run /
+ball-walk hybrid sampler (`Model/Theorem`), where before it was the algorithm at *reference*
+oracles charged at two fixed per-call numbers.  Naming the constructed pair is naming the
+construction: the new `Ttc.ttc` and the new `Ttc.ttc_volume` reach 637 constants across 108
+modules outside the surface, so neither can be checked, and neither is.
 
-| group (module) | count | why the *statement* names it |
-| --- | --- | --- |
-| `Volume/MonteCarlo` | 12 | the accuracy conjunct's outer `∫⁻ … ∂(MonteCarlo.coins n)` *is* this coin space, and `Ttc.ttcOracleBundle` supplies `Ttc.mcVol` as the `vol` field |
-| `Coupling/Family` | 12 | `Ttc.trajLaw` is the inner measure integrated against; `Ttc.trajOracles` is what the bundle unfolds to; `chainKernel`/`thinKernel`/`padPoint`/`toMultiset` are what those two are built from |
-| `Model/Pseudocode` | 8 | `Ttc.Oracles` + six projections + `Ttc.run` — inherited from `Ttc.ttcAlgOutput`, and *inside* the audit surface, so `#modelClosure` is content with them |
-| `Process/Thinning` | 3 | `Ttc.half` and its proof obligations, reached through `thinKernel` |
+Quoting the old numbers at the new objects would be exactly the substitution
+`CLAUDE.md` §13 warns about — a name standing in for an analysis that was done of something
+else — so the numbers were removed rather than adjusted.  What survives is the measurement of
+`Ttc.ttcAlgOutput` above: 109 constants, 0 outside, `#modelClosure` enabled in
+`Ttc/Audit/ClosureCheck.lean` and failing the build on drift.  That check is about the
+*specification*, and the specification is what still lives inside `Model/`.
 
-**`Ttc.TtcProb` is *not* in the closure.** The 59-field hypothesis bundle does not appear in
-the statement at all — that part of the nfalean discipline already holds, and it is what
-`Model/Theorem`'s docstring claims.
+`Ttc/Audit/ClosureCheck.lean` states the resulting asymmetry — the algorithm is auditable in
+four files, the runtime claim is not — and argues why widening the surface to 108 modules
+would be worse than admitting it.
 
-The 86 constants outside `Model/`, by module and by what they are:
-
-| module | n | what |
-| --- | --- | --- |
-| `Exec/Api` | 18 | the run's abbreviations and parameter block (`ttcInput`, `ttcAtoms`, `ttcCen`, `ttcRadius`, `ttcScaledRadius`, `ttcBlock`, `ttcPrec`, `ttcIndex`, `ttcOracleBundle`, `ttcRates`, `ttcThresh`, `ttcTerminates`, `ttcCost`, `ttcNumCubes`) plus four proof terms |
-| `Volume/MonteCarlo` | 12 | probability space + constructed volume oracle |
-| `Coupling/Family` | 12 | probability space (the coupled Poisson family) |
-| `Sampler/Construct` | 11 | constructed sampler (`ballWalkLaw`, `kv97ContLaw`, `kv97SampD`, `mixSteps`) |
-| `Exec/CanonPolytope` | 6 | geometry data (`canonAm`, `canonBv`, `canonDm`, `canonRfac`, `facetOf`) |
-| `Exec/Endgoal` | 5 | constructed oracles and the lattice enumeration |
-| `Sampler/Rates` | 3 | parameter block: the Poisson rate vector (`rates`, `cubeAt`, `cubeOf`) |
-| `Runtime` | 3 | cost model for the running-time conjunct (`runCost`, `stepCost`, `Terminates`) |
-| `Process/Thinning` | 3 | probability: the ½-thinning law |
-| `Exec/EndToEnd` | 3 | sampler: `e2eSampD` |
-| `Invariants` | 2 | the loop invariant `AbsorbExits`, via `ttcTerminates` |
-| `Exec/VolDischarge` | 2 | constructed volume oracle `Ttc.mcVol` |
-| `Exec/Inputs` | 2 | `runOracles`, `runRates` |
-| `Exec/Coverage` | 2 | covering data (`coverOfRegion`, `memPtOfRegion`) |
-| `Volume/Oracle` | 1 | `roundBody` |
-
-
-So the gap is concentrated: **half** of it (`Exec/Api` 18 + `Sampler/Rates` 3 + `Exec/Inputs`
-2 + `Runtime` 3 = 26) is naming and cost-model vocabulary that could plausibly move into
-`Model/`; the other half (`Volume/MonteCarlo` 12 + `Coupling/Family` 12 + `Sampler/Construct`
-11 + `Process/Thinning` 3 + `Exec/VolDischarge` 2 + `Exec/EndToEnd` 3 = 43) is the two
-*constructed* oracles and the probability spaces they run on, which the statement names only
-because the theorem is stated at the constructed bundle rather than monadically.
-
-Contrast nfalean, where `#closure countNFAM` and `#modelClosure countNFAM` both pass.
-
-### `Ttc.ttcRun` — the algorithm with its oracle argument filled in
-
-`Ttc.ttcRun` (`Model/Pseudocode`) is `Ttc.ttcAlgOutput` at the bundle the run `(c, t)`
-itself supplies, and it is what the headline's accuracy conjunct is now stated over.
-Full closure: **157** `Ttc` constants, of which **0** are outside the audit surface —
-**152** under `Ttc/Model/` (90 in `Model/Pseudocode`, 62 in `Model/Prelude`) and **5** in
-`Probability/Trajectory`, namely the trajectory read-offs `Ttc.toMultiset`,
-`Ttc.trajThin`, `Ttc.trajPois`, `Ttc.trajGen` and `Ttc.padRow` that the constructed
-bundle returns.  Those five were in `Model/Pseudocode` until the two contracts about them
-were moved beside them; the total did not change, because a relocation is not a drift.
-`#modelClosure Ttc.ttcRun` **passes** and is enabled below.  That is the
-machine-checked form of "the headline's accuracy conjunct names only `Model/` things": it
-fails the build the moment any part of the *constructed oracle bundle* drifts out of it,
-which is a much larger surface than `Ttc.ttcAlgOutput`'s.
-
-**The count is not comparable across `private`.**  It was 155 until
-`Ttc.exists_latticeEnum` (`Model/Pseudocode`) stopped being `private`, and that is a
-reporting change, not a drift: a private declaration's real name begins `_private`, not
-`Ttc`, so `closureAux`'s `(`Ttc).isPrefixOf` test skipped it even though `Ttc.latticeEnum`
-is `Classical.choose`n from it and it was always *in* the closure.  156 is the honest
-number.  Read the count as an alarm bell for the "outside `Ttc/Model/`" tally beside it,
-never as a size the file should be judged by.
-
-Exactly one such blind spot is left, and it is measured rather than guessed: re-running
-the walk with the accumulator widened to keep `_private` names finds **no** private
-declaration inside `Ttc.ttcAlgOutput`'s or `Ttc.ttcRun`'s closure, and exactly **one**
-inside `Ttc.ttc`'s and inside `Ttc.ttc_volume_estimate`'s statement —
-`Ttc.exists_cubeOf` (`Model/Pseudocode`), which `Ttc.cubeOf` is `Classical.choose`n from.
-So un-`private`ing it would report 199 → **200** and 206 → **207**, with
-`Ttc.ttcAlgOutput` and `Ttc.ttcRun` unmoved; the two numbers are a reporting change and
-nothing else.
-
-Getting there moved three groups of declarations into `Model/Pseudocode`, each keeping its
-name and its proof: the count-vector dictionary and the two oracle contracts
-(`Ttc.count_toMultiset`, `Ttc.toMultiset_le_of_count_le`, `Ttc.trajThin_le`,
-`Ttc.card_trajGen`, formerly `Coupling/Family`) — of which the dictionary has since gone
-on to `Ttc/ModelSupport.lean`, restated at the sum `Ttc.toMultiset` unfolds to, and the
-two contracts on to `Probability/Trajectory` with the five read-offs they are about,
-neither of which changes any of these counts because no theorem outside a `def`'s body is
-in a closure;
-the coverage test
-(`Ttc.coverOfRegion`, `Ttc.memPtOfRegion`, formerly `Exec/Coverage`); and the lattice
-enumeration (`Ttc.HasLatticeEnum`, `Ttc.exists_latticeEnum`, `Ttc.latticeEnum` and its
-unconditional injectivity, formerly `Exec/Endgoal`).  Only what the bundle is *built
-from* moved: the enumeration's two guarded properties `Ttc.latticeEnum_mem` and
-`Ttc.latticeEnum_onto` are back in `Exec/Endgoal`, and `Ttc.card_toMultiset` in
-`Coupling/Family`, because no field of the bundle needs either.
-`#closure Ttc.ttcRun` still fails, on the same monadic-versus-oracle gap
-as `Ttc.ttcAlgOutput` plus `Ttc.MonteCarlo`'s estimator — all of them defined in
-`Model/Pseudocode` itself.
-
-`Ttc.ttcRun`'s count went 156 → **157** when the oracle bundle its body used to spell
-out inline was named `Ttc.algOracles` (`Model/Pseudocode`), so that `Ttc.algCost` could
-be charged on the same bundle.  A naming change, not drift.
-
-### `Ttc.ttc` — the whole algorithm as one law (`Model/Pseudocode`)
-
-`Ttc.ttcCharged atoms φ ε δ cVol cSample : Measure (ℝ × ℕ)` is the `Measure` analogue of
-nfalean's `ApproxNFA.countNFAM : PMF (ℝ × ℕ)`: draw the volume coins, draw the sample
-trajectory at the rates they produced, return `(estimate, cost)`.  Full closure:
-**199** `Ttc` constants, of which **0** are outside `Ttc/Model/` and
-`Ttc/Probability/`, so `#modelClosure Ttc.ttc` **passes** and is enabled below.  It is
-the machine-checked form of "the headline names only audit-surface things" for *both*
-conjuncts at once — strictly larger than `Ttc.ttcRun`'s surface, because it also covers
-the rate vector, the two coin spaces and the charging model.
-
-Where those 199 live, as measured: **98** in `Model/Pseudocode`, **70** in
-`Model/Prelude`, and **31** in `Ttc/Probability/` — 15 in `Probability/Trajectory`, 7 in
-`Probability/Sampler`, 5 in `Probability/BallWalk`, 4 in `Probability/Coins`.  Of those
-31 only **seventeen** are declarations anyone wrote (`half`, `thinKernel`, `chainKernel`,
-`trajLaw`, `isMarkovKernel_chainKernel`, `toMultiset`, `trajThin`, `trajPois`, `trajGen`,
-`padRow`; `MonteCarlo.coinLaw`, `MonteCarlo.coins`;
-`mixSteps`, `ballWalkLaw`; `kv97SampD`, `kv97ContLaw`, `e2eSampD`); the other fourteen are
-the `_proof_N` auxiliaries Lean lifts out of their bodies.  The `98 / 31` split was
-`103 / 26` before the five read-offs moved from `Model/Pseudocode` to
-`Probability/Trajectory`; the total was 199 either way.  That is also the whole of the
-`194 → 199` change from the revision in which they sat in `Model/Prelude`: the same twelve
-declarations with five more lifted auxiliaries, re-elaborated in new modules.
-`Ttc.ttcAlgOutput` (109) and `Ttc.ttcRun` (157) did not move at all, which is the check
-that the move was a relocation and not a change of content — neither of those two closures
-contains a probability constant.
-
-Getting there moved definitions upstream, keeping every name and statement, split by
-role between three homes:
-
-* into `Ttc/Probability/` (the ambient random objects, not steps of `alg:ttc`):
-  `Ttc.MonteCarlo.coinLaw`/`coins` (formerly `Volume/MonteCarlo`), `Ttc.half`
-  (`Process/Thinning`), `Ttc.thinKernel`/`chainKernel`/`trajLaw` with the two
-  Markov-kernel instances Ionescu–Tulcea takes as instance arguments
-  (`Coupling/Family`), `Ttc.mixSteps`/`ballWalkLaw`/`kv97SampD`/`kv97ContLaw`
-  (`Sampler/Construct`) and `Ttc.e2eSampD` (`Exec/EndToEnd`).  These were briefly in
-  `Model/Prelude` and are not any more;
-* into `Ttc/Geometry/CanonPolytope` (convex geometry, definitions only): the canonical
-  linear description
-  `Ttc.facetOf`/`canonAm`/`canonBv`/`canonDm`/`canonRfac` (`Exec/CanonPolytope`) together
-  with `Ttc.instFiniteCubeMem`/`instFiniteFacetIndex`, which `Ttc.facetOf` needs and which
-  used to sit in `Model/Pseudocode`.  This group is **convex geometry read off the
-  formula**, with no randomness in it, which is why it did not follow the sampler out;
-* into `Model/Pseudocode` (steps of `alg:ttc`): the charging model
-  `Ttc.stepCost`/`runCost` (`Runtime`), and line 20's rate vocabulary
-  `Ttc.cubeOf`/`cubeAt`/`rates` with the private choice principle `Ttc.exists_cubeOf`
-  and the specification `Ttc.cubeOf_spec` that travel with `Ttc.cubeOf`
-  (`Sampler/Rates`).
-
-Nothing was duplicated: `Ttc.algRates` and `Ttc.algCost` (`Model/Pseudocode`) are the
-run's own `Ttc.ttcRates` and `Ttc.ttcCost` spelled in `Model/` vocabulary, and
-`Ttc.algRates_eq_ttcRates`, `Ttc.algCost_eq_ttcCost` (`Exec/Api`) hold by `rfl`.  The
-honesty bridge is `Ttc.ttcCharged_eq_ttcPairLaw` (`Monadic/Program`), which identifies
-`Ttc.ttc` with the composition–product form `Ttc.ttcPairLaw` the rest of the
-development reasons about; it is *not* `rfl`, because `Ttc.ttc` is stated with
-`MeasureTheory.Measure.bind`/`map` — deliberately, so that no measurability proof has
-to enter `Model/` — and the three-line proof is where `⊗ₘ` is unfolded.
-
-`#closure Ttc.ttc` fails on the same handful it always did: `Ttc.Oracles` and its
-projections, `Ttc.run`, `Ttc.MonteCarlo`'s estimator and coin space, `Ttc.trajLaw`,
-`Ttc.trajOracles` and `Ttc.padPoint`.  **All of them are defined inside the audit
-surface.**  That is the residual, and it is structural: `forbidden` was written to catch
-a *statement* that names this development's probability spaces, and `Ttc.ttc` is by
-construction a measure, so it names them.  What the list no longer detects is a filing
-problem — `#modelClosure` is the check that does.
-
-### Knock-on: `Ttc.ttc_volume_estimate`'s statement
-
-Unchanged as a statement, but its closure improved as a side effect of the moves:
-**206** `Ttc` constants, of which **0** are outside `Ttc/Model/` and
-`Ttc/Probability/`, and every constant `forbidden` still matches by name is *defined
-inside* the surface.  (The trajectory was 212/86 → 219/71 → 229/30 → 201/0 → 206/0; the
-last step is the move of the probability vocabulary out of `Model/Prelude`, which changed
-where the constants are filed and added five lifted `_proof_N` auxiliaries, not what the
-statement means.  Earlier revisions of this paragraph quoted the intermediate figures and
-were left stale by later moves.  It is measured, so re-run rather than trust the prose.)
-
-That is why `#modelClosureOfType Ttc.ttc_volume_estimate` is **enabled** below: the
-headline's *type* — not merely the algorithm — names nothing defined outside the four
-`Model/` files and the four `Ttc/Probability/` files, and the build fails if that ever
-stops being true.
-
-`#closureOfType` stays disabled, and by construction rather than by filing: it
-forbids a statement naming this development's probability spaces, and
-`Ttc.ttc` **is** a measure, so the statement names them.  Every constant it flags
-is inside the audit surface.
 -/
 

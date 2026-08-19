@@ -15,7 +15,7 @@ decomposition it reads its parameters off:
 * `hr : 1 ≤ Nat.card (FacetIndex D)` — some cube of it has at least one literal.
 
 Neither is derivable from nothing.  Both are discharged from hypotheses that the
-top-level statement `Ttc.ttc_volume_estimate` already has, so that they need not
+top-level statement `Ttc.ttc_volume` already has, so that they need not
 appear as binders there — `hr` and the two packaged conclusions in
 `Model/Pseudocode`, where the parameter block is built, and `hm`'s positivity
 route here.

@@ -7,9 +7,9 @@ import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
 
 /-!
-# `Witness/Headline`: `Ttc.ttc_volume_estimate` is not vacuous
+# `Witness/Headline`: `Ttc.ttc_volume` is not vacuous
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem`) is a `∀` over a formula, a centre map
+`Ttc.ttc_volume` (`Model/Theorem`) is a `∀` over a formula, a centre map
 and a radius, under seven side conditions.  A `∀` with unsatisfiable hypotheses is
 vacuously true (`CLAUDE.md` §11), so the statement is worth nothing until
 something satisfies them.
@@ -20,7 +20,7 @@ disjoint boxes `[0,c]ⁿ` and `[lo, lo+c]ⁿ` — at every `(ε, δ) ∈ (0,1]²
 is `Ttc.TwoCube.ttc_volume_inputs_two_cube` (`Ttc/Witness/Inputs.lean`), which
 discharges all seventeen hypotheses; this file records the numeric consequences.
 
-**Why that is a witness for `Ttc.ttc_volume_estimate` too.**  The Model-layer
+**Why that is a witness for `Ttc.ttc_volume` too.**  The Model-layer
 theorem *is* `Ttc.ttc_volume_inputs` — identical binder list, in the same order,
 proof one application — restated through the definitional wrappers
 `Ttc.runOracles`, `Ttc.ttcRunOutput`, `Ttc.runRates` and `Ttc.runPrec`.  So a set of
@@ -35,12 +35,12 @@ parameter pairs with the achieved bound proved **strictly positive inside the
 statement**, so neither conclusion is the vacuous `0 ≤ (…).toReal`
 (`ENNReal.toReal ⊤ = 0`).
 
-**These witness `Ttc.ttc_volume_inputs`, not the current `Ttc.ttc_volume_estimate`.**
+**These witness `Ttc.ttc_volume_inputs`, not the current `Ttc.ttc_volume`.**
 The Model-layer statement has since moved on twice — the volume hypothesis was
 discharged by dilating the input (`Exec/Rescaled`) and the inscribed ball is now
 constructed rather than supplied (`Exec/Inscribed`) — so its run is a *different*
 run and its probability is a different number.  The witness at the current statement
-is `Ttc.TwoCube.ttc_volume_estimate_two_cube_full` (`Witness/FullTwoCube.lean`).
+is `Ttc.TwoCube.Ttc.TwoCube.ttc_volume_two_cube` (`Witness/FullTwoCube.lean`).
 
 **Cost.**  Exponential in `n`, and paid twice: hit-and-miss Monte Carlo at
 `Θ(Rⁿ/(ε'²δ'))` samples per cube, `2^Θ(n)·log(M·Vol(P′)/ε′)` certified ball-walk
@@ -53,7 +53,7 @@ namespace TwoCube
 
 open MeasureTheory Set
 
-/-- **`Ttc.ttc_volume_estimate` on a DNF with two cubes**, at every
+/-- **`Ttc.ttc_volume` on a DNF with two cubes**, at every
 `(ε, δ) ∈ (0,1]²` and every `n ≥ 1`.
 
 The accuracy half of `Ttc.TwoCube.ttc_volume_inputs_two_cube`, on the named

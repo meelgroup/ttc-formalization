@@ -19,7 +19,7 @@ exceptions are two finiteness instances, which `Ttc.facetOf` (`Ttc/Geometry/Cano
 needs to enumerate the facets.
 
 The file is held to a *measured* keep-set rather than to a topic: the union of the
-definitional closures of `Ttc.ttc` and of the statement of `Ttc.ttc_volume_estimate`, as
+definitional closures of `Ttc.ttc` and of the statement of `Ttc.ttc_volume`, as
 `Ttc/Audit/ClosureCheck.lean` measures them.  The probability vocabulary lives in
 `Ttc/Probability/` and the canonical polytope description in `Ttc/Geometry/`, both inside
 the audit surface; ten further declarations were evicted downstream, keeping name, type

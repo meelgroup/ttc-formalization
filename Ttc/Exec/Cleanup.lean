@@ -7,7 +7,7 @@ import Ttc.Exec.Inputs
 /-!
 # `Exec/Cleanup`: `hcoeff` discharged by deleting the degenerate literals
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem`) carries
+`Ttc.ttc_volume` (`Model/Theorem`) carries
 
 ```
 hcoeff : ∀ j : FacetIndex (toDNFd φ), (atoms j.2.val.atom).coeff ≠ 0
@@ -463,7 +463,7 @@ theorem sol_cleanForm (atoms : A → LinAtom n) {φ : BForm A} (hφ : φ.IsPosit
     (isDNFOf_dnfForm hne (isPositive_cleanDNF atoms (toDNFd_isPositive hφ)))]
   exact sol_cleanDNF atoms (toDNFd_isDNFOf φ) (toDNFd_isPositive hφ)
 
-/-- **`hcoeff` in the shape `Ttc.ttc_volume_estimate` asks for it**, for the cleaned
+/-- **`hcoeff` in the shape `Ttc.ttc_volume` asks for it**, for the cleaned
 formula, with no degeneracy hypothesis: only `hφ` (already a binder of the headline)
 and non-voidness of the DNF (`Ttc.cleanDNF_ne_nil_of_sol_nonempty`, i.e. `Sol(F) ≠
 ∅`). -/

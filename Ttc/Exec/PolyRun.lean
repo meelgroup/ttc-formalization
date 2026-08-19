@@ -14,16 +14,16 @@ import Ttc.Monadic.Program
 
 `Ttc.ttc` (`Model/Pseudocode.lean:816`) is the algorithm at the **hit-and-miss Monte
 Carlo** volume estimator and the **lazy ball walk**, with the two per-call prices
-`cVol`, `cSample` left as binders.  `Ttc.ttc_volume_estimate` (`Model/Theorem.lean:93`)
-is its *unconditional* accuracy result, and `Ttc.ttc_volume_estimate_quartic`
-(`Exec/TheoremPoly.lean:284`) prices those binders — but only by **hypothesis**:
+`cVol`, `cSample` left as binders.  `Ttc.ttc_volume` (`Model/Theorem.lean:93`)
+is its *unconditional* accuracy result, and `Ttc.ttc_volume`
+(`Exec/TheoremPoly`, deleted 2026-08-19) priced those binders — but only by **hypothesis**:
 nothing there says the run executes a polynomial oracle.
 
 This file is **additive**.  It builds, beside `Ttc.ttc` and changing nothing about it,
 a second program `Ttc.ttcPoly` whose oracle bundle is Cousins–Vempala (an arbitrary
 `Ttc.VolumeAlgorithm`, drawn from *its own* coin space) plus the **hit-and-run**
 sampler, and whose two prices are **closed terms** rather than binders.  `Ttc.ttc`,
-`Ttc.algOracles`, `Ttc.mcVol` and everything in `Ttc/Model/` are untouched: not one
+`Ttc.ttcOracleBundle`, `Ttc.mcVol` and everything in `Ttc/Model/` are untouched: not one
 declaration below rewrites them.
 
 ## THE TRADE, STATED PLAINLY — neither theorem dominates the other
@@ -80,7 +80,7 @@ charged are the ones `Ttc.SamplerCost.samplePrice_le_quartic` and
 
 | declaration | what it is |
 | --- | --- |
-| `Ttc.polyOracles` | the bundle: `Ttc.trajOracles` at `Ttc.volOfAlg V` — **only `vol` differs** from `Ttc.algOracles` |
+| `Ttc.polyOracles` | the bundle: `Ttc.trajOracles` at `Ttc.volOfAlg V` — **only `vol` differs** from `Ttc.ttcOracleBundle` |
 | `Ttc.algOracles_eq_trajOracles` | `rfl`: the run's own bundle is `Ttc.trajOracles` at `Ttc.mcVol` |
 | `Ttc.polySampD` | the hit-and-run discrete law, at the run's canonical geometry |
 | `Ttc.polyVolPrice`, `Ttc.polySamplePrice` | the two prices, as **closed** naturals |
@@ -136,27 +136,15 @@ noncomputable def polyOracles (V : VolumeAlgorithm n) (ω : V.Ω)
     (coverOfRegion (atomSet (algAtoms atoms φ ε δ)))
     (algMem atoms φ ε δ) t
 
-/-- The run's own bundle is `Ttc.trajOracles` at `Ttc.mcVol`. -/
-theorem algOracles_eq_trajOracles (c : ℕ → Space n)
-    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) :
-    algOracles atoms φ ε δ c t
-      = trajOracles
-          (latticeEnum_injective (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)
-            (algPrec atoms φ ε δ))
-          (mcVol (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
-            (algCen atoms φ ε δ) (algGamma atoms φ ε δ)
-            (algBlock atoms φ ε δ).epsPrime (algBlock atoms φ ε δ).deltaPrime c)
-          (coverOfRegion (atomSet (algAtoms atoms φ ε δ)))
-          (algMem atoms φ ε δ) t := rfl
-
 /-- Only `vol` differs. -/
 theorem polyOracles_vol (V : VolumeAlgorithm n) (ω : V.Ω)
     (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) :
     (polyOracles atoms φ ε δ V ω t).vol = polyVol atoms φ ε δ V ω := rfl
 
 theorem polyOracles_covered (V : VolumeAlgorithm n) (ω : V.Ω)
-    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) (c : ℕ → Space n) :
-    (polyOracles atoms φ ε δ V ω t).covered = (algOracles atoms φ ε δ c t).covered := rfl
+    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) :
+    (polyOracles atoms φ ε δ V ω t).covered
+      = coverOfRegion (atomSet (algAtoms atoms φ ε δ)) := rfl
 
 /-! ## The hit-and-run sampler's discrete law, at the run's own geometry -/
 
@@ -708,7 +696,6 @@ theorem nonempty_volumeAlgorithm (n : ℕ) : Nonempty (VolumeAlgorithm n) :=
 end Ttc
 
 #print axioms Ttc.polyOracles
-#print axioms Ttc.algOracles_eq_trajOracles
 #print axioms Ttc.polyOracles_vol
 #print axioms Ttc.ttcPoly
 #print axioms Ttc.toNNReal_max_zero

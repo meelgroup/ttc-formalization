@@ -45,7 +45,7 @@ form the run actually reads — is in the definitional closure of `Ttc.ttc`.
 
 Everything that is only ever used to *supply* `Ttc.ttcParams`' five proof arguments,
 or that is only ever proved *about* the block, is here.  None of it is in that
-closure, nor in the closure of `Ttc.ttc_volume_estimate`'s statement, so none of it
+closure, nor in the closure of `Ttc.ttc_volume`'s statement, so none of it
 belongs in the audit surface — `Ttc/Audit/ClosureCheck.lean` is what measures that.
 
 ## `hm` and `hr`, derived rather than assumed
@@ -124,7 +124,7 @@ theorem one_le_card_facets_of_isBounded {n : ℕ} (hn : 1 ≤ n)
 
 `Ttc.ttcParamsTotal` (`Model/Pseudocode`) **decides** the five side conditions
 classically and falls back on `Ttc.junkParams` when they fail, which is what lets
-`Ttc.ttcAlgOutput` and `Ttc.ttcRun` carry no proof binder.  These two lemmas are
+`Ttc.ttcAlgOutput` and `Ttc.ttcEstimate` carry no proof binder.  These two lemmas are
 what makes that honest: the block is `Ttc.ttcParams` exactly where the headline's
 hypotheses hold, and the junk value elsewhere.  Neither is in the closure of
 `Ttc.ttc` — the *definition* needs no lemma — so both are here. -/

@@ -15,7 +15,7 @@ import Ttc.Exec.Final
       ≤ ∑ s, rates M φ (toDNF φ) (P.precision gammaHat) (e2eSampD …) (mcVol … c) s)
 ```
 
-carried by `Ttc.ttc_volume_final`, `Ttc.ttc_volume_stmt` and `Ttc.ttc_volume_estimate`
+carried by `Ttc.ttc_volume_final`, `Ttc.ttc_volume_stmt` and `Ttc.ttc_volume`
 is **independent** of that theorem's other hypotheses.  This file proves it, by a
 counterexample: `Ttc.Box.big_not_derivable` exhibits, for every
 `(ε, δ) ∈ (0,1] × (0,1]` and every dimension `n ≥ 1`, a box `[0,a]ⁿ` that satisfies

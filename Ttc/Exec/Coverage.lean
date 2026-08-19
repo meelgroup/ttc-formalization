@@ -81,7 +81,7 @@ variable {A X : Type*}
 
 /-! `Ttc.coverOfRegion` and `Ttc.memPtOfRegion` themselves are in
 `Model/Pseudocode`: `alg:ttc` line 27's membership query is a step of the
-algorithm, and `Ttc.ttcRun` builds its oracle bundle from it, so it has to be
+algorithm, and `Ttc.ttcEstimate` builds its oracle bundle from it, so it has to be
 inside the audit surface.  What stays here is everything *about* them. -/
 
 @[simp] theorem coverOfRegion_eq_true (M : A → Set X) (x : X) (c : Cube A) :

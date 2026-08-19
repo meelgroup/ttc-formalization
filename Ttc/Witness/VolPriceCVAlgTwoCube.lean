@@ -30,7 +30,7 @@ variable {A : Type*} {n : ℕ}
 The seven hypotheses of `Ttc.ttcVolPriceCVAlg_le` are conditions on `(atoms, φ, ε, δ, n)`,
 so the bound would be vacuous if no input met them.  `Ttc/Witness/FullTwoCube.lean`'s
 two-cube data meets them at **every** `n ≥ 1` and **every** `(ε, δ) ∈ (0,1]²` — it is the
-same witness `Ttc.ttc_volume_estimate_two_cube_full` uses — and there the price is a
+same witness `Ttc.TwoCube.ttc_volume_two_cube` uses — and there the price is a
 *positive* natural, so neither the bound nor the positivity statement is empty. -/
 
 /-- **Non-vacuity: the whole bundle is inhabited, and the price is positive there.**

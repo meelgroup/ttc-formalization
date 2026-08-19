@@ -9,7 +9,7 @@ import Ttc.Model.Pseudocode
 /-!
 # The inscribed ball, constructed rather than supplied
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) currently carries **four** binders
+`Ttc.ttc_volume` (`Model/Theorem.lean`) currently carries **four** binders
 for the inscribed ball that `alg:prec` line 86 obtains from an LP,
 `γ̂ ← MaxInscribedBall(Pⁱ)`:
 
@@ -32,7 +32,7 @@ radius fits" — and `Ttc.gammaOf` takes the least of the resulting radii over t
 Non-maximality costs nothing in soundness. The radius enters the algorithm only through
 the precision `ρ = ⌈log₁₀(γ/γ̂)⌉`, and a smaller `γ̂` only makes `ρ` **larger**: a finer
 lattice, hence a more expensive but still correct run. So the guarantee that
-`ttc_volume_estimate` states is untouched; only the efficiency is looser than what
+`ttc_volume` states is untouched; only the efficiency is looser than what
 `alg:prec` line 86 would deliver.
 
 ## What is unconditional and what is not

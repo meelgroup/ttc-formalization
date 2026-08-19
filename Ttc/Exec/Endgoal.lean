@@ -183,7 +183,7 @@ variable {A : Type*} {n : ℕ}
 
 `Ttc.HasLatticeEnum`, `Ttc.latticeEnum` and its unconditional injectivity are in
 `Model/Pseudocode`: `alg:ttc` line 43's `GenerateSamples` draws from
-`Sol(F) ∩ 𝕃ⁿ`, so the enumeration is a step of the algorithm, and `Ttc.ttcRun`
+`Sol(F) ∩ 𝕃ⁿ`, so the enumeration is a step of the algorithm, and `Ttc.ttcEstimate`
 builds its oracle bundle from it, which requires it inside the audit surface.
 `Ttc.latticeEnum` is a total function of `(M, φ, ρ)` alone, carrying no proof
 argument.

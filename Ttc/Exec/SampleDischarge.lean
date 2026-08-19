@@ -104,7 +104,7 @@ bounds `Vol(P'ᵢ)` above (so the tolerance is bounded below), and §5 here boun
 What this does **not** repair are the three undercounts `Exec/PriceList` records:
 `Ttc.kv97SampD`'s rejection rounds are counted nowhere, `alg:ttc`'s `while` loops are
 uncharged, and `Ttc.mixSteps` prices the chain the sampler's *law* is defined by rather
-than steps `Ttc.ttcRun` takes.  A bound on an undercount is not a bound on the count.
+than steps `Ttc.ttcEstimate` takes.  A bound on an undercount is not a bound on the count.
 
 No `sorry`, no new `axiom`, and no `def` at all: every declaration below is a theorem
 about names that already existed.
@@ -685,7 +685,7 @@ Together with `Ttc.ttcVolCoins_le_ttcVolPrice` (`Exec/PriceList`) this is the pa
 per-cube-free prices the run's charge is built from, both now unconditional on the
 geometry.  **Exponential in `n`** — twice over, see `Exec/InflateBound`'s docstring — and
 still a price for the chain the sampler's *law* is defined by, not for steps
-`Ttc.ttcRun` takes. -/
+`Ttc.ttcEstimate` takes. -/
 theorem ttcSampleSteps_le_ttcSampStepsPrice_run (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
     (hφ : φ.IsPositive) (hpos : 0 < volSol (atomSet atoms) φ) {i : Cube A}
     (hi : i ∈ toDNFd (ttcInput atoms φ)) :

@@ -17,7 +17,7 @@ These two theorems used to live in `Ttc/Model/Theorem.lean`.  They were moved ou
 because their statements name the bundle's oracle field `T.O` and its precision
 field `T.ρ`, and `Model/` states the problem and the guarantee over the
 algorithm's own inputs `(M, φ, ε, δ)` — with the precision *computed* by
-`GetPrecision` rather than supplied.  That statement is `Ttc.ttc_volume_estimate`
+`GetPrecision` rather than supplied.  That statement is `Ttc.ttc_volume`
 (`Model/Theorem.lean`); this file is the machinery it is proved from, kept
 because `Ttc/Coupling/Product.lean` and everything downstream of it consume
 `Ttc.TtcProb.volume_estimate` directly.
@@ -58,7 +58,7 @@ the fields of `Ttc.TtcProb`, inhabited non-degenerately by
 **This statement still names the bundle's `T.O` and `T.ρ`**, i.e. an *assumed*
 oracle and an *assumed* precision. Both are discharged downstream: the
 oracle-free statement over `(M, φ, ε, δ)`, with the precision computed by
-`Ttc.Params.precision` (`GetPrecision`), is `Ttc.ttc_volume_estimate`
+`Ttc.Params.precision` (`GetPrecision`), is `Ttc.ttc_volume`
 (`Model/Theorem.lean`).
 
 Proof: at every `ω` satisfying `lem:numlattice` the deterministic chain of

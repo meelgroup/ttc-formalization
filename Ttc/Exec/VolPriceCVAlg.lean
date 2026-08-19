@@ -18,15 +18,17 @@ a per-call price that is a function of `(atoms, φ, ε, δ)` and of nothing else
 
 > ## ⚠ FOUR THINGS THIS FILE IS NOT ⚠
 >
-> **1. `Ttc.ttc` does not execute this oracle.**  `Ttc.algOracles` (`Ttc/Model/Pseudocode.lean`)
-> is a closed term built over `Ttc.mcVol`, the hit-and-miss Monte Carlo estimator; the price
-> the *run* actually pays is `Ttc.ttcVolPrice`, and `Ttc.ttcVolCoins_le_ttcVolPrice` is the
-> lemma that proves it.  **Nothing below bounds anything the modelled run does.**  It prices
-> a *different* volume oracle — the one `Ttc/Volume/CVEstimator.lean` proves an accuracy
-> statement for — evaluated at the run's own parameters, so that the two prices are
-> comparable.  There is no lemma here of the form `ttcVolCoins … ≤ ttcVolPriceCVAlg …`: the
-> two oracles read different coins, so such an inequality — if it happened to hold — would be
-> an arithmetic accident between two unrelated counts, not a costing of the run.
+> **1. Nothing charges this price — including the run that does execute Gaussian cooling.**
+> Until 2026-08-19 the caveat here was that `Ttc.ttc` ran hit-and-miss Monte Carlo instead,
+> so this number priced an oracle the modelled run never called.  `Ttc.ttc` (`Model/Theorem`)
+> now *does* execute Cousins–Vempala Gaussian cooling —
+> `Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation.algorithm n` — and the caveat
+> survives anyway, for a different reason: what `Ttc.ttc_volume` bounds is
+> `Ttc.CVShaped.shapedVolumeQueryEnvelopeAt`, an **expected membership-query** envelope
+> proved about that implementation, and this file's `Ttc.ttcVolPriceCVAlg` is a fixed
+> per-call **arithmetic-operation** price obtained by evaluating `Ttc.CVCost.cvVolumeOpsPrice`
+> at the run's parameters.  Different quantity, different units, no lemma relating them, and
+> nothing consumes this one.  **Nothing below bounds anything the run does.**
 >
 > **2. The estimator being priced is conditional.**  `Ttc.VolumeAlgorithm.cousinsVempalaOfRuns`
 > leaves `hphase_mean` and `hphase_var` open (`Ttc/Volume/CVInstantiate.lean:66-67, 120, 125`),
@@ -109,14 +111,13 @@ a per-call price that is a function of `(atoms, φ, ε, δ)` and of nothing else
   `Ttc.cvAlgModelRhs` / `Ttc.cvAlgModelRhs_eq` with the `#closureReport` that measures it
   (§7 — including a finding about what the closure check counts).
 * `Ttc.ttcVolPriceCVAlg_pos_two_cube`, `Ttc.ttcVolPriceCVAlg_le_two_cube` — non-vacuity: the
-  seven hypotheses are jointly satisfiable, at the two-cube witness of
-  `Ttc/Witness/FullTwoCube.lean`, at every `n ≥ 1` and every `(ε, δ) ∈ (0,1]²`, with the
-  price positive there.
+  seven hypotheses are jointly satisfiable, at the two-cube data of `Ttc/Witness/TwoCube.lean`,
+  at every `n ≥ 1` and every `(ε, δ) ∈ (0,1]²`, with the price positive there.
 
-The `p` and `ε_draw` slots are not chosen freely: `Ttc.algOracles`
-(`Ttc/Model/Pseudocode.lean:752-758`) hands its *own* volume oracle exactly
-`(algBlock …).epsPrime` and `(algBlock …).deltaPrime`, so the CV oracle is priced at the
-same per-call accuracy and confidence the run gives `Ttc.mcVol`.
+The `p` and `ε_draw` slots are not chosen freely: they are `(algBlock …).epsPrime` and
+`(algBlock …).deltaPrime`, the per-call accuracy and confidence `alg:ttc` allots one volume
+call (`Model/Pseudocode`), so the price is taken at the budget the algorithm itself sets
+rather than at a convenient one.
 -/
 
 namespace Ttc
@@ -176,8 +177,9 @@ theorem cvAlgKappa_def :
 
 `Ttc.CVCost.cvVolumeOpsPrice` at the six slot values of the module docstring's table.  A
 plain arithmetic `def`; **its name asserts nothing** — in particular it does *not* assert
-that it dominates anything the run reads, and it cannot: `Ttc.algOracles` executes
-`Ttc.mcVol`, not this estimator (module docstring, item 1).  What is proved about it is
+that it dominates anything the run spends, and it does not: the run's volume work is bounded
+by `Ttc.CVShaped.shapedVolumeQueryEnvelopeAt`, in different units (module docstring,
+item 1).  What is proved about it is
 `Ttc.ttcVolPriceCVAlg_le` (the `n⁴` bound) and `Ttc.ttcVolPriceCVAlg_pos`.
 
 `M = 1` — the warm-start assumption — is baked in and is **nowhere proved** (module
@@ -199,7 +201,7 @@ theorem ttcVolPriceCVAlg_def :
 
 That lemma takes twelve hypotheses — `hn hL hκ0 hκ1 hc1 hc hp0 hp1 hM heps0 heps1 hr`.  At
 the slot values of §1–§2 **every one of them follows from the algorithm's own invariants**,
-using only the seven conditions the headline `Ttc.ttc_volume_estimate` already carries.
+using only the seven conditions the headline `Ttc.ttc_volume` already carries.
 This section is that discharge, lemma by lemma; §4 assembles them.
 
 Four are unconditional (`hL`, `hc1`, `hc`, `hM`, `hκ0`), and the rest are read off the
@@ -285,7 +287,7 @@ theorem one_le_canonRfac_run (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (h
 
 `Ttc.CoolCost.cvVolumeOpsPrice_le_cool` (`Ttc/Exec/CoolDrawPrice.lean:492`) at the six slot
 values of §2, with all twelve of its hypotheses discharged from §3.  **The binder list of
-the theorem below is exactly the seven conditions `Ttc.ttc_volume_estimate` already carries**
+the theorem below is exactly the seven conditions `Ttc.ttc_volume` already carries**
 — `0 < ε`, `ε ≤ 1`, `1 ≤ n`, `φ.IsPositive`, `0 < volSol …`, `0 < δ`, `δ ≤ 1` — and no
 geometric or regime side condition is added.
 
@@ -365,7 +367,7 @@ theorem ttcVolPriceCVAlg_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n) (h
 
 /-! ## §6  The same natural in `Ttc/Model/` vocabulary
 
-`Ttc.ttcSampPrice_model` (`Ttc/Exec/SamplePrice.lean`) is the pattern: restate the price with
+`Ttc.ttcSampPriceHR_model` (`Ttc/Exec/SampPriceHR.lean`) is the pattern: restate the price with
 every `Ttc/Exec/` constant unfolded, by `rfl`, so that the expression can appear in a
 *statement* — `#modelClosureOfType` (`Ttc/Audit/ClosureCheck.lean:285`) fails the build if a
 constant in the capstone's type is defined outside `Ttc/Model/`, `Ttc/Probability/` or
@@ -491,26 +493,15 @@ noncomputable def cvAlgModelRhs : ℕ :=
 so the closure check below is a check on the model form and not on a lookalike. -/
 theorem cvAlgModelRhs_eq : ttcVolPriceCVAlg atoms φ ε δ = cvAlgModelRhs atoms φ ε δ := rfl
 
-/-! ### The two bridges to `Model/Pseudocode`'s fixed prices
+/-! ### The two fixed per-call prices, and where they went
 
-`Ttc.ttc` (`Model/Pseudocode`) is `Ttc.ttcCharged` at two fixed per-call charges,
-`Ttc.cvVolPriceAt` and `Ttc.hrSampPriceAt` — copies of these two prices, filed beside
-`Ttc.ttc` itself because its *definition* names them.  A copy whose *name* asserts it is the
-price is exactly the failure mode `CLAUDE.md` §13 warns about, so the assertion is proved
-rather than asserted — and both proofs are `rfl`, so a drift in either copy is a build
-error.
-
-They live here because `Model/Pseudocode` may not import `Ttc/Exec/` (it would leave the
-audit surface) and `Ttc/Exec/SampPriceHR.lean` is upstream of this file. -/
-
-/-- `Ttc.cvVolPriceAt` **is** the Cousins–Vempala volume price — same `rfl` as
-`Ttc.ttcVolPriceCVAlg_model`. -/
-theorem cvVolPriceAt_eq : cvVolPriceAt atoms φ ε δ = ttcVolPriceCVAlg atoms φ ε δ := rfl
-
-/-- `Ttc.hrSampPriceAt` **is** the hit-and-run sampling price — same `rfl` as
-`Ttc.ttcSampPriceHR_model`. -/
-theorem hrSampPriceAt_eq : hrSampPriceAt atoms φ ε δ = ttcSampPriceHR atoms φ ε δ := rfl
-
+Until 2026-08-19 `Model/Pseudocode` carried copies of these two prices, `Ttc.cvVolPriceAt`
+and `Ttc.hrSampPriceAt`, because `Ttc.ttc` was defined as `Ttc.ttcCharged` at them, and two
+`rfl` bridges here proved the copies were the prices (`CLAUDE.md` §13).  `Ttc.ttc` is now the
+law that **executes** the Cousins–Vempala estimator and the hit-and-run sampler rather than
+one charged at a fixed number for calling them, so there is no copy left to bridge to and
+both bridges were removed with it.  `Ttc.ttcVolPriceCVAlg` and `Ttc.ttcSampPriceHR` remain,
+and remain the prices they name. -/
 end AtTheRun
 
 end Ttc

@@ -64,7 +64,7 @@ The `8/η` (not `4/η`) is the `θ = η/2` repair; see the README, finding 1.
 This is the one member of the parameter block `alg:ttc` does **not** compute: it
 is `lem:nonconv`'s constant, it appears in no line of the pseudocode, and it is
 outside the definitional closure of both `Ttc.ttc` and the statement of
-`Ttc.ttc_volume_estimate`.  It therefore sits here, with the inequality it is
+`Ttc.ttc_volume`.  It therefore sits here, with the inequality it is
 chosen to satisfy, rather than in `Model/Prelude` with the five parameters the
 algorithm really does compute.  It reaches `Ttc.Params.gamma` only through
 `Ttc.Params.kappa_div_gamma_le` below. -/

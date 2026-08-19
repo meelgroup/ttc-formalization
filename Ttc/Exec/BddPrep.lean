@@ -8,7 +8,8 @@ import Ttc.Exec.BddFromPos
 /-!
 # `Exec/BddPrep`: the agreement lemma at the preprocessed formula
 
-`Ttc.ttcAlgOutput` and `Ttc.ttcRun` (`Model/Pseudocode`) used to carry four *proof*
+`Ttc.ttcAlgOutput` (`Model/Pseudocode`) and `Ttc.ttcEstimate` (`Exec/Api`) used to carry
+four *proof*
 binders — `hε0 : 0 < ε`, `hε1 : ε ≤ 1`, `hn : 1 ≤ n` and
 `hbdd : Bornology.IsBounded (sol (atomSet atoms) (preprocess atoms φ))` — and every
 one of them was consumed at exactly one place: `Ttc.inputParams`, because
@@ -33,7 +34,7 @@ formula, whose boundedness side is discharged from `hφ` and `hpos` by
 (`Exec/CleanInput`).  Whenever the side conditions hold, the total block *is* the
 block the algorithm used to build — so replacing `inputParams` by
 `inputParamsTotal` downstream changed no value that any theorem talks about, and the
-four binders are deleted from `ttcAlgOutput` and `ttcRun`, and appear in
+four binders are deleted from `ttcAlgOutput` and `ttcEstimate`, and appear in
 `Model/Theorem` only as plain hypotheses of the headline.
 
 ## Why the junk branch is inhabited at all
@@ -68,7 +69,7 @@ variable {A : Type*}
 `Ttc.junkParams`, `Ttc.ttcParamsTotal`, `Ttc.ttcParamsTotal_eq`,
 `Ttc.ttcParamsTotal_eq_junk`, `Ttc.inputParamsTotal` and
 `Ttc.inputParamsTotal_eq_inputParams` now live in `Model/Pseudocode`, where
-`Ttc.ttcAlgOutput` and `Ttc.ttcRun` read them.  What stays here is the one lemma
+`Ttc.ttcAlgOutput` and `Ttc.ttcEstimate` read them.  What stays here is the one lemma
 that needs `Exec/`: the agreement lemma at the *preprocessed* formula, whose
 boundedness proof is discharged from `hφ` and `hpos`. -/
 

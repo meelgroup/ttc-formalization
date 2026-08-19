@@ -15,7 +15,7 @@ the algorithm** — they are what its two coin sequences are *governed by*, and 
 whose mass function the level-`0` rates are read off.  `Model/Pseudocode` stays
 pseudocode because they are here.
 
-Since `Ttc.ttc` (`Model/Pseudocode`) is a `Measure` and `Ttc.ttc_volume_estimate`
+Since `Ttc.ttc` (`Model/Pseudocode`) is a `Measure` and `Ttc.ttc_volume`
 (`Model/Theorem`) is a statement about that measure, this vocabulary is unavoidably part
 of what the headline's *type* unfolds to.  That is why `Ttc/Audit/ClosureCheck.lean`
 audits `Ttc/Model/` **together with** `Ttc/Probability/`, and why the contents of this
@@ -41,7 +41,7 @@ independent would cost.
 **Definitions, and two contracts.**  Sixteen `def`s and two `instance`s, plus exactly two
 `Prop`s: `Ttc.trajThin_le` and `Ttc.card_trajGen`, the sub-multiset and cardinality
 contracts `Ttc.Oracles` demands of the trajectory read-offs.  They are here because a
-theorem cannot be stated upstream of the definition it is about and `Ttc.algOracles`
+theorem cannot be stated upstream of the definition it is about and `Ttc.ttcOracleBundle`
 needs them at elaboration time, so they cannot go downstream either; both are invisible
 to `Ttc/Audit/ClosureCheck.lean`, which enters a theorem only through its type.  No
 hypothesis bundle, no `@[simp]` lemma, nothing assumed.  Every *other* property of these

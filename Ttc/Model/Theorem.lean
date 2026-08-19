@@ -3,206 +3,190 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Monadic.MeasurePr
-import Ttc.Monadic.Program
-import Ttc.Exec.PricedHeadline
-import Ttc.Exec.SamplePrice
 import Ttc.Exec.TtcSlowRuntimePerPhase
 
 /-!
 # The main theorem of the paper
 
 `Ttc/Model/` describes the paper and nothing else: `Prelude` the preliminaries,
-`ProblemSetting` the problem definition, `Pseudocode` the algorithm, and this file the main
-theorem — `thm:volumettc` + `thm:runtime` in one statement, about `Ttc.ttc` itself.
+`ProblemSetting` the problem definition, `Pseudocode` the algorithm `alg:ttc` with **no
+oracle chosen**, and this file the algorithm at the oracles the paper specifies together
+with the one theorem about it — `thm:volumettc` + `thm:runtime` in a single statement.
 
-**One theorem, two conjuncts, one run.**  `Ttc.ttc_volume` states accuracy and charged cost
-for the *same* law: `Ttc.ttc atoms φ ε δ` (`Model/Pseudocode`), the algorithm's own law on
-runs `r = (volume coins, trajectory)`, taking `TTC`'s own four inputs and nothing else — no
-interpretation, no parameter block, no oracle argument, no precision argument.  The accuracy
-conjunct is about `r.1`, the cost conjunct about `r.2`.  The statement is written out here in
-full — this is the **audit surface** — and the proof is discharged by reference to the
-development (`Ttc.ttc_volume_estimate_parametric` and
-`Ttc.PricedHeadline.all_ttc_cost_le_quartic`, both in `Ttc/Exec/PricedHeadline.lean`).
+## The two backends, and only these two
 
-## What it says
+`Ttc.ttc atoms φ ε δ` is the law of one run of `TTC(F, ε, δ)` with
+
+* **volume** — `Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation.algorithm n`, the
+  Cousins–Vempala Gaussian-cooling estimator (`sections/analysis.tex`, `cor:vol`), built out
+  of the slow canonical construction at the per-phase slack, bound, stream count and
+  truncation radius;
+* **sampling** — the hit-and-run / ball-walk hybrid carried by
+  `Ttc.TTCSourceSharpOperationalFinal.canonicalCappedPolyHybridPlugin`: hit-and-run at
+  `1100 ≤ n` (`cor:linf`), the lazy ball walk below.
+
+Until 2026-08-19 this file also carried a second headline about a second `Ttc.ttc`, whose
+volume oracle was hit-and-miss Monte Carlo (`Ttc.mcVol`) and whose sampler was the lazy ball
+walk, charged at two *fixed* per-call prices it was not proved to pay.  Those reference
+oracles and every theorem, price and witness attached to them were deleted, not weakened:
+there is one algorithm and one theorem here now.
+
+## Where `Ttc.ttc` is defined, and why it is here rather than in `Pseudocode`
+
+`Ttc/Exec/` imports `Model/Pseudocode` — `Ttc.algIndex`, `Ttc.algAtoms`, `Ttc.algBlock` are
+the spec the construction is built against — so `Pseudocode` cannot name the construction
+without a cycle.  `Pseudocode` therefore states `alg:ttc` with the oracle bundle as an
+*argument* (`Ttc.ttcAlgOutput`), and this file, the only `Model/` file downstream of the
+construction, fills it in.  That layering is the reason the four-file surface still means
+something for the *specification* even though the *instantiation* names 100+ modules.
+
+## What the theorem says
 
 * **Accuracy.**  `Pr[ TTC(F, ε, δ) ∈ (1 ± ε)·Vol(F) ] ≥ 1 − δ`, at the user's own `Vol(F)`,
-  **unconditionally** under the nine binders.
-* **Charged cost.**  `All[…]` is `∀ᵐ`, with **no termination hypothesis**: the absorption
-  loops halt `Ttc.ttc`-almost surely.  At any `(R, γ)` bounding the fixed sampling price
-  quartically, the charged cost is at most `m·n⁴·(2⁴²·volFac + 2⁶²·rfac·(R²/γ²)·log(2R)·(Θ+1))`,
-  written out as explicit arithmetic in `ε`, `δ`, the run's own geometry and
-  `m = |toDNFd (preprocess atoms φ)|`.  The guard is discharged at the run's own geometry by
-  `Ttc.PricedHeadline.all_ttc_cost_le_quartic_at_run`, and it guards this conjunct only, so
-  the accuracy half stays unconditional.
+  under the eight binders and nothing else — no oracle binder, no certificate binder, no
+  implementation binder, no cost-side binder.
+* **Expected query cost.**  `∫⁻ r, r.2` — the *expectation* of the run's total membership-
+  query count — is at most the constructed volume envelope plus the constructed sampler
+  envelope.
 
-## ⚠ Which complexity this is, and which it is not
+The cost half is deliberately an expectation and not an `All[…]`: what the construction
+proves is a bound on `∫⁻`, and an almost-sure bound is a different statement.  Getting one
+would take Markov's inequality against a failure budget plus the existing
+`Ttc.sourceReferenceCutoff`; that work has not been done and is not claimed here.
 
-**This run does not execute the two oracles being priced.**  `Ttc.ttc`'s cost coordinate is
-charged at two *fixed* prices — the Cousins–Vempala and hit-and-run numbers — which are not
-prices this run is proved to pay.  Nothing here proves `TTC` runs in `O(m·n⁴)`.  Read the boxed
-warning in `Ttc/Exec/PricedHeadline.lean` and `AUDIT.md` §1e before quoting the cost conjunct.
+## ⚠ Three things this is not
 
-The repository's **proved** polynomial figure is a different statement about a different
-object: `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase` bounds the expected query
-cost of `canonicalFullOperationalLaw`, the law that **actually executes** the constructed
-volume subroutine `slowPerPhaseImplementation.algorithm n`, unconditionally and with no
-oracle, certificate, implementation or cost-side binder, at
-
-```
-                    Õ( m · n⁶ · ρ⁸ / ε⁴ )
-```
-
-— charged cost, per polytope, `ρ` the aspect ratio.  That is **not** the paper's
-`O(m · n⁵ · ρ² · r_max)`; the gap and every route examined for closing it are recorded in
-`AUDIT.md` §0g and `PLAN-RETRYENV.md`.  It is stated for the operational law rather than for
-`Ttc.ttc` because that is the object for which executing the real oracle is proved; carrying
-it back to `Ttc.ttc` is exactly the accounting step this repository has not taken.
+1. **Not the paper's exponents.**  The envelope is `Õ(m·n⁴·ρ⁶/ε²)` in *membership-query*
+   units, not `O(m·n⁵·ρ²·r_max)`, and the two are not in the same units until the `⌈n·rfac⌉₊`
+   charge of `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops` is applied.  The
+   `ρ` exponent is unsettled.  See `lean/PLAN-SHAPE.md` §5 and `lean/PAPER-CLAIMS.md`.
+2. **Not uniform in the dimension.**  At `1100 ≤ n` the sampler is hit-and-run and the
+   transition bound is polynomial.  For `21 ≤ n < 1100` it is the ball walk's own bound, with
+   `4 ^ n` and a `(radius ratio) ^ (4 n)`; `n` is bounded there, so that is a constant rather
+   than an asymptotic obstruction — but an astronomical one.  Both directions are proved in
+   `Ttc/Exec/SamplerEnvelopeShape.lean`; removing it is one lemma, scoped in
+   `lean/PLAN-SPHERECAP.md`.
+3. **Not inside a four-file audit surface.**  Naming the constructed oracles *is* naming the
+   construction: the statement below reaches 637 constants across 108 modules outside
+   `Model/`, `Probability/` and `Geometry/`.  `#modelClosureOfType` does not hold of it and is
+   not claimed.  What the surface still certifies is the *specification* —
+   `Ttc.ttcAlgOutput`, checked in `Ttc/Audit/ClosureCheck.lean`.  The asymmetry is real and
+   recorded there rather than papered over by widening the surface until it says nothing.
 -/
 
 namespace Ttc
 
-open MeasureTheory Set
-open Ttc.Monadic
 open scoped ENNReal BigOperators Classical
+open MeasureTheory Ttc.Monadic
+open Ttc.TtcSlowRuntimePerPhase Ttc.TTCSourceSharpOperationalFinal
+open Ttc.TTCSourceSharpOperationalTheorem Ttc.CVShaped Ttc.TtcCircumRadius
+open Ttc.TTCCVExpectedImplementation
 
-/-- **`thm:volumettc` + `thm:runtime`, at two fixed per-call prices.**  `TTC` is run on
-`F = (atoms, φ)` at accuracy `ε` and confidence `δ`; both halves speak about the same run.
+variable {A : Type*}
 
-* **Accuracy.** `Pr[ TTC(F, ε, δ) ∈ (1 ± ε)·Vol(F) ] ≥ 1 − δ`, at the **user's own**
-  `Vol(F)`, **unconditionally** under the nine binders.  The output is
-  `Model/Pseudocode`'s `Ttc.ttcRun`, which takes no oracle argument.
-* **Charged cost.** `All[…]` is `∀ᵐ`, with **no termination hypothesis**.  At any `(R, γ)`
-  bounding the fixed sampling price quartically, `alg:ttc`'s charged cost is at most
-  `m · n⁴ · (2⁴²·volFac + 2⁶²·rfac·(R²/γ²)·log(2R)·(Θ+1))`.
+/-- **The side condition `TTC(F, ε, δ)` is defined under.**
 
-⚠ **The run does not execute the two oracles being priced.**  Correctness, not efficiency:
-nothing here proves `TTC` runs in `O(m·n⁴)`.  The repository's proved polynomial bound is
-`Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase`, at `Õ(m·n⁶·ρ⁸/ε⁴)`, and it is about
-the operational law that actually executes the constructed oracle — see this file's module
-docstring. -/
-theorem ttc_volume {A : Type*} {n : ℕ}
-    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
-    (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) :
-    -- (accuracy) the estimate is within `(1 ± ε)·Vol(F)` with probability `≥ 1 − δ`
-    (1 - δ ≤
-      Pr[r ← ttc atoms φ ε δ;
-        r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
-    ∧
-    -- (running time) almost every run is charged at most
-    -- `m · (C_vol + C_sample·(Θ + 1))`, at the two prices the run ACTUALLY pays.
-    -- Both are written out: `C_vol` is the coin count of `Ttc.mcVol`, the hit-and-miss
-    -- Monte-Carlo oracle `Ttc.algOracles` is built over, and `C_sample` is
-    -- `Ttc.mixStepsBound` at the run's own arguments.  BOTH ARE EXPONENTIAL IN `n` —
-    -- visible here as the `^ n` of the first and the `4 ^ n`, `^ (2 * n)`, `^ (4 * n)`
-    -- of the second.  Nothing is hidden behind a name.
-    (All[r ← ttc atoms φ ε δ;
-      (r.2 : ℝ) ≤
-        ((toDNFd (preprocess atoms φ)).length : ℝ)
-          * (((
-          ⌈((algGamma atoms φ ε δ)⁻¹
-                * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
-              / ((algBlock atoms φ ε δ).epsPrime ^ 2 * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1 : ℕ) : ℝ)
-              + ((
-          ⌈(Real.log ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-            algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-            (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
-            (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
-            ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-            algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-            (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
-            (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-            algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-            latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-            (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ) ^ 2 * ((1
-            + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-            algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-            latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-            (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)
-            ^ 2 * (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-            algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-            latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-            (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-            Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-            (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊ : ℕ) : ℝ)
-              * (41472 * Real.log (30 / δ) / (ε ^ 2 * (12 - ε))
-                  + 15 * (Real.log (15 / (2 * δ))
-                      + Real.log ((toDNFd (preprocess atoms φ)).length))
-                  + 1))]) :=
-  ⟨(ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _).1,
-    (ttc_volume_estimate_parametric atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos _ _).2⟩
+Exactly the binders `Ttc.TTCSourceSharpOperationalFinal.canonicalCappedPolyHybridPlugin`
+takes: a usable accuracy target, a nonzero dimension, a positive formula and a solution set
+of positive volume.  `δ` is unconstrained — the plugin does not read it — so it does not
+appear here even though the theorem below does bound it.
 
-/-- **`thm:volumettc` + `thm:runtime`, at the oracles the paper actually specifies.**
+`Ttc.ttc` is *total*: off this condition it is the zero measure, a junk value with no
+content, and the theorem discharges the condition from its own hypotheses.  Defining the
+algorithm only where it makes sense and reading a junk value elsewhere is what lets the
+headline be stated with no definedness side goal (`CLAUDE.md` §11 is about hypotheses that
+*nothing* satisfies; these are satisfied — see `Ttc/Witness/`). -/
+def TtcInputs {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε : ℝ) : Prop :=
+  0 < ε ∧ ε ≤ 1 ∧ 1 ≤ n ∧ φ.IsPositive ∧ 0 < volSol (atomSet atoms) φ
 
-`Ttc.ttc_volume` above is about `Ttc.ttc`, whose volume oracle is `Ttc.mcVol` — hit-and-miss
-Monte Carlo — and whose sampler is the lazy ball walk.  Those are *reference* oracles: correct,
-and exponential in `n`, as its own statement now shows.
+/-- **`TTC(F, ε, δ)` — the law of one run, at Cousins–Vempala volume and hit-and-run
+sampling.**
 
-This is the same guarantee for the constructed ones:
+Four inputs and nothing else: the atoms, the formula, the accuracy target and the failure
+budget.  No oracle argument, no interpretation, no parameter block, no precision argument —
+the two backends are *chosen here*, not received.
 
-* **volume** — `slowPerPhaseImplementation.algorithm n`, the Cousins–Vempala Gaussian-cooling
-  estimator (`sections/analysis.tex`, `cor:vol`);
-* **sampling** — `Ttc.kv97HybridKernel`: hit-and-run at `1100 ≤ n` (`cor:linf`), lazy ball
-  walk below.
+A draw `r : ℝ × ℝ≥0∞` is one complete run: `r.1` is the estimate the run returns and `r.2` is
+the number of membership queries it spent getting it.  The two conjuncts of `Ttc.ttc_volume`
+are about the two coordinates of the **same** draw, so they describe one execution rather
+than two.
 
-Both conjuncts are about the one law that executes them.  No oracle, certificate,
-implementation or cost binder; axioms `[propext, Classical.choice, Quot.sound]`.
+The inner failure budget is `4 * δ / 5`: the remaining fifth is what the outer
+absorption/estimation stages spend, and the theorem's `1 - δ` is stated at the user's `δ`. -/
+noncomputable def ttc {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ) :
+    Measure (ℝ × ℝ≥0∞) :=
+  if h : TtcInputs atoms φ ε then
+    letI : NeZero n := ⟨Nat.ne_of_gt h.2.2.1⟩
+    canonicalFullOperationalLaw (slowPerPhaseImplementation.algorithm n)
+      (canonicalCappedPolyHybridPlugin atoms φ ε (4 * δ / 5)
+        (slowPerPhaseImplementation.algorithm n)
+        h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
+  else 0
 
-⚠ **Three things this is not.**
+/-- **`Ttc.ttc` on its own inputs is the law that executes the two constructed backends.**
 
-1. **Not the paper's number.**  The envelope is `Õ(m·n⁴·ρ⁶/ε²)` in *membership-query* units,
-   not `O(m·n⁵·ρ²·r_max)`, and the two are not in the same units until the `⌈n·rfac⌉₊` charge
-   of `ttc_volume_runtime_perPhase_ops` is applied.  The `ρ` exponent is unsettled.  See
-   `lean/PLAN-SHAPE.md` §5.
-2. **Not uniform in the dimension.**  At `1100 ≤ n` the sampler is hit-and-run and the
-   transition bound is polynomial.  For `21 ≤ n < 1100` it is the ball walk's own bound, with
-   `4 ^ n` and a `(radius ratio)^(4n)`; `n` is bounded there, so that is a constant and not an
-   asymptotic obstruction — but an astronomical one.  Proved in both directions in
-   `Ttc/Exec/SamplerEnvelopeShape.lean`.  Removing it is one lemma: `lean/PLAN-SPHERECAP.md`.
-3. **Not inside the four-file audit surface.**  Its statement names the construction — 637
-   constants across 108 modules — so `#modelClosureOfType` does not hold of it and is not
-   claimed.  `Ttc.ttc_volume` keeps that promise for accuracy. -/
-theorem ttc_volume_runtime {A : Type*} {n : ℕ}
+By `rfl` after the branch is taken, so the theorem below is about the object the
+construction proves things about and not a renamed copy of it. -/
+theorem ttc_eq_canonicalFullOperationalLaw {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ) (h : TtcInputs atoms φ ε) :
+    letI : NeZero n := ⟨Nat.ne_of_gt h.2.2.1⟩
+    ttc atoms φ ε δ
+      = canonicalFullOperationalLaw (slowPerPhaseImplementation.algorithm n)
+          (canonicalCappedPolyHybridPlugin atoms φ ε (4 * δ / 5)
+            (slowPerPhaseImplementation.algorithm n)
+            h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2) := by
+  unfold ttc
+  rw [dif_pos h]
+
+/-- **`Ttc.ttc` is a probability measure on its own inputs** — every run returns something,
+and the absorption loops halt `Ttc.ttc`-almost surely.  Off the inputs it is `0`. -/
+instance instIsProbabilityMeasureTtc {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ) [Fact (TtcInputs atoms φ ε)] :
+    IsProbabilityMeasure (ttc atoms φ ε δ) := by
+  have h : TtcInputs atoms φ ε := Fact.out
+  letI : NeZero n := ⟨Nat.ne_of_gt h.2.2.1⟩
+  rw [ttc_eq_canonicalFullOperationalLaw atoms φ ε δ h]
+  infer_instance
+
+/-- **`thm:volumettc` + `thm:runtime`, in one statement about one law.**
+
+`TTC(F, ε, δ)` — `Ttc.ttc`, the algorithm of `alg:ttc` run with the Cousins–Vempala
+Gaussian-cooling volume estimator and the hit-and-run / ball-walk hybrid sampler — returns an
+`ε`-relative estimate of `Vol(F)` with probability at least `1 − δ`, and its **expected**
+membership-query count is at most the constructed volume envelope plus the constructed
+sampler envelope.
+
+Both conjuncts are about the one law that *executes* those two backends.  There is no oracle
+binder, no certificate binder, no implementation binder and no cost-side binder; the axioms
+are `[propext, Classical.choice, Quot.sound]`.
+
+Read the module docstring before quoting the cost conjunct: the envelope is in
+membership-query units, it is not the paper's exponents, and it is not uniform in `n` below
+1100. -/
+theorem ttc_volume {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
     (hn : 21 ≤ n) (hφ : φ.IsPositive)
     (hpos : 0 < volSol (atomSet atoms) φ) :
-    let deltaRun := 4 * δ / 5
-    let hn1 : 1 ≤ n := le_trans (by norm_num) hn
-    let I := Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation
-    let V := I.algorithm n
-    letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
-    let P := Ttc.TTCSourceSharpOperationalFinal.canonicalCappedPolyHybridPlugin
-      atoms φ ε deltaRun V hε0 hε1 hn1 hφ hpos
-    (1 - δ ≤ (Ttc.TTCSourceSharpOperationalTheorem.canonicalFullOperationalLaw V P).real
-      {r | r.1 ∈ relErr ε (volSol (atomSet atoms) φ)}) ∧
-    ((∫⁻ r, r.2 ∂Ttc.TTCSourceSharpOperationalTheorem.canonicalFullOperationalLaw V P) ≤
-      Ttc.CVShaped.shapedVolumeQueryEnvelopeAt I atoms φ ε deltaRun
-          (fun j ↦ (Ttc.TtcCircumRadius.circumR (interior
-            (Ttc.TTCCVExpectedImplementation.callBody atoms φ ε deltaRun j))) ^ 2) +
-        Ttc.TTCSourceSharpOperationalFinal.canonicalCappedSampleQueryEnvelope
-          atoms φ ε deltaRun) :=
-  Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
-
-#print axioms ttc_volume_runtime
+    -- **Accuracy.**  The estimate is within a factor `1 ± ε` of the true volume, except
+    -- with probability `δ`.
+    (1 - δ ≤ Pr[r ← ttc atoms φ ε δ; r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
+    ∧
+    -- **Expected query cost**, on the same run: the Cousins–Vempala volume envelope summed
+    -- over the cubes at each cube's own interior circumradius, plus the hybrid sampler's
+    -- envelope.
+    ((∫⁻ r, r.2 ∂ttc atoms φ ε δ) ≤
+      shapedVolumeQueryEnvelopeAt slowPerPhaseImplementation atoms φ ε (4 * δ / 5)
+          (fun j ↦ (circumR (interior (callBody atoms φ ε (4 * δ / 5) j))) ^ 2)
+        + canonicalCappedSampleQueryEnvelope atoms φ ε (4 * δ / 5)) := by
+  have hn1 : 1 ≤ n := le_trans (by norm_num) hn
+  have hin : TtcInputs atoms φ ε := ⟨hε0, hε1, hn1, hφ, hpos⟩
+  letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
+  have hrw := ttc_eq_canonicalFullOperationalLaw atoms φ ε δ hin
+  have hcap := ttc_volume_runtime_perPhase atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
+  refine ⟨?_, ?_⟩
+  · rw [hrw]; exact hcap.1
+  · rw [hrw]; exact hcap.2
 
 #print axioms ttc_volume
 

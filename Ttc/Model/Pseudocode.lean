@@ -12,9 +12,8 @@ import Arlib.Convexity.GaussianCooling.PhaseSchedule
 
 A line-by-line transcription of Algorithm 1, then of the four preprocessing steps the
 verified algorithm applies before it, ending in `Ttc.ttcAlgOutput` (the output as one
-term, over an oracle bundle), `Ttc.ttcRun` (the same term with that bundle filled in from
-the run, taking **no oracle argument**) and `Ttc.ttc` (the law of the pair
-`(estimate, cost)`).
+term, over an oracle bundle).  No oracle is chosen here — `Ttc.ttc` and the bundle it runs
+at are in `Model/Theorem`, downstream of the construction those oracles are built by.
 
 **This file is not proof-free.**  It carries four theorems, one `private`, and no
 instances — the smallest set that leaves it able to elaborate: `Ttc.exists_latticeEnum`
@@ -474,20 +473,13 @@ end Algorithm
 
 end Ttc
 
-/-! # What `Vol_ED` **computes**, with no probability space of ours
+/-! # No volume oracle is defined here
 
-The *data* half of the constructed volume oracle: the definitions `Ttc.mcVol` unfolds to,
-and nothing else.  Every theorem about them — measurability, unbiasedness, the Bernoulli
-variance, Chebyshev — is in `Ttc/Volume/MonteCarlo.lean`.
-
-They are here because `Ttc.run` *calls* `Ttc.mcVol` rather than receiving it, so they must
-be reachable from inside the audit surface.  The sample count is defined from
-`Ttc.MonteCarlo.hitData`, a ratio of Lebesgue volumes, rather than from the coin law, so
-that **no measure constructed by this development** is in the algorithm's definitional
-closure; `Ttc.MonteCarlo.hit_eq_hitData` (`Volume/MonteCarlo`) shows the two agree.
-Mathlib's `volume` does remain in the closure, in three places, each needed at definition
-time — a volume estimator whose output does not mention volume would be a different
-object. -/
+Until 2026-08-19 this file also defined `Ttc.mcVol` — hit-and-miss Monte Carlo — together
+with the estimator data it unfolds to, because the run *called* it rather than receiving it.
+`Ttc.ttcAlgOutput` takes `(O : Oracles n (Cube A))` as an argument, so nothing in `alg:ttc`
+needs a volume oracle to be named here.  The oracle is Cousins-Vempala Gaussian cooling,
+constructed in `Ttc/Volume/` and `Ttc/Exec/`. -/
 
 namespace Ttc
 
@@ -582,14 +574,12 @@ noncomputable def mcVol {A : Type*} {n : ℕ} (M : A → Set (Space n)) (D : DNF
 
 end Ttc
 
-/-! # `TTC(F, ε, δ)` on one run, with no oracle argument
+/-! # `TTC(F, ε, δ)` on one run
 
 `Ttc.ttcAlgOutput` above takes the oracle bundle as an argument, because `alg:ttc` prints
-`Vol_ED` and `GenerateSamples` as external calls.  `Ttc.ttcRun` below is the same algorithm
-with that argument **filled in** by the data the run supplies — the volume coins `c` and
-the sample trajectory `t` — so the headline does not have to name an oracle.
-
-`Ttc.ttcRun_eq_ttcAlgOutput` (`Exec/Api`) proves, by `rfl`, that this is the same number.
+`Vol_ED` and `GenerateSamples` as external calls.  Filling that argument in is what
+`Ttc.ttcOracleBundle` (`Exec/Api`) does, and `Ttc.ttcEstimate` is the resulting number; both
+are downstream of this file, because the oracles the paper specifies are built there.
 Without that lemma this would be a rename; with it, it is the same term.  Everything the
 bundle is built from is therefore in the audit surface: the coverage test, the lattice
 enumeration, and the trajectory read-offs (the last in `Probability/Trajectory`). -/
@@ -700,9 +690,9 @@ noncomputable def rates (M : A → Set (Space n)) (φ : BForm A) (D : DNF A) (ρ
 
 /-! ## The run's own data, and `TTC(F, ε, δ)` on one run
 
-Nine abbreviations spelling out what lines A10–A13 and 17–20 compute, then `Ttc.ttcRun`,
-which is `Ttc.ttcAlgOutput` at the bundle those nine determine.  Nothing here is a proof
-binder: all nine are closed functions of `(atoms, φ, ε, δ)`. -/
+Nine abbreviations spelling out what lines A10–A13 and 17–20 compute.  They are what the
+oracle bundle is built from downstream (`Ttc.ttcOracleBundle`, `Exec/Api`).  Nothing here is
+a proof binder: all nine are closed functions of `(atoms, φ, ε, δ)`. -/
 
 section Run
 
@@ -747,253 +737,22 @@ noncomputable def algCen : {c : Cube A // c ∈ toDNFd (preprocess atoms φ)} �
 noncomputable def algMem : Cube A → Fin (algIndex atoms φ ε δ) → Bool :=
   memPtOfRegion (atomSet (algAtoms atoms φ ε δ)) (algEnum atoms φ ε δ)
 
-/-- **The oracle bundle the run itself supplies.**  `Vol_ED` (line 24) is `Ttc.mcVol` at
-the volume coins `c`; `thin`, `Pois` and `GenerateSamples` are the read-offs `Ttc.trajThin`,
-`Ttc.trajPois`, `Ttc.trajGen` of the trajectory `t` (all in `Probability/Trajectory`).
-Nothing is assumed: this is a closed term. -/
-noncomputable def algOracles (c : ℕ → Space n)
-    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) : Oracles n (Cube A) where
-  vol := mcVol (atomSet (algAtoms atoms φ ε δ))
-    (toDNFd (preprocess atoms φ)) (algCen atoms φ ε δ)
-    (algGamma atoms φ ε δ)
-    (algBlock atoms φ ε δ).epsPrime
-    (algBlock atoms φ ε δ).deltaPrime c
-  covered := coverOfRegion (atomSet (algAtoms atoms φ ε δ))
-  thin := fun _j₀ j' X => trajThin (algEnum atoms φ ε δ) (t j') X
-  thin_le := fun _j₀ j' X => trajThin_le (latticeEnum_injective _ _ _) (t j') X
-  pois := fun i j _lam => trajPois (algMem atoms φ ε δ i) (t j)
-  gen := fun i j N _ρ =>
-    trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
-      (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i))
-  gen_card := fun i j N _ρ =>
-    card_trajGen (algEnum atoms φ ε δ) (algMem atoms φ ε δ i) (t j) N
-      (padRow (algEnum atoms φ ε δ) (algMem atoms φ ε δ i))
+/-! ## No oracle is chosen here
 
-/-- **`TTC(F, ε, δ)`'s output on one run `(c, t)`, with no oracle argument.** -/
-noncomputable def ttcRun (c : ℕ → Space n)
-    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) : ℝ :=
-  ttcAlgOutput atoms φ ε δ (algOracles atoms φ ε δ c t)
+`alg:ttc` calls `Vol_ED` and `GenerateSamples`; it does not say how either is implemented,
+and neither does this file.  `Ttc.ttcAlgOutput` above takes `(O : Oracles n (Cube A))` as an
+argument, and that is the whole of the algorithm.
 
-/-- **Line 20's rate vector `θ`, on the volume coins `c`**.  `Ttc.trajLaw` of this is the
-law the sample coins `t` are drawn from. -/
-noncomputable def algRates (c : ℕ → Space n) : Fin (algIndex atoms φ ε δ) → ℝ :=
-  rates (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)
-    (toDNFd (preprocess atoms φ)) (algPrec atoms φ ε δ)
-    (e2eSampD (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
-      (algPrec atoms φ ε δ)
-      (algBlock atoms φ ε δ).epsPrime (canonRfac (toDNFd (preprocess atoms φ)))
-      (Jt := Fin (Nat.card (FacetIndex (toDNFd (preprocess atoms φ)))))
-      (canonAm (algAtoms atoms φ ε δ) (toDNFd (preprocess atoms φ)))
-      (canonBv (algAtoms atoms φ ε δ) (toDNFd (preprocess atoms φ))
-        (latticeScale (algPrec atoms φ ε δ)))
-      (algCen atoms φ ε δ) (algGamma atoms φ ε δ)
-      (canonDm (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
-        (algPrec atoms φ ε δ)))
-    (mcVol (atomSet (algAtoms atoms φ ε δ)) (toDNFd (preprocess atoms φ))
-      (algCen atoms φ ε δ) (algGamma atoms φ ε δ)
-      (algBlock atoms φ ε δ).epsPrime (algBlock atoms φ ε δ).deltaPrime c)
+The oracles are **Cousins–Vempala Gaussian cooling** for volume and **hit-and-run** for
+sampling, constructed in `Ttc/Volume/` and `Ttc/Exec/`, and `Ttc.ttc` — `alg:ttc` at those —
+is defined in `Ttc/Model/Theorem.lean`.  It has to be: the construction is built on the
+definitions *in this file* (`Ttc.algBlock`, `Ttc.preprocess`, `Ttc.ttcAlgOutput`, …), so it is
+downstream of it, and only a file downstream of the construction can name it.  The layering
+is `Prelude → ProblemSetting → ModelSupport → … → Pseudocode → Volume/Exec → Theorem`.
 
-/-- **The charged cost of the run `(c, t)`**, at the per-call charges `cVol` (one
-`Vol_ED` call) and `cSample` (one generated sample). -/
-noncomputable def algCost (c : ℕ → Space n)
-    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) (cVol cSample : ℕ) : ℕ :=
-  runCost (algBlock atoms φ ε δ) (algOracles atoms φ ε δ c t) cVol cSample
-    (algPrec atoms φ ε δ) (toDNFd (preprocess atoms φ))
-
-/-! ## `TTC(F, ε, δ)` as one program: the law of `(estimate, cost)`
-
-The whole algorithm as a single measure on the pair — the `Measure` analogue of nfalean's
-`ApproxNFA.countNFAM : PMF (ℝ × ℕ)`:
-
-```
-c ← MonteCarlo.coins n                      -- the volume oracle's coins
-t ← trajLaw (algRates … c)                  -- the sample trajectory at those rates
-return (ttcRun … c t, algCost … c t)        -- the estimate and what it cost
-```
-
-Written with `Measure.bind`/`Measure.map`, neither of which carries a measurability
-obligation, so the definition is total and proof-free; `Ttc.ttcCharged_eq_ttcPairLaw`
-(`Monadic/Program`) proves it behaves like the display.  Returning the pair is what makes
-both halves of the headline statements about *the same run*. -/
-noncomputable def ttcCharged (cVol cSample : ℕ) : MeasureTheory.Measure (ℝ × ℕ) :=
-  (MonteCarlo.coins n).bind fun c =>
-    (trajLaw (algRates atoms φ ε δ c)).map fun t =>
-      (ttcRun atoms φ ε δ c t, algCost atoms φ ε δ c t cVol cSample)
-
-/-! ## The two per-call prices `Ttc.ttc` charges
-
-`Ttc.ttcCharged` above leaves both per-call charges free, which is the general object and
-the one every price-parametric statement is proved over.  `Ttc.ttc` — the four-argument law
-the headline is stated about, `TTC(F, ε, δ)` and nothing else — is that law at two **fixed**
-charges, defined immediately below.
-
-They are here, in the cost-model half of `Model/Pseudocode`, beside `Ttc.stepCost`,
-`Ttc.runCost` and `Ttc.algCost`, because `Ttc.ttc`'s own definition names them: filing them
-downstream would put the headline's measure outside `Ttc/Model/` and outside
-`Ttc.Audit.auditSurface`.  Both are copies of a `Ttc/Exec/` price, and the copies are not
-allowed to stand in for the analysis — `Ttc.cvVolPriceAt_eq` and `Ttc.hrSampPriceAt_eq`
-(`Exec/VolPriceCVAlg`) prove each equals the price it is named after, by `rfl`
-(`CLAUDE.md` §13).
--/
-
-/-- **The Cousins–Vempala per-call volume price at the run's own data.**  The right-hand
-side of `Ttc.ttcVolPriceCVAlg_model`, verbatim.  Equal to `Ttc.ttcVolPriceCVAlg` by `rfl`
-(`Ttc.cvVolPriceAt_eq`, `Exec/VolPriceCVAlg`).
-
-Reading it: `(⌈4·lsThreshold⌉₊ + 3)` transitions at `⌈n·r⌉₊` operations each, times the
-number of Cousins–Vempala draws — `(⌈log(1/δ')/2(4/5−1/2)²⌉₊ + 1)` per phase across
-`Arlib.GaussianCooling.coolPhases` phases.
-
-⚠ **Not a price `Ttc.ttc` is proved to pay** — see `Ttc.ttc`'s docstring below. -/
-noncomputable def cvVolPriceAt : ℕ :=
-  (⌈4 * Arlib.MarkovChains.lsThreshold 1 (Real.log 2 / (5120 * (n : ℝ)))
-        ((algBlock atoms φ ε δ).epsPrime)⌉₊ + 1 + 2)
-      * ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
-    * ((⌈Real.log (1 / (algBlock atoms φ ε δ).deltaPrime)
-            / (2 * (4 / 5 - 1 / 2) ^ 2)⌉₊ + 1)
-        * (Arlib.GaussianCooling.coolPhases n
-              (1 + Real.log (1 + (n : ℝ)
-                * ((algGamma atoms φ ε δ)⁻¹
-                    * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                        (preprocess atoms φ))) ^ 2))
-              ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)
-            * (⌈(1 + 2 / (n : ℝ) - 1)
-                  * (Arlib.GaussianCooling.coolPhases n
-                      (1 + Real.log (1 + (n : ℝ)
-                        * ((algGamma atoms φ ε δ)⁻¹
-                            * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ))
-                                (preprocess atoms φ))) ^ 2))
-                      ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10) : ℕ)
-                  / ((algBlock atoms φ ε δ).epsPrime ^ 2 / 10)⌉₊ + 1)))
-
-open scoped Pointwise in
-/-- **The hit-and-run per-draw sampling price at the run's own data.**  The right-hand side
-of `Ttc.ttcSampPriceHR_model`, verbatim.  Equal to `Ttc.ttcSampPriceHR` by `rfl`
-(`Ttc.hrSampPriceAt_eq`, `Exec/VolPriceCVAlg`).
-
-Reading it: `⌊2⁵⁶·n²·(R²/γ²)·log(8M/ν²)⌋₊ + 1` transitions plus `2` post-processing units,
-at `⌈n·r⌉₊` operations each, with `ν = ε'/(4·(2R)ⁿ)` the worst-case TV tolerance, `R` the
-inflated body's diameter and `γ` its inradius.
-
-⚠ **Not a price `Ttc.ttc` is proved to pay**, and for this one there provably cannot be such
-a lemma — see `Exec/SampPriceHR`, "What is *not* here". -/
-noncomputable def hrSampPriceAt : ℕ :=
-  (⌊2 ^ 56 * (n : ℝ) ^ 2 * ((1 +
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-    (canonRfac (toDNFd (preprocess atoms φ))) /
-    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-    Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-    sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ))) ^ 2 /
-    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-    (canonRfac (toDNFd (preprocess atoms φ)))) ^ 2 *
-    Real.log (8 * (((1 +
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-    (canonRfac (toDNFd (preprocess atoms φ))) /
-    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) ^ n *
-    (latticeScale (algPrec atoms φ ε δ) ^ n *
-    (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))) /
-    (MeasureTheory.volume (Metric.ball (0 : Space n)
-    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-    (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) /
-    ((algBlock atoms φ ε δ).epsPrime / (4 * (2 * ((1 +
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-    (canonRfac (toDNFd (preprocess atoms φ))) /
-    (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)) *
-    Metric.diam (latticeScale (algPrec atoms φ ε δ) •
-    sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)))) ^ n)) ^ 2)⌋₊ + 1 + 2) *
-    ⌈(n : ℝ) * canonRfac (toDNFd (preprocess atoms φ))⌉₊
-
-/-- **The volume price the run actually pays.**
-
-`Ttc.algOracles` is a closed term over `Ttc.mcVol` — hit-and-miss Monte Carlo — and this is
-the number of coins that oracle reads, at every cube.  `Ttc.ttcVolCoins_le_ttcVolPrice`
-(`Exec/PriceList`) is the lemma that proves it, and `Ttc.volPricePaidAt_eq` proves this copy
-equals `Ttc.ttcVolPrice` by `rfl` (`CLAUDE.md` §13).
-
-**Exponential in `n`**, and that is the honest cost of the oracle `Ttc.ttc` runs.  The
-polynomial `Ttc.cvVolPriceAt` beside it prices a *different* volume algorithm — the one
-`Ttc/Volume/CVEstimator.lean` is about — evaluated at these parameters, and is **not** a
-price this run pays. -/
-noncomputable def volPricePaidAt : ℕ :=
-  ⌈((algGamma atoms φ ε δ)⁻¹
-        * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
-      / ((algBlock atoms φ ε δ).epsPrime ^ 2 * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1
-
-/-- **The per-sample price the run actually pays.**
-
-`Ttc.mixStepsBound` at the run's own cube-free arguments — the chain length the sampler's law
-is defined by.  `Ttc.ttcSampleSteps_le_ttcSampPrice` (`Exec/SamplePrice`) proves it dominates
-the steps at every cube, and `Ttc.sampPricePaidAt_eq` proves this copy equals
-`Ttc.ttcSampPrice` by `rfl`.
-
-**Exponential in `n`** — it carries `4 ^ n` and a `(…)^(4n)` radius ratio. -/
-noncomputable def sampPricePaidAt : ℕ :=
-
-      ⌈(Real.log ((1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-        algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-        (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ)) / (volume (Metric.ball
-        (0 : Space n) (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ)))))).toReal) + 2 * Real.log (1 /
-        ((algBlock atoms φ ε δ).epsPrime / (4 * ((1 +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-        algGamma atoms φ ε δ)) ^ n * (latticeScale (algPrec atoms φ ε δ) ^ n *
-        (algScale atoms φ ε δ ^ n * volSol (atomSet atoms) φ))))))) * (1024 *
-        (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-        algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-        latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-        (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))))) ^ (2 * n) + 16384 * 4 ^ n * (n : ℝ) ^ 2 * ((1
-        + Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-        algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-        latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-        (preprocess atoms φ))) ^ 2 / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ)
-        ^ 2 * (((latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ)))) + ((1 +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))) / (latticeScale (algPrec atoms φ ε δ) *
-        algGamma atoms φ ε δ)) * Metric.diam ((fun x : Space n =>
-        latticeScale (algPrec atoms φ ε δ) • x) '' sol (atomSet (algAtoms atoms φ ε δ))
-        (preprocess atoms φ)))) / (latticeScale (algPrec atoms φ ε δ) * algGamma atoms φ ε δ +
-        Arlib.KV97.kappaOf (Arlib.KV97.cOf (algBlock atoms φ ε δ).epsPrime)
-        (canonRfac (toDNFd (preprocess atoms φ))))) ^ (4 * n)) + 1⌉₊
-
-/-- **`TTC(F, ε, δ)` as one law, at the run's own four inputs and nothing else.**  This is
-the measure `Ttc.ttc_volume_estimate` is stated about: `Ttc.ttcCharged` with the two
-per-call charges fixed, so that neither appears as an argument.  `Ttc.ttc_def` is the
-equation, by `rfl`.
-
-⚠ **The two prices are not prices this run is proved to pay.**  `Ttc.algOracles` is a closed
-term over `Ttc.mcVol` — hit-and-miss Monte Carlo — whose sampling law is the lazy ball walk;
-the prices fixed here are the Cousins–Vempala and hit-and-run ones.  `cVol`/`cSample` are
-unit multipliers in `Ttc.stepCost` (`stepCost cVol cSample N = cVol + cSample * N`), so
-substituting *any* pair of naturals gives a law of this shape — at `0` the charged cost is
-identically `0`.  Fixing them is a **modelling choice, not a costing of this run**: the
-prices the run *can* be shown to pay are `Ttc.ttcVolPrice` (`Exec/PriceList`) and
-`Ttc.ttcSampPrice` (`Exec/SamplePrice`), and both are exponential in `n`.  Read the boxed
-warning at the head of `Ttc/Exec/PricedHeadline.lean` before quoting any running-time
-statement about this measure. -/
-noncomputable def ttc : MeasureTheory.Measure (ℝ × ℕ) :=
-  ttcCharged atoms φ ε δ (volPricePaidAt atoms φ ε δ) (sampPricePaidAt atoms φ ε δ)
-
-/-- **The prices, from a lemma rather than from the statement.**  `Ttc.ttc` is
-`Ttc.ttcCharged` at the two fixed charges — by `rfl`, so the two are interchangeable
-wherever a price-parametric result is being applied. -/
-theorem ttc_def :
-    ttc atoms φ ε δ
-      = ttcCharged atoms φ ε δ (volPricePaidAt atoms φ ε δ) (sampPricePaidAt atoms φ ε δ) :=
-  rfl
+Until 2026-08-19 this file also defined a *reference* instantiation over `Ttc.mcVol`
+(hit-and-miss Monte Carlo) and the lazy ball walk.  Both were exponential in `n` and neither
+was the paper's oracle; they have been removed. -/
 
 end Run
 

@@ -20,7 +20,7 @@ MonteCarlo.coins n ⊗ₘ ttcTrajKernel …
 
 — the volume oracle's coins, then the trajectory law at the rates *that* draw
 produced.  This file gives that measure a name, `Ttc.ttcLaw`, so that the headline
-`Ttc.ttc_volume_estimate` can state **both** of its conjuncts about a single point
+`Ttc.ttc_volume` can state **both** of its conjuncts about a single point
 `p = (c, t)` of a single space, drawn from a single law: no iterated integral, and
 no pair of separately-quantified coin sequences.
 
@@ -50,7 +50,7 @@ be read off *one* draw.  Ours is `Ttc.ttcLaw` pushed forward along the determini
 read-off `Ttc.ttcPair`,
 
 ```
-p ↦ (ttcRun … p.1 p.2, ttcCost … p.1 p.2 cVol cSample) : ℝ × ℕ
+p ↦ (ttcEstimate … p.1 p.2, ttcCost … p.1 p.2 cVol cSample) : ℝ × ℕ
 ```
 
 giving `Ttc.ttcPairLaw … cVol cSample : Measure (ℝ × ℕ)`, again a probability measure
@@ -205,7 +205,7 @@ produced.  Everything the algorithm reads on a run is a function of `p`: the ora
 bundle is `Ttc.ttcOracleBundle … p.1 p.2`, the output is
 `Ttc.ttcAlgOutput … (that bundle)`, and the charged cost is `Ttc.ttcCost … p.1 p.2`.
 
-This is what makes `Ttc.ttc_volume_estimate`'s two conjuncts statements about *the
+This is what makes `Ttc.ttc_volume`'s two conjuncts statements about *the
 same run*, and it is why that theorem has no iterated integral. -/
 noncomputable def ttcLaw :
     Measure ((ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ)) :=
@@ -297,25 +297,25 @@ theorem ae_ttcLaw_ttcTerminates (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
 
 /-- **The deterministic read-off `p ↦ (estimate, cost)`.**
 
-`Ttc.ttcRun` is `Model/Pseudocode`'s own output on the run `p = (c, t)` — the oracle
+`Ttc.ttcEstimate` is `alg:ttc`'s own output on the run `p = (c, t)` — the oracle
 bundle filled in from `p` itself — and `Ttc.ttcCost` is `alg:ttc`'s charged cost on the
 same run, at the per-call charges `cVol` (one `Vol_ED` call) and `cSample` (one
 generated sample).  No randomness: this is a function of the run. -/
 noncomputable def ttcPair (cVol cSample : ℕ) :
     (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) → ℝ × ℕ :=
   fun p =>
-    (ttcRun atoms φ ε δ p.1 p.2,
+    (ttcEstimate atoms φ ε δ p.1 p.2,
       ttcCost atoms φ ε δ p.1 p.2 cVol cSample)
 
 /-- **What `Ttc.ttcPair` is**, by `rfl`. -/
 theorem ttcPair_def (cVol cSample : ℕ)
     (p : (ℕ → Space n) × (ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ)) :
     ttcPair atoms φ ε δ cVol cSample p
-      = (ttcRun atoms φ ε δ p.1 p.2,
+      = (ttcEstimate atoms φ ε δ p.1 p.2,
           ttcCost atoms φ ε δ p.1 p.2 cVol cSample) := rfl
 
 /-- **The read-off is countably determined**: its first component by
-`Ttc.countablyDetermined_ttcAlgOutput_joint` (`Ttc.ttcRun` is that term, by `rfl`), its
+`Ttc.countablyDetermined_ttcAlgOutput_joint` (`Ttc.ttcEstimate` is that term, by `rfl`), its
 second by `Ttc.countablyDetermined_ttcCost_joint` (`Monadic/Pair`). -/
 theorem countablyDetermined_ttcPair (cVol cSample : ℕ) :
     CountablyDetermined (ttcPair atoms φ ε δ cVol cSample) :=
@@ -341,32 +341,11 @@ theorem ttcPairLaw_def (cVol cSample : ℕ) :
       = (ttcLaw atoms φ ε δ).map
           (ttcPair atoms φ ε δ cVol cSample) := rfl
 
-/-- **`Model/Pseudocode`'s `Ttc.ttc` is the paired law.**
-
-`Ttc.ttc` is the algorithm as written in `Model/`: a `MeasureTheory.Measure.bind` of
-the volume coins with the `MeasureTheory.Measure.map` of the trajectory law along the
-read-off — a definition that carries no measurability obligation, which is why it can
-live in the audit surface.  This identifies it with the composition–product form
-`Ttc.ttcPairLaw` that the rest of the development reasons about, so `Ttc.ttc` is not a
-rename: every theorem below transfers to it verbatim.
-
-Three Mathlib steps and nothing else: `MeasureTheory.Measure.compProd_eq_comp_prod`
-turns `⊗ₘ` into a `bind`, `MeasureTheory.Measure.map_comp` pushes the read-off inside
-it, and `MeasureTheory.Measure.dirac_prod` evaluates the resulting kernel at a coin
-sequence.  The `Model/`-side names are definitionally the run's own
-(`Ttc.algRates_eq_ttcRates`, `Ttc.algCost_eq_ttcCost`, both `rfl`), so the last step is
-`rfl`. -/
-theorem ttcCharged_eq_ttcPairLaw (cVol cSample : ℕ) :
-    ttcCharged atoms φ ε δ cVol cSample = ttcPairLaw atoms φ ε δ cVol cSample := by
-  have hpair : Measurable (ttcPair atoms φ ε δ cVol cSample) :=
-    measurable_ttcPair atoms φ ε δ cVol cSample
-  rw [ttcPairLaw_def, ttcLaw_def, Measure.compProd_eq_comp_prod,
-    Measure.map_comp _ _ hpair]
-  refine congrArg (Measure.bind (MonteCarlo.coins n)) ?_
-  funext c
-  rw [Kernel.map_apply _ hpair, Kernel.prod_apply, Kernel.id_apply, Measure.dirac_prod,
-    Measure.map_map hpair measurable_prodMk_left]
-  rfl
+/-! `Ttc.ttcCharged_eq_ttcPairLaw` — `Model/Pseudocode`'s `Ttc.ttc` as a
+`MeasureTheory.Measure.bind`, identified with this composition-product form — was removed on
+2026-08-19 with the fixed-price `Ttc.ttcCharged` it was about.  `Ttc.ttc` is now
+`Model/Theorem`'s law of the run that executes the constructed oracles, and
+`Ttc.ttcPairLaw` is no longer a second presentation of it. -/
 
 /-- **The paired law is a probability measure**, from `Ttc.instIsProbabilityMeasureTtcLaw`
 and the measurability of the read-off. -/
@@ -401,16 +380,16 @@ theorem PrR_ttcPairLaw (cVol cSample : ℕ) (E : ℝ × ℕ → Prop) :
     (ttcPairLaw_apply atoms φ ε δ cVol cSample {r | E r})
 
 /-- **The accuracy transfer.**  An event about the pair's *estimate* component is the
-same event about `Model/Pseudocode`'s `Ttc.ttcRun` on the underlying run — so nothing is
+same event about `Ttc.ttcEstimate` on the underlying run — so nothing is
 lost by stating the accuracy conjunct over `Ttc.ttcPairLaw`. -/
 theorem PrR_ttcPairLaw_fst (cVol cSample : ℕ) (S : Set ℝ) :
     Pr[r ← ttcPairLaw atoms φ ε δ cVol cSample; r.1 ∈ S]
       = Pr[p ← ttcLaw atoms φ ε δ;
-          ttcRun atoms φ ε δ p.1 p.2 ∈ S] :=
+          ttcEstimate atoms φ ε δ p.1 p.2 ∈ S] :=
   PrR_ttcPairLaw atoms φ ε δ cVol cSample fun r => r.1 ∈ S
 
 include hε0 hε1 hn hφ hpos in
-/-- **The headline's accuracy conjunct over the paired law.**  `Ttc.ttc_volume_estimate`'s
+/-- **The headline's accuracy conjunct over the paired law.**  `Ttc.ttc_volume`'s
 first half, verbatim, with the run law replaced by the law of `(estimate, cost)`: the
 estimate component lands in `(1 ± ε)·Vol(F)` with probability at least `1 − δ`.  Nothing
 is weakened — `Ttc.PrR_ttcPairLaw_fst` is an equality. -/

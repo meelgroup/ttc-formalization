@@ -237,7 +237,7 @@ The run's state is a `Multiset (Space n)`; the family is a count vector. Most of
 the dictionary between them lives upstream. `Ttc.toMultiset` itself, and the two
 oracle contracts `Ttc.trajThin_le` and `Ttc.card_trajGen` it is there to prove, are
 in `Probability/Trajectory`, beside the trajectory law they read off:
-`Ttc.algOracles` (`Model/Pseudocode`) builds the oracle bundle, so its `thin_le` and
+`Ttc.ttcOracleBundle` (`Exec/Api`) builds the oracle bundle, so its `thin_le` and
 `gen_card` fields have to be provable inside the audit surface, of which
 `Ttc/Probability/` is part. The three lemmas those contracts rest on — `Ttc.count_toMultiset`,
 `Ttc.count_toMultiset_of_notMem` and `Ttc.toMultiset_le_of_count_le` — went one step
@@ -284,7 +284,7 @@ noncomputable def padPoint {n : ℕ} {ι : Type*} (pt : Fin L → Space n) (mem 
 
 `Ttc.trajThin_le` and `Ttc.card_trajGen` — exactly `Ttc.Oracles`' two proof fields
 with the bundle taken away — are in `Probability/Trajectory`, beside the read-offs
-they are about; `Ttc.ttcRun` needs them inside the audit surface. -/
+they are about; the bundle `Ttc.ttcEstimate` is taken at needs them. -/
 
 /-- **The oracle bundle that reads a trajectory.**
 

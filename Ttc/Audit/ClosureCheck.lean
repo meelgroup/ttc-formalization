@@ -45,6 +45,45 @@ somewhere that says more accurately what they are. The counts *did* move on 2026
 when `Ttc.ttc` became four-ary and its body took on the two fixed per-call prices. The
 number the invocations below print is the current one; quote that, not this sentence.
 
+## `Ttc.ttc` and `Ttc.ttc_volume` are deliberately NOT checked, and here is the argument
+
+`Ttc/Model/Theorem.lean` carries one algorithm and one theorem, both at the oracles the paper
+specifies — Cousins–Vempala Gaussian cooling for volume, the hit-and-run / ball-walk hybrid
+for sampling.  Neither is checked below, and the omission is a decision rather than an
+oversight.
+
+Until 2026-08-19 they *were* checked, because `Ttc.ttc` was then a different object: the
+algorithm at *reference* oracles — hit-and-miss Monte Carlo and the lazy ball walk, correct
+and exponential in `n` — charged at two fixed per-call prices it was not proved to pay.  That
+version was deleted, together with every price, bridge and witness attached to it.  What
+replaced it is the algorithm at the constructed backends, and that object cannot be checked.
+
+**Why it cannot be checked.**  Naming the fast algorithm *is* naming the construction.
+Measured with this file's own `closureAux` and `outsideSurface`, the statement reaches **805
+constants, 637 of them outside the surface, across 108 modules** — the whole `Ttc/Exec/` cost
+layer and much of `Ttc/Volume/`: kernels, retry laws, Poisson trajectories, certificates,
+schedules, the backend.  Not envelopes and prices; everything.  There is no small set to
+relocate: the cost is the algorithm, not the packaging.
+
+**Why the list below was not extended.**  Admitting those 108 modules would make the surface
+108 modules wide, and the reader-facing promise — open three directories and every constant
+the headline mentions is in front of you — would mean nothing.  A promise that covers
+everything is not a promise.  So the surface is left as it is, and the headline is stated
+outside it.
+
+**What is therefore still guaranteed, and what is not.**  The *specification* keeps the
+four-file promise: `Ttc.ttcAlgOutput` is `alg:ttc` with the oracle bundle as an argument, its
+closure is checked below, and the build fails if it drifts.  The *instantiation* — which
+volume estimator, which sampler, at which envelope — has no such guarantee, and
+`Ttc/Model/Theorem.lean`'s docstring says so in place.  A reader checking *what the paper's
+algorithm is* need not leave `Model/`; a reader checking *what was proved about running it*
+must read the construction.  That asymmetry is real and is the honest state of the
+development, not a gap to be papered over by widening a definition until it says nothing.
+
+Trading it away was the deliberate choice: one theorem about the algorithm that actually
+executes the paper's oracles is worth more than two theorems of which the checkable one is
+about oracles nobody would run.
+
 ## What "closure" means here, precisely
 
 `closureAux` walks **both** the type and the value (`ci.value?`) of each constant it reaches.
@@ -64,14 +103,12 @@ types they inhabit, as they should be.
 
 ## Status in this repo
 
-`#modelClosure` **passes** on the three algorithm-side declarations — `Ttc.ttcAlgOutput`,
-`Ttc.ttcRun` and `Ttc.ttc` — and `#modelClosureOfType` on the headline's statement; all four
-invocations are enabled at the bottom of this file, so a definition drifting out of
-`Ttc/Model/` **or** `Ttc/Probability/` fails `lake build`. `#closure` still fails on the
-three algorithm-side ones, on the monadic-versus-oracle gap and on the probability
-vocabulary; **every constant it names is defined inside the surface**, so the two checks
-disagree by construction rather than by filing (see the measurement section below). The two
-`Ttc.ttc_volume_estimate` `#closure` invocations remain commented out.
+`#modelClosure` **passes** on the algorithm-side specification `Ttc.ttcAlgOutput`; that
+invocation is enabled at the bottom of this file, so a definition drifting out of
+`Ttc/Model/` **or** `Ttc/Probability/` fails `lake build`. `#closure` still fails on it, on
+the monadic-versus-oracle gap and on the probability vocabulary; **every constant it names is
+defined inside the surface**, so the two checks disagree by construction rather than by
+filing (see the measurement section below).
 
 `Ttc.Audit.forbidden` and `Ttc.Audit.forbiddenModules` were **not** touched by the move to
 `Ttc/Probability/`, deliberately: every definition kept its existing full name, so
@@ -85,9 +122,5 @@ section Invocations
 
 -- #closure Ttc.ttcAlgOutput
 #modelClosure Ttc.ttcAlgOutput
-#modelClosure Ttc.ttcRun
-#modelClosure Ttc.ttc
--- #closureOfType Ttc.ttc_volume
-#modelClosureOfType Ttc.ttc_volume
 
 end Invocations

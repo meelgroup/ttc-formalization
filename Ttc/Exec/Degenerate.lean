@@ -10,12 +10,12 @@ import Ttc.Exec.Geometry
 /-!
 # `hint` cannot be discharged: the degenerate cubes of a DNF
 
-**Verdict: `Ttc.ttc_volume_estimate`'s `hint` — every polytope of the decomposition is
+**Verdict: `Ttc.ttc_volume`'s `hint` — every polytope of the decomposition is
 full-dimensional — is *not* dischargeable, and cannot be removed without restating
 `thm:decomposition` up to null sets.**  This file proves the verdict rather than
 asserting it: it lands the measure-theoretic half of the argument (dropping the
 degenerate cubes is invisible to `Ttc.volSol`), and then an explicit input on which
-every other hypothesis of `Ttc.ttc_volume_estimate` holds, `Ttc.volSol` is *positive*,
+every other hypothesis of `Ttc.ttc_volume` holds, `Ttc.volSol` is *positive*,
 `hint` fails, and the repair that the measure-theoretic half suggests provably destroys
 `Ttc.IsDNFOf`.
 
@@ -72,7 +72,7 @@ two cubes: `Ttc.thinCube`, whose region is the single point `0`, and `Ttc.fatCub
 whose region is `[−1, 1]`.  The formula is negation-free, its solution set is bounded,
 no atom has a zero normal, and `Vol(F) > 0` (`Ttc.volSol_degForm_pos`; the value is
 `2`, but only positivity is proved, since only positivity is what matters) — so the
-conclusion of `Ttc.ttc_volume_estimate` is not vacuous for it.  Yet `hint` fails
+conclusion of `Ttc.ttc_volume` is not vacuous for it.  Yet `hint` fails
 (`Ttc.hint_not_derivable`), and the deletion of `Ttc.thinCube` — which changes the
 solution *set* not at all, since `{0} ⊆ [−1, 1]` — still destroys `Ttc.IsDNFOf`.
 
@@ -183,7 +183,7 @@ theorem volSol_eq_toReal_biUnion_nondegenCubes (atoms : A → LinAtom n) {φ : B
 
 Dimension `1`, four atoms, `F = (x ≤ 0 ∧ −x ≤ 0) ∨ (x ≤ 1 ∧ −x ≤ 1)`.  The first
 disjunct denotes the point `{0}` and the second the interval `[−1, 1]`, so `Sol(F)` is
-`[−1, 1]`.  Every hypothesis of `Ttc.ttc_volume_estimate` other than `hint` holds, and
+`[−1, 1]`.  Every hypothesis of `Ttc.ttc_volume` other than `hint` holds, and
 `Vol(F) > 0`; `hint` fails at the first cube. -/
 
 /-- The witness atoms: `x ≤ 0`, `−x ≤ 0`, `x ≤ 1`, `−x ≤ 1`. -/
@@ -305,7 +305,7 @@ theorem interior_region_fatCube_nonempty :
     (interior (region (atomSet degAtoms) fatCube)).Nonempty :=
   interior_nonempty_of_ball_subset one_pos ball_subset_region_fatCube
 
-/-! ### The other hypotheses of `Ttc.ttc_volume_estimate`, checked -/
+/-! ### The other hypotheses of `Ttc.ttc_volume`, checked -/
 
 /-- `hφ`: the witness formula is negation-free. -/
 theorem degForm_isPositive : degForm.IsPositive := ⟨⟨trivial, trivial⟩, trivial, trivial⟩
@@ -339,7 +339,7 @@ theorem volume_sol_degForm_ne_zero : volume (sol (atomSet degAtoms) degForm) ≠
   exact (Metric.measure_ball_pos volume (0 : Space 1) one_pos).ne'
     (nonpos_iff_eq_zero.1 (h ▸ measure_mono hsub))
 
-/-- **The conclusion of `Ttc.ttc_volume_estimate` is not vacuous here**: `Vol(F) > 0`,
+/-- **The conclusion of `Ttc.ttc_volume` is not vacuous here**: `Vol(F) > 0`,
 so `relErr ε (volSol …)` is a genuine interval and not the single point `{0}`.  This is
 what makes the counterexample sharp — the failure of `hint` is not accompanied by a
 degenerate right-hand side. -/
@@ -355,7 +355,7 @@ theorem degForm_hint_fails :
   intro h
   exact (h ⟨thinCube, thinCube_mem⟩).ne_empty interior_region_thinCube
 
-/-- **`hint` is not derivable from the other hypotheses of `Ttc.ttc_volume_estimate`.**
+/-- **`hint` is not derivable from the other hypotheses of `Ttc.ttc_volume`.**
 
 The witness formula is negation-free, its solution set is bounded, no atom has a zero
 normal, and its volume is positive — every input condition the theorem carries besides

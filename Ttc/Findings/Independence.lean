@@ -8,10 +8,10 @@ import Ttc.Exec.Inputs
 /-!
 # `hφ` and `hbdd` are logically independent
 
-**Verdict: neither of `Ttc.ttc_volume_estimate`'s two conditions on the input
+**Verdict: neither of `Ttc.ttc_volume`'s two conditions on the input
 formula implies the other, and this file machine-checks both directions.**
 
-`Ttc.ttc_volume_estimate` (`Model/Theorem.lean`) takes
+`Ttc.ttc_volume` (`Model/Theorem.lean`) takes
 
 ```
 (hφ   : φ.IsPositive)                                 -- no negation occurs in φ
@@ -119,7 +119,7 @@ theorem sol_boxForm_subset_closedBall :
 
 There is an instance whose solution set `Sol(F)` is bounded — so `hbdd` holds —
 but whose formula contains a negation, so `hφ` fails.  Hence `hbdd` does not
-imply `hφ`, and `Ttc.ttc_volume_estimate`'s `hφ` cannot be dropped in favour of
+imply `hφ`, and `Ttc.ttc_volume`'s `hφ` cannot be dropped in favour of
 `hbdd`.
 
 The witness is `a₀ ∧ (a₁ ∧ ¬a₂)` over the three half-spaces `x ≤ 1`, `-x ≤ 1`,
@@ -148,7 +148,7 @@ theorem sol_tt (M : A → Set (Space n)) : sol M (BForm.tt : BForm A) = univ :=
 
 There is an instance whose formula is positive — so `hφ` holds — but whose
 solution set is all of `ℝⁿ`, so `hbdd` fails.  Hence `hφ` does not imply `hbdd`,
-and `Ttc.ttc_volume_estimate`'s `hbdd` cannot be dropped in favour of `hφ`.
+and `Ttc.ttc_volume`'s `hbdd` cannot be dropped in favour of `hφ`.
 
 The witness is `Ttc.BForm.tt`, the empty conjunction, at arbitrary atoms;
 unboundedness of `Set.univ` is `Ttc.not_isBounded_univ_space`.  See

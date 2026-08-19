@@ -107,7 +107,7 @@ and `Ttc.ttcSampleSteps_le` is the closed form at exactly those.  `Ttc.mixCost_l
 ## The caveat, restated — this prices a law, not a run
 
 `Exec/Complexity` §4 records, and this file does not change, that **`Ttc.mixSteps` does not
-occur in `Ttc.ttcRun`'s definitional closure at all.**  It enters through `Ttc.ttcRates`,
+occur in `Ttc.ttcEstimate`'s definitional closure at all.**  It enters through `Ttc.ttcRates`,
 the *law* the sample coins are drawn from; the run's `GenerateSamples` is `Ttc.trajGen`, a
 read-off of a row of naturals.  So everything below prices **the chain the sampler's law is
 defined by**, not steps the modelled run takes.  That is the difference between a cost and a
@@ -494,7 +494,7 @@ sample from cube `i` of the run — is at most
 at `γ = Ttc.ttcSampInradius`, `Dmᵢ = Ttc.ttcSampDiam`, `δ = Ttc.ttcSampStep`,
 `Mwᵢ = Ttc.ttcSampWarm`, `epsᵢ = Ttc.ttcSampTol`.  **Exponential in `n`** — see the module
 docstring — and it prices the chain the sampler's *law* is defined by, not steps
-`Ttc.ttcRun` takes. -/
+`Ttc.ttcEstimate` takes. -/
 theorem ttcSampleSteps_le {i : Cube A} (hi : i ∈ toDNFd (ttcInput atoms φ)) (hn : 1 ≤ n)
     (hγ : 0 < ttcSampInradius atoms φ ε δ)
     (hDm : 0 < ttcSampDiam atoms φ ε δ ⟨i, hi⟩)

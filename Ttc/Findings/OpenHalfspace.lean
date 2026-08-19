@@ -7,7 +7,7 @@ import Ttc.Exec.Inputs
 /-!
 # `Findings/OpenHalfspace`: what `hφ : φ.IsPositive` is actually buying
 
-**Verdict: removing `hφ` from `Ttc.ttc_volume_estimate` is a real but bounded
+**Verdict: removing `hφ` from `Ttc.ttc_volume` is a real but bounded
 refactor of the DNF→facet-system layer, bought at the price of two extra input
 hypotheses — not a bookkeeping change, and not research-scale.**  No new
 mathematics is needed: a negated atom never has to reach the counting side at all,
@@ -107,7 +107,7 @@ The relaxation's boundedness has to be assumed of the relaxation, which is
 strictly stronger than assuming it of `Sol(F)`.
 
 **And the statement changes meaning in one place.**  `Ttc.latticeCount` occurs in
-`Ttc.ttc_volume_estimate` as the index type of the sample coins.  After the
+`Ttc.ttc_volume` as the index type of the sample coins.  After the
 refactor the run enumerates the lattice points of the *closed relaxation*, which
 is provably a different set (fact 2).  The accuracy conclusion, which is about
 `Ttc.volSol`, is unaffected (fact 1) — but the algorithm is counting something

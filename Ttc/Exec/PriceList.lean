@@ -44,7 +44,7 @@ ttcVolPrice atoms φ ε δ
 
 Every name in it is defined under `Ttc/Model/` — `Ttc.algGamma`, `Ttc.algAtoms`,
 `Ttc.algBlock`, `Ttc.preprocess`, `Ttc.sol`, `Ttc.atomSet` — which is what lets
-`Ttc.ttc_volume_estimate` carry it in its *statement* without breaking
+`Ttc.ttc_volume` carry it in its *statement* without breaking
 `#modelClosureOfType`.
 
 **It is exponential in `n`, and must not be read otherwise.**  The `(…)ⁿ` is the
@@ -52,7 +52,17 @@ hit-and-miss estimator's rejection factor: sampling uniformly from a ball of rad
 to hit a body of inradius `1` needs `Θ(Rⁿ)` draws, and no rearrangement avoids it.  The
 price is `Θ((diam/γ)ⁿ / (ε'²·δ'))`.
 
-## The sampler: uniform too, in `Exec/SamplePrice`
+## The sampler: uniform too — in `Exec/SamplePrice`, deleted 2026-08-19
+
+⚠ **Read this section as history.**  `Ttc/Exec/SamplePrice.lean` assembled the ball-walk
+price `Ttc.ttcSampPrice` and its domination lemma, and it was deleted on 2026-08-19 with the
+rest of the reference-oracle apparatus: `Ttc.ttc` no longer charges a fixed per-sample price
+for calling a sampler, it *executes* the hit-and-run / ball-walk hybrid, and what bounds its
+sampling work is `Ttc.TTCSourceSharpOperationalFinal.canonicalCappedSampleQueryEnvelope`
+(`Model/Theorem`).  Every named lemma below that lived in that file is gone with it.  The
+account is kept because the *finding* it records — that the sampler price does have a uniform
+closed form — is still true of the arithmetic, and because the reasoning about `hD` and
+`heps1` at the end was instructive.
 
 This section used to read "**no** uniform closed form, and this is the finding".  **That is
 no longer true and the claim is withdrawn.**
@@ -103,7 +113,7 @@ concrete numeral where a parameter was:
 * the **`while` loops of `alg:ttc` lines 32–42 are uncharged** (`Runtime`, "Two honest
   gaps");
 * **per-step arithmetic is free**;
-* `Ttc.mixSteps` **does not occur in `Ttc.ttcRun`'s definitional closure** — it enters
+* `Ttc.mixSteps` **does not occur in `Ttc.ttcEstimate`'s definitional closure** — it enters
   through `Ttc.ttcRates`, the *law*, while `GenerateSamples` is the read-off
   `Ttc.trajGen`.  So `cSample` prices the chain the sampler's law is defined by, not steps
   the modelled run takes.
@@ -249,7 +259,7 @@ theorem algBlock_deltaPrime_pos (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hn : 1 ≤ n)
 
 at `γ = Ttc.algGamma`, `ε' = (Ttc.algBlock …).epsPrime`, `δ' = (Ttc.algBlock …).deltaPrime`.
 Every constant it names is defined under `Ttc/Model/`, which is what lets
-`Ttc.ttc_volume_estimate` carry the expression in its statement.
+`Ttc.ttc_volume` carry the expression in its statement.
 
 The name promises a semantic identity — "the price that dominates the coins the volume
 oracle reads" — and `Ttc.ttcVolCoins_le_ttcVolPrice` is the lemma that proves it.
@@ -259,10 +269,6 @@ noncomputable def ttcVolPrice : ℕ :=
   ⌈((algGamma atoms φ ε δ)⁻¹
         * Metric.diam (sol (atomSet (algAtoms atoms φ ε δ)) (preprocess atoms φ)) + 1) ^ n
       / ((algBlock atoms φ ε δ).epsPrime ^ 2 * (algBlock atoms φ ε δ).deltaPrime)⌉₊ + 1
-
-/-- **The `Ttc/Model/` copy is this price**, by `rfl` — so a drift between them is a build
-error rather than a silent divergence (`CLAUDE.md` §13). -/
-theorem volPricePaidAt_eq : volPricePaidAt atoms φ ε δ = ttcVolPrice atoms φ ε δ := rfl
 
 theorem ttcVolPrice_def :
     ttcVolPrice atoms φ ε δ

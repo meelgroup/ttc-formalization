@@ -31,7 +31,7 @@ Those two contracts are the *only* `Prop`s in `Ttc/Probability/`.  They are here
 rather than in `Model/Pseudocode` because they say nothing about `TTC` — they are
 facts about the read-offs of a trajectory, beside the trajectory law — and because
 neither is reachable by `Ttc/Audit/ClosureCheck.lean`'s walk: both are `_proof_`
-fields of `Ttc.algOracles`, so moving them changed no closure count.  Nothing else
+fields of `Ttc.ttcOracleBundle`, so moving them changed no closure count.  Nothing else
 here is a `Prop` and nothing is assumed.  Every *other* property of these objects —
 that the thinning is the paper's `lem:process`, that the loops terminate almost
 surely — is still proved downstream (`Process/Thinning`, `Process/Truncation`,
@@ -187,22 +187,22 @@ contracts `Ttc.Oracles` demands of any bundle, which mention `Ttc.trajThin` and
 
 These are the only two `Prop`s in `Ttc/Probability/`, and they are the reason the
 read-offs came here from `Model/Pseudocode` rather than the other way round: a
-theorem cannot be stated upstream of the definition it is about, and `Ttc.algOracles`
+theorem cannot be stated upstream of the definition it is about, and `Ttc.ttcOracleBundle`
 (`Model/Pseudocode`) needs both at elaboration time, so they cannot go downstream
 either.  Neither is visible to `Ttc/Audit/ClosureCheck.lean` — a theorem is entered
 only through its type, and these two are reached as `_proof_` fields of
-`Ttc.algOracles` — so the move changed no closure count. -/
+`Ttc.ttcOracleBundle` — so the move changed no closure count. -/
 
 section Dictionary
 
 /-- **The `thin` contract**: `Ttc.trajThin` removes elements, it never invents them.
-This is `Ttc.Oracles.thin_le` for the bundle `Ttc.ttcRun` builds. -/
+This is `Ttc.Oracles.thin_le` for the bundle `Ttc.ttcEstimate` builds. -/
 theorem trajThin_le {n : ℕ} {pt : Fin L → Space n} (hpt : Function.Injective pt)
     (ωj : Fin L → ℕ) (X : Multiset (Space n)) : trajThin pt ωj X ≤ X :=
   toMultiset_le_of_count_le hpt fun _ => min_le_right _ _
 
 /-- **The `gen` contract**: `Ttc.trajGen` returns exactly `N` points.  This is
-`Ttc.Oracles.gen_card` for the bundle `Ttc.ttcRun` builds. -/
+`Ttc.Oracles.gen_card` for the bundle `Ttc.ttcEstimate` builds. -/
 theorem card_trajGen {n : ℕ} (pt : Fin L → Space n) (m : Fin L → Bool) (ωj : Fin L → ℕ)
     (N : ℕ) (pad : Space n) : Multiset.card (trajGen pt m ωj N pad) = N := by
   classical

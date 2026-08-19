@@ -53,10 +53,11 @@ description and recount.
   definitions, no assumption.**
 * `Ttc.Model.Pseudocode`     — `alg:ttc` and its preprocessing, transcribed line
   by line, ending in the algorithm's **output** `Ttc.ttcAlgOutput` over an oracle
-  bundle and in `Ttc.ttcRun`, the same term with that bundle filled in from the
-  run.  **The algorithm carries no proof binder**: `Ttc.Params` does bundle five
+  bundle.  **No oracle is chosen there**: filling the bundle in requires the
+  construction, which is downstream, so `Ttc.ttc` lives in `Model/Theorem`.
+  **The algorithm carries no proof binder**: `Ttc.Params` does bundle five
   proof fields, but `Ttc.ttcParamsTotal` decides all five side conditions
-  classically, so `Ttc.ttcAlgOutput` and `Ttc.ttcRun` are closed functions of the
+  classically, so `Ttc.ttcAlgOutput` is a closed function of the
   data.  Not proof-free, though.  The criterion, which is stable in a way a count
   is not: a theorem stays here exactly when something the file *defines* cannot be
   written down without it — the run's own oracle bundle, whose `Ttc.Oracles`
@@ -81,74 +82,60 @@ description and recount.
   set of files `Model/Pseudocode` pulls in has been re-cut more than once in a day.
   Read the import lines, not this docstring.
 
-  **CORRECTED 2026-08-18.**  This paragraph used to add that every `Ttc` constant the
+  **CORRECTED 2026-08-19.**  This paragraph used to add that every `Ttc` constant the
   headline's type unfolds to is defined under `Ttc/Model/`, machine-checked by
-  `#modelClosureOfType`.  That was true of the old headline `Ttc.ttc_volume_estimate`
-  and is **deliberately false** of the main theorem that replaced it: the whole point
-  of `Ttc.ttc_volume_runtime` is that both conjuncts are about
-  `canonicalFullOperationalLaw`, an `Exec/`-layer law that actually executes the
-  constructed volume oracle.  The audit is retired, not silently dropped — see
-  `Ttc/Audit/ClosureCheck`.  The three `#modelClosure` checks on `Ttc.ttc` itself are
-  untouched and still pass, so the claim that *the algorithm* is model-layer stands.
-* `Ttc.Model.Theorem`        — **the main theorem of the paper**, and the only
-                              declaration in that file: `Ttc.ttc_volume`,
+  `#modelClosureOfType`.  That was true while `Ttc.ttc` ran *reference* oracles, and is
+  **deliberately false** now: `Ttc.ttc` executes the constructed Cousins–Vempala volume
+  estimator and the hit-and-run / ball-walk hybrid sampler, and naming them is naming the
+  construction — 637 constants across 108 modules.  The audit is retired for the headline,
+  not silently dropped: `#modelClosure Ttc.ttcAlgOutput`, the *specification*, is still
+  checked and still passes, so the claim that *the algorithm as written* is model-layer
+  stands.  `Ttc/Audit/ClosureCheck` argues the trade in place.
+* `Ttc.Model.Theorem`        — **the main theorem of the paper**, and — with `Ttc.ttc`
+                              itself and the side condition `Ttc.TtcInputs` it is defined
+                              under — all that file contains: `Ttc.ttc_volume`,
                               `thm:volumettc` + `thm:runtime` in one statement about
-                              `Ttc.ttc` itself.  Nine binders — `atoms φ ε δ hε0 hε1
-                              hδ0 hδ1 hn hφ hpos`.  Both conjuncts are stated over
-                              **one law on one space**, `Ttc.ttc atoms φ ε δ`
-                              (`Model/Pseudocode`), which takes `TTC`'s own four
-                              inputs and nothing else — no interpretation, no
-                              parameter block, no oracle argument, no precision
-                              argument.  Accuracy is about `r.1`, charged cost about
-                              `r.2`.  The statement is written out in full (the audit
-                              surface); the proof is a reference to
-                              `Ttc.ttc_volume_estimate_parametric` and
-                              `Ttc.PricedHeadline.all_ttc_cost_le_quartic`.
-                              `#modelClosureOfType Ttc.ttc_volume` machine-checks that
-                              every `Ttc` constant its type unfolds to is defined under
-                              `Ttc/Model/`.
+                              `Ttc.ttc atoms φ ε δ`, the law of one run at the two oracles
+                              the paper specifies.  Ten binders — `atoms φ ε δ hε0 hε1
+                              hδ0 hδ1 hn hφ hpos`, with `hn : 21 ≤ n`.  Both conjuncts are
+                              stated over **one law on one space**, taking `TTC`'s own four
+                              inputs and nothing else — no interpretation, no parameter
+                              block, no oracle argument, no precision argument.  A draw
+                              `r : ℝ × ℝ≥0∞` is one run: accuracy is about `r.1`, expected
+                              membership-query cost about `r.2`.
 
-                              ⚠ **The cost conjunct is charged at two fixed prices this
-                              run is not proved to pay**, so nothing there proves `TTC`
-                              runs in `O(m n⁴)`.  The repository's *proved* polynomial
-                              bound is a statement about a different object:
-                              `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase`,
-                              at `Õ(m · n⁶ · ρ⁸ / ε⁴)`, for the operational law that
-                              **actually executes** the constructed volume oracle, with
-                              no oracle, certificate, implementation or cost-side
-                              binder.  Carrying that back to `Ttc.ttc` is the
-                              accounting step this repository has not taken; see
-                              `AUDIT.md` §0g and §1e.
-* `Ttc.Exec.TheoremPoly`    — the same theorem with the two per-call prices
-                              **discharged**: `Ttc.ttc_volume_estimate_quartic` has
-                              the accuracy conjunct byte-identical to
-                              `Model/Theorem`'s and the runtime side collapsed to
-                              `m·n⁴·(…)`, with `_quintic` the loose `n⁵` form the
-                              paper prints.  The prices enter as hypotheses — the
-                              oracle bundle of `Ttc.ttc` is untouched, and the
-                              accuracy half is still the Monte-Carlo/ball-walk one;
-                              what makes pricing them coherent is that the call
-                              **counts** are oracle-independent.  **Nothing there
-                              proves `TTC` runs in `O(m n⁴)`**: the prices are
-                              conditional on `HitAndRunTheorem11Input`,
-                              Cousins–Vempala's `hphase_mean`/`hphase_var` and
-                              `thm:iso`, and the `n⁴` needs a temperature-scale body
-                              (`R = O(σ)`) — in the `R ≍ σ√n` regime it is `n⁵`.
+                              ⚠ **The cost conjunct is an expectation, in query units, and
+                              is not the paper's exponents.**  It bounds `∫⁻ r, r.2` by the
+                              constructed volume envelope plus the constructed sampler
+                              envelope, at `Õ(m·n⁴·ρ⁶/ε²)` in membership queries — not
+                              `O(m·n⁵·ρ²·r_max)`, and not in the same units until the
+                              `⌈n·rfac⌉₊` charge of
+                              `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops`
+                              is applied.  It is also not uniform in `n`: below dimension
+                              1100 the sampler branch is the ball walk, whose certified
+                              bound carries `4 ^ n`.  See `lean/PLAN-SHAPE.md` §5,
+                              `lean/PAPER-CLAIMS.md` and `lean/PLAN-SPHERECAP.md`.
 
-**Five files as of 2026-08-12** — this paragraph said "four, and the count is an
-invariant" until `Exec/TheoremPoly` landed, so recount rather than quote it. The
-*rule* is the invariant, not the number: `Model/` is what a referee reads to trust
-the *statement* and the *algorithm*, so anything that is neither belongs
-elsewhere. The test that has settled every borderline case is declaration mix, not
-subject matter — a file carrying tactic proofs and a witness chain fails it
-however relevant its contents are.
+                              `Ttc.EnvelopeFinite.ttc_volume_bound_ne_top` proves the cost
+                              bound is not `⊤` — without it the conjunct would hold
+                              vacuously in `ℝ≥0∞` — and `Ttc/Witness/FullTwoCube.lean`
+                              exhibits data meeting all ten binders at `n = 21`.
 
-`Exec/TheoremPoly` earns its place by that rule: it states the *same* theorem —
-accuracy conjunct byte-identical to `Model/Theorem`'s — with the runtime
-right-hand side collapsed from `m·(cVol + cSample·(Θ+1))` to `m·n⁴·(…)`, once the
-two per-call prices are bounded. It carries the price hypotheses, not proofs of
-them; the prices themselves are priced in `Exec/SamplerCost`, `Exec/VolumePriceCV`
-and `Exec/CoolDrawPrice`, which is where the tactic proofs live.
+**Four files, and this time the count is not the point.**  Earlier versions of this
+paragraph tracked a file count in `Model/` (four, then five when `Exec/TheoremPoly` landed).
+`Exec/TheoremPoly` was deleted on 2026-08-19 with the rest of the reference-oracle
+apparatus, so the count is four again, but the *rule* is what is invariant: `Model/` is what
+a referee reads to trust the *statement* and the *algorithm*, so anything that is neither
+belongs elsewhere. The test that has settled every borderline case is declaration mix, not
+subject matter — a file carrying tactic proofs and a witness chain fails it however relevant
+its contents are.
+
+One thing that rule does **not** buy any more, and the reason is worth stating: `Ttc.ttc`
+lives in `Model/Theorem` rather than `Model/Pseudocode` because `Ttc/Exec/` imports
+`Model/Pseudocode` (it is built against `Ttc.algIndex`, `Ttc.algAtoms`, `Ttc.algBlock`), so
+`Pseudocode` cannot name the construction without a cycle. `Pseudocode` states `alg:ttc`
+with the oracle bundle as an argument; `Theorem`, the only `Model/` file downstream of the
+construction, fills it in.
 
 `Model/ProblemSetting` is held to a sharper form of the same rule, modelled on
 `nfalean/ApproxNFA/Model/ProblemSetting.lean`: it states the **problem** — the
@@ -350,18 +337,21 @@ unfolds to no matter where it is filed. `Ttc/Probability/` is bounded in exchang
 vocabulary, no hypothesis bundle, nothing assumed, and a `Prop` only where a
 definition filed there forces one and `#modelClosure`'s walk cannot see it — as of
 this writing exactly two, the oracle contracts `Ttc.trajThin_le` and
-`Ttc.card_trajGen`, which are `_proof_` fields of `Ttc.algOracles`. Two things make
-this more than a filing convention.
+`Ttc.card_trajGen`, which are `_proof_` fields of the run's oracle bundle. Two things
+make this more than a filing convention.
 
 **It is machine-checked, for the statement.** `Ttc/Audit/ClosureCheck.lean`
 defines `#modelClosure`/`#modelClosureOfType`, which walk a declaration's
 definitional closure — through `def` bodies, through theorem *types* only — and
-**throw** if any `Ttc` constant in it is defined outside `Ttc/Model/`. Four
-invocations are live at the foot of that file, so a definition drifting out of
-`Model/` fails `lake build`: `Ttc.ttcAlgOutput`, `Ttc.ttcRun`, `Ttc.ttc`, and the
-headline's own type, `#modelClosureOfType Ttc.ttc_volume_estimate`. That last is
-the reader-facing one — open `Model/`, and every constant the headline *means* is
-defined in front of you. Sizes are reported by the non-failing `#closureReport`
+**throw** if any `Ttc` constant in it is defined outside `Ttc/Model/`. One
+invocation is live at the foot of that file, so a definition drifting out of
+`Model/` fails `lake build`: `#modelClosure Ttc.ttcAlgOutput`, the *specification*.
+The headline's own type is no longer checked and cannot be: since 2026-08-19
+`Ttc.ttc` executes the constructed Cousins–Vempala and hit-and-run oracles, and
+naming them reaches 637 constants across 108 modules. What the surface still
+promises is that the *algorithm* is written down inside `Model/`; what it no longer
+promises is that everything the *headline* mentions is. `Ttc/Audit/ClosureCheck.lean`
+argues that trade in place. Sizes are reported by the non-failing `#closureReport`
 variants; treat them as an alarm bell for the "outside `Model/`" tally beside
 them, never as a size the files should be judged by.
 
@@ -385,11 +375,12 @@ constant those checks flag is nonetheless defined inside the audit surface.
 
 Two per-file points not implied by the above: that `volSol` is the volume of the
 right set is checked, for that symbol alone, in `Volume/VolSolCheck`; and
-`Model/Theorem` binds **no oracle and no precision** — the bundle the run reads is
-the closed term `Ttc.algOracles` (`Model/Pseudocode`) and every precision is
-`P.precision gammaHat`, i.e. `GetPrecision`, `alg:ttc` line 17.
+`Model/Theorem` binds **no oracle and no precision** — it *chooses* the two oracles
+(Cousins–Vempala volume, hit-and-run/ball-walk sampling) rather than quantifying over
+them, and every precision is `P.precision gammaHat`, i.e. `GetPrecision`, `alg:ttc`
+line 17.
 
-**The assumptions are not in `Model/`.** `Ttc.ttc_volume_estimate` quantifies
+**The assumptions are not in `Model/`.** `Ttc.ttc_volume` quantifies
 over inputs, not over a bundle; what it rests on *through the proof* are the 59
 fields of `Ttc.TtcProb` (`Ttc/TtcProb.lean`), which the bundle-level
 `Ttc.TtcProb.volume_estimate` (`Ttc/Estimate.lean`) quantifies over, plus
@@ -441,7 +432,6 @@ import Ttc.Sampler.Interface
 import Ttc.TtcProb
 import Ttc.Access
 import Ttc.Estimate
-import Ttc.Exec.TheoremPoly
 import Ttc.Witness.Inputs
 import Ttc.Witness.TwoCubeVol
 import Ttc.Exec.Inscribed
@@ -453,7 +443,6 @@ import Ttc.Exec.BddFromPos
 import Ttc.Exec.BddPrep
 import Ttc.Exec.Api
 import Ttc.Exec.Complexity
-import Ttc.Witness.FullTwoCube
 import Ttc.Witness.Headline
 import Ttc.Exec.Endgoal
 import Ttc.Exec.Params
@@ -498,20 +487,14 @@ import Ttc.Exec.VolumePriceCV
 import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.SampPriceHR
 import Ttc.Exec.VolPriceCVAlg
-import Ttc.Witness.VolPriceCVAlgTwoCube
-import Ttc.Witness.FixedPriceTwoCube
 import Ttc.Exec.PolyRun
 import Ttc.Exec.PolyAccuracy
-import Ttc.Exec.RuntimeMN4
 import Ttc.Exec.SampPriceEps
-import Ttc.Exec.SampPricePoly
-import Ttc.Exec.SpeedySamplerChain
 import Ttc.Exec.PolyComplexity
 import Ttc.Exec.SampleBound
 import Ttc.Exec.InflateBound
 import Ttc.Exec.SampleDischarge
 import Ttc.Exec.PriceList
-import Ttc.Exec.SamplePrice
 import Ttc.Dnf
 
 -- What the constants buy
@@ -731,7 +714,6 @@ import Ttc.Exec.CostedKV97Rounding
 import Ttc.Exec.KV97RoundedEndpointBridge
 import Ttc.Exec.PolynomialBallWalkKV97Sampler
 import Ttc.Exec.AffinePolynomialBallWalkKV97Sampler
-import Ttc.Exec.OperationalSpeedySamplerAudit
 import Ttc.Exec.CostedLazyHitAndRunAdapter
 import Ttc.Exec.CVGaussianWarmFallbackCostedPhaseKernel
 import Ttc.Exec.CVGaussianWarmFallbackIndependentCertificate
@@ -910,3 +892,6 @@ import Ttc.Exec.TtcSlowRuntimePerPhase
 import Ttc.Exec.SamplerEnvelopeShape
 import Ttc.Exec.CVHolderRetryCost
 import Ttc.Model.Theorem
+import Ttc.Exec.EnvelopeFinite
+import Ttc.Witness.FullTwoCube
+import Ttc.Witness.VolPriceCVAlgTwoCube

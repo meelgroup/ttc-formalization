@@ -50,7 +50,7 @@ nothing outside `Model/`.  What is left here is the layer those bodies are built
 * the three obligations these discharge from the headline's own binders,
   `Ttc.ttcInput_isPositive`, `Ttc.ttcInput_bdd`, `Ttc.ttcAtoms_bdd`;
 * `Ttc.ttc_volume_api`, the headline restated, which is what
-  `Ttc.ttc_volume_estimate` is a bare application of.
+  `Ttc.ttc_volume` is a bare application of.
 
 Since `Ttc.ttcInput`, `Ttc.ttcScale`, `Ttc.ttcBlock`, `Ttc.ttcPrec` and
 `Ttc.ttcOracleBundle` are downstream of this file, the statements below spell out
@@ -58,7 +58,7 @@ their bodies instead of naming them — `cleanForm atoms (pruneForm atoms φ)` f
 the input, `Ttc.runScale …` for the dilation, `Ttc.inputParamsTotal …` for the block,
 `Ttc.runPrec …` for the precision and `Ttc.runOracles …` for the bundle.  Each is
 *definitionally* the corresponding `Model/Run` name (that is exactly what the
-`_def` lemmas there say), which is why `Ttc.ttc_volume_estimate` can be stated
+`_def` lemmas there say), which is why `Ttc.ttc_volume` can be stated
 over the names and proved by applying `Ttc.ttc_volume_api`, with no rewriting.
 
 ## What the algorithm is actually handed
@@ -233,7 +233,7 @@ preprocessed formula are written out here rather than named, because their names
 `Ttc.ttcBlock`, `Ttc.ttcPrec`, `Ttc.ttcOracleBundle`, `Ttc.ttcScale`,
 `Ttc.ttcInput` — and the seven measured quantities built on them are introduced in
 `Model/Run`, which imports this file.  Each sub-term here is *literally* the body
-of the corresponding definition there, so `Ttc.ttc_volume_estimate` is this theorem
+of the corresponding definition there, so `Ttc.ttc_volume` is this theorem
 applied, with no rewriting. -/
 
 /-- **`thm:volumettc` + `thm:runtime`, in the statement API.**  `TTC(F, ε, δ)` run
@@ -324,7 +324,7 @@ and the four folded names of the runtime conjunct.
 **Every `def` below is a pure abbreviation and asserts nothing.**  Each has a closed
 body and an identifying `rfl` lemma (`Ttc.ttcInput_def`, `Ttc.ttcScale_def`, …)
 spelling that body out, so no name here stands in for a proof.  The structural check
-that they are the *right* abbreviations is that `Ttc.ttc_volume_estimate`'s proof is
+that they are the *right* abbreviations is that `Ttc.ttc_volume`'s proof is
 the bare application `Ttc.ttc_volume_api atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos`, with
 no rewriting — a wrong abbreviation is a build error, not a silent divergence. -/
 
@@ -358,7 +358,7 @@ alone (`Ttc.isBounded_sol_pruneForm_of_volSol_pos`, `Exec/BddFromPos`, then
 `Ttc.cleanBdd`).  Stated at `Ttc.preprocess atoms φ`, which is `Ttc.ttcInput atoms φ`
 by `rfl`.
 
-**It is no longer named in `Ttc.ttc_volume_estimate`'s type.**  It used to be, and
+**It is no longer named in `Ttc.ttc_volume`'s type.**  It used to be, and
 had to be: `Ttc.Params` bundles five proof fields, so `Ttc.inputParams` — and hence
 `Ttc.ttcAlgOutput`, the algorithm's own output — could not be applied without a proof
 of this.  The run now reads `Ttc.inputParamsTotal` (`Model/Pseudocode`), which decides
@@ -520,7 +520,7 @@ theorem ttcNumCubes_def :
 
 /-! ## The two bridges to `Model/Pseudocode`
 
-The first is what makes `Ttc.ttc_volume_estimate` a statement about the *algorithm*:
+The first is what makes `Ttc.ttc_volume` a statement about the *algorithm*:
 the measured quantity is `Model/Pseudocode`'s own `Ttc.ttcAlgOutput`, at the oracle
 bundle the run reads, and the identification is `rfl` — checked by the kernel, not
 asserted in prose. -/
@@ -550,7 +550,7 @@ theorem ttcEstimate_eq_ttcOutput (c : ℕ → Space n)
 
 /-! ## The oracle-free form of the algorithm's output
 
-`Ttc.ttcRun` (`Model/Pseudocode`) is `Ttc.ttcAlgOutput` with its oracle argument
+`Ttc.ttcEstimate` (this file) is `Ttc.ttcAlgOutput` with its oracle argument
 filled in from the run `(c, t)` itself, built inline from the read-offs
 `Ttc.trajThin`, `Ttc.trajPois`, `Ttc.trajGen`, `Ttc.padRow` and the Monte-Carlo
 volume estimator `Ttc.mcVol` — all of which are defined in `Model/Pseudocode`.
@@ -565,45 +565,17 @@ build error rather than a silent drift. -/
 (above) reads `Ttc.runCount` at the dilated atoms and the dilated boundedness proof;
 `Ttc.algIndex` (`Model/Pseudocode`) reads `Ttc.latticeCount` at the dilated atoms and
 `Ttc.runPrec` at the *original* boundedness proof, which is legitimate because
-`Ttc.inputParams_scaleAtoms` holds definitionally.  So `Ttc.ttcRun` needs no second
+`Ttc.inputParams_scaleAtoms` holds definitionally.  So `Ttc.ttcEstimate` needs no second
 boundedness binder. -/
 theorem algIndex_eq_ttcIndex :
     algIndex atoms φ ε δ
       = ttcIndex atoms φ ε δ := rfl
 
-/-- **`Ttc.ttcRun` is `Ttc.ttcAlgOutput` at the constructed oracle bundle**, by
-`rfl`.
-
-This is the lemma the headline rests on: `Model/Theorem`'s accuracy conjunct is
-stated over `Ttc.ttcRun`, which names nothing outside `Model/`, and this identifies
-it with the oracle-bundle form the rest of the development proves things about.
-`Ttc.ttc_accuracy_single_measure` is transported through it by nothing at all — the
-two sides are definitionally equal, so the proof term is unchanged. -/
-theorem ttcRun_eq_ttcAlgOutput (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) :
-    ttcRun atoms φ ε δ c t
-      = ttcAlgOutput atoms φ ε δ
-          (ttcOracleBundle atoms φ ε δ c t) := rfl
-
-/-- **The `Model/`-side rate vector is the run's rate vector**, by `rfl`.
-`Ttc.algRates` (`Model/Pseudocode`) is `Ttc.ttcRates` with `Ttc.runRates` unfolded
-into the `Model/` vocabulary — the same term, so `Ttc.ttc` is the law of the same
-trajectory as `Ttc.ttcPairLaw`. -/
-theorem algRates_eq_ttcRates (c : ℕ → Space n) :
-    algRates atoms φ ε δ c = ttcRates atoms φ ε δ c := rfl
-
-/-- **The `Model/`-side charged cost is the run's charged cost**, by `rfl` — the
-oracle-free form of `Ttc.ttcCost`, on the bundle the run itself supplies. -/
-theorem algCost_eq_ttcCost (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) (cVol cSample : ℕ) :
-    algCost atoms φ ε δ c t cVol cSample = ttcCost atoms φ ε δ c t cVol cSample := rfl
-
-/-- **`Ttc.ttcRun` is the run's estimate**, by `rfl` — the oracle-free form of
-`Ttc.ttcAlgOutput_eq_ttcEstimate`. -/
-theorem ttcRun_eq_ttcEstimate (c : ℕ → Space n)
-    (t : ℕ → Fin (ttcIndex atoms φ ε δ) → ℕ) :
-    ttcRun atoms φ ε δ c t
-      = ttcEstimate atoms φ ε δ c t := rfl
+/-! The four `rfl` bridges from `Model/Pseudocode`'s oracle-free names —
+`Ttc.ttcEstimate`, `Ttc.ttcRates`, `Ttc.ttcCost` — to the run's own were removed on
+2026-08-19 together with those names.  `Model/Pseudocode` no longer instantiates the
+oracles: `Ttc.ttcAlgOutput` takes the bundle as an argument and the single headline
+(`Model/Theorem`) is stated at the constructed Cousins–Vempala / hit-and-run pair. -/
 
 /-! ## The runtime conjunct in closed arithmetic form
 
@@ -886,8 +858,6 @@ end Ttc
 #print axioms Ttc.ttcAlgOutput_eq_ttcEstimate
 #print axioms Ttc.ttcEstimate_eq_ttcOutput
 #print axioms Ttc.algIndex_eq_ttcIndex
-#print axioms Ttc.ttcRun_eq_ttcAlgOutput
-#print axioms Ttc.ttcRun_eq_ttcEstimate
 #print axioms Ttc.ttcNumCubes_eq
 #print axioms Ttc.ttcNumCubes_eq_card
 #print axioms Ttc.ttcBlock_m

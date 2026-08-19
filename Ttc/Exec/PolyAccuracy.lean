@@ -28,11 +28,11 @@ and it is **unconditional**.  This file adds the *accuracy* half, which is **not
 The paper's regime condition `big` (README finding 20) is **not** in that list: it is
 *discharged* here (`Ttc.big_polyRates`), see below.
 
-**`Ttc.ttc`'s accuracy is unconditional and stays that way.**  `Ttc.ttc_volume_estimate`
+**`Ttc.ttc`'s accuracy is unconditional and stays that way.**  `Ttc.ttc_volume`
 (`Model/Theorem.lean:60`) is proved outright, at exponential prices.  So: `Ttc.ttc` has
 unconditional accuracy at exponential prices; `Ttc.ttcPoly` has a polynomial *charged*
 cost at conditional accuracy.  **Neither theorem dominates the other**, and nothing here
-weakens or replaces `Ttc.ttc_volume_estimate`.
+weakens or replaces `Ttc.ttc_volume`.
 
 ## THE REGIME CAVEAT — the `n⁴` needs a temperature-scale body (`R = O(σ)`)
 
@@ -112,7 +112,7 @@ they are the general forms, at an arbitrary `sampD`-certificate pairing.
   would have to inhabit `Ttc.HitAndRunTheorem11Input`, which nothing in this development
   does and which is exactly the assumed content of Lovász–Vempala Theorem 1.1; and it
   would have to supply `hphase_mean`/`hphase_var`.  No witness is faked.  Contrast
-  `Ttc.ttc_volume_estimate_poly_two_cube` (`Exec/TheoremPoly.lean:626`), which is a
+  `Ttc.TwoCube.ttc_volume_two_cube` (`Witness/FullTwoCube`), which is a
   witness on the *unconditional* path.
 
 ## What is here
@@ -655,9 +655,9 @@ theorem pr_ttcPoly_accuracy_hitAndRun
     (big_polyRates atoms φ ε δ hε0 hε1 hn hφ hpos V rin Rout Mw sigma S)
 
 /-! # THE CAPSTONE: both halves of `Ttc.ttcPoly`, in the shape of
-`Ttc.ttc_volume_estimate`
+`Ttc.ttc_volume`
 
-Same two conjuncts as `Ttc.ttc_volume_estimate` (`Model/Theorem.lean:60`) — the
+Same two conjuncts as `Ttc.ttc_volume` (`Model/Theorem.lean:60`) — the
 accuracy conjunct **identical in form** — but with **no `cVol`/`cSample` binders**:
 `Ttc.ttcPoly` fixes the two prices to the closed terms `Ttc.polyVolPrice` and
 `Ttc.polySamplePrice`, and the runtime conjunct is the collapsed `m·n⁴·(…)`. -/
@@ -667,7 +667,7 @@ open Ttc.Monadic in
 
 Read the module docstring before quoting this.  The accuracy conjunct is
 **conditional** — on `sampler`, on whatever `V` assumes, and on `big` — while
-`Ttc.ttc_volume_estimate`'s is unconditional; the runtime conjunct is
+`Ttc.ttc_volume`'s is unconditional; the runtime conjunct is
 `Ttc.all_ttcPoly_cost_le_quartic`, which is unconditional but charges only oracle
 calls. -/
 theorem ttcPoly_volume_estimate
@@ -692,7 +692,7 @@ theorem ttcPoly_volume_estimate
     (hL : 1 ≤ Lc) (hkap0 : 0 < kap) (hkap1 : kap ≤ 1) (hcc1 : 1 ≤ cc)
     (hcc : cc ≤ 1 + 2 / (n : ℝ)) (hp0 : 0 < pf) (hp1 : pf ≤ 1 / 2)
     (hMc : 1 ≤ Mcool) (hed0 : 0 < epsDraw) (hed1 : epsDraw ≤ 1) :
-    -- (accuracy) identical in form to `Ttc.ttc_volume_estimate`'s
+    -- (accuracy) identical in form to `Ttc.ttc_volume`'s
     (1 - δ ≤
       Pr[r ← ttcPoly atoms φ ε δ V rin Rout Mw sigma
             gam R Mwarm Lc kap cc pf Mcool epsDraw;
@@ -746,7 +746,7 @@ is a visible binder of this statement:
   `Sx/hSm/hS/hdom`;
 The regime condition `big` is **not** among them (`Ttc.big_polyRates`).
 
-`Ttc.ttc_volume_estimate`'s accuracy half is **unconditional** and stays so; neither of
+`Ttc.ttc_volume`'s accuracy half is **unconditional** and stays so; neither of
 the two results dominates the other. -/
 theorem ttcPoly_volume_estimate_cv
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) (hn : 1 ≤ n)
