@@ -1077,8 +1077,17 @@ count `Ttc.CVPerPhaseSamples.perPhaseRuntimeSamples` and the `n`-aware truncatio
 `canonicalFullOperationalLaw V P` that executes it.
 
 **The cost envelope.**  The volume term is the per-cube sum of
-`cvComplexityShapeClipped * slowPerPhaseOV`, each cube taken at **its own interior
-circumradius squared**, where
+`cvConfidenceShape * slowPerPhaseOV`, each cube taken at **its own interior
+circumradius squared**, where `cvConfidenceShape n R2 eps p = max 1 (log (1/p))` is the
+confidence-amplification factor and nothing else.
+
+⚠ Until 2026-08-19 this shape was `cvComplexityShapeClipped * slowPerPhaseOV` —
+Cousins–Vempala's whole Theorem 1.1 expression times the overhead.  That factor was a
+`1 ≤ x` weakening and has been removed; see `lean/PLAN-SHAPE.md`.  **No exponent
+comparison with the paper may be quoted from this docstring**: this bound and the paper's
+`O(m n^5 rho^2 r_max)` are not in the same units, and the units audit is not done.
+
+Here
 
   `slowPerPhaseOV n R2 eps p = 64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
       slowPerPhaseOverhead n R2 (min eps 1 / 2) p

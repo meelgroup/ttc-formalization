@@ -19,8 +19,12 @@ The chain, all of it already proved elsewhere and merely composed here:
    a point mass, zero cost and zero value.
 2. `Ttc.CVEffectiveSourceReference.cvShapedExpectedImplementationOfEffectiveFamily`
    turns it into a `CVShapedExpectedImplementation` at the shape
-   `cvComplexityShapeClipped * OV`, where `OV` is whatever overhead envelope the
-   construction pays over Cousins–Vempala's own Theorem 1.1 expression.
+   `cvConfidenceShape * OV`, where `OV` is whatever overhead envelope the construction
+   pays and `cvConfidenceShape n R2 eps p = max 1 (log (1/p))` is the confidence factor.
+   ⚠ Until 2026-08-19 this shape was `cvComplexityShapeClipped * OV` — Cousins–Vempala's
+   whole Theorem 1.1 expression times the overhead.  That factor was a `1 ≤ x` weakening and
+   has been removed; see `lean/PLAN-SHAPE.md`.
+   
 3. `Ttc.CVShaped.ttc_volume_estimate_of_cvShapedExpectedImplementationAt` transports that
    to TTC at the per-call *declared* radii.
 
@@ -120,7 +124,9 @@ at that cube's **declared outer radius squared**, which is the paper's per-polyt
 `R_i/gamma_i` rather than a global normalisation.
 
 Read the caveat in `RUNTIME-ENDGAME.md` §4 before quoting the second conjunct: the shape is
-`cvComplexityShapeClipped * OV`, **not** the paper's `O(m n^5 rho^2 r_max)` exponents. -/
+`cvConfidenceShape * OV`, **not** the paper's `O(m n^5 rho^2 r_max)` exponents — and the two
+are not even in the same units, so no exponent comparison with the paper may be quoted from
+here until the units audit of `lean/PLAN-SHAPE.md` §5 is done. -/
 theorem ttc_runtime_of_effectiveCertificates
     (OV : (n : Nat) → Real → Real → Real → Real)
     (hOV : ∀ (n : Nat) (R2 eps p : Real), 1 ≤ OV n R2 eps p)

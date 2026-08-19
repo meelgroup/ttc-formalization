@@ -153,8 +153,13 @@ theorem sourceOneRunQueryBudget_clip_eps
 
 /-! ## Step 3 — the overhead envelope and the effective runtime constant -/
 
-/-- **The overhead envelope the assembly is instantiated at.**  Cousins–Vempala's own
-Theorem 1.1 expression is multiplied by this, and by nothing else. -/
+/-- **The overhead envelope the assembly is instantiated at.**  The confidence factor
+`max 1 (log (1/p))` is multiplied by this, and by nothing else.
+
+⚠ Until 2026-08-19 this shape was `cvComplexityShapeClipped * OV` — Cousins–Vempala's
+whole Theorem 1.1 expression times the overhead.  That factor was a `1 ≤ x` weakening and
+has been removed; see `lean/PLAN-SHAPE.md`.
+-/
 noncomputable def slowFinalOV (n : Nat) (R2 eps p : Real) : Real :=
   64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
     slowUniformOverheadQ n R2 (min eps 1 / 2) p
@@ -543,8 +548,14 @@ canonical Gaussian-cooling construction, and the two conjuncts are about the one
 `canonicalFullOperationalLaw V P` that executes it.
 
 **The cost envelope.**  The volume term is the per-cube sum of
-`cvComplexityShapeClipped * slowFinalOV` at each cube's own *declared* outer radius
-squared (`callDeclaredR2`), where
+`cvConfidenceShape * slowFinalOV` at each cube's own *declared* outer radius
+squared (`callDeclaredR2`), where `cvConfidenceShape n R2 eps p = max 1 (log (1/p))`.
+
+⚠ Until 2026-08-19 this shape was `cvComplexityShapeClipped * OV` — Cousins–Vempala's
+whole Theorem 1.1 expression times the overhead.  That factor was a `1 ≤ x` weakening and
+has been removed; see `lean/PLAN-SHAPE.md`.
+
+where
 
   `slowFinalOV n R2 eps p = 64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
       slowUniformOverheadQ n R2 (min eps 1 / 2) p`.

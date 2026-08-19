@@ -146,6 +146,16 @@ the step that reads as bookkeeping is the step that is actually unproved.
 | Ball/halfspace volume plumbing | `SphereCap.lean`, `EuclideanMeasureSlicing.lean` — survey before rebuilding |
 | The deficit bound itself | **nothing** — `lintegral_one_sub_ell_shrunken_eq_zero` is the `ε = 0`, `δ ≤ 1/(2n)` case |
 
+## 3a.  What this is worth, recomputed (2026-08-19)
+
+The ledger moved under this plan.  Commit `8a917c2` removed the unearned Cousins–Vempala shape
+factor (`PLAN-SHAPE.md`), taking the proved bound `Õ(m n⁶ρ⁸/ε⁴) → Õ(m n⁴ρ⁶/ε²)`.  So the KLS97
+item now acts on `n⁴`, not `n⁶`: it is worth **one factor `n`** off that, via the step size in
+`radiusQDelta`.  It is no longer the largest outstanding factor, and the framing "one `n` short
+of the paper" — which this file inherited — is stale twice over: it was computed with the shape
+artifact in it, and the paper comparison is blocked on the units audit
+(`PLAN-SHAPE.md` §5) in any case.
+
 ## 4.  Downstream — do **not** promise `n⁵` off this plan
 
 `ell_eq_one_on_shrunken` is load-bearing in seven files: `MapSpeedyToTarget`, `WarmSpeedy`,

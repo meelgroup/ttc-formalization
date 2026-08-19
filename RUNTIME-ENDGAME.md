@@ -347,7 +347,31 @@ overhead  =  k · mφ · 10 · Lenv · Tenv · 2e
 | before lever 2 | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
 | lever 2 (was operative until P1) | `nρ²` | `n⁴ρ⁴` | `n⁷L²ρ⁶/ε²` | `Õ(m n⁹ρ⁸/ε⁴)` |
 | + P1 sharp (wired) | `ρ²` | `n³ρ⁴` | `n⁵L²ρ⁶/ε²` | `Õ(m n⁷ρ⁸/ε⁴)` |
-| **+ P2 per-phase (wired, operative)** | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁶ρ⁸/ε⁴)` |
+| **+ P2 per-phase (wired)** | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁶ρ⁸/ε⁴)` |
+| **+ shape factor removed (wired, operative, 2026-08-19)** | `ρ²` | `n³ρ⁴` | `n⁴L²ρ⁶/ε²` | `Õ(m n⁴ρ⁶/ε²)` |
+
+### The shape factor is gone (2026-08-19, commit `8a917c2`)
+
+The per-cube bound was `800 · cvComplexityShapeClipped n ρ²ⱼ ε' δ' · slowPerPhaseOV n ρ²ⱼ ε' δ'`.
+The first factor was **never earned**.  What every discharge site proves is
+`expected queries ≤ OV`; the shape was appended by
+`Ttc.CVSlowEffectiveOverhead.le_sourceOneRunQueryEnvelope_of_le`, whose entire content was
+`le_mul_of_one_le_right` at `1 ≤ cvBaseClipped`.  That lemma is now closed by `le_rfl`, and
+the shape in `Ttc.TtcShapedRuntime.shapeOf` is the confidence factor `max 1 (log (1/p))`
+alone — which *is* earned, by repeated runs.  See `PLAN-SHAPE.md`.
+
+So the removed factor is exactly `cvComplexityShapeClipped ≈ n²ρ²/ε²·log⁶`, and the ledger
+reads
+
+```
+Õ(m n⁶ρ⁸/ε⁴)  ⟶  Õ(m n⁴ρ⁶/ε²)
+```
+
+**State this only as a factor removal.**  The units are unchanged, so the ratio is exact; but
+**no comparison with the paper's `O(m·n⁵·ρ²·r_max)` may be quoted anywhere** — ours counts
+what the certificate's `reference_expected_queries` counts and the paper's counts operations
+with `r_max` explicit, and the units audit (`PLAN-SHAPE.md` §5) is **not done**.  Every
+"one factor `n` short of the paper" statement in this file predates the removal and is stale.
 
 ### P1 is OPERATIVE as of 2026-08-18
 

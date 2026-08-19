@@ -1,5 +1,8 @@
 # Divergence 1: the Cousins–Vempala shape factor is a `1 ≤ x` weakening
 
+**STATUS: DONE — commit `8a917c2`, 2026-08-19.**  `Õ(m n⁶ρ⁸/ε⁴) → Õ(m n⁴ρ⁶/ε²)`.
+§2 and §7 below record how it was actually resolved.
+
 **What this proposes.** Delete a factor of `n²ρ²/ε²·log⁶` from the proved runtime bound by
 changing one definition.  No new mathematics.  The factor is not earned by any argument: it
 is introduced by `le_mul_of_one_le_right` in a single lemma, and every structural use of it
@@ -54,22 +57,40 @@ obligation has the `cost ≤ OV`, then `OV ≤ OV·B` shape — i.e. **no site u
 `n³/ε²·log⁶` headroom to swallow a real cost**.  If one does, that route's `OV` must grow and
 the ledger below changes.  **Verify all of these before editing anything.**
 
-| site | status |
+| site | resolved |
 |---|---|
-| `TtcSlowRuntimePerPhase:355` (`slowPerPhase_hscalar`) — **the operative capstone** | ✅ read; exactly the two-step shape |
-| `CVSlowEffectiveOverhead:529` (`slowCanonical_hscalar`) | ✅ read; exactly the two-step shape |
-| `TtcSlowRuntimeFinal` (22 mentions, 3 unfolds) — heaviest consumer | ⬜ **partially**: `sourceOneRunQueryEnvelope_clip_eps` read, see §3 |
-| `TtcSlowRuntimeSharp` (9) | ⬜ |
-| `CVGaussianSourceSharpCost:99` | ⬜ |
-| `CVColdHotReferenceCost:112, :305` | ⬜ |
-| `CVGaussianHybridWeightedCertificate` (6) | ⬜ |
-| `CVSourceSharpIndependentCertificate` (4) | ⬜ |
-| `CVConcreteAugmentedRetryCutoffBudget` (5) | ⬜ |
-| `CVRadiusAwareReferenceCostArithmetic` (7) | ⬜ |
-| `CVSourceOneRunFromCostedPhases:164, :215, :283` | ⬜ |
-| `CVSlowActualCostEnvelope:209` | ⬜ |
+| `TtcSlowRuntimePerPhase:355` (`slowPerPhase_hscalar`) — **the operative capstone** | ✅ read before editing; the two-step shape |
+| `CVSlowEffectiveOverhead:529` (`slowCanonical_hscalar`) | ✅ read before editing; the two-step shape |
+| all remaining sites | ✅ resolved **by the compiler**, see below |
 
-The two that matter most are already green.  That is grounds for scoping, **not** for editing.
+**How the matrix was actually completed: build-as-oracle.**  Reading ten more files would have
+been slower and less reliable than making the edit and letting Lean decide — a site that needs
+the shape's headroom cannot typecheck without it.  Only **three** files failed the first build
+(`CVSourceTheorem11Arithmetic`, `CVColdHotReferenceCost`, `TTCOperationalPaperBridge`), and
+five more surfaced as the fixes propagated.  Every one of them was a weakening that collapsed —
+`_eps_absorb` to `rc ≤ 64·rc`, `clip_eps` to `rc ≤ rc·(max 1 eps)²·log²n`, the three
+`CVSourceReferenceWeaken` monotonicity lemmas to `le_rfl`, `_le_of_sq_le` to
+`one_le_cvBaseClipped` — **except one.**
+
+### The one red entry, and why it did not stop the edit
+
+`doubledEstimator_coldHotPhaseSum_le_sourceBudget` (`CVColdHotReferenceCost`) and its
+`innerHundred` twin genuinely spend the shape's `1/ε²`:
+
+```
+2·k·∑means ≤ 2·(weightedSampleNumerator/ε²)·∑means = (2·num·∑means)/ε² ≤ core/ε² = envelope
+```
+
+with `k = estimatorSamples ≈ num/ε²` — the estimator's own sample count, paid for by a factor
+nobody was charging for.  That is a real cost, not bookkeeping.
+
+It did not stop the edit because **the cold/hot route is dead**:
+`exists_sourceReferenceTVOneRunCertificate_of_coldHotSeedPhases` has no consumers at all —
+only a `#print axioms`.  So the repair is to make that route pay its own sample count: the six
+`hcoldHotShape` binders across `CVColdHotReferenceCost` and `CVGaussianHybridWeightedCertificate`
+now carry the `/ eps ^ 2` themselves.  **Had this route been on the operative path, the edit
+would have stopped here and `slowPerPhaseOV` would have had to grow instead.**
+
 
 ## 3.  What the structural uses become
 
@@ -97,11 +118,13 @@ Every use that touches the internals is a weakening in the direction that surviv
 
 ## 4.  The edit
 
-1. **Rename and redefine.**  `sourceOneRunQueryEnvelope` is documented as "the paper's one-run
-   membership-query shape"; after the edit that name is a lie, and `CLAUDE.md` §13 forbids it.
-   Either rename to `sourceOneRunBudgetScalar` or delete it and let
-   `sourceOneRunQueryBudget rc n R eps := ENNReal.ofReal rc` stand alone.  **Decide before
-   editing**; do not leave the old name on the new definition.
+1. **Rename and redefine.**  ⚠ **Decision taken 2026-08-19: the name stays, and here is why.**
+   What `CLAUDE.md` §13 forbids is a name that asserts something false.  The *docstring* did —
+   it read "the paper's one-run membership-query shape" — and it was rewritten.  The *name* did
+   not: `sourceOneRunQueryEnvelope` says "an envelope on one run's queries", which is exactly
+   what `rc` now is, and was also true before.  A ~91-occurrence sed rename would have produced
+   a large diff for no gain in honesty.  The vestigial `(n, R, eps)` slots are retained so that
+   no consumer signature changes, and the docstring says so.
 2. **New arithmetic lemma** replacing `sourceAmplifiedQueryEnvelope_le_cvComplexityShapeClipped`:
    `sourceAmplifiedQueryEnvelope rc n R eps p ≤ (200·(rc+1)) · max 1 (Real.log (1/p))`.
    The proof is that lemma's existing `calc` with `B` deleted.  Keep the old lemma too — it is
@@ -174,13 +197,22 @@ factor `n` off whatever the ledger reads *after* this change.
 
 ## 7.  Checklist
 
-- [ ] Complete the §2 matrix.  **Any red entry stops the edit.**
-- [ ] Decide the rename (§4.1).
-- [ ] Decide scope for `sourceOneRunQueryCore` and the radial-log family (§4).
-- [ ] Make the edit; `lake build Arlib Ttc` green; `#print axioms` clean on all four capstones.
-- [ ] Re-elaborate `ttc_volume_runtime_perPhase`'s type independently — binders unchanged,
-      `slowPerPhaseImplementation` still closed.
-- [ ] Re-run the four `#modelClosure` / `#modelClosureOfType` audits.  Expected untouched
-      (`Ttc/Model/Theorem.lean` is at declared prices), but **do not assume**.
-- [ ] Update `RUNTIME-ENDGAME.md`'s ledger table and `AUDIT.md` §"SETTLED" per §5.
-- [ ] Recompute `PLAN-WARMSTART`'s payoff line.
+- [x] Complete the §2 matrix — by build-as-oracle; one red entry found and handled (§2).
+- [x] Decide the rename (§4.1) — **name stays**, reasoning recorded there.
+- [x] Decide scope for `sourceOneRunQueryCore` and the radial-log family — `sourceOneRunQueryCore`
+      kept unchanged (it is a standalone shaped quantity `CVHotRefreshHonestRuntime` compares
+      against); the radial-log envelope was made lean in step, so
+      `sourceOneRunQueryEnvelope_effective_eq_radialLog` still holds.
+- [x] Make the edit; `lake build Ttc` green at **9467 jobs**; `#print axioms` clean on all four
+      capstones; no `sorryAx` anywhere in the build log.
+- [x] Re-elaborate `ttc_volume_runtime_perPhase`'s type independently — binders unchanged
+      (`atoms phi eps delta` + the same seven conditions), `slowPerPhaseImplementation` still a
+      closed term, and `#print shapeOf` confirms `cvConfidenceShape * OV`.
+- [x] Re-run the four closure audits — all pass, counts unchanged (109 / 157 / 208 / 212).
+- [x] Update `RUNTIME-ENDGAME.md`'s ledger table and supersede `AUDIT.md` §"SETTLED".
+- [x] Recompute `PLAN-WARMSTART`'s payoff line.
+- [ ] **The units audit of §5 — still not done.**  Until it is, no comparison between this
+      bound and the paper's `O(m·n⁵·ρ²·r_max)` may be stated anywhere.
+- [ ] The free `log²n`: `clip_eps` is the origin of the `64·(max 1 eps)²·sourceLogFactor n ²`
+      prefix in the four `OV`s, and with the shape gone that inflation buys nothing.  Recorded
+      in its docstring; deliberately not bundled.

@@ -1430,6 +1430,21 @@ cannot shed.
   and one power of `n` cheaper. This is a local-conductance question: research.
 * **`thm:decompose`** — still not formalised at all, still not planned.
 
+### ⚠ SUPERSEDED 2026-08-19 — the section below is wrong as stated
+
+It concluded that the exponent gap "is the walk step size, and it is forced".  The gap was
+the walk step size **times** an unearned factor.  Commit `8a917c2` removed the second: the
+proved bound carried Cousins–Vempala's whole Theorem 1.1 expression as a multiplier that no
+argument ever justified — it was introduced by `le_mul_of_one_le_right` at `1 ≤ cvBaseClipped`
+in `Ttc.CVSlowEffectiveOverhead.le_sourceOneRunQueryEnvelope_of_le`, now `le_rfl`.  The ledger
+went `Õ(m n⁶ρ⁸/ε⁴) → Õ(m n⁴ρ⁶/ε²)` with no new mathematics.  See `PLAN-SHAPE.md` and
+`RUNTIME-ENDGAME.md`.
+
+What survives from the section: the step-size analysis itself (branch A vs branch B, the
+`min` with `1/(2n)` in `radiusQDelta`, and the fact that removing it needs KLS97 Theorem
+4.16).  What does **not** survive: the claim that the step size was the *only* thing, and
+every exponent comparison with the paper drawn from it.
+
 ### The `n⁴` vs `n⁶` exponent gap is SETTLED: it is the walk step size, and it is forced (2026-08-18)
 
 `Ttc/Model/Theorem.lean` charges `cvVolPriceAt`, bounded by `2⁴²·n⁴·volFac`

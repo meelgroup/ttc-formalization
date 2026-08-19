@@ -122,7 +122,12 @@ noncomputable def slowUncTenv (n : Nat) (R2 epsP : Real) : Real :=
 /-! ## Step 2 — the overhead envelope and the effective runtime constant -/
 
 /-- **The overhead envelope the unconditional assembly is instantiated at.**
-Cousins–Vempala's own Theorem 1.1 expression is multiplied by this, and by nothing else.
+The confidence factor `max 1 (log (1/p))` is multiplied by this, and by nothing else.
+
+⚠ Until 2026-08-19 this shape was `cvComplexityShapeClipped * OV` — Cousins–Vempala's
+whole Theorem 1.1 expression times the overhead.  That factor was a `1 ≤ x` weakening and
+has been removed; see `lean/PLAN-SHAPE.md`.
+
 
 It is `Ttc.TtcSlowRuntimeFinal.slowFinalOV` with the reference-warm cap
 `slowUniformOverheadQ` replaced by the actual-warm `slowActualOverhead` at the two envelopes
@@ -491,9 +496,15 @@ out of the slow canonical Gaussian-cooling construction, and the two conjuncts a
 one law `canonicalFullOperationalLaw V P` that executes it.
 
 **The cost envelope.**  The volume term is the per-cube sum of
-`cvComplexityShapeClipped * slowUncOV`, each cube taken at **its own interior circumradius
+`cvConfidenceShape * slowUncOV`, each cube taken at **its own interior circumradius
 squared** — the radius the construction actually runs at, pinned by
-`Ttc.TtcCallCircumAdmissible.cvAdmCircum` — where
+`Ttc.TtcCallCircumAdmissible.cvAdmCircum` — with
+`cvConfidenceShape n R2 eps p = max 1 (log (1/p))`.
+
+⚠ Until 2026-08-19 this shape was `cvComplexityShapeClipped * slowUncOV` — Cousins–Vempala's
+whole Theorem 1.1 expression times the overhead.  That factor was a `1 ≤ x` weakening and
+has been removed; see `lean/PLAN-SHAPE.md`.  **No exponent comparison with the paper may
+be quoted from this docstring** — the units audit is not done.
 
   `slowUncOV n R2 eps p = 64 * (max 1 eps) ^ 2 * sourceLogFactor n ^ 2 *
       slowActualOverhead n R2 (min eps 1 / 2) p
