@@ -123,4 +123,45 @@ section Invocations
 -- #closure Ttc.ttcAlgOutput
 #modelClosure Ttc.ttcAlgOutput
 
+/-! ### The reference oracles are gone from behind `Ttc.ttc`, and this checks it
+
+`Ttc.ttc` used to run hit-and-miss Monte Carlo (`Ttc.mcVol`) for volume and the lazy ball
+walk for sampling.  It now runs Cousins–Vempala Gaussian cooling and the hit-and-run / ball-
+walk hybrid.  A docstring saying so would be a name standing in for an analysis
+(`CLAUDE.md` §13), so the three checks below *are* the analysis: `#absentFromClosure` walks
+`Ttc.ttc`'s definitional closure and throws if it finds the constant named.
+
+`Ttc.mcVol` still exists, and files that define it are still on `Ttc.ttc`'s **import** path —
+they are imported for other definitions, and `Ttc/Exec/Final.lean`'s separate end-to-end
+theorem is still proved about it.  Import reachability is not definitional reachability, and
+it is the second one that says which oracle a run executes.  These checks measure the second.
+
+**A fourth check was written and it failed, which is the useful part.**
+`#absentFromClosure Ttc.mixSteps in Ttc.ttc` throws: the lazy ball walk's step count *is*
+still behind `Ttc.ttc`.  That is not a leftover — it is the hybrid sampler's low-dimension
+branch.  `Ttc.hybridTransitionBound` is hit-and-run at `1100 ≤ n` and `Ttc.mixStepsBound`
+below it, so a run at `21 ≤ n < 1100` takes ball-walk steps by construction, with the `4 ^ n`
+that implies.  The check is therefore inverted below into `#inClosure`, which fails if that
+dependence ever silently disappears, and the fact it records is the same one
+`Ttc/Exec/SamplerEnvelopeShape.lean` proves in both directions and `lean/PLAN-SPHERECAP.md`
+scopes the removal of.
+
+`#inClosure` also serves as the control on the two negative checks: a negative result from a
+walk that was looking in the wrong place would prove nothing, so the two positive checks —
+the constructed volume estimator and the constructed sampler kernel, both of which pass for
+the right reason — are what make the negatives worth reading.
+
+One measurement worth recording, because it is a distinction the checks make sharply.
+`Ttc.hybridTransitionBound` and `Ttc.mixStepsBound` are **not** in the closure, while
+`Ttc.mixSteps` and `Ttc.kv97HybridKernel` are.  The first two are *envelope* arithmetic —
+they appear in what `Ttc.ttc_volume` bounds the cost by, not in what the run does — and the
+last two are the run's own kernel.  The walk sees the algorithm, not the analysis of it,
+which is what makes "which oracle does this execute" a question it can answer. -/
+
+#absentFromClosure Ttc.mcVol in Ttc.ttc
+#absentFromClosure Ttc.MonteCarlo.hitData in Ttc.ttc
+#inClosure Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation in Ttc.ttc
+#inClosure Ttc.kv97HybridKernel in Ttc.ttc
+#inClosure Ttc.mixSteps in Ttc.ttc
+
 end Invocations

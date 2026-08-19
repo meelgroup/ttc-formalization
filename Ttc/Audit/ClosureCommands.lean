@@ -248,6 +248,54 @@ elab "#modelClosureOfType " id:ident : command => do
       Ttc/Probability/ or Ttc/Geometry/ ({cls.toList.length} Ttc constants)"
   | bad => throwError m!"OUTSIDE Model/, Probability/ and Geometry/ in the statement of {n}: {bad}"
 
+open Ttc.Audit in
+/-- **A negative closure check: `needle` does *not* occur behind `hay`.**
+
+`#modelClosure` asks whether everything a declaration reaches is inside a named surface.
+This asks the opposite question about a single constant: is `needle` reachable from `hay`'s
+definitional closure at all?  It **throws** when it is, so an oracle that was deleted from a
+definition cannot creep back in through a chain of `def` bodies without failing `lake build`.
+
+The intended use is the one in `Ttc/Audit/ClosureCheck.lean`: `Ttc.ttc` was, until
+2026-08-19, the algorithm at hit-and-miss Monte Carlo; a prose claim that it no longer is
+would be exactly the substitution `CLAUDE.md` §13 warns against, so the claim is checked
+instead.  Note what it does and does not cover — the *definitional* closure, walking `def`
+bodies and theorem *types*.  A file that merely mentions `Ttc.mcVol` in a docstring, or is
+imported for something else entirely, is invisible to it, and should be. -/
+elab "#absentFromClosure " needle:ident " in " hay:ident : command => do
+  let env ← getEnv
+  let nn ← liftCoreM <| Lean.realizeGlobalConstNoOverload needle
+  let hn ← liftCoreM <| Lean.realizeGlobalConstNoOverload hay
+  let some _ := env.find? hn | throwError "not found: {hn}"
+  let some _ := env.find? nn | throwError "not found: {nn}"
+  let cls := (closureAux env {} [hn] {}).erase hn
+  if cls.contains nn then
+    throwError m!"{nn} IS in the definitional closure of {hn}"
+  else
+    logInfo m!"OK — {nn} does not occur in the definitional closure of {hn} ({cls.toList.length} Ttc constants walked)"
+
+open Ttc.Audit in
+/-- **The dual: `needle` *does* occur behind `hay`.**
+
+Throws when it does not.  Two uses, both of them about keeping a docstring honest rather
+than decorative.  The first is a tripwire on a *deliberate* dependence — if a docstring says
+"the ball walk is still the low-dimension branch of the sampler", this fails the build the
+day that stops being true, instead of leaving the sentence quietly wrong.  The second is a
+control on `#absentFromClosure`: a negative check that passes because the walk is looking in
+the wrong place proves nothing, so pairing it with a positive one that passes for the right
+reason is what makes the negative informative. -/
+elab "#inClosure " needle:ident " in " hay:ident : command => do
+  let env ← getEnv
+  let nn ← liftCoreM <| Lean.realizeGlobalConstNoOverload needle
+  let hn ← liftCoreM <| Lean.realizeGlobalConstNoOverload hay
+  let some _ := env.find? hn | throwError "not found: {hn}"
+  let some _ := env.find? nn | throwError "not found: {nn}"
+  let cls := (closureAux env {} [hn] {}).erase hn
+  if cls.contains nn then
+    logInfo m!"OK — {nn} does occur in the definitional closure of {hn} ({cls.toList.length} Ttc constants walked)"
+  else
+    throwError m!"{nn} is NOT in the definitional closure of {hn}"
+
 /-! ## Reporting variants that do not fail the build
 
 The four commands above are the audit proper: they *throw*, so a regression stops `lake
