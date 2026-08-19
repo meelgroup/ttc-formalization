@@ -1430,6 +1430,19 @@ cannot shed.
   and one power of `n` cheaper. This is a local-conductance question: research.
 * **`thm:decompose`** — still not formalised at all, still not planned.
 
+### The paper's sampling bridge has a premise the construction cannot meet (2026-08-19)
+
+`Ttc.TTCOperationalPaperBridge.canonicalCappedSampleQueryEnvelope_le_paperSampling_of_cube`
+takes `hprice : canonicalHybridSamplerQueryBound i ≤ ofReal (rMax · n^5 · rho^2)` — "one
+endpoint costs at most `rMax·n⁵·ρ²` inspections", the operational meaning of the sampling
+line of `analysis.tex`.
+
+**Nothing in this development discharges it at large `ρ`.**  `Ttc.hybridTransitionBound` adds
+`Ttc.lowDimBallWalkEnvelope` unconditionally, and that term is `Θ(4^1099 · ρ^4396 · log Mw)` —
+constant in `n`, but far above `n⁵ρ²` once `ρ` grows.  This is the `CLAUDE.md` §11 pattern: a
+bridge to the paper whose hypothesis the construction does not satisfy, so it certifies
+nothing about this algorithm.  See `PLAN-SHAPE.md` §5.7.
+
 ### ⚠ SUPERSEDED 2026-08-19 — the section below is wrong as stated
 
 It concluded that the exponent gap "is the walk step size, and it is forced".  The gap was

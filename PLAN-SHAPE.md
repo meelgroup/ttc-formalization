@@ -236,7 +236,15 @@ Against the paper's *volume* term alone (`r·max(n³ρ², n⁴)/ε²`) we are wo
   suppresses warm-starting costs explicitly; ours does not.  Any comparison that treats the
   two conventions as the same is wrong.
 
-### 5.6  The fix, and the total (2026-08-19, commit `68592ae`)
+### ⚠ 5.6 SUPERSEDED 2026-08-19 — the total below is WRONG
+
+**The sampler row and the `total` row of the table in §5.6 are false, and so is every
+`ρ`-comparison drawn from them.**  They came from hand arithmetic that dropped a term, which
+is exactly what the "hand arithmetic, not machine-checked" flag existed to catch; the flag
+worked, on the first attempt to machine-check it.  The corrected reading is §5.7.  §5.6 is
+kept below only so the error is legible.
+
+### 5.6  The fix, and the total — ⚠ SUPERSEDED, see §5.7 (2026-08-19, commit `68592ae`)
 
 `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops` charges both recorded components
 at one rate, `Ttc.CoolCost.coolStepOpCharge n rfac = ⌈n · rfac⌉₊`:
@@ -267,6 +275,62 @@ the sampler half, and marked as such:
 paper's displayed expression carries it and its `O(·)` suppresses it.  The `log Mw` in the
 sampler half is a warm-start factor, which the paper's `O(·)` suppresses explicitly and ours
 does not.
+
+### 5.7  What the sampler envelope actually is (2026-08-19)
+
+Two errors in §5.6's sampler row, both found by reading the definitions the machine-check
+would have to unfold.
+
+**(a) A dropped additive term.**  `Ttc.hybridTransitionBound` is **not**
+`2⁶⁶·n²·(Rout/rin)²·log(8·Mw/ε²)`.  Its definition
+(`Ttc/Sampler/ConstructHybridUncond.lean:199`) is
+
+```
+max 0 (2^66 * n^2 * Rout^2 / rin^2 * log (8*Mw/eps^2))  +  1  +  lowDimBallWalkEnvelope rin Rout δ Mw eps
+```
+
+and the third summand is added **unconditionally** — it is a uniform envelope covering both
+branches, not something that switches off when `1100 ≤ n`.  It is
+
+```
+lowDimBallWalkEnvelope rin Rout δ Mw eps = ∑ k ∈ range 1100, max 0 (mixStepsBound k rin (2*Rout) δ Mw eps)
+```
+
+with (`Ttc/Exec/SampleBound.lean:219`)
+
+```
+mixStepsBound k γ Dm dl Mw eps
+  = (log Mw + 2 log (1/eps)) * (1024 * ((γ+Dm)/γ)^(2k) + 16384 * 4^k * k^2 * Dm^2/dl^2 * ((γ+Dm)/γ)^(4k)) + 1
+```
+
+At `k = 1099`, `Dm = 2·Rout`, `dl = rin/2`, and `(γ+Dm)/γ = 1 + 2·Rout/rin ≍ ρ`, this
+contributes a term of order
+
+```
+4^1099 * 1099^2 * ρ^2 * ρ^4396 * (log Mw + 2 log (1/eps))
+```
+
+— **constant in `n`, but polynomial in `ρ` of degree ≈ 4400, with a `4^1099` constant.**  `ρ`
+is an input parameter, not a constant, so no `Õ` convention suppresses it.
+
+**(b) `log Mw` is not `O(1)`.**  `Ttc.ttcSampWarm i = vol(body i) / vol(ball(centre, inradius))`
+(`Ttc/Exec/SampleBound.lean:462`) — a volume ratio, so `Mw ≲ ρⁿ` and
+`log(8·Mw/ε²) = Θ(n·log ρ + log(1/ε))`.  §5.6 treated it as a constant, which silently costs a
+further factor `n` in the high-dimensional part: that part is `Θ(n³·ρ²·log ρ)`, not `n²ρ²`.
+
+**What survives.**  Polynomiality — the low-dimensional term is polynomial in `ρ`, with an
+astronomical degree and constant, but polynomial.  And the `n`-dependence at fixed `ρ`: the
+dropped term is constant in `n`, so the volume half still governs the `n` exponent.
+
+**What dies.**  Every `ρ`-exponent claim, and every `ρ`-comparison with the paper.  In
+particular "`Õ(m·n⁵·ρ⁶·r_max/ε²)`" and "`ρ⁴` above the paper" are **withdrawn**.
+
+**A `CLAUDE.md` §11 finding this explains.**
+`Ttc.TTCOperationalPaperBridge.canonicalCappedSampleQueryEnvelope_le_paperSampling_of_cube`
+carries the premise `hprice : canonicalHybridSamplerQueryBound i ≤ ofReal (rMax·n⁵·ρ²)`.  **The
+construction cannot discharge that premise at large `ρ`** — the low-dimensional term exceeds
+`n⁵ρ²`.  That bridge is a theorem whose hypothesis this development does not satisfy, and the
+term above is why.
 
 ### 5.5  Consequences for existing text
 

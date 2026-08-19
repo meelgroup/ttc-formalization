@@ -393,9 +393,16 @@ Two findings, and the second is the important one.
    alike, giving a bound in one unit.  It is a **costing convention** — the paper's own — not
    a theorem about a machine; see `PLAN-SHAPE.md` §5.6.
 
-   **Total, in operations:** `Õ(m · n⁵ · ρ⁶ · r_max / ε²)`, the volume half dominating.
-   Against the paper's `O(m · n⁵ · ρ² · r_max)`: **`n` matches at `n⁵`, `ρ⁴` above.**
-   ⚠ The sampler half of that total is **hand arithmetic, not machine-checked**.
+   ⚠ **The total previously stated here — `Õ(m·n⁵·ρ⁶·r_max/ε²)`, "`ρ⁴` above the paper" —
+   is WITHDRAWN (2026-08-19).**  It rested on hand arithmetic for the sampler half that
+   dropped `Ttc.lowDimBallWalkEnvelope`, an additive term of `hybridTransitionBound` that is
+   constant in `n` but polynomial in `ρ` of degree ≈ 4400 with a `4^1099` constant, and that
+   also treated `log Mw` as `O(1)` when `Ttc.ttcSampWarm` is a volume ratio and
+   `log Mw = Θ(n log ρ)`.  See `PLAN-SHAPE.md` §5.7.
+
+   What survives: polynomiality, and the `n`-exponent at fixed `ρ` (the dropped term is
+   constant in `n`, so the volume half still governs it).  What dies: every `ρ`-exponent and
+   every `ρ`-comparison with the paper.
 
 ### P1 is OPERATIVE as of 2026-08-18
 
