@@ -498,6 +498,7 @@ import Ttc.Exec.VolumePriceCV
 import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.SampPriceHR
 import Ttc.Exec.VolPriceCVAlg
+import Ttc.Witness.VolPriceCVAlgTwoCube
 import Ttc.Witness.FixedPriceTwoCube
 import Ttc.Exec.PolyRun
 import Ttc.Exec.PolyAccuracy

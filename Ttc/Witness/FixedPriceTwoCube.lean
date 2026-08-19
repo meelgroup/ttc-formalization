@@ -3,6 +3,8 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Ttc.Exec.VolPriceCVAlg
+import Ttc.Witness.FullTwoCube
+import Ttc.Model.Theorem
 
 /-!
 # `Witness/FixedPriceTwoCube`: non-vacuity for the **fixed-price** headline

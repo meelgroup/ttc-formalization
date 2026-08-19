@@ -5,8 +5,7 @@ Released under Apache 2.0 license.
 import Ttc.Exec.CoolDrawPrice
 import Ttc.Exec.PriceList
 import Ttc.Exec.SampPriceHR
-import Ttc.Audit.ClosureCheck
-import Ttc.Witness.FullTwoCube
+import Ttc.Audit.ClosureCommands
 
 /-!
 # `Exec/VolPriceCVAlg`: the Cousins–Vempala per-call volume price, at the algorithm's own data
@@ -512,44 +511,6 @@ theorem cvVolPriceAt_eq : cvVolPriceAt atoms φ ε δ = ttcVolPriceCVAlg atoms �
 `Ttc.ttcSampPriceHR_model`. -/
 theorem hrSampPriceAt_eq : hrSampPriceAt atoms φ ε δ = ttcSampPriceHR atoms φ ε δ := rfl
 
-/-! ## §8  Non-vacuity
-
-The seven hypotheses of `Ttc.ttcVolPriceCVAlg_le` are conditions on `(atoms, φ, ε, δ, n)`,
-so the bound would be vacuous if no input met them.  `Ttc/Witness/FullTwoCube.lean`'s
-two-cube data meets them at **every** `n ≥ 1` and **every** `(ε, δ) ∈ (0,1]²` — it is the
-same witness `Ttc.ttc_volume_estimate_two_cube_full` uses — and there the price is a
-*positive* natural, so neither the bound nor the positivity statement is empty. -/
-
-/-- **Non-vacuity: the whole bundle is inhabited, and the price is positive there.**
-
-At the two-cube witness (`Ttc.TwoCube.atomsT`, `Ttc.TwoCube.twoForm`), at every `n ≥ 1` and
-every `(ε, δ) ∈ (0,1]²`: `hφ` is `Ttc.TwoCube.twoForm_isPositive` and `hpos` is
-`Ttc.TwoCube.twoVolPos`, so all seven hypotheses of `Ttc.ttcVolPriceCVAlg_le` hold
-simultaneously, and `0 < ttcVolPriceCVAlg …` — the price is not the trivial `0`. -/
-theorem ttcVolPriceCVAlg_pos_two_cube (m : ℕ) (hm : 1 ≤ m) (a b : ℝ) (ha0 : 0 < a)
-    (ha1 : a ≤ 1) (_hb0 : 0 < b) (_hb1 : b ≤ 1) :
-    0 < ttcVolPriceCVAlg (TwoCube.atomsT m hm a b ha0 ha1) (TwoCube.twoForm m) a b :=
-  ttcVolPriceCVAlg_pos (TwoCube.atomsT m hm a b ha0 ha1) (TwoCube.twoForm m) a b ha0 ha1 hm
-    TwoCube.twoForm_isPositive (TwoCube.twoVolPos m hm a b ha0 ha1)
-
-/-- **The bound itself, at the same witness** — so that `Ttc.ttcVolPriceCVAlg_le` is known to
-have at least one instance whose hypotheses are all met. -/
-theorem ttcVolPriceCVAlg_le_two_cube (m : ℕ) (hm : 1 ≤ m) (a b : ℝ) (ha0 : 0 < a)
-    (ha1 : a ≤ 1) (hb0 : 0 < b) (hb1 : b ≤ 1) :
-    (ttcVolPriceCVAlg (TwoCube.atomsT m hm a b ha0 ha1) (TwoCube.twoForm m) a b : ℝ)
-      ≤ 2 ^ 42 * (m : ℝ) ^ 4
-          * ((canonRfac (toDNFd (preprocess (TwoCube.atomsT m hm a b ha0 ha1)
-                (TwoCube.twoForm m))) + 1)
-              * Real.log (8 / (algBlock (TwoCube.atomsT m hm a b ha0 ha1)
-                  (TwoCube.twoForm m) a b).epsPrime ^ 2)
-              * (cvAlgL (TwoCube.atomsT m hm a b ha0 ha1) (TwoCube.twoForm m) a b ^ 4
-                  * Real.log (1 / (algBlock (TwoCube.atomsT m hm a b ha0 ha1)
-                      (TwoCube.twoForm m) a b).deltaPrime)
-                  / cvAlgKappa (TwoCube.atomsT m hm a b ha0 ha1)
-                      (TwoCube.twoForm m) a b ^ 3)) :=
-  ttcVolPriceCVAlg_le (TwoCube.atomsT m hm a b ha0 ha1) (TwoCube.twoForm m) a b ha0 ha1 hm
-    TwoCube.twoForm_isPositive (TwoCube.twoVolPos m hm a b ha0 ha1) hb0 hb1
-
 end AtTheRun
 
 end Ttc
@@ -578,5 +539,3 @@ are this file's own numeral auxiliaries — see §7's docstring; the vocabulary 
 #print axioms Ttc.ttcVolPriceCVAlg_model
 #print axioms Ttc.cvAlgModelRhs
 #print axioms Ttc.cvAlgModelRhs_eq
-#print axioms Ttc.ttcVolPriceCVAlg_pos_two_cube
-#print axioms Ttc.ttcVolPriceCVAlg_le_two_cube
