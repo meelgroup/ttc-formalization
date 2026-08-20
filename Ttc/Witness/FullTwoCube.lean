@@ -51,9 +51,9 @@ the dimension, met by taking `n ≥ 21`, and `Ttc.TwoCube.ttc_volume_two_cube_at
    demands probability at least `1/10`, and `Ttc.TwoCube.ttc_volume_two_cube_at` carries that
    numeral in its statement.
 2. **The cost conjunct** reads `∫⁻ r, r.2 ≤ B` in `ℝ≥0∞`, where *everything* is `≤ ⊤`.
-   `Ttc.EnvelopeFinite.ttc_volume_bound_ne_top` proves `B ≠ ⊤`, so the bound constrains the
-   run.  It is not a *small* bound — see `Ttc/Exec/SamplerEnvelopeShape.lean` for how large
-   it is below dimension 1100 — but it is a number.
+   `Ttc.ttc_volume_bound_ne_top` proves `B ≠ ⊤`, so the bound constrains the run.  It is not
+   a *small* bound — it is exponential in `n`, see the cost caveat below — but it is a
+   number.
 
 ## Cost caveat
 
@@ -120,23 +120,24 @@ theorem ttcInputs_two_cube (n : ℕ) (hn : 1 ≤ n) (ε δ : ℝ) (hε0 : 0 < ε
 `(ε, δ) ∈ (0,1]²`.
 
 Both binders that are about the *formula* are met by the two-cube data; the rest are the
-numeric ranges the headline is stated over.  Nothing is weakened: this is
-`Ttc.ttc_volume` itself, applied. -/
+numeric ranges the headline is stated over.  Nothing is weakened: the accuracy conjunct is
+`Ttc.ttc_volume`'s own, and the cost conjunct is `Ttc.ttc_volume_bound_ne_top`'s — whose `B`
+is unified from `Ttc.ttc_volume`'s bound rather than restated here, so this witness cannot
+drift away from the statement it is a witness *for*.
+
+Pairing the two is what makes the cost half non-vacuous: `∫⁻ … ≤ B` with `B = ⊤` would hold
+of every run, so `B ≠ ⊤` is the content. -/
 theorem ttc_volume_two_cube (n : ℕ) (hn : 21 ≤ n) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) :
     let hn1 : 1 ≤ n := le_trans (by norm_num) hn
     let atoms := atomsT n hn1 ε δ hε0 hε1
     (1 - δ ≤ Pr[r ← Ttc.ttc atoms (twoForm n) ε δ;
       r.1 ∈ relErr ε (volSol (Ttc.atomSet atoms) (twoForm n))])
-    ∧ ((∫⁻ r, r.2 ∂Ttc.ttc atoms (twoForm n) ε δ) ≤
-      Ttc.CVShaped.shapedVolumeQueryEnvelopeAt
-          Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation atoms (twoForm n) ε (4 * δ / 5)
-          (fun j ↦ (Ttc.TtcCircumRadius.circumR (interior
-            (Ttc.TTCCVExpectedImplementation.callBody atoms (twoForm n) ε (4 * δ / 5) j))) ^ 2)
-        + Ttc.TTCSourceSharpOperationalFinal.canonicalCappedSampleQueryEnvelope
-            atoms (twoForm n) ε (4 * δ / 5)) :=
-  Ttc.ttc_volume _ (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn twoForm_isPositive
-    (twoVolPos n (le_trans (by norm_num) hn) ε δ hε0 hε1)
+    ∧ ∃ B : ℝ≥0∞, B ≠ ⊤ ∧ (∫⁻ r, r.2 ∂Ttc.ttc atoms (twoForm n) ε δ) ≤ B :=
+  ⟨(Ttc.ttc_volume _ (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn twoForm_isPositive
+      (twoVolPos n (le_trans (by norm_num) hn) ε δ hε0 hε1)).1,
+    Ttc.ttc_volume_bound_ne_top _ (twoForm n) ε δ hε0 hε1 hδ0 hδ1 hn twoForm_isPositive
+      (twoVolPos n (le_trans (by norm_num) hn) ε δ hε0 hε1)⟩
 
 /-- **The accuracy conjunct at a numeral, with the numeral proved positive in the
 statement.**
@@ -159,26 +160,10 @@ theorem ttc_volume_two_cube_at :
       (ttc_volume_two_cube 21 (by norm_num) (1 / 3) (9 / 10) hε0 hε1
         (by norm_num) (by norm_num)).1⟩
 
-/-- **The cost conjunct is not vacuous at the witness**: its right-hand side is a number, not
-`⊤`.  In `ℝ≥0∞` a bound of `⊤` would be satisfied by every run, so this is the check that
-makes the cost half of `Ttc.TwoCube.ttc_volume_two_cube` say something. -/
-theorem ttc_volume_two_cube_bound_ne_top (n : ℕ) (hn : 21 ≤ n) (ε δ : ℝ)
-    (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    let hn1 : 1 ≤ n := le_trans (by norm_num) hn
-    let atoms := atomsT n hn1 ε δ hε0 hε1
-    Ttc.CVShaped.shapedVolumeQueryEnvelopeAt
-        Ttc.TtcSlowRuntimePerPhase.slowPerPhaseImplementation atoms (twoForm n) ε (4 * δ / 5)
-        (fun j ↦ (Ttc.TtcCircumRadius.circumR (interior
-          (Ttc.TTCCVExpectedImplementation.callBody atoms (twoForm n) ε (4 * δ / 5) j))) ^ 2)
-      + Ttc.TTCSourceSharpOperationalFinal.canonicalCappedSampleQueryEnvelope
-          atoms (twoForm n) ε (4 * δ / 5) ≠ ⊤ :=
-  Ttc.EnvelopeFinite.ttc_volume_bound_ne_top _ (twoForm n) ε (4 * δ / 5)
-
 #print axioms Ttc.TwoCube.twoVolPos
 #print axioms Ttc.TwoCube.ttcInputs_two_cube
 #print axioms Ttc.TwoCube.ttc_volume_two_cube
 #print axioms Ttc.TwoCube.ttc_volume_two_cube_at
-#print axioms Ttc.TwoCube.ttc_volume_two_cube_bound_ne_top
 
 end TwoCube
 

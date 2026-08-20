@@ -1,5 +1,45 @@
 # TTC end-to-end: where we are, and the immediate work
 
+> ## ⚠⚠ Supersedes the 2026-08-19 box below — 2026-08-20
+>
+> **`Ttc.ttc_volume` now carries its cost bound as an expression, not two function names**,
+> in `n`, the cube count `m`, `ε`, `δ`, the facet count `r` and the run's own geometry.
+> `Ttc/Exec/ExplicitEnvelope.lean` computes every factor; all equalities but one
+> already-proved inequality, so nothing is estimated away by reading the capstone instead of
+> the definitions.
+>
+> **Writing it out made the real obstruction visible, and it is not the one this document
+> chases.**  The sampler factor is `m · (endpoint count) · (cost of one endpoint)`:
+>
+> * the **cost of one endpoint**, `8·((2⁶⁶n²ρ²L + 1)·(r/2) + 1)`, is polynomial at every
+>   dimension the theorem admits.  That is what the `n ≥ 21` spherical-cap estimate bought
+>   on 2026-08-19, and it is **one factor of three**;
+> * the **endpoint count** is `(1 + ε/12)·max 1 (Thresh/(Vₙγ̂ⁿ))·Vol(Sol F)` — `Thresh` times
+>   a body-to-inscribed-ball volume ratio, i.e. `(R/γ̂)ⁿ` in the worst case.
+>
+> **The endpoint count is exponential because of the cost model, not a loose bound.**
+> `Ttc.fullTrajectoryQueryCost omega = (omega 0).1`
+> (`Exec/TTCFullTrajectoryQueryCost.lean:27`): `r.2` charges the entire **level-0** marked
+> Poisson process, and `alg:ttc` lines 39–42 then thin it to `≤ Thresh` **for free**
+> (`levelQueryIncrement j = 0` for `j ≠ 0`).  The model pays for every point the algorithm
+> discards.  `Ttc.runCost_le` (`Runtime.lean:132`) proves the paper's own accounting —
+> `m·(cVol + cSample·Thresh)`, guard discharged a.s. by `Ttc.trajLaw_ae_terminates` — but
+> that is a **different cost function**, not a sharper bound on this one.
+>
+> So no theorem gets `Ttc.ttc_volume` under `Thresh`.  Removing the exponential means
+> charging marked-Poisson generation at the *absorbed* level rather than level 0 — a change
+> to what `r.2` counts.  That is the next decision, and it is a cost-model change, so it
+> needs saying out loud rather than landing quietly.
+>
+> **Also landed 2026-08-20:** `Ttc.scaleFactor` now takes the `n`-th root,
+> `(max 1 (Thresh/(Vₙγ̂ⁿ)))^{1/n}`.  It previously took the ratio un-rooted — "free because
+> line A13 divides by `qⁿ`", which is true for accuracy and false for cost — putting a
+> *further* `n`-th power on the same endpoint count.  `Ttc.scaleFactor_pow` gives
+> `qⁿ = max 1 (Thresh/(Vₙγ̂ⁿ))` exactly.  Commit `f6f3435`.
+>
+> **Stale below:** item 1's `Õ(m·n⁴·ρ⁶/ε²)` figure describes the volume half's shape and
+> reads as a claim about the whole envelope, which the endpoint count contradicts.
+
 > ## ⚠ Current state, 2026-08-19 — read this before the body
 >
 > The repository has **one algorithm and one theorem**, both at the oracles the paper

@@ -59,10 +59,18 @@ would take Markov's inequality against a failure budget plus the existing
 
 ## ⚠ Three things this is not
 
-1. **Not the paper's exponents.**  The envelope is `Õ(m·n⁴·ρ⁶/ε²)` in *membership-query*
-   units, not `O(m·n⁵·ρ²·r_max)`, and the two are not in the same units until the `⌈n·rfac⌉₊`
-   charge of `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops` is applied.  The
-   `ρ` exponent is unsettled.  See `lean/PLAN-SHAPE.md` §5 and `lean/PAPER-CLAIMS.md`.
+1. **Not the paper's exponents — and not a polynomial.**  The envelope is in
+   *membership-query* units, not the operation counts `thm:runtime` reports, and the two are
+   not in the same units until the `⌈n·rfac⌉₊` charge of
+   `Ttc.TtcSlowRuntimePerPhase.ttc_volume_runtime_perPhase_ops` is applied.  More seriously,
+   the bound is **exponential in `n`**: its sampler factor is the endpoint count
+   `(1 + ε/12)·max 1 (Thresh/(Vₙγ̂ⁿ))·Vol(Sol F)`, which is `Thresh` times a
+   body-to-inscribed-ball volume ratio.  That is not slack in the estimate — `Ttc.ttc`'s cost
+   coordinate is defined to charge the whole level-0 marked Poisson process
+   (`Ttc.fullTrajectoryQueryCost` is `(omega 0).1`, thinning being free), so the model pays
+   for every point `alg:ttc` lines 39–42 later discard.  `Ttc.runCost_le` proves the paper's
+   own accounting, `m·(cVol + cSample·Thresh)`, but that is a different cost function.  The
+   volume half's `ρ` exponent is separately unsettled: `lean/PLAN-SHAPE.md` §5.
 2. **Not a practical bound, though it is now a uniform one.**  Until 2026-08-19 the sampler
    was hit-and-run only at `1100 ≤ n`, and for `21 ≤ n < 1100` the proved transition bound was
    the ball walk's own — `4 ^ n` times a `(radius ratio) ^ (4 n)`.  That hole is closed: the
@@ -72,7 +80,7 @@ would take Markov's inequality against a failure budget plus the existing
    transition bound is polynomial throughout.  What remains is the size of the constant:
    `2 ^ 66 · n² · R²/r² · log(8 M/ε²)`.  Polynomial is not the same as runnable.
 3. **Not inside a four-file audit surface.**  Naming the constructed oracles *is* naming the
-   construction: the statement below reaches 637 constants across 108 modules outside
+   construction: the statement below reaches 798 constants outside
    `Model/`, `Probability/` and `Geometry/`.  `#modelClosureOfType` does not hold of it and is
    not claimed.  What the surface still certifies is the *specification* —
    `Ttc.ttcAlgOutput`, checked in `Ttc/Audit/ClosureCheck.lean`.  The asymmetry is real and
@@ -265,6 +273,26 @@ theorem ttc_volume {n : ℕ}
       hε0 hε1 hn1 hφ hpos).trans (le_of_eq ?_)
     rw [algBlock_thresh_eq_at atoms φ ε δ hε0 hε1 hδ0 hn1 hφ hpos]
 
+/-- **The cost conjunct is not vacuous: its bound is a number, not `⊤`.**
+
+In `ℝ≥0∞` the inequality `∫⁻ … ≤ ⊤` holds of every run, so a cost bound says nothing until
+its right-hand side is known finite (`CLAUDE.md` §11).  `B` here is *literally*
+`Ttc.ttc_volume`'s bound — it is unified from that theorem rather than restated, so this
+cannot drift away from the statement it certifies. -/
+theorem ttc_volume_bound_ne_top {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
+    (hn : 21 ≤ n) (hφ : φ.IsPositive)
+    (hpos : 0 < volSol (atomSet atoms) φ) :
+    ∃ B : ℝ≥0∞, B ≠ ⊤ ∧ (∫⁻ r, r.2 ∂ttc atoms φ ε δ) ≤ B := by
+  refine ⟨_, ?_, (ttc_volume atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos).2⟩
+  refine ENNReal.add_ne_top.2 ⟨ENNReal.sum_ne_top.2 fun _ _ ↦ ENNReal.ofReal_ne_top, ?_⟩
+  refine ENNReal.mul_ne_top (by simp) (ENNReal.mul_ne_top ENNReal.ofReal_ne_top ?_)
+  refine ENNReal.mul_ne_top (by simp) (ENNReal.add_ne_top.2 ⟨?_, by simp⟩)
+  exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+    (ENNReal.mul_ne_top (by simp) (by simp))
+
 #print axioms ttc_volume
+#print axioms ttc_volume_bound_ne_top
 
 end Ttc

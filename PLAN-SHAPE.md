@@ -376,13 +376,19 @@ replaces every `R_i/γ_i` by `ρ` and every `r_i` by `r_max` (`sections/analysis
 `thm:runtime`).  So the shape is right; supplying `T` means taking that sup over the run's own
 per-cube geometry.
 
-**What this does not restore.**  The withdrawn *total* stays withdrawn, and the reason has now
-narrowed to one half.  The **sampler** half is closed: `Ttc/Exec/SamplerPolyEnvelope.lean`
-proves `canonicalCappedSampleQueryEnvelope ≤ m · threshold · 8·((2⁶⁶·n²·ρ²·L + 1)·(r/2) + 1)`
-with `ρ²` and `L` `Finset.sup`s over the run's own cubes — binder-free, and wired to the
-headline by `Ttc.PolyRuntime.ttc_cost_le_volume_add_poly`.  The **volume** half is not
-reduced, so there is still no `ρ`-exponent for the total and no `ρ`-comparison with the paper
-is licensed.  Note also that `L = log(8·Mw/ν²)` is itself `Θ(n log ρ)` by §5.7(b), so the
+**What this does not restore.**  The withdrawn *total* stays withdrawn, and the reason has
+**not** narrowed to one half — that reading, held until 2026-08-20, was wrong.
+`Ttc/Exec/SamplerPolyEnvelope.lean` proves
+`canonicalCappedSampleQueryEnvelope ≤ m · threshold · 8·((2⁶⁶·n²·ρ²·L + 1)·(r/2) + 1)` with
+`ρ²` and `L` `Finset.sup`s over the run's own cubes, binder-free, and `Ttc.ttc_volume` now
+carries it inline (`Ttc/Exec/ExplicitEnvelope.lean`; `Ttc.PolyRuntime` was deleted as
+redundant).  But **`threshold` is not a constant** — it is `Ttc.canonicalRateThreshold`, the
+endpoint count, `= (1 + ε')·algScaleⁿ·Vol(Sol F)`, exponential in `n`.  Only the
+`8·((2⁶⁶n²ρ²L + 1)(r/2) + 1)` factor is polynomial, and it is one factor of three.  See
+`RUNTIME-ENDGAME.md`'s 2026-08-20 box: the exponential is in the cost model
+(`fullTrajectoryQueryCost` charges the level-0 marked Poisson process), not in the estimate.
+The **volume** half is separately not reduced, so there is still no `ρ`-exponent for the total
+and no `ρ`-comparison with the paper is licensed.  Note also that `L = log(8·Mw/ν²)` is itself `Θ(n log ρ)` by §5.7(b), so the
 sampler polynomial is `Θ(n³ρ²·r·log ρ)` in `n` and `ρ`, not `n²ρ²`.
 
 ### 5.5  Consequences for existing text
@@ -400,8 +406,11 @@ sampler polynomial is `Θ(n³ρ²·r·log ρ)` in `n` and `ρ`, not `n²ρ²`.
 * The sampler-side summand carries **no** shape:
   `canonicalCappedSampleQueryEnvelope = ∑ᵢ polyGoodRateCapᵢ · canonicalHybridSamplerQueryBoundᵢ`
   (`TTCSourceSharpOperationalFinal:462`).  This change does not touch it.
-* The capstone's statement *text* is stable: `shapedVolumeQueryEnvelopeAt` is abstract in `I`
-  and its shape, so only `I`'s type and the bound's value change.
+* The capstone's statement text is **no longer** `shapedVolumeQueryEnvelopeAt` (2026-08-20):
+  `Ttc.ttc_volume` now carries the expression itself, via
+  `Ttc/Exec/ExplicitEnvelope.lean`'s equalities.  A change to `I` therefore does move the
+  capstone's text, and `shapedVolumeQueryEnvelopeAt_eq` is the lemma that has to move with
+  it.  `ttc_volume_runtime_perPhase` is unchanged and still stated in the abstract form.
 
 ## 7.  Checklist
 
