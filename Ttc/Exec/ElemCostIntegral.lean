@@ -35,20 +35,23 @@ variable {A : Type*} {n : Nat} {I : Type*} [Fintype I]
 set_option maxHeartbeats 1000000 in
 /-- **The elementary cost, in expectation.**
 
-`B` bounds the loop half **almost everywhere** — not pointwise.  That matters: the loop
-half is bounded via `Ttc.elemRunCost_le`, whose `Ttc.Terminates` guard is *false* at some
-coins (`Exec/Complexity` §2), so a pointwise hypothesis would be one nothing satisfies
-(`CLAUDE.md` §11).  Almost everywhere is what `Ttc.trajLaw_ae_terminates` can supply. -/
+`B` bounds the loop half **in expectation** — not pointwise, and not even almost
+everywhere.  That is forced, not a convenience: the thinning charge is paid for by the
+sketch shrinking geometrically (`Ttc.thinKernel` is `Binomial(·, ½)` per lattice point), and
+that argument controls the *mean* of the charge while its tails stay unbounded.  An a.e.
+hypothesis would be one nothing satisfies (`CLAUDE.md` §11); the same is true of the
+`Ttc.Terminates` guard, which is false at some coins (`Exec/Complexity` §2).
+`DnfstreamXt/Analysis/OverflowExpCost.lean` bounds an expectation for the same reason. -/
 theorem lintegral_snd_elemFullOperationalLaw_le
     {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
     (V : ExpectedQueryVolumeAlgorithm n)
     (P : @CanonicalOwnerTrajectoryPlugin I _
       (algIndex atoms phi eps delta) V.Ω V.mΩ)
     (r Tw : Nat) (B : ENNReal)
-    (hB : ∀ᵐ z ∂canonicalCostedPolyJoint (atoms := atoms) (phi := phi) (eps := eps)
-        (delta := delta) V P,
-      ((ttcPolyElemCost atoms phi eps delta V.toVolumeAlgorithm z.1
-        (Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2) r 0 Tw : Nat) : ENNReal) ≤ B) :
+    (hB : (∫⁻ z, ((ttcPolyElemCost atoms phi eps delta V.toVolumeAlgorithm z.1
+          (Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2) r 0 Tw : Nat) : ENNReal)
+        ∂canonicalCostedPolyJoint (atoms := atoms) (phi := phi) (eps := eps)
+          (delta := delta) V P) ≤ B) :
     (∫⁻ x, x.2 ∂elemFullOperationalLaw V P r Tw)
       ≤ (memCost n r : ENNReal) * ttcPolyVolumeQueryBound atoms phi eps delta V + B := by
   letI := V.mΩ
@@ -79,9 +82,39 @@ theorem lintegral_snd_elemFullOperationalLaw_le
     rw [hjoint, Measure.lintegral_compProd hvolm]
     simpa using lintegral_ttcPolyVolumeQueryCost_le atoms phi eps delta V
   · -- loop half: pointwise, against a probability measure
-    refine le_trans (lintegral_mono_ae hB) ?_
-    simp
+    exact hB
+
+/-- **Changing the cost model does not move any estimate event.**
+
+`Ttc.map_fst_elemFullOperationalLaw` read at a single measurable set: an accuracy statement
+proved for `Ttc.canonicalFullOperationalLaw` transfers verbatim. -/
+theorem elemFullOperationalLaw_fst_eq
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n)
+    (P : @CanonicalOwnerTrajectoryPlugin I _
+      (algIndex atoms phi eps delta) V.Ω V.mΩ)
+    (r Tw : Nat) {S : Set Real} (hS : MeasurableSet S) :
+    elemFullOperationalLaw V P r Tw {x | x.1 ∈ S}
+      = canonicalFullOperationalLaw V P {x | x.1 ∈ S} := by
+  have hpre : {x : Real × ENNReal | x.1 ∈ S} = Prod.fst ⁻¹' S := rfl
+  rw [hpre, ← Measure.map_apply measurable_fst hS,
+    ← Measure.map_apply measurable_fst hS, map_fst_elemFullOperationalLaw V P r Tw]
+
+/-- **The elementary-cost law is a probability measure** — the same joint, pushed along a
+measurable pair. -/
+instance isProbabilityMeasure_elemFullOperationalLaw
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n)
+    (P : @CanonicalOwnerTrajectoryPlugin I _
+      (algIndex atoms phi eps delta) V.Ω V.mΩ)
+    (r Tw : Nat) : IsProbabilityMeasure (elemFullOperationalLaw V P r Tw) := by
+  letI := V.mΩ
+  letI : IsProbabilityMeasure V.μ := V.isProb
+  letI : IsMarkovKernel P.trajectoryKernel := P.trajectoryKernel_markov
+  unfold elemFullOperationalLaw
+  exact Measure.isProbabilityMeasure_map (measurable_elemFullOperationalPair V r Tw).aemeasurable
 
 #print axioms lintegral_snd_elemFullOperationalLaw_le
+#print axioms elemFullOperationalLaw_fst_eq
 
 end Ttc.TTCSourceSharpOperationalTheorem
