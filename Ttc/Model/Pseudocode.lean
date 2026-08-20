@@ -263,22 +263,32 @@ def genCost (n r T N : ℕ) : ℕ := N * sampleCost n r T
 /-- One `Vol_ED` call issuing `Q` membership tests. -/
 def volCallCost (n r Q : ℕ) : ℕ := Q * memCost n r
 
-/-- One pass of the early-reduce loop (lines 32–35): the coins only. -/
-def earlyPassCost (X : Multiset (Space n)) : ℕ := thinCost X
+/-- **The coins of every thinning pass from level `j₀` to level `j`.**
 
-/-- One pass of the overflow loop (lines 39–42): the coins, plus the `Bin(N,½)` draw that
-thins the count already made. -/
-def overflowPassCost (X : Multiset (Space n)) : ℕ := thinCost X + drawCost
+Lines 33 and 40 each flip one coin per copy *currently* in the sketch, and the sketch
+shrinks as the levels rise — so the charge is a sum over levels, not the pass count times
+the entry sketch.  That distinction is not cosmetic: the pass count has no deterministic
+bound, while this sum is geometric (each level's bucket is a `Binomial(·, ½)` thinning of
+the last, `Ttc.thinKernel`), which is what makes the loop payable.  Compare
+`DnfstreamXt.overflow`, which charges `thinCost s.bucket` inside the loop at the current
+bucket for the same reason. -/
+noncomputable def thinPassCost (j₀ j : ℕ) (X : Multiset (Space n)) : ℕ :=
+  ∑ k ∈ Finset.Ico j₀ j, thinCost (O.thin j₀ k X)
 
-/-- **One iteration of the main loop, lines 24–45**, at `X` the sketch on entry, `r` the
-facet count, `Q` the volume call's test count, `e` early-reduce passes, `a` overflow
-passes, `N` the surviving Poisson count and `T` the walk length one sample costs.
+/-- **One iteration of the main loop, lines 24–45**, at
 
-The two pass counts are charged at the entry sketch, which dominates: both loops only
-remove copies. -/
-def cubeCost (r : ℕ) (X : Multiset (Space n)) (e a N Q T : ℕ) : ℕ :=
-  volCallCost n r Q + removalCost r X
-    + e * earlyPassCost X + drawCost + a * overflowPassCost X + genCost n r T N
+* `X` the sketch once the covered points are dropped and `r` the facet count,
+* `j₀` the entry level, `j₁` the early-reduce exit level, `j` the overflow exit level,
+* `N` the surviving Poisson count, `Q` the volume call's membership-test count, and `Tw`
+  the walk length one generated sample costs.
+
+The charges are: the `Vol_ED` call; one membership test per copy for lines 26–30; the
+coins of every thinning pass of *both* loops; the `Poisson` draw of line 37; one
+`Binomial(N, ½)` draw per overflow pass (line 41 — a thinning of the draw already made,
+not a redraw); and `N` generated samples. -/
+noncomputable def cubeCost (r : ℕ) (X : Multiset (Space n)) (j₀ j₁ j N Q Tw : ℕ) : ℕ :=
+  volCallCost n r Q + removalCost r X + thinPassCost O j₀ j X
+    + drawCost + (j - j₁) * drawCost + genCost n r Tw N
 
 /-- **The cost of one iteration** in the older two-price form: one `Vol_ED` call plus one
 `GenerateSamples` draw per point returned.  `N` is the surviving Poisson count `Nᵢ`.
@@ -302,21 +312,20 @@ level increments the two `while` loops actually perform, and `N` is the survivin
 count.  Only `r` (the facet count), `Q` (the volume call's membership-test count) and `T`
 (the walk length one sample costs) come from outside, because they are properties of the
 polytope and of the two subroutines rather than of the loop. -/
-noncomputable def elemStepCost (r Q T : ℕ) (st : SketchState n) (i : ι) : ℕ :=
-  cubeCost r (dropCovered O i st.X)
-    (haltLevel P (O.vol i) st.level - st.level)
-    ((stepPre P O st i).1.level - haltLevel P (O.vol i) st.level)
-    (stepPre P O st i).2 Q T
+noncomputable def elemStepCost (r Q Tw : ℕ) (st : SketchState n) (i : ι) : ℕ :=
+  cubeCost O r (dropCovered O i st.X) st.level
+    (haltLevel P (O.vol i) st.level) (stepPre P O st i).1.level
+    (stepPre P O st i).2 Q Tw
 
 /-- **The cost of the whole run in the elementary cost model**, summed along `Ttc.run`'s
 own fold — so every quantity charged is the one the algorithm actually reaches.
 
 This is `Ttc.runCost` with the two supplied prices replaced by the elementary costs, and
 with the removal and thinning charges — which `Ttc.stepCost` omits entirely — restored. -/
-noncomputable def elemRunCost (r Q T : ℕ) (ρ : ℤ) (cubes : List ι) : ℕ :=
+noncomputable def elemRunCost (r Q Tw : ℕ) (ρ : ℤ) (cubes : List ι) : ℕ :=
   (cubes.foldl
     (fun (acc : ℕ × SketchState n) i =>
-      (acc.1 + elemStepCost P O r Q T acc.2 i, step P O ρ acc.2 i))
+      (acc.1 + elemStepCost P O r Q Tw acc.2 i, step P O ρ acc.2 i))
     (0, ⟨0, 0⟩)).1
 
 /-! # The preprocessing, lines A1–A13.  Definitions only: what each step *is*.

@@ -137,12 +137,28 @@ theorem countablyDetermined_runCost (P : Params) (ρ : ℤ) (cVol cSample : ℕ)
 randomness at three places rather than one.  All three are already known countably
 determined, and the sketch argument is not random at all. -/
 
+/-- **Finite sums of countably determined naturals are countably determined.** -/
+theorem countablyDetermined_finsetSum {κ : Type*} {f : κ → Ω → ℕ} :
+    ∀ (s : Finset κ), (∀ k ∈ s, CountablyDetermined (f k)) →
+      CountablyDetermined fun ω : Ω => ∑ k ∈ s, f k ω := by
+  classical
+  intro s
+  induction s using Finset.induction_on with
+  | empty => intro _; simpa using countablyDetermined_const (0 : ℕ)
+  | insert a s ha ih =>
+      intro hf
+      have h1 : CountablyDetermined (f a) := hf a (Finset.mem_insert_self a s)
+      have h2 := ih (fun k hk => hf k (Finset.mem_insert_of_mem hk))
+      have h3 := (h1.prodMk h2).map (fun p : ℕ × ℕ => p.1 + p.2)
+      simpa [Finset.sum_insert ha] using h3
+
 /-- **One iteration's elementary cost is countably determined.**
 
-`Ttc.elemStepCost` reads the run at the early-reduce exit level, the overflow exit level
-and the surviving Poisson count.  Its sketch argument `Ttc.dropCovered` does not depend on
-the randomness at all — `covered` is a fixed function — so the whole charge factors through
-a triple of countably determined values. -/
+`Ttc.elemStepCost` reads the run at the early-reduce exit level, the overflow exit level,
+the surviving Poisson count, and — through `Ttc.thinPassCost` — the trajectory at every
+level in between.  The last of these has a *random range*, so the triple is bound first and
+the thinning sum taken at the exit level it names.  The sketch argument is not random at
+all: `covered` is a fixed function. -/
 theorem countablyDetermined_elemStepCost (P : Params) (r Q Tw : ℕ) (i : ι)
     (S : SketchState n)
     (hT : ∀ k, CountablyDetermined fun ω => T ω k)
@@ -158,8 +174,20 @@ theorem countablyDetermined_elemStepCost (P : Params) (r Q Tw : ℕ) (i : ι)
   have hN : CountablyDetermined fun ω : Ω =>
       (stepPre P (trajOracles hpt (V ω) covered mem (T ω)) S i).2 :=
     countablyDetermined_stepPre_snd hpt V covered mem T P i S hT hH
-  exact ((hhalt.prodMk habs).prodMk hN).map
-    (fun p => cubeCost r X₀ (p.1.1 - S.level) (p.1.2 - p.1.1) p.2 Q Tw)
+  refine CountablyDetermined.bind ((hhalt.prodMk habs).prodMk hN)
+    (g := fun p ω =>
+      volCallCost n r Q + removalCost r X₀
+        + (∑ k ∈ Finset.Ico S.level p.1.2,
+            thinCost ((trajOracles hpt (V ω) covered mem (T ω)).thin S.level k X₀))
+        + drawCost + (p.1.2 - p.1.1) * drawCost + genCost n r Tw p.2) ?_
+  intro p
+  have hsum : CountablyDetermined fun ω : Ω =>
+      ∑ k ∈ Finset.Ico S.level p.1.2,
+        thinCost ((trajOracles hpt (V ω) covered mem (T ω)).thin S.level k X₀) :=
+    countablyDetermined_finsetSum _
+      (fun k _ => (hT k).map (fun v => thinCost (trajThin pt v X₀)))
+  exact hsum.map (fun c => volCallCost n r Q + removalCost r X₀ + c + drawCost
+    + (p.1.2 - p.1.1) * drawCost + genCost n r Tw p.2)
 
 /-- **The elementary cost fold lemma.**  `Ttc.elemRunCost`'s accumulator-and-state pair,
 after any prefix of the cube list, is countably determined.  Same induction as
