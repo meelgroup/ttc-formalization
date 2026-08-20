@@ -32,41 +32,35 @@ namespace Ttc.PerPhasePoly
 open Ttc.PerPhaseLeavesExplicit
 open Ttc.TtcSlowRuntimePerPhase Ttc.CVSlowEffectiveOverhead
 open Ttc.CVSlowFullBodySourceSchedule Ttc.CVSlowSourceReferenceCertificate
-open Arlib.Convexity.GaussianCooling
+open Arlib.GaussianCooling
 
-/-- `1/log(1+1/n) ≤ 2n` — the step that turns the phase count into a polynomial.  For
-`0 ≤ x ≤ 1`, `log(1+x) ≥ x/2`. -/
+/-- `1/log(1+1/n) ≤ 2n` — the step that turns the phase count into a polynomial.
+
+`Real.one_sub_inv_le_log_of_pos` gives `log(1+1/n) ≥ 1 - (1+1/n)⁻¹ = 1/(n+1)`, and
+`1/(2n) ≤ 1/(n+1)` because `n ≥ 1`. -/
 theorem one_div_log_one_add_le (n : ℕ) (hn : 1 ≤ n) :
     1 / Real.log (1 + 1 / (n : ℝ)) ≤ 2 * (n : ℝ) := by
   have hn0 : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have hx1 : 1 / (n : ℝ) ≤ 1 := by
-    rw [div_le_one hn0]; exact_mod_cast hn
-  have hx0 : (0 : ℝ) < 1 / (n : ℝ) := by positivity
-  -- `log(1+x) ≥ x/2` on `[0,1]`, via `log(1+x) ≥ x/(1+x)` and `1+x ≤ 2`
-  have hkey : 1 / (2 * (n : ℝ)) ≤ Real.log (1 + 1 / (n : ℝ)) := by
-    have hlb : (1 / (n : ℝ)) / (1 + 1 / (n : ℝ)) ≤ Real.log (1 + 1 / (n : ℝ)) := by
-      have := Real.add_one_le_exp (-(Real.log (1 + 1 / (n : ℝ))))
-      have hpos : (0 : ℝ) < 1 + 1 / (n : ℝ) := by linarith
-      rw [Real.exp_neg, Real.exp_log hpos] at this
-      have hinv : (1 + 1 / (n : ℝ))⁻¹ = 1 / (1 + 1 / (n : ℝ)) := by rw [one_div]
-      rw [hinv] at this
-      have hstep : 1 - 1 / (1 + 1 / (n : ℝ)) ≤ Real.log (1 + 1 / (n : ℝ)) := by linarith
-      have hEq : 1 - 1 / (1 + 1 / (n : ℝ)) = (1 / (n : ℝ)) / (1 + 1 / (n : ℝ)) := by
-        field_simp
-      linarith [hEq ▸ hstep]
-    have hden : 1 + 1 / (n : ℝ) ≤ 2 := by linarith
-    have : (1 / (n : ℝ)) / 2 ≤ (1 / (n : ℝ)) / (1 + 1 / (n : ℝ)) := by
-      apply div_le_div_of_nonneg_left (le_of_lt hx0) (by linarith) hden
-    have hrw : (1 / (n : ℝ)) / 2 = 1 / (2 * (n : ℝ)) := by field_simp; ring
-    linarith [hrw ▸ this]
+  have hn1 : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hpos : (0 : ℝ) < 1 + 1 / (n : ℝ) := by positivity
+  have h1 : 1 - (1 + 1 / (n : ℝ))⁻¹ ≤ Real.log (1 + 1 / (n : ℝ)) :=
+    Real.one_sub_inv_le_log_of_pos hpos
+  have heq : 1 - (1 + 1 / (n : ℝ))⁻¹ = 1 / ((n : ℝ) + 1) := by
+    field_simp
+    ring
+  rw [heq] at h1
+  have h3 : 1 / (2 * (n : ℝ)) ≤ 1 / ((n : ℝ) + 1) := by
+    apply one_div_le_one_div_of_le (by positivity)
+    linarith
+  have hkey : 1 / (2 * (n : ℝ)) ≤ Real.log (1 + 1 / (n : ℝ)) := le_trans h3 h1
   have hlogpos : 0 < Real.log (1 + 1 / (n : ℝ)) := by
     have : (0 : ℝ) < 1 / (2 * (n : ℝ)) := by positivity
     linarith
   rw [div_le_iff₀ hlogpos]
   have h2n : (0 : ℝ) < 2 * (n : ℝ) := by positivity
   calc (1 : ℝ) = (2 * (n : ℝ)) * (1 / (2 * (n : ℝ))) := by field_simp
-    _ ≤ (2 * (n : ℝ)) * Real.log (1 + 1 / (n : ℝ)) := by
-        exact mul_le_mul_of_nonneg_left hkey (le_of_lt h2n)
+    _ ≤ (2 * (n : ℝ)) * Real.log (1 + 1 / (n : ℝ)) :=
+        mul_le_mul_of_nonneg_left hkey (le_of_lt h2n)
 
 #print axioms one_div_log_one_add_le
 
