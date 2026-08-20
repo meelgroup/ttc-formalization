@@ -194,7 +194,7 @@ theorem runRates_nonneg (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
 
 `Ttc.ttcRates` (`Exec/Api`) is `Ttc.runRates` at `γ̂ := Ttc.ttcScaledRadius`, which is
 `Ttc.runScale … * Ttc.autoGamma …`.  Both factors are nonnegative with **no**
-hypotheses: `Ttc.scaleFactor` is a `max 1 (…)`, and `Ttc.gammaOf` is an infimum of
+hypotheses: `Ttc.scaleFactor` is a `max 1 (…)` raised to `1/n`, and `Ttc.gammaOf` is an infimum of
 `Ttc.ballData` radii, which `Ttc.gammaOf_nonneg` shows is `≥ 0` even when the
 infimum is over an empty family.  So `Ttc.runRates_nonneg_autoGamma` below is
 hypothesis-free, and `Ttc.ttcRates_nonneg` is a `rfl`-application of it — see this

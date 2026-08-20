@@ -28,7 +28,7 @@ assumes it away (`sections/analysis.tex:284`, the definition of `j*`).
 It **changes the algorithm**, by one preprocessing step, and then the hypothesis is
 discharged rather than assumed:
 
-1. dilate the input by `c := Ttc.scaleFactor n P gammaHat = max 1 (Thresh/(Vₙ·γ̂ⁿ))`,
+1. dilate the input by `c := Ttc.scaleFactor n P gammaHat = max 1 (Thresh/(Vₙ·γ̂ⁿ))^{1/n}`,
    which is computable from the inscribed radius `γ̂` that `alg:prec` line 86 already
    produces, and from the dimension — **no knowledge of `Vol(Sol F)` is needed**;
 2. run `TTC` on the dilated formula, whose inscribed radius is `c·γ̂`;
@@ -53,8 +53,11 @@ defined at all:
 * `φ` itself is untouched, so `Ttc.toDNFd φ` is the same list and the cube index type
   `{c // c ∈ toDNFd φ}` does not move. No dependent-type transport is needed.
 
-`Ttc.scaleFactor` overshoots (`max 1 (…)` rather than an `n`-th root); that is
-deliberate and free, since the answer is divided by `cⁿ` at the end.
+`Ttc.scaleFactor` **is** an `n`-th root, `max 1 (Thresh/(Vₙγ̂ⁿ))^{1/n}`.  Until
+2026-08-20 it was the un-rooted ratio, on the ground that the answer is divided by `cⁿ`
+at the end so the overshoot is free.  That reasoning is sound for accuracy and wrong for
+cost — the sampler's endpoint count is the *dilated* volume and so carries `cⁿ` — and the
+root is what makes `Ttc.scaleFactor_pow` give `cⁿ = max 1 (Thresh/(Vₙγ̂ⁿ))`.
 -/
 
 namespace Ttc

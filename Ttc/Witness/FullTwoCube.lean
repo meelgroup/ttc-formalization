@@ -57,13 +57,15 @@ the dimension, met by taking `n ≥ 21`, and `Ttc.TwoCube.ttc_volume_two_cube_at
 
 ## Cost caveat
 
-**Polynomial at `n = 21`, and still not runnable.**  Until 2026-08-19 the sampler branch
-below dimension 1100 was the lazy ball walk, whose certified transition bound carries `4 ^ n`
-and a `(radius ratio) ^ (4 n)`, so this witness sat squarely in the exponential regime.  The
-spherical-cap estimate now holds from `n ≥ 21`, so the run witnessed here takes the
-hit-and-run branch and its bound is polynomial — at a constant of `2 ^ 66 · n² · R²/r²`.  What
-this file establishes is that the headline *applies* to something, not that running it at
-`n = 21` is feasible.
+**Not runnable, and not polynomial.**  Until 2026-08-19 the sampler branch below dimension
+1100 was the lazy ball walk, whose certified transition bound carries `4 ^ n` and a
+`(radius ratio) ^ (4 n)`.  The spherical-cap estimate now holds from `n ≥ 21`, so the run
+witnessed here takes the hit-and-run branch and its **per-endpoint** bound is polynomial — at
+a constant of `2 ^ 66 · n² · R²/r²`.  The endpoint **count** is a separate matter: it is the
+dilated cube volume (`Ttc.polyGoodRateCap`), exponential in `n` through the
+body-to-inscribed-ball volume ratio even after the 2026-08-20 `n`-th root in
+`Ttc.scaleFactor`.  What this file establishes is that the headline *applies* to something,
+not that running it at `n = 21` is feasible.
 -/
 
 namespace Ttc

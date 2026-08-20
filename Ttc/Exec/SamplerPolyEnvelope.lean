@@ -48,43 +48,50 @@ The paper replaces every `R_i/γ_i` by `ρ` and every `r_i` by `r_max`
 at the run's own per-cube geometry rather than at a supplied binder: a `Finset.sup` over the
 cubes, so nothing is assumed and the bound below carries no geometry hypothesis. -/
 
-/-- **The run's own squared radius ratio, maximised over cubes.** -/
-noncomputable def sampRhoSq (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) : NNReal :=
-  Finset.univ.sup (fun i : CubeIndex atoms phi =>
-    (⟨(canonicalHybridOuterRadius atoms phi eps delta i) ^ 2 /
-        (canonicalHybridInnerRadius atoms phi eps delta i) ^ 2, by positivity⟩ : NNReal))
+/-- **The run's own squared radius ratio, maximised over cubes.**
 
-/-- **The run's own warm-start logarithm, maximised over cubes.**  Clamped at `0`, which is
-what makes it usable as an upper bound in a product. -/
-noncomputable def sampLog (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) : NNReal :=
-  Finset.univ.sup (fun i : CubeIndex atoms phi =>
-    (⟨max 0 (Real.log (8 * canonicalHybridWarm atoms phi eps delta i /
-        (Ttc.ttcSampTol atoms phi eps delta i) ^ 2)), le_max_left _ _⟩ : NNReal))
+A `⨆` over the run's own cubes, clamped at `0` so that it is usable as an upper bound in a
+product with no side condition.  This is the move the paper makes when it replaces every
+`R_i/γ_i` by a single `ρ` (`sections/analysis.tex`, proof of `thm:runtime`), taken at the
+run's own geometry rather than at a supplied binder. -/
+noncomputable def sampRhoSq (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) : Real :=
+  max 0 (⨆ i : CubeIndex atoms phi,
+    (canonicalHybridOuterRadius atoms phi eps delta i) ^ 2 /
+      (canonicalHybridInnerRadius atoms phi eps delta i) ^ 2)
+
+/-- **The run's own warm-start logarithm, maximised over cubes.** -/
+noncomputable def sampLog (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) : Real :=
+  max 0 (⨆ i : CubeIndex atoms phi,
+    Real.log (8 * canonicalHybridWarm atoms phi eps delta i /
+      (Ttc.ttcSampTol atoms phi eps delta i) ^ 2))
+
+theorem sampRhoSq_nonneg (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) :
+    0 ≤ sampRhoSq atoms phi eps delta := le_max_left _ _
+
+theorem sampLog_nonneg (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) :
+    0 ≤ sampLog atoms phi eps delta := le_max_left _ _
 
 theorem le_sampRhoSq (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
     (i : CubeIndex atoms phi) :
     (canonicalHybridOuterRadius atoms phi eps delta i) ^ 2 /
         (canonicalHybridInnerRadius atoms phi eps delta i) ^ 2
-      ≤ (sampRhoSq atoms phi eps delta : Real) := by
-  have h := Finset.le_sup (f := fun i : CubeIndex atoms phi =>
-    (⟨(canonicalHybridOuterRadius atoms phi eps delta i) ^ 2 /
-        (canonicalHybridInnerRadius atoms phi eps delta i) ^ 2, by positivity⟩ : NNReal))
-    (Finset.mem_univ i)
-  exact_mod_cast h
+      ≤ sampRhoSq atoms phi eps delta := by
+  unfold sampRhoSq
+  refine le_trans (le_ciSup (f := fun i : CubeIndex atoms phi =>
+    (canonicalHybridOuterRadius atoms phi eps delta i) ^ 2 /
+      (canonicalHybridInnerRadius atoms phi eps delta i) ^ 2)
+    (Set.finite_range _).bddAbove i) (le_max_right _ _)
 
 theorem le_sampLog (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
     (i : CubeIndex atoms phi) :
     Real.log (8 * canonicalHybridWarm atoms phi eps delta i /
         (Ttc.ttcSampTol atoms phi eps delta i) ^ 2)
-      ≤ (sampLog atoms phi eps delta : Real) := by
-  have h := Finset.le_sup (f := fun i : CubeIndex atoms phi =>
-    (⟨max 0 (Real.log (8 * canonicalHybridWarm atoms phi eps delta i /
-        (Ttc.ttcSampTol atoms phi eps delta i) ^ 2)), le_max_left _ _⟩ : NNReal))
-    (Finset.mem_univ i)
-  have h2 : max 0 (Real.log (8 * canonicalHybridWarm atoms phi eps delta i /
-      (Ttc.ttcSampTol atoms phi eps delta i) ^ 2)) ≤ (sampLog atoms phi eps delta : Real) := by
-    exact_mod_cast h
-  exact le_trans (le_max_right _ _) h2
+      ≤ sampLog atoms phi eps delta := by
+  unfold sampLog
+  refine le_trans (le_ciSup (f := fun i : CubeIndex atoms phi =>
+    Real.log (8 * canonicalHybridWarm atoms phi eps delta i /
+      (Ttc.ttcSampTol atoms phi eps delta i) ^ 2))
+    (Set.finite_range _).bddAbove i) (le_max_right _ _)
 
 /-! ## The transition bound is polynomial -/
 
@@ -122,8 +129,8 @@ theorem hybridTransitionBound_le_poly {n : Nat} (hn : 21 ≤ n)
 /-- **The run's own polynomial transition bound**, with no geometry binder: the two uniform
 quantities are `Finset.sup`s over the run's own cubes. -/
 noncomputable def sampPolyT (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real) : Real :=
-  2 ^ 66 * (n : Real) ^ 2 * (sampRhoSq atoms phi eps delta : Real) *
-    (sampLog atoms phi eps delta : Real) + 1
+  2 ^ 66 * (n : Real) ^ 2 * sampRhoSq atoms phi eps delta *
+    sampLog atoms phi eps delta + 1
 
 /-- **Every cube's sampler bound is under the polynomial.** -/
 theorem canonicalHybridSamplerQueryBound_le_poly {n : Nat} (hn21 : 21 ≤ n)
@@ -140,18 +147,25 @@ theorem canonicalHybridSamplerQueryBound_le_poly {n : Nat} (hn21 : 21 ≤ n)
   gcongr
   unfold sampPolyT
   exact hybridTransitionBound_le_poly hn21
-    (le_sampRhoSq atoms phi eps delta i) (sampRhoSq atoms phi eps delta).coe_nonneg
-    (le_sampLog atoms phi eps delta i) (sampLog atoms phi eps delta).coe_nonneg
+    (le_sampRhoSq atoms phi eps delta i) (sampRhoSq_nonneg atoms phi eps delta)
+    (le_sampLog atoms phi eps delta i) (sampLog_nonneg atoms phi eps delta)
 
-/-- **The sampler envelope, in closed polynomial form.**
+/-- **The sampler envelope with its per-endpoint factor in closed polynomial form.**
 
-`m · threshold · 8·(2⁶⁶·n²·ρ²·L + 1)·(r/2) + …` — every factor an explicit function of the
+`m · threshold · 8·((2⁶⁶·n²·ρ²·L + 1)·(r/2) + 1)` — every factor an explicit function of the
 run's own inputs, and **no hypothesis beyond the ones `Ttc.ttc_volume` already carries**.
 
-⚠ This closes the *sampler* half only.  The volume half — `shapedVolumeQueryEnvelopeAt` — is
-not reduced to a polynomial here and should not be: its `ρ` exponent is the unsettled question
-`lean/PLAN-SHAPE.md` §5 records, and gluing an unsettled volume reduction onto a settled
-sampler one would make the whole statement as soft as its softest half. -/
+⚠ **This is not a polynomial bound on the sampler envelope.**  What is polynomial is the
+`8·((2⁶⁶n²ρ²L + 1)(r/2) + 1)` factor — the cost of *one* endpoint.  `threshold` is
+`Ttc.canonicalRateThreshold`, the endpoint **count**, and it is the dilated cube volume:
+`Ttc.algScale ^ n · Vol`, which even after the 2026-08-20 `n`-th root in `Ttc.scaleFactor`
+retains an exponential body-to-inscribed-ball ratio.  The statement below is exact about
+which factor moved.
+
+⚠ This also closes the *sampler* half only.  The volume half — `shapedVolumeQueryEnvelopeAt`
+— is not reduced to a polynomial here and should not be: its `ρ` exponent is the unsettled
+question `lean/PLAN-SHAPE.md` §5 records, and gluing an unsettled volume reduction onto a
+settled sampler one would make the whole statement as soft as its softest half. -/
 theorem canonicalCappedSampleQueryEnvelope_le_poly {n : Nat} (hn21 : 21 ≤ n)
     (atoms : A → LinAtom n) (phi : BForm A) (eps delta : Real)
     (h_eps_pos : 0 < eps) (h_eps_le : eps ≤ 1) (hn : 1 ≤ n)

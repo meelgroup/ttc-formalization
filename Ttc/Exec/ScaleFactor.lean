@@ -72,7 +72,7 @@ contraction) when the instance is already large enough.
 | `Ttc.unitBallVol_pos` | `0 < Vₙ` |
 | `Ttc.volume_ball_eq` | `Vol(B(x,r)) = rⁿ · Vₙ` for `r > 0` |
 | `Ttc.volume_ball_eq_of_one_le_dim` | the same for `r ≥ 0`, when `n ≥ 1` |
-| `Ttc.scaleFactor` | `c = max 1 (Thresh / (Vₙ γ̂ⁿ))` |
+| `Ttc.scaleFactor` | `c = max 1 (Thresh / (Vₙ γ̂ⁿ)) ^ (1/n)` |
 | `Ttc.one_le_scaleFactor`, `Ttc.scaleFactor_pos` | `1 ≤ c`, `0 < c` |
 | `Ttc.thresh_le_scaled_ball_volume` | `Thresh ≤ (c·γ̂)ⁿ · Vₙ` |
 | `Ttc.ball_volume_le_volSol` | `γ̂ⁿ · Vₙ ≤ Vol(Sol F)` from one inscribed ball |
@@ -151,15 +151,25 @@ A function of `n`, `P` and `γ̂` alone — in particular **not** of `Vol(Sol F)
 `Model/Pseudocode`**; only its theory is here.
 -/
 
-/-- **`1 ≤ c`.**  Immediate from the `max`; this is the half of the definition that
-replaces the `n`-th root, via `le_self_pow`. -/
+/-- **`1 ≤ c`.**  A base of at least `1` raised to a nonnegative exponent. -/
 theorem one_le_scaleFactor (n : ℕ) (P : Params) (gammaHat : ℝ) :
-    1 ≤ scaleFactor n P gammaHat := le_max_left _ _
+    1 ≤ scaleFactor n P gammaHat :=
+  Real.one_le_rpow (le_max_left _ _) (inv_nonneg.2 (Nat.cast_nonneg n))
 
 /-- **`0 < c`.**  A dilation, never a contraction or a collapse. -/
 theorem scaleFactor_pos (n : ℕ) (P : Params) (gammaHat : ℝ) :
     0 < scaleFactor n P gammaHat :=
   lt_of_lt_of_le zero_lt_one (one_le_scaleFactor n P gammaHat)
+
+/-- **`cⁿ` in closed form.**  The `n`-th root of `Ttc.scaleFactor` is undone exactly by
+the `n`-th power the algorithm raises it to, so the dilation multiplies every volume by
+`max 1 (Thresh/(Vₙγ̂ⁿ))` — *not* by the `n`-th power of that ratio, which is what the
+un-rooted definition cost until 2026-08-20.  This is the lemma that lets
+`Ttc.canonicalClosedRateThreshold` be read as a number. -/
+theorem scaleFactor_pow (n : ℕ) (hn : n ≠ 0) (P : Params) (gammaHat : ℝ) :
+    scaleFactor n P gammaHat ^ n
+      = max 1 (P.thresh / (unitBallVol n * gammaHat ^ n)) :=
+  Real.rpow_inv_natCast_pow (le_trans zero_le_one (le_max_left _ _)) hn
 
 /-- **The payoff: the dilated inscribed ball clears the threshold.**
 
@@ -167,25 +177,23 @@ theorem scaleFactor_pos (n : ℕ) (P : Params) (gammaHat : ℝ) :
 `γ̂ > 0`.  Combined with `Ttc.ball_volume_le_volSol` applied to the dilated instance,
 this is what makes `hvol` automatic instead of hypothetical.
 
-The proof is the un-rooting step: with `K := Thresh/(Vₙ γ̂ⁿ)` one has
-`K · (Vₙ γ̂ⁿ) = Thresh` exactly, `K ≤ c` by `le_max_right`, and `c ≤ cⁿ` by
-`le_self_pow` (needing `1 ≤ c` and `n ≠ 0`) — so `Thresh ≤ cⁿ · (Vₙ γ̂ⁿ)`, which is
-the claim after `mul_pow`. -/
+With `K := Thresh/(Vₙ γ̂ⁿ)` one has `K · (Vₙ γ̂ⁿ) = Thresh` exactly and `K ≤ cⁿ` by
+`Ttc.scaleFactor_pow` and `le_max_right` — so `Thresh ≤ cⁿ · (Vₙ γ̂ⁿ)`, which is the claim
+after `mul_pow`.  The old proof needed a further `c ≤ cⁿ` step (`le_self_pow`); that step
+*was* the exponential overshoot, and with the root it is gone. -/
 theorem thresh_le_scaled_ball_volume (n : ℕ) (hn : 1 ≤ n) (P : Params)
     {gammaHat : ℝ} (hg : 0 < gammaHat) :
     P.thresh ≤ (scaleFactor n P gammaHat * gammaHat) ^ n * unitBallVol n := by
   have hV : 0 < unitBallVol n := unitBallVol_pos n
   have hbase : 0 < unitBallVol n * gammaHat ^ n := mul_pos hV (pow_pos hg n)
-  have hc1 : 1 ≤ scaleFactor n P gammaHat := one_le_scaleFactor n P gammaHat
-  have hK : P.thresh / (unitBallVol n * gammaHat ^ n) ≤ scaleFactor n P gammaHat :=
-    le_max_right _ _
-  have hcn : scaleFactor n P gammaHat ≤ scaleFactor n P gammaHat ^ n :=
-    le_self_pow₀ hc1 (by omega)
+  have hK : P.thresh / (unitBallVol n * gammaHat ^ n) ≤ scaleFactor n P gammaHat ^ n := by
+    rw [scaleFactor_pow n (by omega) P gammaHat]
+    exact le_max_right _ _
   calc P.thresh
       = P.thresh / (unitBallVol n * gammaHat ^ n) * (unitBallVol n * gammaHat ^ n) := by
         field_simp
     _ ≤ scaleFactor n P gammaHat ^ n * (unitBallVol n * gammaHat ^ n) :=
-        mul_le_mul_of_nonneg_right (hK.trans hcn) hbase.le
+        mul_le_mul_of_nonneg_right hK hbase.le
     _ = (scaleFactor n P gammaHat * gammaHat) ^ n * unitBallVol n := by
         rw [mul_pow]; ring
 
@@ -238,6 +246,7 @@ end Ttc
 #print axioms Ttc.volume_ball_eq
 #print axioms Ttc.volume_ball_eq_of_one_le_dim
 #print axioms Ttc.one_le_scaleFactor
+#print axioms Ttc.scaleFactor_pow
 #print axioms Ttc.scaleFactor_pos
 #print axioms Ttc.thresh_le_scaled_ball_volume
 #print axioms Ttc.ball_volume_le_volSol

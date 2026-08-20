@@ -331,10 +331,23 @@ noncomputable def unitBallVol (n : ℕ) : ℝ :=
 
 /-- **Line A10.** The dilation factor `q`, computed from `γ̂` and `n` with **no
 knowledge of `Vol`** — which is what makes this preprocessing rather than a hypothesis.
-`max 1 (…)` deliberately overshoots the exact `(Thresh/(Vₙ γ̂ⁿ))^{1/n}` to avoid an `n`-th
-root; the overshoot is free because line A13 divides by `qⁿ`. -/
+
+**The `n`-th root is not cosmetic.**  All the dilation has to achieve is
+`Thresh ≤ (q·γ̂)ⁿ·Vₙ` (`Ttc.thresh_le_scaled_ball_volume`), i.e. `q ≥ (Thresh/(Vₙγ̂ⁿ))^{1/n}`.
+Until 2026-08-20 this definition took the ratio **un-rooted**, on the ground that line A13
+divides the estimate by `qⁿ` so the slack is free.  It is free for *accuracy* and not for
+*cost*: `Ttc.polyGoodRateCap` — the sampler's per-cube Poisson intensity cap — is the
+**dilated** cube volume, so `Ttc.canonicalCappedSampleQueryEnvelope` carries `qⁿ`, and the
+un-rooted `q` put `(Thresh/(Vₙγ̂ⁿ))ⁿ` into `Ttc.ttc_volume`'s cost bound where
+`Thresh/(Vₙγ̂ⁿ)` suffices.  With the root, `Ttc.scaleFactor_pow` gives the closed form
+`qⁿ = max 1 (Thresh/(Vₙγ̂ⁿ))` exactly.
+
+⚠ This removes one exponential and not the other: `qⁿ·Vol(Sol F)` is still
+`Thresh · Vol(Sol F)/(Vₙγ̂ⁿ)`, and the ratio of a body's volume to its inscribed ball's is
+`(R/γ̂)ⁿ` in the worst case.  The algorithm normalises by the inscribed ball because that
+is the only volume certificate it has before it runs; see `lean/PLAN-SHAPE.md`. -/
 noncomputable def scaleFactor (n : ℕ) (P : Params) (gammaHat : ℝ) : ℝ :=
-  max 1 (P.thresh / (unitBallVol n * gammaHat ^ n))
+  (max 1 (P.thresh / (unitBallVol n * gammaHat ^ n))) ^ ((n : ℝ))⁻¹
 
 /-- **Line A11.** The atoms dilated by `c`: same normals, bounds scaled.  Scaling the
 bound and not the normal is what dilates rather than rotates

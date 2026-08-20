@@ -21,10 +21,14 @@ Each of the two summands is a finite sum of manifestly finite terms:
   `8 * (ENNReal.ofReal (…) * hybridStepInspectionBound … + 1)`, whose inspection factor is
   `2⁻¹ * facetCount` or `2⁻¹`.
 
-Nothing here bounds the envelope by anything small — it is polynomial in `n` at every
-dimension the headline admits (since 2026-08-19), but with a constant of `2 ^ 66`.  Finiteness is the weakest
-possible statement in this direction, and it is the one the cost conjunct needs in order to
-say anything at all (`CLAUDE.md` §11).
+Nothing here bounds the envelope by anything small.  Since 2026-08-19 the *per-endpoint*
+cost is polynomial in `n` at every dimension the headline admits, with a constant of `2 ^ 66`
+— but the endpoint **count** multiplying it is `Ttc.polyGoodRateCap`, the *dilated* cube
+volume, which carries `Ttc.algScale ^ n`.  The 2026-08-20 `n`-th root in `Ttc.scaleFactor`
+brings that to `Thresh · Vol(Sol F)/(Vₙ γ̂ⁿ)`; the residual body-to-inscribed-ball ratio is
+still exponential in `n`.  **The sampler envelope is therefore not polynomial overall.**
+Finiteness is the weakest possible statement in this direction, and it is the one the cost
+conjunct needs in order to say anything at all (`CLAUDE.md` §11).
 -/
 
 namespace Ttc.EnvelopeFinite
