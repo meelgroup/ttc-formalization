@@ -131,6 +131,76 @@ theorem countablyDetermined_runCost (P : Params) (ρ : ℤ) (cVol cSample : ℕ)
       cubes (fun _ => ((0, ⟨0, 0⟩) : ℕ × SketchState n))
       (countablyDetermined_const _)).map Prod.fst
 
+/-! ### The same, in the elementary cost model
+
+`Ttc.elemStepCost` charges `Ttc.cubeCost` at the run's own data, so it reads the
+randomness at three places rather than one.  All three are already known countably
+determined, and the sketch argument is not random at all. -/
+
+/-- **One iteration's elementary cost is countably determined.**
+
+`Ttc.elemStepCost` reads the run at the early-reduce exit level, the overflow exit level
+and the surviving Poisson count.  Its sketch argument `Ttc.dropCovered` does not depend on
+the randomness at all — `covered` is a fixed function — so the whole charge factors through
+a triple of countably determined values. -/
+theorem countablyDetermined_elemStepCost (P : Params) (r Q Tw : ℕ) (i : ι)
+    (S : SketchState n)
+    (hT : ∀ k, CountablyDetermined fun ω => T ω k)
+    (hH : ∀ j : ℕ, CountablyDetermined fun ω : Ω => haltLevel P (V ω i) j) :
+    CountablyDetermined fun ω : Ω =>
+      elemStepCost P (trajOracles hpt (V ω) covered mem (T ω)) r Q Tw S i := by
+  set X₀ : Multiset (Space n) := Multiset.filter (fun s => covered s i = false) S.X with hX₀
+  have hhalt : CountablyDetermined fun ω : Ω => haltLevel P (V ω i) S.level := hH S.level
+  have habs : CountablyDetermined fun ω : Ω =>
+      absorbLevel P (trajOracles hpt (V ω) covered mem (T ω)) i (V ω i) X₀ S.level
+        (haltLevel P (V ω i) S.level) :=
+    countablyDetermined_absorbLevel hpt V covered mem T P i X₀ S.level hT _ hhalt
+  have hN : CountablyDetermined fun ω : Ω =>
+      (stepPre P (trajOracles hpt (V ω) covered mem (T ω)) S i).2 :=
+    countablyDetermined_stepPre_snd hpt V covered mem T P i S hT hH
+  exact ((hhalt.prodMk habs).prodMk hN).map
+    (fun p => cubeCost r X₀ (p.1.1 - S.level) (p.1.2 - p.1.1) p.2 Q Tw)
+
+/-- **The elementary cost fold lemma.**  `Ttc.elemRunCost`'s accumulator-and-state pair,
+after any prefix of the cube list, is countably determined.  Same induction as
+`Ttc.countablyDetermined_foldl_cost`, with `Ttc.elemStepCost` in place of `Ttc.stepCost`. -/
+theorem countablyDetermined_foldl_elemCost (P : Params) (ρ : ℤ) (r Q Tw : ℕ)
+    (hT : ∀ k, CountablyDetermined fun ω => T ω k)
+    (hH : ∀ (i : ι) (j : ℕ), CountablyDetermined fun ω : Ω => haltLevel P (V ω i) j) :
+    ∀ (cubes : List ι) (acc : Ω → ℕ × SketchState n), CountablyDetermined acc →
+      CountablyDetermined fun ω : Ω =>
+        cubes.foldl
+          (fun (a : ℕ × SketchState n) i =>
+            (a.1 + elemStepCost P (trajOracles hpt (V ω) covered mem (T ω)) r Q Tw a.2 i,
+              step P (trajOracles hpt (V ω) covered mem (T ω)) ρ a.2 i))
+          (acc ω) := by
+  intro cubes
+  induction cubes with
+  | nil => exact fun _ hacc => hacc
+  | cons i cs ih =>
+      intro acc hacc
+      refine ih _ (hacc.bind (g := fun (a : ℕ × SketchState n) (ω : Ω) =>
+        (a.1 + elemStepCost P (trajOracles hpt (V ω) covered mem (T ω)) r Q Tw a.2 i,
+          step P (trajOracles hpt (V ω) covered mem (T ω)) ρ a.2 i)) fun a => ?_)
+      exact ((countablyDetermined_elemStepCost hpt V covered mem T P r Q Tw i a.2 hT
+            (hH i)).map (fun c => a.1 + c)).prodMk
+        (countablyDetermined_step hpt V covered mem T P ρ i a.2 hT (hH i))
+
+/-- **`Ttc.elemRunCost` is countably determined**, hence measurable — the gate for making
+it the cost coordinate of a law. -/
+theorem countablyDetermined_elemRunCost (P : Params) (ρ : ℤ) (r Q Tw : ℕ) (cubes : List ι)
+    (hT : ∀ k, CountablyDetermined fun ω => T ω k)
+    (hV : ∀ i, Measurable fun ω : Ω => V ω i) :
+    CountablyDetermined fun ω : Ω =>
+      elemRunCost P (trajOracles hpt (V ω) covered mem (T ω)) r Q Tw ρ cubes :=
+  (countablyDetermined_foldl_elemCost hpt V covered mem T P ρ r Q Tw hT
+      (fun i j => countablyDetermined_haltLevel P _ (hV i) j)
+      cubes (fun _ => ((0, ⟨0, 0⟩) : ℕ × SketchState n))
+      (countablyDetermined_const _)).map Prod.fst
+
+#print axioms countablyDetermined_elemStepCost
+#print axioms countablyDetermined_elemRunCost
+
 end CostFold
 
 /-! ## Part 2.  `TTC`'s charged cost, jointly in both coin sequences -/

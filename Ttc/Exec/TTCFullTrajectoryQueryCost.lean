@@ -252,6 +252,78 @@ theorem measurable_canonicalFullOperationalPair
   exact (hout.comp hstate).prodMk
     (measurable_canonicalFullPolyQueryCost V P)
 
+/-! ## The same law in the elementary cost model
+
+`Ttc.canonicalFullPolyQueryCost` charges the volume calls at their actual query counts and
+the sampler at the **level-zero** marked Poisson process
+(`Ttc.fullTrajectoryQueryCost` is `(omega 0).1`, thinning being free).  The cost below
+charges `Model/Pseudocode`'s three elementary costs instead, folded along the run by
+`Ttc.elemRunCost`, so the samples paid for are the ones the absorption loop actually
+reaches.
+
+The volume side stays as it is — `Ttc.ttcPolyVolumeQueryCost` is the *actual* query count
+at the run's own coin, with no supplied price — and is converted into the elementary model
+by charging `Ttc.memCost n r` per query, which is `Ttc.volCallCost` summed over the cubes.
+So `Q` never appears as a binder: it is read off the run.  `Tw` is the walk length the run
+is *configured* with, an input to the algorithm rather than a bound on it. -/
+
+/-- **The cost of one run in the elementary model**: every volume query charged
+`Ttc.memCost n r`, plus the loop's own removal, thinning, draw and generation charges. -/
+noncomputable def elemFullCost
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n) (r Tw : Nat)
+    (z : V.Ω × CostedCountPath (algIndex atoms phi eps delta)) : ENNReal :=
+  (memCost n r : ENNReal) * ttcPolyVolumeQueryCost atoms phi eps delta V z.1
+    + (ttcPolyElemCost atoms phi eps delta V.toVolumeAlgorithm z.1
+        (Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2) r 0 Tw : ENNReal)
+
+set_option maxHeartbeats 1000000 in
+theorem measurable_elemFullCost
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n) (r Tw : Nat) :
+    letI := V.mΩ
+    Measurable (elemFullCost (atoms := atoms) (phi := phi) (eps := eps) (delta := delta)
+      V r Tw) := by
+  letI := V.mΩ
+  have hstate : Measurable (fun z : V.Ω × CostedCountPath (algIndex atoms phi eps delta) ↦
+      (z.1, Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2)) :=
+    measurable_fst.prodMk
+      ((Ttc.SequentialCostedPathLumping.measurable_pathMap measurable_snd).comp measurable_snd)
+  have hloop := (measurable_ttcPolyElemCost_ennreal atoms phi eps delta
+    V.toVolumeAlgorithm r 0 Tw).comp hstate
+  exact (measurable_const.mul
+    ((measurable_ttcPolyVolumeQueryCost atoms phi eps delta V).comp measurable_fst)).add hloop
+
+/-- **TTC's estimate paired with its elementary-model cost.**  The first component is
+`Ttc.canonicalFullOperationalPair`'s verbatim, so the estimate's law does not move. -/
+noncomputable def elemFullOperationalPair
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n) (r Tw : Nat) :
+    V.Ω × CostedCountPath (algIndex atoms phi eps delta) → Real × ENNReal :=
+  fun z ↦
+    (ttcPolyRun atoms phi eps delta V.toVolumeAlgorithm z.1
+      (Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2),
+    elemFullCost (atoms := atoms) (phi := phi) (eps := eps) (delta := delta) V r Tw z)
+
+theorem measurable_elemFullOperationalPair
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n) (r Tw : Nat) :
+    letI := V.mΩ
+    Measurable (elemFullOperationalPair (atoms := atoms) (phi := phi) (eps := eps)
+      (delta := delta) V r Tw) := by
+  letI := V.mΩ
+  have hstate : Measurable (fun z : V.Ω × CostedCountPath (algIndex atoms phi eps delta) ↦
+      (z.1, Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2)) :=
+    measurable_fst.prodMk
+      ((Ttc.SequentialCostedPathLumping.measurable_pathMap measurable_snd).comp measurable_snd)
+  have hout : Measurable (fun z :
+      V.Ω × CountPath (algIndex atoms phi eps delta) ↦
+      ttcPolyRun atoms phi eps delta V.toVolumeAlgorithm z.1 z.2) :=
+    measurable_fst.comp
+      (measurable_polyPair atoms phi eps delta V.toVolumeAlgorithm 0 0)
+  exact (hout.comp hstate).prodMk (measurable_elemFullCost V r Tw)
+
+
 /-- Public output law for the estimate and the complete operational query
 cost. -/
 noncomputable def canonicalFullOperationalLaw
@@ -263,6 +335,44 @@ noncomputable def canonicalFullOperationalLaw
   exact Measure.map (canonicalFullOperationalPair V P)
     (canonicalCostedPolyJoint
       (atoms := atoms) (phi := phi) (eps := eps) (delta := delta) V P)
+
+/-- **The same law with the elementary cost model in the second coordinate.**
+
+Same joint randomness, same estimate — `Ttc.elemFullOperationalPair`'s first component is
+`Ttc.canonicalFullOperationalPair`'s verbatim — and `Ttc.elemFullCost` in place of
+`Ttc.canonicalFullPolyQueryCost`. -/
+noncomputable def elemFullOperationalLaw
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n)
+    (P : @CanonicalOwnerTrajectoryPlugin I _
+      (algIndex atoms phi eps delta) V.Ω V.mΩ)
+    (r Tw : Nat) : Measure (Real × ENNReal) := by
+  letI := V.mΩ
+  exact Measure.map (elemFullOperationalPair V r Tw)
+    (canonicalCostedPolyJoint
+      (atoms := atoms) (phi := phi) (eps := eps) (delta := delta) V P)
+
+/-- **Changing the cost model does not move the estimate's law.**
+
+Both laws are the same joint pushed along pairs with the *same* first component, so the
+first marginals are equal — which is what lets an accuracy statement proved for one be read
+off the other, with no re-proof. -/
+theorem map_fst_elemFullOperationalLaw
+    {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}
+    (V : ExpectedQueryVolumeAlgorithm n)
+    (P : @CanonicalOwnerTrajectoryPlugin I _
+      (algIndex atoms phi eps delta) V.Ω V.mΩ)
+    (r Tw : Nat) :
+    Measure.map Prod.fst (elemFullOperationalLaw V P r Tw)
+      = Measure.map Prod.fst (canonicalFullOperationalLaw V P) := by
+  letI := V.mΩ
+  unfold elemFullOperationalLaw canonicalFullOperationalLaw
+  rw [Measure.map_map measurable_fst (measurable_elemFullOperationalPair V r Tw),
+    Measure.map_map measurable_fst (measurable_canonicalFullOperationalPair V P)]
+  rfl
+
+#print axioms measurable_elemFullOperationalPair
+#print axioms map_fst_elemFullOperationalLaw
 
 instance canonicalFullOperationalLaw.instIsProbabilityMeasure
     {atoms : A → LinAtom n} {phi : BForm A} {eps delta : Real}

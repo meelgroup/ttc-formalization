@@ -406,6 +406,64 @@ theorem measurable_polyPair (V : VolumeAlgorithm n) (cVol cSample : ℕ) :
   letI := V.mΩ
   exact (countablyDetermined_polyPair atoms φ ε δ V cVol cSample).measurable
 
+/-! ## The same read-off in the elementary cost model
+
+`Ttc.polyPair` charges two supplied prices.  The pair below charges
+`Ttc.elemRunCost` — the three elementary costs of `Model/Pseudocode`, folded along the
+run — and is measurable for the same reason. -/
+
+/-- **The elementary cost of one run at the canonical data.**  `Ttc.ttcPolyCost` with the
+two supplied prices replaced by the elementary cost model. -/
+noncomputable def ttcPolyElemCost (V : VolumeAlgorithm n) (ω : V.Ω)
+    (t : ℕ → Fin (algIndex atoms φ ε δ) → ℕ) (r Q Tw : ℕ) : ℕ :=
+  elemRunCost (algBlock atoms φ ε δ) (polyOracles atoms φ ε δ V ω t) r Q Tw
+    (algPrec atoms φ ε δ) (toDNFd (preprocess atoms φ))
+
+/-- **The read-off `(estimate, elementary cost)` of one run.**  The first component is
+`Ttc.polyPair`'s verbatim, so the estimate's law is untouched by the change of cost
+model. -/
+noncomputable def elemPolyPair (V : VolumeAlgorithm n) (r Q Tw : ℕ) :
+    V.Ω × (ℕ → Fin (algIndex atoms φ ε δ) → ℕ) → ℝ × ℕ :=
+  fun p => (ttcPolyRun atoms φ ε δ V p.1 p.2,
+    ttcPolyElemCost atoms φ ε δ V p.1 p.2 r Q Tw)
+
+theorem countablyDetermined_elemPolyPair (V : VolumeAlgorithm n) (r Q Tw : ℕ) :
+    @CountablyDetermined (V.Ω × (ℕ → Fin (algIndex atoms φ ε δ) → ℕ))
+      (@Prod.instMeasurableSpace _ _ V.mΩ _) (ℝ × ℕ)
+      (elemPolyPair atoms φ ε δ V r Q Tw) := by
+  letI := V.mΩ
+  have hT : ∀ k, CountablyDetermined
+      fun p : V.Ω × (ℕ → Fin (algIndex atoms φ ε δ) → ℕ) => p.2 k :=
+    fun k => (countablyDetermined_apply (Y := Fin (algIndex atoms φ ε δ) → ℕ) k).precomp
+      measurable_snd
+  have hV : ∀ i, Measurable
+      fun p : V.Ω × (ℕ → Fin (algIndex atoms φ ε δ) → ℕ) =>
+        polyVol atoms φ ε δ V p.1 i :=
+    fun i => (measurable_polyVol atoms φ ε δ V i).comp measurable_fst
+  exact (countablyDetermined_run_div _ _ _ _ _ _ _ _ _ hT hV).prodMk
+    (countablyDetermined_elemRunCost _ _ _ _ _ _ _ r Q Tw _ hT hV)
+
+theorem measurable_elemPolyPair (V : VolumeAlgorithm n) (r Q Tw : ℕ) :
+    @Measurable (V.Ω × (ℕ → Fin (algIndex atoms φ ε δ) → ℕ)) (ℝ × ℕ)
+      (@Prod.instMeasurableSpace _ _ V.mΩ _) _
+      (elemPolyPair atoms φ ε δ V r Q Tw) := by
+  letI := V.mΩ
+  exact (countablyDetermined_elemPolyPair atoms φ ε δ V r Q Tw).measurable
+
+/-- **The elementary cost as an `ℝ≥0∞`-valued measurable function.**  Straight from
+countable determinacy, which gives measurability into *any* target — so this needs no
+composition lemma for the `ℕ → ℝ≥0∞` coercion. -/
+theorem measurable_ttcPolyElemCost_ennreal (V : VolumeAlgorithm n) (r Q Tw : ℕ) :
+    @Measurable (V.Ω × (ℕ → Fin (algIndex atoms φ ε δ) → ℕ)) ENNReal
+      (@Prod.instMeasurableSpace _ _ V.mΩ _) _
+      (fun p => (ttcPolyElemCost atoms φ ε δ V p.1 p.2 r Q Tw : ENNReal)) := by
+  letI := V.mΩ
+  exact ((countablyDetermined_elemPolyPair atoms φ ε δ V r Q Tw).map
+    (fun p : ℝ × ℕ => (p.2 : ENNReal))).measurable
+
+#print axioms measurable_elemPolyPair
+#print axioms measurable_ttcPolyElemCost_ennreal
+
 /-- **`Ttc.ttcPoly` is the composition–product pushed along the read-off.**  Verbatim
 `Ttc.ttcCharged_eq_ttcPairLaw` (`Monadic/Program.lean:359`), at `V.μ` instead of
 `Ttc.MonteCarlo.coins`.  This is what shows the `Measure.bind` is not the junk zero
