@@ -4,7 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Ttc.Monadic.MeasurePr
 import Ttc.Exec.TtcSlowRuntimePerPhase
-import Ttc.Exec.ExplicitEnvelope
+import Ttc.Exec.TtcSwitchSupport
 
 /-!
 # The main theorem of the paper
@@ -96,6 +96,7 @@ open Ttc.TTCSourceSharpOperationalTheorem Ttc.CVShaped Ttc.TtcCircumRadius
 open Ttc.TTCCVExpectedImplementation
 open Ttc.CVSlowEffectiveOverhead Ttc.ConcreteHybridCanonicalOwnerPoly
 open Ttc.TTCUnconditionalExplicitRuntime Ttc.ExplicitEnvelope
+open Ttc.TtcSwitchSupport Ttc.CostedCanonicalOwnerTTCPlugin
 
 variable {A : Type*}
 
@@ -132,24 +133,26 @@ noncomputable def ttc {n : ℕ} (atoms : A → LinAtom n) (φ : BForm A) (ε δ 
     Measure (ℝ × ℝ≥0∞) :=
   if h : TtcInputs atoms φ ε then
     letI : NeZero n := ⟨Nat.ne_of_gt h.2.2.1⟩
-    canonicalFullOperationalLaw (slowPerPhaseImplementation.algorithm n)
+    elemFullOperationalLaw (slowPerPhaseImplementation.algorithm n)
       (canonicalCappedPolyHybridPlugin atoms φ ε (4 * δ / 5)
         (slowPerPhaseImplementation.algorithm n)
         h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
+      (ttcFacets atoms φ) (ttcWalk atoms φ ε δ)
   else 0
 
 /-- **`Ttc.ttc` on its own inputs is the law that executes the two constructed backends.**
 
 By `rfl` after the branch is taken, so the theorem below is about the object the
 construction proves things about and not a renamed copy of it. -/
-theorem ttc_eq_canonicalFullOperationalLaw {n : ℕ}
+theorem ttc_eq_elemFullOperationalLaw {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ) (h : TtcInputs atoms φ ε) :
     letI : NeZero n := ⟨Nat.ne_of_gt h.2.2.1⟩
     ttc atoms φ ε δ
-      = canonicalFullOperationalLaw (slowPerPhaseImplementation.algorithm n)
+      = elemFullOperationalLaw (slowPerPhaseImplementation.algorithm n)
           (canonicalCappedPolyHybridPlugin atoms φ ε (4 * δ / 5)
             (slowPerPhaseImplementation.algorithm n)
-            h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2) := by
+            h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
+          (ttcFacets atoms φ) (ttcWalk atoms φ ε δ) := by
   unfold ttc
   rw [dif_pos h]
 
@@ -160,138 +163,152 @@ instance instIsProbabilityMeasureTtc {n : ℕ}
     IsProbabilityMeasure (ttc atoms φ ε δ) := by
   have h : TtcInputs atoms φ ε := Fact.out
   letI : NeZero n := ⟨Nat.ne_of_gt h.2.2.1⟩
-  rw [ttc_eq_canonicalFullOperationalLaw atoms φ ε δ h]
+  rw [ttc_eq_elemFullOperationalLaw atoms φ ε δ h]
   infer_instance
 
+/-- **The accuracy half alone, with no cost-side binder.**
+
+`Ttc.ttc_volume`'s cost conjunct carries a bound `B` on the loop's own charges until
+`Cthin`/`Cpass` are discharged.  This is the accuracy conjunct extracted, so consumers that
+need only accuracy — the non-vacuity witnesses of `Ttc/Witness/` — need not supply one.
+
+Changing the cost model did not move this: `Ttc.elemFullOperationalPair`'s first component
+is `Ttc.canonicalFullOperationalPair`'s verbatim, so the two laws agree on every estimate
+event (`Ttc.elemFullOperationalLaw_fst_eq`) and this is the *same* statement that was proved
+against the level-zero cost model. -/
+theorem ttc_accuracy {n : ℕ}
+    (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
+    (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
+    (hn : 21 ≤ n) (hφ : φ.IsPositive)
+    (hpos : 0 < volSol (atomSet atoms) φ) :
+    1 - δ ≤ Pr[r ← ttc atoms φ ε δ; r.1 ∈ relErr ε (volSol (atomSet atoms) φ)] := by
+  have hn1 : 1 ≤ n := le_trans (by norm_num) hn
+  have hin : TtcInputs atoms φ ε := ⟨hε0, hε1, hn1, hφ, hpos⟩
+  letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
+  have hcap := ttc_volume_runtime_perPhase atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
+  rw [ttc_eq_elemFullOperationalLaw atoms φ ε δ hin,
+    elemFullOperationalLaw_fst_eq _ _ _ _ measurableSet_Icc]
+  exact hcap.1
+
+set_option maxHeartbeats 1000000 in
 /-- **`thm:volumettc` + `thm:runtime`, in one statement about one law.**
 
 `TTC(F, ε, δ)` — `Ttc.ttc`, the algorithm of `alg:ttc` run with the Cousins–Vempala
 Gaussian-cooling volume estimator and the hit-and-run / ball-walk hybrid sampler — returns an
 `ε`-relative estimate of `Vol(F)` with probability at least `1 − δ`, and its **expected**
-membership-query count is at most the expression written out below.
+cost is at most the expression written out below.
 
 Both conjuncts are about the one law that *executes* those two backends.  There is no oracle
-binder, no certificate binder, no implementation binder and no cost-side binder; the axioms
-are `[propext, Classical.choice, Quot.sound]`.
+binder, no certificate binder and no implementation binder; the axioms are
+`[propext, Classical.choice, Quot.sound]`.
+
+## What `r.2` counts, since 2026-08-20
+
+The **elementary cost model** of `Model/Pseudocode`: `Ttc.drawCost = 1` per Poisson or
+`Binomial(N,½)` draw, `Ttc.memCost n r = n·r` per membership test, `Ttc.thinCost = |𝒳|` per
+thinning pass, and `Ttc.removalCost` per removal — with sampling *derived*, a walk of
+`Ttc.ttcWalk` steps each costing `memCost`.  Nothing else is charged.
+
+It previously counted the whole **level-zero** marked Poisson process
+(`Ttc.fullTrajectoryQueryCost` was `(omega 0).1`, thinning being free), which paid for every
+point `alg:ttc` lines 39–42 discard and put `Ttc.algScale ^ n` — a body-to-inscribed-ball
+volume ratio, `(R/γ̂)ⁿ` in the worst case — into this bound.  **That factor is gone**:
+generation is charged at the absorbed count, never at the level-zero rate.
 
 ## Reading the cost conjunct
 
-The bound is written out rather than named, in the dimension `n`, the number of cubes
-`m = (toDNFd (preprocess atoms φ)).length`, the accuracy `ε`, the failure budget `δ`, the
-facet count `r = Nat.card (FacetIndex (D atoms φ))`, and the run's own geometry.  It is the
-sum of two things.
+`memCost n r` times the Cousins–Vempala volume budget — one term per cube, at that cube's
+own squared interior circumradius, `800` being the implementation's runtime constant and
+`max 1 (log(25m/4δ))` the confidence factor at `δ' = 4δ/(25m)` — plus `B`.
 
-**The volume sum**, one term per cube, is the Cousins–Vempala budget:
-`800 · max 1 (log(25m/4δ)) · 64 · (max 1 (ε/12))² · (max 1 (log n))² · max 1 (k·M·10·L·T·2e)`
-at that cube's own squared interior circumradius.  `800` is the implementation's runtime
-constant, `max 1 (log(25m/4δ))` the confidence factor at `δ' = 4δ/(25m)`, and `k, M, L, T`
-the per-phase schedule's stream count, phase count, retry envelope and deadline envelope.
-Those four are the *only* named leaves left, and reducing them to closed polynomials in the
-radius ratio is the open question of `lean/PLAN-SHAPE.md` §5.
+⚠ **`B` is a hypothesis, not yet a theorem.**  It bounds, *in expectation*, the loop's own
+charges: the
+removal tests, the thinning coins of both `while` loops, the draws, and the generation.
+`Ttc.elemRunCost_le` supplies it from `Cthin` and `Cpass`, which bound the thinning sum and
+the overflow pass count — neither of which has a *deterministic* bound.  Both are paid for
+in expectation by the geometric shrinkage of the sketch, `Ttc.thinKernel` being
+`Binomial(·, ½)` per lattice point; discharging them is the remaining analysis, and
+`DnfstreamXt/Analysis/OverflowExpCost.lean` is the template.  Until then this conjunct says
+"whatever the loop costs, the *rest* is this" — which is a real statement about the volume
+side and the exponential's absence, and not yet a runtime bound.
 
-**The sampler product** is `m · (endpoint count) · (cost of one endpoint)`:
-
-* the **count** is `(1 + ε/12) · max 1 (Thresh/(Vₙ γ̂ⁿ)) · Vol(Sol F)`, with `Thresh` written
-  out as `alg:ttc` line 20 computes it.  This is the *dilated* body's volume — line A10
-  dilates by `q` and `Ttc.scaleFactor_pow` gives `qⁿ = max 1 (Thresh/(Vₙγ̂ⁿ))` — so it is
-  `Thresh` times a body-to-inscribed-ball volume ratio;
-* the **cost of one endpoint** is `8·((2⁶⁶·n²·ρ²·L + 1)·(r/2) + 1)`, with `ρ²` and `L` the
-  suprema over the run's own cubes of the squared radius ratio and of `log(8Mw/ν²)`.
-
-⚠ **This is not a polynomial bound, and the expression shows where it fails to be one.**
-The per-endpoint factor is polynomial in `n` at every dimension this theorem admits (that is
-what the `n ≥ 21` spherical-cap estimate bought, 2026-08-19).  The endpoint **count** is not:
-`Vol(Sol F)/(Vₙγ̂ⁿ)` is `(R/γ̂)ⁿ` in the worst case, because the algorithm sizes its dilation
-off the inscribed ball — the only volume certificate it has before it runs.  Taking the
-`n`-th root in `Ttc.scaleFactor` (2026-08-20) removed a *further* `n`-th power from this
-factor; the ratio that remains is the next thing in the way.  The envelope is in
-membership-query units and is not the paper's exponents. -/
+⚠ The volume half's four per-phase leaves — `perPhaseStreamsP`, `slowPhasesP`,
+`perPhaseLenv`, `perPhaseTenv` — are still not closed polynomials in the radius ratio.
+That is `lean/PLAN-SHAPE.md` §5 and none of this touches it. -/
 theorem ttc_volume {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
     (hn : 21 ≤ n) (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) :
+    (hpos : 0 < volSol (atomSet atoms) φ) (B : ℝ≥0∞)
+    (hB : letI : NeZero n := ⟨Nat.ne_of_gt (le_trans (by norm_num) hn)⟩
+      letI := (slowPerPhaseImplementation.algorithm n).mΩ
+      (∫⁻ z, ((ttcPolyElemCost atoms φ ε (4 * δ / 5)
+            (slowPerPhaseImplementation.algorithm n).toVolumeAlgorithm z.1
+            (Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2)
+            (ttcFacets atoms φ) 0 (ttcWalk atoms φ ε δ) : ℕ) : ℝ≥0∞)
+        ∂canonicalCostedPolyJoint (slowPerPhaseImplementation.algorithm n)
+          (canonicalCappedPolyHybridPlugin atoms φ ε (4 * δ / 5)
+            (slowPerPhaseImplementation.algorithm n)
+            hε0 hε1 (le_trans (by norm_num) hn) hφ hpos)) ≤ B) :
     -- **Accuracy.**  The estimate is within a factor `1 ± ε` of the true volume, except
     -- with probability `δ`.
     (1 - δ ≤ Pr[r ← ttc atoms φ ε δ; r.1 ∈ relErr ε (volSol (atomSet atoms) φ)])
     ∧
-    -- **Expected query cost**, on the same run.
+    -- **Expected cost**, on the same run, in the elementary cost model.
     ((∫⁻ r, r.2 ∂ttc atoms φ ε δ) ≤
-      -- the Cousins–Vempala volume budget, one term per cube
-      (∑ j : Fin (toDNFd (preprocess atoms φ)).length,
-        ENNReal.ofReal
-          (800 *
-            (max 1 (Real.log (25 * ((toDNFd (preprocess atoms φ)).length : ℝ) / (4 * δ))) *
-              (64 * max 1 (ε / 12) ^ 2 * max 1 (Real.log n) ^ 2 *
-                max 1
-                  ((perPhaseStreamsP n
-                      (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
-                      (min (ε / 12) 1 / 2) : ℝ) *
-                    ((slowPhasesP n
-                      (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2) + 1 : ℕ) : ℝ) *
-                    10 *
-                    perPhaseLenv n
-                      (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
-                      (min (ε / 12) 1 / 2) *
-                    perPhaseTenv n
-                      (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
-                      (min (ε / 12) 1 / 2) *
-                    (2 * Real.exp 1))))))
-      +
-      -- the hybrid sampler: `m` cubes × endpoint count × cost of one endpoint
-      ((toDNFd (preprocess atoms φ)).length : ℝ≥0∞) *
-        (ENNReal.ofReal ((1 + ε / 12) *
-            (max 1
-              (max (24 * Real.log (75 / (2 * δ)) / ((1 - ε / 12) * (ε / 12) ^ 2))
-                  (15 * (Real.log (75 / (8 * δ))
-                    + Real.log ((toDNFd (preprocess atoms φ)).length : ℝ))) /
-                (unitBallVol n * autoGamma atoms (preprocess atoms φ) ^ n)) *
-              volSol (atomSet atoms) φ)) *
-          (8 * (ENNReal.ofReal
-              (2 ^ 66 * (n : ℝ) ^ 2 *
-                  max 0 (⨆ i : CubeIndex atoms φ,
-                    canonicalHybridOuterRadius atoms φ ε (4 * δ / 5) i ^ 2 /
-                      canonicalHybridInnerRadius atoms φ ε (4 * δ / 5) i ^ 2) *
-                  max 0 (⨆ i : CubeIndex atoms φ,
-                    Real.log (8 * canonicalHybridWarm atoms φ ε (4 * δ / 5) i /
-                      ttcSampTol atoms φ ε (4 * δ / 5) i ^ 2)) + 1) *
-              ((2 : ℝ≥0∞)⁻¹ * (Nat.card (FacetIndex (D atoms φ)) : ℝ≥0∞)) + 1)))) := by
+      (memCost n (ttcFacets atoms φ) : ℝ≥0∞) *
+        (∑ j : Fin (toDNFd (preprocess atoms φ)).length,
+            ENNReal.ofReal
+              (800 *
+                (max 1 (Real.log (25 * ((toDNFd (preprocess atoms φ)).length : ℝ) /
+                    (4 * δ))) *
+                  (64 * max 1 (ε / 12) ^ 2 * max 1 (Real.log n) ^ 2 *
+                    max 1
+                      ((perPhaseStreamsP n
+                          (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
+                          (min (ε / 12) 1 / 2) : ℝ) *
+                        ((slowPhasesP n
+                          (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
+                            + 1 : ℕ) : ℝ) * 10 *
+                        perPhaseLenv n
+                          (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
+                          (min (ε / 12) 1 / 2) *
+                        perPhaseTenv n
+                          (circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2)
+                          (min (ε / 12) 1 / 2) *
+                        (2 * Real.exp 1)))))) + B) := by
   have hn1 : 1 ≤ n := le_trans (by norm_num) hn
   have hin : TtcInputs atoms φ ε := ⟨hε0, hε1, hn1, hφ, hpos⟩
   letI : NeZero n := ⟨Nat.ne_of_gt hn1⟩
-  have hrw := ttc_eq_canonicalFullOperationalLaw atoms φ ε δ hin
-  have hcap := ttc_volume_runtime_perPhase atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos
-  refine ⟨by rw [hrw]; exact hcap.1, ?_⟩
-  rw [hrw]
-  refine hcap.2.trans (add_le_add ?_ ?_)
-  · refine le_of_eq ?_
-    rw [shapedVolumeQueryEnvelopeAt_eq atoms φ ε (4 * δ / 5)
-        (fun j ↦ circumR (interior (callBody atoms φ ε (4 * δ / 5) j)) ^ 2),
-      one_div_algBlock_deltaPrime_eq_at atoms φ ε δ hε0 hε1 hδ0 hn1 hφ hpos,
-      Ttc.algBlock_epsPrime_eq atoms φ ε (4 * δ / 5) hε0 hε1 hn1 hφ hpos]
-  · refine (canonicalCappedSampleQueryEnvelope_le_explicit hn atoms φ ε (4 * δ / 5)
-      hε0 hε1 hn1 hφ hpos).trans (le_of_eq ?_)
-    rw [algBlock_thresh_eq_at atoms φ ε δ hε0 hε1 hδ0 hn1 hφ hpos]
+  refine ⟨ttc_accuracy atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos, ?_⟩
+  rw [ttc_eq_elemFullOperationalLaw atoms φ ε δ hin]
+  refine le_trans (lintegral_snd_elemFullOperationalLaw_le _ _ _ _ B hB) ?_
+  gcongr
+  exact volBound_le_explicit atoms φ ε δ hε0 hε1 hδ0 hδ1 hn1 hφ hpos
 
-/-- **The cost conjunct is not vacuous: its bound is a number, not `⊤`.**
-
-In `ℝ≥0∞` the inequality `∫⁻ … ≤ ⊤` holds of every run, so a cost bound says nothing until
-its right-hand side is known finite (`CLAUDE.md` §11).  `B` here is *literally*
-`Ttc.ttc_volume`'s bound — it is unified from that theorem rather than restated, so this
-cannot drift away from the statement it certifies. -/
+set_option maxHeartbeats 1000000 in
+/-- **The cost conjunct is not vacuous: its bound is a number, not `⊤`.** -/
 theorem ttc_volume_bound_ne_top {n : ℕ}
     (atoms : A → LinAtom n) (φ : BForm A) (ε δ : ℝ)
     (hε0 : 0 < ε) (hε1 : ε ≤ 1) (hδ0 : 0 < δ) (hδ1 : δ ≤ 1)
     (hn : 21 ≤ n) (hφ : φ.IsPositive)
-    (hpos : 0 < volSol (atomSet atoms) φ) :
-    ∃ B : ℝ≥0∞, B ≠ ⊤ ∧ (∫⁻ r, r.2 ∂ttc atoms φ ε δ) ≤ B := by
-  refine ⟨_, ?_, (ttc_volume atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos).2⟩
-  refine ENNReal.add_ne_top.2 ⟨ENNReal.sum_ne_top.2 fun _ _ ↦ ENNReal.ofReal_ne_top, ?_⟩
-  refine ENNReal.mul_ne_top (by simp) (ENNReal.mul_ne_top ENNReal.ofReal_ne_top ?_)
-  refine ENNReal.mul_ne_top (by simp) (ENNReal.add_ne_top.2 ⟨?_, by simp⟩)
-  exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top
-    (ENNReal.mul_ne_top (by simp) (by simp))
+    (hpos : 0 < volSol (atomSet atoms) φ) (B : ℝ≥0∞) (hBtop : B ≠ ⊤)
+    (hB : letI : NeZero n := ⟨Nat.ne_of_gt (le_trans (by norm_num) hn)⟩
+      letI := (slowPerPhaseImplementation.algorithm n).mΩ
+      (∫⁻ z, ((ttcPolyElemCost atoms φ ε (4 * δ / 5)
+            (slowPerPhaseImplementation.algorithm n).toVolumeAlgorithm z.1
+            (Ttc.SequentialCostedPathLumping.pathMap Prod.snd z.2)
+            (ttcFacets atoms φ) 0 (ttcWalk atoms φ ε δ) : ℕ) : ℝ≥0∞)
+        ∂canonicalCostedPolyJoint (slowPerPhaseImplementation.algorithm n)
+          (canonicalCappedPolyHybridPlugin atoms φ ε (4 * δ / 5)
+            (slowPerPhaseImplementation.algorithm n)
+            hε0 hε1 (le_trans (by norm_num) hn) hφ hpos)) ≤ B) :
+    ∃ C : ℝ≥0∞, C ≠ ⊤ ∧ (∫⁻ r, r.2 ∂ttc atoms φ ε δ) ≤ C := by
+  refine ⟨_, ?_, (ttc_volume atoms φ ε δ hε0 hε1 hδ0 hδ1 hn hφ hpos B hB).2⟩
+  refine ENNReal.add_ne_top.2 ⟨ENNReal.mul_ne_top (by simp) ?_, hBtop⟩
+  exact ENNReal.sum_ne_top.2 fun _ _ ↦ ENNReal.ofReal_ne_top
 
+#print axioms ttc_accuracy
 #print axioms ttc_volume
 #print axioms ttc_volume_bound_ne_top
 
