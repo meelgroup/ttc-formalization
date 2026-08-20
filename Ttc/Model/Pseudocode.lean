@@ -194,12 +194,96 @@ noncomputable def run (ρ : ℤ) (cubes : List ι) : ℝ :=
   let final := cubes.foldl (step P O ρ) ⟨0, 0⟩
   (card final.X : ℝ) / final.p
 
-/-! ## The charging model, `thm:runtime`.  Here because the headline *bounds* it, so a
-referee must be able to read what the returned cost is.  The closed-form bound
-`Ttc.ttcComplexity` is in `Exec/Complexity`. -/
+/-! ## The charging model, `thm:runtime`
 
-/-- **The cost of one iteration**: one `Vol_ED` call plus one `GenerateSamples` draw per
-point returned.  `N` is the surviving Poisson count `Nᵢ`. -/
+Here because the headline *bounds* it, so a referee must be able to read what the returned
+cost is.  The closed-form bound `Ttc.ttcComplexity` is in `Exec/Complexity`, and the
+per-iteration bound `Ttc.cubeCost_le` is in `Ttc/Runtime.lean` — this section is
+definitions only.
+
+**Three elementary costs.  Everything below is built on them, and nothing else is charged
+anywhere.**
+
+| | | |
+|---|---|---|
+| `Ttc.drawCost` | one `Poisson(λ)` draw (line 37) or one `Bin(N,½)` draw (line 41) | `1` |
+| `Ttc.memCost` | one membership test of a point against a polytope with `r` facets in dimension `n` | `n · r` |
+| `Ttc.thinCost` | one thinning pass — one fair coin per copy of the sketch | `card X` |
+
+`Ttc.memCost n r = n · r` is `r` inner products of length `n`: the point is tested against
+every facet.  It is the only place the facet count enters the cost model.
+`Ttc.removalCost` is the composite lines 26–30 need — one membership test per copy —
+matching `DnfstreamXt.removalCost = satTestCost n * card X` in shape.
+
+**Two readings a referee must be told about.**
+
+1. *One hit-and-run step is charged `Ttc.memCost n r`.*  A step picks a direction and must
+   find the chord of the polytope through the current point along it, sweeping all `r`
+   facets at `O(n)` each — the same work as a membership test.  So **sampling is derived**:
+   `Ttc.sampleCost n r T = T · memCost n r` for a walk of `T` steps.  There is no
+   elementary "cost of one sample".
+2. *Drawing the step direction is `O(n)` and is folded in.*  Uniform on the sphere costs
+   `n` Gaussians, dominated by `memCost n r` since `1 ≤ r`, so it is not a fourth
+   elementary cost.  Loop tests, the level update `p ← p/2` and the final division `|X|/p`
+   are `O(1)` and folded in likewise.
+
+**Deliberately not charged — a gap, not a convention.**  The preprocessing of lines A1–A13
+(pruning, cleaning, DNF conversion, the inscribed ball, the dilation); the lattice
+enumeration `Ttc.algIndex`/`Ttc.algEnum`, which an implementation never performs, so
+charging it would price a modelling artifact (`CLAUDE.md` §6) — but nothing proves the two
+agree; and the volume oracle's non-query arithmetic, `Ttc.volCallCost` charging only the
+`Q` membership tests a `Vol_ED` call issues.  A bound on an undercount is not a bound on
+the count, and these three are the residue. -/
+
+/-- **Elementary cost 1.**  One draw from `Poisson(λ)` (line 37), and one draw from
+`Bin(N, ½)` (line 41): `O(1)` either way. -/
+def drawCost : ℕ := 1
+
+/-- **Elementary cost 2.**  One membership test of a point against a polytope with `r`
+facets in dimension `n`: `r` inner products of length `n`. -/
+def memCost (n r : ℕ) : ℕ := n * r
+
+/-- **Elementary cost 3a.**  One thinning pass (lines 32–35 and 39–42): one fair coin per
+copy currently in the sketch. -/
+def thinCost (X : Multiset (Space n)) : ℕ := Multiset.card X
+
+/-- **Elementary cost 3b.**  Lines 26–30: one membership test per copy of the sketch, to
+decide which copies the incoming region already covers. -/
+def removalCost (r : ℕ) (X : Multiset (Space n)) : ℕ := memCost n r * Multiset.card X
+
+/-- One hit-and-run step: the chord sweep, `Ttc.memCost n r`.  See reading 1 above. -/
+def walkStepCost (n r : ℕ) : ℕ := memCost n r
+
+/-- One generated sample: a walk of `T` steps. -/
+def sampleCost (n r T : ℕ) : ℕ := T * walkStepCost n r
+
+/-- Lines 43–45: `N` samples, each a `T`-step walk. -/
+def genCost (n r T N : ℕ) : ℕ := N * sampleCost n r T
+
+/-- One `Vol_ED` call issuing `Q` membership tests. -/
+def volCallCost (n r Q : ℕ) : ℕ := Q * memCost n r
+
+/-- One pass of the early-reduce loop (lines 32–35): the coins only. -/
+def earlyPassCost (X : Multiset (Space n)) : ℕ := thinCost X
+
+/-- One pass of the overflow loop (lines 39–42): the coins, plus the `Bin(N,½)` draw that
+thins the count already made. -/
+def overflowPassCost (X : Multiset (Space n)) : ℕ := thinCost X + drawCost
+
+/-- **One iteration of the main loop, lines 24–45**, at `X` the sketch on entry, `r` the
+facet count, `Q` the volume call's test count, `e` early-reduce passes, `a` overflow
+passes, `N` the surviving Poisson count and `T` the walk length one sample costs.
+
+The two pass counts are charged at the entry sketch, which dominates: both loops only
+remove copies. -/
+def cubeCost (r : ℕ) (X : Multiset (Space n)) (e a N Q T : ℕ) : ℕ :=
+  volCallCost n r Q + removalCost r X
+    + e * earlyPassCost X + drawCost + a * overflowPassCost X + genCost n r T N
+
+/-- **The cost of one iteration** in the older two-price form: one `Vol_ED` call plus one
+`GenerateSamples` draw per point returned.  `N` is the surviving Poisson count `Nᵢ`.
+`Ttc.cubeCost` is this at the elementary costs, with the removal and thinning charges —
+which this form omits — restored. -/
 def stepCost (cVol cSample N : ℕ) : ℕ := cVol + cSample * N
 
 /-- **The cost of the whole run**: the per-iteration cost summed along `Ttc.run`'s own
@@ -208,6 +292,31 @@ noncomputable def runCost (cVol cSample : ℕ) (ρ : ℤ) (cubes : List ι) : �
   (cubes.foldl
     (fun (acc : ℕ × SketchState n) i =>
       (acc.1 + stepCost cVol cSample (stepPre P O acc.2 i).2, step P O ρ acc.2 i))
+    (0, ⟨0, 0⟩)).1
+
+/-- **The cost of one iteration at the run's own data**, in the elementary cost model.
+
+Every argument of `Ttc.cubeCost` is *read off the iteration* rather than supplied: `X` is
+the sketch once the covered points are dropped (lines 26–30), the two pass counts are the
+level increments the two `while` loops actually perform, and `N` is the surviving Poisson
+count.  Only `r` (the facet count), `Q` (the volume call's membership-test count) and `T`
+(the walk length one sample costs) come from outside, because they are properties of the
+polytope and of the two subroutines rather than of the loop. -/
+noncomputable def elemStepCost (r Q T : ℕ) (st : SketchState n) (i : ι) : ℕ :=
+  cubeCost r (dropCovered O i st.X)
+    (haltLevel P (O.vol i) st.level - st.level)
+    ((stepPre P O st i).1.level - haltLevel P (O.vol i) st.level)
+    (stepPre P O st i).2 Q T
+
+/-- **The cost of the whole run in the elementary cost model**, summed along `Ttc.run`'s
+own fold — so every quantity charged is the one the algorithm actually reaches.
+
+This is `Ttc.runCost` with the two supplied prices replaced by the elementary costs, and
+with the removal and thinning charges — which `Ttc.stepCost` omits entirely — restored. -/
+noncomputable def elemRunCost (r Q T : ℕ) (ρ : ℤ) (cubes : List ι) : ℕ :=
+  (cubes.foldl
+    (fun (acc : ℕ × SketchState n) i =>
+      (acc.1 + elemStepCost P O r Q T acc.2 i, step P O ρ acc.2 i))
     (0, ⟨0, 0⟩)).1
 
 /-! # The preprocessing, lines A1–A13.  Definitions only: what each step *is*.

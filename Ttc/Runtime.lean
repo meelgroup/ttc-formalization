@@ -166,6 +166,124 @@ theorem runCost_le (cVol cSample : ℕ) (ρ : ℤ) (cubes : List ι) (thr : ℕ)
   have := key cubes h ⟨0, 0⟩ 0
   simpa [runCost] using this
 
+/-! ## The elementary cost model
+
+`Ttc.runCost` above charges two supplied prices and nothing else — in particular nothing
+for the removal test of lines 26–30 and nothing for either thinning loop.
+`Ttc.elemRunCost` (`Model/Pseudocode`) charges the three elementary costs instead, with
+sampling *derived* from them.  These are its bounds.
+-/
+
+/-- **The sketch never exceeds `Thresh`.**  The overflow loop exits only when
+`Nᵢ + |thin 𝒳| ≤ Thresh`, and the iteration's output sketch is exactly those two pieces
+(`Ttc.card_step`), so the bound is the exit guard read forwards.  This is the analogue of
+`DnfstreamXt.pepin_correct`'s third conjunct, and it is what makes the removal and thinning
+charges — which are proportional to `|𝒳|` — polynomial. -/
+theorem card_step_le_thresh (ρ : ℤ) (st : SketchState n) (i : ι)
+    (h : AbsorbExits P O i (O.vol i) (dropCovered O i st.X) st.level
+      (haltLevel P (O.vol i) st.level)) :
+    ((card (step P O ρ st i).X : ℝ)) ≤ P.thresh := by
+  have hspec := absorbLevel_spec P O i (O.vol i) (dropCovered O i st.X) h
+  rw [not_lt] at hspec
+  rw [card_step]
+  have hlevel : (stepPre P O st i).1.level
+      = absorbLevel P O i (O.vol i) (dropCovered O i st.X) st.level
+          (haltLevel P (O.vol i) st.level) := rfl
+  rw [stepPre_fst_X, stepPre_snd, hlevel]
+  push_cast
+  linarith [hspec]
+
+/-- **One iteration, in the elementary cost model, under the loop invariants.**
+
+`Ttc.cubeCost` is bounded by a polynomial in the facet count `r`, the volume call's test
+count `Q`, the walk length `T`, the threshold, and the two `while`-loop pass counts. -/
+theorem cubeCost_le (r : ℕ) (X : Multiset (Space n)) (e a N Q T thr : ℕ)
+    (hX : card X ≤ thr) (hN : N ≤ thr) :
+    cubeCost r X e a N Q T
+      ≤ n * r * Q + n * r * thr + e * thr + 1 + a * (thr + 1) + thr * (T * (n * r)) := by
+  unfold cubeCost volCallCost removalCost earlyPassCost overflowPassCost thinCost
+    genCost sampleCost walkStepCost memCost drawCost
+  have h1 : Q * (n * r) ≤ n * r * Q := by rw [Nat.mul_comm]
+  have h2 : n * r * card X ≤ n * r * thr := Nat.mul_le_mul_left _ hX
+  have h3 : e * card X ≤ e * thr := Nat.mul_le_mul_left _ hX
+  have h4 : a * (card X + 1) ≤ a * (thr + 1) :=
+    Nat.mul_le_mul_left _ (Nat.succ_le_succ hX)
+  have h5 : N * (T * (n * r)) ≤ thr * (T * (n * r)) := Nat.mul_le_mul_right _ hN
+  omega
+
+/-- **The whole run, in the elementary cost model.**
+
+`m` iterations, each meeting `Ttc.cubeCost_le`.  `E` and `A` bound the two `while` loops'
+pass counts; bounding *those* is the remaining analysis — see the module note below.  The
+`Ttc.Terminates` guard is the same one `Ttc.runCost_le` carries and is still not removable
+(`Exec/Complexity` §2). -/
+theorem elemRunCost_le (r Q T thr E A : ℕ) (ρ : ℤ) (cubes : List ι)
+    (hT : 0 ≤ P.thresh) (hthr : P.thresh ≤ (thr : ℝ)) (h : Terminates P O cubes)
+    (hE : ∀ (st : SketchState n) (i : ι), i ∈ cubes →
+      haltLevel P (O.vol i) st.level - st.level ≤ E)
+    (hA : ∀ (st : SketchState n) (i : ι), i ∈ cubes →
+      (stepPre P O st i).1.level - haltLevel P (O.vol i) st.level ≤ A) :
+    elemRunCost P O r Q T ρ cubes
+      ≤ cubes.length *
+          (n * r * Q + n * r * thr + E * thr + 1 + A * (thr + 1) + thr * (T * (n * r))) := by
+  set B := n * r * Q + n * r * thr + E * thr + 1 + A * (thr + 1) + thr * (T * (n * r)) with hB
+  have key : ∀ (l : List ι), (∀ (st : SketchState n) (i : ι), i ∈ l →
+        AbsorbExits P O i (O.vol i) (dropCovered O i st.X) st.level
+          (haltLevel P (O.vol i) st.level)) →
+      (∀ (st : SketchState n) (i : ι), i ∈ l →
+        haltLevel P (O.vol i) st.level - st.level ≤ E) →
+      (∀ (st : SketchState n) (i : ι), i ∈ l →
+        (stepPre P O st i).1.level - haltLevel P (O.vol i) st.level ≤ A) →
+      ∀ (st : SketchState n) (acc : ℕ), (card st.X : ℝ) ≤ P.thresh →
+      (l.foldl (fun (a : ℕ × SketchState n) i =>
+          (a.1 + elemStepCost P O r Q T a.2 i, step P O ρ a.2 i)) (acc, st)).1
+        ≤ acc + l.length * B := by
+    intro l
+    induction l with
+    | nil => intro _ _ _ st acc _; simp
+    | cons i rest ih =>
+        intro hmem hEm hAm st acc hst
+        have hi := hmem st i List.mem_cons_self
+        have hXcard : card (dropCovered O i st.X) ≤ thr := by
+          have h1 : card (dropCovered O i st.X) ≤ card st.X := card_dropCovered_le O i st.X
+          have h2 : (card st.X : ℝ) ≤ (thr : ℝ) := le_trans hst hthr
+          have : card st.X ≤ thr := by exact_mod_cast h2
+          omega
+        have hN : (stepPre P O st i).2 ≤ thr := by
+          have h1 := stepPre_snd_le P O st i hi
+          have : ((stepPre P O st i).2 : ℝ) ≤ (thr : ℝ) := le_trans h1 hthr
+          exact_mod_cast this
+        have hstep : elemStepCost P O r Q T st i ≤ B := by
+          rw [hB]
+          refine le_trans (cubeCost_le r (dropCovered O i st.X) _ _ _ Q T thr hXcard hN) ?_
+          have h3 : (haltLevel P (O.vol i) st.level - st.level) * thr ≤ E * thr :=
+            Nat.mul_le_mul_right _ (hEm st i List.mem_cons_self)
+          have h4 : ((stepPre P O st i).1.level - haltLevel P (O.vol i) st.level) * (thr + 1)
+              ≤ A * (thr + 1) :=
+            Nat.mul_le_mul_right _ (hAm st i List.mem_cons_self)
+          omega
+        have hnext : (card (step P O ρ st i).X : ℝ) ≤ P.thresh :=
+          card_step_le_thresh P O ρ st i hi
+        have hrec := ih (fun st' i' hi' => hmem st' i' (List.mem_cons_of_mem _ hi'))
+          (fun st' i' hi' => hEm st' i' (List.mem_cons_of_mem _ hi'))
+          (fun st' i' hi' => hAm st' i' (List.mem_cons_of_mem _ hi'))
+          (step P O ρ st i) (acc + elemStepCost P O r Q T st i) hnext
+        simp only [List.foldl_cons, List.length_cons]
+        refine le_trans hrec ?_
+        have : acc + elemStepCost P O r Q T st i + rest.length * B
+            ≤ acc + B + rest.length * B := by omega
+        calc acc + elemStepCost P O r Q T st i + rest.length * B
+            ≤ acc + B + rest.length * B := this
+          _ = acc + (rest.length + 1) * B := by ring
+  have hstart : ((card (⟨0, 0⟩ : SketchState n).X : ℝ)) ≤ P.thresh := by
+    simpa using hT
+  have := key cubes h hE hA ⟨0, 0⟩ 0 hstart
+  simpa [elemRunCost] using this
+
+#print axioms card_step_le_thresh
+#print axioms cubeCost_le
+#print axioms elemRunCost_le
+
 /-! ## The same fold with a per-cube price list
 
 `Ttc.runCost` charges the same `cVol` at every cube and the same `cSample` at every
