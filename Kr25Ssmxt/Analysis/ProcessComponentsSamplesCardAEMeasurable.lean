@@ -1,12 +1,10 @@
-import Kr25Ssmxt.Analysis.CardAEMeasurableOfFixedCardSum
-import Kr25Ssmxt.Analysis.ProcessComponentsProfileStratified
+import Kr25Ssmxt.Model.Pseudocode
 
 /-!
-# Reachable retained-sample cardinality is almost everywhere measurable
+# Retained-sample cardinality is measurable
 
-This is the finite-configuration obligation hidden by the membership-generated measurable
-space on `Finset`.  It is deliberately restricted to laws produced by the TTC component fold;
-global measurability of `Finset.card` is unavailable for the uncountable point type.
+The sampler state is a finite set over the countable type of coded decimal-lattice points.
+Consequently its cardinality is globally measurable; no reachable-law stratification is needed.
 -/
 
 namespace Kr25Ssmxt
@@ -23,21 +21,17 @@ lemma processComponents_samples_card_aemeasurable {n k : Nat} (O : TTCOracles n 
     (state : TTCState n) :
     AEMeasurable (fun s : TTCState n => s.samples.card)
       (processComponents O b epsilonPrime deltaPrime threshold Ps state) := by
-  obtain ⟨ν, hsum, hprofile⟩ :=
-    processComponents_profile_stratified O b epsilonPrime deltaPrime threshold Ps state
-  rw [hsum]
-  apply card_aemeasurable_of_fixedCard_sum ν fun profile => profile.card
-  intro profile
-  filter_upwards [hprofile profile] with s hs
-  rw [← futureMembershipProfile_card ([] : List (PolytopeData n)) s, hs]
+  have hsamples : Measurable (fun s : TTCState n => s.samples) :=
+    (measurable_fst.comp measurable_snd).comp
+      (comap_measurable (fun s : TTCState n => (s.rate, s.samples, s.nextLabel)))
+  exact ((measurable_of_countable (fun samples : Finset (SampleCopy n) => samples.card)).comp
+    hsamples).aemeasurable
 
 end Kr25Ssmxt
 
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
-* this round · proved by reduction · converted exact empty-suffix profile strata into
-  fixed-cardinality strata
-* this round · reduced · isolated the reachable-cardinality property missing from the current
-  membership-generated `Finset` measurable structure
+* this round · proved · countability of coded lattice samples makes `Finset.card` measurable
+* previous round · reduced · used reachable-profile stratification for arbitrary real samples
 -/

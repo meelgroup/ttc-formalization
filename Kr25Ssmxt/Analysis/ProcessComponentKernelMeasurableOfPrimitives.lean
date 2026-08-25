@@ -27,7 +27,7 @@ lemma processComponent_kernel_measurable_of_primitives {n k : Nat}
       (fun r : NNReal => ProbabilityTheory.poissonMeasure r))
     (hremove : Measurable (fun s : TTCState n => s.removeComponent P))
     (hadd : ∀ count, Measurable
-      (fun z : TTCState n × (Fin count → Point n) => z.1.addBatch z.2))
+      (fun z : TTCState n × (Fin count → LatticePoint n) => z.1.addBatch z.2))
     (hthin : Measurable
       (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold)) :
     Measurable (fun s =>

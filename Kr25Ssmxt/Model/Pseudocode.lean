@@ -57,8 +57,23 @@ def TTCPreprocessor.run {n k : Nat} (prep : TTCPreprocessor n k)
 /-- A volume-oracle result is tagged by membership in its batch good event. -/
 abbrev VolumeOutcome := Bool × NNReal
 
+/--
+A lattice point is stored by its decimal precision and integer coordinates.  This is the
+countable state space actually used by the paper's sampler; `toPoint` is its realization in
+the ambient real space.
+-/
+abbrev LatticePoint (n : Nat) := Nat × (Fin n → Int)
+
+/-- Realization of a coded decimal-lattice point. -/
+def LatticePoint.toPoint {n : Nat} (x : LatticePoint n) : Point n :=
+  fun i => (x.2 i : Real) / (10 : Real) ^ x.1
+
+/-- Coded points of precision `b` lying in a component. -/
+def codedLatticePoints {n : Nat} (P : PolytopeData n) (b : Nat) : Set (LatticePoint n) :=
+  {x | x.1 = b ∧ x.toPoint ∈ P.carrier}
+
 /-- A sample batch is likewise tagged by membership in its batch good event. -/
-abbrev SampleBatch (n count : Nat) := Bool × (Fin count → Point n)
+abbrev SampleBatch (n count : Nat) := Bool × (Fin count → LatticePoint n)
 
 /-- The deterministic certified stages and the two randomized geometric oracles. -/
 structure TTCOracles (n k : Nat) where
@@ -68,14 +83,14 @@ structure TTCOracles (n k : Nat) where
     Real → Real → Measure (SampleBatch n count)
 
 /-- Pointwise multiplicative almost-uniformity on one finite lattice set. -/
-def AlmostUniformPointwise {n : Nat} (μ : Measure (Point n))
-    (S : Set (Point n)) (η : Real) : Prop :=
+def AlmostUniformPointwise {n : Nat} (μ : Measure (LatticePoint n))
+    (S : Set (LatticePoint n)) (η : Real) : Prop :=
   IsProbabilityMeasure μ ∧ S.Finite ∧ S.Nonempty ∧ μ Sᶜ = 0 ∧
     ∀ x ∈ S, μ.real {x} ∈ Arlib.relErr η (1 / S.ncard)
 
 /-- A batch's samples are IID from one law after conditioning on its good tag. -/
 def IIDBatchOnGood {n count : Nat} (law : Measure (SampleBatch n count))
-    (pointLaw : Measure (Point n)) : Prop :=
+    (pointLaw : Measure (LatticePoint n)) : Prop :=
   (ProbabilityTheory.cond law {o | o.1 = true}).map Prod.snd =
     Measure.pi (fun _ : Fin count => pointLaw)
 
@@ -104,13 +119,13 @@ def GenerateSamplesContract {n k : Nat} (O : TTCOracles n k)
       (p.deltaPrime D.componentCount)
     IsProbabilityMeasure law ∧
       law.real {o | o.1 = false} ≤ p.deltaPrime D.componentCount ∧
-      ∃ pointLaw : Measure (Point n),
+      ∃ pointLaw : Measure (LatticePoint n),
         AlmostUniformPointwise pointLaw
-          ((D.component i).carrier ∩ decimalLattice b n) p.epsilonPrime ∧
+          (codedLatticePoints (D.component i) b) p.epsilonPrime ∧
         IIDBatchOnGood law pointLaw
 
-/-- A labelled copy; equal points may occur with different labels. -/
-abbrev SampleCopy (n : Nat) := Nat × Point n
+/-- A labelled lattice copy; equal points may occur with different labels. -/
+abbrev SampleCopy (n : Nat) := Nat × LatticePoint n
 
 /-- The mutable mathematical state of TTC. -/
 structure TTCState (n : Nat) where
@@ -118,7 +133,11 @@ structure TTCState (n : Nat) where
   samples : Finset (SampleCopy n)
   nextLabel : Nat
 
-/-- The state carries the product measurable structure of its mathematical fields. -/
+/--
+The state carries the product measurable structure of its mathematical fields.  In
+particular, the retained collection is discrete because `SampleCopy n` is countable.  This
+matches the paper's lattice-supported execution and makes its finite control state measurable.
+-/
 instance TTCState.instMeasurableSpace (n : Nat) : MeasurableSpace (TTCState n) :=
   MeasurableSpace.comap (fun s => (s.rate, s.samples, s.nextLabel)) inferInstance
 
@@ -135,11 +154,11 @@ def TTCState.initial (n : Nat) : TTCState n where
 /-- Remove every retained copy whose point lies in the next component. -/
 def TTCState.removeComponent {n : Nat} (s : TTCState n) (P : PolytopeData n) : TTCState n := by
   classical
-  exact { s with samples := s.samples.filter (fun copy => copy.2 ∉ P.carrier) }
+  exact { s with samples := s.samples.filter (fun copy => copy.2.toPoint ∉ P.carrier) }
 
 /-- Add a generated batch, retaining multiplicity via fresh labels. -/
 def TTCState.addBatch {n count : Nat} (s : TTCState n)
-    (points : Fin count → Point n) : TTCState n := by
+    (points : Fin count → LatticePoint n) : TTCState n := by
   classical
   let added : Finset (SampleCopy n) :=
     Finset.univ.image (fun i => (s.nextLabel + i.val, points i))

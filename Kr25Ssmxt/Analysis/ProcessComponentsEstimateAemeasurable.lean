@@ -2,11 +2,10 @@ import Kr25Ssmxt.Analysis.ProcessComponentsSamplesCardAEMeasurable
 import Kr25Ssmxt.Analysis.TTCStateEstimateAEMeasurableOfSamplesCard
 
 /-!
-# Measurability of the TTC estimator on reachable states
+# Measurability of the TTC estimator
 
-Cardinality is not globally measurable on arbitrary finite subsets of an uncountable point
-space. This file derives estimator measurability from the narrower almost-everywhere
-measurability of cardinality under the law of states reachable through TTC.
+Cardinality is globally measurable on finite subsets of the countable coded-lattice sample
+space. This file packages that fact for the law produced by the TTC component fold.
 -/
 
 namespace Kr25Ssmxt
@@ -30,8 +29,6 @@ end Kr25Ssmxt
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
-* this round · proved by reduction · estimator arithmetic follows from the separately stated
-  reachable-cardinality a.e.-measurability lemma
-* this round · reduced · isolated reachable-state a.e. measurability after global
-  measurability failed at `Finset.card` over the uncountable point type
+* this round · updated · coded lattice samples make retained cardinality globally measurable
+* previous round · proved by reduction · estimator arithmetic follows from sample cardinality
 -/

@@ -15,30 +15,31 @@ Adding a fixed-size batch is jointly measurable in the state and point family.
 INTERNAL: deterministic state-transition measurability after sampling.
 -/
 lemma measurable_addBatch {n count : Nat} :
-    Measurable (fun z : TTCState n × (Fin count → Point n) => z.1.addBatch z.2) := by
+    Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
+      z.1.addBatch z.2) := by
   classical
-  have hstateCoords : Measurable (fun z : TTCState n × (Fin count → Point n) =>
+  have hstateCoords : Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
       (z.1.rate, z.1.samples, z.1.nextLabel)) :=
     (comap_measurable _).comp measurable_fst
-  have hrate : Measurable (fun z : TTCState n × (Fin count → Point n) =>
+  have hrate : Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
       z.1.rate) :=
     measurable_fst.comp hstateCoords
-  have hsamples : Measurable (fun z : TTCState n × (Fin count → Point n) =>
+  have hsamples : Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
       z.1.samples) :=
     (measurable_fst.comp measurable_snd).comp hstateCoords
-  have hnext : Measurable (fun z : TTCState n × (Fin count → Point n) =>
+  have hnext : Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
       z.1.nextLabel) :=
     (measurable_snd.comp measurable_snd).comp hstateCoords
-  have hadded : Measurable (fun z : TTCState n × (Fin count → Point n) =>
+  have hadded : Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
       z.1.samples ∪ Finset.univ.image
         (fun i : Fin count => (z.1.nextLabel + i.val, z.2 i))) := by
     rw [measurable_finset_iff]
     intro copy
-    have hold : Measurable (fun z : TTCState n × (Fin count → Point n) =>
+    have hold : Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
         copy ∈ z.1.samples) :=
       (measurable_finset_mem copy).comp hsamples
     have hfresh : ∀ i : Fin count,
-        Measurable (fun z : TTCState n × (Fin count → Point n) =>
+        Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
           (z.1.nextLabel + i.val, z.2 i)) := by
       intro i
       exact ((measurable_of_countable (fun label : Nat => label + i.val)).comp hnext).prodMk
@@ -47,7 +48,7 @@ lemma measurable_addBatch {n count : Nat} :
       hold.or (Measurable.exists fun i => (hfresh i).eq_const copy)
   unfold TTCState.addBatch
   rw [measurable_comap_iff]
-  change Measurable (fun z : TTCState n × (Fin count → Point n) =>
+  change Measurable (fun z : TTCState n × (Fin count → LatticePoint n) =>
     (z.1.rate,
       z.1.samples ∪ Finset.univ.image
         (fun i : Fin count => (z.1.nextLabel + i.val, z.2 i)),

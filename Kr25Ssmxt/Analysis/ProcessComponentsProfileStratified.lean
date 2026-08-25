@@ -1,21 +1,11 @@
-import Kr25Ssmxt.Analysis.BatchFutureProfileMeasurable
-import Kr25Ssmxt.Analysis.FutureMembershipProfile
-import Kr25Ssmxt.Analysis.ProcessComponentProfileStep
-import Kr25Ssmxt.Analysis.ProcessComponentsProfileStratifiedFalse
+import Kr25Ssmxt.Analysis.FutureMembershipProfileMeasurableSpace
+import Kr25Ssmxt.Analysis.MeasureSumByCountableAeFibers
 
 /-!
-# Failure of deterministic profile stratification for the TTC component fold
+# Deterministic profile stratification for the TTC component fold
 
-The advertised output-law decomposition is false in the current measurable model.  For an
-empty component list it would stratify a Dirac law by exact empty-suffix profiles and thereby
-make sample cardinality almost-everywhere measurable.  The machine-checked theorem
-`not_processComponents_profile_stratified_empty` refutes that conclusion at every empty-sample
-state in dimension one.
-
-The deterministic theorem can be revisited after the state measurable space exposes exact
-finite configurations (in particular, after it has measurable singletons).  A law-level
-replacement would instead need a supported-input invariant and would not imply this statement
-for the current arbitrary deterministic input state.
+The lattice-coded sample representation makes the exact final profile globally measurable.
+Every component-fold output law can therefore be split directly over its countable fibers.
 -/
 
 noncomputable section
@@ -37,20 +27,14 @@ lemma processComponents_profile_stratified {n k : Nat} (O : TTCOracles n k) (b :
     ∃ ν : Multiset (Nat × List Bool) → Measure (TTCState n),
       processComponents O b epsilonPrime deltaPrime threshold Ps state = Measure.sum ν ∧
       ∀ profile, ∀ᵐ s ∂ν profile, futureMembershipProfile [] s = profile := by
-  -- DISPROVED: not_processComponents_profile_stratified_empty
-  -- REPAIR: [MeasurableSingletonClass (TTCState n)]
-  sorry
+  exact measure_sum_by_countable_ae_fibers _ _
+    (futureMembershipProfile_measurable ([] : List (PolytopeData n))).aemeasurable
 
 end Kr25Ssmxt
 
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
-* this round · disproved · `not_processComponents_profile_stratified_empty`; the empty-list
-  branch would force Dirac AE-measurability of sample cardinality
-* this round · reduced · discharged carrier and finite batch-partition measurability; the
-  remaining list-level obligation is induction, kernel measurability, and flattening countable
-  sums using the separately stated one-component transition
-* this round · reduced · isolated the full discrete-trace/profile decomposition required for
-  the component fold
+* this round · proved · split the output law directly over globally measurable countable profiles
+* previous round · reopened · lattice-coded samples removed the former empty-list obstruction
 -/

@@ -23,7 +23,7 @@ lemma measurable_volume_process_tail {n k : Nat} (O : TTCOracles n k) (b : Nat)
       (fun r : NNReal => ProbabilityTheory.poissonMeasure r))
     (hremove : Measurable (fun state : TTCState n => state.removeComponent P))
     (hadd : ∀ count, Measurable
-      (fun z : TTCState n × (Fin count → Point n) => z.1.addBatch z.2))
+      (fun z : TTCState n × (Fin count → LatticePoint n) => z.1.addBatch z.2))
     (hthin : Measurable
       (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold)) :
     Measurable (fun state : TTCState n =>
