@@ -76,6 +76,10 @@ lemma process_components_lattice_count_accuracy
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
+* r8 · blocked · stopped at the prescribed specification boundary: `processComponent`
+  still draws fresh copies with mean `volumeOutcome.2 / withoutDuplicates.rate`, while
+  the paper's union-sampling invariant requires multiplication by that rate; the theorem
+  also still has neither a threshold-sized final-mean premise nor a low-intensity branch
 * r7 · blocked · reconfirmed from the elaborated `processComponent` definition that
   fresh copies use the divisive mean `t / p`, differing from the invariant's `t * p`
   by `p⁻²` after later thinning; the independent unit-Poisson obstruction still leaves
