@@ -1,5 +1,6 @@
 import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Analysis.TheoremProof
 
 namespace Kr25Ssmxt
 
@@ -12,9 +13,10 @@ that algorithm.  Nor can `Measure.toPMF` repair the mismatch: its general constr
 requires a `Countable` output type, while `NNReal` is uncountable, and in any case such a
 post-hoc conversion would not expose the paper's random choices as `PMF.pure`/`PMF.bind`.
 
-This theorem therefore records the paper's probability bound for the actual on-disk
-algorithm until the randomized primitives and control flow in `Pseudocode.lean` are
-changed to return `PMF` directly.
+The measure-valued theorem below is the audit statement for the actual on-disk algorithm.
+Its proof side additionally records a distinct model mismatch: `processComponent` uses a
+Poisson mean `t / p`, while the paper uses `t * p`.  The empty-decomposition branch is
+proved, but the nonempty accuracy argument is blocked until that rate convention is fixed.
 -/
 
 /--
@@ -22,6 +24,8 @@ TTC returns a probability law on single nonnegative estimates, and its estimate 
 relative error `ε` of the Lebesgue volume of the existentially projected real solution set
 with probability at least `1 - δ`.  This is an accuracy statement only; it makes no runtime
 claim.
+
+PAPER: sections/analysis.tex:314-326
 -/
 theorem ttc_volume_accuracy
     (hprior : Prior)
@@ -39,7 +43,7 @@ theorem ttc_volume_accuracy
             Arlib.relErr params.epsilon
               (MeasureTheory.volume (solutionSet F)).toReal} ≥
         1 - params.delta := by
-  sorry
+  exact ttc_volume_accuracy_proof hprior hn F hbounded params O hvolume hsamples
 
 #modelClosureOfType ttc_volume_accuracy
 #print axioms ttc_volume_accuracy
