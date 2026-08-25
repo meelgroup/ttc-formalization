@@ -1,28 +1,25 @@
-name = "ttc"
-version = "0.1.0"
-keywords = ["math"]
-defaultTargets = ["Ttc", "Arlib"]
+name = "kr25ssmxt"
+defaultTargets = ["Kr25Ssmxt"]
 
-[leanOptions]
-pp.unicode.fun = true
-relaxedAutoImplicit = false
-autoImplicit = false
+# Pinned so a fresh clone builds without a version hunt. If you bump the
+# toolchain in lean-toolchain, bump both revs below to match.
+#
+# Run `lake exe cache get` after `lake update` — otherwise you compile
+# Mathlib from source, which takes hours.
 
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.32.0"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.33.0"
+
+# Reusable, problem-independent material (finite probability, multiplicative
+# error algebra, automata lower bounds, MDPs, …) lives here. Look for a lemma
+# in arlib before proving it in this project.
+[[require]]
+name = "arlib"
+git = "https://github.com/uddaloksarkar/arlib.git"
+rev = "kr"
 
 [[lean_lib]]
-name = "Ttc"
-
-# The ArLib staging area. General, reusable, project-independent material —
-# randomized rounding, lattice counting, total variation, convexity, Markov
-# chain mixing. Written against `Arlib.*` namespaces and arlib's conventions so
-# that porting it into https://github.com/meelgroup/arlib is a `git mv` once
-# that repo is bumped from Lean v4.15.0 to v4.32.0.
-#
-# HARD RULE: nothing under `Arlib/` may import `Ttc.*`. `Ttc/**` may import both.
-[[lean_lib]]
-name = "Arlib"
-globs = ["Arlib", "Arlib.+"]
+name = "Kr25Ssmxt"
