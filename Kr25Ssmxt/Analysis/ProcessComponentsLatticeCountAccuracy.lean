@@ -14,7 +14,8 @@ The paper's invariant instead requires multiplication by the current rate.  In a
 the paper's concentration split does not cover its `j* = 0` case: at unit intensity the
 desired half-relative-error event has probability `exp (-1) < 1/2`, as formalized by
 `poisson_unit_not_half_accurate`.  Thus correcting the rate convention alone is not enough;
-a lower-intensity hypothesis or a separate low-volume estimator is also required.
+a positive lower bound on the relevant Poisson mean or a separate low-volume estimator is
+also required.
 
 MODEL: `processComponent` — replace the fresh Poisson mean
 `volumeOutcome.2 / withoutDuplicates.rate` by
@@ -65,11 +66,23 @@ lemma process_components_lattice_count_accuracy
           Arlib.relErr (params.epsilon / 2)
             ((D.latticePoints b).ncard / (10 : Real) ^ (b * n))} >=
       1 - params.delta := by
+  -- The available component-intensity lemma is deliberately stated for the paper's
+  -- multiplicative mean.  It cannot be applied to `processComponent`, whose definition
+  -- still uses `volumeOutcome.2 / withoutDuplicates.rate`.  Independently, the present
+  -- assumptions give no lower bound on the final Poisson mean, so the threshold-sized
+  -- concentration lemma does not cover the `j* = 0` branch.
   sorry
 
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
+* r6 · blocked · the new point-intensity and finite-sum lemmas concern the paper's
+  corrected multiplicative mean and therefore do not apply to the modeled divisive mean;
+  the proposed unit-Poisson disproof also needs `delta = 1/2` (not `delta = 1`, whose
+  conclusion is the trivial lower bound zero) and a concrete exact-oracle instance
+* r5 · blocked · the new coded-cardinality, parameter-envelope, and high-intensity
+  Poisson lemmas do not supply either missing model feature; author decisions are still
+  required on the corrected fresh mean and the shape-preserving low-intensity branch
 * r4 · blocked · the prescribed proof needs two model-level design decisions: correct
   the fresh mean `t / p` to `t * p`, and add a low-count branch or a threshold-sized
   lattice-count premise; no theorem-local lemma follows from the present assumptions
