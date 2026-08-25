@@ -76,6 +76,10 @@ lemma process_components_lattice_count_accuracy
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
+* r7 · blocked · reconfirmed from the elaborated `processComponent` definition that
+  fresh copies use the divisive mean `t / p`, differing from the invariant's `t * p`
+  by `p⁻²` after later thinning; the independent unit-Poisson obstruction still leaves
+  the `j* = 0` branch false without a low-intensity repair
 * r6 · blocked · the new point-intensity and finite-sum lemmas concern the paper's
   corrected multiplicative mean and therefore do not apply to the modeled divisive mean;
   the proposed unit-Poisson disproof also needs `delta = 1/2` (not `delta = 1`, whose
