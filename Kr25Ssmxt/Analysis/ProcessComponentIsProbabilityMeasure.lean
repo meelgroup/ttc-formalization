@@ -43,7 +43,7 @@ lemma processComponent_isProbabilityMeasure {n k : Nat} (O : TTCOracles n k) (b 
     thinUntil_isProbabilityMeasure withoutDuplicates pending threshold
   apply MeasureTheory.isProbabilityMeasure_bind
     (processComponent_thinned_continuation_aemeasurable
-      O b epsilonPrime deltaPrime threshold P withoutDuplicates pending)
+      O b epsilonPrime deltaPrime threshold P hsamples withoutDuplicates pending)
   filter_upwards with thinned
   letI : MeasureTheory.IsProbabilityMeasure
       (O.generateSamples P thinned.2 b epsilonPrime deltaPrime) := hsamples thinned.2
@@ -61,5 +61,6 @@ end Kr25Ssmxt
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
-* r1 · reduced · proved normalization from three isolated continuation-measurability lemmas
+* this round · proved · repaired the parked proof after the post-thinning lemma gained `hsamples`
+* r1 · reduced · isolated normalization behind three continuation-measurability lemmas
 -/
