@@ -70,6 +70,9 @@ lemma process_components_lattice_count_accuracy
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
+* r4 · blocked · the prescribed proof needs two model-level design decisions: correct
+  the fresh mean `t / p` to `t * p`, and add a low-count branch or a threshold-sized
+  lattice-count premise; no theorem-local lemma follows from the present assumptions
 * r3 · blocked · formalized the low-intensity `j* = 0` obstruction in
   `poisson_unit_not_half_accurate`; the assumptions provide no lower mean bound
 * r2 · reduced · isolated the exact `processComponents` invariant/concentration theorem;
