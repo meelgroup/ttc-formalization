@@ -18,28 +18,35 @@ INTERNAL: measure-valued kernel bookkeeping for the TTC thinning loop.
 -/
 lemma thinUntil_kernel_measurable {n : Nat} (threshold : Real) :
     Measurable (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold) := by
-  letI : MeasureTheory.IsProbabilityMeasure fairCoinStreamLaw :=
+  let _ : MeasureTheory.IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
-  apply MeasureTheory.Measure.measurable_of_measurable_coe
-  intro A hA
-  unfold thinUntil
-  simp_rw [MeasureTheory.Measure.map_apply
-    (measurable_thinningResult _ _ threshold) hA]
-  let J : Set ((TTCState n × Nat) × (Nat × Nat → Bool)) :=
-    {q | thinningResult q.1.1 q.1.2 threshold q.2 ∈ A}
-  have hJ : MeasurableSet J := by
-    exact (measurable_thinningResult_joint threshold) hA
-  let κ : ProbabilityTheory.Kernel (TTCState n × Nat) (Nat × Nat → Bool) :=
-    ProbabilityTheory.Kernel.const (TTCState n × Nat) fairCoinStreamLaw
-  have hsection := ProbabilityTheory.Kernel.measurable_kernel_prodMk_left
-    (κ := κ) hJ
-  simpa [κ, J] using hsection
+  let G := fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
+    thinningResult z.1.1 z.1.2 threshold z.2
+  have hG : Measurable G := measurable_thinningResult_joint threshold
+  have hpair : Measurable
+      (fun z : TTCState n × Nat => fairCoinStreamLaw.map (Prod.mk z)) :=
+    Measurable.map_prodMk_left
+  have hmap : Measurable
+      (fun z : TTCState n × Nat =>
+        (fairCoinStreamLaw.map (Prod.mk z)).map G) :=
+    (MeasureTheory.Measure.measurable_map G hG).comp hpair
+  have heq :
+      (fun z : TTCState n × Nat =>
+        (fairCoinStreamLaw.map (Prod.mk z)).map G) =
+      (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold) := by
+    funext z
+    rw [MeasureTheory.Measure.map_map hG measurable_prodMk_left]
+    unfold thinUntil
+    congr 1
+  rw [← heq]
+  exact hmap
 
 end Kr25Ssmxt
 
 /-! ### Run record
 Newest first. History, not instruction — what this file claims is above.
 
+* this round · proved · used joint thinning measurability and measurable pushforward composition
 * this round · proved · expressed varying pushforwards as sections of one jointly measurable event
 * this round · reduced · isolated the parameterized pushforward from joint thinning measurability
 -/
