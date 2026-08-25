@@ -1,4 +1,5 @@
 import Arlib.Prelude
+import Kr25Ssmxt.Analysis.PreludeProof
 import Kr25Ssmxt.Meta.ModelClosure
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Data.Matrix.Mul
@@ -259,6 +260,6 @@ notion of volume.
 theorem Decomposition.volume_eq_solutionSet {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) :
     volume D.union = volume (solutionSet F) := by
-  sorry
+  exact measure_eq_of_mem_ae_iff D.solution_ae
 
 end Kr25Ssmxt
