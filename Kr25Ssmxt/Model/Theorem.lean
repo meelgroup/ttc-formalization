@@ -17,12 +17,12 @@ comparison, measure normalization, and final error composition are proved in thi
 -/
 
 /--
-There exists a TTC oracle bundle using the supplied preprocessing whose volume and sampling
-contracts are discharged by the current arlib-community CV18 and finite-step Hit-and-Run/KV97
-implementations.  TTC returns a probability law on single nonnegative estimates, and its
-estimate is within relative error `ε` of the Lebesgue volume of the existentially projected
-real solution set with probability at least `1 - δ`.  This is an accuracy statement only; it
-makes no runtime claim.
+The concrete TTC program using the current arlib-community CV18 and finite-step
+Hit-and-Run/KV97 implementations returns a probability law on single nonnegative estimates,
+and its estimate is within relative error `ε` of the Lebesgue volume of the existentially
+projected real solution set with probability at least `1 - δ`.  The two geometric-oracle
+contracts are discharged in the proof rather than exposed as assumptions.  This is an
+accuracy statement only; it makes no runtime claim.
 
 PAPER: sections/analysis.tex:314-326
 -/
@@ -39,19 +39,12 @@ theorem ttc_volume_accuracy
       let b := (prep.choosePrecision D params).value
       D.componentCount = 0 ∨
         params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real)) :
-    ∃ O : TTCOracles n k,
-      O.preprocessing = prep ∧
-      ComputeVolumeContract O F hbounded params ∧
-      GenerateSamplesContract O F hbounded params ∧
-      MeasureTheory.IsProbabilityMeasure (ttc F hbounded params O) ∧
-        (ttc F hbounded params O).real
-            {estimate | (estimate : Real) ∈
-              Arlib.relErr params.epsilon
-                (MeasureTheory.volume (solutionSet F)).toReal} ≥
-          1 - params.delta := by
-  let O := communityCV18HitAndRunOracles hn prep
-  refine ⟨O, rfl, communityCV18HitAndRun_volume_contract hn prep F hbounded params,
-    communityCV18HitAndRun_samples_contract hn prep F hbounded params, ?_⟩
+    MeasureTheory.IsProbabilityMeasure (communityTTC hn F hbounded params prep) ∧
+      (communityTTC hn F hbounded params prep).real
+          {estimate | (estimate : Real) ∈
+            Arlib.relErr params.epsilon
+              (MeasureTheory.volume (solutionSet F)).toReal} ≥
+        1 - params.delta := by
   exact ttc_volume_accuracy_communityCV18_hitAndRun
     hprior hn F hbounded params prep hregime
 
@@ -77,7 +70,6 @@ theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
           bounds.volumeOverhead bounds.samplingOverhead := by
   exact PaperRuntime.ttc_total_runtime_theorem3 (hn := hn) cert bounds
 
-#modelClosureOfType ttc_volume_accuracy
 #modelClosureOfType ttc_total_runtime_theorem3
 #print axioms ttc_volume_accuracy
 #print axioms ttc_total_runtime_theorem3

@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prelude
 
 /-!
 # Retained-sample cardinality is measurable

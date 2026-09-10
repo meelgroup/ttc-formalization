@@ -1,5 +1,5 @@
 import Arlib.Probability.Poisson
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prelude
 
 /-!
 # Poisson event probabilities as explicit mass sums

@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prelude
 
 /-!
 # Scalar parameter envelope for lattice-count accuracy

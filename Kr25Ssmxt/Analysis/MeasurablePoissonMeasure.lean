@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prelude
 
 /-!
 # Measurability of the Poisson law in its rate

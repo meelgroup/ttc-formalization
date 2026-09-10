@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.PreludeProof
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prelude
 
 /-!
 # From retained-count concentration to estimator concentration

@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Model.Prior
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prelude
 import Kr25Ssmxt.Analysis.PreludeProof
 import Kr25Ssmxt.Analysis.TtcVolumeAccuracyLatticeComparison
 import Kr25Ssmxt.Analysis.TtcVolumeAccuracyLatticeEstimate
