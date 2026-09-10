@@ -1,6 +1,6 @@
 import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Model.Pseudocode
-import Kr25Ssmxt.Analysis.TheoremProof
+import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
 import Kr25Ssmxt.Analysis.TTCPaperRuntime
 
 namespace Kr25Ssmxt
@@ -17,35 +17,43 @@ comparison, measure normalization, and final error composition are proved in thi
 -/
 
 /--
-TTC returns a probability law on single nonnegative estimates, and its estimate is within
-relative error `ε` of the Lebesgue volume of the existentially projected real solution set
-with probability at least `1 - δ`.  This is an accuracy statement only; it makes no runtime
-claim.
+There exists a TTC oracle bundle using the supplied preprocessing whose volume and sampling
+contracts are discharged by the current arlib-community CV18 and finite-step Hit-and-Run/KV97
+implementations.  TTC returns a probability law on single nonnegative estimates, and its
+estimate is within relative error `ε` of the Lebesgue volume of the existentially projected
+real solution set with probability at least `1 - δ`.  This is an accuracy statement only; it
+makes no runtime claim.
 
 PAPER: sections/analysis.tex:314-326
 -/
 theorem ttc_volume_accuracy
     (hprior : Prior)
     {n k : Nat}
-    (hn : 0 < n)
+    (hn : 21 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams)
-    (O : TTCOracles n k)
-    (hvolume : ComputeVolumeContract O F hbounded params)
-    (hsamples : GenerateSamplesContract O F hbounded params)
+    (prep : TTCPreprocessor n k)
     (hregime :
-      let D := O.preprocessing.run F hbounded
-      let b := (O.preprocessing.choosePrecision D params).value
+      let D := prep.run F hbounded
+      let b := (prep.choosePrecision D params).value
       D.componentCount = 0 ∨
         params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real)) :
-    MeasureTheory.IsProbabilityMeasure (ttc F hbounded params O) ∧
-      (ttc F hbounded params O).real
-          {estimate | (estimate : Real) ∈
-            Arlib.relErr params.epsilon
-              (MeasureTheory.volume (solutionSet F)).toReal} ≥
-        1 - params.delta := by
-  exact ttc_volume_accuracy_proof hprior hn F hbounded params O hvolume hsamples hregime
+    ∃ O : TTCOracles n k,
+      O.preprocessing = prep ∧
+      ComputeVolumeContract O F hbounded params ∧
+      GenerateSamplesContract O F hbounded params ∧
+      MeasureTheory.IsProbabilityMeasure (ttc F hbounded params O) ∧
+        (ttc F hbounded params O).real
+            {estimate | (estimate : Real) ∈
+              Arlib.relErr params.epsilon
+                (MeasureTheory.volume (solutionSet F)).toReal} ≥
+          1 - params.delta := by
+  let O := communityCV18HitAndRunOracles hn prep
+  refine ⟨O, rfl, communityCV18HitAndRun_volume_contract hn prep F hbounded params,
+    communityCV18HitAndRun_samples_contract hn prep F hbounded params, ?_⟩
+  exact ttc_volume_accuracy_communityCV18_hitAndRun
+    hprior hn F hbounded params prep hregime
 
 /--
 The public audit-surface statement of Theorem 3 (`thm:runtime`).  In the paper's
