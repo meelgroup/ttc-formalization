@@ -1,8 +1,6 @@
 import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Model.Pseudocode
-import Kr25Ssmxt.Model.Runtime
 import Kr25Ssmxt.Analysis.TheoremProof
-import Kr25Ssmxt.Analysis.GeometricOracleDischarge
 import Kr25Ssmxt.Analysis.TTCPaperRuntime
 
 namespace Kr25Ssmxt
@@ -50,38 +48,6 @@ theorem ttc_volume_accuracy
   exact ttc_volume_accuracy_proof hprior hn F hbounded params O hvolume hsamples hregime
 
 /--
-A specialization of the headline accuracy theorem to exact semantic oracles.  The canonical
-laws return exact Lebesgue volume and an IID uniform batch on the coded lattice, and their
-contracts are proved.  This is not a refinement proof for finite-step implementations of
-CV18 or Hit-and-Run.
-
-This theorem makes no runtime claim about evaluating the canonical laws.
--/
-theorem ttc_volume_accuracy_exact_semantic_oracles
-    (hprior : Prior)
-    {n k : Nat}
-    (hn : 0 < n)
-    (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F))
-    (params : ApproxParams)
-    (prep : TTCPreprocessor n k)
-    (hregime :
-      let D := prep.run F hbounded
-      let b := (prep.choosePrecision D params).value
-      D.componentCount = 0 ∨
-        params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real)) :
-    MeasureTheory.IsProbabilityMeasure
-        (ttc F hbounded params (exactSemanticOracles prep)) ∧
-      (ttc F hbounded params (exactSemanticOracles prep)).real
-          {estimate | (estimate : Real) ∈
-            Arlib.relErr params.epsilon
-              (MeasureTheory.volume (solutionSet F)).toReal} ≥
-        1 - params.delta := by
-  exact ttc_volume_accuracy hprior hn F hbounded params (exactSemanticOracles prep)
-    (exact_volume_contract prep F hbounded params)
-    (exact_samples_contract hn prep F hbounded params) hregime
-
-/--
 The public audit-surface statement of Theorem 3 (`thm:runtime`).  In the paper's
 membership-query real-RAM cost model, the certified geometric-oracle operations are at
 most `m n^5 rho^2 r_max` times the displayed factors suppressed by its `O` notation.
@@ -106,7 +72,6 @@ theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
 #modelClosureOfType ttc_volume_accuracy
 #modelClosureOfType ttc_total_runtime_theorem3
 #print axioms ttc_volume_accuracy
-#print axioms ttc_volume_accuracy_exact_semantic_oracles
 #print axioms ttc_total_runtime_theorem3
 
 end Kr25Ssmxt

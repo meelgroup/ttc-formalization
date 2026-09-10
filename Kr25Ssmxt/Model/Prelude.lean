@@ -1,7 +1,5 @@
 import Arlib.Prelude
-import Kr25Ssmxt.Analysis.PreludeProof
 import Kr25Ssmxt.Meta.ModelClosure
-import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Data.Matrix.Mul
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.MeasureTheory.Measure.Real
@@ -189,12 +187,6 @@ def Decomposition.union {n k : Nat} {F : LRAFormula n k}
 def decimalLattice (b n : Nat) : Set (Point n) :=
   {x | ∀ i, ∃ z : Int, x i = (z : Real) / (10 : Real) ^ b}
 
-/-- Lattice points in the union through component `i`. -/
-def prefixLatticePoints {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (b : Nat) (i : Fin D.componentCount) : Set (Point n) :=
-  {x | ∃ j : Fin D.componentCount,
-    j.val ≤ i.val ∧ x ∈ (D.component j).carrier ∩ decimalLattice b n}
-
 /-- The final lattice-point set `Q ∩ L_b^n`. -/
 def Decomposition.latticePoints {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (b : Nat) : Set (Point n) :=
@@ -240,18 +232,6 @@ def samplerRadiusRequirement {n : Nat} (P : PolytopeData n) (η : Real) : Real :
   (512 * n / η) *
     Real.sqrt (Real.log (32 * P.presentation.facetCount / η))
 
-/-- Ratios whose maximum is used by the repaired `GetPrecision` in the paper. -/
-def precisionRatios {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (latticeEta sampleEta : Real) : Set Real :=
-  {x | ∃ i, x = max (latticeRadiusRequirement D latticeEta)
-      (samplerRadiusRequirement (D.component i) sampleEta) /
-        (D.component i).inradius}
-
-/-- The precision printed in the repaired paper, covering lattice comparison and sampling. -/
-def paperPrecision {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (latticeEta sampleEta : Real) : Nat :=
-  Nat.ceil (Real.logb 10 (max 1 (sSup (precisionRatios D latticeEta sampleEta))))
-
 /-- The useful specification of a working precision: both cited geometric results apply. -/
 def PrecisionAdequate {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (b : Nat) (latticeEta sampleEta : Real) : Prop :=
@@ -259,17 +239,79 @@ def PrecisionAdequate {n k : Nat} {F : LRAFormula n k}
       (samplerRadiusRequirement (D.component i) sampleEta) ≤
     (10 : Real) ^ b * (D.component i).inradius
 
-/-! ## The quantity -/
+/-! ## Runtime vocabulary -/
 
-/--
-Cross-check against Mathlib's `MeasureTheory.volume`: certified preprocessing does not
-change the Lebesgue measure of the existentially projected solution set.  The headline
-therefore uses `(volume (solutionSet F)).toReal` directly instead of defining a duplicate
-notion of volume.
--/
-theorem Decomposition.volume_eq_solutionSet {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) :
-    volume D.union = volume (solutionSet F) := by
-  exact measure_eq_of_mem_ae_iff D.solution_ae
+namespace TTCRuntime
+
+/-- One polytope membership query scans every facet and costs `dimension * facets`
+real-arithmetic operations in the paper's cost model. -/
+def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
+  dimension * facets * queries
+
+/-- Cost of one accepted sample: its Hit-and-Run transitions and final membership test,
+multiplied by the integer upper bound `2` on the paper's expected rejection count. -/
+def acceptedSampleOperations (dimension facets steps : Nat) : Nat :=
+  2 * membershipQueryOperations dimension facets (steps + 1)
+
+/-- Model-level trace of TTC's geometric calls. -/
+structure TTCMembershipRuntimeCertificate {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) where
+  volumeQueryCount : Fin D.componentCount → Nat
+  samplerStepCount : Fin D.componentCount → Nat
+
+/-- Maximum number of accepted samples charged per component. -/
+def sampleCap (p : ApproxParams) (componentCount : Nat) : Nat :=
+  Nat.ceil (p.threshold componentCount)
+
+/-- Total geometric-oracle operations represented by a runtime trace. -/
+def TTCMembershipRuntimeCertificate.operations {n k : Nat} {F : LRAFormula n k}
+    {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCMembershipRuntimeCertificate D p) : Nat :=
+  ∑ i : Fin D.componentCount,
+    (membershipQueryOperations n (D.component i).presentation.facetCount
+        (cert.volumeQueryCount i) +
+      sampleCap p D.componentCount *
+        acceptedSampleOperations n (D.component i).presentation.facetCount
+          (cert.samplerStepCount i))
+
+/-- Volume kernel in Theorem 3 before facets and suppressed factors. -/
+def theorem3VolumeKernel (n : Nat) (rho epsilon : Real) : Real :=
+  max ((n : Real) ^ 3 * rho ^ 2) ((n : Real) ^ 4) / epsilon ^ 2
+
+/-- Per-sample kernel in Theorem 3. -/
+def theorem3SamplingKernel (n : Nat) (rho : Real) : Real :=
+  (n : Real) ^ 5 * rho ^ 2
+
+/-- Exact multiplier containing the factors suppressed by the paper's `O` notation. -/
+def theorem3SuppressedFactor (epsilon threshold volumeOverhead samplingOverhead : Real) :
+    Real :=
+  volumeOverhead / epsilon ^ 2 + threshold * samplingOverhead
+
+/-- Geometric monomial in the headline statement of Theorem 3. -/
+def theorem3HeadlineCore (componentCount n rMax : Nat) (rho : Real) : Real :=
+  (componentCount : Real) * (n : Real) ^ 5 * rho ^ 2 * rMax
+
+/-- Componentwise oracle estimates assumed by the model-level statement of Theorem 3. -/
+structure Theorem3OracleBounds {n k : Nat} {F : LRAFormula n k}
+    {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCMembershipRuntimeCertificate D p) (rho : Real) (rMax : Nat) where
+  one_le_rho : 1 ≤ rho
+  volumeOverhead : Real
+  volumeOverhead_nonneg : 0 ≤ volumeOverhead
+  samplingOverhead : Real
+  samplingOverhead_nonneg : 0 ≤ samplingOverhead
+  facets_le : ∀ i, (D.component i).presentation.facetCount ≤ rMax
+  volume_operations_le : ∀ i,
+    (membershipQueryOperations n (D.component i).presentation.facetCount
+        (cert.volumeQueryCount i) : Real) ≤
+      ((D.component i).presentation.facetCount : Real) * volumeOverhead *
+        theorem3VolumeKernel n rho p.epsilon
+  sample_operations_le : ∀ i,
+    (acceptedSampleOperations n (D.component i).presentation.facetCount
+        (cert.samplerStepCount i) : Real) ≤
+      ((D.component i).presentation.facetCount : Real) * samplingOverhead *
+        theorem3SamplingKernel n rho
+
+end TTCRuntime
 
 end Kr25Ssmxt

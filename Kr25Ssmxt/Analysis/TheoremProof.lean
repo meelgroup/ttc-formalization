@@ -1,5 +1,6 @@
 import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Analysis.PreludeProof
 import Kr25Ssmxt.Analysis.TtcVolumeAccuracyLatticeComparison
 import Kr25Ssmxt.Analysis.TtcVolumeAccuracyLatticeEstimate
 import Kr25Ssmxt.Analysis.TtcLatticeCountAccuracy
@@ -21,6 +22,12 @@ open scoped ENNReal NNReal ProbabilityTheory unitInterval
 open MeasureTheory
 
 namespace Kr25Ssmxt
+
+/-- Certified preprocessing preserves the volume of the projected solution set. -/
+theorem Decomposition.volume_eq_solutionSet {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) :
+    volume D.union = volume (solutionSet F) := by
+  exact measure_eq_of_mem_ae_iff D.solution_ae
 
 /--
 After thinning a coded `t / p` Poisson batch by `2ʳ` and updating the stored rate in the

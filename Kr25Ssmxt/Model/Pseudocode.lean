@@ -32,11 +32,10 @@ open MeasureTheory
 
 namespace Kr25Ssmxt
 
-/-- A certified precision starts no lower than the repaired printed value and satisfies both uses. -/
+/-- A certified precision satisfies both geometric uses in the algorithm. -/
 structure PrecisionChoice {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) where
   value : Nat
-  paper_le : paperPrecision D p.latticeEta p.epsilonPrime ≤ value
   adequate : PrecisionAdequate D value p.latticeEta p.epsilonPrime
 
 /-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input. -/

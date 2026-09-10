@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
-import Kr25Ssmxt.Model.Runtime
+import Kr25Ssmxt.Model.Prelude
 
 /-!
 # TTC runtime in the paper's membership-query real-RAM model
@@ -23,10 +23,6 @@ namespace Kr25Ssmxt
 namespace PaperRuntime
 
 open TTCRuntime
-
-lemma paper_expected_rejection_attempts_le_charge :
-    (3 / 2 : Real) ≤ rejectionAttemptCharge := by
-  norm_num [rejectionAttemptCharge]
 
 /-- A certificate for the exact current arlib-community CV18 program invoked on one TTC
 component.  `queryCount` is a worst-case membership-query bound supplied by
@@ -283,6 +279,14 @@ theorem operations_le_maxima {n k : Nat} {hn : 21 ≤ n}
       simp [Nat.mul_comm]
 
 /-! ## Theorem 3 (`thm:runtime`) -/
+
+/-- Analysis-only unsimplified expression used between the componentwise oracle bounds
+and the public headline expression. -/
+private def theorem3DetailedRuntime (componentCount n rMax : Nat)
+    (rho epsilon threshold volumeOverhead samplingOverhead : Real) : Real :=
+  (componentCount : Real) * rMax *
+    (volumeOverhead * theorem3VolumeKernel n rho epsilon +
+      threshold * samplingOverhead * theorem3SamplingKernel n rho)
 
 private lemma theorem3VolumeKernel_nonneg (n : Nat) (rho epsilon : Real) :
     0 ≤ theorem3VolumeKernel n rho epsilon := by
