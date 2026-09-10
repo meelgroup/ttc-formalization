@@ -2,6 +2,7 @@ import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Model.Pseudocode
 import Kr25Ssmxt.Analysis.TheoremProof
 import Kr25Ssmxt.Analysis.GeometricOracleDischarge
+import Kr25Ssmxt.Analysis.TTCPaperRuntime
 
 namespace Kr25Ssmxt
 
@@ -79,8 +80,32 @@ theorem ttc_volume_accuracy_exact_semantic_oracles
     (exact_volume_contract prep F hbounded params)
     (exact_samples_contract hn prep F hbounded params) hregime
 
+/--
+The public audit-surface statement of Theorem 3 (`thm:runtime`).  In the paper's
+membership-query real-RAM cost model, the certified geometric-oracle operations are at
+most `m n^5 rho^2 r_max` times the displayed factors suppressed by its `O` notation.
+
+The certificate uses the current arlib-community CV18 implementation for volume and the
+finite-step Hit-and-Run/KV97 implementation for sampling.
+
+PAPER: sections/analysis.tex:52-72
+-/
+theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
+    {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
+    (cert : PaperRuntime.TTCMembershipRuntimeCertificate hn D b p)
+    {rho : Real} {rMax : Nat}
+    (bounds : PaperRuntime.Theorem3OracleBounds cert rho rMax) :
+    (cert.operations : Real) ≤
+      PaperRuntime.theorem3HeadlineCore D.componentCount n rMax rho *
+        PaperRuntime.theorem3SuppressedFactor p.epsilon
+          (PaperRuntime.sampleCap p D.componentCount)
+          bounds.volumeOverhead bounds.samplingOverhead := by
+  exact PaperRuntime.ttc_total_runtime_theorem3 cert bounds
+
 #modelClosureOfType ttc_volume_accuracy
+#modelClosureOfType ttc_total_runtime_theorem3
 #print axioms ttc_volume_accuracy
 #print axioms ttc_volume_accuracy_exact_semantic_oracles
+#print axioms ttc_total_runtime_theorem3
 
 end Kr25Ssmxt

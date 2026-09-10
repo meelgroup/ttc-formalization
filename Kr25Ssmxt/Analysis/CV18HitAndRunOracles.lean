@@ -59,7 +59,7 @@ theorem ttc_volume_accuracy_cv18_hitAndRun
           {estimate | (estimate : Real) ∈
             Arlib.relErr params.epsilon (volume (solutionSet F)).toReal} >=
         1 - params.delta := by
-  apply ttc_volume_accuracy hprior (lt_of_lt_of_le (by norm_num) hn) F hbounded params
+  apply ttc_volume_accuracy_proof hprior (lt_of_lt_of_le (by norm_num) hn) F hbounded params
     (cv18HitAndRunOracles hn prep V)
     (cv18HitAndRun_volume_contract hn prep V F hbounded params)
     (cv18HitAndRun_samples_contract hn prep V F hbounded params)

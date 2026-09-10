@@ -9,4 +9,3 @@ Keep this file a pure aggregation of area roots — put content in the modules.
 
 import Kr25Ssmxt.Model.Theorem
 import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
-import Kr25Ssmxt.Analysis.TTCPaperRuntime

@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.CV18VolumeAdapter
-import Kr25Ssmxt.Model.Theorem
+import Kr25Ssmxt.Analysis.TheoremProof
 import ArlibCommunity.Algorithms.CV18
 
 /-!
@@ -213,7 +213,7 @@ theorem ttc_volume_accuracy
           {estimate | (estimate : Real) ∈
             Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
         1 - p.delta := by
-  apply Kr25Ssmxt.ttc_volume_accuracy hprior (by omega) F hbounded p (install hn O)
+  apply Kr25Ssmxt.ttc_volume_accuracy_proof hprior (by omega) F hbounded p (install hn O)
     (install_volume_contract hn O F hbounded p)
     (install_samples_contract hn O F hbounded p hsamples)
   simpa [install, TTCOracles.withNormalizedCV18Volume] using hregime
