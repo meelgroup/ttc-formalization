@@ -1,5 +1,6 @@
 import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Runtime
 import Kr25Ssmxt.Analysis.TheoremProof
 import Kr25Ssmxt.Analysis.GeometricOracleDischarge
 import Kr25Ssmxt.Analysis.TTCPaperRuntime
@@ -91,16 +92,16 @@ finite-step Hit-and-Run/KV97 implementation for sampling.
 PAPER: sections/analysis.tex:52-72
 -/
 theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
-    {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
-    (cert : PaperRuntime.TTCMembershipRuntimeCertificate hn D b p)
+    {F : LRAFormula n k} {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCRuntime.TTCMembershipRuntimeCertificate D p)
     {rho : Real} {rMax : Nat}
-    (bounds : PaperRuntime.Theorem3OracleBounds cert rho rMax) :
+    (bounds : TTCRuntime.Theorem3OracleBounds cert rho rMax) :
     (cert.operations : Real) ≤
-      PaperRuntime.theorem3HeadlineCore D.componentCount n rMax rho *
-        PaperRuntime.theorem3SuppressedFactor p.epsilon
-          (PaperRuntime.sampleCap p D.componentCount)
+      TTCRuntime.theorem3HeadlineCore D.componentCount n rMax rho *
+        TTCRuntime.theorem3SuppressedFactor p.epsilon
+          (TTCRuntime.sampleCap p D.componentCount)
           bounds.volumeOverhead bounds.samplingOverhead := by
-  exact PaperRuntime.ttc_total_runtime_theorem3 cert bounds
+  exact PaperRuntime.ttc_total_runtime_theorem3 (hn := hn) cert bounds
 
 #modelClosureOfType ttc_volume_accuracy
 #modelClosureOfType ttc_total_runtime_theorem3

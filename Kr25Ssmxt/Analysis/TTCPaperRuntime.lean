@@ -1,4 +1,5 @@
 import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
+import Kr25Ssmxt.Model.Runtime
 
 /-!
 # TTC runtime in the paper's membership-query real-RAM model
@@ -21,30 +22,11 @@ open scoped BigOperators ENNReal
 namespace Kr25Ssmxt
 namespace PaperRuntime
 
-/-- The paper's conversion from membership queries to real-RAM operations. -/
-def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
-  dimension * facets * queries
-
-@[simp] theorem membershipQueryOperations_eq (dimension facets queries : Nat) :
-    membershipQueryOperations dimension facets queries = dimension * facets * queries := rfl
-
-/-- The paper proves an expected retry count at most `3/2`; charging two attempts is the
-integer upper bound used below. -/
-def rejectionAttemptCharge : Nat := 2
+open TTCRuntime
 
 lemma paper_expected_rejection_attempts_le_charge :
     (3 / 2 : Real) ≤ rejectionAttemptCharge := by
   norm_num [rejectionAttemptCharge]
-
-/-- One accepted sample: every Hit-and-Run transition scans all facets, and the final
-round-and-reject test performs one further membership scan.  The factor two is the rounded
-paper bound on the expected number of rejection attempts. -/
-def acceptedSampleOperations (dimension facets steps : Nat) : Nat :=
-  rejectionAttemptCharge * membershipQueryOperations dimension facets (steps + 1)
-
-@[simp] theorem acceptedSampleOperations_eq (dimension facets steps : Nat) :
-    acceptedSampleOperations dimension facets steps =
-      2 * (dimension * facets * (steps + 1)) := rfl
 
 /-- A certificate for the exact current arlib-community CV18 program invoked on one TTC
 component.  `queryCount` is a worst-case membership-query bound supplied by
@@ -176,9 +158,9 @@ theorem HitAndRunMembershipRun.operations_eq_deadline {n : Nat}
   unfold HitAndRunMembershipRun.operations
   rw [run.steps_eq_ceil_deadline]
 
-/-- Every nonempty component receives the CV18 and Hit-and-Run certificates for precisely
-the internal parameters and precision selected by TTC. -/
-structure TTCMembershipRuntimeCertificate {n k : Nat} (hn : 21 ≤ n)
+/-- Analysis witness connecting every model-level query/step count to the concrete CV18
+and Hit-and-Run executions selected for that TTC component. -/
+structure CommunityRuntimeCertificate {n k : Nat} (hn : 21 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (b : Nat) (p : ApproxParams) where
   volume : ∀ i : Fin D.componentCount,
     CV18MembershipRun (by omega) (D.component i)
@@ -186,21 +168,14 @@ structure TTCMembershipRuntimeCertificate {n k : Nat} (hn : 21 ≤ n)
   sampler : ∀ i : Fin D.componentCount,
     HitAndRunMembershipRun (D.component i) b p.epsilonPrime
 
-/-- The maximum number of accepted samples charged per component in the paper analysis. -/
-def sampleCap (p : ApproxParams) (componentCount : Nat) : Nat :=
-  Nat.ceil (p.threshold componentCount)
-
-/-- Total geometric-oracle cost: one CV18 run and at most `Threshold` accepted sampler
-outputs per component, with every query/facet scan converted to exactly `n * r` operations. -/
-def TTCMembershipRuntimeCertificate.operations {n k : Nat} {hn : 21 ≤ n}
+/-- Forget implementation details while retaining exactly the counts used by the public
+model-level runtime theorem. -/
+def CommunityRuntimeCertificate.toModel {n k : Nat} {hn : 21 ≤ n}
     {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate hn D b p) : Nat :=
-  ∑ i : Fin D.componentCount, (
-    membershipQueryOperations n (D.component i).presentation.facetCount
-        (cert.volume i).queryCount +
-      sampleCap p D.componentCount *
-        acceptedSampleOperations n (D.component i).presentation.facetCount
-          (cert.sampler i).steps)
+    (cert : CommunityRuntimeCertificate hn D b p) :
+    TTCRuntime.TTCMembershipRuntimeCertificate D p where
+  volumeQueryCount := fun i => (cert.volume i).queryCount
+  samplerStepCount := fun i => (cert.sampler i).steps
 
 private lemma ttc_request_admissible {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (i : Fin D.componentCount) :
@@ -225,7 +200,7 @@ theorem ttc_membership_runtime_certificate {n k : Nat} (hn : 21 ≤ n)
     (p : ApproxParams) (prep : TTCPreprocessor n k) :
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
-    Nonempty (TTCMembershipRuntimeCertificate hn D b p) := by
+    Nonempty (CommunityRuntimeCertificate hn D b p) := by
   dsimp only
   let D := prep.run F hbounded
   let choice := prep.choosePrecision D p
@@ -252,21 +227,33 @@ theorem ttc_membership_runtime_certificate {n k : Nat} (hn : 21 ≤ n)
       (exists_hitAndRunMembershipRun hn (D.component i) b hunit heta0 heta1 hset.1 hset.2)
   exact ⟨{ volume := volumeRun, sampler := samplerRun }⟩
 
+/-- The current arlib-community implementations discharge the public model-level runtime
+trace interface. -/
+theorem ttc_model_runtime_certificate {n k : Nat} (hn : 21 ≤ n)
+    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
+    (p : ApproxParams) (prep : TTCPreprocessor n k) :
+    let D := prep.run F hbounded
+    Nonempty (TTCRuntime.TTCMembershipRuntimeCertificate D p) := by
+  dsimp only
+  obtain ⟨cert⟩ := ttc_membership_runtime_certificate hn F hbounded p prep
+  exact ⟨cert.toModel⟩
+
 /-- Paper algebra after replacing component-specific facet/query/step counts by maxima.
 This is the finite-sum form behind the paper's soft-O TTC runtime calculation. -/
 theorem operations_le_maxima {n k : Nat} {hn : 21 ≤ n}
     {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate hn D b p)
+    (cert : CommunityRuntimeCertificate hn D b p)
     (rMax volumeQueryMax samplerStepMax : Nat)
     (hfacets : ∀ i, (D.component i).presentation.facetCount ≤ rMax)
     (hvolume : ∀ i, (cert.volume i).queryCount ≤ volumeQueryMax)
     (hsampler : ∀ i, (cert.sampler i).steps ≤ samplerStepMax) :
-    cert.operations ≤
+    cert.toModel.operations ≤
       D.componentCount *
         (membershipQueryOperations n rMax volumeQueryMax +
           sampleCap p D.componentCount *
             acceptedSampleOperations n rMax samplerStepMax) := by
-  unfold TTCMembershipRuntimeCertificate.operations
+  unfold TTCRuntime.TTCMembershipRuntimeCertificate.operations
+    CommunityRuntimeCertificate.toModel
   calc
     (∑ i : Fin D.componentCount, (
         membershipQueryOperations n (D.component i).presentation.facetCount
@@ -297,59 +284,6 @@ theorem operations_le_maxima {n k : Nat} {hn : 21 ≤ n}
 
 /-! ## Theorem 3 (`thm:runtime`) -/
 
-/-- The volume term displayed in the proof of Theorem 3, before the number of facets and
-the factors hidden by `O` are included. -/
-def theorem3VolumeKernel (n : Nat) (rho epsilon : Real) : Real :=
-  max ((n : Real) ^ 3 * rho ^ 2) ((n : Real) ^ 4) / epsilon ^ 2
-
-/-- The per-sample term displayed in Theorem 3, before facets and suppressed factors. -/
-def theorem3SamplingKernel (n : Nat) (rho : Real) : Real :=
-  (n : Real) ^ 5 * rho ^ 2
-
-/-- The first, unsimplified runtime display in the proof of Theorem 3.  The two overheads
-contain the absolute constants, CV18 logarithms, and Hit-and-Run warm-start/logarithmic
-terms hidden by the paper's `O` notation. -/
-def theorem3DetailedRuntime (componentCount n rMax : Nat) (rho epsilon threshold : Real)
-    (volumeOverhead samplingOverhead : Real) : Real :=
-  (componentCount : Real) * rMax *
-    (volumeOverhead * theorem3VolumeKernel n rho epsilon +
-      threshold * samplingOverhead * theorem3SamplingKernel n rho)
-
-/-- The exact multiplicative factor suppressed in the headline
-`O(m n^5 rho^2 r_max)` statement. -/
-def theorem3SuppressedFactor (epsilon threshold volumeOverhead samplingOverhead : Real) :
-    Real :=
-  volumeOverhead / epsilon ^ 2 + threshold * samplingOverhead
-
-/-- The geometric monomial in the headline statement of Theorem 3. -/
-def theorem3HeadlineCore (componentCount n rMax : Nat) (rho : Real) : Real :=
-  (componentCount : Real) * (n : Real) ^ 5 * rho ^ 2 * rMax
-
-/-- The two oracle estimates cited in the proof of Theorem 3, stated directly for the
-concrete CV18/Hit-and-Run runtime certificate.  `rho` and `rMax` dominate every component;
-the overhead fields are exactly what the theorem says is hidden by `O`.
-
-Keeping these factors explicit avoids treating informal big-O notation as an equality. -/
-structure Theorem3OracleBounds {n k : Nat} {hn : 21 ≤ n}
-    {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate hn D b p) (rho : Real) (rMax : Nat) where
-  one_le_rho : 1 ≤ rho
-  volumeOverhead : Real
-  volumeOverhead_nonneg : 0 ≤ volumeOverhead
-  samplingOverhead : Real
-  samplingOverhead_nonneg : 0 ≤ samplingOverhead
-  facets_le : ∀ i, (D.component i).presentation.facetCount ≤ rMax
-  volume_operations_le : ∀ i,
-    (membershipQueryOperations n (D.component i).presentation.facetCount
-        (cert.volume i).queryCount : Real) ≤
-      ((D.component i).presentation.facetCount : Real) * volumeOverhead *
-        theorem3VolumeKernel n rho p.epsilon
-  sample_operations_le : ∀ i,
-    (acceptedSampleOperations n (D.component i).presentation.facetCount
-        (cert.sampler i).steps : Real) ≤
-      ((D.component i).presentation.facetCount : Real) * samplingOverhead *
-        theorem3SamplingKernel n rho
-
 private lemma theorem3VolumeKernel_nonneg (n : Nat) (rho epsilon : Real) :
     0 ≤ theorem3VolumeKernel n rho epsilon := by
   unfold theorem3VolumeKernel
@@ -362,21 +296,22 @@ private lemma theorem3SamplingKernel_nonneg (n : Nat) (rho : Real) :
 
 /-- The main-loop summation in Theorem 3: exactly `m` component costs, each dominated by
 the two cited oracle bounds, give the paper's first displayed total-runtime expression. -/
-theorem certificate_operations_le_theorem3Detailed {n k : Nat} {hn : 21 ≤ n}
-    {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate hn D b p) {rho : Real} {rMax : Nat}
-    (bounds : Theorem3OracleBounds cert rho rMax) :
+theorem certificate_operations_le_theorem3Detailed {n k : Nat}
+    {F : LRAFormula n k} {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCRuntime.TTCMembershipRuntimeCertificate D p)
+    {rho : Real} {rMax : Nat}
+    (bounds : TTCRuntime.Theorem3OracleBounds cert rho rMax) :
     (cert.operations : Real) ≤
       theorem3DetailedRuntime D.componentCount n rMax rho p.epsilon
         (sampleCap p D.componentCount) bounds.volumeOverhead bounds.samplingOverhead := by
-  rw [TTCMembershipRuntimeCertificate.operations, Nat.cast_sum]
+  rw [TTCRuntime.TTCMembershipRuntimeCertificate.operations, Nat.cast_sum]
   calc
     (∑ i : Fin D.componentCount,
         ((membershipQueryOperations n (D.component i).presentation.facetCount
-              (cert.volume i).queryCount +
+              (cert.volumeQueryCount i) +
             sampleCap p D.componentCount *
               acceptedSampleOperations n (D.component i).presentation.facetCount
-                (cert.sampler i).steps : Nat) : Real)) ≤
+                (cert.samplerStepCount i) : Nat) : Real)) ≤
         ∑ i : Fin D.componentCount,
           ((D.component i).presentation.facetCount : Real) *
             (bounds.volumeOverhead * theorem3VolumeKernel n rho p.epsilon +
@@ -387,10 +322,10 @@ theorem certificate_operations_le_theorem3Detailed {n k : Nat} {hn : 21 ≤ n}
       push_cast
       calc
         (membershipQueryOperations n (D.component i).presentation.facetCount
-              (cert.volume i).queryCount : Real) +
+              (cert.volumeQueryCount i) : Real) +
             (sampleCap p D.componentCount : Real) *
               (acceptedSampleOperations n (D.component i).presentation.facetCount
-                (cert.sampler i).steps : Real) ≤
+                (cert.samplerStepCount i) : Real) ≤
             ((D.component i).presentation.facetCount : Real) * bounds.volumeOverhead *
                 theorem3VolumeKernel n rho p.epsilon +
               (sampleCap p D.componentCount : Real) *
@@ -500,9 +435,10 @@ theorem theorem3DetailedRuntime_le_headline {componentCount n rMax : Nat}
 The right-hand side is exactly `m n^5 rho^2 r_max` times the factors suppressed by the
 paper's `O` notation. -/
 theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
-    {F : LRAFormula n k} {D : Decomposition F} {b : Nat} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate hn D b p) {rho : Real} {rMax : Nat}
-    (bounds : Theorem3OracleBounds cert rho rMax) :
+    {F : LRAFormula n k} {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCRuntime.TTCMembershipRuntimeCertificate D p)
+    {rho : Real} {rMax : Nat}
+    (bounds : TTCRuntime.Theorem3OracleBounds cert rho rMax) :
     (cert.operations : Real) ≤
       theorem3HeadlineCore D.componentCount n rMax rho *
         theorem3SuppressedFactor p.epsilon (sampleCap p D.componentCount)
@@ -531,7 +467,7 @@ theorem ttc_accuracy_and_membership_runtime
         1 - p.delta) ∧
       (let D := prep.run F hbounded
        let b := (prep.choosePrecision D p).value
-       Nonempty (TTCMembershipRuntimeCertificate hn D b p)) := by
+       Nonempty (CommunityRuntimeCertificate hn D b p)) := by
   constructor
   · exact ttc_volume_accuracy_communityCV18_hitAndRun hprior hn F hbounded p prep hregime
   · exact ttc_membership_runtime_certificate hn F hbounded p prep
