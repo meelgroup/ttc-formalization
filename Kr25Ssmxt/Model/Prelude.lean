@@ -147,7 +147,11 @@ structure HalfspacePresentation (n : Nat) where
 def HalfspacePresentation.carrier {n : Nat} (H : HalfspacePresentation n) : Set (Point n) :=
   {x | ∀ i, dotProduct (H.normal i) x ≤ H.offset i}
 
-/-- A surviving normalized component, with the geometric read-offs used by the paper. -/
+/-- A surviving normalized component, with the geometric read-offs used by the paper.
+
+`outerRadius` is an explicit preprocessing certificate, rather than merely a consequence
+of `bounded`.  CV18's cooling schedule and running-time bound depend quantitatively on this
+number, so hiding it behind classical choice would not describe an executable algorithm. -/
 structure PolytopeData (n : Nat) where
   presentation : HalfspacePresentation n
   facets_pos : 0 < presentation.facetCount
@@ -156,6 +160,10 @@ structure PolytopeData (n : Nat) where
   inradius_pos : 0 < inradius
   inball : Metric.closedBall incenter inradius ⊆ presentation.carrier
   bounded : Bornology.IsBounded presentation.carrier
+  outerRadius : Real
+  outerRadius_nonneg : 0 ≤ outerRadius
+  outer_bound : ∀ x ∈ presentation.carrier,
+    ‖(WithLp.toLp 2 x : EuclideanSpace Real (Fin n))‖ ≤ outerRadius
 
 /-- The geometric carrier of a normalized component. -/
 abbrev PolytopeData.carrier {n : Nat} (P : PolytopeData n) : Set (Point n) :=
@@ -232,15 +240,17 @@ def samplerRadiusRequirement {n : Nat} (P : PolytopeData n) (η : Real) : Real :
   (512 * n / η) *
     Real.sqrt (Real.log (32 * P.presentation.facetCount / η))
 
-/-- Ratios whose maximum is used by the paper's printed `GetPrecision`. -/
+/-- Ratios whose maximum is used by the repaired `GetPrecision` in the paper. -/
 def precisionRatios {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Set Real :=
-  {x | ∃ i, x = latticeRadiusRequirement D η / (D.component i).inradius}
+    (D : Decomposition F) (latticeEta sampleEta : Real) : Set Real :=
+  {x | ∃ i, x = max (latticeRadiusRequirement D latticeEta)
+      (samplerRadiusRequirement (D.component i) sampleEta) /
+        (D.component i).inradius}
 
-/-- The precision printed in the paper, before repairing the stronger sampler obligation. -/
+/-- The precision printed in the repaired paper, covering lattice comparison and sampling. -/
 def paperPrecision {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Nat :=
-  Nat.ceil (Real.logb 10 (max 1 (sSup (precisionRatios D η))))
+    (D : Decomposition F) (latticeEta sampleEta : Real) : Nat :=
+  Nat.ceil (Real.logb 10 (max 1 (sSup (precisionRatios D latticeEta sampleEta))))
 
 /-- The useful specification of a working precision: both cited geometric results apply. -/
 def PrecisionAdequate {n k : Nat} {F : LRAFormula n k}

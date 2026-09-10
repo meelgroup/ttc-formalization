@@ -25,7 +25,7 @@ lemma measurable_poisson_thin_tail {n k : Nat} (O : TTCOracles n k) (b : Nat)
     (hthin : Measurable
       (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold)) :
     Measurable (fun z : TTCState n × VolumeOutcome =>
-      (ProbabilityTheory.poissonMeasure (z.2.2 / z.1.rate)).bind fun pending =>
+      (ProbabilityTheory.poissonMeasure (z.2.2 * z.1.rate)).bind fun pending =>
         (thinUntil z.1 pending threshold).bind fun thinned =>
           (O.generateSamples P thinned.2 b epsilonPrime deltaPrime).bind fun batch =>
             (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst) := by
@@ -38,17 +38,17 @@ lemma measurable_poisson_thin_tail {n k : Nat} (O : TTCOracles n k) (b : Nat)
   have hK : Measurable K := by
     simpa only [K] using htail
   change Measurable (fun z : TTCState n × VolumeOutcome =>
-    (ProbabilityTheory.poissonMeasure (z.2.2 / z.1.rate)).bind fun pending =>
+    (ProbabilityTheory.poissonMeasure (z.2.2 * z.1.rate)).bind fun pending =>
       K (z.1, pending))
   have hrate : Measurable (fun z : TTCState n × VolumeOutcome => z.1.rate) :=
     (measurable_fst.comp
       (comap_measurable (fun state : TTCState n =>
         (state.rate, state.samples, state.nextLabel)))).comp measurable_fst
   have hmean : Measurable
-      (fun z : TTCState n × VolumeOutcome => z.2.2 / z.1.rate) :=
-    (measurable_snd.comp measurable_snd).div hrate
+      (fun z : TTCState n × VolumeOutcome => z.2.2 * z.1.rate) :=
+    (measurable_snd.comp measurable_snd).mul hrate
   have hlaw : Measurable (fun z : TTCState n × VolumeOutcome =>
-      ProbabilityTheory.poissonMeasure (z.2.2 / z.1.rate)) :=
+      ProbabilityTheory.poissonMeasure (z.2.2 * z.1.rate)) :=
     hpoisson.comp hmean
   refine MeasureTheory.Measure.measurable_of_measurable_coe _ ?_
   intro event hevent

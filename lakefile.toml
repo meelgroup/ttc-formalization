@@ -18,8 +18,15 @@ rev = "v4.33.0"
 # in arlib before proving it in this project.
 [[require]]
 name = "arlib"
-git = "https://github.com/uddaloksarkar/arlib.git"
-rev = "kr"
+git = "https://github.com/meelgroup/arlib.git"
+rev = "e79fb42448f9083250776d9d708abe9965653322"
+
+# CV18 and Hit-and-Run now live in the community algorithms repository.  Pin
+# the audited head rather than tracking a moving branch.
+[[require]]
+name = "arlib-community"
+git = "https://github.com/uddaloksarkar/arlib-community.git"
+rev = "92c714e173f66544bd02f8ff7e62b6f952838c08"
 
 [[lean_lib]]
 name = "Kr25Ssmxt"

@@ -7,25 +7,12 @@ import Kr25Ssmxt.Analysis.TtcLatticeCountAccuracy
 /-!
 # Assembly of the TTC volume-accuracy theorem
 
-The empty decomposition is handled completely here.  In the nonempty case, the current
-model does not implement the sampling rate used by the paper: `processComponent` draws a
-Poisson count with mean `t / p`, whereas the paper draws with mean `t * p`.  The two
-algebraic lemmas below make the resulting `p⁻²` bias, and the corrected cancellation,
-explicit.
+The empty decomposition is handled completely here.  The nonempty branch combines the
+component and union lattice comparisons with `ttc_lattice_count_accuracy`; that theorem
+invokes the explicit `Prior` field under the public high-intensity premise.
 
-Accordingly, the headline assembly is reduced in the nonempty branch to
-`ttc_lattice_count_accuracy`.  The missing proof is not a lattice-comparison estimate: it
-is the stochastic lattice-count estimate, whose paper invariant is false for the present
-definition of `processComponent`.
-
-MODEL: `processComponent` — replace the fresh Poisson mean
-`volumeOutcome.2 / withoutDuplicates.rate` by
-`volumeOutcome.2 * withoutDuplicates.rate`.
-
-PRESERVES: `∀ {n k} (O : TTCOracles n k) b e d threshold P state,
-  IsProbabilityMeasure (O.computeVolume P e d) →
-  (∀ count, IsProbabilityMeasure (O.generateSamples P count b e d)) →
-  IsProbabilityMeasure (processComponent O b e d threshold P state)`.
+The algebraic lemmas below retain the original divisive-rate diagnosis as a regression
+check and record the multiplicative cancellation used by the repaired model.
 -/
 
 noncomputable section
@@ -58,7 +45,7 @@ lemma multiplied_poisson_rate_estimator (t p : NNReal) (hp : p ≠ 0) (r : Nat) 
 /--
 The headline accuracy conclusion in the exact zero-volume branch.
 
-INTERNAL: Separates the sound empty-decomposition case from the blocked stochastic case.
+INTERNAL: Exact zero-volume branch of the total algorithm.
 -/
 lemma ttc_volume_accuracy_empty
     {n k : Nat}
@@ -118,7 +105,12 @@ theorem ttc_volume_accuracy_proof
     (params : ApproxParams)
     (O : TTCOracles n k)
     (hvolume : ComputeVolumeContract O F hbounded params)
-    (hsamples : GenerateSamplesContract O F hbounded params) :
+    (hsamples : GenerateSamplesContract O F hbounded params)
+    (hregime :
+      let D := O.preprocessing.run F hbounded
+      let b := (O.preprocessing.choosePrecision D params).value
+      D.componentCount = 0 ∨
+        params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real)) :
     IsProbabilityMeasure (ttc F hbounded params O) ∧
       (ttc F hbounded params O).real
           {estimate | (estimate : Real) ∈
@@ -129,10 +121,15 @@ theorem ttc_volume_accuracy_proof
   by_cases hempty : D.componentCount = 0
   · exact ttc_volume_accuracy_empty F hbounded params O hempty
   · let b := (O.preprocessing.choosePrecision D params).value
+    have hlarge :
+        params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real) := by
+      change D.componentCount = 0 ∨
+        params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real) at hregime
+      exact hregime.resolve_left hempty
     have hcomparison := ttc_volume_accuracy_lattice_comparison hn D params b
       (O.preprocessing.choosePrecision D params).adequate
-    have hlatticeEstimate := ttc_lattice_count_accuracy F hbounded params O hvolume
-      hsamples hempty hcomparison.1
+    have hlatticeEstimate := ttc_lattice_count_accuracy hprior F hbounded params O hvolume
+      hsamples hempty hlarge hcomparison.1
     have haccuracy := ttc_volume_accuracy_lattice_estimate hn F hbounded params O hvolume
       hsamples hcomparison.2 hlatticeEstimate
     have hvolumeEq : volume D.union = volume (solutionSet F) := D.volume_eq_solutionSet
@@ -144,7 +141,7 @@ theorem ttc_volume_accuracy_proof
 Newest first. History, not instruction — what this file claims is above.
 
 * r2 · reduced · closed the headline assembly through `ttc_lattice_count_accuracy`
-* r1 · blocked · proved the empty branch and isolated the nonempty `t / p` rate mismatch
+* r1 · diagnosed · isolated the original nonempty `t / p` rate mismatch
 -/
 
 end Kr25Ssmxt

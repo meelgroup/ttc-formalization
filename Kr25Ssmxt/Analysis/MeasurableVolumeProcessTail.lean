@@ -30,7 +30,7 @@ lemma measurable_volume_process_tail {n k : Nat} (O : TTCOracles n k) (b : Nat)
       (O.computeVolume P epsilonPrime deltaPrime).bind fun volumeOutcome =>
         let withoutDuplicates := state.removeComponent P
         (ProbabilityTheory.poissonMeasure
-          (volumeOutcome.2 / withoutDuplicates.rate)).bind fun pending =>
+          (volumeOutcome.2 * withoutDuplicates.rate)).bind fun pending =>
           (thinUntil withoutDuplicates pending threshold).bind fun thinned =>
             (O.generateSamples P thinned.2 b epsilonPrime deltaPrime).bind fun batch =>
               (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst) := by
@@ -46,7 +46,7 @@ lemma measurable_volume_process_tail {n k : Nat} (O : TTCOracles n k) (b : Nat)
       (O.generateSamples P thinned.2 b epsilonPrime deltaPrime).bind fun batch =>
         (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst
   let K : TTCState n × VolumeOutcome → MeasureTheory.Measure (TTCState n) := fun z =>
-    (ProbabilityTheory.poissonMeasure (z.2.2 / z.1.rate)).bind fun pending =>
+    (ProbabilityTheory.poissonMeasure (z.2.2 * z.1.rate)).bind fun pending =>
       H (z.1, pending)
   have hR : Measurable R := by
     simpa only [R] using hremove
@@ -75,17 +75,17 @@ lemma measurable_volume_process_tail {n k : Nat} (O : TTCOracles n k) (b : Nat)
           H (R state, pending) event *
             ∫⁻ volumeOutcome,
               (ProbabilityTheory.poissonMeasure
-                (volumeOutcome.2 / (R state).rate)) {pending} ∂mu := by
+                (volumeOutcome.2 * (R state).rate)) {pending} ∂mu := by
     intro state
     have hHsection : Measurable (fun pending : Nat => H (R state, pending)) :=
       hH.comp (measurable_const.prodMk measurable_id)
     have hlaw : Measurable (fun volumeOutcome : VolumeOutcome =>
         ProbabilityTheory.poissonMeasure
-          (volumeOutcome.2 / (R state).rate)) :=
-      hpoisson.comp (measurable_snd.div measurable_const)
+          (volumeOutcome.2 * (R state).rate)) :=
+      hpoisson.comp (measurable_snd.mul measurable_const)
     have hweight : ∀ pending : Nat, Measurable (fun volumeOutcome : VolumeOutcome =>
         (ProbabilityTheory.poissonMeasure
-          (volumeOutcome.2 / (R state).rate)) {pending}) := by
+          (volumeOutcome.2 * (R state).rate)) {pending}) := by
       intro pending
       exact (MeasureTheory.Measure.measurable_coe
         (measurableSet_singleton pending)).comp hlaw

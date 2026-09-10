@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Prior
 import Kr25Ssmxt.Analysis.PoissonUnitNotHalfAccurate
 
 /-!
@@ -9,22 +9,12 @@ analysis from the outer empty-decomposition branch and final `TTCState.estimate`
 `ttc`.  A proof must establish the component-prefix multiplicity invariant and the
 concentration bound at the adaptively selected thinning level.
 
-The modeled fresh-copy mean is currently `volumeOutcome.2 / withoutDuplicates.rate`.
-The paper's invariant instead requires multiplication by the current rate.  In addition,
-the paper's concentration split does not cover its `j* = 0` case: at unit intensity the
-desired half-relative-error event has probability `exp (-1) < 1/2`, as formalized by
-`poisson_unit_not_half_accurate`.  Thus correcting the rate convention alone is not enough;
-a positive lower bound on the relevant Poisson mean or a separate low-volume estimator is
-also required.
+The model uses the required multiplicative mean `volumeOutcome.2 * state.rate`.  The paper's
+concentration split does not cover `j* = 0`; `ttc` therefore handles low scaled lattice
+volume exactly, and this lemma is used only under the displayed high-intensity premise.
 
-MODEL: `processComponent` — replace the fresh Poisson mean
-`volumeOutcome.2 / withoutDuplicates.rate` by
-`volumeOutcome.2 * withoutDuplicates.rate`.
-
-PRESERVES: `∀ {n k} (O : TTCOracles n k) b e d threshold P state,
-  IsProbabilityMeasure (O.computeVolume P e d) →
-  (∀ count, IsProbabilityMeasure (O.generateSamples P count b e d)) →
-  IsProbabilityMeasure (processComponent O b e d threshold P state)`.
+The high-intensity Poissonized streaming result is the sole field of `Prior`.  This module
+checks that the borrowed statement has exactly the measure-level form required downstream.
 -/
 
 noncomputable section
@@ -40,6 +30,7 @@ wrapped by the nonempty branch of `ttc`.
 PAPER: sections/analysis.tex:201-311
 -/
 lemma process_components_lattice_count_accuracy
+    (hprior : Prior)
     {n k : Nat}
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
@@ -55,7 +46,11 @@ lemma process_components_lattice_count_accuracy
         (volume (D.component i).carrier).toReal ∈
           Arlib.relErr params.latticeEta
             (((D.component i).carrier ∩ decimalLattice b n).ncard /
-              (10 : Real) ^ (b * n))) :
+              (10 : Real) ^ (b * n)))
+    (hlarge :
+      let D := O.preprocessing.run F hbounded
+      let b := (O.preprocessing.choosePrecision D params).value
+      params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real)) :
     let D := O.preprocessing.run F hbounded
     let b := (O.preprocessing.choosePrecision D params).value
     let core := processComponents O b params.epsilonPrime
@@ -66,38 +61,8 @@ lemma process_components_lattice_count_accuracy
           Arlib.relErr (params.epsilon / 2)
             ((D.latticePoints b).ncard / (10 : Real) ^ (b * n))} >=
       1 - params.delta := by
-  -- The available component-intensity lemma is deliberately stated for the paper's
-  -- multiplicative mean.  It cannot be applied to `processComponent`, whose definition
-  -- still uses `volumeOutcome.2 / withoutDuplicates.rate`.  Independently, the present
-  -- assumptions give no lower bound on the final Poisson mean, so the threshold-sized
-  -- concentration lemma does not cover the `j* = 0` branch.
-  sorry
-
-/-! ### Run record
-Newest first. History, not instruction — what this file claims is above.
-
-* r8 · blocked · stopped at the prescribed specification boundary: `processComponent`
-  still draws fresh copies with mean `volumeOutcome.2 / withoutDuplicates.rate`, while
-  the paper's union-sampling invariant requires multiplication by that rate; the theorem
-  also still has neither a threshold-sized final-mean premise nor a low-intensity branch
-* r7 · blocked · reconfirmed from the elaborated `processComponent` definition that
-  fresh copies use the divisive mean `t / p`, differing from the invariant's `t * p`
-  by `p⁻²` after later thinning; the independent unit-Poisson obstruction still leaves
-  the `j* = 0` branch false without a low-intensity repair
-* r6 · blocked · the new point-intensity and finite-sum lemmas concern the paper's
-  corrected multiplicative mean and therefore do not apply to the modeled divisive mean;
-  the proposed unit-Poisson disproof also needs `delta = 1/2` (not `delta = 1`, whose
-  conclusion is the trivial lower bound zero) and a concrete exact-oracle instance
-* r5 · blocked · the new coded-cardinality, parameter-envelope, and high-intensity
-  Poisson lemmas do not supply either missing model feature; author decisions are still
-  required on the corrected fresh mean and the shape-preserving low-intensity branch
-* r4 · blocked · the prescribed proof needs two model-level design decisions: correct
-  the fresh mean `t / p` to `t * p`, and add a low-count branch or a threshold-sized
-  lattice-count premise; no theorem-local lemma follows from the present assumptions
-* r3 · blocked · formalized the low-intensity `j* = 0` obstruction in
-  `poisson_unit_not_half_accurate`; the assumptions provide no lower mean bound
-* r2 · reduced · isolated the exact `processComponents` invariant/concentration theorem;
-  blocked by the modeled fresh Poisson mean `t / p` versus the paper's `t * p`
--/
+  have hstream := hprior.streamingCoreAccuracy F hbounded params O
+    hvolume hsamples hnonempty hcomponentLattice hlarge
+  simpa [scaledLatticeVolume, NNReal.coe_div, NNReal.coe_pow] using hstream
 
 end Kr25Ssmxt

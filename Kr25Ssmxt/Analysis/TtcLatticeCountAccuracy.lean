@@ -26,6 +26,7 @@ count, except with probability `delta`.
 PAPER: sections/analysis.tex:218-311
 -/
 lemma ttc_lattice_count_accuracy
+    (hprior : Prior)
     {n k : Nat}
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
@@ -34,6 +35,10 @@ lemma ttc_lattice_count_accuracy
     (hvolume : ComputeVolumeContract O F hbounded params)
     (hsamples : GenerateSamplesContract O F hbounded params)
     (hnonempty : (O.preprocessing.run F hbounded).componentCount ≠ 0)
+    (hlarge :
+      let D := O.preprocessing.run F hbounded
+      let b := (O.preprocessing.choosePrecision D params).value
+      params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real))
     (hcomponentLattice :
       let D := O.preprocessing.run F hbounded
       let b := (O.preprocessing.choosePrecision D params).value
@@ -49,17 +54,18 @@ lemma ttc_lattice_count_accuracy
           Arlib.relErr (params.epsilon / 2)
             ((D.latticePoints b).ncard / (10 : Real) ^ (b * n))} >=
       1 - params.delta := by
-  simpa [ttc, hnonempty] using
-    process_components_lattice_count_accuracy F hbounded params O hvolume hsamples
-      hnonempty hcomponentLattice
-
-/-! ### Run record
-Newest first. History, not instruction — what this file claims is above.
-
-* r2 · reduced · closed the public theorem from the exact measure-level
-  `processComponents` stochastic obligation
-* r1 · reduced · isolated the adaptive Poisson concentration argument; proof is blocked
-  by the modeled `t / p` mean versus the paper's `t * p` mean
--/
+  let D := O.preprocessing.run F hbounded
+  let b := (O.preprocessing.choosePrecision D params).value
+  let q := scaledLatticeVolume D b
+  let core := processComponents O b params.epsilonPrime
+    (params.deltaPrime D.componentCount) (params.threshold D.componentCount)
+    (List.ofFn D.component) (TTCState.initial n)
+  have htcc : ttc F hbounded params O = core.map TTCState.estimate := by
+    simp [ttc, D, hnonempty, b, core]
+  rw [htcc]
+  simpa [D, b, q, core, scaledLatticeVolume, NNReal.coe_div,
+    NNReal.coe_pow] using
+      process_components_lattice_count_accuracy hprior F hbounded params O hvolume hsamples
+        hnonempty hcomponentLattice hlarge
 
 end Kr25Ssmxt

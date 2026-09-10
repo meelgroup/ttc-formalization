@@ -8,17 +8,14 @@ together with the union lattice comparison, implies the desired relative-error e
 the union's volume.  The oracle contracts are used to ensure that the output law is finite,
 which is required when passing from event inclusion to monotonicity of `Measure.real`.
 
-The substantive stochastic premise remains explicit because the current model draws the
-fresh Poisson count with mean `t / p`; the paper's prefix invariant and cancellation require
-mean `t * p`.
+The substantive stochastic premise is supplied by `ttc_lattice_count_accuracy` under the
+headline theorem's high-intensity premise.
 -/
 
 namespace Kr25Ssmxt
 
 /-- If the stochastic core supplies the paper's intermediate lattice-count estimate, the
-deterministic lattice comparison converts that event into the headline volume event.  The
-intermediate estimate is deliberately a hypothesis: the current `processComponent` divides
-its Poisson rate by the state rate, so the oracle contracts alone do not establish it.
+deterministic lattice comparison converts that event into the headline volume event.
 
 INTERNAL: Deterministic assembly of the lattice estimate and lattice comparison bounds. -/
 lemma ttc_volume_accuracy_lattice_estimate
@@ -98,8 +95,7 @@ Newest first. History, not instruction — what this file claims is above.
 
 * r2 · repaired · closed the conditional deterministic assembly; restored the oracle
   contracts needed to make `Measure.real` monotone on the containing event
-* r1 · reduced · exposed the stochastic lattice estimate as a premise because the modeled
-  Poisson rate is `t / p`, rather than the paper's `t * p`
+* r1 · reduced · exposed the stochastic lattice estimate as a premise
 -/
 
 end Kr25Ssmxt

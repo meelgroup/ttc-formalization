@@ -21,7 +21,7 @@ lemma processComponent_volume_continuation_aemeasurable {n k : Nat}
       (fun volumeOutcome : VolumeOutcome =>
         let withoutDuplicates := s.removeComponent P
         (ProbabilityTheory.poissonMeasure
-          (volumeOutcome.2 / withoutDuplicates.rate)).bind fun pending =>
+          (volumeOutcome.2 * withoutDuplicates.rate)).bind fun pending =>
             (thinUntil withoutDuplicates pending threshold).bind fun thinned =>
               (O.generateSamples P thinned.2 b epsilonPrime deltaPrime).bind fun batch =>
                 (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst)
@@ -33,19 +33,19 @@ lemma processComponent_volume_continuation_aemeasurable {n k : Nat}
         (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst
   have hAfterPending : Measurable afterPending := Measurable.of_discrete
   have hRate : Measurable
-      (fun volumeOutcome : VolumeOutcome => volumeOutcome.2 / withoutDuplicates.rate) :=
-    (measurable_snd : Measurable (fun volumeOutcome : VolumeOutcome => volumeOutcome.2)).div_const _
+      (fun volumeOutcome : VolumeOutcome => volumeOutcome.2 * withoutDuplicates.rate) :=
+    (measurable_snd : Measurable (fun volumeOutcome : VolumeOutcome => volumeOutcome.2)).mul_const _
   have hPoisson : Measurable (fun volumeOutcome : VolumeOutcome =>
       ProbabilityTheory.poissonMeasure
-        (volumeOutcome.2 / withoutDuplicates.rate)) :=
+        (volumeOutcome.2 * withoutDuplicates.rate)) :=
     measurable_poissonMeasure.comp hRate
   have hContinuation : Measurable (fun volumeOutcome : VolumeOutcome =>
       (ProbabilityTheory.poissonMeasure
-        (volumeOutcome.2 / withoutDuplicates.rate)).bind afterPending) :=
+        (volumeOutcome.2 * withoutDuplicates.rate)).bind afterPending) :=
     (MeasureTheory.Measure.measurable_bind' hAfterPending).comp hPoisson
   have hContinuationAE : AEMeasurable (fun volumeOutcome : VolumeOutcome =>
       (ProbabilityTheory.poissonMeasure
-        (volumeOutcome.2 / withoutDuplicates.rate)).bind afterPending)
+        (volumeOutcome.2 * withoutDuplicates.rate)).bind afterPending)
       (O.computeVolume P epsilonPrime deltaPrime) :=
     hContinuation.aemeasurable
   simpa [withoutDuplicates, afterPending] using

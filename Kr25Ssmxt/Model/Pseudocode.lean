@@ -11,9 +11,11 @@ import Mathlib.Probability.ProductMeasure
 
 The encoding follows the paper's mathematical control flow.  Boolean abstraction, DNF
 conversion, normalization, and precision selection are certified deterministic stages.
-The two geometric routines are probability kernels whose Boolean tag records the paper's
-batch-level good event.  All later random choices are composed with `Measure.bind`, so every
-adaptive call is a fresh conditional draw.
+The two geometric routines are probability kernels.  The volume tag records its batch-level
+good event; the sampler tag permits a general implementation contract, while the paper's
+independently restarted Hit-and-Run construction instantiates it with an always-true tag.
+All later random choices are composed with `Measure.bind`, so every adaptive call is a fresh
+conditional draw.
 
 The two unbounded thinning loops are represented by their first-exit semantics under an
 infinite stream of independent fair coins.  `sInf` totalizes the null set of streams on which
@@ -30,11 +32,11 @@ open MeasureTheory
 
 namespace Kr25Ssmxt
 
-/-- A repaired precision starts no lower than the printed value and satisfies both uses. -/
+/-- A certified precision starts no lower than the repaired printed value and satisfies both uses. -/
 structure PrecisionChoice {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) where
   value : Nat
-  paper_le : paperPrecision D p.latticeEta ≤ value
+  paper_le : paperPrecision D p.latticeEta p.epsilonPrime ≤ value
   adequate : PrecisionAdequate D value p.latticeEta p.epsilonPrime
 
 /-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input. -/
@@ -72,7 +74,7 @@ def LatticePoint.toPoint {n : Nat} (x : LatticePoint n) : Point n :=
 def codedLatticePoints {n : Nat} (P : PolytopeData n) (b : Nat) : Set (LatticePoint n) :=
   {x | x.1 = b ∧ x.toPoint ∈ P.carrier}
 
-/-- A sample batch is likewise tagged by membership in its batch good event. -/
+/-- A sample batch retains a tag so certified fallible implementations remain representable. -/
 abbrev SampleBatch (n count : Nat) := Bool × (Fin count → LatticePoint n)
 
 /-- The deterministic certified stages and the two randomized geometric oracles. -/
@@ -108,7 +110,11 @@ def ComputeVolumeContract {n k : Nat} (O : TTCOracles n k)
         (o.2 : Real) ∈ Arlib.relErr p.epsilonPrime
           (volume (D.component i).carrier).toReal
 
-/-- The required batch-level, pointwise, conditionally IID sampling guarantee. -/
+/-- The required batch-level, pointwise, conditionally IID sampling guarantee.
+
+The repaired paper's Hit-and-Run construction is unconditional: independent restarts yield
+the product law and its tag can be constantly true, making the failure bound below zero.
+-/
 def GenerateSamplesContract {n k : Nat} (O : TTCOracles n k)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) : Prop :=
@@ -150,6 +156,11 @@ def TTCState.initial (n : Nat) : TTCState n where
   rate := 1
   samples := ∅
   nextLabel := 0
+
+/-- The lattice count converted back to the ambient volume scale. -/
+def scaledLatticeVolume {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (b : Nat) : NNReal :=
+  (D.latticePoints b).ncard / (10 : NNReal) ^ (b * n)
 
 /-- Remove every retained copy whose point lies in the next component. -/
 def TTCState.removeComponent {n : Nat} (s : TTCState n) (P : PolytopeData n) : TTCState n := by
@@ -227,7 +238,7 @@ def processComponent {n k : Nat} (O : TTCOracles n k) (b : Nat)
     (state : TTCState n) : Measure (TTCState n) :=
   (O.computeVolume P epsilonPrime deltaPrime).bind fun volumeOutcome =>
     let withoutDuplicates := state.removeComponent P
-    (ProbabilityTheory.poissonMeasure (volumeOutcome.2 / withoutDuplicates.rate)).bind fun pending =>
+    (ProbabilityTheory.poissonMeasure (volumeOutcome.2 * withoutDuplicates.rate)).bind fun pending =>
       (thinUntil withoutDuplicates pending threshold).bind fun thinned =>
         (O.generateSamples P thinned.2 b epsilonPrime deltaPrime).bind fun batch =>
           (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst
@@ -244,7 +255,8 @@ def processComponents {n k : Nat} (O : TTCOracles n k) (b : Nat)
 /--
 The theoretical TTC output law.  The empty normalized family returns zero before any
 division by `m`; otherwise it selects a repaired precision, executes the streaming core,
-and returns exactly the single nonnegative estimate `|X| / p`.
+and returns exactly the single nonnegative estimate `|X| / p`.  Accuracy for the nonempty
+branch is conditional on the public high-intensity premise.
 -/
 def ttc {n k : Nat} (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
@@ -257,6 +269,41 @@ def ttc {n k : Nat} (F : LRAFormula n k)
     (processComponents O b params.epsilonPrime (params.deltaPrime D.componentCount)
       (params.threshold D.componentCount) (List.ofFn D.component) (TTCState.initial n)).map
         TTCState.estimate
+
+/--
+The nontrivial probabilistic result supplied by the Poissonized finite-union streaming
+analysis.  It is restricted to the regime in which the initial scaled lattice volume is
+large enough for the paper's dyadic concentration argument.  This condition is now a public
+premise of the headline accuracy theorem; the algorithm does not compute it.
+
+This is deliberately a named proposition rather than an axiom.  The headline theorem takes
+its proof through `Prior`, making the borrowed streaming result part of the public theorem
+assumptions.
+-/
+def StreamingCoreAccuracy
+    {n k : Nat}
+    (F : LRAFormula n k)
+    (hbounded : Bornology.IsBounded (solutionSet F))
+    (params : ApproxParams)
+    (O : TTCOracles n k) : Prop :=
+  let D := O.preprocessing.run F hbounded
+  let b := (O.preprocessing.choosePrecision D params).value
+  ComputeVolumeContract O F hbounded params →
+    GenerateSamplesContract O F hbounded params →
+    D.componentCount ≠ 0 →
+    (∀ i,
+      (volume (D.component i).carrier).toReal ∈
+        Arlib.relErr params.latticeEta
+          (((D.component i).carrier ∩ decimalLattice b n).ncard /
+            (10 : Real) ^ (b * n))) →
+    params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real) →
+    let core := processComponents O b params.epsilonPrime
+      (params.deltaPrime D.componentCount) (params.threshold D.componentCount)
+      (List.ofFn D.component) (TTCState.initial n)
+    (core.map TTCState.estimate).real
+        {estimate | (estimate : Real) ∈
+          Arlib.relErr (params.epsilon / 2) (scaledLatticeVolume D b : Real)} ≥
+      1 - params.delta
 
 #modelClosure ttc
 

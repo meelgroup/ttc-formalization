@@ -37,8 +37,8 @@ lemma process_components_lattice_count_accuracy_coded_card
           (y.2 i : Real) / (10 : Real) ^ y.1 at hcoord
       rw [hx.1, hy.1] at hcoord
       have hcast : (x.2 i : Real) = (y.2 i : Real) :=
-        (div_left_injʹ (pow_ne_zero b (by norm_num))).mp hcoord
-      exact_mod_cast hcast
+        (div_left_inj' (pow_ne_zero b (by norm_num))).mp hcoord
+      exact Int.cast_injective hcast
   · intro y hy
     choose z hz using hy.2
     let x : LatticePoint n := (b, z)

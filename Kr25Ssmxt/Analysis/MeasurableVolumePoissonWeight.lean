@@ -19,7 +19,7 @@ open scoped Topology
 
 /--
 For a fixed pending count, averaging its Poisson mass over an arbitrary volume
-outcome law is measurable in the denominator rate.
+outcome law is measurable in the sampling rate.
 
 INTERNAL: coefficient obtained by expanding the volume and Poisson binds into a
 countable sum; its proof uses lower semicontinuity away from rate zero and a
@@ -28,39 +28,34 @@ measurable singleton split at zero.
 lemma measurable_volume_poisson_weight
     (mu : MeasureTheory.Measure VolumeOutcome) (pending : Nat) :
     Measurable (fun r : NNReal =>
-      ∫⁻ v, (ProbabilityTheory.poissonMeasure (v.2 / r)) {pending} ∂mu) := by
-  apply measurable_of_measurable_on_compl_singleton 0
+      ∫⁻ v, (ProbabilityTheory.poissonMeasure (v.2 * r)) {pending} ∂mu) := by
   apply LowerSemicontinuous.measurable
-  rw [lowerSemicontinuous_restrict_iff]
-  rw [lowerSemicontinuousOn_iff_le_liminf]
-  intro r hr
-  let _ := nhdsWithin_neBot_of_mem hr
+  rw [lowerSemicontinuous_iff_le_liminf]
+  intro r
   calc
-    (∫⁻ v, (ProbabilityTheory.poissonMeasure (v.2 / r)) {pending} ∂mu) =
+    (∫⁻ v, (ProbabilityTheory.poissonMeasure (v.2 * r)) {pending} ∂mu) =
         ∫⁻ v, liminf (fun q : NNReal =>
-          (ProbabilityTheory.poissonMeasure (v.2 / q)) {pending})
-          (𝓝[{q : NNReal | q ≠ 0}] r) ∂mu := by
+          (ProbabilityTheory.poissonMeasure (v.2 * q)) {pending})
+          (𝓝 r) ∂mu := by
       congr 1 with v
       apply Eq.symm
       apply Filter.Tendsto.liminf_eq
       simp_rw [ProbabilityTheory.poissonMeasure_singleton]
-      have hmean : ContinuousWithinAt (fun q : NNReal => v.2 / q)
-          {q : NNReal | q ≠ 0} r :=
-        (continuousAt_const.div continuousAt_id hr).continuousWithinAt
-      have hmeanReal : ContinuousWithinAt
-          (fun q : NNReal => ((v.2 / q : NNReal) : Real))
-          {q : NNReal | q ≠ 0} r :=
-        NNReal.continuous_coe.continuousAt.comp_continuousWithinAt hmean
+      have hmean : ContinuousAt (fun q : NNReal => v.2 * q) r :=
+        continuousAt_const.mul continuousAt_id
+      have hmeanReal : ContinuousAt
+          (fun q : NNReal => ((v.2 * q : NNReal) : Real)) r :=
+        NNReal.continuous_coe.continuousAt.comp hmean
       apply ENNReal.continuous_ofReal.continuousAt.tendsto.comp
-      exact ((Real.continuous_exp.continuousAt.comp_continuousWithinAt
+      exact ((Real.continuous_exp.continuousAt.comp
         hmeanReal.neg).mul (hmeanReal.pow pending)).div_const _
     _ ≤ liminf (fun q : NNReal =>
-        ∫⁻ v, (ProbabilityTheory.poissonMeasure (v.2 / q)) {pending} ∂mu)
-        (𝓝[{q : NNReal | q ≠ 0}] r) := by
+        ∫⁻ v, (ProbabilityTheory.poissonMeasure (v.2 * q)) {pending} ∂mu)
+        (𝓝 r) := by
       apply lintegral_liminf_le
       intro q
       exact (Measure.measurable_coe (measurableSet_singleton pending)).comp
-        (measurable_poissonMeasure.comp (measurable_snd.div measurable_const))
+        (measurable_poissonMeasure.comp (measurable_snd.mul measurable_const))
 
 end Kr25Ssmxt
 
