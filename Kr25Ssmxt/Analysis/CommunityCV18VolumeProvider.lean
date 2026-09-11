@@ -41,39 +41,13 @@ def input {n : Nat} (P : PolytopeData n) : VolumeInput n where
 noncomputable def oracle {n : Nat} (P : PolytopeData n) : MembershipOracle (input P) := by
   classical
   exact
-    { query := fun x => if x ∈ P.cv18Body then true else false
+    { query := query P
       correct := fun x => by
-        change (if x ∈ P.cv18Body then true else false) = true ↔ x ∈ P.cv18Body
-        simp }
-
-/-- A positive roundness factor large enough for the actual second moment.
-It is data passed to CV18, not an additional hypothesis. -/
-def roundness {n : Nat} (P : PolytopeData n) : Real :=
-  |uniformSecondMoment (input P)| + 1
+        simp [query] }
 
 lemma roundness_pos {n : Nat} (P : PolytopeData n) : 0 < roundness P := by
   unfold roundness
   positivity
-
-/-- We run the community algorithm at half the requested error and failure
-budgets.  This handles TTC's allowed endpoint `eta = 1`/`delta = 1`, while
-CV18's public parameter type asks for strict inequalities. -/
-def params {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
-    (eta delta : Real) (h : AdmissibleCV18Request eta delta) : VolumeParams where
-  n := n
-  dim_ok := hn
-  eps := eta / 2
-  heps := by
-    constructor
-    · exact div_pos h.1 (by norm_num)
-    · linarith [h.2.1]
-  p := delta / 2
-  hp := by
-    constructor
-    · exact div_pos h.2.2.1 (by norm_num)
-    · linarith [h.2.2.2]
-  roundness := roundness P
-  roundness_pos := roundness_pos P
 
 lemma wellRounded {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
@@ -82,17 +56,14 @@ lemma wellRounded {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   have habs : uniformSecondMoment (input P) ≤
       |uniformSecondMoment (input P)| := le_abs_self _
   have hnonneg : 0 ≤ |uniformSecondMoment (input P)| + 1 := by positivity
-  unfold WellRounded params roundness
+  have hmoment : uniformSecondMoment (input P) =
+      (∫ x in P.cv18Body, ‖x‖ ^ 2) / (volume P.cv18Body).toReal := by
+    rfl
+  rw [hmoment] at habs hnonneg
+  change uniformSecondMoment (input P) ≤ roundness P * (n : Real)
+  rw [hmoment]
+  unfold roundness
   nlinarith
-
-/-- The concrete amplified program selected by the community capstone. -/
-def algorithm : VolumeAlgorithm :=
-  amplifyOracleProgram figureOneFinalScheduledCappedValueProgram
-
-/-- The real-valued estimator law before TTC tagging and affine rescaling. -/
-def law {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
-    (eta delta : Real) (h : AdmissibleCV18Request eta delta) : Measure Real :=
-  volumeAlgorithmLaw algorithm (params hn P eta delta h) (input P) (oracle P)
 
 instance law_probability {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
@@ -103,13 +74,6 @@ instance law_probability {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
       (oracle P).query
       (figureOneFinalScheduledCappedValueProgram_stronglyMeasurable
         (params hn P eta delta h) (input P) (oracle P))).1.estimateMeasurable
-
-/-- The CV18 success event tagged as TTC's `Bool × NNReal` outcome. -/
-def taggedLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
-    (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
-    Measure VolumeOutcome :=
-  taggedVolumeLaw (law hn P eta delta h)
-    (accurateOutcome (params hn P eta delta h) (input P)) Real.toNNReal
 
 private lemma relErr_half_mono {x target eta : Real} (htarget : 0 ≤ target)
     (heta : 0 ≤ eta) (hx : x ∈ Arlib.relErr (eta / 2) target) :
@@ -126,6 +90,9 @@ lemma taggedLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   letI : IsProbabilityMeasure (law hn P eta delta h) :=
     law_probability hn P eta delta h
   obtain ⟨_, _, hfinal⟩ := volumeTheorem_finalScheduled
+  have hevent : accurateOutcome (params hn P eta delta h) (input P) =
+      successSet P eta := by
+    rfl
   have hsuccessCommunity :=
     (hfinal (params hn P eta delta h) (input P) (oracle P)
       (wellRounded hn P eta delta h)).1
@@ -136,17 +103,16 @@ lemma taggedLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
       ((law hn P eta delta h)
         (accurateOutcome (params hn P eta delta h) (input P))).toReal
     rw [← outcomeProbability_eq_measure]
-    simpa [law, algorithm, params] using hsuccessCommunity
-  have hsuccess : 1 - delta ≤ (law hn P eta delta h).real
-      (accurateOutcome (params hn P eta delta h) (input P)) := by
+    simpa [law, algorithm, params, volumeAlgorithmLaw, oracle] using hsuccessCommunity
+  rw [hevent] at hsuccessCommunity'
+  have hsuccess : 1 - delta ≤ (law hn P eta delta h).real (successSet P eta) := by
     linarith [h.2.2.1]
   have haccuracy : ∀ x,
-      x ∈ accurateOutcome (params hn P eta delta h) (input P) →
+      x ∈ successSet P eta →
       (Real.toNNReal x : Real) ∈ Arlib.relErr eta (volume P.cv18Body).toReal := by
     intro x hx
     have hx' : x ∈ Arlib.relErr (eta / 2) (volume P.cv18Body).toReal := by
-      change x ∈ Arlib.relErr (eta / 2) (euclideanVolume (input P)) at hx
-      simpa only [euclideanVolume, input_body] using hx
+      exact hx
     have htarget : 0 ≤ (volume P.cv18Body).toReal := ENNReal.toReal_nonneg
     have hx0 : 0 ≤ x := by
       rw [Arlib.mem_relErr] at hx'
@@ -154,18 +120,22 @@ lemma taggedLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
       nlinarith [hx'.1]
     rw [Real.coe_toNNReal x hx0]
     exact relErr_half_mono htarget h.1.le hx'
-  change IsProbabilityMeasure
-      (taggedVolumeLaw (law hn P eta delta h)
-        (accurateOutcome (params hn P eta delta h) (input P)) Real.toNNReal) ∧
-    (taggedVolumeLaw (law hn P eta delta h)
-      (accurateOutcome (params hn P eta delta h) (input P)) Real.toNNReal).real
-        {o | o.1 = false} ≤ delta ∧
-    ∀ᵐ o ∂taggedVolumeLaw (law hn P eta delta h)
-      (accurateOutcome (params hn P eta delta h) (input P)) Real.toNNReal,
-      o.1 = true → (o.2 : Real) ∈ Arlib.relErr eta (volume P.cv18Body).toReal
-  exact taggedVolumeLaw_spec (law hn P eta delta h)
-      (accurateOutcome_measurable (params hn P eta delta h) (input P))
-      measurable_real_toNNReal hsuccess haccuracy
+  have hgeneric := taggedVolumeLaw_spec (law hn P eta delta h)
+    (good := successSet P eta) (by exact measurableSet_Icc)
+    measurable_real_toNNReal hsuccess haccuracy
+  simpa [taggedLaw, successTag, taggedVolumeLaw, volumeSuccessTag] using hgeneric
+
+/-- Contract of the direct CV18 call declared on the model surface. -/
+theorem communityCV18VolumeLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
+    (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
+    IsProbabilityMeasure (communityCV18VolumeLaw hn P eta delta) ∧
+      (communityCV18VolumeLaw hn P eta delta).real {o | o.1 = false} ≤ delta ∧
+      ∀ᵐ o ∂communityCV18VolumeLaw hn P eta delta, o.1 = true →
+        (o.2 : Real) ∈ Arlib.relErr eta (volume P.carrier).toReal := by
+  have htag := taggedLaw_spec hn P eta delta h
+  letI : IsProbabilityMeasure (taggedLaw hn P eta delta h) := htag.1
+  simpa only [communityCV18VolumeLaw, dif_pos h] using
+    P.rescaleCV18Law_spec (taggedLaw hn P eta delta h) htag.2.1 htag.2.2
 
 /-- The requested TTC normalized-volume provider, with no volume-oracle or
 mixing hypothesis left to the caller. -/

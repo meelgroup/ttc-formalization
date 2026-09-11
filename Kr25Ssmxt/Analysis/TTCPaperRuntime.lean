@@ -113,12 +113,7 @@ structure HitAndRunMembershipRun {n : Nat} (P : PolytopeData n) (b : Nat)
   pointwise_accuracy :
     AlmostUniformPointwise
       (acceptedRoundedLatticeLaw
-        (Arlib.MarkovChains.iterate
-          (Arlib.MarkovChains.lazy (Arlib.MarkovChains.hitAndRun
-            (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-              (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))))
-          (Arlib.uniformOn volume
-            (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)) steps)
+        (hitAndRunContinuousLaw P b eta)
         P b)
       (codedLatticePoints P b) eta
 
@@ -133,15 +128,31 @@ theorem exists_hitAndRunMembershipRun {n : Nat} (hn : 21 ≤ n)
     (hfinite : (codedLatticePoints P b).Finite)
     (hnonempty : (codedLatticePoints P b).Nonempty) :
     Nonempty (HitAndRunMembershipRun P b eta) := by
-  obtain ⟨D, steps, hD, hdeadline, hmceil, haccuracy⟩ :=
-    P.exists_hitAndRun_latticePointLaw hn b hunit heta0 heta1 hfinite hnonempty
-  exact ⟨
-    { diameter := D
+  let diameter := hitAndRunDiameter P b eta
+  let steps := hitAndRunSteps P b eta
+  have hbounded := P.hitAndRunBody_bounded b eta
+  refine ⟨
+    { diameter := diameter
       steps := steps
-      diameter_bound := hD
-      deadline_bound := hdeadline
-      steps_eq_ceil_deadline := hmceil
-      pointwise_accuracy := haccuracy }⟩
+      diameter_bound := ?_
+      deadline_bound := ?_
+      steps_eq_ceil_deadline := ?_
+      pointwise_accuracy := ?_ }⟩
+  · intro x hx y hy
+    exact Metric.dist_le_diam_of_mem hbounded hx hy
+  · change ArlibCommunity.Algorithms.HitAndRun.deadline n diameter
+      (hitAndRunWarmness P b eta) (hitAndRunTolerance P b eta) ≤ (steps : Real)
+    simpa only [steps, hitAndRunSteps, diameter, hitAndRunDiameter] using
+      (Nat.le_ceil (ArlibCommunity.Algorithms.HitAndRun.deadline n
+        (hitAndRunDiameter P b eta) (hitAndRunWarmness P b eta)
+        (hitAndRunTolerance P b eta)))
+  · simp [steps, diameter, hitAndRunSteps, hitAndRunDiameter, hitAndRunWarmness,
+      hitAndRunTolerance, hitAndRunBody,
+      ArlibCommunity.Algorithms.HitAndRun.deadline,
+      Arlib.MarkovChains.hrDeadlineUncond]
+  · have hacc := P.direct_hitAndRun_latticePointLaw hn b hunit heta0 heta1
+      hfinite hnonempty
+    simpa [hitAndRunPointLaw] using hacc
 
 /-- The sampler charge uses exactly the ceiling of the proved current-community mixing
 deadline, rather than an unconstrained larger walk length. -/

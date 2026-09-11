@@ -62,15 +62,6 @@ theorem PolytopeData.exists_hitAndRun_pointLaw {n : Nat} (hn : 21 ≤ n)
         (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)) m)
     P b, hpoint⟩
 
-/-- A canonical choice of the proved finite-step Hit-and-Run/KV97 point law. -/
-def hitAndRunPointLaw {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
-    (hunit : 1 ≤ decimalScale b * P.inradius)
-    (eta : Real) (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hfinite : (codedLatticePoints P b).Finite)
-    (hnonempty : (codedLatticePoints P b).Nonempty) : Measure (LatticePoint n) :=
-  Classical.choose
-    (P.exists_hitAndRun_pointLaw hn b hunit heta0 heta1 hfinite hnonempty)
-
 lemma hitAndRunPointLaw_spec {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
     (hunit : 1 ≤ decimalScale b * P.inradius)
     (eta : Real) (heta0 : 0 < eta) (heta1 : eta ≤ 1)
@@ -79,13 +70,7 @@ lemma hitAndRunPointLaw_spec {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n) (b :
     AlmostUniformPointwise
       (hitAndRunPointLaw hn P b hunit eta heta0 heta1 hfinite hnonempty)
       (codedLatticePoints P b) eta :=
-  Classical.choose_spec
-    (P.exists_hitAndRun_pointLaw hn b hunit heta0 heta1 hfinite hnonempty)
-
-/-- Independent restarts from any point law, tagged as an unconditional successful batch. -/
-def iidSampleBatchLaw {n count : Nat} (pointLaw : Measure (LatticePoint n)) :
-    Measure (SampleBatch n count) :=
-  (Measure.pi (fun _ : Fin count => pointLaw)).map (fun samples => (true, samples))
+  P.direct_hitAndRun_latticePointLaw hn b hunit heta0 heta1 hfinite hnonempty
 
 lemma iidSampleBatchLaw_isProbabilityMeasure {n count : Nat}
     (pointLaw : Measure (LatticePoint n)) [IsProbabilityMeasure pointLaw] :
@@ -121,23 +106,6 @@ lemma iidSampleBatchLaw_iid {n count : Nat} (pointLaw : Measure (LatticePoint n)
     Measure.restrict_eq_self_of_ae_mem hae]
   rw [Measure.map_map measurable_snd htag]
   simpa [Function.comp_def, tag, productLaw] using (Measure.map_id productLaw)
-
-/-- TTC oracles whose sampling field uses the proved Hit-and-Run/KV97 law whenever its
-certificates hold.  The fallback makes the structure total; the contract theorem proves that
-it is never selected on an adequately preprocessed TTC call. -/
-def hitAndRunSamplingOracles {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k) :
-    TTCOracles n k := by
-  classical
-  exact
-    { preprocessing := prep
-      computeVolume := fun P _ _ => exactVolumeLaw P
-      generateSamples := fun P count b eta _ =>
-        if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
-            (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
-          iidSampleBatchLaw
-            (hitAndRunPointLaw hn P b h.1 eta h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
-        else
-          exactSampleBatchLaw P b }
 
 /-- `PrecisionAdequate` routes every sampling call through finite-step Hit-and-Run, KV97
 rounding/rejection, and independent restarts. -/

@@ -90,20 +90,6 @@ theorem taggedVolumeLaw_spec {Omega : Type*} [MeasurableSpace Omega]
       simpa [out] using htag
     simpa [out, homega] using haccuracy omega homega
 
-/-- The positive determinant of TTC's inverse normalization chart, as an `NNReal`. -/
-def PolytopeData.cv18VolumeScale {n : Nat} (P : PolytopeData n) : NNReal :=
-  ⟨P.inradius ^ n, pow_nonneg P.inradius_pos.le n⟩
-
-/-- Preserve the success tag and rescale a normalized-body estimate. -/
-def PolytopeData.rescaleCV18Outcome {n : Nat} (P : PolytopeData n)
-    (o : VolumeOutcome) : VolumeOutcome :=
-  (o.1, P.cv18VolumeScale * o.2)
-
-/-- Push a normalized-body estimator law through the determinant rescaling. -/
-def PolytopeData.rescaleCV18Law {n : Nat} (P : PolytopeData n)
-    (mu : Measure VolumeOutcome) : Measure VolumeOutcome :=
-  mu.map P.rescaleCV18Outcome
-
 lemma PolytopeData.measurable_rescaleCV18Outcome {n : Nat} (P : PolytopeData n) :
     Measurable P.rescaleCV18Outcome := by
   unfold PolytopeData.rescaleCV18Outcome

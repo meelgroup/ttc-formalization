@@ -105,17 +105,17 @@ theorem almostUniform_acceptedRoundedLatticeLaw_of_tvLe {n : Nat}
     exact_mod_cast P.facets_pos
   have href : ∀ z ∈ T,
       (1 - eta / 4) / V ≤
-          ∫ p, prodTent (Arlib.KV97.latEmb n z) p ∂(Arlib.uniformOn volume S) ∧
-        ∫ p, prodTent (Arlib.KV97.latEmb n z) p ∂(Arlib.uniformOn volume S) ≤
+          ∫ p, prodTent (kv97LatEmb n z) p ∂(Arlib.uniformOn volume S) ∧
+        ∫ p, prodTent (kv97LatEmb n z) p ∂(Arlib.uniformOn volume S) ≤
           (1 + 0) / V := by
     intro z hz
-    have hesc : ∫ p in Sᶜ, prodTent (Arlib.KV97.latEmb n z) p ≤ eta / 4 := by
+    have hesc : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 := by
       have he := setIntegral_prodTent_compl_inflate_le_exp
         (c := Arlib.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
         P.arlibNormal (P.scaledOffset b) hz Arlib.KV97.cOf_nonneg hfacet1 (by simp)
       simpa [S, Arlib.KV97.inflated, Arlib.KV97.exp_cOf heta0 heta1] using he
     exact Arlib.PointwiseRoute.uniformOn_window
-      (S := S) (V := V) (E := eta / 4) (x := Arlib.KV97.latEmb n z)
+      (S := S) (V := V) (E := eta / 4) (x := kv97LatEmb n z)
       (Arlib.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc
   have hepsV :
       (ENNReal.ofReal ((eta / 8) / V)).toReal * V ≤ eta / 8 := by
@@ -124,19 +124,19 @@ theorem almostUniform_acceptedRoundedLatticeLaw_of_tvLe {n : Nat}
     rw [← Nat.card_coe_set_eq T, Nat.card_eq_fintype_card]
   have hraw : ∀ z ∈ T,
       (1 - 3 * eta / 8) / ((1 + eta / 8) * (T.ncard : Real)) ≤
-          (Arlib.KV97.roundedMeasureLaw mu).real {z} /
-            (Arlib.KV97.roundedMeasureLaw mu).real T ∧
-        (Arlib.KV97.roundedMeasureLaw mu).real {z} /
-            (Arlib.KV97.roundedMeasureLaw mu).real T ≤
+          (kv97RoundedMeasureLaw mu).real {z} /
+            (kv97RoundedMeasureLaw mu).real T ∧
+        (kv97RoundedMeasureLaw mu).real {z} /
+            (kv97RoundedMeasureLaw mu).real T ≤
           (1 + eta / 8) / ((1 - 3 * eta / 8) * (T.ncard : Real)) := by
     intro z hz
     have h := Arlib.PointwiseRoute.ratio_bounds_of_tvLe
       (i := (⟨z, hz⟩ : T)) (V := V) (a := eta / 4) (b := 0) (θ := eta / 8)
-      (g := fun w : T => fun p => prodTent (Arlib.KV97.latEmb n w.1) p)
+      (g := fun w : T => fun p => prodTent (kv97LatEmb n w.1) p)
       (by simpa [S, V] using htv) ENNReal.ofReal_ne_top
-      (fun w => measurable_prodTent (Arlib.KV97.latEmb n w.1))
-      (fun w p => prodTent_nonneg (Arlib.KV97.latEmb n w.1) p)
-      (fun w p => Arlib.PointwiseRoute.prodTent_le_one (Arlib.KV97.latEmb n w.1) p)
+      (fun w => measurable_prodTent (kv97LatEmb n w.1))
+      (fun w p => prodTent_nonneg (kv97LatEmb n w.1) p)
+      (fun w p => Arlib.PointwiseRoute.prodTent_le_one (kv97LatEmb n w.1) p)
       hV hepsV (fun w => (href w.1 w.2).1) (fun w => (href w.1 w.2).2)
       (by linarith)
     rw [Arlib.KV97.roundedMeasureLaw_singleton_real,
@@ -147,14 +147,14 @@ theorem almostUniform_acceptedRoundedLatticeLaw_of_tvLe {n : Nat}
     exact_mod_cast hTne.ncard_pos hTfin
   obtain ⟨z, hz⟩ := hTne
   have hratioPos : 0 <
-      (Arlib.KV97.roundedMeasureLaw mu).real {z} /
-        (Arlib.KV97.roundedMeasureLaw mu).real T := by
+      (kv97RoundedMeasureLaw mu).real {z} /
+        (kv97RoundedMeasureLaw mu).real T := by
     exact (div_pos (by linarith) (mul_pos (by linarith) hN)).trans_le (hraw z hz).1
-  have hacceptReal : (Arlib.KV97.roundedMeasureLaw mu).real T ≠ 0 := by
+  have hacceptReal : (kv97RoundedMeasureLaw mu).real T ≠ 0 := by
     intro hzero
     rw [hzero, div_zero] at hratioPos
     exact (lt_irrefl 0) hratioPos
-  have haccept : Arlib.KV97.roundedMeasureLaw mu T ≠ 0 := by
+  have haccept : kv97RoundedMeasureLaw mu T ≠ 0 := by
     intro hzero
     apply hacceptReal
     simp [Measure.real, hzero]
@@ -223,5 +223,42 @@ theorem PolytopeData.exists_hitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ n)
   refine ⟨D, m, hD, hdeadline, hmceil, ?_⟩
   apply almostUniform_acceptedRoundedLatticeLaw_of_tvLe P b heta0 heta1 hfinite hnonempty mu
   simpa [mu, mu0] using htv
+
+/-- Pointwise correctness of the exact Hit-and-Run/KV97 law declared in `Model.Run`. -/
+theorem PolytopeData.direct_hitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ n)
+    (P : PolytopeData n) (b : Nat)
+    (hunit : 1 ≤ decimalScale b * P.inradius)
+    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
+    (hfinite : (codedLatticePoints P b).Finite)
+    (hnonempty : (codedLatticePoints P b).Nonempty) :
+    AlmostUniformPointwise
+      (hitAndRunPointLaw hn P b hunit eta heta0 heta1 hfinite hnonempty)
+      (codedLatticePoints P b) eta := by
+  letI : NeZero n := ⟨by omega⟩
+  let mu := hitAndRunContinuousLaw P b eta
+  let mu0 : Measure (EuclideanSpace Real (Fin n)) :=
+    Arlib.uniformOn volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)
+  have hball0 : volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1) ≠ 0 :=
+    (Metric.measure_ball_pos volume _ one_pos).ne'
+  have hballtop : volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1) ≠ ⊤ :=
+    measure_ball_lt_top.ne
+  letI : IsProbabilityMeasure mu0 :=
+    Arlib.isProbabilityMeasure_uniformOn volume hball0 hballtop
+  letI : IsMarkovKernel
+      (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
+        P.arlibNormal (hitAndRunOffset P b eta)) := by
+    unfold ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
+    infer_instance
+  letI : IsProbabilityMeasure mu := by
+    dsimp only [mu, hitAndRunContinuousLaw,
+      ArlibCommunity.Algorithms.HitAndRun.run,
+      ArlibCommunity.Algorithms.HitAndRun.lazyStep,
+      ArlibCommunity.Algorithms.HitAndRun.step]
+    infer_instance
+  change AlmostUniformPointwise (acceptedRoundedLatticeLaw mu P b)
+    (codedLatticePoints P b) eta
+  apply almostUniform_acceptedRoundedLatticeLaw_of_tvLe P b heta0 heta1
+    hfinite hnonempty mu
+  simpa [mu, hitAndRunBody] using P.direct_hitAndRun_tvLe hn b hunit heta0
 
 end Kr25Ssmxt

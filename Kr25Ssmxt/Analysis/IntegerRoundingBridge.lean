@@ -18,57 +18,18 @@ namespace Arlib.KV97
 open MeasureTheory ProbabilityTheory
 open Arlib.Lattice.Rounding
 
-/-- The integer lattice embedded in the Euclidean state space. -/
-noncomputable def latEmb (n : Nat) (z : Fin n → Int) : EuclideanSpace Real (Fin n) :=
-  WithLp.toLp 2 fun i => (z i : Real)
-
-@[simp] theorem latEmb_apply (z : Fin n → Int) (i : Fin n) :
-    latEmb n z i = (z i : Real) := rfl
-
-/-- The current community rounding law, packaged as a measurable Markov kernel. -/
-noncomputable def roundingKernel (n : Nat) :
-    Kernel (EuclideanSpace Real (Fin n)) (Fin n → Int) where
-  toFun p := roundLaw (WithLp.ofLp p)
-  measurable' := by
-    apply Measure.measurable_of_measurable_coe
-    intro s hs
-    have heq : (fun p : EuclideanSpace Real (Fin n) => roundLaw (WithLp.ofLp p) s) =
-        fun p => ∑' z : Fin n → Int,
-          s.indicator (fun z => roundLaw (WithLp.ofLp p) {z}) z := by
-      funext p
-      exact (Measure.tsum_indicator_apply_singleton (roundLaw (WithLp.ofLp p)) s hs).symm
-    rw [heq]
-    apply Measurable.tsum
-    intro z
-    by_cases hz : z ∈ s
-    · simp only [Set.indicator_of_mem hz, roundLaw_singleton]
-      change Measurable fun p => ENNReal.ofReal (prodTent (latEmb n z) p)
-      exact (measurable_prodTent (latEmb n z)).ennreal_ofReal
-    · simp only [Set.indicator_of_notMem hz]
-      fun_prop
-
-instance (n : Nat) : IsMarkovKernel (roundingKernel n) := by
-  constructor
-  intro p
-  change IsProbabilityMeasure (roundLaw (WithLp.ofLp p))
-  infer_instance
-
-/-- Draw `p` from `mu`, then perform independent coordinatewise randomized rounding. -/
-noncomputable def roundedMeasureLaw {n : Nat}
-    (mu : Measure (EuclideanSpace Real (Fin n))) : Measure (Fin n → Int) :=
-  mu.bind (roundingKernel n)
-
 theorem isProbabilityMeasure_roundedMeasureLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure mu] :
-    IsProbabilityMeasure (roundedMeasureLaw mu) := by
-  unfold roundedMeasureLaw
+    IsProbabilityMeasure (Kr25Ssmxt.kv97RoundedMeasureLaw mu) := by
+  unfold Kr25Ssmxt.kv97RoundedMeasureLaw
   infer_instance
 
 theorem roundedMeasureLaw_singleton {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) (z : Fin n → Int) :
-    roundedMeasureLaw mu {z} =
-      ∫⁻ p, ENNReal.ofReal (prodTent (latEmb n z) p) ∂mu := by
-  rw [roundedMeasureLaw, Measure.bind_apply (by measurability) (roundingKernel n).aemeasurable]
+    Kr25Ssmxt.kv97RoundedMeasureLaw mu {z} =
+      ∫⁻ p, ENNReal.ofReal (prodTent (Kr25Ssmxt.kv97LatEmb n z) p) ∂mu := by
+  rw [Kr25Ssmxt.kv97RoundedMeasureLaw,
+    Measure.bind_apply (by measurability) (Kr25Ssmxt.kv97RoundingKernel n).aemeasurable]
   apply lintegral_congr
   intro p
   change roundLaw (WithLp.ofLp p) {z} = _
@@ -78,12 +39,12 @@ theorem roundedMeasureLaw_singleton {n : Nat}
 theorem roundedMeasureLaw_singleton_real {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure mu]
     (z : Fin n → Int) :
-    (roundedMeasureLaw mu).real {z} =
-      ∫ p, prodTent (latEmb n z) p ∂mu := by
-  have hint : Integrable (prodTent (latEmb n z)) mu :=
+    (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real {z} =
+      ∫ p, prodTent (Kr25Ssmxt.kv97LatEmb n z) p ∂mu := by
+  have hint : Integrable (prodTent (Kr25Ssmxt.kv97LatEmb n z)) mu :=
     Arlib.integrable_of_forall_mem_Icc (measurable_prodTent _)
       (fun p => prodTent_nonneg _ p) (fun p => Arlib.PointwiseRoute.prodTent_le_one _ p)
-  have hnn : 0 ≤ᵐ[mu] prodTent (latEmb n z) :=
+  have hnn : 0 ≤ᵐ[mu] prodTent (Kr25Ssmxt.kv97LatEmb n z) :=
     Filter.Eventually.of_forall fun p => prodTent_nonneg _ p
   rw [Measure.real, roundedMeasureLaw_singleton,
     ← ofReal_integral_eq_lintegral_ofReal hint hnn,
@@ -92,21 +53,21 @@ theorem roundedMeasureLaw_singleton_real {n : Nat}
 theorem roundedMeasureLaw_real_finite {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure mu]
     (T : Set (Fin n → Int)) [Fintype T] (hT : T.Finite) :
-    (roundedMeasureLaw mu).real T =
-      ∑ z : T, ∫ p, prodTent (latEmb n z.1) p ∂mu := by
+    (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real T =
+      ∑ z : T, ∫ p, prodTent (Kr25Ssmxt.kv97LatEmb n z.1) p ∂mu := by
   classical
-  letI : IsProbabilityMeasure (roundedMeasureLaw mu) :=
+  letI : IsProbabilityMeasure (Kr25Ssmxt.kv97RoundedMeasureLaw mu) :=
     isProbabilityMeasure_roundedMeasureLaw mu
   calc
-    (roundedMeasureLaw mu).real T =
-        (roundedMeasureLaw mu).real (hT.toFinset : Set (Fin n → Int)) := by
+    (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real T =
+        (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real (hT.toFinset : Set (Fin n → Int)) := by
           rw [hT.coe_toFinset]
-    _ = ∑ z ∈ hT.toFinset, (roundedMeasureLaw mu).real {z} := by
+    _ = ∑ z ∈ hT.toFinset, (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real {z} := by
       symm
       exact sum_measureReal_singleton hT.toFinset
-    _ = ∑ z : T, (roundedMeasureLaw mu).real {z.1} := by
+    _ = ∑ z : T, (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real {z.1} := by
       exact Finset.sum_subtype hT.toFinset (fun z => hT.mem_toFinset) _
-    _ = ∑ z : T, ∫ p, prodTent (latEmb n z.1) p ∂mu := by
+    _ = ∑ z : T, ∫ p, prodTent (Kr25Ssmxt.kv97LatEmb n z.1) p ∂mu := by
       apply Finset.sum_congr rfl
       intro z _
       exact roundedMeasureLaw_singleton_real mu z.1
@@ -117,20 +78,13 @@ namespace Kr25Ssmxt
 
 open Set MeasureTheory ProbabilityTheory
 
-/-- Attach TTC's decimal precision to an integer vector returned by KV97 rounding. -/
-def encodeInteger {n : Nat} (b : Nat) (z : Fin n → Int) : LatticePoint n := (b, z)
-
 lemma encodeInteger_injective {n : Nat} (b : Nat) :
     Function.Injective (encodeInteger (n := n) b) := by
   intro z w h
   exact congrArg Prod.snd h
 
-/-- Integer vectors accepted by rejection from the scaled TTC component. -/
-def acceptedIntegers {n : Nat} (P : PolytopeData n) (b : Nat) : Set (Fin n → Int) :=
-  {z | Arlib.KV97.latEmb n z ∈ P.scaledBody b}
-
 lemma scaled_toPoint_encodeInteger {n : Nat} (b : Nat) (z : Fin n → Int) :
-    decimalScale b • toEuclidean (encodeInteger b z).toPoint = Arlib.KV97.latEmb n z := by
+    decimalScale b • toEuclidean (encodeInteger b z).toPoint = kv97LatEmb n z := by
   ext i
   change decimalScale b * ((z i : Real) / decimalScale b) = (z i : Real)
   exact mul_div_cancel₀ _ (decimalScale_ne_zero b)
@@ -170,14 +124,6 @@ theorem image_encodeInteger_acceptedIntegers {n : Nat} (P : PolytopeData n) (b :
     rw [← encodeInteger_mem_coded_iff P b x.2, hxe]
     exact hx
 
-/-- The actual rejection sampler: round an arbitrary continuous law, condition on the
-integer vector lying in the scaled component, and attach the TTC precision code. -/
-def acceptedRoundedLatticeLaw {n : Nat}
-    (mu : Measure (EuclideanSpace Real (Fin n))) (P : PolytopeData n) (b : Nat) :
-    Measure (LatticePoint n) :=
-  (Arlib.condOn (Arlib.KV97.roundedMeasureLaw mu) (acceptedIntegers P b)).map
-    (encodeInteger b)
-
 /-- Once the per-integer normalized weight window has been proved, the concrete
 round--reject--encode law satisfies TTC's pointwise almost-uniform interface. -/
 theorem acceptedRoundedLatticeLaw_almostUniform_of_ratio {n : Nat}
@@ -185,14 +131,14 @@ theorem acceptedRoundedLatticeLaw_almostUniform_of_ratio {n : Nat}
     (P : PolytopeData n) (b : Nat) {eta : Real}
     (hfinite : (codedLatticePoints P b).Finite)
     (hnonempty : (codedLatticePoints P b).Nonempty)
-    (haccept : Arlib.KV97.roundedMeasureLaw mu (acceptedIntegers P b) ≠ 0)
+    (haccept : kv97RoundedMeasureLaw mu (acceptedIntegers P b) ≠ 0)
     (hratio : ∀ z ∈ acceptedIntegers P b,
-      (Arlib.KV97.roundedMeasureLaw mu).real {z} /
-          (Arlib.KV97.roundedMeasureLaw mu).real (acceptedIntegers P b) ∈
+      (kv97RoundedMeasureLaw mu).real {z} /
+          (kv97RoundedMeasureLaw mu).real (acceptedIntegers P b) ∈
         Arlib.relErr eta (1 / (codedLatticePoints P b).ncard)) :
     AlmostUniformPointwise (acceptedRoundedLatticeLaw mu P b)
       (codedLatticePoints P b) eta := by
-  let mur := Arlib.KV97.roundedMeasureLaw mu
+  let mur := kv97RoundedMeasureLaw mu
   have hmur : IsProbabilityMeasure mur :=
     Arlib.KV97.isProbabilityMeasure_roundedMeasureLaw mu
   letI : IsProbabilityMeasure mur := hmur

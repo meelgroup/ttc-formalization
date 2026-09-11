@@ -1,4 +1,5 @@
 import Kr25Ssmxt.Analysis.ScaledPolytopeInball
+import Kr25Ssmxt.Model.Run
 import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Convexity.Polytope
 
 /-!
@@ -16,11 +17,7 @@ open scoped InnerProductSpace
 
 namespace Kr25Ssmxt
 
-/-- The coordinate identity from TTC's product norm to Arlib's Euclidean norm. -/
-def toEuclidean {n : Nat} (x : Point n) : EuclideanSpace Real (Fin n) :=
-  WithLp.toLp 2 x
-
-/-- The inverse coordinate identity. -/
+/-- The inverse coordinate identity, used only in bridge proofs. -/
 def fromEuclidean {n : Nat} (x : EuclideanSpace Real (Fin n)) : Point n :=
   WithLp.ofLp x
 
@@ -35,11 +32,6 @@ def fromEuclidean {n : Nat} (x : EuclideanSpace Real (Fin n)) : Point n :=
 
 @[simp] lemma fromEuclidean_toEuclidean {n : Nat} (x : Point n) :
     fromEuclidean (toEuclidean x) = x := rfl
-
-/-- A TTC facet normal viewed in Arlib's Euclidean-space representation. -/
-def PolytopeData.arlibNormal {n : Nat} (P : PolytopeData n) :
-    Fin P.presentation.facetCount → EuclideanSpace Real (Fin n) :=
-  fun i => toEuclidean (P.presentation.normal i)
 
 /-- TTC's halfspace carrier is exactly Arlib's polytope body. -/
 theorem PolytopeData.image_toEuclidean_carrier {n : Nat} (P : PolytopeData n) :
@@ -86,25 +78,12 @@ theorem PolytopeData.volume_arlib_body_eq_carrier {n : Nat} (P : PolytopeData n)
     MeasureTheory.volume P.carrier
   rw [hpre]
 
-/-- The positive dilation carrying the precision-`b` decimal lattice to `ℤⁿ`. -/
-def decimalScale (b : Nat) : Real := (10 : Real) ^ b
-
 lemma decimalScale_pos (b : Nat) : 0 < decimalScale b := by
   unfold decimalScale
   positivity
 
 lemma decimalScale_ne_zero (b : Nat) : decimalScale b ≠ 0 :=
   (decimalScale_pos b).ne'
-
-/-- Facet offsets of the decimal-dilated body. -/
-def PolytopeData.scaledOffset {n : Nat} (P : PolytopeData n) (b : Nat) :
-    Fin P.presentation.facetCount → Real :=
-  fun i => decimalScale b * P.presentation.offset i
-
-/-- The Arlib body obtained by scaling every point of `P` by `10^b`. -/
-def PolytopeData.scaledBody {n : Nat} (P : PolytopeData n) (b : Nat) :
-    Set (EuclideanSpace Real (Fin n)) :=
-  Arlib.Polytope.body P.arlibNormal (P.scaledOffset b)
 
 /-- Scaling the carrier by `10^b` gives exactly `scaledBody`. -/
 theorem PolytopeData.image_decimalScale_eq_scaledBody {n : Nat} (P : PolytopeData n)

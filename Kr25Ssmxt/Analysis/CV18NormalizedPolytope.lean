@@ -47,11 +47,6 @@ def PolytopeData.arlibBody {n : Nat} (P : PolytopeData n) :
     Set (EuclideanSpace Real (Fin n)) :=
   Arlib.Polytope.body P.arlibNormal P.presentation.offset
 
-/-- Pull the component back along `y ↦ inradius • y + incenter`. -/
-def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
-    Set (EuclideanSpace Real (Fin n)) :=
-  (fun y => P.inradius • y + toEuclidean P.incenter) ⁻¹' P.arlibBody
-
 /-- Facet normals after translating by the certified incenter and scaling the inball to
 unit radius. -/
 def PolytopeData.cv18Normal {n : Nat} (P : PolytopeData n) :

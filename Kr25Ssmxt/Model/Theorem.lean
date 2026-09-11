@@ -76,16 +76,14 @@ theorem ttc_total_runtime_theorem3 {n k : Nat} (hn : 21 ≤ n)
               bounds.volumeOverhead bounds.samplingOverhead := by
   exact PaperRuntime.model_ttc_total_runtime_theorem3 hn F hbounded p prep
 
+#krModelClosureOfType ttc_volume_accuracy
 #krModelClosureOfType ttc_total_runtime_theorem3
 #krSurplusIn Kr25Ssmxt.Model from ttc_volume_accuracy ttc_total_runtime_theorem3 StreamingCoreAccuracy
 
 /-!
-The runtime statement is recursively sealed above.  The accuracy statement deliberately is
-not yet passed to `#krModelClosureOfType`: `communityTTC` fixes the external implementations
-through certified adapter definitions that still live under `Analysis/`.  Separating their
-executable constructors into `Model/Run.lean` while leaving proof-only lemmas under
-`Analysis/` is the remaining dependency-direction step required for the same recursive
-statement seal on `ttc_volume_accuracy`.
+Both public statements are recursively sealed above.  `communityTTC` and every executable
+adapter it unfolds are defined under `Model/`; `Analysis/` is used only to prove the two
+statements.
 -/
 
 #print axioms ttc_volume_accuracy

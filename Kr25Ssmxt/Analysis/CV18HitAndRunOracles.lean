@@ -66,26 +66,38 @@ theorem ttc_volume_accuracy_cv18_hitAndRun
   simpa [cv18HitAndRunOracles, TTCOracles.withNormalizedCV18Volume,
     hitAndRunSamplingOracles] using hregime
 
-/-- The fully concrete oracle bundle: current `arlib-community` CV18 for volume and
-current community Hit-and-Run followed by KV97 rounding/rejection for sampling. -/
-def communityCV18HitAndRunOracles {n k : Nat} (hn : 21 <= n)
-    (prep : TTCPreprocessor n k) : TTCOracles n k :=
-  CommunityCV18.install (by omega) (hitAndRunSamplingOracles hn prep)
-
 theorem communityCV18HitAndRun_volume_contract {n k : Nat} (hn : 21 <= n)
     (prep : TTCPreprocessor n k) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams) :
-    ComputeVolumeContract (communityCV18HitAndRunOracles hn prep) F hbounded params :=
-  CommunityCV18.install_volume_contract (by omega)
-    (hitAndRunSamplingOracles hn prep) F hbounded params
+    ComputeVolumeContract (communityCV18HitAndRunOracles hn prep) F hbounded params := by
+  let D := prep.run F hbounded
+  intro i
+  have hcount : 0 < D.componentCount := lt_of_le_of_lt (Nat.zero_le i) i.isLt
+  have heta0 : 0 < params.epsilonPrime :=
+    div_pos params.epsilon_pos (by norm_num)
+  have heta1 : params.epsilonPrime ≤ 1 := by
+    dsimp only [ApproxParams.epsilonPrime]
+    linarith [params.epsilon_le_one]
+  have hdenom : 0 < (4 * D.componentCount : Real) := by
+    exact_mod_cast Nat.mul_pos (by norm_num : 0 < 4) hcount
+  have hdelta0 : 0 < params.deltaPrime D.componentCount := by
+    exact div_pos params.delta_pos hdenom
+  have hdelta1 : params.deltaPrime D.componentCount ≤ 1 := by
+    dsimp only [ApproxParams.deltaPrime]
+    rw [div_le_iff₀ hdenom]
+    have hcountR : (1 : Real) ≤ D.componentCount := by exact_mod_cast hcount
+    nlinarith [params.delta_le_one]
+  simpa only [communityCV18HitAndRunOracles, hitAndRunSamplingOracles] using
+    CommunityCV18.communityCV18VolumeLaw_spec (by omega) (D.component i)
+      params.epsilonPrime (params.deltaPrime D.componentCount)
+      ⟨heta0, heta1, hdelta0, hdelta1⟩
 
 theorem communityCV18HitAndRun_samples_contract {n k : Nat} (hn : 21 <= n)
     (prep : TTCPreprocessor n k) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams) :
-    GenerateSamplesContract (communityCV18HitAndRunOracles hn prep) F hbounded params :=
-  CommunityCV18.install_samples_contract (by omega)
-    (hitAndRunSamplingOracles hn prep) F hbounded params
-    (hitAndRun_samples_contract hn prep F hbounded params)
+    GenerateSamplesContract (communityCV18HitAndRunOracles hn prep) F hbounded params := by
+  simpa only [communityCV18HitAndRunOracles, GenerateSamplesContract] using
+    hitAndRun_samples_contract hn prep F hbounded params
 
 /-- End-to-end TTC accuracy with both oracle contracts discharged against the current
 `arlib-community` APIs. -/
@@ -106,9 +118,11 @@ theorem ttc_volume_accuracy_communityCV18_hitAndRun
           {estimate | (estimate : Real) ∈
             Arlib.relErr params.epsilon (volume (solutionSet F)).toReal} >=
         1 - params.delta := by
-  exact CommunityCV18.ttc_volume_accuracy hprior (by omega) F hbounded params
-    (hitAndRunSamplingOracles hn prep)
-    (hitAndRun_samples_contract hn prep F hbounded params) hregime
+  apply ttc_volume_accuracy_proof hprior (by omega) F hbounded params
+    (communityCV18HitAndRunOracles hn prep)
+    (communityCV18HitAndRun_volume_contract hn prep F hbounded params)
+    (communityCV18HitAndRun_samples_contract hn prep F hbounded params)
+  exact hregime
 
 #print axioms cv18HitAndRun_volume_contract
 #print axioms cv18HitAndRun_samples_contract
