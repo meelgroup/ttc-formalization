@@ -1,11 +1,11 @@
-import Kr25Ssmxt.Model.Prelude
+import Kr25Ssmxt.Model.Program
 import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
 
 /-!
-# The concrete TTC pseudocode
+# The concrete TTC run
 
-The oracle-parametric TTC engine and its data model live in `Model.Prelude`, below the
-implementation layer.  This audit-facing entry point fixes the two geometric routines to
+The oracle-parametric TTC engine lives in `Model.Program`.  This audit-facing entry point
+fixes its two geometric routines to
 the current arlib-community CV18 volume algorithm and finite-step Hit-and-Run/KV97 sampler.
 -/
 

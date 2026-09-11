@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
-import Kr25Ssmxt.Model.Prelude
+import Kr25Ssmxt.Model.Program
 
 /-!
 # Adapting a normalized CV18 volume law to TTC

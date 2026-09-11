@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Prelude
+import Kr25Ssmxt.Model.Program
 
 /-!
 # Lower per-point intensity bound for one component

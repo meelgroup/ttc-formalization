@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Prelude
+import Kr25Ssmxt.Model.Program
 import Kr25Ssmxt.Analysis.DecimalLatticeComponentComparison
 import Kr25Ssmxt.Analysis.DecimalLatticeUnionComparison
 import Kr25Ssmxt.Analysis.DecompositionLatticePointsEq

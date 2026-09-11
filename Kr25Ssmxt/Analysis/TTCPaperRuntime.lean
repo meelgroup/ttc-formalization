@@ -44,6 +44,16 @@ structure CV18MembershipRun {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
           ArlibCommunity.Algorithms.CV18.protectedLog
             (1 / (CommunityCV18.params hn P eta delta admissible).p)))
 
+/-- The explicit arlib-community schedule cap certified for this CV18 run. -/
+def CV18MembershipRun.scheduleQueryCap {n : Nat} {hn : 3 ≤ n} {P : PolytopeData n}
+    {eta delta : Real} (run : CV18MembershipRun hn P eta delta) : Nat :=
+  Nat.ceil
+    (run.constant *
+      (ArlibCommunity.Algorithms.CV18.volumeScheduledBaseComplexityRate
+          (CommunityCV18.params hn P eta delta run.admissible) *
+        ArlibCommunity.Algorithms.CV18.protectedLog
+          (1 / (CommunityCV18.params hn P eta delta run.admissible).p)))
+
 def CV18MembershipRun.operations {n : Nat} {hn : 3 ≤ n} {P : PolytopeData n}
     {eta delta : Real} (run : CV18MembershipRun hn P eta delta) : Nat :=
   membershipQueryOperations n P.presentation.facetCount run.queryCount
@@ -67,12 +77,7 @@ theorem CV18MembershipRun.operations_le_schedule {n : Nat} {hn : 3 ≤ n}
     {P : PolytopeData n} {eta delta : Real}
     (run : CV18MembershipRun hn P eta delta) :
     run.operations ≤ membershipQueryOperations n P.presentation.facetCount
-      (Nat.ceil
-        (run.constant *
-          (ArlibCommunity.Algorithms.CV18.volumeScheduledBaseComplexityRate
-              (CommunityCV18.params hn P eta delta run.admissible) *
-            ArlibCommunity.Algorithms.CV18.protectedLog
-              (1 / (CommunityCV18.params hn P eta delta run.admissible).p)))) := by
+      run.scheduleQueryCap := by
   unfold CV18MembershipRun.operations membershipQueryOperations
   exact Nat.mul_le_mul_left _ run.queryCount_le
 
@@ -451,6 +456,160 @@ theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
     (theorem3DetailedRuntime_le_headline (by omega) bounds.one_le_rho p.epsilon_pos
       (by positivity) bounds.volumeOverhead_nonneg bounds.samplingOverhead_nonneg)
 
+/-- End-to-end Theorem 3 for the current community implementations.  The CV18 query
+certificate and Hit-and-Run deadline are constructed for every component.  Their exact
+finite maxima, normalized by the two displayed paper kernels, supply the factors hidden by
+the paper's `O` notation; callers no longer provide an oracle-cost hypothesis. -/
+theorem community_ttc_total_runtime_theorem3 {n k : Nat} (hn : 21 ≤ n)
+    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
+    (p : ApproxParams) (prep : TTCPreprocessor n k) :
+    let D := prep.run F hbounded
+    let b := (prep.choosePrecision D p).value
+    ∃ communityCert : CommunityRuntimeCertificate hn D b p,
+      ∃ bounds : TTCRuntime.Theorem3OracleBounds communityCert.toModel
+          (theorem3Rho D) (theorem3RMax D),
+        (communityCert.toModel.operations : Real) ≤
+          theorem3HeadlineCore D.componentCount n (theorem3RMax D) (theorem3Rho D) *
+            theorem3SuppressedFactor p.epsilon (sampleCap p D.componentCount)
+              bounds.volumeOverhead bounds.samplingOverhead := by
+  let D := prep.run F hbounded
+  let b := (prep.choosePrecision D p).value
+  change ∃ communityCert : CommunityRuntimeCertificate hn D b p,
+    ∃ bounds : TTCRuntime.Theorem3OracleBounds communityCert.toModel
+        (theorem3Rho D) (theorem3RMax D),
+      (communityCert.toModel.operations : Real) ≤
+        theorem3HeadlineCore D.componentCount n (theorem3RMax D) (theorem3Rho D) *
+          theorem3SuppressedFactor p.epsilon (sampleCap p D.componentCount)
+            bounds.volumeOverhead bounds.samplingOverhead
+  obtain ⟨communityCert⟩ := ttc_membership_runtime_certificate hn F hbounded p prep
+  let cert := communityCert.toModel
+  let rho := theorem3Rho D
+  let rMax := theorem3RMax D
+  let volumeKernel := theorem3VolumeKernel n rho p.epsilon
+  let samplingKernel := theorem3SamplingKernel n rho
+  have hn0 : 0 < n := by omega
+  have hnR : (0 : Real) < n := by exact_mod_cast hn0
+  have hrho : 1 ≤ rho := by
+    unfold rho theorem3Rho
+    exact le_max_left _ _
+  have hrho0 : 0 < rho := lt_of_lt_of_le zero_lt_one hrho
+  have hvolumeKernel : 0 < volumeKernel := by
+    unfold volumeKernel theorem3VolumeKernel
+    apply div_pos
+    · exact lt_of_lt_of_le (pow_pos hnR 4) (le_max_right _ _)
+    · exact sq_pos_of_pos p.epsilon_pos
+  have hsamplingKernel : 0 < samplingKernel := by
+    unfold samplingKernel theorem3SamplingKernel
+    positivity
+  let volumeLocal : Fin D.componentCount → NNReal := fun i =>
+    Real.toNNReal
+      ((membershipQueryOperations n 1 (communityCert.volume i).scheduleQueryCap : Real) /
+        volumeKernel)
+  let samplingLocal : Fin D.componentCount → NNReal := fun i =>
+    Real.toNNReal
+      ((acceptedSampleOperations n 1 (communityCert.sampler i).steps : Real) /
+        samplingKernel)
+  let volumeOverhead : NNReal := Finset.univ.sup volumeLocal
+  let samplingOverhead : NNReal := Finset.univ.sup samplingLocal
+  have volumeLocal_le (i : Fin D.componentCount) :
+      ((membershipQueryOperations n 1
+          (communityCert.volume i).scheduleQueryCap : Real) / volumeKernel) ≤
+        (volumeOverhead : Real) := by
+    have hnonneg : 0 ≤
+        ((membershipQueryOperations n 1
+          (communityCert.volume i).scheduleQueryCap : Real) / volumeKernel) := by
+      positivity
+    rw [← Real.coe_toNNReal _ hnonneg]
+    exact_mod_cast (Finset.le_sup (f := volumeLocal) (Finset.mem_univ i))
+  have samplingLocal_le (i : Fin D.componentCount) :
+      ((acceptedSampleOperations n 1 (communityCert.sampler i).steps : Real) /
+          samplingKernel) ≤ (samplingOverhead : Real) := by
+    have hnonneg : 0 ≤
+        ((acceptedSampleOperations n 1 (communityCert.sampler i).steps : Real) /
+          samplingKernel) := by
+      positivity
+    rw [← Real.coe_toNNReal _ hnonneg]
+    exact_mod_cast (Finset.le_sup (f := samplingLocal) (Finset.mem_univ i))
+  let bounds : TTCRuntime.Theorem3OracleBounds cert rho rMax :=
+    { one_le_rho := hrho
+      volumeOverhead := volumeOverhead
+      volumeOverhead_nonneg := by positivity
+      samplingOverhead := samplingOverhead
+      samplingOverhead_nonneg := by positivity
+      facets_le := fun i => by
+        unfold rMax theorem3RMax
+        exact Finset.le_sup (f := fun j : Fin D.componentCount =>
+          (D.component j).presentation.facetCount) (Finset.mem_univ i)
+      volume_operations_le := fun i => by
+        let run := communityCert.volume i
+        have hquery : run.queryCount ≤ run.scheduleQueryCap := run.queryCount_le
+        have hqueryOps :
+            (membershipQueryOperations n (D.component i).presentation.facetCount
+              run.queryCount : Real) ≤
+            (membershipQueryOperations n (D.component i).presentation.facetCount
+              run.scheduleQueryCap : Real) := by
+          exact_mod_cast Nat.mul_le_mul_left
+            (n * (D.component i).presentation.facetCount) hquery
+        calc
+          (membershipQueryOperations n (D.component i).presentation.facetCount
+              (cert.volumeQueryCount i) : Real) ≤
+              (membershipQueryOperations n (D.component i).presentation.facetCount
+                run.scheduleQueryCap : Real) := by
+                  simpa [cert, CommunityRuntimeCertificate.toModel, run] using hqueryOps
+          _ = ((D.component i).presentation.facetCount : Real) *
+              (((membershipQueryOperations n 1 run.scheduleQueryCap : Real) /
+                volumeKernel)) * volumeKernel := by
+                  rw [mul_assoc, div_mul_cancel₀ _ hvolumeKernel.ne']
+                  simp [membershipQueryOperations]
+                  ring
+          _ ≤ ((D.component i).presentation.facetCount : Real) *
+              (volumeOverhead : Real) * volumeKernel := by
+                gcongr
+                simpa [run] using volumeLocal_le i
+          _ = ((D.component i).presentation.facetCount : Real) *
+              (volumeOverhead : Real) * theorem3VolumeKernel n rho p.epsilon := by
+                rfl
+      sample_operations_le := fun i => by
+        let run := communityCert.sampler i
+        calc
+          (acceptedSampleOperations n (D.component i).presentation.facetCount
+              (cert.samplerStepCount i) : Real) =
+              ((D.component i).presentation.facetCount : Real) *
+                (((acceptedSampleOperations n 1 run.steps : Real) /
+                  samplingKernel)) * samplingKernel := by
+                    rw [mul_assoc, div_mul_cancel₀ _ hsamplingKernel.ne']
+                    simp [cert, CommunityRuntimeCertificate.toModel, run,
+                      acceptedSampleOperations, membershipQueryOperations]
+                    ring
+          _ ≤ ((D.component i).presentation.facetCount : Real) *
+              (samplingOverhead : Real) * samplingKernel := by
+                gcongr
+                simpa [run] using samplingLocal_le i
+          _ = ((D.component i).presentation.facetCount : Real) *
+              (samplingOverhead : Real) * theorem3SamplingKernel n rho := by
+                rfl }
+  refine ⟨communityCert, bounds, ?_⟩
+  exact ttc_total_runtime_theorem3 (hn := hn) cert bounds
+
+/-- Model-facing corollary of `community_ttc_total_runtime_theorem3`.  It erases the
+implementation fields only after the concrete CV18 `MembershipCostBound` and Hit-and-Run
+deadline have been used to construct the public certificate and its bounds. -/
+theorem model_ttc_total_runtime_theorem3 {n k : Nat} (hn : 21 ≤ n)
+    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
+    (p : ApproxParams) (prep : TTCPreprocessor n k) :
+    let D := prep.run F hbounded
+    ∃ cert : TTCRuntime.TTCMembershipRuntimeCertificate D p,
+      ∃ bounds : TTCRuntime.Theorem3OracleBounds cert
+          (theorem3Rho D) (theorem3RMax D),
+        (cert.operations : Real) ≤
+          theorem3HeadlineCore D.componentCount n (theorem3RMax D) (theorem3Rho D) *
+            theorem3SuppressedFactor p.epsilon (sampleCap p D.componentCount)
+              bounds.volumeOverhead bounds.samplingOverhead := by
+  dsimp only
+  obtain ⟨communityCert, bounds, hbound⟩ :=
+    community_ttc_total_runtime_theorem3 hn F hbounded p prep
+  exact ⟨communityCert.toModel, bounds, hbound⟩
+
 /-- Accuracy and the paper-level membership-operation certificate for the same concrete
 CV18/Hit-and-Run TTC instance. -/
 theorem ttc_accuracy_and_membership_runtime
@@ -483,6 +642,8 @@ theorem ttc_accuracy_and_membership_runtime
 #print axioms certificate_operations_le_theorem3Detailed
 #print axioms theorem3DetailedRuntime_le_headline
 #print axioms ttc_total_runtime_theorem3
+#print axioms community_ttc_total_runtime_theorem3
+#print axioms model_ttc_total_runtime_theorem3
 #print axioms ttc_accuracy_and_membership_runtime
 
 end PaperRuntime

@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Prelude
+import Kr25Ssmxt.Model.Program
 import Mathlib.Analysis.Complex.ExponentialBounds
 
 /-!

@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Prior
+import Kr25Ssmxt.Model.Program
 import Kr25Ssmxt.Analysis.PoissonUnitNotHalfAccurate
 
 /-!

@@ -1,11 +1,12 @@
-import Kr25Ssmxt.Model.Prior
-import Kr25Ssmxt.Model.Pseudocode
+import Kr25Ssmxt.Model.Run
 import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
 import Kr25Ssmxt.Analysis.TTCPaperRuntime
 
 namespace Kr25Ssmxt
 
 /-!
+# The public TTC theorems
+
 The headline is stated for the measure-valued law of the on-disk algorithm.  The model
 repairs two defects exposed by formalization: fresh Poisson counts use the multiplicative
 mean `t * p`, and the invalid low-count concentration step is excluded by a public
@@ -49,28 +50,44 @@ theorem ttc_volume_accuracy
     hprior hn F hbounded params prep hregime
 
 /--
-The public audit-surface statement of Theorem 3 (`thm:runtime`).  In the paper's
-membership-query real-RAM cost model, the certified geometric-oracle operations are at
-most `m n^5 rho^2 r_max` times the displayed factors suppressed by its `O` notation.
+The public audit-surface statement of Theorem 3 (`thm:runtime`).  For the decomposition
+actually produced by TTC, the current arlib-community CV18 implementation and finite-step
+Hit-and-Run/KV97 sampler produce a membership-operation certificate satisfying the paper's
+`m n^5 rho^2 r_max` bound.  Here `rho` and `r_max` are the finite maxima computed from that
+decomposition, and the two overheads are the finite maxima of the exact community schedule
+and mixing costs after normalization by the displayed paper kernels.
 
-The certificate uses the current arlib-community CV18 implementation for volume and the
-finite-step Hit-and-Run/KV97 implementation for sampling.
+In particular, the caller supplies neither query/step counts nor an oracle-cost bound.
 
 PAPER: sections/analysis.tex:52-72
 -/
-theorem ttc_total_runtime_theorem3 {n k : Nat} {hn : 21 ≤ n}
-    {F : LRAFormula n k} {D : Decomposition F} {p : ApproxParams}
-    (cert : TTCRuntime.TTCMembershipRuntimeCertificate D p)
-    {rho : Real} {rMax : Nat}
-    (bounds : TTCRuntime.Theorem3OracleBounds cert rho rMax) :
-    (cert.operations : Real) ≤
-      TTCRuntime.theorem3HeadlineCore D.componentCount n rMax rho *
-        TTCRuntime.theorem3SuppressedFactor p.epsilon
-          (TTCRuntime.sampleCap p D.componentCount)
-          bounds.volumeOverhead bounds.samplingOverhead := by
-  exact PaperRuntime.ttc_total_runtime_theorem3 (hn := hn) cert bounds
+theorem ttc_total_runtime_theorem3 {n k : Nat} (hn : 21 ≤ n)
+    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
+    (p : ApproxParams) (prep : TTCPreprocessor n k) :
+    let D := prep.run F hbounded
+    ∃ cert : TTCRuntime.TTCMembershipRuntimeCertificate D p,
+      ∃ bounds : TTCRuntime.Theorem3OracleBounds cert
+          (TTCRuntime.theorem3Rho D) (TTCRuntime.theorem3RMax D),
+        (cert.operations : Real) ≤
+          TTCRuntime.theorem3HeadlineCore D.componentCount n
+              (TTCRuntime.theorem3RMax D) (TTCRuntime.theorem3Rho D) *
+            TTCRuntime.theorem3SuppressedFactor p.epsilon
+              (TTCRuntime.sampleCap p D.componentCount)
+              bounds.volumeOverhead bounds.samplingOverhead := by
+  exact PaperRuntime.model_ttc_total_runtime_theorem3 hn F hbounded p prep
 
-#modelClosureOfType ttc_total_runtime_theorem3
+#krModelClosureOfType ttc_total_runtime_theorem3
+#krSurplusIn Kr25Ssmxt.Model from ttc_volume_accuracy ttc_total_runtime_theorem3 StreamingCoreAccuracy
+
+/-!
+The runtime statement is recursively sealed above.  The accuracy statement deliberately is
+not yet passed to `#krModelClosureOfType`: `communityTTC` fixes the external implementations
+through certified adapter definitions that still live under `Analysis/`.  Separating their
+executable constructors into `Model/Run.lean` while leaving proof-only lemmas under
+`Analysis/` is the remaining dependency-direction step required for the same recursive
+statement seal on `ttc_volume_accuracy`.
+-/
+
 #print axioms ttc_volume_accuracy
 #print axioms ttc_total_runtime_theorem3
 

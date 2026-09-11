@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.ArlibPolytopeBridge
-import Kr25Ssmxt.Model.Prelude
+import Kr25Ssmxt.Model.Program
 import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.Rounding.RoundLaw
 import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.MarkovChains.Continuous.PointwiseRoute
 
