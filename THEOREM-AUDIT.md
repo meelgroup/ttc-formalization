@@ -4,6 +4,12 @@
 `Kr25Ssmxt/Analysis/`. `#krModelClosureOfType` checks that both public theorem
 statements unfold only through `Model/` definitions.
 
+`Model/Theorem.lean` now declares exactly two theorems: the older conditional
+accuracy theorem and the corrected expected-runtime theorem. The intermediate
+runtime inequalities are in `Analysis/ManuscriptRuntimeBounds.lean`. The
+accuracy declaration still concerns the older TTC core; it must be replaced
+after proving the current manuscript program's stochastic lattice-count lemma.
+
 ## Theorem 1 (`sections/analysis.tex`, `thm:volumettc`)
 
 `ttc_volume_accuracy` is a conditional accuracy theorem, not yet the manuscript's
@@ -14,6 +20,11 @@ hypothesis, not an axiom silently introduced by Lean. The remaining streaming
 result must be proved, and the input domain of the manuscript statement must be
 made precise: an unbounded solution set can have infinite volume while TTC returns
 a finite `NNReal` estimate.
+`ManuscriptEmptyAccuracy.lean` proves the empty-decomposition branch for the
+current program, and `ManuscriptLatticeAccuracy.lean` proves the deterministic
+step from a lattice-count guarantee to volume accuracy for any probability
+output law. The nonempty adaptive Poisson invariant and concentration bound
+remain open.
 
 ## Theorem 3 (`sections/analysis.tex`, `thm:runtime`)
 
