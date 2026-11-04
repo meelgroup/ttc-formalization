@@ -24,7 +24,7 @@ private theorem dist_homothety_apply (c : EuclideanSpace Real (Fin n)) (k : Real
   rw [show (k • (p - c) + c) - (k • (q - c) + c) = k • (p - q) by module,
     norm_smul, Real.norm_eq_abs]
 
-private theorem dist_le_of_mem_inflated {n : Nat} {ι : Type*}
+theorem dist_le_of_mem_inflated {n : Nat} {ι : Type*}
     {A : ι → EuclideanSpace Real (Fin n)} {b : ι → Real}
     {c : EuclideanSpace Real (Fin n)} {gamma D cp r : Real}
     (hgamma : 0 < gamma) (hcp : 0 ≤ cp)
@@ -46,7 +46,7 @@ private theorem dist_le_of_mem_inflated {n : Nat} {ι : Type*}
 /-- Compatibility wrapper for the former `HitAndRunFromInball` API.  It proves that
 the uniform law on an included unit ball is a warm start, then invokes the current
 community Hit-and-Run theorem. -/
-private theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
+theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace Real (Fin n))}
     (hKc : Convex Real K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K) {z : EuclideanSpace Real (Fin n)}

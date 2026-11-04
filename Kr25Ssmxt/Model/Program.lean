@@ -270,6 +270,182 @@ def ttc {n k : Nat} (F : LRAFormula n k)
       (params.threshold D.componentCount) (List.ofFn D.component) (TTCState.initial n)).map
         TTCState.estimate
 
+/-! ## TTC as printed in the current manuscript
+
+The older `ttc` core above remains the subject of the existing streaming proof chain.
+The definitions below give the changed algorithm its own law, so that a theorem about
+the older core cannot be mistaken for a theorem about the manuscript program. -/
+
+/-- The first while guard becomes false after this many rate halvings. -/
+def manuscriptRateExit {n : Nat} (s : TTCState n) (intensity : NNReal)
+    (threshold : Real) : Nat :=
+  sInf {rounds : Nat |
+    ((intensity * s.rate / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}
+
+/-- The manuscript's rate loop thins stored copies before drawing the Poisson count. -/
+def manuscriptRateThinningResult {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real) (coins : Nat × Nat → Bool) : TTCState n :=
+  let rounds := manuscriptRateExit s intensity threshold
+  { rate := s.rate / (2 : NNReal) ^ rounds
+    samples := samplesAfter coins rounds s.samples
+    nextLabel := s.nextLabel }
+
+def manuscriptRateThinUntil {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real) : Measure (TTCState n) :=
+  fairCoinStreamLaw.map (manuscriptRateThinningResult s intensity threshold)
+
+/-- An upper charge for the first loop: each round visits at most the copies
+present at entry, and performs its guard and rate update. -/
+def manuscriptRateThinningCost {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real) : Nat :=
+  manuscriptRateExit s intensity threshold *
+    TTCRuntime.rateThinningRoundOperations s.samples.card
+
+/-- The first loop with its charged rounds retained in the result. -/
+def manuscriptRateThinWithCost {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real) : Measure (TTCState n × Nat) :=
+  fairCoinStreamLaw.map fun coins =>
+    (manuscriptRateThinningResult s intensity threshold coins,
+      manuscriptRateThinningCost s intensity threshold)
+
+/-- An upper charge for the second loop. The pending count is represented by
+one binomial draw per round, regardless of its numeric value. -/
+def manuscriptCountThinningCost {n : Nat} (s : TTCState n) (pending : Nat)
+    (threshold : Real) (coins : Nat × Nat → Bool) : Nat :=
+  firstExitRound s pending threshold coins *
+    TTCRuntime.countThinningRoundOperations s.samples.card
+
+/-- The existing second-loop law with its charged rounds retained. -/
+def manuscriptCountThinWithCost {n : Nat} (s : TTCState n) (pending : Nat)
+    (threshold : Real) : Measure ((TTCState n × Nat) × Nat) :=
+  fairCoinStreamLaw.map fun coins =>
+    (thinningResult s pending threshold coins,
+      manuscriptCountThinningCost s pending threshold coins)
+
+/-- Compose two charged random computations, adding their operation counts. -/
+def costedBind {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (first : Measure (α × Nat)) (next : α → Measure (β × Nat)) :
+    Measure (β × Nat) :=
+  first.bind fun result =>
+    (next result.1).map fun continuation =>
+      (continuation.1, result.2 + continuation.2)
+
+/-- Add a fixed real-RAM charge to a random computation. -/
+def costedCharge {α : Type*} [MeasurableSpace α]
+    (law : Measure α) (operations : Nat) : Measure (α × Nat) :=
+  law.map fun result => (result, operations)
+
+/-- The scaled volume estimate `t = Threshold * 10^(b*n) * VolED(P)`. -/
+def manuscriptIntensity (b n : Nat) (threshold : Real) (volumeEstimate : NNReal) : NNReal :=
+  Real.toNNReal threshold * (10 : NNReal) ^ (b * n) * volumeEstimate
+
+/-- The manuscript output `|X| / (p * Threshold * 10^(b*n))`. -/
+def manuscriptEstimate {n : Nat} (b : Nat) (threshold : Real)
+    (s : TTCState n) : NNReal :=
+  (s.samples.card : NNReal) /
+    (s.rate * Real.toNNReal threshold * (10 : NNReal) ^ (b * n))
+
+/-- One manuscript component: delete, rate-thin, draw Poisson, count-thin, sample, append. -/
+def manuscriptProcessComponent {n k : Nat} (O : TTCOracles n k) (b : Nat)
+    (epsilonPrime deltaPrime threshold : Real) (P : PolytopeData n)
+    (state : TTCState n) : Measure (TTCState n) :=
+  (O.computeVolume P epsilonPrime deltaPrime).bind fun volumeOutcome =>
+    let intensity := manuscriptIntensity b n threshold volumeOutcome.2
+    let withoutDuplicates := state.removeComponent P
+    (manuscriptRateThinUntil withoutDuplicates intensity threshold).bind fun firstThinned =>
+      (ProbabilityTheory.poissonMeasure (intensity * firstThinned.rate)).bind fun pending =>
+        (thinUntil firstThinned pending threshold).bind fun secondThinned =>
+          (O.generateSamples P secondThinned.2 b epsilonPrime deltaPrime).map fun batch =>
+            secondThinned.1.addBatch batch.2
+
+def manuscriptProcessComponents {n k : Nat} (O : TTCOracles n k) (b : Nat)
+    (epsilonPrime deltaPrime threshold : Real) :
+    List (PolytopeData n) → TTCState n → Measure (TTCState n)
+  | [], state => Measure.dirac state
+  | P :: rest, state =>
+      (manuscriptProcessComponent O b epsilonPrime deltaPrime threshold P state).bind
+        (manuscriptProcessComponents O b epsilonPrime deltaPrime threshold rest)
+
+/-- Current Algorithm 1, apart from the certified preprocessing and clipped oracle adapter. -/
+def manuscriptTTC {n k : Nat} (F : LRAFormula n k)
+    (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
+    (O : TTCOracles n k) : Measure NNReal :=
+  let D := O.preprocessing.run F hbounded
+  if D.componentCount = 0 then
+    Measure.dirac 0
+  else
+    let b := (O.preprocessing.choosePrecision D params).value
+    let threshold := params.threshold D.componentCount
+    (manuscriptProcessComponents O b params.epsilonPrime
+      (params.deltaPrime D.componentCount) threshold
+      (List.ofFn D.component) (TTCState.initial n)).map
+        (manuscriptEstimate b threshold)
+
+/-! ## The same manuscript control flow with operation counts -/
+
+/-- Charged implementations of TTC's two geometric oracle calls. -/
+structure CostedTTCOracles (n k : Nat) where
+  base : TTCOracles n k
+  computeVolumeWithCost : (P : PolytopeData n) → Real → Real →
+    Measure (VolumeOutcome × Nat)
+  generateSamplesWithCost : (P : PolytopeData n) → (count b : Nat) →
+    Real → Real → Measure (SampleBatch n count × Nat)
+
+/-- One charged manuscript component, using the fixed real-RAM charges in `Prelude`.
+The oracle fields retain their own charges, including retries. -/
+def manuscriptProcessComponentWithCost {n k : Nat} (O : CostedTTCOracles n k)
+    (b : Nat) (epsilonPrime deltaPrime threshold : Real) (P : PolytopeData n)
+    (state : TTCState n) : Measure (TTCState n × Nat) :=
+  costedBind (O.computeVolumeWithCost P epsilonPrime deltaPrime) fun volumeOutcome =>
+    let intensity := manuscriptIntensity b n threshold volumeOutcome.2
+    let withoutDuplicates := state.removeComponent P
+    let deletionCost := TTCRuntime.deletionPassOperations n
+      P.presentation.facetCount state.samples.card
+        (state.samples.card - withoutDuplicates.samples.card)
+    costedBind (costedCharge (Measure.dirac withoutDuplicates) deletionCost)
+      fun deleted =>
+        costedBind (manuscriptRateThinWithCost deleted intensity threshold)
+          fun firstThinned =>
+            costedBind
+              (costedCharge
+                (ProbabilityTheory.poissonMeasure (intensity * firstThinned.rate))
+                TTCRuntime.poissonDrawOperations)
+              fun pending =>
+                costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                  fun secondThinned =>
+                    costedBind
+                      (O.generateSamplesWithCost P secondThinned.2 b epsilonPrime deltaPrime)
+                      fun batch =>
+                        costedCharge (Measure.dirac (secondThinned.1.addBatch batch.2))
+                          (secondThinned.2 * TTCRuntime.appendCopyOperations)
+
+/-- The charged component sequence retains the manuscript's component order. -/
+def manuscriptProcessComponentsWithCost {n k : Nat} (O : CostedTTCOracles n k)
+    (b : Nat) (epsilonPrime deltaPrime threshold : Real) :
+    List (PolytopeData n) → TTCState n → Measure (TTCState n × Nat)
+  | [], state => Measure.dirac (state, 0)
+  | P :: rest, state =>
+      costedBind
+        (manuscriptProcessComponentWithCost O b epsilonPrime deltaPrime threshold P state)
+        (manuscriptProcessComponentsWithCost O b epsilonPrime deltaPrime threshold rest)
+
+/-- A charged TTC law whose first coordinate is the manuscript estimate. -/
+def manuscriptTTCWithCost {n k : Nat} (F : LRAFormula n k)
+    (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
+    (O : CostedTTCOracles n k) (preprocessingOperations : Nat) :
+    Measure (NNReal × Nat) :=
+  let D := O.base.preprocessing.run F hbounded
+  if D.componentCount = 0 then
+    Measure.dirac (0, preprocessingOperations)
+  else
+    let b := (O.base.preprocessing.choosePrecision D params).value
+    let threshold := params.threshold D.componentCount
+    (manuscriptProcessComponentsWithCost O b params.epsilonPrime
+      (params.deltaPrime D.componentCount) threshold
+      (List.ofFn D.component) (TTCState.initial n)).map
+        fun result => (manuscriptEstimate b threshold result.1,
+          preprocessingOperations + result.2)
+
 /--
 The nontrivial probabilistic result supplied by the Poissonized finite-union streaming
 analysis.  It is restricted to the regime in which the initial scaled lattice volume is
@@ -306,6 +482,7 @@ def StreamingCoreAccuracy
       1 - params.delta
 
 #krModelClosure ttc
+#krModelClosure manuscriptTTC
 
 end Kr25Ssmxt
 
@@ -326,6 +503,7 @@ structure Prior : Prop where
       (params : ApproxParams) (O : TTCOracles n k),
       StreamingCoreAccuracy F hbounded params O
 
-#krSurplusIn Kr25Ssmxt.Model.Program from ttc StreamingCoreAccuracy Prior
+#krSurplusIn Kr25Ssmxt.Model.Program from ttc manuscriptTTC StreamingCoreAccuracy Prior
+  manuscriptRateThinWithCost manuscriptCountThinWithCost
 
 end Kr25Ssmxt

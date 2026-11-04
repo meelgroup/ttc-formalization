@@ -248,12 +248,54 @@ real-arithmetic operations in the paper's cost model. -/
 def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
   dimension * facets * queries
 
+/-- One CV18 membership call or one Hit-and-Run chord step scans the facet
+presentation in dimension `n`. -/
+def facetScanOperations (dimension facets : Nat) : Nat := dimension * facets
+
+/-- Arithmetic to round one proposed point coordinatewise. -/
+def roundPointOperations (dimension : Nat) : Nat := dimension
+
+/-- One final acceptance test after rounding is another facet scan. -/
+def rejectionTestOperations (dimension facets : Nat) : Nat :=
+  facetScanOperations dimension facets
+
+/-- Unit-cost primitive operations in the requested real-RAM accounting model. -/
+def deleteCopyOperations : Nat := 1
+def fairCoinOperations : Nat := 1
+def poissonDrawOperations : Nat := 1
+def binomialDrawOperations : Nat := 1
+def appendCopyOperations : Nat := 1
+def scalarOperationCost : Nat := 1
+
+/-- Deleting stored copies tests each one against the current polytope and
+charges one additional operation for each copy actually removed. -/
+def deletionPassOperations (dimension facets checked removed : Nat) : Nat :=
+  checked * facetScanOperations dimension facets +
+    removed * deleteCopyOperations
+
+/-- A rate-thinning round flips one coin for each stored copy; the two scalar
+operations cover the guard and rate update. -/
+def rateThinningRoundOperations (stored : Nat) : Nat :=
+  stored * fairCoinOperations + 2 * scalarOperationCost
+
+/-- A count-thinning round also draws one binomial count; its cost does not
+depend on the pending count represented by that draw. -/
+def countThinningRoundOperations (stored : Nat) : Nat :=
+  stored * fairCoinOperations + binomialDrawOperations +
+    2 * scalarOperationCost
+
+/-- Per rejected or accepted sampler attempt, before multiplying by its
+random number of attempts. -/
+def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
+  steps * facetScanOperations dimension facets +
+    roundPointOperations dimension + rejectionTestOperations dimension facets
+
 /-- Cost of one accepted sample: its Hit-and-Run transitions and final membership test,
 multiplied by the integer upper bound `2` on the paper's expected rejection count. -/
 def acceptedSampleOperations (dimension facets steps : Nat) : Nat :=
   2 * membershipQueryOperations dimension facets (steps + 1)
 
-/-- Model-level trace of TTC's geometric calls. -/
+/-- Concrete membership-query and walk-step budgets for TTC's geometric calls. -/
 structure TTCMembershipRuntimeCertificate {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) where
   volumeQueryCount : Fin D.componentCount → Nat
@@ -274,6 +316,16 @@ def TTCMembershipRuntimeCertificate.operations {n k : Nat} {F : LRAFormula n k}
         acceptedSampleOperations n (D.component i).presentation.facetCount
           (cert.samplerStepCount i))
 
+/-- Assumed allowance for CV18 arithmetic outside its charged membership oracle.
+`Qᵢ + 1` also covers a run with no membership call. The factor is a public
+hypothesis, not a bound supplied by the imported CV18 theorem. -/
+def TTCMembershipRuntimeCertificate.cv18NonQueryAllowance {n k : Nat}
+    {F : LRAFormula n k} {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCMembershipRuntimeCertificate D p) (factor : Nat) : Nat :=
+  ∑ i : Fin D.componentCount,
+    factor * membershipQueryOperations n (D.component i).presentation.facetCount
+      (cert.volumeQueryCount i + 1)
+
 /-- Volume kernel in Theorem 3 before facets and suppressed factors. -/
 def theorem3VolumeKernel (n : Nat) (rho epsilon : Real) : Real :=
   max ((n : Real) ^ 3 * rho ^ 2) ((n : Real) ^ 4) / epsilon ^ 2
@@ -286,6 +338,18 @@ def theorem3SamplingKernel (n : Nat) (rho : Real) : Real :=
 def theorem3RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
   Finset.univ.sup fun i : Fin D.componentCount =>
     (D.component i).presentation.facetCount
+
+/-- The largest outer-radius certificate used by the corrected TTC runtime
+statement. The empty family has radius zero. -/
+noncomputable def theorem3OuterRadiusMax {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) : Real :=
+  ((Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal (D.component i).outerRadius : NNReal) : Real)
+
+/-- The explicit precision and scale factor omitted from the printed
+Theorem 3. -/
+def theorem3PrecisionScale (b : Nat) (outerRadiusMax : Real) : Real :=
+  1 + b + max 0 (Real.log outerRadiusMax)
 
 /-- The paper's common radius ratio `ρ = maxᵢ Rᵢ / γᵢ`, protected below by one.
 The `NNReal` finite supremum gives the empty decomposition the canonical value zero before
@@ -304,26 +368,27 @@ def theorem3SuppressedFactor (epsilon threshold volumeOverhead samplingOverhead 
 def theorem3HeadlineCore (componentCount n rMax : Nat) (rho : Real) : Real :=
   (componentCount : Real) * (n : Real) ^ 5 * rho ^ 2 * rMax
 
-/-- Componentwise oracle estimates assumed by the model-level statement of Theorem 3. -/
-structure Theorem3OracleBounds {n k : Nat} {F : LRAFormula n k}
+/-- The exact finite maximum of the concrete volume-query budgets, normalized by the
+volume kernel displayed in Theorem 3.  This is data computed from `cert`, not an oracle
+estimate supplied as a hypothesis. -/
+noncomputable def theorem3VolumeOverhead {n k : Nat} {F : LRAFormula n k}
     {D : Decomposition F} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate D p) (rho : Real) (rMax : Nat) where
-  one_le_rho : 1 ≤ rho
-  volumeOverhead : Real
-  volumeOverhead_nonneg : 0 ≤ volumeOverhead
-  samplingOverhead : Real
-  samplingOverhead_nonneg : 0 ≤ samplingOverhead
-  facets_le : ∀ i, (D.component i).presentation.facetCount ≤ rMax
-  volume_operations_le : ∀ i,
-    (membershipQueryOperations n (D.component i).presentation.facetCount
-        (cert.volumeQueryCount i) : Real) ≤
-      ((D.component i).presentation.facetCount : Real) * volumeOverhead *
-        theorem3VolumeKernel n rho p.epsilon
-  sample_operations_le : ∀ i,
-    (acceptedSampleOperations n (D.component i).presentation.facetCount
-        (cert.samplerStepCount i) : Real) ≤
-      ((D.component i).presentation.facetCount : Real) * samplingOverhead *
-        theorem3SamplingKernel n rho
+    (cert : TTCMembershipRuntimeCertificate D p) (rho : Real) : Real :=
+  (Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal
+      ((membershipQueryOperations n 1 (cert.volumeQueryCount i) : Real) /
+        theorem3VolumeKernel n rho p.epsilon) : NNReal)
+
+/-- The exact finite maximum of the concrete sampling budgets, normalized by the
+per-sample kernel displayed in Theorem 3.  This is data computed from `cert`, not an
+oracle estimate supplied as a hypothesis. -/
+noncomputable def theorem3SamplingOverhead {n k : Nat} {F : LRAFormula n k}
+    {D : Decomposition F} {p : ApproxParams}
+    (cert : TTCMembershipRuntimeCertificate D p) (rho : Real) : Real :=
+  (Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal
+      ((acceptedSampleOperations n 1 (cert.samplerStepCount i) : Real) /
+        theorem3SamplingKernel n rho) : NNReal)
 
 end TTCRuntime
 

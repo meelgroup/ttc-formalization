@@ -1,5 +1,6 @@
 import Kr25Ssmxt.Analysis.GeometricOracleDischarge
 import Kr25Ssmxt.Analysis.KV97HitAndRunSampling
+import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
 
 /-!
 # A TTC sampling oracle implemented by Hit-and-Run and KV97 rounding
@@ -152,6 +153,53 @@ theorem hitAndRun_samples_contract {n k : Nat} (hn : 21 ≤ n)
       exact div_nonneg params.delta_pos.le (by positivity)
     simp [Measure.real, iidSampleBatchLaw_false pointLaw, hdelta]
   simpa only [hitAndRunSamplingOracles, D, choice, b, dif_pos hroute, pointLaw]
+    using hmain
+
+/-- The manuscript run uses the normalized walk, with the same batch contract. -/
+theorem manuscript_hitAndRun_samples_contract {n k : Nat} (hn : 21 ≤ n)
+    (prep : TTCPreprocessor n k) (F : LRAFormula n k)
+    (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams) :
+    GenerateSamplesContract (communityManuscriptOracles hn prep) F hbounded params := by
+  let D := prep.run F hbounded
+  let choice := prep.choosePrecision D params
+  let b := choice.value
+  intro i count
+  have hn0 : 0 < n := lt_of_lt_of_le (by norm_num) hn
+  have heta0 : 0 < params.epsilonPrime :=
+    div_pos params.epsilon_pos (by norm_num)
+  have heta1 : params.epsilonPrime ≤ 1 := by
+    dsimp only [ApproxParams.epsilonPrime]
+    linarith [params.epsilon_le_one]
+  have hset := coded_lattice_points_finite_nonempty hn0 D params b choice.adequate i
+  have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
+    (one_le_samplerRadiusRequirement hn0 (D.component i) heta0 heta1).trans
+      ((le_max_right _ _).trans (choice.adequate i))
+  let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b hunit
+    params.epsilonPrime heta0 heta1 hset.1 hset.2
+  have halmost : AlmostUniformPointwise pointLaw
+      (codedLatticePoints (D.component i) b) params.epsilonPrime := by
+    exact (D.component i).normalizedHitAndRun_latticePointLaw hn b hunit
+      heta0 heta1 hset.1 hset.2
+  letI : IsProbabilityMeasure pointLaw := halmost.1
+  have hroute : 1 ≤ decimalScale b * (D.component i).inradius ∧
+      0 < params.epsilonPrime ∧ params.epsilonPrime ≤ 1 ∧
+      (codedLatticePoints (D.component i) b).Finite ∧
+      (codedLatticePoints (D.component i) b).Nonempty :=
+    ⟨hunit, heta0, heta1, hset.1, hset.2⟩
+  have hmain : IsProbabilityMeasure (iidSampleBatchLaw (count := count) pointLaw) ∧
+      (iidSampleBatchLaw (count := count) pointLaw).real {o | o.1 = false} ≤
+        params.deltaPrime D.componentCount ∧
+      ∃ pointLaw' : Measure (LatticePoint n),
+        AlmostUniformPointwise pointLaw'
+            (codedLatticePoints (D.component i) b) params.epsilonPrime ∧
+          IIDBatchOnGood (iidSampleBatchLaw (count := count) pointLaw) pointLaw' := by
+    refine ⟨iidSampleBatchLaw_isProbabilityMeasure pointLaw, ?_,
+      ⟨pointLaw, halmost, iidSampleBatchLaw_iid pointLaw⟩⟩
+    have hdelta : 0 ≤ params.deltaPrime D.componentCount := by
+      exact div_nonneg params.delta_pos.le (by positivity)
+    simp [Measure.real, iidSampleBatchLaw_false pointLaw, hdelta]
+  simpa only [communityManuscriptOracles, communityCV18HitAndRunOracles,
+    hitAndRunSamplingOracles, D, choice, b, dif_pos hroute, pointLaw]
     using hmain
 
 end Kr25Ssmxt
