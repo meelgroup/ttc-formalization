@@ -22,16 +22,16 @@ lemma homothety_image_nullMeasurable {n : Nat} (S : Set (Point n))
     MeasureTheory.NullMeasurableSet
       ((fun x : Point n => c + r • (x - c)) '' S) MeasureTheory.volume := by
   let g : Point n → Point n := fun x => r⁻¹ • (x + -c) + c
-  have hg : MeasureTheory.Measure.QuasiMeasurePreserving g MeasureTheory.volume
+  have hg : MeasureTheory.QuasiMeasurePreserving g MeasureTheory.volume
       MeasureTheory.volume := by
-    have hsub : MeasureTheory.Measure.QuasiMeasurePreserving
+    have hsub : MeasureTheory.QuasiMeasurePreserving
         (fun x : Point n => x + -c) MeasureTheory.volume MeasureTheory.volume :=
       MeasureTheory.quasiMeasurePreserving_add_right MeasureTheory.volume (-c)
-    have hsmul : MeasureTheory.Measure.QuasiMeasurePreserving
+    have hsmul : MeasureTheory.QuasiMeasurePreserving
         (fun x : Point n => r⁻¹ • x) MeasureTheory.volume MeasureTheory.volume :=
       MeasureTheory.Measure.quasiMeasurePreserving_smul
         MeasureTheory.volume (r := r⁻¹) (inv_ne_zero hr)
-    have hadd : MeasureTheory.Measure.QuasiMeasurePreserving
+    have hadd : MeasureTheory.QuasiMeasurePreserving
         (fun x : Point n => x + c) MeasureTheory.volume MeasureTheory.volume :=
       MeasureTheory.quasiMeasurePreserving_add_right MeasureTheory.volume c
     simpa [g, Function.comp_def] using hadd.comp (hsmul.comp hsub)

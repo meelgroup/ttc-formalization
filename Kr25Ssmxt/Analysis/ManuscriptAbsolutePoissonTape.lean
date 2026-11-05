@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptTapeCoupling
 
 /-! One component's level-zero Poisson copies, absolute-level survival coins,
@@ -37,7 +38,7 @@ theorem measurable_manuscriptPoissonTapePointCounts
     {n : Nat} (S : Finset (LatticePoint n))
     (firstLabel level : Nat) :
     Measurable (manuscriptPoissonTapePointCounts S firstLabel level) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro x
   apply measurable_from_prod_countable_right
   intro pending

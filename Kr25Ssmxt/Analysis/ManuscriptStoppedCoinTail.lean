@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptFirstExitPrefix
 import Kr25Ssmxt.Analysis.ManuscriptCoinLabelMergeLaw
 
@@ -13,7 +14,7 @@ theorem measurable_stoppedCoinPair
     Measurable (fun coins => (stop coins, shiftCoins (stop coins) coins)) := by
   have hshiftJoint : Measurable
       (fun z : Nat × (Nat × Nat → Bool) => shiftCoins z.1 z.2) := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro index
     apply measurable_from_prod_countable_right
     intro rounds
@@ -52,7 +53,7 @@ theorem fairCoinStreamLaw_stopped_shift
   let E (rounds : Nat) : Set (Nat × Nat → Bool) :=
     if rounds ∈ A then fiber rounds ∩ (shiftCoins rounds) ⁻¹' B else ∅
   have hshift (rounds : Nat) : Measurable (shiftCoins rounds) :=
-    measurable_pi_lambda _ (fun index =>
+    Measurable.of_eval (fun index =>
       measurable_pi_apply (index.1 + rounds, index.2))
   have hfiber (rounds : Nat) : MeasurableSet (fiber rounds) :=
     (measurableSet_singleton rounds).preimage hstop

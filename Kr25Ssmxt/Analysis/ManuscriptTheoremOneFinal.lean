@@ -162,12 +162,21 @@ theorem community_manuscriptTTC_lattice_estimate
       exact prob_le_one.trans le_self_add
   have _ : IsProbabilityMeasure (communityManuscriptTTC hn F hbounded p prep) :=
     community_manuscriptTTC_isProbabilityMeasure hn F hbounded p prep
+  have hKmeas : Measurable K := by
+    have hcoords : Measurable
+        (fun o : Fin components.length → VolumeOutcome =>
+          (o, TTCState.initial n)) :=
+      measurable_id.prodMk measurable_const
+    have h := (measurable_communityManuscriptComponentsGivenVolumes hn prep b
+      eta delta' T hT components).comp hcoords
+    exact (Measure.measurable_map _ (measurable_manuscriptEstimate b T)).comp h
   have hTTCBad : (communityManuscriptTTC hn F hbounded p prep) Bad ≤
       ENNReal.ofReal (p.delta / 4) +
         (ENNReal.ofReal (p.delta / 6) + ENNReal.ofReal (p.delta / 6)) := by
     rw [hTTC]
     calc
-      (law.bind K) Bad ≤ ∫⁻ o, K o Bad ∂law := Measure.bind_apply_le K hBad
+      (law.bind K) Bad ≤ ∫⁻ o, K o Bad ∂law :=
+        Measure.bind_apply_le hKmeas.aemeasurable hBad
       _ ≤ ∫⁻ o, (goodᶜ.indicator
           (1 : (Fin components.length → VolumeOutcome) → ENNReal) o +
           (ENNReal.ofReal (p.delta / 6) + ENNReal.ofReal (p.delta / 6))) ∂law :=

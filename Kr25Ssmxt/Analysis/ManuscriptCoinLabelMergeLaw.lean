@@ -26,7 +26,7 @@ theorem mergeCoinIndex_injective (boundary : Nat) :
 theorem measurable_mergeCoinsAtLabel_pair (boundary : Nat) :
     Measurable (fun pair : (Nat × Nat → Bool) × (Nat × Nat → Bool) =>
       mergeCoinsAtLabel boundary pair.1 pair.2) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   by_cases h : index.2 < boundary
   · simpa only [mergeCoinsAtLabel, h, ite_true, Function.comp_def] using
@@ -185,7 +185,7 @@ def pendingCoinRestriction (firstLabel pending : Nat)
 
 theorem measurable_pendingCoinRestriction (firstLabel pending : Nat) :
     Measurable (pendingCoinRestriction firstLabel pending) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   exact measurable_pi_apply (pair.1, firstLabel + pair.2.val)
 
@@ -274,7 +274,7 @@ def pendingCoinExtension (firstLabel pending : Nat)
 
 theorem measurable_pendingCoinExtension (firstLabel pending : Nat) :
     Measurable (pendingCoinExtension firstLabel pending) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   by_cases h : firstLabel ≤ pair.2 ∧ pair.2 < firstLabel + pending
   · simpa [pendingCoinExtension, h] using

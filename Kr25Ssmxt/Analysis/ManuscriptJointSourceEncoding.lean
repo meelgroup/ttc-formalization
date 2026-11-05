@@ -31,9 +31,9 @@ def manuscriptJointFreshRead (coins : Nat × Nat → Bool) :
 theorem measurable_manuscriptJointRead :
     Measurable (fun coins : Nat × Nat → Bool =>
       (manuscriptJointOldRead coins, manuscriptJointFreshRead coins)) := by
-  exact (measurable_pi_lambda _ (fun tag =>
+  exact (Measurable.of_eval (fun tag =>
     measurable_pi_apply (manuscriptJointSourceIndex (0, tag)))).prodMk
-    (measurable_pi_lambda _ (fun pair =>
+    (Measurable.of_eval (fun pair =>
       measurable_pi_apply (manuscriptJointSourceIndex (1, (0, pair)))))
 
 theorem manuscriptJointOldRead_shift (coins : Nat × Nat → Bool)
@@ -77,7 +77,7 @@ def manuscriptJointMergedRead (origin : Nat → Nat × Nat)
 theorem measurable_manuscriptJointMergedRead
     (origin : Nat → Nat × Nat) (firstLabel : Nat) :
     Measurable (manuscriptJointMergedRead origin firstLabel) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   by_cases hlabel : pair.2 < firstLabel
   · simpa [manuscriptJointMergedRead, mergeCoinsAtLabel,
@@ -242,7 +242,7 @@ theorem fairCoinStreamLaw_jointRead :
       Fin 2 × (Nat × (Nat × Nat)) → Bool :=
     fun coins tag => coins (manuscriptJointSourceIndex tag)
   have hread : Measurable read :=
-    measurable_pi_lambda _ (fun tag =>
+    Measurable.of_eval (fun tag =>
       measurable_pi_apply (manuscriptJointSourceIndex tag))
   have hindexed : fairCoinStreamLaw.map read = global := by
     letI : ∀ _ : Nat × Nat, IsProbabilityMeasure fairCoinLaw :=
@@ -296,7 +296,7 @@ theorem fairCoinStreamLaw_jointRead :
   let restrict : (Nat × (Nat × Nat) → Bool) →
       Nat × Nat → Bool := fun src pair => src (0, pair)
   have hrestrict : Measurable restrict :=
-    measurable_pi_lambda _ (fun pair => measurable_pi_apply (0, pair))
+    Measurable.of_eval (fun pair => measurable_pi_apply (0, pair))
   have hbaseMap : Measurable
       (fun coins : Fin 2 × (Nat × (Nat × Nat)) → Bool =>
         ((fun tag => coins (0, tag)),
@@ -426,7 +426,7 @@ theorem measurable_manuscriptJointRelabelRead
     (origin : Nat → Nat × Nat) (firstLabel : Nat)
     (labelMap : Nat → Nat) :
     Measurable (manuscriptJointRelabelRead origin firstLabel labelMap) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   by_cases hlabel : pair.2 < firstLabel
   · simpa [manuscriptJointRelabelRead, mergeCoinsAtLabel,

@@ -99,7 +99,7 @@ theorem measurable_manuscriptOriginCoinPairIndex
     P intensity threshold hthreshold basePending
   have hactive := measurable_manuscriptOriginCoinPairActiveFull
     P intensity threshold hthreshold basePending
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro i
   exact measurable_twoStageSurvivorLabelOrZero_joint.comp
     ((hpre.prodMk

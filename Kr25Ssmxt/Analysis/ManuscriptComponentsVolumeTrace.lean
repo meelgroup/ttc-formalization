@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptComponentVolumeTrace
 
 /-! Record CV18 outcomes while executing the charged manuscript component
@@ -10,7 +11,7 @@ open MeasureTheory
 theorem measurable_finCons_volumeOutcome (m : Nat) :
     Measurable (fun pair : VolumeOutcome × (Fin m → VolumeOutcome) =>
       (Fin.cons pair.1 pair.2 : Fin (m + 1) → VolumeOutcome)) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro i
   refine Fin.cases ?_ ?_ i
   · simpa only [Fin.cons_zero] using
@@ -70,7 +71,7 @@ theorem volumeOutcome_pi_fin_cons (m : Nat)
       (law 0).bind (fun outcome => tail.map
         (fun vec : Fin m → VolumeOutcome =>
           (Fin.cons outcome vec : Fin (m + 1) → VolumeOutcome))) := by
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [map_bind_measure (law 0)
       (fun outcome => tail.map (Prod.mk outcome))
       (fun pair : VolumeOutcome × (Fin m → VolumeOutcome) =>

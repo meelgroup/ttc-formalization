@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptStoppedPrefixSource
 
 /-! The merged thinning stop leaves an independent fair tail available to
@@ -77,7 +78,7 @@ theorem firstExitRoundSplit_stoppedPrefix_shift_bind
     _ = ((μ.map observed).prod fairCoinStreamLaw).bind K := by rw [hlaw]
     _ = (μ.map observed).bind
         (fun pre => fairCoinStreamLaw.bind (fun tail => K (pre, tail))) := by
-      rw [Measure.prod]
+      rw [Measure.prod_eq_bind_map]
       rw [Measure.bind_bind hprod.aemeasurable hK.aemeasurable]
       congr 1
       funext pre

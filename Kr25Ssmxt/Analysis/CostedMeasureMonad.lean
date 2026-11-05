@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Model.Program
 import Kr25Ssmxt.Analysis.MeasurableFixedSfiniteBind
 import Mathlib.Probability.Kernel.MeasurableLIntegral
@@ -389,6 +390,7 @@ has been established. -/
 theorem costedBind_lintegral_cost_le {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (first : Measure (α × Nat)) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (hnext : ∀ x, (next x) Set.univ ≤ 1) :
     ∫⁻ run, (run.2 : ENNReal) ∂costedBind first next ≤
       ∫⁻ result, (result.2 : ENNReal) +
@@ -405,16 +407,19 @@ theorem costedBind_lintegral_cost_le {α β : Type*}
     rw [lintegral_add_left (by fun_prop)]
     simp only [lintegral_const]
   unfold costedBind
-  apply (Measure.lintegral_bind_le _ first continuation).trans
-  simp_rw [hmap]
+  apply (Measure.lintegral_bind_le _ first
+    (measurable_costedContinuation next hnextMeas).aemeasurable).trans
   apply lintegral_mono
   intro result
+  change (∫⁻ run, (run.2 : ENNReal) ∂continuation result) ≤ _
+  rw [hmap]
   exact add_le_add_left
     (mul_le_of_le_one_right (by positivity) (hnext result.1)) _
 
 theorem costedBind_mass_le_one {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (first : Measure (α × Nat)) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (hfirst : first Set.univ ≤ 1) (hnext : ∀ x, (next x) Set.univ ≤ 1) :
     (costedBind first next) Set.univ ≤ 1 := by
   let continuation : (α × Nat) → Measure (β × Nat) := fun result =>
@@ -427,7 +432,9 @@ theorem costedBind_mass_le_one {α β : Type*}
   calc
     (first.bind continuation) Set.univ ≤
         ∫⁻ result, continuation result Set.univ ∂first :=
-      Measure.bind_apply_le continuation MeasurableSet.univ
+      Measure.bind_apply_le
+        (measurable_costedContinuation next hnextMeas).aemeasurable
+        MeasurableSet.univ
     _ ≤ ∫⁻ _result, (1 : ENNReal) ∂first := lintegral_mono hcont
     _ = first Set.univ := by simp
     _ ≤ 1 := hfirst
@@ -437,6 +444,7 @@ when the adaptive kernel has not yet been shown measurable. -/
 theorem costedBind_expected_cost_le_add {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (first : Measure (α × Nat)) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (hfirstMass : first Set.univ ≤ 1)
     (hnextMass : ∀ x, (next x) Set.univ ≤ 1)
     {firstBudget nextBudget : ENNReal}
@@ -444,7 +452,7 @@ theorem costedBind_expected_cost_le_add {α β : Type*}
     (hnextCost : ∀ x, (∫⁻ result, (result.2 : ENNReal) ∂next x) ≤ nextBudget) :
     (∫⁻ result, (result.2 : ENNReal) ∂costedBind first next) ≤
       firstBudget + nextBudget := by
-  apply (costedBind_lintegral_cost_le first next hnextMass).trans
+  apply (costedBind_lintegral_cost_le first next hnextMeas hnextMass).trans
   have hpoint :
       (∫⁻ result, (result.2 : ENNReal) +
         ∫⁻ future, (future.2 : ENNReal) ∂next result.1 ∂first) ≤
@@ -464,6 +472,7 @@ guard and stored-population invariant to be used inside adaptive binds. -/
 theorem costedBind_expected_cost_le_add_ae {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (first : Measure (α × Nat)) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (hfirstMass : first Set.univ ≤ 1)
     (hnextMass : ∀ x, (next x) Set.univ ≤ 1)
     {firstBudget nextBudget : ENNReal}
@@ -472,7 +481,7 @@ theorem costedBind_expected_cost_le_add_ae {α β : Type*}
       (∫⁻ future, (future.2 : ENNReal) ∂next result.1) ≤ nextBudget) :
     (∫⁻ result, (result.2 : ENNReal) ∂costedBind first next) ≤
       firstBudget + nextBudget := by
-  apply (costedBind_lintegral_cost_le first next hnextMass).trans
+  apply (costedBind_lintegral_cost_le first next hnextMeas hnextMass).trans
   have hpoint :
       (∫⁻ result, (result.2 : ENNReal) +
         ∫⁻ future, (future.2 : ENNReal) ∂next result.1 ∂first) ≤
@@ -491,13 +500,14 @@ adaptive charged continuation. -/
 theorem costedBind_charge_dirac_expected_cost_le {α β : Type*}
     [MeasurableSpace α] [MeasurableSingletonClass α] [MeasurableSpace β]
     (x : α) (charge : Nat) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (hnextMass : ∀ y, (next y) Set.univ ≤ 1) :
     (∫⁻ result, (result.2 : ENNReal) ∂
       costedBind (costedCharge (Measure.dirac x) charge) next) ≤
       charge + ∫⁻ result, (result.2 : ENNReal) ∂next x := by
-  apply (costedBind_lintegral_cost_le _ next hnextMass).trans
+  apply (costedBind_lintegral_cost_le _ next hnextMeas hnextMass).trans
   unfold costedCharge
-  apply (lintegral_map_le _ _).trans
+  apply (lintegral_map_le _ (by fun_prop)).trans
   simp only [lintegral_dirac]
   exact le_rfl
 
@@ -505,14 +515,15 @@ theorem costedBind_charge_dirac_expected_cost_le {α β : Type*}
 only a pointwise continuation budget and the oracle's total mass. -/
 theorem costedCharge_map_continuation_bound {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
-    (law : Measure α) (clip : α → β) (charge : Nat)
+    (law : Measure α) (clip : α → β) (hclip : AEMeasurable clip law)
+    (charge : Nat)
     (continuationCost : β → ENNReal) (hlaw : law Set.univ ≤ 1)
     {budget : ENNReal} (hbudget : ∀ x, continuationCost (clip x) ≤ budget) :
     (∫⁻ result, (result.2 : ENNReal) + continuationCost result.1 ∂
       costedCharge (law.map clip) charge) ≤ charge + budget := by
   unfold costedCharge
-  apply (lintegral_map_le _ _).trans
-  apply (lintegral_map_le _ _).trans
+  apply (lintegral_map_le _ (by fun_prop)).trans
+  apply (lintegral_map_le _ hclip).trans
   apply (lintegral_mono (fun x => add_le_add_right (hbudget x) _)).trans
   simp only [lintegral_const]
   exact mul_le_of_le_one_right (by positivity) hlaw
@@ -522,6 +533,7 @@ writer addition changes only the cost coordinate. -/
 theorem costedBind_ae_state_of_ae {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (first : Measure (α × Nat)) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (Good : α → Prop) (Goal : β → Prop)
     (hGoal : MeasurableSet {y | Goal y})
     (hfirst : ∀ᵐ result ∂first, Good result.1)
@@ -541,12 +553,13 @@ theorem costedBind_ae_state_of_ae {α β : Type*}
     rw [ae_iff] at hfuture
     unfold continuation
     rw [Measure.map_apply (by fun_prop) hbad]
-    simpa only [bad, Set.preimage_setOf_eq] using hfuture
+    simpa only [bad, Set.preimage_ofPred_eq] using hfuture
   unfold costedBind
   apply le_antisymm
   · calc
     (first.bind continuation) bad ≤ ∫⁻ result, continuation result bad ∂first :=
-      Measure.bind_apply_le continuation hbad
+      Measure.bind_apply_le
+        (measurable_costedContinuation next hnextMeas).aemeasurable hbad
     _ = 0 := by
       rw [lintegral_congr_ae hpoint]
       simp
@@ -567,10 +580,11 @@ theorem costedCharge_dirac_ae_state {α : Type*}
 theorem costedBind_ae_state_of_forall {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (first : Measure (α × Nat)) (next : α → Measure (β × Nat))
+    (hnextMeas : Measurable next)
     (Goal : β → Prop) (hGoal : MeasurableSet {y | Goal y})
     (hnext : ∀ x, ∀ᵐ future ∂next x, Goal future.1) :
     ∀ᵐ result ∂costedBind first next, Goal result.1 := by
-  apply costedBind_ae_state_of_ae first next (fun _ => True) Goal hGoal
+  apply costedBind_ae_state_of_ae first next hnextMeas (fun _ => True) Goal hGoal
   · exact Filter.Eventually.of_forall (fun _ => trivial)
   · intro x _
     exact hnext x

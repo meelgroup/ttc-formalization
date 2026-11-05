@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptCoinSpliceLaw
 import Kr25Ssmxt.Analysis.ThinUntilKernelMeasurable
 import Kr25Ssmxt.Analysis.CostedMeasureMonad
@@ -11,7 +12,7 @@ open MeasureTheory
 
 theorem measurable_shiftCoins (rounds : Nat) :
     Measurable (shiftCoins rounds) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   exact measurable_pi_apply (pair.1 + rounds, pair.2)
 
@@ -53,7 +54,7 @@ theorem manuscript_twoLoops_givenPending_eq_oneCoinStream
       (fairCoinStreamLaw.map firstResult).bind K =
         (fairCoinStreamLaw.prod fairCoinStreamLaw).map pairResult := by
     rw [bind_mapped_measure fairCoinStreamLaw firstResult hfirst K hK]
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [map_bind_measure fairCoinStreamLaw
       (fun first : Nat × Nat → Bool =>
         fairCoinStreamLaw.map (Prod.mk first)) pairResult

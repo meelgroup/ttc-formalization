@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptCoinLabelMergeLaw
 
 /-! At fixed shifts, replacing one component of a global fair source by an
@@ -73,7 +74,7 @@ theorem manuscriptCombinedTail_fixedShift_law
         Nat × Nat → Bool :=
       fun src pair => src (component, pair)
     have hrestrict : Measurable restrict :=
-      measurable_pi_lambda _ (fun pair =>
+      Measurable.of_eval (fun pair =>
         measurable_pi_apply (component, pair))
     have hbaseMap : Measurable
         (fun coins : Fin 2 × (Nat × (Nat × Nat)) → Bool =>
@@ -132,7 +133,7 @@ theorem manuscriptCombinedTail_fixedShift_law
           if tag.1 = component then
             z.2 (newShift + tag.2.1, tag.2.2)
           else z.1 (tag.1, (oldShift + tag.2.1, tag.2.2))) := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro tag
     by_cases htag : tag.1 = component
     · simpa only [htag, ite_true, Function.comp_def] using
@@ -189,7 +190,9 @@ theorem manuscriptCombinedTail_conditional_product
     preLaw.prod
       (Measure.infinitePi
         (fun _ : Nat × (Nat × Nat) => fairCoinLaw)) := by
-  conv_rhs => rw [Measure.prod]
+  haveI : ∀ _ : Nat × (Nat × Nat), IsProbabilityMeasure fairCoinLaw :=
+    fun _ => fairCoinLaw_isProbabilityMeasure
+  conv_rhs => rw [Measure.prod_eq_bind_map]
   apply Measure.bind_congr_right
   apply Filter.Eventually.of_forall
   intro pre

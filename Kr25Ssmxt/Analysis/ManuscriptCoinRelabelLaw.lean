@@ -101,15 +101,15 @@ theorem fairCoin_pointTape_joint_relabel
   let markFresh : (Nat → LatticePoint n) → (Fin count → LatticePoint n) :=
     fun tape i => tape (freshLabels i)
   have hcoinOld : Measurable coinOld :=
-    measurable_pi_lambda _ (fun index =>
+    Measurable.of_eval (fun index =>
       measurable_pi_apply (index.1, oldLabels index.2))
   have hcoinFresh : Measurable coinFresh :=
-    measurable_pi_lambda _ (fun index =>
+    Measurable.of_eval (fun index =>
       measurable_pi_apply (index.1, freshLabels index.2))
   have hmarkOld : Measurable markOld :=
-    measurable_pi_lambda _ (fun i => measurable_pi_apply (oldLabels i))
+    Measurable.of_eval (fun i => measurable_pi_apply (oldLabels i))
   have hmarkFresh : Measurable markFresh :=
-    measurable_pi_lambda _ (fun i => measurable_pi_apply (freshLabels i))
+    Measurable.of_eval (fun i => measurable_pi_apply (freshLabels i))
   have hcoin : fairCoinStreamLaw.map coinOld =
       fairCoinStreamLaw.map coinFresh :=
     fairCoinStreamLaw_relabel_eq oldLabels freshLabels hold hfresh
@@ -171,16 +171,16 @@ theorem fairCoin_pointTape_adaptive_relabel
       ((fun index => pair.1 (index.1, freshLabels a index.2)),
         fun i => pair.2 (freshLabels a i))
   have holdMeas : Measurable oldProjection :=
-    (measurable_pi_lambda _ (fun index =>
+    (Measurable.of_eval (fun index =>
       (measurable_pi_apply (index.1, oldLabels a index.2)).comp
         measurable_fst)).prodMk
-      (measurable_pi_lambda _ (fun i =>
+      (Measurable.of_eval (fun i =>
         (measurable_pi_apply (oldLabels a i)).comp measurable_snd))
   have hfreshMeas : Measurable freshProjection :=
-    (measurable_pi_lambda _ (fun index =>
+    (Measurable.of_eval (fun index =>
       (measurable_pi_apply (index.1, freshLabels a index.2)).comp
         measurable_fst)).prodMk
-      (measurable_pi_lambda _ (fun i =>
+      (Measurable.of_eval (fun i =>
         (measurable_pi_apply (freshLabels a i)).comp measurable_snd))
   change (fairCoinStreamLaw.prod tapeLaw).map (g a ∘ oldProjection) =
     (fairCoinStreamLaw.prod tapeLaw).map (g a ∘ freshProjection)

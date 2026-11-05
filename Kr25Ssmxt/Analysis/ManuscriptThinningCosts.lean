@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.MeasurableThinningResult
 import Kr25Ssmxt.Analysis.MeasurableSamplesAfterFixed
 import Kr25Ssmxt.Analysis.FairCoinStreamLawIsProbabilityMeasure

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptStoppedCoinTail
 import Kr25Ssmxt.Analysis.ManuscriptOriginHistory
 import Mathlib.Data.Nat.Pairing
@@ -27,7 +28,7 @@ def manuscriptGlobalCoinRead (coins : Nat × Nat → Bool) :
 
 theorem measurable_manuscriptGlobalCoinRead :
     Measurable manuscriptGlobalCoinRead :=
-  measurable_pi_lambda _ (fun tag =>
+  Measurable.of_eval (fun tag =>
     measurable_pi_apply (manuscriptGlobalCoinIndex tag))
 
 /-- Independent component/original-label streams can be read from one
@@ -60,7 +61,7 @@ theorem fairCoinStreamLaw_globalCoinRead_shift (level : Nat) :
         manuscriptGlobalCoinRead := by
           simpa only [Function.comp_def] using
             (Measure.map_map hmap
-              (measurable_pi_lambda _ (fun index =>
+              (Measurable.of_eval (fun index =>
                 measurable_pi_apply (index.1 + level, index.2)))).symm
     _ = fairCoinStreamLaw.map manuscriptGlobalCoinRead := by
       rw [fairCoinStreamLaw_shift level]
@@ -83,7 +84,7 @@ theorem fairCoinStreamLaw_prefix_globalFuture (level : Nat) :
     fun coins => (coinPrefix level coins, shiftCoins level coins)
   have hsplit : Measurable split :=
     (measurable_coinPrefix level).prodMk
-      (measurable_pi_lambda _ (fun index =>
+      (Measurable.of_eval (fun index =>
         measurable_pi_apply (index.1 + level, index.2)))
   let reindex : ((Nat × Nat → Bool) × (Nat × Nat → Bool)) →
       (Nat × Nat → Bool) × (Nat × (Nat × Nat) → Bool) :=
@@ -253,7 +254,7 @@ theorem fairCoinStreamLaw_prefix_originFuture
       Nat × Fin nextLabel → Bool :=
     fun source pair => source (manuscriptOriginCoinIndex nextLabel origin pair)
   have holdRead : Measurable oldRead :=
-    measurable_pi_lambda _ (fun pair =>
+    Measurable.of_eval (fun pair =>
       measurable_pi_apply (manuscriptOriginCoinIndex nextLabel origin pair))
   let split : (Nat × Nat → Bool) →
       (Nat × Nat → Bool) × (Nat × (Nat × Nat) → Bool) :=
@@ -263,7 +264,7 @@ theorem fairCoinStreamLaw_prefix_originFuture
   have hsplit : Measurable split :=
     (measurable_coinPrefix level).prodMk
       (measurable_manuscriptGlobalCoinRead.comp
-        (measurable_pi_lambda _ (fun index =>
+        (Measurable.of_eval (fun index =>
           measurable_pi_apply (index.1 + level, index.2))))
   let reindex : ((Nat × Nat → Bool) × (Nat × (Nat × Nat) → Bool)) →
       (Nat × Nat → Bool) × (Nat × Fin nextLabel → Bool) :=
@@ -321,7 +322,7 @@ theorem firstExitRound_originFuture_law {n : Nat}
       Nat × Fin nextLabel → Bool :=
     fun source pair => source (manuscriptOriginCoinIndex nextLabel origin pair)
   have holdRead : Measurable oldRead :=
-    measurable_pi_lambda _ (fun pair =>
+    Measurable.of_eval (fun pair =>
       measurable_pi_apply (manuscriptOriginCoinIndex nextLabel origin pair))
   let stopped : (Nat × Nat → Bool) →
       Nat × (Nat × (Nat × Nat) → Bool) := fun coins =>
@@ -396,7 +397,7 @@ theorem manuscript_origin_futureCoins_adaptive
     fun source pair => source
       (manuscriptOriginCoinIndex (nextLabel a) (origin a) pair)
   have holdRead : Measurable oldRead :=
-    measurable_pi_lambda _ (fun pair =>
+    Measurable.of_eval (fun pair =>
       measurable_pi_apply
         (manuscriptOriginCoinIndex (nextLabel a) (origin a) pair))
   change (Measure.infinitePi
@@ -431,7 +432,7 @@ theorem manuscript_origin_futureCoins_adaptive_ae
     fun source pair => source
       (manuscriptOriginCoinIndex (nextLabel a) (origin a) pair)
   have holdRead : Measurable oldRead :=
-    measurable_pi_lambda _ (fun pair =>
+    Measurable.of_eval (fun pair =>
       measurable_pi_apply
         (manuscriptOriginCoinIndex (nextLabel a) (origin a) pair))
   change (Measure.infinitePi
@@ -491,7 +492,7 @@ theorem fairCoinStreamLaw_prefix_originFuture_adaptive
   have hsplit : Measurable split :=
     (measurable_coinPrefix level).prodMk
       (measurable_manuscriptGlobalCoinRead.comp
-        (measurable_pi_lambda _ (fun index =>
+        (Measurable.of_eval (fun index =>
           measurable_pi_apply (index.1 + level, index.2))))
   let f : (Nat × Nat → Bool) × (Nat × (Nat × Nat) → Bool) → β :=
     fun z => g z.1 (fun pair => z.2
@@ -500,7 +501,7 @@ theorem fairCoinStreamLaw_prefix_originFuture_adaptive
   have hproduct : (preLaw.prod sourceLaw).map f =
       preLaw.bind (fun pre =>
         sourceLaw.map fun source => f (pre, source)) := by
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [map_bind_measure preLaw
       (fun pre => sourceLaw.map (Prod.mk pre)) f
       Measurable.map_prodMk_left.aemeasurable hf]

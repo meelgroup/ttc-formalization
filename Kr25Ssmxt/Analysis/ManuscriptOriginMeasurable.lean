@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptSourceRefresh
 
 /-! Product measurable structures for the source and ghost configuration.
@@ -53,7 +54,7 @@ theorem measurable_manuscriptOriginSourceState_coins {n : Nat} :
 
 theorem measurable_manuscriptOriginCoinPrefix (rounds : Nat) :
     Measurable (manuscriptOriginCoinPrefix rounds) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro component
   exact (measurable_coinPrefix rounds).comp
     (measurable_pi_apply component)
@@ -61,7 +62,7 @@ theorem measurable_manuscriptOriginCoinPrefix (rounds : Nat) :
 theorem measurable_coinPrefix_joint :
     Measurable (fun z : Nat × (Nat × Nat → Bool) =>
       coinPrefix z.1 z.2) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   have hcond : MeasurableSet
       {z : Nat × (Nat × Nat → Bool) | index.1 < z.1} :=
@@ -75,7 +76,7 @@ theorem measurable_coinPrefix_joint :
 theorem measurable_manuscriptOriginCoinPrefix_joint :
     Measurable (fun z : Nat × (Nat → Nat × Nat → Bool) =>
       manuscriptOriginCoinPrefix z.1 z.2) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro component
   exact measurable_coinPrefix_joint.comp
     (measurable_fst.prodMk
@@ -100,7 +101,7 @@ theorem measurable_manuscriptOriginSourceState_pointCounts
     Measurable (fun g : ManuscriptOriginSourceState n =>
       g.pointCounts level S) := by
   classical
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro x
   let filtered : ManuscriptOriginSourceState n → Finset (Nat × Nat) :=
     fun g => g.valid.filter fun tag =>
@@ -137,9 +138,9 @@ theorem measurable_manuscriptOriginSourceState_pointCounts
 theorem measurable_manuscriptRefreshedSourceCoins
     (sources : Nat → Nat × Nat → Bool) (level : Nat) :
     Measurable (manuscriptRefreshedSourceCoins sources level) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro component
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   by_cases hround : pair.1 < level
   · simpa [manuscriptRefreshedSourceCoins, spliceCoins, hround] using
@@ -200,9 +201,9 @@ theorem ManuscriptOriginConfiguration.measurable_refreshFuture_joint
   have hrefreshed : Measurable (fun z : ManuscriptOriginConfiguration n ×
       (Nat × (Nat × Nat) → Bool) =>
       manuscriptRefreshedSourceCoins z.1.source.coins z.1.level z.2) := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro component
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro pair
     have hold : Measurable (fun z : ManuscriptOriginConfiguration n ×
         (Nat × (Nat × Nat) → Bool) =>
@@ -316,7 +317,7 @@ theorem measurable_manuscriptOriginObservedRepresentative {n : Nat} :
 theorem measurable_manuscriptOriginUnusedTail {n : Nat} :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
       c.unusedTail) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   have hcoin : Measurable
       (fun z : Nat × (Nat → Nat × Nat → Bool) =>
@@ -667,7 +668,7 @@ theorem measurable_manuscriptMarksAppend
     (component : Nat) :
     Measurable (fun tape : Nat → LatticePoint n =>
       manuscriptMarksAppend marks component tape) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro tag
   by_cases htag : tag.1 = component
   · simpa [manuscriptMarksAppend, htag] using

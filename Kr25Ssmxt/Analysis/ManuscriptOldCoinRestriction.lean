@@ -18,12 +18,12 @@ def allocatedCoinExtension (nextLabel : Nat)
 
 theorem measurable_allocatedCoinRestriction (nextLabel : Nat) :
     Measurable (allocatedCoinRestriction nextLabel) :=
-  measurable_pi_lambda _ (fun index =>
+  Measurable.of_eval (fun index =>
     measurable_pi_apply (index.1, index.2.val))
 
 theorem measurable_allocatedCoinExtension (nextLabel : Nat) :
     Measurable (allocatedCoinExtension nextLabel) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   by_cases h : index.2 < nextLabel
   · simpa only [allocatedCoinExtension, h, dite_true] using

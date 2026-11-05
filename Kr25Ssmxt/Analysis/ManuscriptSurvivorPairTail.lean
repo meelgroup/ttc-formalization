@@ -33,7 +33,7 @@ theorem measurable_manuscriptSurvivorPairRead
     (origin : Nat → Nat × Nat) :
     Measurable (manuscriptSurvivorPairRead preCoins preRounds firstLabel
       basePending origin) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   by_cases hlabel : pair.2 < firstLabel
   · simpa [manuscriptSurvivorPairRead, mergeCoinsAtLabel, hlabel,

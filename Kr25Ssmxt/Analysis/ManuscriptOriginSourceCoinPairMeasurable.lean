@@ -21,9 +21,9 @@ theorem measurable_manuscriptCoinsAppend_joint {n : Nat} :
           ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       manuscriptCoinsAppend z.1.1.coins z.1.1.processed
         z.2.1 z.2.2 z.1.2) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro component
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   have hsource : Measurable (fun z :
       (ManuscriptOriginSourceState n × Nat) ×

@@ -10,7 +10,7 @@ lake exe cache get     # download Mathlib oleans — do not skip this
 lake build
 ```
 
-Toolchain: `leanprover/lean4:v4.33.0`. Mathlib is pinned to `v4.33.0`;
+Toolchain: `leanprover/lean4:v4.35.0`. Mathlib is pinned to `v4.35.0`;
 arlib to `main`.
 
 ## What "done" means here

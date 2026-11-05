@@ -47,7 +47,7 @@ theorem measurable_manuscriptGlobalSourceGlue (rounds : Nat) :
     Measurable (fun z : (Nat × (Nat × Nat) → Bool) ×
         (Nat × (Nat × Nat) → Bool) =>
       manuscriptGlobalSourceGlue rounds z.1 z.2) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro tag
   by_cases h : tag.2.1 < rounds
   · simp only [manuscriptGlobalSourceGlue, h, if_true]

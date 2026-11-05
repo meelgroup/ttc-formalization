@@ -11,7 +11,7 @@ theorem measurable_manuscriptOriginAppend_joint :
         ((Nat → Nat × Nat) × (Nat → Nat)) =>
       manuscriptOriginAppend z.2.1 z.1.1 z.1.2.1 z.1.2.2
         (fun i => z.2.2 i.val)) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro label
   apply measurable_from_prod_countable_right
   intro params

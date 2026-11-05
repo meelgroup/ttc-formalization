@@ -13,7 +13,7 @@ def coinPrefix (rounds : Nat) (coins : Nat × Nat → Bool) :
 
 theorem measurable_coinPrefix (rounds : Nat) :
     Measurable (coinPrefix rounds) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   by_cases h : index.1 < rounds
   · simpa only [coinPrefix, h, ite_true] using measurable_pi_apply index
@@ -89,7 +89,7 @@ theorem fairCoinStreamLaw_prefix_shift (rounds : Nat) :
     fun coins => (coinPrefix rounds coins, shiftCoins rounds coins)
   have hsplit : Measurable split :=
     (measurable_coinPrefix rounds).prodMk
-      (measurable_pi_lambda _ (fun index =>
+      (Measurable.of_eval (fun index =>
         measurable_pi_apply (index.1 + rounds, index.2)))
   have hfun : split ∘
       (fun pair : (Nat × Nat → Bool) × (Nat × Nat → Bool) =>
@@ -129,7 +129,7 @@ theorem fairCoinStreamLaw_prefix_shift_indep
     fun coins => (coinPrefix rounds coins, shiftCoins rounds coins)
   have hsplit : Measurable split :=
     (measurable_coinPrefix rounds).prodMk
-      (measurable_pi_lambda _ (fun index =>
+      (Measurable.of_eval (fun index =>
         measurable_pi_apply (index.1 + rounds, index.2)))
   have hpreimage : split ⁻¹' (A ×ˢ B) =
       (coinPrefix rounds) ⁻¹' A ∩ (shiftCoins rounds) ⁻¹' B := by

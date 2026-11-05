@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.FairThinningExpectation
 import Kr25Ssmxt.Analysis.ManuscriptLabelFreshness
 
@@ -150,7 +151,7 @@ theorem fairCoinStreamLaw_survivalVector (rounds : Nat) :
           (fun streams label => labelSurvives rounds (streams label)) := by
         have hdecision : Measurable (fun streams : Nat → Nat → Bool =>
             fun label => labelSurvives rounds (streams label)) :=
-          measurable_pi_lambda _ (fun label =>
+          Measurable.of_eval (fun label =>
             (measurable_labelSurvives rounds).comp (measurable_pi_apply label))
         rw [Measure.map_map hdecision (by fun_prop)]
         rfl
@@ -175,9 +176,9 @@ theorem fairCoinStreamLaw_survivalVector_finite
     fun coins label => labelSurvives rounds (fun r => coins (r, label))
   have hmap : Measurable vector := by
     unfold vector
-    exact measurable_pi_lambda _ (fun label =>
+    exact Measurable.of_eval (fun label =>
       (measurable_labelSurvives rounds).comp
-        (measurable_pi_lambda _ (fun r => measurable_pi_apply (r, label))))
+        (Measurable.of_eval (fun r => measurable_pi_apply (r, label))))
   change fairCoinStreamLaw.map (labels.restrict ∘ vector) = _
   rw [← Measure.map_map (Finset.measurable_restrict labels) hmap,
     fairCoinStreamLaw_survivalVector]
@@ -212,9 +213,9 @@ theorem TTCState.fixed_round_population_law {n : Nat} (s : TTCState n)
     fun coins label => labelSurvives rounds (fun r => coins (r, label.1))
   have hdecisions : Measurable decisions := by
     unfold decisions
-    exact measurable_pi_lambda _ (fun label =>
+    exact Measurable.of_eval (fun label =>
       (measurable_labelSurvives rounds).comp
-        (measurable_pi_lambda _ (fun r => measurable_pi_apply (r, label.1))))
+        (Measurable.of_eval (fun r => measurable_pi_apply (r, label.1))))
   have hcount : Measurable (fun bits : labels → Bool =>
       (Finset.univ.filter (fun label => bits label = true)).card) := by
     fun_prop

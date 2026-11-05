@@ -422,7 +422,7 @@ theorem measurable_manuscriptOriginCoinPairIndex_intensity
         (z.1.1.state.removeComponent P).nextLabel basePending
         (manuscriptOriginCoinPairSplitExit P z.1.2 threshold
           basePending (z.1.1, z.2)) i) := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro i
     exact measurable_twoStageSurvivorLabelOrZero_joint.comp
       ((hpre.prodMk

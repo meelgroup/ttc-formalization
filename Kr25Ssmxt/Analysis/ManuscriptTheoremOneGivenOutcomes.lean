@@ -199,7 +199,8 @@ theorem communityManuscript_ghost_estimate_bad_le
   have hM : MeasurableSet {c : ManuscriptOriginConfiguration n | c.MarksIn S} :=
     measurableSet_manuscriptOriginMarksIn S
   have hmarks0 : ∀ᵐ c ∂μ0, c.MarksIn S := by
-    apply ae_map_of_ae_marksIn hM
+    apply ae_map_of_ae_marksIn
+      (ManuscriptOriginConfiguration.initial n).measurable_refreshFuture.aemeasurable hM
     refine Filter.Eventually.of_forall (fun future => ?_)
     intro tag htag
     simp [ManuscriptOriginConfiguration.refreshFuture,

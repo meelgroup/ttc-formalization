@@ -33,7 +33,7 @@ theorem spliceCoinIndex_injective (rounds : Nat) :
 theorem measurable_spliceCoins_pair (rounds : Nat) :
     Measurable (fun pair : (Nat × Nat → Bool) × (Nat × Nat → Bool) =>
       spliceCoins pair.1 pair.2 rounds) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   by_cases h : index.1 < rounds
   · simpa only [spliceCoins, h, ite_true, Function.comp_def] using

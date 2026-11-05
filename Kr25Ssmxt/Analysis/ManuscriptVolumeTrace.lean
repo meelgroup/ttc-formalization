@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.CostedMeasureMonad
 import Kr25Ssmxt.Analysis.ManuscriptVolumeOutcomeUnion
 import Mathlib.Probability.Kernel.MeasurableLIntegral
@@ -72,7 +73,6 @@ theorem measurable_parametric_probability_bind
   have hint : Measurable (fun a : α => ∫⁻ b, next (a, b) event ∂first a) :=
     by
       convert (Measurable.lintegral_kernel_prod_right' (κ := κ) hsection) using 1
-      rfl
   convert hint using 1
   funext a
   rw [Measure.bind_apply hevent]

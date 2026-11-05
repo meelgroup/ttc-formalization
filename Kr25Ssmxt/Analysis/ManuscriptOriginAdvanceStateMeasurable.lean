@@ -21,7 +21,7 @@ theorem measurable_addBatch_indexed_tape_joint {n : Nat} :
   have hpoints : Measurable (fun z :
       (TTCState n × (Nat → Nat)) × (Nat → LatticePoint n) =>
       (fun i : Fin count => z.2 (z.1.2 i.val))) := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro i
     exact heval.comp (measurable_snd.prodMk
       ((measurable_pi_apply i.val).comp

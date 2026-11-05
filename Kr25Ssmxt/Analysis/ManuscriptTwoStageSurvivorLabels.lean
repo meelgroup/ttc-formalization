@@ -60,7 +60,7 @@ theorem measurable_originalSurvivorCoinRestriction
     (preCoins : Nat × Nat → Bool) (preRounds firstLabel basePending : Nat) :
     Measurable (originalSurvivorCoinRestriction preCoins preRounds
       firstLabel basePending) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   exact measurable_pi_apply (pair.1,
     firstLabel +

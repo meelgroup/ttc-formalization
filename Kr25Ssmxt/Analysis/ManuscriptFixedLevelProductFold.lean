@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptConcreteSourceProduct
 
 /-! Deterministic evaluation of one fixed-level union prefix from the
@@ -63,7 +64,7 @@ theorem fixedLevelLaw_bind_initial
           fixedLevelLaw rest (Measure.dirac state)) := Measurable.of_discrete
       have hstep (law : Measure (ι → Nat)) :
           (law.prod ν).map update = law.bind K := by
-        rw [Measure.prod]
+        rw [Measure.prod_eq_bind_map]
         rw [map_bind_measure law
           (fun initial => ν.map (Prod.mk initial)) update
           (Measurable.of_discrete.aemeasurable)
@@ -116,7 +117,7 @@ theorem pointCountVector_pi_fin_cons
       (fun pair : (ι → Nat) × (Fin m → ι → Nat) =>
         (Fin.cons pair.1 pair.2 : Fin (m + 1) → ι → Nat)) =
       (law 0).bind (fun current => tail.map (Fin.cons current)) := by
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [map_bind_measure (law 0)
       (fun current => tail.map (Prod.mk current))
       (fun pair : (ι → Nat) × (Fin m → ι → Nat) =>
@@ -242,7 +243,7 @@ theorem fixedLevelFold_pi_eq_fixedLevelLaw
           (fun pair : (ι → Nat) × (ι → Nat) =>
             fun x => (if x ∈ step.deleted then 0 else pair.1 x) + pair.2 x) =
           head.map update := by
-        rw [Measure.prod]
+        rw [Measure.prod_eq_bind_map]
         rw [Measure.dirac_bind (Measurable.of_discrete)]
         rw [Measure.map_map (Measurable.of_discrete) measurable_prodMk_left]
         rfl
@@ -274,7 +275,7 @@ theorem fixedLevelFold_source_pi_eq_fixedLevelLaw
   let f : (Fin steps.length → α) → (Fin steps.length → ι → Nat) :=
     fun sources i => draw i (sources i)
   have hf : Measurable f :=
-    measurable_pi_lambda _ (fun i => (hdrawMeas i).comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i => (hdrawMeas i).comp (measurable_pi_apply i))
   have hmap (i : Fin steps.length) : IsProbabilityMeasure
       ((sourceLaw i).map (draw i)) := by
     rw [hdrawLaw i]

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.KV97HitAndRunSampling
 import Mathlib.MeasureTheory.Constructions.Pi
 

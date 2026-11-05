@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptComponentPredrawTape
 import Kr25Ssmxt.Analysis.ManuscriptComponentsVolumeTrace
 import Kr25Ssmxt.Analysis.ManuscriptProductBindSwap
@@ -19,7 +20,7 @@ private theorem bind_independent_comm
       ν.bind (fun b => μ.bind fun a => K (a, b)) := by
   have hleft : μ.bind (fun a => ν.bind fun b => K (a, b)) =
       (μ.prod ν).bind K := by
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [Measure.bind_bind Measurable.map_prodMk_left.aemeasurable
       hK.aemeasurable]
     congr 1
@@ -29,7 +30,7 @@ private theorem bind_independent_comm
   have hright : ν.bind (fun b => μ.bind fun a => K (a, b)) =
       (ν.prod μ).bind (fun z => K z.swap) := by
     change _ = (ν.prod μ).bind (K ∘ Prod.swap)
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [Measure.bind_bind Measurable.map_prodMk_left.aemeasurable
       (hK.comp measurable_swap).aemeasurable]
     congr 1
@@ -138,7 +139,7 @@ theorem measurable_communityManuscriptComponentsGivenVolumes
       have htail : Measurable
           (fun z : Fin (P :: rest).length → VolumeOutcome =>
             (fun i : Fin rest.length => z i.succ)) :=
-        measurable_pi_lambda _ (fun i => measurable_pi_apply i.succ)
+        Measurable.of_eval (fun i => measurable_pi_apply i.succ)
       have hnext : Measurable next := by
         exact ih.comp
           ((htail.comp (measurable_fst.comp measurable_fst)).prodMk

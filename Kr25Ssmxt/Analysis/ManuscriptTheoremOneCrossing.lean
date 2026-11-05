@@ -35,16 +35,23 @@ theorem manuscriptOriginRefreshedComponentLaw_ae_of_forall
       hroute intensity c), q c' := by
   rw [manuscriptOriginRefreshedComponentLaw_eq_source hn P b eta threshold
     hthreshold hroute intensity c]
-  apply ae_bind_of_ae_ae_marksIn hq
+  apply ae_bind_of_ae_ae_marksIn
+    ((measurable_manuscriptOriginPoissonCoinTapeLaw hn P b eta threshold
+      hthreshold hroute intensity).comp c.measurable_refreshFuture).aemeasurable hq
   refine Filter.Eventually.of_forall (fun future => ?_)
   unfold manuscriptOriginPoissonCoinTapeLaw
-  apply ae_bind_of_ae_ae_marksIn hq
+  apply ae_bind_of_ae_ae_marksIn (measurable_of_countable _).aemeasurable hq
   refine Filter.Eventually.of_forall (fun basePending => ?_)
   unfold manuscriptOriginFairCoinTapeLaw
-  apply ae_bind_of_ae_ae_marksIn hq
+  apply ae_bind_of_ae_ae_marksIn
+    ((measurable_manuscriptOriginCoinPairTapeLaw hn P b eta threshold
+      hthreshold hroute intensity basePending).comp
+        (measurable_const.prodMk measurable_id)).aemeasurable hq
   refine Filter.Eventually.of_forall (fun coins => ?_)
   unfold manuscriptOriginCoinPairTapeLaw
-  apply ae_map_of_ae_marksIn hq
+  apply ae_map_of_ae_marksIn
+    ((c.refreshFuture future).measurable_advance_tape P intensity threshold
+      basePending coins.1 coins.2).aemeasurable hq
   exact Filter.Eventually.of_forall (fun tape =>
     hall future basePending coins.1 coins.2 tape)
 
@@ -208,7 +215,7 @@ theorem manuscriptOriginGivenVolumesLaw_crossing
         measurableSet_manuscriptOriginMarksIn S
       have hsuppD := hsupport d List.mem_cons_self
       have hmarks' : ∀ᵐ c ∂(μ.bind R), c.MarksIn S := by
-        apply ae_bind_of_ae_ae_marksIn hM
+        apply ae_bind_of_ae_ae_marksIn hR.aemeasurable hM
         filter_upwards [hmarks] with c hc
         exact manuscriptOriginRefreshedComponentLaw_ae_marksIn hn d.polytope
           b eta threshold hthreshold d.route intensity S hsuppD c hc

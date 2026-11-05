@@ -58,9 +58,9 @@ theorem TTCState.fixed_round_pointCounts_law {n : Nat}
       (s.samples.image Prod.fst → Bool) :=
     fun coins label => labelSurvives rounds (fun r => coins (r, label.1))
   have hdecisions : Measurable decisions := by
-    exact measurable_pi_lambda _ (fun label =>
+    exact Measurable.of_eval (fun label =>
       (measurable_labelSurvives rounds).comp
-        (measurable_pi_lambda _ (fun r => measurable_pi_apply (r, label.1))))
+        (Measurable.of_eval (fun r => measurable_pi_apply (r, label.1))))
   have hcount : Measurable (s.pointCountsFromDecisions S) :=
     Measurable.of_discrete
   calc
@@ -98,9 +98,9 @@ theorem TTCState.fixed_round_pointCounts_pending_law {n : Nat}
   let decisions : (Nat × Nat → Bool) → Nat → Bool :=
     fun coins label => labelSurvives rounds (fun r => coins (r, label))
   have hdecisions : Measurable decisions := by
-    exact measurable_pi_lambda _ (fun label =>
+    exact Measurable.of_eval (fun label =>
       (measurable_labelSurvives rounds).comp
-        (measurable_pi_lambda _ (fun r => measurable_pi_apply (r, label))))
+        (Measurable.of_eval (fun r => measurable_pi_apply (r, label))))
   let output : (Nat → Bool) → (S → Nat) × Nat := fun bits =>
     (s.pointCountsFromDecisions S (fun label => bits label.1),
       ((Finset.range pending).filter
@@ -110,7 +110,7 @@ theorem TTCState.fixed_round_pointCounts_pending_law {n : Nat}
         s.pointCountsFromDecisions S (fun label => bits label.1)) := by
       have hrestrict : Measurable (fun bits : Nat → Bool =>
           fun label : s.samples.image Prod.fst => bits label.1) :=
-        measurable_pi_lambda _ (fun label => measurable_pi_apply label.1)
+        Measurable.of_eval (fun label => measurable_pi_apply label.1)
       exact (Measurable.of_discrete :
         Measurable (s.pointCountsFromDecisions S)).comp hrestrict
     have hpending (T : Finset Nat) : Measurable (fun bits : Nat → Bool =>

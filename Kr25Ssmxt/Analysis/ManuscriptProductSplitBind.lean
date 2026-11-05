@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.CostedMeasureMonad
 import Kr25Ssmxt.Analysis.ManuscriptVolumeTrace
 
@@ -20,8 +21,8 @@ theorem measure_bind_prod_const
   have hfun : (fun a => (κ a).prod ν) =
       fun a => (κ a).bind (fun b => ν.map (Prod.mk b)) := by
     funext a
-    rw [Measure.prod]
-  rw [hfun, Measure.prod, Measure.bind_bind hκ.aemeasurable
+    rw [Measure.prod_eq_bind_map]
+  rw [hfun, Measure.prod_eq_bind_map, Measure.bind_bind hκ.aemeasurable
     hinner.aemeasurable]
 
 /-- The observation of a law is independent of a tail with law `ν`. -/

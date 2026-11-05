@@ -25,7 +25,7 @@ theorem measurable_manuscriptSourceOldCoins_joint {n : Nat} :
       measurable_manuscriptOriginConfiguration_source
   have hlevel : Measurable (fun c : ManuscriptOriginConfiguration n =>
       c.level) := measurable_manuscriptOriginConfiguration_level
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   have horiginLabel : Measurable (fun c : ManuscriptOriginConfiguration n =>
       c.origin pair.2) := (measurable_pi_apply pair.2).comp horigin

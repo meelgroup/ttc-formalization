@@ -416,7 +416,7 @@ theorem ManuscriptOriginConfiguration.refreshFuture_oldKernelLaw
       funext future pair
       exact congrFun (c.refreshFuture_oldCoins future) (pair.1, pair.2.val)
     rw [hfun]
-    exact measurable_pi_lambda _ (fun pair =>
+    exact Measurable.of_eval (fun pair =>
       measurable_pi_apply (manuscriptOriginCoinIndex
         c.state.nextLabel c.origin pair))
   let K := communityManuscriptOriginTapeKernel hn P b eta threshold hroute
@@ -502,7 +502,7 @@ theorem ManuscriptOriginConfiguration.refreshFuture_jointCoinKernelLaw
       funext future pair
       exact congrFun (c.refreshFuture_oldCoins future) (pair.1, pair.2.val)
     rw [hfun]
-    exact measurable_pi_lambda _ (fun pair =>
+    exact Measurable.of_eval (fun pair =>
       measurable_pi_apply (manuscriptOriginCoinIndex
         c.state.nextLabel c.origin pair))
   have hfreshOf : Measurable freshOf :=

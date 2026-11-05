@@ -1,12 +1,500 @@
 import Kr25Ssmxt.Analysis.PoissonMean
 import Kr25Ssmxt.Analysis.ScaledVolumeBridge
 import Kr25Ssmxt.Analysis.TTCPaperRuntime
+import Kr25Ssmxt.Analysis.ManuscriptRateKernelMeasurable
+import Kr25Ssmxt.Analysis.MeasurableAddBatch
+import Kr25Ssmxt.Analysis.MeasurablePoissonMeasure
+import Kr25Ssmxt.Analysis.MeasurableRemoveComponent
 
 /-! Expected cost of the manuscript's adaptive rate and count thinning stages. -/
 
 namespace Kr25Ssmxt
 
 open MeasureTheory ProbabilityTheory
+
+/-! ### Kernel measurability of the charged component stages
+
+Mathlib's `Measure.bind` and `Measure.map` accounting lemmas require
+measurable continuations. These private lemmas supply them for the concrete
+community oracles; they mirror the output-marginal proofs downstream. -/
+
+private theorem ce_samples_mass_le_one_all
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (count b : Nat)
+    (eta delta : Real) :
+    ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+      P count b eta delta) Set.univ ≤ 1 := by
+  classical
+  by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+      (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
+  · exact communityManuscriptCosted_samples_mass_le_one hn prep factor
+      P count b eta delta h
+  · simp [communityManuscriptCostedOracles, h, costedCharge,
+      failedSampleBatchLaw]
+
+private theorem ce_append_charge_measurable {n count : Nat}
+    (state : TTCState n) (charge : Nat) :
+    Measurable (fun batch : SampleBatch n count =>
+      costedCharge (Measure.dirac (state.addBatch batch.2)) charge) := by
+  have hf : Measurable (fun batch : SampleBatch n count => state.addBatch batch.2) :=
+    measurable_addBatch.comp
+      (measurable_const.prodMk (measurable_snd :
+        Measurable (fun batch : SampleBatch n count => batch.2)))
+  exact (Measure.measurable_map _ (by fun_prop)).comp
+    (Measure.measurable_dirac.comp hf)
+
+private theorem ce_sample_append_kernel_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta : Real) :
+    Measurable (fun z : TTCState n × Nat =>
+      costedBind
+        ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+          P z.2 b eta delta)
+        (fun batch => costedCharge (Measure.dirac (z.1.addBatch batch.2))
+          (z.2 * TTCRuntime.appendCopyOperations))) := by
+  apply measurable_from_prod_countable_left
+  intro count
+  let μ := (communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+    P count b eta delta
+  have hmass : μ Set.univ ≤ 1 :=
+    ce_samples_mass_le_one_all hn prep factor P count b eta delta
+  letI : IsFiniteMeasure μ := ⟨lt_of_le_of_lt hmass (by norm_num)⟩
+  let G : TTCState n × (SampleBatch n count × Nat) → TTCState n × Nat :=
+    fun z => (z.1.addBatch z.2.1.2,
+      z.2.2 + count * TTCRuntime.appendCopyOperations)
+  have hpoints : Measurable
+      (fun z : TTCState n × (SampleBatch n count × Nat) => z.2.1.2) :=
+    (measurable_snd.comp (measurable_fst.comp measurable_snd))
+  have hadded : Measurable
+      (fun z : TTCState n × (SampleBatch n count × Nat) =>
+        z.1.addBatch z.2.1.2) :=
+    measurable_addBatch.comp (measurable_fst.prodMk hpoints)
+  have hcost : Measurable
+      (fun z : TTCState n × (SampleBatch n count × Nat) =>
+        z.2.2 + count * TTCRuntime.appendCopyOperations) :=
+    (measurable_of_countable (fun c : Nat =>
+      c + count * TTCRuntime.appendCopyOperations)).comp
+      (measurable_snd.comp measurable_snd)
+  have hG : Measurable G := hadded.prodMk hcost
+  have hpair : Measurable (fun state : TTCState n => μ.map (Prod.mk state)) :=
+    Measurable.map_prodMk_left
+  have hmap : Measurable (fun state : TTCState n =>
+      μ.map fun result => (state.addBatch result.1.2,
+        result.2 + count * TTCRuntime.appendCopyOperations)) := by
+    have h := (Measure.measurable_map G hG).comp hpair
+    convert h using 1
+    funext state
+    change μ.map (fun result => (state.addBatch result.1.2,
+        result.2 + count * TTCRuntime.appendCopyOperations)) =
+      (μ.map (Prod.mk state)).map G
+    rw [Measure.map_map hG measurable_prodMk_left]
+    rfl
+  convert hmap using 1
+  funext state
+  exact costedBind_dirac_eq_map μ
+    (fun batch => state.addBatch batch.2)
+    (fun _ => count * TTCRuntime.appendCopyOperations)
+    (measurable_addBatch.comp
+      (measurable_const.prodMk (measurable_snd :
+        Measurable (fun batch : SampleBatch n count => batch.2)))) measurable_const
+
+private theorem ce_count_sample_append_kernel_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) :
+    Measurable (fun z : TTCState n × Nat =>
+      costedBind (manuscriptCountThinWithCost z.1 z.2 threshold)
+        (fun secondThinned => costedBind
+          ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+            P secondThinned.2 b eta delta)
+          (fun batch => costedCharge
+            (Measure.dirac (secondThinned.1.addBatch batch.2))
+            (secondThinned.2 * TTCRuntime.appendCopyOperations)))) := by
+  have h := costedBind_kernel_measurable
+      (fun z : TTCState n × Nat => manuscriptCountThinWithCost z.1 z.2 threshold) _
+      (manuscriptCountThinWithCost_kernel_measurable threshold)
+      (ce_sample_append_kernel_measurable hn prep factor P b eta delta)
+  exact h
+
+private theorem ce_state_rate_measurable {n : Nat} :
+    Measurable (fun s : TTCState n => s.rate) :=
+  measurable_fst.comp (comap_measurable _ : Measurable (fun s : TTCState n =>
+    (s.rate, s.samples, s.nextLabel)))
+
+private theorem ce_poisson_count_kernel_measurable {n : Nat}
+    (intensity : NNReal) (threshold : Real) :
+    Measurable (fun firstThinned : TTCState n =>
+      costedBind
+        (costedCharge (poissonMeasure (intensity * firstThinned.rate))
+          TTCRuntime.poissonDrawOperations)
+        (fun pending => manuscriptCountThinWithCost firstThinned pending threshold)) := by
+  have h := measurable_nat_costedCharge_bind_kernel
+      (fun firstThinned : TTCState n => poissonMeasure (intensity * firstThinned.rate))
+      (fun z : TTCState n × Nat => manuscriptCountThinWithCost z.1 z.2 threshold)
+      TTCRuntime.poissonDrawOperations
+      (measurable_poissonMeasure.comp (measurable_const.mul ce_state_rate_measurable))
+      (manuscriptCountThinWithCost_kernel_measurable threshold)
+  exact h
+
+private theorem ce_poisson_count_sample_joint_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) :
+    Measurable (fun z : TTCState n × NNReal =>
+      costedBind
+        (costedCharge (poissonMeasure (z.2 * z.1.rate))
+          TTCRuntime.poissonDrawOperations)
+        (fun pending =>
+          costedBind (manuscriptCountThinWithCost z.1 pending threshold)
+            (fun secondThinned => costedBind
+              ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                P secondThinned.2 b eta delta)
+              (fun batch => costedCharge
+                (Measure.dirac (secondThinned.1.addBatch batch.2))
+                (secondThinned.2 * TTCRuntime.appendCopyOperations))))) := by
+  have hlaw : Measurable (fun z : TTCState n × NNReal => poissonMeasure (z.2 * z.1.rate)) := by
+    have h := measurable_poissonMeasure.comp
+      ((measurable_snd : Measurable (fun z : TTCState n × NNReal => z.2)).mul
+        ((ce_state_rate_measurable (n := n)).comp measurable_fst))
+    exact h
+  have hnext : Measurable (fun w : (TTCState n × NNReal) × Nat =>
+      costedBind (manuscriptCountThinWithCost w.1.1 w.2 threshold)
+        (fun secondThinned => costedBind
+          ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+            P secondThinned.2 b eta delta)
+          (fun batch => costedCharge
+            (Measure.dirac (secondThinned.1.addBatch batch.2))
+            (secondThinned.2 * TTCRuntime.appendCopyOperations)))) := by
+    have h := (ce_count_sample_append_kernel_measurable hn prep factor P b eta delta
+      threshold).comp ((measurable_fst.comp measurable_fst).prodMk measurable_snd :
+        Measurable (fun w : (TTCState n × NNReal) × Nat => (w.1.1, w.2)))
+    exact h
+  have h := measurable_nat_costedCharge_bind_kernel _ _
+    TTCRuntime.poissonDrawOperations hlaw hnext
+  exact h
+
+private theorem ce_rate_tail_joint_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold) :
+    Measurable (fun z : TTCState n × NNReal =>
+      costedBind (manuscriptRateThinWithCost z.1 z.2 threshold)
+        (fun firstThinned =>
+          costedBind
+            (costedCharge (poissonMeasure (z.2 * firstThinned.rate))
+              TTCRuntime.poissonDrawOperations)
+            (fun pending =>
+              costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                (fun secondThinned => costedBind
+                  ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                    P secondThinned.2 b eta delta)
+                  (fun batch => costedCharge
+                    (Measure.dirac (secondThinned.1.addBatch batch.2))
+                    (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) := by
+  have hnext : Measurable (fun w : (TTCState n × NNReal) × TTCState n =>
+      costedBind
+        (costedCharge (poissonMeasure (w.1.2 * w.2.rate))
+          TTCRuntime.poissonDrawOperations)
+        (fun pending =>
+          costedBind (manuscriptCountThinWithCost w.2 pending threshold)
+            (fun secondThinned => costedBind
+              ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                P secondThinned.2 b eta delta)
+              (fun batch => costedCharge
+                (Measure.dirac (secondThinned.1.addBatch batch.2))
+                (secondThinned.2 * TTCRuntime.appendCopyOperations))))) := by
+    have h := (ce_poisson_count_sample_joint_measurable hn prep factor P b eta delta
+      threshold).comp (measurable_snd.prodMk (measurable_snd.comp measurable_fst) :
+        Measurable (fun w : (TTCState n × NNReal) × TTCState n => (w.2, w.1.2)))
+    exact h
+  have h := measurable_costedBind_dependent_finite _ _
+    (manuscriptRateThinWithCost_kernel_measurable threshold hthreshold) hnext
+    (fun z => manuscriptRateThinWithCost_mass_le_one z.1 z.2 threshold)
+  exact h
+
+private theorem ce_poisson_count_sample_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (intensity : NNReal) :
+    Measurable (fun firstThinned : TTCState n =>
+      costedBind
+        (costedCharge (poissonMeasure (intensity * firstThinned.rate))
+          TTCRuntime.poissonDrawOperations)
+        (fun pending =>
+          costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+            (fun secondThinned => costedBind
+              ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                P secondThinned.2 b eta delta)
+              (fun batch => costedCharge
+                (Measure.dirac (secondThinned.1.addBatch batch.2))
+                (secondThinned.2 * TTCRuntime.appendCopyOperations))))) := by
+  have h := (ce_poisson_count_sample_joint_measurable hn prep factor P b eta delta
+    threshold).comp (measurable_id.prodMk measurable_const :
+      Measurable (fun s : TTCState n => (s, intensity)))
+  exact h
+
+private theorem ce_rate_tail_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold) (intensity : NNReal) :
+    Measurable (fun deleted : TTCState n =>
+      costedBind (manuscriptRateThinWithCost deleted intensity threshold)
+        (fun firstThinned =>
+          costedBind
+            (costedCharge (poissonMeasure (intensity * firstThinned.rate))
+              TTCRuntime.poissonDrawOperations)
+            (fun pending =>
+              costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                (fun secondThinned => costedBind
+                  ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                    P secondThinned.2 b eta delta)
+                  (fun batch => costedCharge
+                    (Measure.dirac (secondThinned.1.addBatch batch.2))
+                    (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) := by
+  have h := (ce_rate_tail_joint_measurable hn prep factor P b eta delta threshold
+    hthreshold).comp (measurable_id.prodMk measurable_const :
+      Measurable (fun s : TTCState n => (s, intensity)))
+  exact h
+
+private theorem ce_deletion_pair_measurable {n : Nat}
+    (P : PolytopeData n) :
+    Measurable (fun state : TTCState n =>
+      (state.removeComponent P,
+        TTCRuntime.deletionPassOperations n P.presentation.facetCount
+          state.samples.card
+          (state.samples.card - (state.removeComponent P).samples.card))) := by
+  have hcoords : Measurable (fun s : TTCState n =>
+      (s.rate, s.samples, s.nextLabel)) := comap_measurable _
+  have hsamples : Measurable (fun s : TTCState n => s.samples) :=
+    (measurable_fst.comp measurable_snd).comp hcoords
+  have hcard : Measurable (fun s : TTCState n => s.samples.card) :=
+    (measurable_of_countable (fun copies : Finset (SampleCopy n) =>
+      copies.card)).comp hsamples
+  have hdeleted : Measurable (fun s : TTCState n => s.removeComponent P) :=
+    measurable_removeComponent P
+  have hcost : Measurable (fun s : TTCState n =>
+      TTCRuntime.deletionPassOperations n P.presentation.facetCount
+        s.samples.card
+        (s.samples.card - (s.removeComponent P).samples.card)) := by
+    let f : Nat × Nat → Nat := fun counts =>
+      TTCRuntime.deletionPassOperations n P.presentation.facetCount counts.1
+        (counts.1 - counts.2)
+    have hf : Measurable f := measurable_of_countable f
+    exact hf.comp (hcard.prodMk (hcard.comp hdeleted))
+  exact hdeleted.prodMk hcost
+
+private theorem ce_deletion_tail_joint_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold) :
+    Measurable (fun z : TTCState n × NNReal =>
+      costedBind
+        (costedCharge (Measure.dirac (z.1.removeComponent P))
+          (TTCRuntime.deletionPassOperations n P.presentation.facetCount
+            z.1.samples.card
+            (z.1.samples.card - (z.1.removeComponent P).samples.card)))
+        (fun deleted =>
+          costedBind (manuscriptRateThinWithCost deleted z.2 threshold)
+            (fun firstThinned =>
+              costedBind
+                (costedCharge (poissonMeasure (z.2 * firstThinned.rate))
+                  TTCRuntime.poissonDrawOperations)
+                (fun pending =>
+                  costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                    (fun secondThinned => costedBind
+                      ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                        P secondThinned.2 b eta delta)
+                      (fun batch => costedCharge
+                        (Measure.dirac (secondThinned.1.addBatch batch.2))
+                        (secondThinned.2 * TTCRuntime.appendCopyOperations))))))) := by
+  have hpair := (ce_deletion_pair_measurable P).comp
+    (measurable_fst : Measurable (fun z : TTCState n × NNReal => z.1))
+  have hfirst : Measurable (fun z : TTCState n × NNReal =>
+      costedCharge (Measure.dirac (z.1.removeComponent P))
+        (TTCRuntime.deletionPassOperations n P.presentation.facetCount
+          z.1.samples.card
+          (z.1.samples.card - (z.1.removeComponent P).samples.card))) := by
+    have heq : (fun z : TTCState n × NNReal =>
+        costedCharge (Measure.dirac (z.1.removeComponent P))
+          (TTCRuntime.deletionPassOperations n P.presentation.facetCount
+            z.1.samples.card
+            (z.1.samples.card - (z.1.removeComponent P).samples.card))) =
+        (fun z : TTCState n × NNReal => Measure.dirac
+          (z.1.removeComponent P,
+            TTCRuntime.deletionPassOperations n P.presentation.facetCount
+              z.1.samples.card
+              (z.1.samples.card - (z.1.removeComponent P).samples.card))) := by
+      funext z
+      simp only [costedCharge, Measure.map_dirac' (by fun_prop :
+        Measurable (fun result : TTCState n => (result,
+          TTCRuntime.deletionPassOperations n P.presentation.facetCount
+            z.1.samples.card
+            (z.1.samples.card - (z.1.removeComponent P).samples.card)))) _]
+    rw [heq]
+    exact Measure.measurable_dirac.comp hpair
+  have hnext : Measurable (fun w : (TTCState n × NNReal) × TTCState n =>
+      costedBind (manuscriptRateThinWithCost w.2 w.1.2 threshold)
+        (fun firstThinned =>
+          costedBind
+            (costedCharge (poissonMeasure (w.1.2 * firstThinned.rate))
+              TTCRuntime.poissonDrawOperations)
+            (fun pending =>
+              costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                (fun secondThinned => costedBind
+                  ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                    P secondThinned.2 b eta delta)
+                  (fun batch => costedCharge
+                    (Measure.dirac (secondThinned.1.addBatch batch.2))
+                    (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) := by
+    have h := (ce_rate_tail_joint_measurable hn prep factor P b eta delta threshold
+      hthreshold).comp (measurable_snd.prodMk (measurable_snd.comp measurable_fst) :
+        Measurable (fun w : (TTCState n × NNReal) × TTCState n => (w.2, w.1.2)))
+    exact h
+  have h := measurable_costedBind_dependent_finite _ _ hfirst hnext
+    (fun z => costedCharge_mass_le_one _ _ (by simp))
+  exact h
+
+private theorem ce_intensity_measurable (b n : Nat) (threshold : Real) :
+    Measurable (fun outcome : VolumeOutcome =>
+      manuscriptIntensity b n threshold outcome.2) := by
+  unfold manuscriptIntensity
+  exact measurable_const.mul measurable_snd
+
+private theorem ce_component_tail_joint_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold) :
+    Measurable (fun z : TTCState n × VolumeOutcome =>
+      costedBind
+        (costedCharge (Measure.dirac (z.1.removeComponent P))
+          (TTCRuntime.deletionPassOperations n P.presentation.facetCount
+            z.1.samples.card
+            (z.1.samples.card - (z.1.removeComponent P).samples.card)))
+        (fun deleted =>
+          costedBind (manuscriptRateThinWithCost deleted
+              (manuscriptIntensity b n threshold z.2.2) threshold)
+            (fun firstThinned =>
+              costedBind
+                (costedCharge (poissonMeasure
+                  (manuscriptIntensity b n threshold z.2.2 * firstThinned.rate))
+                  TTCRuntime.poissonDrawOperations)
+                (fun pending =>
+                  costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                    (fun secondThinned => costedBind
+                      ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                        P secondThinned.2 b eta delta)
+                      (fun batch => costedCharge
+                        (Measure.dirac (secondThinned.1.addBatch batch.2))
+                        (secondThinned.2 * TTCRuntime.appendCopyOperations))))))) := by
+  have h := (ce_deletion_tail_joint_measurable hn prep factor P b eta delta threshold
+      hthreshold).comp
+      (measurable_fst.prodMk ((ce_intensity_measurable b n threshold).comp measurable_snd))
+  exact h
+
+private theorem ce_component_step_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold)
+    (state : TTCState n) :
+    Measurable (fun volumeOutcome : VolumeOutcome =>
+      costedBind
+        (costedCharge (Measure.dirac (state.removeComponent P))
+          (TTCRuntime.deletionPassOperations n P.presentation.facetCount
+            state.samples.card
+            (state.samples.card - (state.removeComponent P).samples.card)))
+        (fun deleted =>
+          costedBind (manuscriptRateThinWithCost deleted
+              (manuscriptIntensity b n threshold volumeOutcome.2) threshold)
+            (fun firstThinned =>
+              costedBind
+                (costedCharge (poissonMeasure
+                  (manuscriptIntensity b n threshold volumeOutcome.2 * firstThinned.rate))
+                  TTCRuntime.poissonDrawOperations)
+                (fun pending =>
+                  costedBind (manuscriptCountThinWithCost firstThinned pending threshold)
+                    (fun secondThinned => costedBind
+                      ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+                        P secondThinned.2 b eta delta)
+                      (fun batch => costedCharge
+                        (Measure.dirac (secondThinned.1.addBatch batch.2))
+                        (secondThinned.2 * TTCRuntime.appendCopyOperations))))))) := by
+  have h := (ce_component_tail_joint_measurable hn prep factor P b eta delta threshold
+      hthreshold).comp (measurable_const.prodMk measurable_id :
+        Measurable (fun volumeOutcome : VolumeOutcome => (state, volumeOutcome)))
+  exact h
+
+private theorem ce_component_kernel_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold)
+    (hvolume : ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      P eta delta) Set.univ ≤ 1) :
+    Measurable (fun state : TTCState n =>
+      manuscriptProcessComponentWithCost
+        (communityManuscriptCostedOracles hn prep factor)
+        b eta delta threshold P state) := by
+  have h := measurable_costedBind_dependent_finite
+      (fun _ : TTCState n =>
+        (communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          P eta delta) _
+      measurable_const
+      (ce_component_tail_joint_measurable hn prep factor P b eta delta threshold
+        hthreshold)
+      (fun _ => hvolume)
+  exact h
+
+private theorem ce_components_kernel_measurable
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor b : Nat) (eta delta threshold : Real)
+    (hthreshold : 0 < threshold)
+    (components : List (PolytopeData n))
+    (hvolume : ∀ P ∈ components,
+      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+        P eta delta) Set.univ ≤ 1) :
+    Measurable (fun state : TTCState n =>
+      manuscriptProcessComponentsWithCost
+        (communityManuscriptCostedOracles hn prep factor)
+        b eta delta threshold components state) := by
+  induction components with
+  | nil =>
+      change Measurable (fun state : TTCState n => Measure.dirac (state, 0))
+      exact Measure.measurable_dirac.comp (measurable_id.prodMk measurable_const)
+  | cons P rest ih =>
+      have hrest : ∀ Q ∈ rest,
+          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+            Q eta delta) Set.univ ≤ 1 := by
+        intro Q hQ
+        exact hvolume Q (by simp [hQ])
+      change Measurable (fun state : TTCState n =>
+        costedBind
+          (manuscriptProcessComponentWithCost
+            (communityManuscriptCostedOracles hn prep factor)
+            b eta delta threshold P state)
+          (manuscriptProcessComponentsWithCost
+            (communityManuscriptCostedOracles hn prep factor)
+            b eta delta threshold rest))
+      exact costedBind_kernel_measurable _ _
+        (ce_component_kernel_measurable hn prep factor P b eta delta threshold
+          hthreshold (hvolume P (by simp)))
+        (ih hrest)
+
+private theorem ce_manuscriptEstimate_measurable {n : Nat} (b : Nat)
+    (threshold : Real) :
+    Measurable (manuscriptEstimate (n := n) b threshold) := by
+  have hcoords : Measurable (fun s : TTCState n =>
+      (s.rate, s.samples, s.nextLabel)) := comap_measurable _
+  have hrate : Measurable (fun s : TTCState n => s.rate) :=
+    measurable_fst.comp hcoords
+  have hsamples : Measurable (fun s : TTCState n => s.samples) :=
+    (measurable_fst.comp measurable_snd).comp hcoords
+  have hcount : Measurable (fun s : TTCState n =>
+      (s.samples.card : NNReal)) :=
+    (measurable_of_countable (fun copies : Finset (SampleCopy n) =>
+      (copies.card : NNReal))).comp hsamples
+  unfold manuscriptEstimate
+  exact hcount.div ((hrate.mul_const _).mul_const _)
+
 
 theorem PolytopeData.clipManuscriptVolume_le_max {n : Nat}
     (P : PolytopeData n) (eta : Real) (o : VolumeOutcome) :
@@ -79,6 +567,7 @@ theorem certified_community_volume_continuation_bound {n k : Nat}
     (communityCV18VolumeLaw (by omega) (D.component i) p.epsilonPrime
       (p.deltaPrime D.componentCount))
     ((D.component i).clipManuscriptVolume p.epsilonPrime)
+    ((D.component i).measurable_clipManuscriptVolume p.epsilonPrime).aemeasurable
     (TTCRuntime.membershipQueryOperations n
       (D.component i).presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) (D.component i)
@@ -162,14 +651,18 @@ theorem manuscriptRatePoissonCount_expected_cost_le {n : Nat}
       (fun pending => manuscriptCountThinWithCost firstThinned pending threshold)
   have hnextMass (firstThinned : TTCState n) :
       (next firstThinned) Set.univ ≤ 1 := by
-    apply costedBind_mass_le_one
+    refine costedBind_mass_le_one _ _ (measurable_of_countable _) ?_ ?_
     · apply costedCharge_mass_le_one
       simp
     · intro pending
       exact manuscriptCountThinWithCost_mass_le_one firstThinned pending threshold
-  apply (costedBind_lintegral_cost_le _ next hnextMass).trans
+  have hnextMeas : Measurable next :=
+    ce_poisson_count_kernel_measurable intensity threshold
+  apply (costedBind_lintegral_cost_le _ next hnextMeas hnextMass).trans
   unfold manuscriptRateThinWithCost
-  apply (lintegral_map_le _ _).trans
+  apply (lintegral_map_le _
+    ((measurable_manuscriptRateThinningResult s intensity threshold).prodMk
+      measurable_const).aemeasurable).trans
   simp only
   rw [lintegral_add_left (by fun_prop)]
   haveI : IsProbabilityMeasure fairCoinStreamLaw :=
@@ -216,7 +709,8 @@ theorem manuscriptSampleAppend_expected_cost_le {n : Nat} {count : Nat}
         costedCharge (Measure.dirac (state.addBatch batch.2))
           (count * TTCRuntime.appendCopyOperations))) ≤
       sampleBudget + count * TTCRuntime.appendCopyOperations := by
-  apply costedBind_expected_cost_le_add sampleLaw _ hsampleMass
+  apply costedBind_expected_cost_le_add sampleLaw _
+    (ce_append_charge_measurable state _) hsampleMass
   · intro batch
     apply costedCharge_mass_le_one
     simp
@@ -293,13 +787,16 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
           (secondThinned.2 * TTCRuntime.appendCopyOperations))
   have hnextMass (secondThinned : TTCState n × Nat) :
       (next secondThinned) Set.univ ≤ 1 := by
-    apply costedBind_mass_le_one
+    refine costedBind_mass_le_one _ _ (ce_append_charge_measurable _ _) ?_ ?_
     · exact certified_community_sampler_mass_le_one hn D p b hprecision
         prep factor secondThinned.2 (p.deltaPrime D.componentCount) i
     · intro batch
       apply costedCharge_mass_le_one
       simp
-  apply (costedBind_lintegral_cost_le _ next hnextMass).trans
+  have hnextMeas : Measurable next :=
+    ce_sample_append_kernel_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount)
+  apply (costedBind_lintegral_cost_le _ next hnextMeas hnextMass).trans
   rw [lintegral_add_left (by fun_prop)]
   apply add_le_add_right
   have hnextCost (secondThinned : TTCState n × Nat) :
@@ -355,10 +852,12 @@ theorem certified_count_sample_append_mass_le_one {n k : Nat}
           (fun batch => costedCharge
             (Measure.dirac (secondThinned.1.addBatch batch.2))
             (secondThinned.2 * TTCRuntime.appendCopyOperations)))) Set.univ ≤ 1 := by
-  apply costedBind_mass_le_one
+  refine costedBind_mass_le_one _ _
+    (ce_sample_append_kernel_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount)) ?_ ?_
   · exact manuscriptCountThinWithCost_mass_le_one state pending _
   · intro secondThinned
-    apply costedBind_mass_le_one
+    refine costedBind_mass_le_one _ _ (ce_append_charge_measurable _ _) ?_ ?_
     · exact certified_community_sampler_mass_le_one hn D p b hprecision
         prep factor secondThinned.2 (p.deltaPrime D.componentCount) i
     · intro batch
@@ -415,9 +914,9 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
   have hnextMass (pending : Nat) : (next pending) Set.univ ≤ 1 :=
     certified_count_sample_append_mass_le_one hn D p b hprecision prep factor
       pending i state
-  apply (costedBind_lintegral_cost_le _ next hnextMass).trans
+  apply (costedBind_lintegral_cost_le _ next (measurable_of_countable _) hnextMass).trans
   unfold costedCharge
-  apply (lintegral_map_le _ _).trans
+  apply (lintegral_map_le _ (measurable_id.prodMk measurable_const).aemeasurable).trans
   simp only
   rw [lintegral_add_left (by fun_prop)]
   simp only [lintegral_const, measure_univ, mul_one]
@@ -508,15 +1007,20 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
                 (secondThinned.2 * TTCRuntime.appendCopyOperations))))
   have hnextMass (firstThinned : TTCState n) :
       (next firstThinned) Set.univ ≤ 1 := by
-    apply costedBind_mass_le_one
+    refine costedBind_mass_le_one _ _ (measurable_of_countable _) ?_ ?_
     · apply costedCharge_mass_le_one
       simp
     · intro pending
       exact certified_count_sample_append_mass_le_one hn D p b hprecision
         prep factor pending i firstThinned
-  apply (costedBind_lintegral_cost_le _ next hnextMass).trans
+  have hnextMeas : Measurable next :=
+    ce_poisson_count_sample_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount) threshold intensity
+  apply (costedBind_lintegral_cost_le _ next hnextMeas hnextMass).trans
   unfold manuscriptRateThinWithCost
-  apply (lintegral_map_le _ _).trans
+  apply (lintegral_map_le _
+    ((measurable_manuscriptRateThinningResult state intensity threshold).prodMk
+      measurable_const).aemeasurable).trans
   simp only
   rw [lintegral_add_left (by fun_prop)]
   haveI : IsProbabilityMeasure fairCoinStreamLaw :=
@@ -582,10 +1086,13 @@ theorem certified_rate_rest_mass_le_one {n k : Nat}
                     (Measure.dirac (secondThinned.1.addBatch batch.2))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations))))))
         Set.univ ≤ 1 := by
-  apply costedBind_mass_le_one
+  refine costedBind_mass_le_one _ _
+    (ce_poisson_count_sample_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      intensity) ?_ ?_
   · exact manuscriptRateThinWithCost_mass_le_one state intensity _
   · intro firstThinned
-    apply costedBind_mass_le_one
+    refine costedBind_mass_le_one _ _ (measurable_of_countable _) ?_ ?_
     · apply costedCharge_mass_le_one
       simp
     · intro pending
@@ -671,7 +1178,12 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
       hsamples
   have hcost := certified_rate_poisson_count_sample_expected_cost hn D p b
     hprecision prep factor i deleted intensity hdeleted
-  have hstep := costedBind_charge_dirac_expected_cost_le deleted deletionCost next hmass
+  have hnextMeas : Measurable next :=
+    ce_rate_tail_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount) intensity
+  have hstep := costedBind_charge_dirac_expected_cost_le deleted deletionCost next
+    hnextMeas hmass
   calc
     _ ≤ (deletionCost : ENNReal) +
         (∫⁻ result, (result.2 : ENNReal) ∂next deleted) := hstep
@@ -878,7 +1390,12 @@ theorem certified_manuscript_component_expected_cost {n k : Nat}
   have hstepMass (volumeOutcome : VolumeOutcome) :
       (step volumeOutcome) Set.univ ≤ 1 := by
     dsimp only [step]
-    apply costedBind_mass_le_one
+    refine costedBind_mass_le_one _ _
+      (ce_rate_tail_measurable hn prep factor P b p.epsilonPrime
+        (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+        (p.threshold_pos D.componentCount)
+        (manuscriptIntensity b n (p.threshold D.componentCount) volumeOutcome.2))
+      ?_ ?_
     · apply costedCharge_mass_le_one
       simp
     · intro deleted
@@ -894,7 +1411,11 @@ theorem certified_manuscript_component_expected_cost {n k : Nat}
   change (∫⁻ result, (result.2 : ENNReal) ∂
     costedBind (O.computeVolumeWithCost P p.epsilonPrime
       (p.deltaPrime D.componentCount)) step) ≤ _
-  apply (costedBind_lintegral_cost_le _ step hstepMass).trans
+  have hstepMeas : Measurable step :=
+    ce_component_step_measurable hn prep factor P b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount) state
+  apply (costedBind_lintegral_cost_le _ step hstepMeas hstepMass).trans
   exact certified_community_volume_continuation_bound hn D p prep factor i
     (fun outcome => ∫⁻ result, (result.2 : ENNReal) ∂step outcome)
     hstepCost
@@ -951,9 +1472,17 @@ theorem certified_manuscript_component_mass_le_one {n k : Nat}
       MeasurableSet.univ]
     simpa using hcv
   unfold manuscriptProcessComponentWithCost
-  apply costedBind_mass_le_one _ _ hvol
+  refine costedBind_mass_le_one _ _
+    (ce_component_step_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount) state) hvol ?_
   intro volumeOutcome
-  apply costedBind_mass_le_one
+  refine costedBind_mass_le_one _ _
+    (ce_rate_tail_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount)
+      (manuscriptIntensity b n (p.threshold D.componentCount) volumeOutcome.2))
+    ?_ ?_
   · apply costedCharge_mass_le_one
     simp
   · intro deleted
@@ -1040,7 +1569,8 @@ private theorem sample_append_card_le_ae {n : Nat} {count : Nat}
       (fun batch => costedCharge (Measure.dirac (state.addBatch batch.2))
         (count * TTCRuntime.appendCopyOperations)),
       (result.1.samples.card : Real) ≤ threshold := by
-  apply costedBind_ae_state_of_ae sampleLaw _ (fun _ => True)
+  apply costedBind_ae_state_of_ae sampleLaw _ (ce_append_charge_measurable state _)
+    (fun _ => True)
     (fun s : TTCState n => (s.samples.card : Real) ≤ threshold)
     (measurableSet_state_card_le threshold)
   · exact Filter.Eventually.of_forall (fun _ => trivial)
@@ -1067,6 +1597,8 @@ private theorem count_sample_append_card_le_ae {n k : Nat}
               (secondThinned.2 * TTCRuntime.appendCopyOperations))),
         (result.1.samples.card : Real) ≤ p.threshold D.componentCount := by
   apply costedBind_ae_state_of_ae _ _
+    (ce_sample_append_kernel_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount))
     (fun secondThinned : TTCState n × Nat =>
       ((secondThinned.1.samples.card + secondThinned.2 : Nat) : Real) ≤
         p.threshold D.componentCount)
@@ -1090,19 +1622,28 @@ theorem certified_manuscript_component_card_le_ae {n k : Nat}
       (result.1.samples.card : Real) ≤ p.threshold D.componentCount := by
   unfold manuscriptProcessComponentWithCost
   apply costedBind_ae_state_of_forall _ _
+    (ce_component_step_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount) state)
     (fun s : TTCState n => (s.samples.card : Real) ≤ p.threshold D.componentCount)
     (measurableSet_state_card_le _)
   intro volumeOutcome
-  dsimp only
   apply costedBind_ae_state_of_forall _ _
+    (ce_rate_tail_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount)
+      (manuscriptIntensity b n (p.threshold D.componentCount) volumeOutcome.2))
     (fun s : TTCState n => (s.samples.card : Real) ≤ p.threshold D.componentCount)
     (measurableSet_state_card_le _)
   intro deleted
   apply costedBind_ae_state_of_forall _ _
+    (ce_poisson_count_sample_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (manuscriptIntensity b n (p.threshold D.componentCount) volumeOutcome.2))
     (fun s : TTCState n => (s.samples.card : Real) ≤ p.threshold D.componentCount)
     (measurableSet_state_card_le _)
   intro firstThinned
-  apply costedBind_ae_state_of_forall _ _
+  apply costedBind_ae_state_of_forall _ _ (measurable_of_countable _)
     (fun s : TTCState n => (s.samples.card : Real) ≤ p.threshold D.componentCount)
     (measurableSet_state_card_le _)
   intro pending
@@ -1115,7 +1656,7 @@ private theorem sample_append_rate_le_one_ae {n : Nat} {count : Nat}
       (fun batch => costedCharge (Measure.dirac (state.addBatch batch.2))
         (count * TTCRuntime.appendCopyOperations)),
       result.1.rate ≤ 1 := by
-  apply costedBind_ae_state_of_forall _ _
+  apply costedBind_ae_state_of_forall _ _ (ce_append_charge_measurable state _)
     (fun s : TTCState n => s.rate ≤ 1) measurableSet_state_rate_le_one
   intro batch
   apply costedCharge_dirac_ae_state _ _ _ measurableSet_state_rate_le_one
@@ -1139,6 +1680,8 @@ private theorem count_sample_append_rate_le_one_ae {n k : Nat}
               (secondThinned.2 * TTCRuntime.appendCopyOperations))),
         result.1.rate ≤ 1 := by
   apply costedBind_ae_state_of_ae _ _
+    (ce_sample_append_kernel_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount))
     (fun secondThinned : TTCState n × Nat => secondThinned.1.rate ≤ 1)
     (fun s : TTCState n => s.rate ≤ 1) measurableSet_state_rate_le_one
   · exact manuscriptCountThinWithCost_rate_le_one_ae state pending _ hrate
@@ -1165,7 +1708,7 @@ private theorem poisson_count_sample_rate_le_one_ae {n k : Nat}
                 (Measure.dirac (secondThinned.1.addBatch batch.2))
                 (secondThinned.2 * TTCRuntime.appendCopyOperations)))),
       result.1.rate ≤ 1 := by
-  apply costedBind_ae_state_of_forall _ _
+  apply costedBind_ae_state_of_forall _ _ (measurable_of_countable _)
     (fun s : TTCState n => s.rate ≤ 1) measurableSet_state_rate_le_one
   intro pending
   exact count_sample_append_rate_le_one_ae hn D p b prep factor i state pending hrate
@@ -1194,7 +1737,11 @@ private theorem rate_poisson_count_sample_rate_le_one_ae {n k : Nat}
                     (Measure.dirac (secondThinned.1.addBatch batch.2))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations))))),
       result.1.rate ≤ 1 := by
-  apply costedBind_ae_state_of_ae _ _ (fun s : TTCState n => s.rate ≤ 1)
+  apply costedBind_ae_state_of_ae _ _
+    (ce_poisson_count_sample_measurable hn prep factor (D.component i) b
+      p.epsilonPrime (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      intensity)
+    (fun s : TTCState n => s.rate ≤ 1)
     (fun s : TTCState n => s.rate ≤ 1) measurableSet_state_rate_le_one
   · exact manuscriptRateThinWithCost_rate_le_one_ae state intensity _ hrate
   · intro firstThinned hfirst
@@ -1214,10 +1761,16 @@ theorem certified_manuscript_component_rate_le_one_ae {n k : Nat}
       result.1.rate ≤ 1 := by
   unfold manuscriptProcessComponentWithCost
   apply costedBind_ae_state_of_forall _ _
+    (ce_component_step_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount) state)
     (fun s : TTCState n => s.rate ≤ 1) measurableSet_state_rate_le_one
   intro volumeOutcome
-  dsimp only
   apply costedBind_ae_state_of_ae _ _
+    (ce_rate_tail_measurable hn prep factor (D.component i) b p.epsilonPrime
+      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+      (p.threshold_pos D.componentCount)
+      (manuscriptIntensity b n (p.threshold D.componentCount) volumeOutcome.2))
     (fun s : TTCState n => s.rate ≤ 1)
     (fun s : TTCState n => s.rate ≤ 1) measurableSet_state_rate_le_one
   · apply costedCharge_dirac_ae_state _ _ _ measurableSet_state_rate_le_one
@@ -1225,6 +1778,37 @@ theorem certified_manuscript_component_rate_le_one_ae {n k : Nat}
   · intro deleted hdeleted
     exact rate_poisson_count_sample_rate_le_one_ae hn D p b prep factor i
       deleted _ hdeleted
+
+private theorem ce_certified_volume_mass_le_one {n k : Nat}
+    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (p : ApproxParams) (prep : TTCPreprocessor n k) (factor : Nat)
+    (i : Fin D.componentCount) :
+    ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      (D.component i) p.epsilonPrime
+      (p.deltaPrime D.componentCount)) Set.univ ≤ 1 := by
+  apply costedCharge_mass_le_one
+  dsimp only [communityManuscriptOracles]
+  rw [Measure.map_apply
+    ((D.component i).measurable_clipManuscriptVolume p.epsilonPrime)
+    MeasurableSet.univ]
+  simpa using certified_community_volume_mass_le_one hn D p i
+
+private theorem ce_certified_components_kernel_measurable {n k : Nat}
+    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
+    (components : List (PolytopeData n))
+    (hcomponents : ∀ P ∈ components, ∃ i : Fin D.componentCount,
+      D.component i = P) :
+    Measurable (fun state : TTCState n =>
+      manuscriptProcessComponentsWithCost
+        (communityManuscriptCostedOracles hn prep factor) b p.epsilonPrime
+        (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+        components state) :=
+  ce_components_kernel_measurable hn prep factor b p.epsilonPrime
+    (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+    (p.threshold_pos D.componentCount) components (fun P hP => by
+      obtain ⟨i, rfl⟩ := hcomponents P hP
+      exact ce_certified_volume_mass_le_one hn D p prep factor i)
 
 private theorem certified_component_list_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
@@ -1257,7 +1841,9 @@ private theorem certified_component_list_mass_le_one {n k : Nat}
           (communityManuscriptCostedOracles hn prep factor) b p.epsilonPrime
           (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
           rest)) Set.univ ≤ 1
-      apply costedBind_mass_le_one
+      refine costedBind_mass_le_one _ _
+        (ce_certified_components_kernel_measurable hn D p b prep factor rest hrest)
+        ?_ ?_
       · exact certified_manuscript_component_mass_le_one hn D p b hprecision
           prep factor i state
       · intro nextState
@@ -1319,7 +1905,9 @@ theorem certified_component_list_expected_cost {n k : Nat}
         exact ih hrest result.1 hc hr
       change (∫⁻ result, (result.2 : ENNReal) ∂costedBind first next) ≤ _
       simpa only [List.map_cons, List.sum_cons] using
-        costedBind_expected_cost_le_add_ae first next hfirstMass hnextMass
+        costedBind_expected_cost_le_add_ae first next
+          (ce_certified_components_kernel_measurable hn D p b prep factor rest hrest)
+          hfirstMass hnextMass
           hfirstCost hnextCost
 
 /-- Exact finite expected-operation bound for the charged manuscript TTC run,
@@ -1380,7 +1968,10 @@ theorem community_manuscript_expected_cost_finite_sum {n k : Nat}
       core.map (fun result =>
         (manuscriptEstimate b (p.threshold D.componentCount) result.1,
           preprocessingOperations + result.2))) ≤ _
-    apply (lintegral_map_le _ _).trans
+    apply (lintegral_map_le _
+      (((ce_manuscriptEstimate_measurable b (p.threshold D.componentCount)).comp
+        measurable_fst).prodMk
+        (measurable_snd.const_add preprocessingOperations)).aemeasurable).trans
     simp only [Nat.cast_add]
     rw [lintegral_add_left (by fun_prop)]
     simp only [lintegral_const]

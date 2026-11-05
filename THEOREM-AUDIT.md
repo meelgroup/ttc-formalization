@@ -39,6 +39,15 @@ and that program is not the manuscript's Algorithm 1 (it draws the Poisson
 count before a single count-thinning loop and outputs `|X|/p`).
 The text below records the history.
 
+Oracle discharge (2026-11-05, Lean/Mathlib 4.35, arlib `8d08f89`,
+arlib-community `db1f401`): the volume oracle's guarantee comes from the
+public `CV18.cv18TheoremOneOne_program` (CV18 Theorem 1.1 for the named
+`cv18Program`, which `CommunityCV18.algorithm` now is), and the sampler's
+mixing bound from the public `HitAndRun.hitAndRun_mixes`. A dependency walk
+confirms the project references neither internal capstone
+(`volumeTheorem_finalScheduled`, `tvLe_iterate_lazy_hitAndRun_uncond`)
+directly; they appear only inside the proofs of those headlines.
+
 Fidelity of `ttc_theorem1_volume_accuracy` to `sections/analysis.tex`
 (`thm:volumettc`) and Algorithm 1 in `sections/algo.tex`:
 - Matches: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`, the scaled

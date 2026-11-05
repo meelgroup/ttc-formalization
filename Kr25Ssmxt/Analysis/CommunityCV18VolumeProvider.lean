@@ -1,3 +1,4 @@
+import ArlibCommunity.Algorithms.CV18.Program
 import Kr25Ssmxt.Analysis.CV18VolumeAdapter
 import Kr25Ssmxt.Analysis.TheoremProof
 import ArlibCommunity.Algorithms.CV18
@@ -89,7 +90,8 @@ lemma taggedLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
         (o.2 : Real) ∈ Arlib.relErr eta (volume P.cv18Body).toReal := by
   letI : IsProbabilityMeasure (law hn P eta delta h) :=
     law_probability hn P eta delta h
-  obtain ⟨_, _, hfinal⟩ := volumeTheorem_finalScheduled
+  -- The public arlib-community headline for the named CV18 program.
+  obtain ⟨_, _, hfinal⟩ := cv18TheoremOneOne_program
   have hevent : accurateOutcome (params hn P eta delta h) (input P) =
       successSet P eta := by
     rfl
@@ -103,7 +105,8 @@ lemma taggedLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
       ((law hn P eta delta h)
         (accurateOutcome (params hn P eta delta h) (input P))).toReal
     rw [← outcomeProbability_eq_measure]
-    simpa [law, algorithm, params, volumeAlgorithmLaw, oracle] using hsuccessCommunity
+    simpa [law, algorithm, cv18Program, params, volumeAlgorithmLaw, oracle]
+      using hsuccessCommunity
   rw [hevent] at hsuccessCommunity'
   have hsuccess : 1 - delta ≤ (law hn P eta delta h).real (successSet P eta) := by
     linarith [h.2.2.1]
@@ -173,11 +176,28 @@ theorem membershipCostBound {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
       calls ≤ Nat.ceil
         (C * (volumeScheduledBaseComplexityRate (params hn P eta delta h) *
           protectedLog (1 / (params hn P eta delta h).p))) := by
-  obtain ⟨C, hC, htheorem⟩ := volumeTheorem_finalScheduled
+  -- The public arlib-community headline for the named CV18 program.
+  obtain ⟨C, hC, htheorem⟩ := cv18TheoremOneOne_program
+  let q := params hn P eta delta h
+  have hsteps : modelTerminalPhaseSteps q = terminalPhaseSteps q := by
+    unfold modelTerminalPhaseSteps terminalPhaseSteps
+    rw [Nat.sInf_def]
+    rfl
+  have hrate : volumeTheoremOneOneRate q =
+      volumeScheduledBaseComplexityRate q * protectedLog (1 / q.p) := by
+    simp only [volumeTheoremOneOneRate, hsteps,
+      volumeScheduledBaseComplexityRate, figureOneScheduledAccuracyLog,
+      figureOneScheduledCoreError, figureOneScheduledRadialError,
+      figureOneCorrectedBlockMixingError, figureOneSafeRetryCount,
+      figureOnePerSampleMixingError, figureOneDependentEpsilon,
+      figureOneDependentAlpha, figureOneDependentPhaseCount,
+      figureOneDependentMaxSampleCount, figureOneFixedSampleCount,
+      figureOneSampleCount]
   obtain ⟨_, calls, hcalls, hle⟩ :=
-    htheorem (params hn P eta delta h) (input P) (oracle P)
-      (wellRounded hn P eta delta h)
-  exact ⟨C, hC, calls, hcalls.toMembershipCostBound, hle⟩
+    htheorem q (input P) (oracle P) (wellRounded hn P eta delta h)
+  refine ⟨C, hC, calls, hcalls, ?_⟩
+  rw [← hrate]
+  exact hle
 
 #print axioms provider
 #print axioms membershipCostBound

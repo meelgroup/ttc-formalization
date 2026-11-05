@@ -95,7 +95,7 @@ theorem measurable_manuscriptOriginAdvanceIndex
     P intensity threshold hthreshold basePending preCoins future
   have hactive := measurable_manuscriptOriginAdvanceActiveFullCoins
     P intensity threshold hthreshold basePending preCoins future
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro i
   exact measurable_twoStageSurvivorLabelOrZero_joint.comp
     ((hpre.prodMk

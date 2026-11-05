@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptOldCoinKernel
 
 /-! The allocated-label source law can be used inside a measure-valued
@@ -32,7 +33,7 @@ theorem manuscript_origin_futureCoins_adaptive_bind
     fun source pair => source
       (manuscriptOriginCoinIndex (nextLabel a) (origin a) pair)
   have hread : Measurable read :=
-    measurable_pi_lambda _ (fun pair =>
+    Measurable.of_eval (fun pair =>
       measurable_pi_apply
         (manuscriptOriginCoinIndex (nextLabel a) (origin a) pair))
   have hmap : (Measure.infinitePi
@@ -100,7 +101,12 @@ theorem manuscript_independentSource_adaptive_bind
     _ = (preLaw.prod sourceLaw).bind joint := by rw [hproduct]
     _ = preLaw.bind (fun a =>
         sourceLaw.bind fun src => joint (a, src)) := by
-      rw [Measure.prod]
+      haveI : IsProbabilityMeasure sourceLaw := by
+        dsimp [sourceLaw]
+        haveI : ∀ _ : Nat × (Nat × Nat), IsProbabilityMeasure fairCoinLaw :=
+          fun _ => fairCoinLaw_isProbabilityMeasure
+        infer_instance
+      rw [Measure.prod_eq_bind_map]
       rw [Measure.bind_bind hpreSource.aemeasurable hjoint.aemeasurable]
       congr 1
       funext a
@@ -171,7 +177,7 @@ theorem fairCoinStreamLaw_prefix_originFuture_adaptive_bind
       fun source pair => source
         (manuscriptOriginCoinIndex (nextLabel pre) (origin pre) pair)
     have hread : Measurable read :=
-      measurable_pi_lambda _ (fun pair =>
+      Measurable.of_eval (fun pair =>
         measurable_pi_apply
           (manuscriptOriginCoinIndex (nextLabel pre) (origin pre) pair))
     have hmap := manuscript_origin_coins_on_allocated_labels

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptAdaptiveSourceBind
 
 /-! The fair tail after the actual thinning stop is independent of all coins
@@ -60,7 +61,7 @@ theorem firstExitRound_stoppedPrefix_shift_law {n : Nat}
     (hfiber r).inter (hA.preimage (measurable_coinPrefix r))
   have hE (r : Nat) : MeasurableSet (E r) :=
     (hF r).inter (hB.preimage
-      (measurable_pi_lambda _ (fun index =>
+      (Measurable.of_eval (fun index =>
         measurable_pi_apply (index.1 + r, index.2))))
   have hdisjF : Pairwise (Disjoint on F) := by
     intro r q hrq
@@ -265,7 +266,12 @@ theorem firstExitRound_stoppedPrefix_originFuture_bind
         threshold hthreshold]
     _ = preLaw.bind (fun pre =>
         sourceLaw.bind fun source => joint (pre, source)) := by
-      rw [Measure.prod]
+      haveI : IsProbabilityMeasure sourceLaw := by
+        dsimp [sourceLaw]
+        haveI : ∀ _ : Nat × (Nat × Nat), IsProbabilityMeasure fairCoinLaw :=
+          fun _ => fairCoinLaw_isProbabilityMeasure
+        infer_instance
+      rw [Measure.prod_eq_bind_map]
       rw [Measure.bind_bind hpreSource.aemeasurable
         hjoint'.aemeasurable]
       congr 1

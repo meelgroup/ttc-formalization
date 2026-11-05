@@ -297,7 +297,7 @@ def manuscriptCombinedTail (component : Nat)
 
 theorem measurable_manuscriptCombinedTail (component : Nat) :
     Measurable (manuscriptCombinedTail component) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro index
   by_cases h : index.1 = component
   · simp only [manuscriptCombinedTail, h, if_true]

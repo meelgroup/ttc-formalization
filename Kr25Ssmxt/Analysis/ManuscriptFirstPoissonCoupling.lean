@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptTwoLoopCoinLaw
 import Kr25Ssmxt.Analysis.ManuscriptVolumeTrace
 
@@ -50,7 +51,7 @@ theorem manuscript_firstLoop_poisson_joint_law
   change fairCoinStreamLaw.bind (fun coins =>
     (law (firstResult coins)).map (Prod.mk (firstResult coins))) = _
   simp_rw [hmean]
-  rw [Measure.prod]
+  rw [Measure.prod_eq_bind_map]
   have hout : Measurable
       (fun pair : (Nat × Nat → Bool) × Nat =>
         (firstResult pair.1, pair.2)) :=

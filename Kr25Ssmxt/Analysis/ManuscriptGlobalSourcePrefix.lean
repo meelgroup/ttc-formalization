@@ -35,7 +35,7 @@ theorem manuscriptGlobalSourceShift_read (rounds : Nat)
 
 theorem measurable_manuscriptGlobalSourcePrefix (rounds : Nat) :
     Measurable (manuscriptGlobalSourcePrefix rounds) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro tag
   by_cases h : tag.2.1 < rounds
   · simpa [manuscriptGlobalSourcePrefix, h] using
@@ -44,7 +44,7 @@ theorem measurable_manuscriptGlobalSourcePrefix (rounds : Nat) :
 
 theorem measurable_manuscriptGlobalSourceShift (rounds : Nat) :
     Measurable (manuscriptGlobalSourceShift rounds) := by
-  exact measurable_pi_lambda _ (fun tag =>
+  exact Measurable.of_eval (fun tag =>
     measurable_pi_apply
       (tag.1, (tag.2.1 + rounds, tag.2.2)))
 

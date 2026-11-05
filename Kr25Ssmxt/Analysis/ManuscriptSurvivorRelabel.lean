@@ -406,7 +406,7 @@ theorem manuscriptJointSurvivorRead_stoppedPrefix_combinedTail_law
     if tag.1 = component then z.2 (tag.2.1, tag.2.2)
     else z.1 (tag.1, (tag.2.1, tag.2.2))
   have hcombine : Measurable combine := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro tag
     by_cases htag : tag.1 = component
     · simpa only [combine, htag, ite_true, Function.comp_def] using

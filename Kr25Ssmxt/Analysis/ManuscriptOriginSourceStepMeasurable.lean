@@ -47,7 +47,7 @@ theorem measurable_manuscriptMarksAppend_source_tape
     Measurable (fun z : ManuscriptOriginSourceState n ×
         (Nat → LatticePoint n) =>
       manuscriptMarksAppend z.1.marks z.1.processed z.2) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro tag
   have hprocessed : Measurable (fun z : ManuscriptOriginSourceState n ×
       (Nat → LatticePoint n) => z.1.processed) :=
@@ -68,9 +68,9 @@ theorem measurable_manuscriptCoinsAppend_source
     {n : Nat} (preCoins future : Nat × Nat → Bool) (preRounds : Nat) :
     Measurable (fun g : ManuscriptOriginSourceState n =>
       manuscriptCoinsAppend g.coins g.processed preCoins future preRounds) := by
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro component
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   have hcond : MeasurableSet
       {g : ManuscriptOriginSourceState n | component = g.processed} :=

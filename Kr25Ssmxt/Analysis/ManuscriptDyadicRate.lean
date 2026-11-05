@@ -59,18 +59,6 @@ theorem measurableSet_isDyadicRate {n : Nat} :
     TTCState.IsDyadicRate]
   exact exists_congr fun _ => eq_comm
 
-private theorem ae_bind_of_forall_dyadic {α β : Type*}
-    [MeasurableSpace α] [MeasurableSpace β]
-    (μ : Measure α) (f : α → Measure β) {Q : β → Prop}
-    (hQ : MeasurableSet {b | Q b})
-    (hf : ∀ a, ∀ᵐ b ∂f a, Q b) :
-    ∀ᵐ b ∂μ.bind f, Q b := by
-  apply ae_bind_of_ae
-    (P := fun _ : α => True) (Q := Q) hQ
-  · exact Filter.Eventually.of_forall fun _ => trivial
-  · intro a _
-    exact hf a
-
 theorem manuscriptRateThinUntil_isDyadicRate {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (h : s.IsDyadicRate) :
@@ -107,59 +95,5 @@ theorem manuscript_sample_append_isDyadicRate {n k : Nat}
     measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
   rw [ae_map_iff hmap.aemeasurable measurableSet_isDyadicRate]
   exact Filter.Eventually.of_forall fun batch => s.isDyadicRate_addBatch batch.2 h
-
-theorem manuscriptProcessComponent_isDyadicRate {n k : Nat}
-    (O : TTCOracles n k) (b : Nat)
-    (epsilonPrime deltaPrime threshold : Real)
-    (P : PolytopeData n) (s : TTCState n)
-    (h : s.IsDyadicRate) :
-    ∀ᵐ result ∂manuscriptProcessComponent O b epsilonPrime deltaPrime
-      threshold P s, result.IsDyadicRate := by
-  unfold manuscriptProcessComponent
-  apply ae_bind_of_forall_dyadic (hQ := measurableSet_isDyadicRate)
-  intro volumeOutcome
-  apply ae_bind_of_ae
-    (P := fun firstThinned : TTCState n => firstThinned.IsDyadicRate)
-    (Q := fun result : TTCState n => result.IsDyadicRate)
-    measurableSet_isDyadicRate
-    (manuscriptRateThinUntil_isDyadicRate (s.removeComponent P)
-      (manuscriptIntensity b n threshold volumeOutcome.2) threshold
-      (s.isDyadicRate_removeComponent P h))
-  intro firstThinned hfirst
-  apply ae_bind_of_forall_dyadic (hQ := measurableSet_isDyadicRate)
-  intro pending
-  apply ae_bind_of_ae
-    (P := fun thinned : TTCState n × Nat => thinned.1.IsDyadicRate)
-    (Q := fun result : TTCState n => result.IsDyadicRate)
-    measurableSet_isDyadicRate
-    (thinUntil_isDyadicRate firstThinned pending threshold hfirst)
-  intro thinned hthinned
-  exact manuscript_sample_append_isDyadicRate O P thinned.1 thinned.2
-    b epsilonPrime deltaPrime hthinned
-
-theorem manuscriptProcessComponents_isDyadicRate {n k : Nat}
-    (O : TTCOracles n k) (b : Nat)
-    (epsilonPrime deltaPrime threshold : Real)
-    (Ps : List (PolytopeData n)) (s : TTCState n)
-    (h : s.IsDyadicRate) :
-    ∀ᵐ result ∂manuscriptProcessComponents O b epsilonPrime deltaPrime
-      threshold Ps s, result.IsDyadicRate := by
-  induction Ps generalizing s with
-  | nil =>
-      change ∀ᵐ result ∂Measure.dirac s, result.IsDyadicRate
-      exact (ae_dirac_iff measurableSet_isDyadicRate).2 h
-  | cons P rest ih =>
-      change ∀ᵐ result ∂
-        (manuscriptProcessComponent O b epsilonPrime deltaPrime threshold P s).bind
-          (manuscriptProcessComponents O b epsilonPrime deltaPrime threshold rest),
-        result.IsDyadicRate
-      apply ae_bind_of_ae
-        (P := fun next : TTCState n => next.IsDyadicRate)
-        (Q := fun result : TTCState n => result.IsDyadicRate)
-        measurableSet_isDyadicRate
-        (manuscriptProcessComponent_isDyadicRate O b epsilonPrime deltaPrime
-          threshold P s h)
-      intro next hnext
-      exact ih next hnext
 
 end Kr25Ssmxt

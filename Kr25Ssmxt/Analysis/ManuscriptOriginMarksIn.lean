@@ -54,12 +54,13 @@ theorem ManuscriptOriginConfiguration.samples_card_eq_sum_pointCounts
 
 theorem ae_bind_of_ae_ae_marksIn {α β : Type*} [MeasurableSpace α]
     [MeasurableSpace β] {m : Measure α} {f : α → Measure β}
+    (hf : AEMeasurable f m)
     {p : β → Prop} (hp : MeasurableSet {b | p b})
     (h : ∀ᵐ a ∂m, ∀ᵐ b ∂f a, p b) : ∀ᵐ b ∂m.bind f, p b := by
   rw [ae_iff]
   apply nonpos_iff_eq_zero.mp
   calc m.bind f {b | ¬p b} ≤ ∫⁻ a, f a {b | ¬p b} ∂m :=
-        Measure.bind_apply_le f hp.compl
+        Measure.bind_apply_le hf hp.compl
     _ = ∫⁻ _, 0 ∂m := by
         apply lintegral_congr_ae
         filter_upwards [h] with a ha
@@ -68,12 +69,10 @@ theorem ae_bind_of_ae_ae_marksIn {α β : Type*} [MeasurableSpace α]
 
 theorem ae_map_of_ae_marksIn {α β : Type*} [MeasurableSpace α]
     [MeasurableSpace β] {ν : Measure α} {f : α → β}
+    (hf : AEMeasurable f ν)
     {p : β → Prop} (hp : MeasurableSet {b | p b})
-    (h : ∀ᵐ a ∂ν, p (f a)) : ∀ᵐ b ∂ν.map f, p b := by
-  by_cases hf : AEMeasurable f ν
-  · exact (ae_map_iff hf hp).mpr h
-  · rw [Measure.map_of_not_aemeasurable hf]
-    exact ae_zero.le (Filter.mem_bot)
+    (h : ∀ᵐ a ∂ν, p (f a)) : ∀ᵐ b ∂ν.map f, p b :=
+  (ae_map_iff hf hp).mpr h
 
 theorem ManuscriptOriginConfiguration.advance_marksIn {n : Nat}
     (S : Finset (LatticePoint n)) (c : ManuscriptOriginConfiguration n)
@@ -144,19 +143,27 @@ theorem manuscriptOriginRefreshedComponentLaw_ae_marksIn
   have htape := ae_tape_mem_marksIn _ S hsupport
   have hrefresh : ∀ᵐ c1 ∂c.refreshLaw, c1.MarksIn S := by
     unfold ManuscriptOriginConfiguration.refreshLaw
-    exact ae_map_of_ae_marksIn hmeas (ae_of_all _ (fun f =>
+    exact ae_map_of_ae_marksIn c.measurable_refreshFuture.aemeasurable hmeas
+      (ae_of_all _ (fun f =>
       ManuscriptOriginConfiguration.refreshFuture_marksIn S c hc f))
   unfold manuscriptOriginRefreshedComponentLaw
-  apply ae_bind_of_ae_ae_marksIn hmeas
+  apply ae_bind_of_ae_ae_marksIn
+    (measurable_manuscriptOriginPoissonCoinTapeLaw hn P b eta threshold
+      hthreshold hroute intensity).aemeasurable hmeas
   filter_upwards [hrefresh] with c1 hc1
   unfold manuscriptOriginPoissonCoinTapeLaw
-  apply ae_bind_of_ae_ae_marksIn hmeas
+  apply ae_bind_of_ae_ae_marksIn (measurable_of_countable _).aemeasurable hmeas
   refine ae_of_all _ (fun basePending => ?_)
   unfold manuscriptOriginFairCoinTapeLaw
-  apply ae_bind_of_ae_ae_marksIn hmeas
+  apply ae_bind_of_ae_ae_marksIn
+    ((measurable_manuscriptOriginCoinPairTapeLaw hn P b eta threshold
+      hthreshold hroute intensity basePending).comp
+        (measurable_const.prodMk measurable_id)).aemeasurable hmeas
   refine ae_of_all _ (fun coins => ?_)
   unfold manuscriptOriginCoinPairTapeLaw
-  apply ae_map_of_ae_marksIn hmeas
+  apply ae_map_of_ae_marksIn
+    (c1.measurable_advance_tape P intensity threshold basePending
+      coins.1 coins.2).aemeasurable hmeas
   filter_upwards [htape] with tape ht
   exact ManuscriptOriginConfiguration.advance_marksIn S c1 hc1 P intensity
     threshold basePending _ _ tape ht
@@ -178,12 +185,16 @@ theorem manuscriptOriginGivenVolumesLaw_ae_marksIn
       threshold components outcomes)), c.MarksIn S := by
   induction components generalizing μ with
   | nil =>
-      apply ae_bind_of_ae_ae_marksIn (measurableSet_manuscriptOriginMarksIn S)
+      apply ae_bind_of_ae_ae_marksIn Measure.measurable_dirac.aemeasurable
+        (measurableSet_manuscriptOriginMarksIn S)
       filter_upwards [hμ] with c hc
       change ∀ᵐ c' ∂(Measure.dirac c), c'.MarksIn S
       exact (ae_dirac_iff (measurableSet_manuscriptOriginMarksIn S)).mpr hc
   | cons d rest ih =>
-      apply ae_bind_of_ae_ae_marksIn (measurableSet_manuscriptOriginMarksIn S)
+      apply ae_bind_of_ae_ae_marksIn
+        (measurable_manuscriptOriginGivenVolumesLaw hn prep b eta delta
+          threshold hthreshold (d :: rest) outcomes).aemeasurable
+        (measurableSet_manuscriptOriginMarksIn S)
       filter_upwards [hμ] with c hc
       exact ih (fun d' hd' => hsupport d' (List.mem_cons_of_mem d hd'))
         (fun i => outcomes i.succ) _

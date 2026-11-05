@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptOriginRefreshedKernel
 import Kr25Ssmxt.Analysis.ManuscriptProductBindSwap
 
@@ -16,7 +17,7 @@ theorem measure_prod_bind_eq_nested
     (K : α × β → Measure γ) (hK : Measurable K) :
     (μ.prod ν).bind K =
       μ.bind (fun a => ν.bind (fun b => K (a, b))) := by
-  rw [Measure.prod]
+  rw [Measure.prod_eq_bind_map]
   rw [Measure.bind_bind Measurable.map_prodMk_left.aemeasurable
     hK.aemeasurable]
   congr 1

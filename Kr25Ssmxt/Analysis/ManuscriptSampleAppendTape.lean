@@ -61,7 +61,7 @@ theorem communityManuscript_sampleAppend_from_iidTape
   have hpointsMeas : Measurable
       (fun tape : Nat → LatticePoint n =>
         fun i : Fin second.2 => tape (labels i)) :=
-    measurable_pi_lambda _ (fun i => measurable_pi_apply (labels i))
+    Measurable.of_eval (fun i => measurable_pi_apply (labels i))
   have hctor : Measurable
       (fun points : Fin second.2 → LatticePoint n =>
         (true, points)) := by fun_prop
@@ -69,7 +69,7 @@ theorem communityManuscript_sampleAppend_from_iidTape
     fun tape => (true, fun i => tape (labels i))
   have hselect : Measurable select :=
     measurable_const.prodMk
-      (measurable_pi_lambda _ (fun i => measurable_pi_apply (labels i)))
+      (Measurable.of_eval (fun i => measurable_pi_apply (labels i)))
   have hsample : tapeLaw.map select =
       (communityManuscriptOracles hn prep).generateSamples P second.2
         b eta delta := by
@@ -124,7 +124,7 @@ theorem communityManuscript_sampleAppend_from_iidTape_at_labels
   have hpointsMeas : Measurable
       (fun tape : Nat → LatticePoint n =>
         fun i : Fin second.2 => tape (labels i)) :=
-    measurable_pi_lambda _ (fun i => measurable_pi_apply (labels i))
+    Measurable.of_eval (fun i => measurable_pi_apply (labels i))
   have hctor : Measurable
       (fun points : Fin second.2 → LatticePoint n =>
         (true, points)) := by fun_prop

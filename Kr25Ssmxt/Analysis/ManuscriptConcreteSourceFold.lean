@@ -158,7 +158,7 @@ theorem communityManuscript_source_fixedLevel_fold
       (fun i => manuscriptPoissonTapePointCounts S 0 level (sources i))
   have hf : Measurable f :=
     (measurable_fixedLevelFold steps (fun _ : S => 0)).comp
-      (measurable_pi_lambda _ (fun i =>
+      (Measurable.of_eval (fun i =>
         (measurable_manuscriptPoissonTapePointCounts S 0 level).comp
           (measurable_pi_apply i)))
   change (Measure.pi sourceLaw).map
@@ -216,7 +216,7 @@ theorem communityManuscript_source_fixedLevel_total_law
         (sources (Fin.cast hlength i)))
   have hcounts : Measurable counts :=
     (measurable_fixedLevelFold steps (fun _ : S => 0)).comp
-      (measurable_pi_lambda _ (fun i =>
+      (Measurable.of_eval (fun i =>
         (measurable_manuscriptPoissonTapePointCounts S 0 level).comp
           (measurable_pi_apply (Fin.cast hlength i))))
   have hsum : Measurable (fun v : S → Nat => ∑ x, v x) :=

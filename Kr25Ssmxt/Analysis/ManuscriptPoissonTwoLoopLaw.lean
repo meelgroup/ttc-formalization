@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptProductBindSwap
 
 /-! For one incoming state and fixed component intensity, the manuscript's
@@ -85,7 +86,7 @@ theorem manuscript_poisson_twoLoops_oneCoinStream
     _ = (poissonMeasure mean).bind (fun pending =>
         (fairCoinStreamLaw.map firstResult).bind
           (fun first => thinUntil first pending threshold)) := by
-          rw [Measure.prod]
+          rw [Measure.prod_eq_bind_map]
           rw [Measure.bind_bind
             Measurable.map_prodMk_left.aemeasurable hH.aemeasurable]
           congr 1

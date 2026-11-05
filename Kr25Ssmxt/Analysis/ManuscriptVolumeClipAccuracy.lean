@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptComponentExpectation
 
 /-! Clipping a volume outcome to geometric bounds preserves its relative

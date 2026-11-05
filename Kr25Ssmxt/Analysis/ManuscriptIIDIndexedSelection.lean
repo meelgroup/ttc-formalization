@@ -107,7 +107,7 @@ theorem iid_tape_pending_survivors_batch
       (pendingSurvivorIndices coins rounds firstLabel pending).orderEmbOfFin
         (pendingSurvivorIndices_card coins rounds firstLabel pending) i)
   have hselected : Measurable selected := by
-    exact measurable_pi_lambda _ (fun i => measurable_pi_apply _)
+    exact Measurable.of_eval (fun i => measurable_pi_apply _)
   calc
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
         (fun tape => (true, selected tape)) =

@@ -80,7 +80,7 @@ theorem communityManuscript_adaptive_tape_append_law
               (firstExitRound s pending threshold coins)
               s.nextLabel pending) i))) := by
     exact measurable_const.prodMk
-      (measurable_pi_lambda _ (fun i => measurable_pi_apply _))
+      (Measurable.of_eval (fun i => measurable_pi_apply _))
   have hmap := congrArg (fun μ : Measure (SampleBatch n thinned.2) =>
     μ.map f) hbatch
   rw [Measure.map_map hf hselect] at hmap

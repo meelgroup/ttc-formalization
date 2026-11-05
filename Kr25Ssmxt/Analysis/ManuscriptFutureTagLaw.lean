@@ -56,7 +56,7 @@ theorem globalFairSource_survivalVector_finite
   let survive : (tags → Nat → Bool) → tags → Bool :=
     fun streams tag => labelSurvives rounds (streams tag)
   have hsurvive : Measurable survive :=
-    measurable_pi_lambda _ (fun tag =>
+    Measurable.of_eval (fun tag =>
       (measurable_labelSurvives rounds).comp (measurable_pi_apply tag))
   have hprob : ∀ _ : tags, IsProbabilityMeasure streamLaw := by
     intro tag
@@ -92,7 +92,7 @@ theorem globalFairSource_survivalVector_finite
           (survive ∘ MeasurableEquiv.curry tags Nat Bool) := by
             rw [Measure.map_map
               (hsurvive.comp (MeasurableEquiv.curry tags Nat Bool).measurable)
-              (measurable_pi_lambda _ (fun pair =>
+              (Measurable.of_eval (fun pair =>
                 measurable_pi_apply (index pair)))]
             rfl
     _ = (bitLaw.map (MeasurableEquiv.curry tags Nat Bool)).map survive := by
@@ -138,9 +138,9 @@ theorem ManuscriptOriginConfiguration.refreshLaw_future_pointCounts_bernoulli
     fun future tag => labelSurvives (observedLevel - c.level)
       (fun r => future (tag.1.1, (r, tag.1.2)))
   have hdecision : Measurable decision := by
-    exact measurable_pi_lambda _ (fun tag =>
+    exact Measurable.of_eval (fun tag =>
       (measurable_labelSurvives (observedLevel - c.level)).comp
-        (measurable_pi_lambda _ (fun r =>
+        (Measurable.of_eval (fun r =>
           measurable_pi_apply (tag.1.1, (r, tag.1.2)))))
   have hcount : Measurable (manuscriptFutureTagPointCounts c S) :=
     Measurable.of_discrete

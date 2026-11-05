@@ -48,7 +48,7 @@ theorem measurable_communityManuscriptOriginTapeResult
   have hpoints : Measurable
       (fun tape : Nat → LatticePoint n =>
         (fun i : Fin second.2 => tape (label i))) :=
-    measurable_pi_lambda _ (fun i => measurable_pi_apply (label i))
+    Measurable.of_eval (fun i => measurable_pi_apply (label i))
   exact measurable_addBatch.comp (measurable_const.prodMk hpoints)
 
 theorem communityManuscriptOriginTapeKernel_eq_tapeResult

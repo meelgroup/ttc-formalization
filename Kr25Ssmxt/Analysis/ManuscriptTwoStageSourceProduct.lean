@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptSurvivorPairTail
 
 /-! Compose a deterministic observed-prefix split with a later stopped

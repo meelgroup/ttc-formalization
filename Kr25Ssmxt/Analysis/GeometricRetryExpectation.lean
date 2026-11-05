@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
 import Mathlib.Analysis.SpecificLimits.Normed
 

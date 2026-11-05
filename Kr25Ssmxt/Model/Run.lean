@@ -79,9 +79,10 @@ def params {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   roundness := roundness P
   roundness_pos := by unfold roundness; positivity
 
-/-- The current scheduled, capped, amplified CV18 membership-oracle program. -/
+/-- The current scheduled, capped, amplified CV18 membership-oracle program:
+arlib-community's `cv18Program`, the subject of `cv18TheoremOneOne_program`. -/
 def algorithm : VolumeAlgorithm :=
-  amplifyOracleProgram figureOneFinalScheduledCappedValueProgram
+  cv18Program
 
 /-- The syntax-derived worst-case membership-query budget of the concrete amplified
 CV18 program.  The two factors are, respectively, the number of confidence repetitions

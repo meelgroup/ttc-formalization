@@ -77,7 +77,7 @@ theorem membershipCostCertified {n : Nat} (hn : 3 ≤ n)
     MembershipCostCertified hn P eta delta := by
   rw [MembershipCostCertified, dif_pos h, queryBudgetFor, dif_pos h]
   apply ArlibCommunity.Algorithms.CV18.MembershipOracleProgram.QueryBound.toMembershipCostBound
-  simpa [algorithm, queryBudget] using
+  simpa [algorithm, ArlibCommunity.Algorithms.CV18.cv18Program, queryBudget] using
     ArlibCommunity.Algorithms.CV18.amplifyOracleProgram_queryBound
       ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledCappedValueProgram
       (params hn P eta delta h)

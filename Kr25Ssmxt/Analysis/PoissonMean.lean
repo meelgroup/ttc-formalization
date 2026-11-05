@@ -230,7 +230,7 @@ theorem manuscriptPoissonCountThin_expected_cost_le {n : Nat}
   have hmass (pending : Nat) :
       (manuscriptCountThinWithCost s pending threshold) Set.univ ≤ 1 :=
     manuscriptCountThinWithCost_mass_le_one s pending threshold
-  apply (costedBind_lintegral_cost_le _ _ hmass).trans
+  apply (costedBind_lintegral_cost_le _ _ (measurable_of_countable _) hmass).trans
   have hpair : Measurable (fun pending : Nat =>
       (pending, TTCRuntime.poissonDrawOperations)) := by fun_prop
   unfold costedCharge

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptAdvanceObservedRep
 import Kr25Ssmxt.Analysis.ManuscriptProductSplitBind
 import Kr25Ssmxt.Analysis.ManuscriptSourceFreshCriterion
@@ -308,7 +309,7 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_tailFair
     rw [heq]
     exact h
   have hbind : (lam.prod μ).map H = lam.bind (fun p => μ.map (fun y => H (p, y))) := by
-    rw [Measure.prod, map_bind_measure lam _ H
+    rw [Measure.prod_eq_bind_map, map_bind_measure lam _ H
       Measurable.map_prodMk_left.aemeasurable hH]
     congr 1
     funext p

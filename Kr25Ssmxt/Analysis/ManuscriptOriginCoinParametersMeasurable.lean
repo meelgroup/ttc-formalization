@@ -23,7 +23,7 @@ theorem measurable_originalSurvivorCoinExtension_coinPair_fixed
       pendingAfter coins.1 preRounds firstLabel basePending) :=
     (measurable_pendingAfter_fixed preRounds firstLabel basePending).comp
       measurable_fst
-  apply measurable_pi_lambda
+  apply Measurable.of_eval
   intro pair
   have hselect : Measurable (fun coins :
       (Nat × Nat → Bool) × (Nat × Nat → Bool) =>

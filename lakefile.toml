@@ -11,7 +11,7 @@ defaultTargets = ["Kr25Ssmxt"]
 name = "mathlib"
 scope = "leanprover-community"
 git = "https://github.com/leanprover-community/mathlib4.git"
-rev = "v4.33.0"
+rev = "v4.35.0"
 
 # Reusable, problem-independent material (finite probability, multiplicative
 # error algebra, automata lower bounds, MDPs, …) lives here. Look for a lemma
@@ -19,14 +19,14 @@ rev = "v4.33.0"
 [[require]]
 name = "arlib"
 git = "https://github.com/meelgroup/arlib.git"
-rev = "e79fb42448f9083250776d9d708abe9965653322"
+rev = "8d08f89a6d05c5e8368e91659bd6e117fbb74c4e"
 
 # CV18 and Hit-and-Run now live in the community algorithms repository.  Pin
 # the audited head rather than tracking a moving branch.
 [[require]]
 name = "arlib-community"
 git = "https://github.com/uddaloksarkar/arlib-community.git"
-rev = "92c714e173f66544bd02f8ff7e62b6f952838c08"
+rev = "db1f4018dfbd48b615435c5a869905fbd2874bd4"
 
 [[lean_lib]]
 name = "Kr25Ssmxt"

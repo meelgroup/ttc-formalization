@@ -41,7 +41,7 @@ theorem iid_tape_pending_survivors_bind
       (pendingSurvivorIndices coins rounds firstLabel pending).orderEmbOfFin
         (pendingSurvivorIndices_card coins rounds firstLabel pending) i)
   have hselected : Measurable selected :=
-    measurable_pi_lambda _ (fun i => measurable_pi_apply _)
+    Measurable.of_eval (fun i => measurable_pi_apply _)
   have hlaw := iid_tape_pending_survivors pointLaw coins rounds firstLabel pending
   change K count =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map

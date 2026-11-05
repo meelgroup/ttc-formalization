@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptFirstPoissonCoupling
 
 /-! Swap two independent draws before a measurable continuation. -/
@@ -32,7 +33,7 @@ theorem measure_bind_map_comm
       ν.bind (fun b => μ.map (fun a => f (a, b))) := by
   have hleft : μ.bind (fun a => ν.map (fun b => f (a, b))) =
       (μ.prod ν).map f := by
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [map_bind_measure μ
       (fun a => ν.map (Prod.mk a)) f
       Measurable.map_prodMk_left.aemeasurable hf]
@@ -42,7 +43,7 @@ theorem measure_bind_map_comm
     rfl
   have hright : ν.bind (fun b => μ.map (fun a => f (a, b))) =
       (ν.prod μ).map (f ∘ Prod.swap) := by
-    rw [Measure.prod]
+    rw [Measure.prod_eq_bind_map]
     rw [map_bind_measure ν
       (fun b => μ.map (Prod.mk b)) (f ∘ Prod.swap)
       Measurable.map_prodMk_left.aemeasurable

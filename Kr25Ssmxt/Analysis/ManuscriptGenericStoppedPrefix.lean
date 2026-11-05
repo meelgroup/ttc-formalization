@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptStoppedPrefixSource
 
 /-! A stopped-prefix/fresh-tail lemma for any almost surely prefix-adapted
@@ -54,7 +55,7 @@ theorem fairCoinStreamLaw_generic_stoppedPrefix_shift_law
     (hfiber r).inter (hA.preimage (measurable_coinPrefix r))
   have hE (r : Nat) : MeasurableSet (E r) :=
     (hF r).inter (hB.preimage
-      (measurable_pi_lambda _ (fun index =>
+      (Measurable.of_eval (fun index =>
         measurable_pi_apply (index.1 + r, index.2))))
   have hdisjF : Pairwise (Disjoint on F) := by
     intro r q hrq

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptSplicedSourcePointLaw
 
 /-! A new component's Poisson count, spliced fair coins, and point tape form
@@ -68,7 +69,8 @@ theorem manuscriptSplicedSourceLaw_adaptive_product
       (preRounds a)).map (Prod.mk a)) =
     μ.prod (manuscriptPoissonTapeLaw mean pointLaw) := by
   simp_rw [manuscriptSplicedSourceLaw_eq_poissonTape]
-  rw [Measure.prod]
+  haveI := manuscriptPoissonTapeLaw_isProbabilityMeasure mean pointLaw
+  rw [Measure.prod_eq_bind_map]
 
 theorem manuscriptSplicedSourceLaw_adaptive_conditional
     {n : Nat} {α : Type*} [MeasurableSpace α]
@@ -139,7 +141,8 @@ theorem manuscriptSplicedSourceLaw_adaptive_fixedLevel_product
     rw [← Measure.map_map measurable_prodMk_left hcount]
     rw [manuscriptSplicedSourceLaw_fixedLevel_pointCounts mean pointLaw
       S hsupport (firstLabel a) level (preRounds a)]
-  rw [Measure.prod]
+  haveI := manuscriptPoissonTapeLaw_isProbabilityMeasure mean pointLaw
+  rw [Measure.prod_eq_bind_map]
   exact Measure.bind_congr_right
     (Filter.Eventually.of_forall hinner)
 

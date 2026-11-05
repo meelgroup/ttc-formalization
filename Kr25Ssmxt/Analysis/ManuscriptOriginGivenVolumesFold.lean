@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptRefreshStationaryKernel
 import Kr25Ssmxt.Analysis.ManuscriptStationaryFixedLevelKernel
 import Kr25Ssmxt.Analysis.ManuscriptOriginVolumeFold
@@ -72,7 +73,7 @@ theorem measure_bind_map_eq_prod_map
     (ν : Measure α) (q : Measure β) [SFinite q]
     (f : α × β → γ) (hf : Measurable f) :
     ν.bind (fun a => q.map (fun x => f (a, x))) = (ν.prod q).map f := by
-  rw [Measure.prod, map_bind_measure ν _ f
+  rw [Measure.prod_eq_bind_map, map_bind_measure ν _ f
     Measurable.map_prodMk_left.aemeasurable hf]
   congr 1
   funext a
