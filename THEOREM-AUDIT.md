@@ -1,74 +1,115 @@
 # Manuscript theorem audit
 
-`Kr25Ssmxt/Model/` is the statement and program audit surface. Proofs belong in
-`Kr25Ssmxt/Analysis/`. `#krModelClosureOfType` checks that both public theorem
-statements unfold only through `Model/` definitions.
+`Kr25Ssmxt/Model/` is the statement and program audit surface; proofs live in
+`Kr25Ssmxt/Analysis/`. `#krModelClosureOfType` checks that each public statement
+unfolds only through `Model/` definitions, and `#krSurplusIn` checks that `Model/`
+contains nothing the public statements do not use.
 
-`Model/Theorem.lean` now declares exactly two theorems: the older conditional
-accuracy theorem and the corrected expected-runtime theorem. The intermediate
-runtime inequalities are in `Analysis/ManuscriptRuntimeBounds.lean`. The
-accuracy declaration still concerns the older TTC core; it must be replaced
-after proving the current manuscript program's stochastic lattice-count lemma.
+## Current status (2026-11-05)
 
-## Theorem 1 (`sections/analysis.tex`, `thm:volumettc`)
+**Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `db1f401`
+(`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
+with no errors and no `sorry`. Both public theorems depend only on `propext`,
+`Classical.choice` and `Quot.sound`.
 
-**Status (2026-11-05): proved for the current manuscript program.**
-`Model/Theorem.lean` now declares `ttc_theorem1_volume_accuracy`: for
-`communityManuscriptTTC` with the concrete CV18 and normalized
-Hit-and-Run/KV97 oracles, `n ≥ 21` and a bounded solution set, the estimate is
-an `ε`-relative estimate of the projected volume with probability at least
-`1 - δ`. It has no `Prior` hypothesis and no high-intensity regime premise, and
-depends only on `propext`, `Classical.choice` and `Quot.sound`.
-The missing step was the strong Markov property of one refreshed component
-(`ManuscriptRefreshStationaryStep.lean`, `ManuscriptRefreshStationaryKernel.lean`):
-every refreshed component law is refresh-stationary
-(`manuscriptOriginRefreshedComponentLaw_bind_stationary`). Iterating the
-stationary fixed-level step through the given-volumes ghost fold
-(`ManuscriptOriginGivenVolumesFold.lean`) yields the certified fixed-level
-Poisson law at every level. The final-level union bound charges a crossing
-of the penultimate cutoff to the per-prefix `δ/(6m)` budget
-(`ManuscriptOriginCrossing.lean`, `ManuscriptTheoremOneCrossing.lean`) and
-the remaining levels to the dyadic Chernoff sum `δ/6`
-(`ManuscriptTheoremOneGivenOutcomes.lean`). Integration over the CV18 outcome
-vector, with failure budget `δ/4`, is in `ManuscriptTheoremOneFinal.lean`.
-The older conditional `ttc_volume_accuracy`, its program (`ttc`,
-`processComponent(s)`, `communityTTC`), the `Prior`/`StreamingCoreAccuracy`
-hypothesis, and the proof files used only by them were removed: neither
-current public theorem depends on any of them (checked by a dependency walk),
-and that program is not the manuscript's Algorithm 1 (it draws the Poisson
-count before a single count-thinning loop and outputs `|X|/p`).
-The text below records the history.
+**Public theorems** (`Model/Theorem.lean`), both about `communityManuscriptTTC`,
+the manuscript's Algorithm 1 with the concrete oracles:
 
-Oracle discharge (2026-11-05, Lean/Mathlib 4.35, arlib `8d08f89`,
-arlib-community `db1f401`): the volume oracle's guarantee comes from the
-public `CV18.cv18TheoremOneOne_program` (CV18 Theorem 1.1 for the named
-`cv18Program`, which `CommunityCV18.algorithm` now is), and the sampler's
-mixing bound from the public `HitAndRun.hitAndRun_mixes`. A dependency walk
-confirms the project references neither internal capstone
-(`volumeTheorem_finalScheduled`, `tvLe_iterate_lazy_hitAndRun_uncond`)
-directly; they appear only inside the proofs of those headlines.
+| Paper | Lean | Status |
+|---|---|---|
+| Theorem 1 (`thm:volumettc`, accuracy) | `ttc_theorem1_volume_accuracy` | Proved. No prior-work hypothesis, no regime premise. |
+| Theorem 3 (`thm:runtime`, runtime) | `ttc_theorem3_corrected_expected_runtime` | Proved in a corrected form (see below). |
+| Theorem 2 (decomposition) | — | Not formalized beyond the volume equality `Decomposition.solution_ae`. |
 
-Fidelity of `ttc_theorem1_volume_accuracy` to `sections/analysis.tex`
-(`thm:volumettc`) and Algorithm 1 in `sections/algo.tex`:
-- Matches: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`, the scaled
-  intensity `t = Threshold·10^(bn)·VolED`, the overlap deletion, the first
-  loop `while p ≥ Threshold/t`, `N ~ Pois(t p)`, the second loop
+Shared hypotheses: `n ≥ 21` and a bounded solution set.
+
+**Oracles, discharged to arlib-community public headlines.**
+- *Volume:* the program run is arlib-community's `CV18.cv18Program`
+  (`CommunityCV18.algorithm` in `Model/Run.lean`) on an exact facet-membership
+  query, rescaled and clipped as in the paper. Its guarantee is
+  `CV18.cv18TheoremOneOne_program`.
+- *Sampling:* arlib-community's `HitAndRun.finiteFacetStep` walk in unit-inball
+  coordinates, mapped back and KV97-rounded with rejection
+  (`normalizedHitAndRunPointLaw`). Its mixing bound is `HitAndRun.hitAndRun_mixes`.
+- A dependency walk confirms the project references neither internal capstone
+  (`volumeTheorem_finalScheduled`, `tvLe_iterate_lazy_hitAndRun_uncond`)
+  directly; they appear only inside the proofs of those headlines.
+
+**Theorem 1 proof outline.**
+1. Strong Markov property of one refreshed component: every refreshed component
+   law is refresh-stationary (`manuscriptOriginRefreshedComponentLaw_bind_stationary`,
+   `ManuscriptRefreshStationaryStep.lean`, `ManuscriptRefreshStationaryKernel.lean`).
+2. With the CV18 outcomes fixed, the ghost fold's point counts at every dyadic
+   level are the certified fixed-level Poisson process
+   (`ManuscriptOriginGivenVolumesFold.lean`, `ManuscriptOriginStepsCertified.lean`).
+3. Ending above the penultimate cutoff costs at most `δ/(6m)` per component,
+   i.e. `δ/6` (`ManuscriptOriginCrossing.lean`, `ManuscriptTheoremOneCrossing.lean`);
+   the remaining levels cost at most `δ/6` by the dyadic Chernoff sum
+   (`ManuscriptTheoremOneGivenOutcomes.lean`).
+4. Integrating over the CV18 outcome vector adds the `δ/4` CV18 failure budget,
+   and the lattice comparison turns the `ε/2` lattice estimate into an `ε`
+   volume estimate (`ManuscriptTheoremOneFinal.lean`).
+
+**Theorem 3 statement.** The charged execution has exactly the output law of
+`communityManuscriptTTC`, and its *expected* operation count is at most
+`T_preprocessing + m · 30 n⁵ r_max ρ² (1+b+log⁺R_max)(cap+1)(parameterFactor+1)`.
+This corrects the printed claim in two ways: it is an expected (not worst-case)
+bound, since the second loop and the rejection sampler have unbounded iteration
+counts; and it carries the precision factor `1+b+log⁺R_max`, which the printed
+bound omits (a two-cube family forces `Ω(b)` first-loop halvings with every
+quantity in the printed bound fixed).
+
+**Fidelity to the manuscript** (`sections/algo.tex`, `sections/analysis.tex`).
+- Matches Algorithm 1: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`,
+  `t = Threshold·10^(bn)·VolED`, overlap deletion, the first loop
+  `while p ≥ Threshold/t`, `N ~ Pois(tp)`, the second loop
   `while N + |X| > Threshold` with binomial thinning (realised by labelled fair
   coins), sampling, append, the output `|X|/(p·Threshold·10^(bn))`, and the
-  clipping of VolED to `[(1-ε')(2γ/√n)^n, (1+ε')(2R)^n]`.
-- Extra hypotheses not in the printed statement: a bounded solution set
-  (needed for finite volume and for the clipping radii) and `n ≥ 21`
-  (inherited from the formalized Hit-and-Run mixing theorem; the paper cites
-  Lovász–Vempala without a dimension restriction).
-- `getprec` is abstract: any precision satisfying `PrecisionAdequate`
-  (lattice radius at `η = ε/8` and the sampler radius at `ε'`) is allowed. The
-  printed `getprec(·, ε/96)` radius `64mn/(ε/96)·√log(384r/ε)` dominates both
-  requirements, so the paper's choice is covered, but this is not proved in
-  Lean.
-- The preprocessor's `normalize` step returns full-dimensional components whose
-  union agrees with the solution set almost everywhere; empty or degenerate
-  DNF cubes are dropped (they have volume zero, and `getprec` would otherwise
-  divide by a zero inradius).
+  clipping of VolED to `[(1-ε')(2γ/√n)^n, (1+ε')(2R)^n]`. The error budget
+  `δ/6 + δ/6 + δ/4` is the paper's.
+- Hypotheses not in the printed statements: a bounded solution set (needed for
+  finite volume and the clipping radii) and `n ≥ 21` (inherited from the
+  formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
+  a dimension restriction).
+- `getprec` is abstract: any precision satisfying `PrecisionAdequate` (lattice
+  radius at `η = ε/8`, sampler radius at `ε'`) is allowed. The printed
+  `getprec(·, ε/96)` radius `64mn/(ε/96)·√log(384r/ε)` dominates both
+  requirements, so the paper's choice is covered, but that implication is not
+  proved in Lean.
+- Preprocessing returns full-dimensional components whose union agrees with the
+  solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
+  are dropped.
+
+**Open items.**
+- A Lean proof that the six scheduled CV18 logarithmic factors in
+  `theorem3ParameterFactor` are polylogarithmic in the public parameters (needed
+  only for the paper's `Õ` notation; the exact bound is proved).
+- `getprec` as a concrete procedure, with a proof that its output is adequate.
+- Boolean abstraction and DNF conversion (Theorem 2).
+- Manuscript edits: state boundedness; state Theorem 3 in expectation with the
+  `1+b+log⁺R_max` factor and the second-loop and `getprec`/decomposition costs.
+
+**Removed material.** The older `ttc`/`processComponent(s)` program and
+`communityTTC` (Poisson draw before a single thinning loop, output `|X|/p`), its
+conditional theorem `ttc_volume_accuracy` with the `Prior`/`StreamingCoreAccuracy`
+hypothesis, the unnormalized sampler and older oracle bundle, the older runtime
+certificate (`ttc_total_runtime_theorem3`), and the arbitrary-oracle
+label-freshness and dyadic-rate lemmas were removed: none is used by either
+public theorem (checked by a dependency walk), and that program is not the
+manuscript's Algorithm 1.
+
+**Lean 4.35 notes.** `Measure.map` of a non-measurable function is now a Dirac
+measure, so bind/map bounds carry explicit measurability hypotheses;
+`Measure.prod` unfolds to an `SFinite` case split (use `Measure.prod_eq_bind_map`);
+`MathlibCompat.lean` restores `Measure.isProbabilityMeasure_map`.
+
+## History
+
+The notes below record how the formalization developed, oldest first within
+each part. They mention definitions and theorems that have since been removed
+(see "Removed material" above); the "Current status" section is authoritative.
+
+### Theorem 1 (`sections/analysis.tex`, `thm:volumettc`)
 
 `ttc_volume_accuracy` is a conditional accuracy theorem, not yet the manuscript's
 unqualified claim. It assumes `Prior.streamingCoreAccuracy`, dimension at least 21,
@@ -131,7 +172,7 @@ without importing the conflicting second Hit-and-Run hierarchy.
 The coupling of this fixed-level process to the actual adaptive manuscript
 run, and the resulting stopping-level concentration bound, remain open.
 
-## Theorem 3 (`sections/analysis.tex`, `thm:runtime`)
+### Theorem 3 (`sections/analysis.tex`, `thm:runtime`)
 
 Current progress: `Model/Program.lean` now contains a costed version of the
 manuscript TTC control flow, and `Model/Run.lean` instantiates it with charged
@@ -313,7 +354,7 @@ proves that an explicit dyadic exit level bounds the deterministic first-loop
 charge. The component costs have been composed into one costed TTC law. Its
 global expected-cost bound and marginal equality are proved.
 
-## Program fidelity to `sections/algo.tex`
+### Program fidelity to `sections/algo.tex`
 
 The diff from the last commit touching `lean/` (`eeea231`, 2026-09-11) to
 `HEAD` changes Algorithm 1 in several material ways. The current manuscript
@@ -893,7 +934,7 @@ The stopped-prefix file also proves that equal new-source prefixes give
 equal coin prefixes after survivor renumbering, which is the input needed
 to identify the original Poisson labels selected for the appended batch.
 
-### Avoidable scaling cost in the older sampler implementation
+#### Avoidable scaling cost in the older sampler implementation
 
 The older `communityTTC` sampler walks directly on the decimal-scaled body:
 `hitAndRunDiameter P b eta` is the diameter of `hitAndRunBody P b eta`, whose
