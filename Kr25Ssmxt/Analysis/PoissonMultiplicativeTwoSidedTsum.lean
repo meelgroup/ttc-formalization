@@ -1,4 +1,4 @@
-import Arlib.MarkovChains.Techniques.Pinsker
+import Kr25Ssmxt.Analysis.ManuscriptPadeLog
 import Arlib.Probability.Poisson
 
 /-!
@@ -29,7 +29,7 @@ lemma poisson_multiplicative_two_sided_tsum (mu epsilon : Real)
   have ha : 0 < a := mul_pos hepsilon hmu
   have hamu : a ≤ mu := by
     dsimp [a]
-    exact mul_le_of_le_one_left hmu.le hepsilon.le hepsilon_le_one
+    exact mul_le_of_le_one_left hmu.le hepsilon_le_one
   have hp : ∀ k, 0 ≤ Arlib.Probability.poissonPMF mu k :=
     Arlib.Probability.poissonPMF_nonneg hmu.le
   have hsu : Summable (fun k : Nat => if mu + a ≤ (k : Real) then
@@ -44,7 +44,7 @@ lemma poisson_multiplicative_two_sided_tsum (mu epsilon : Real)
   have hone : 1 < 1 + epsilon := by linarith
   have hlog : 0 < Real.log (1 + epsilon) := Real.log_pos hone
   have hden : 0 < 2 + epsilon := by linarith
-  have hpade := Arlib.MarkovChains.two_mul_sub_le_add_one_mul_log
+  have hpade := manuscript_pade_log_bound
     (t := 1 + epsilon) (by linarith : 1 ≤ 1 + epsilon)
   have hlog_lower : 2 * epsilon / (2 + epsilon) ≤ Real.log (1 + epsilon) := by
     apply (div_le_iff₀ hden).2

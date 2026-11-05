@@ -1,6 +1,7 @@
 import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
 import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
 import Kr25Ssmxt.Analysis.ManuscriptRunMarginal
+import Kr25Ssmxt.Analysis.ManuscriptTheoremOneFinal
 
 namespace Kr25Ssmxt
 
@@ -55,6 +56,28 @@ theorem ttc_volume_accuracy
   exact ttc_volume_accuracy_communityCV18_hitAndRun
     hprior hn F hbounded params prep hregime
 
+/-- Theorem 1 for the current manuscript TTC program: with the concrete
+CV18 and normalized Hit-and-Run/KV97 oracles, the output is within relative
+error `ε` of the Lebesgue volume of the existentially projected solution set
+with probability at least `1 - δ`.  Unlike `ttc_volume_accuracy`, this has no
+`Prior` hypothesis and no high-intensity regime premise.
+
+PAPER: sections/analysis.tex:314-326
+-/
+theorem ttc_theorem1_volume_accuracy
+    {n k : Nat}
+    (hn : 21 ≤ n)
+    (F : LRAFormula n k)
+    (hbounded : Bornology.IsBounded (solutionSet F))
+    (params : ApproxParams)
+    (prep : TTCPreprocessor n k) :
+    (communityManuscriptTTC hn F hbounded params prep).real
+        {estimate | (estimate : Real) ∈
+          Arlib.relErr params.epsilon
+            (MeasureTheory.volume (solutionSet F)).toReal} ≥
+      1 - params.delta := by
+  exact community_manuscriptTTC_volume_accuracy hn F hbounded params prep
+
 /-- Corrected Theorem 3: the charged execution has exactly the manuscript TTC
 output law and its expected arithmetic cost has the preprocessing term plus
 the explicit `m n⁵ ρ² r_max (1+b+log⁺ R_max)` scale. -/
@@ -85,8 +108,9 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
       preprocessingOperations⟩
 
 #krModelClosureOfType ttc_volume_accuracy
+#krModelClosureOfType ttc_theorem1_volume_accuracy
 #krModelClosureOfType ttc_theorem3_corrected_expected_runtime
-#krSurplusIn Kr25Ssmxt.Model from ttc_volume_accuracy
+#krSurplusIn Kr25Ssmxt.Model from ttc_volume_accuracy ttc_theorem1_volume_accuracy
   ttc_theorem3_corrected_expected_runtime
   StreamingCoreAccuracy communityManuscriptTTC
   TTCRuntime.deletionPassOperations TTCRuntime.rateThinningRoundOperations
@@ -101,6 +125,7 @@ statements.
 -/
 
 #print axioms ttc_volume_accuracy
+#print axioms ttc_theorem1_volume_accuracy
 #print axioms ttc_theorem3_corrected_expected_runtime
 
 end Kr25Ssmxt

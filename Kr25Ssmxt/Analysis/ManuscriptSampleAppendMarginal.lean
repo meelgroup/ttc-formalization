@@ -4,6 +4,7 @@ import Kr25Ssmxt.Analysis.MeasurableAddBatch
 import Kr25Ssmxt.Analysis.MeasurableFixedSfiniteBind
 import Kr25Ssmxt.Analysis.MeasurablePoissonMeasure
 import Kr25Ssmxt.Analysis.MeasurableRemoveComponent
+import Kr25Ssmxt.Analysis.ManuscriptOracleNormalization
 
 /-! The charged sampling-and-append tail has the manuscript's state marginal. -/
 
@@ -589,7 +590,7 @@ theorem community_manuscript_deletion_tail_kernel_measurable
   rw [heq]
   exact hmap
 
-private noncomputable def communityCostedComponentTail
+noncomputable def communityCostedComponentTail
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
@@ -802,5 +803,217 @@ theorem community_manuscript_components_fst
       congr 1
       funext nextState
       exact ih hrest nextState
+
+/-- The concrete sampler and deterministic append preserve total mass. -/
+theorem community_manuscript_sample_append_isProbabilityMeasure
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (count b : Nat)
+    (eta delta : Real) (state : TTCState n) :
+    IsProbabilityMeasure
+      (costedBind
+        ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+          P count b eta delta)
+        (fun batch => costedCharge (Measure.dirac (state.addBatch batch.2))
+          (count * TTCRuntime.appendCopyOperations))) := by
+  letI : IsProbabilityMeasure
+      ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+        P count b eta delta) :=
+    community_manuscript_costed_samples_isProbabilityMeasure hn prep factor
+      P count b eta delta
+  apply costedBind_isProbabilityMeasure
+  · have hstate : Measurable (fun batch : SampleBatch n count =>
+        state.addBatch batch.2) :=
+      measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
+    simp only [costedCharge, Measure.map_dirac]
+    exact Measure.measurable_dirac.comp (hstate.prodMk measurable_const)
+  · intro batch
+    exact costedCharge_isProbabilityMeasure
+      (Measure.dirac (state.addBatch batch.2)) _
+
+/-- Count thinning followed by sampling and append is normalized. -/
+theorem community_manuscript_count_sample_append_isProbabilityMeasure
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (state : TTCState n) (pending : Nat) :
+    IsProbabilityMeasure
+      (communityCostedCountSampleAppend hn prep factor P b eta delta
+        threshold (state, pending)) := by
+  letI : IsProbabilityMeasure
+      (manuscriptCountThinWithCost state pending threshold) :=
+    manuscriptCountThinWithCost_isProbabilityMeasure state pending threshold
+  unfold communityCostedCountSampleAppend
+  apply costedBind_isProbabilityMeasure
+  · exact community_manuscript_sample_append_kernel_measurable hn prep factor
+      P b eta delta
+  · intro second
+    exact community_manuscript_sample_append_isProbabilityMeasure hn prep factor
+      P second.2 b eta delta second.1
+
+theorem community_manuscript_poisson_count_sample_append_isProbabilityMeasure
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (state : TTCState n) (intensity : NNReal) :
+    IsProbabilityMeasure
+      (communityCostedPoissonCountSampleAppend hn prep factor P b eta delta
+        threshold state intensity) := by
+  letI : IsProbabilityMeasure
+      (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.rate))
+        TTCRuntime.poissonDrawOperations) :=
+    costedCharge_isProbabilityMeasure _ _
+  unfold communityCostedPoissonCountSampleAppend
+  apply costedBind_isProbabilityMeasure
+  · exact (community_manuscript_costed_count_tail_measurable hn prep factor P b
+      eta delta threshold).comp (measurable_const.prodMk measurable_id)
+  · intro pending
+    exact community_manuscript_count_sample_append_isProbabilityMeasure hn prep
+      factor P b eta delta threshold state pending
+
+set_option maxHeartbeats 800000 in
+theorem community_manuscript_rate_tail_mass_one
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (state : TTCState n) (intensity : NNReal) :
+    (communityCostedRateTail hn prep factor P b eta delta threshold
+      state intensity) Set.univ = 1 := by
+  letI : IsProbabilityMeasure
+      (manuscriptRateThinWithCost state intensity threshold) :=
+    manuscriptRateThinWithCost_isProbabilityMeasure state intensity threshold
+  have hpair : Measurable (fun first : TTCState n => (first, intensity)) :=
+    measurable_id.prodMk measurable_const
+  have hbase := community_manuscript_poisson_count_sample_append_kernel_measurable
+    hn prep factor P b eta delta threshold
+  have hnext : Measurable (fun first : TTCState n =>
+      communityCostedPoissonCountSampleAppend hn prep factor P b eta delta
+        threshold first intensity) := by
+    have hcomp := hbase.comp hpair
+    change Measurable
+      ((fun z : TTCState n × NNReal =>
+        communityCostedPoissonCountSampleAppend hn prep factor P b eta delta
+          threshold z.1 z.2) ∘
+        (fun first : TTCState n => (first, intensity)))
+    exact hcomp
+  have hprob : IsProbabilityMeasure
+      (costedBind (manuscriptRateThinWithCost state intensity threshold)
+        (fun first => communityCostedPoissonCountSampleAppend hn prep factor P b
+          eta delta threshold first intensity)) :=
+    costedBind_isProbabilityMeasure _ _ hnext (fun first =>
+      community_manuscript_poisson_count_sample_append_isProbabilityMeasure
+        hn prep factor P b eta delta threshold first intensity)
+  exact hprob.measure_univ
+
+set_option maxHeartbeats 800000 in
+theorem community_manuscript_deletion_tail_mass_one
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold)
+    (state : TTCState n) (intensity : NNReal) :
+    (communityCostedDeletionTail hn prep factor P b eta delta threshold
+      state intensity) Set.univ = 1 := by
+  let deleted := state.removeComponent P
+  let deletionCost := TTCRuntime.deletionPassOperations n
+    P.presentation.facetCount state.samples.card
+      (state.samples.card - deleted.samples.card)
+  have hpair : Measurable (fun s : TTCState n => (s, intensity)) :=
+    measurable_id.prodMk measurable_const
+  have hbase := community_manuscript_costed_rate_tail_measurable hn prep factor
+    P b eta delta threshold hthreshold
+  have hnext : Measurable (fun s : TTCState n =>
+      communityCostedRateTail hn prep factor P b eta delta threshold
+        s intensity) := by
+    have hcomp := hbase.comp hpair
+    change Measurable
+      ((fun z : TTCState n × NNReal =>
+        communityCostedRateTail hn prep factor P b eta delta threshold
+          z.1 z.2) ∘ (fun s : TTCState n => (s, intensity)))
+    exact hcomp
+  letI : IsProbabilityMeasure
+      (costedCharge (Measure.dirac deleted) deletionCost) :=
+    costedCharge_isProbabilityMeasure _ _
+  have hprob : IsProbabilityMeasure
+      (costedBind (costedCharge (Measure.dirac deleted) deletionCost)
+        (fun afterDeletion => communityCostedRateTail hn prep factor P b eta
+          delta threshold afterDeletion intensity)) :=
+    costedBind_isProbabilityMeasure _ _ hnext (fun afterDeletion =>
+      ⟨community_manuscript_rate_tail_mass_one hn prep factor P b eta delta
+        threshold afterDeletion intensity⟩)
+  exact hprob.measure_univ
+
+set_option maxHeartbeats 800000 in
+theorem community_manuscript_component_mass_one
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (P : PolytopeData n) (b : Nat)
+    (eta delta threshold : Real) (hthreshold : 0 < threshold)
+    (state : TTCState n)
+    (hvolume : IsProbabilityMeasure
+      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+        P eta delta)) :
+    (manuscriptProcessComponentWithCost
+      (communityManuscriptCostedOracles hn prep factor)
+      b eta delta threshold P state) Set.univ = 1 := by
+  letI : IsProbabilityMeasure
+      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+        P eta delta) := hvolume
+  have hnext := community_manuscript_component_tail_measurable hn prep factor P
+    b eta delta threshold hthreshold state
+  have hprob : IsProbabilityMeasure
+      (costedBind
+        ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          P eta delta)
+        (communityCostedComponentTail hn prep factor P b eta delta threshold
+          state)) :=
+    costedBind_isProbabilityMeasure _ _ hnext (fun outcome =>
+      ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b eta delta
+        threshold hthreshold state (manuscriptIntensity b n threshold outcome.2)⟩)
+  exact hprob.measure_univ
+
+set_option maxHeartbeats 800000 in
+theorem community_manuscript_components_mass_one
+    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor b : Nat) (eta delta threshold : Real)
+    (hthreshold : 0 < threshold)
+    (components : List (PolytopeData n))
+    (hvolume : ∀ P ∈ components,
+      IsProbabilityMeasure
+        ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          P eta delta))
+    (state : TTCState n) :
+    (manuscriptProcessComponentsWithCost
+      (communityManuscriptCostedOracles hn prep factor)
+      b eta delta threshold components state) Set.univ = 1 := by
+  induction components generalizing state with
+  | nil =>
+      simp [manuscriptProcessComponentsWithCost]
+  | cons P rest ih =>
+      have hrest : ∀ Q ∈ rest,
+          IsProbabilityMeasure
+            ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+              Q eta delta) := by
+        intro Q hQ
+        exact hvolume Q (by simp [hQ])
+      have hrestMass : ∀ Q ∈ rest,
+          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+            Q eta delta) Set.univ ≤ 1 := by
+        intro Q hQ
+        letI := hrest Q hQ
+        simp
+      have hmeas := community_manuscript_components_kernel_measurable hn prep
+        factor b eta delta threshold hthreshold rest hrestMass
+      letI : IsProbabilityMeasure
+          (manuscriptProcessComponentWithCost
+            (communityManuscriptCostedOracles hn prep factor)
+            b eta delta threshold P state) :=
+        ⟨community_manuscript_component_mass_one hn prep factor P b eta delta
+          threshold hthreshold state (hvolume P (by simp))⟩
+      have hprob : IsProbabilityMeasure
+          (costedBind
+            (manuscriptProcessComponentWithCost
+              (communityManuscriptCostedOracles hn prep factor)
+              b eta delta threshold P state)
+            (manuscriptProcessComponentsWithCost
+              (communityManuscriptCostedOracles hn prep factor)
+              b eta delta threshold rest)) :=
+        costedBind_isProbabilityMeasure _ _ hmeas (fun nextState =>
+          ⟨ih hrest nextState⟩)
+      exact hprob.measure_univ
 
 end Kr25Ssmxt

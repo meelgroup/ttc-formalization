@@ -1,0 +1,556 @@
+import Kr25Ssmxt.Analysis.ManuscriptSurvivorFullPrefixTail
+import Kr25Ssmxt.Analysis.ManuscriptFirstLoopObservation
+import Kr25Ssmxt.Analysis.ManuscriptOriginJointSourceBridge
+
+/-! Pathwise bridges from the global fair source observations to the
+rate-thinning and count-thinning operations in `advance`. -/
+
+namespace Kr25Ssmxt
+
+theorem manuscriptCoinsAppend_refreshed_observedPrefix_eq_of_twoPieces
+    (sources : Nat → Nat × Nat → Bool)
+    (level component rounds activeRounds : Nat)
+    (preCoins freshA freshB : Nat × Nat → Bool)
+    (oldA oldB : Nat × (Nat × Nat) → Bool)
+    (hfirst : manuscriptGlobalSourcePrefix rounds oldA =
+      manuscriptGlobalSourcePrefix rounds oldB)
+    (hsecond : manuscriptGlobalSourcePrefix activeRounds
+        (manuscriptGlobalSourceShift rounds oldA) =
+      manuscriptGlobalSourcePrefix activeRounds
+        (manuscriptGlobalSourceShift rounds oldB))
+    (hfresh : coinPrefix activeRounds freshA =
+      coinPrefix activeRounds freshB) :
+    manuscriptOriginCoinPrefix (level + rounds + activeRounds)
+      (manuscriptCoinsAppend
+        (manuscriptRefreshedSourceCoins sources level oldA)
+        component preCoins freshA (level + rounds)) =
+    manuscriptOriginCoinPrefix (level + rounds + activeRounds)
+      (manuscriptCoinsAppend
+        (manuscriptRefreshedSourceCoins sources level oldB)
+        component preCoins freshB (level + rounds)) := by
+  have hglobal : manuscriptGlobalSourcePrefix (rounds + activeRounds) oldA =
+      manuscriptGlobalSourcePrefix (rounds + activeRounds) oldB :=
+    manuscriptGlobalSourcePrefix_add_eq_of_pieces oldA oldB rounds
+      activeRounds hfirst hsecond
+  have hold := manuscriptRefreshedSourceCoins_observedPrefix_eq_of_futurePrefix
+    sources level (rounds + activeRounds) oldA oldB hglobal
+  have happend := manuscriptCoinsAppend_observedPrefix_eq_of_prefix_eq
+    (manuscriptRefreshedSourceCoins sources level oldA)
+    (manuscriptRefreshedSourceCoins sources level oldB)
+    component (level + rounds) activeRounds preCoins freshA freshB
+    (by simpa only [Nat.add_assoc] using hold) hfresh
+  exact happend
+
+theorem twoStageSurvivorLabel_eq_of_freshPrefix_eq
+    (preCoins : Nat × Nat → Bool)
+    (preRounds firstLabel basePending rounds : Nat)
+    (freshA freshB : Nat × Nat → Bool)
+    (hfresh : coinPrefix rounds freshA = coinPrefix rounds freshB)
+    (hcount :
+      pendingAfter
+        (pendingCoinExtension firstLabel
+          (pendingAfter preCoins preRounds firstLabel basePending)
+          (originalSurvivorCoinRestriction preCoins preRounds
+            firstLabel basePending freshA))
+        rounds firstLabel
+        (pendingAfter preCoins preRounds firstLabel basePending) =
+      pendingAfter
+        (pendingCoinExtension firstLabel
+          (pendingAfter preCoins preRounds firstLabel basePending)
+          (originalSurvivorCoinRestriction preCoins preRounds
+            firstLabel basePending freshB))
+        rounds firstLabel
+        (pendingAfter preCoins preRounds firstLabel basePending))
+    (i : Fin (pendingAfter
+      (pendingCoinExtension firstLabel
+        (pendingAfter preCoins preRounds firstLabel basePending)
+        (originalSurvivorCoinRestriction preCoins preRounds
+          firstLabel basePending freshA))
+      rounds firstLabel
+      (pendingAfter preCoins preRounds firstLabel basePending))) :
+    twoStageSurvivorLabel preCoins preRounds firstLabel basePending
+      (originalSurvivorCoinRestriction preCoins preRounds
+        firstLabel basePending freshA) rounds i =
+    twoStageSurvivorLabel preCoins preRounds firstLabel basePending
+      (originalSurvivorCoinRestriction preCoins preRounds
+        firstLabel basePending freshB) rounds (Fin.cast hcount i) := by
+  have hactive := originalSurvivorExtension_prefix_eq_of_futurePrefix
+    preCoins preRounds firstLabel basePending rounds freshA freshB hfresh
+  have hlabel := twoStageSurvivorLabel_eq_of_active_prefix_eq
+    preCoins preRounds firstLabel basePending
+    (originalSurvivorCoinRestriction preCoins preRounds
+      firstLabel basePending freshA)
+    (originalSurvivorCoinRestriction preCoins preRounds
+      firstLabel basePending freshB) rounds hactive i
+  simpa only [Fin.cast, Fin.val_mk] using hlabel
+
+theorem twoStageSurvivorLabel_round_congr
+    (preCoins : Nat × Nat → Bool)
+    (preRounds firstLabel basePending rounds rounds' : Nat)
+    (active : Nat × Fin
+      (pendingAfter preCoins preRounds firstLabel basePending) → Bool)
+    (hrounds : rounds = rounds')
+    (hcount : pendingAfter
+        (pendingCoinExtension firstLabel
+          (pendingAfter preCoins preRounds firstLabel basePending) active)
+        rounds firstLabel
+        (pendingAfter preCoins preRounds firstLabel basePending) =
+      pendingAfter
+        (pendingCoinExtension firstLabel
+          (pendingAfter preCoins preRounds firstLabel basePending) active)
+        rounds' firstLabel
+        (pendingAfter preCoins preRounds firstLabel basePending))
+    (i : Fin (pendingAfter
+      (pendingCoinExtension firstLabel
+        (pendingAfter preCoins preRounds firstLabel basePending) active)
+      rounds firstLabel
+      (pendingAfter preCoins preRounds firstLabel basePending))) :
+    twoStageSurvivorLabel preCoins preRounds firstLabel basePending
+        active rounds i =
+      twoStageSurvivorLabel preCoins preRounds firstLabel basePending
+        active rounds' (Fin.cast hcount i) := by
+  cases hrounds
+  have hcast : Fin.cast hcount i = i := Fin.ext rfl
+  rw [hcast]
+
+theorem TTCState.addBatch_eq_of_cast
+    {n countA countB : Nat} (sA sB : TTCState n)
+    (hstate : sA = sB) (hcount : countA = countB)
+    (pointsA : Fin countA → LatticePoint n)
+    (pointsB : Fin countB → LatticePoint n)
+    (hpoints : ∀ i, pointsA i = pointsB (Fin.cast hcount i)) :
+    sA.addBatch pointsA = sB.addBatch pointsB := by
+  cases hstate
+  cases hcount
+  have heq : pointsA = pointsB := by
+    funext i
+    simpa using hpoints i
+  rw [heq]
+
+theorem ManuscriptOriginConfiguration.refreshed_rateThinningResult_eq_of_prefix_eq
+    {n : Nat} (c : ManuscriptOriginConfiguration n)
+    (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
+    (a b : Nat × (Nat × Nat) → Bool)
+    (hprefix : manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) a =
+      manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) b) :
+    manuscriptRateThinningResult (c.state.removeComponent P)
+      intensity threshold
+      (manuscriptSourceOldCoins c.origin
+        (c.refreshFuture a).source.coins c.level) =
+    manuscriptRateThinningResult (c.state.removeComponent P)
+      intensity threshold
+      (manuscriptSourceOldCoins c.origin
+        (c.refreshFuture b).source.coins c.level) := by
+  let rounds := manuscriptRateExit (c.state.removeComponent P)
+    intensity threshold
+  have ha := c.refreshFuture_oldCoins a
+  have hb := c.refreshFuture_oldCoins b
+  change manuscriptSourceOldCoins c.origin
+      (c.refreshFuture a).source.coins c.level =
+      (fun pair => a ((c.origin pair.2).1,
+        (pair.1, (c.origin pair.2).2))) at ha
+  change manuscriptSourceOldCoins c.origin
+      (c.refreshFuture b).source.coins c.level =
+      (fun pair => b ((c.origin pair.2).1,
+        (pair.1, (c.origin pair.2).2))) at hb
+  have hread : coinPrefix rounds
+      (fun pair : Nat × Nat => a
+        ((c.origin pair.2).1, (pair.1, (c.origin pair.2).2))) =
+    coinPrefix rounds
+      (fun pair : Nat × Nat => b
+        ((c.origin pair.2).1, (pair.1, (c.origin pair.2).2))) := by
+    calc
+      _ = coinPrefix rounds
+          (fun pair : Nat × Nat =>
+            manuscriptGlobalSourcePrefix rounds a
+              ((c.origin pair.2).1,
+                (pair.1, (c.origin pair.2).2))) :=
+            manuscriptOldRead_globalPrefix c.origin rounds a
+      _ = coinPrefix rounds
+          (fun pair : Nat × Nat =>
+            manuscriptGlobalSourcePrefix rounds b
+              ((c.origin pair.2).1,
+                (pair.1, (c.origin pair.2).2))) := by rw [hprefix]
+      _ = _ := (manuscriptOldRead_globalPrefix c.origin rounds b).symm
+  apply manuscriptRateThinningResult_eq_of_prefix_eq
+  rw [ha, hb]
+  exact hread
+
+theorem ManuscriptOriginConfiguration.refreshed_secondResult_eq_of_observations
+    {n : Nat} (c : ManuscriptOriginConfiguration n)
+    (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
+    (basePending : Nat) (preCoins freshA freshB : Nat × Nat → Bool)
+    (oldA oldB : Nat × (Nat × Nat) → Bool)
+    (hfirst : manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) oldA =
+      manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) oldB)
+    (hsecond :
+      let deleted := c.state.removeComponent P
+      let rounds := manuscriptRateExit deleted intensity threshold
+      let first := manuscriptRateThinningResult deleted intensity threshold
+        (manuscriptSourceOldCoins c.origin
+          (c.refreshFuture oldA).source.coins c.level)
+      let preRounds := c.level + rounds
+      manuscriptSurvivorPairFullObservation first threshold preCoins
+          preRounds basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldA, freshA) =
+        manuscriptSurvivorPairFullObservation first threshold preCoins
+          preRounds basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldB, freshB)) :
+    let deleted := c.state.removeComponent P
+    let rounds := manuscriptRateExit deleted intensity threshold
+    let preRounds := c.level + rounds
+    let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
+    let active := fun fresh => originalSurvivorCoinRestriction preCoins
+      preRounds deleted.nextLabel basePending fresh
+    let old := fun global => manuscriptSourceOldCoins c.origin
+      (c.refreshFuture global).source.coins c.level
+    thinningResultSplitFinite
+      (manuscriptRateThinningResult deleted intensity threshold (old oldA))
+      pending threshold (shiftCoins rounds (old oldA)) (active freshA) =
+    thinningResultSplitFinite
+      (manuscriptRateThinningResult deleted intensity threshold (old oldB))
+      pending threshold (shiftCoins rounds (old oldB)) (active freshB) := by
+  let deleted := c.state.removeComponent P
+  let rounds := manuscriptRateExit deleted intensity threshold
+  let preRounds := c.level + rounds
+  let old := fun global => manuscriptSourceOldCoins c.origin
+    (c.refreshFuture global).source.coins c.level
+  let firstA := manuscriptRateThinningResult deleted intensity threshold
+    (old oldA)
+  let firstB := manuscriptRateThinningResult deleted intensity threshold
+    (old oldB)
+  have hfirstState : firstA = firstB :=
+    c.refreshed_rateThinningResult_eq_of_prefix_eq P intensity threshold
+      oldA oldB hfirst
+  have hshiftA : shiftCoins rounds (old oldA) =
+      (fun pair : Nat × Nat =>
+        manuscriptGlobalSourceShift rounds oldA
+          ((c.origin pair.2).1, (pair.1, (c.origin pair.2).2))) := by
+    change shiftCoins rounds
+      (manuscriptSourceOldCoins c.origin
+        (c.refreshFuture oldA).source.coins c.level) = _
+    rw [c.refreshFuture_shift_oldCoins oldA rounds]
+    funext pair
+    simp [manuscriptGlobalSourceShift, Nat.add_comm]
+  have hshiftB : shiftCoins rounds (old oldB) =
+      (fun pair : Nat × Nat =>
+        manuscriptGlobalSourceShift rounds oldB
+          ((c.origin pair.2).1, (pair.1, (c.origin pair.2).2))) := by
+    change shiftCoins rounds
+      (manuscriptSourceOldCoins c.origin
+        (c.refreshFuture oldB).source.coins c.level) = _
+    rw [c.refreshFuture_shift_oldCoins oldB rounds]
+    funext pair
+    simp [manuscriptGlobalSourceShift, Nat.add_comm]
+  have hfirstFresh : firstA.LabelsFresh := by
+    exact manuscriptRateThinningResult_labelsFresh deleted intensity
+      threshold (old oldA)
+        (c.state.labelsFresh_removeComponent P c.fresh)
+  have hpair :=
+    thinningResultSplitFinite_eq_of_fullObservation_eq firstA threshold
+      preCoins preRounds basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldA, freshA)
+      (manuscriptGlobalSourceShift rounds oldB, freshB)
+      hfirstFresh hsecond
+  change thinningResultSplitFinite firstA
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds (old oldA))
+      (originalSurvivorCoinRestriction preCoins preRounds
+        deleted.nextLabel basePending freshA) =
+    thinningResultSplitFinite firstB
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds (old oldB))
+      (originalSurvivorCoinRestriction preCoins preRounds
+        deleted.nextLabel basePending freshB)
+  rw [← hfirstState, hshiftA, hshiftB]
+  exact hpair
+
+theorem ManuscriptOriginConfiguration.refreshed_activeRounds_eq_pairStop
+    {n : Nat} (c : ManuscriptOriginConfiguration n)
+    (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
+    (basePending : Nat) (preCoins fresh : Nat × Nat → Bool)
+    (oldFuture : Nat × (Nat × Nat) → Bool) :
+    let deleted := c.state.removeComponent P
+    let rounds := manuscriptRateExit deleted intensity threshold
+    let preRounds := c.level + rounds
+    let old := manuscriptSourceOldCoins c.origin
+      (c.refreshFuture oldFuture).source.coins c.level
+    let first := manuscriptRateThinningResult deleted intensity threshold old
+    let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
+    let active := originalSurvivorCoinRestriction preCoins preRounds
+      deleted.nextLabel basePending fresh
+    firstExitRoundSplit first pending threshold (shiftCoins rounds old)
+        (pendingCoinExtension deleted.nextLabel pending active) =
+      manuscriptSurvivorPairStop first threshold preCoins preRounds
+        basePending c.origin
+        (manuscriptGlobalSourceShift rounds oldFuture, fresh) := by
+  let deleted := c.state.removeComponent P
+  let rounds := manuscriptRateExit deleted intensity threshold
+  let preRounds := c.level + rounds
+  let old := manuscriptSourceOldCoins c.origin
+    (c.refreshFuture oldFuture).source.coins c.level
+  let first := manuscriptRateThinningResult deleted intensity threshold old
+  have hshift : shiftCoins rounds old =
+      (fun pair : Nat × Nat =>
+        manuscriptGlobalSourceShift rounds oldFuture
+          ((c.origin pair.2).1, (pair.1, (c.origin pair.2).2))) := by
+    change shiftCoins rounds
+      (manuscriptSourceOldCoins c.origin
+        (c.refreshFuture oldFuture).source.coins c.level) = _
+    rw [c.refreshFuture_shift_oldCoins oldFuture rounds]
+    funext pair
+    simp [manuscriptGlobalSourceShift, Nat.add_comm]
+  have hfresh : first.LabelsFresh :=
+    manuscriptRateThinningResult_labelsFresh deleted intensity threshold old
+      (c.state.labelsFresh_removeComponent P c.fresh)
+  change firstExitRoundSplit first
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds old)
+      (pendingCoinExtension deleted.nextLabel
+        (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+        (originalSurvivorCoinRestriction preCoins preRounds
+          deleted.nextLabel basePending fresh)) = _
+  rw [hshift]
+  exact firstExitRoundSplit_pairRead first threshold preCoins preRounds
+    basePending c.origin
+    (manuscriptGlobalSourceShift rounds oldFuture, fresh) hfresh
+
+theorem ManuscriptOriginConfiguration.refreshed_advance_level_eq_of_observations
+    {n : Nat} (c : ManuscriptOriginConfiguration n)
+    (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
+    (basePending : Nat) (preCoins freshA freshB : Nat × Nat → Bool)
+    (oldA oldB : Nat × (Nat × Nat) → Bool)
+    (tape : Nat → LatticePoint n)
+    (hfirst : manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) oldA =
+      manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) oldB)
+    (hsecond :
+      let deleted := c.state.removeComponent P
+      let rounds := manuscriptRateExit deleted intensity threshold
+      let first := manuscriptRateThinningResult deleted intensity threshold
+        (manuscriptSourceOldCoins c.origin
+          (c.refreshFuture oldA).source.coins c.level)
+      let preRounds := c.level + rounds
+      manuscriptSurvivorPairFullObservation first threshold preCoins
+          preRounds basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldA, freshA) =
+        manuscriptSurvivorPairFullObservation first threshold preCoins
+          preRounds basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldB, freshB)) :
+    ((c.refreshFuture oldA).advance P intensity threshold basePending
+      preCoins freshA tape).level =
+    ((c.refreshFuture oldB).advance P intensity threshold basePending
+      preCoins freshB tape).level := by
+  let deleted := c.state.removeComponent P
+  let rounds := manuscriptRateExit deleted intensity threshold
+  let preRounds := c.level + rounds
+  let old := fun global => manuscriptSourceOldCoins c.origin
+    (c.refreshFuture global).source.coins c.level
+  let firstA := manuscriptRateThinningResult deleted intensity threshold
+    (old oldA)
+  let firstB := manuscriptRateThinningResult deleted intensity threshold
+    (old oldB)
+  let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
+  let active := fun fresh => originalSurvivorCoinRestriction preCoins
+    preRounds deleted.nextLabel basePending fresh
+  have hfirstState : firstA = firstB :=
+    c.refreshed_rateThinningResult_eq_of_prefix_eq P intensity threshold
+      oldA oldB hfirst
+  have hstopA := c.refreshed_activeRounds_eq_pairStop P intensity
+    threshold basePending preCoins freshA oldA
+  have hstopB := c.refreshed_activeRounds_eq_pairStop P intensity
+    threshold basePending preCoins freshB oldB
+  change firstExitRoundSplit firstA pending threshold
+      (shiftCoins rounds (old oldA))
+      (pendingCoinExtension deleted.nextLabel pending (active freshA)) =
+    manuscriptSurvivorPairStop firstA threshold preCoins preRounds
+      basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldA, freshA) at hstopA
+  change firstExitRoundSplit firstB pending threshold
+      (shiftCoins rounds (old oldB))
+      (pendingCoinExtension deleted.nextLabel pending (active freshB)) =
+    manuscriptSurvivorPairStop firstB threshold preCoins preRounds
+      basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldB, freshB) at hstopB
+  have hstopObs := congrArg Prod.fst hsecond
+  change manuscriptSurvivorPairStop firstA threshold preCoins preRounds
+      basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldA, freshA) =
+    manuscriptSurvivorPairStop firstA threshold preCoins preRounds
+      basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldB, freshB) at hstopObs
+  have hrounds : firstExitRoundSplit firstA pending threshold
+      (shiftCoins rounds (old oldA))
+      (pendingCoinExtension deleted.nextLabel pending (active freshA)) =
+    firstExitRoundSplit firstB pending threshold
+      (shiftCoins rounds (old oldB))
+      (pendingCoinExtension deleted.nextLabel pending (active freshB)) := by
+    rw [hstopA, hstopB, ← hfirstState]
+    exact hstopObs
+  have ha := (c.refreshFuture oldA).advance_level P intensity
+    threshold basePending preCoins freshA tape
+  have hb := (c.refreshFuture oldB).advance_level P intensity
+    threshold basePending preCoins freshB tape
+  change ((c.refreshFuture oldA).advance P intensity threshold
+      basePending preCoins freshA tape).level =
+    preRounds + firstExitRoundSplit firstA pending threshold
+      (shiftCoins rounds (old oldA))
+      (pendingCoinExtension deleted.nextLabel pending (active freshA)) at ha
+  change ((c.refreshFuture oldB).advance P intensity threshold
+      basePending preCoins freshB tape).level =
+    preRounds + firstExitRoundSplit firstB pending threshold
+      (shiftCoins rounds (old oldB))
+      (pendingCoinExtension deleted.nextLabel pending (active freshB)) at hb
+  rw [ha, hb, hrounds]
+
+theorem ManuscriptOriginConfiguration.refreshed_advance_sourcePrefix_eq_of_observations
+    {n : Nat} (c : ManuscriptOriginConfiguration n)
+    (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
+    (basePending : Nat) (preCoins freshA freshB : Nat × Nat → Bool)
+    (oldA oldB : Nat × (Nat × Nat) → Bool)
+    (tape : Nat → LatticePoint n)
+    (hfirst : manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) oldA =
+      manuscriptGlobalSourcePrefix
+        (manuscriptRateExit (c.state.removeComponent P)
+          intensity threshold) oldB)
+    (hsecond :
+      let deleted := c.state.removeComponent P
+      let rounds := manuscriptRateExit deleted intensity threshold
+      let first := manuscriptRateThinningResult deleted intensity threshold
+        (manuscriptSourceOldCoins c.origin
+          (c.refreshFuture oldA).source.coins c.level)
+      let preRounds := c.level + rounds
+      manuscriptSurvivorPairFullObservation first threshold preCoins
+          preRounds basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldA, freshA) =
+        manuscriptSurvivorPairFullObservation first threshold preCoins
+          preRounds basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldB, freshB)) :
+    let nextA := (c.refreshFuture oldA).advance P intensity threshold
+      basePending preCoins freshA tape
+    let nextB := (c.refreshFuture oldB).advance P intensity threshold
+      basePending preCoins freshB tape
+    manuscriptOriginCoinPrefix nextA.level nextA.source.coins =
+      manuscriptOriginCoinPrefix nextB.level nextB.source.coins := by
+  let deleted := c.state.removeComponent P
+  let rounds := manuscriptRateExit deleted intensity threshold
+  let preRounds := c.level + rounds
+  let old := fun global => manuscriptSourceOldCoins c.origin
+    (c.refreshFuture global).source.coins c.level
+  let firstA := manuscriptRateThinningResult deleted intensity threshold
+    (old oldA)
+  let firstB := manuscriptRateThinningResult deleted intensity threshold
+    (old oldB)
+  let stopA := manuscriptSurvivorPairStop firstA threshold preCoins
+    preRounds basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldA, freshA)
+  let stopB := manuscriptSurvivorPairStop firstB threshold preCoins
+    preRounds basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldB, freshB)
+  let nextA := (c.refreshFuture oldA).advance P intensity threshold
+    basePending preCoins freshA tape
+  let nextB := (c.refreshFuture oldB).advance P intensity threshold
+    basePending preCoins freshB tape
+  have hfirstState : firstA = firstB :=
+    c.refreshed_rateThinningResult_eq_of_prefix_eq P intensity threshold
+      oldA oldB hfirst
+  have hstopObs := congrArg Prod.fst hsecond
+  change stopA = manuscriptSurvivorPairStop firstA threshold preCoins
+      preRounds basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldB, freshB) at hstopObs
+  have hstop : stopA = stopB := by
+    change stopA = manuscriptSurvivorPairStop firstB threshold preCoins
+      preRounds basePending c.origin
+      (manuscriptGlobalSourceShift rounds oldB, freshB)
+    rw [← hfirstState]
+    exact hstopObs
+  have hprefixObs := congrArg Prod.snd hsecond
+  change (manuscriptGlobalSourcePrefix stopA
+        (manuscriptGlobalSourceShift rounds oldA),
+      coinPrefix stopA freshA) =
+    (manuscriptGlobalSourcePrefix
+        (manuscriptSurvivorPairStop firstA threshold preCoins preRounds
+          basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldB, freshB))
+        (manuscriptGlobalSourceShift rounds oldB),
+      coinPrefix
+        (manuscriptSurvivorPairStop firstA threshold preCoins preRounds
+          basePending c.origin
+          (manuscriptGlobalSourceShift rounds oldB, freshB))
+        freshB) at hprefixObs
+  rw [← hstopObs] at hprefixObs
+  have hsourcePrefix :=
+    manuscriptCoinsAppend_refreshed_observedPrefix_eq_of_twoPieces
+      c.source.coins c.level c.source.processed rounds stopA
+      preCoins freshA freshB oldA oldB hfirst
+      (congrArg Prod.fst hprefixObs)
+      (congrArg Prod.snd hprefixObs)
+  have hsourceA := congrArg ManuscriptOriginSourceState.coins
+    ((c.refreshFuture oldA).advance_source P intensity threshold
+      basePending preCoins freshA tape)
+  have hsourceB := congrArg ManuscriptOriginSourceState.coins
+    ((c.refreshFuture oldB).advance_source P intensity threshold
+      basePending preCoins freshB tape)
+  change nextA.source.coins = manuscriptCoinsAppend
+      (manuscriptRefreshedSourceCoins c.source.coins c.level oldA)
+      c.source.processed preCoins freshA preRounds at hsourceA
+  change nextB.source.coins = manuscriptCoinsAppend
+      (manuscriptRefreshedSourceCoins c.source.coins c.level oldB)
+      c.source.processed preCoins freshB preRounds at hsourceB
+  have hlevelA := (c.refreshFuture oldA).advance_level P intensity
+    threshold basePending preCoins freshA tape
+  have hlevelB := (c.refreshFuture oldB).advance_level P intensity
+    threshold basePending preCoins freshB tape
+  have hactiveA := c.refreshed_activeRounds_eq_pairStop P intensity
+    threshold basePending preCoins freshA oldA
+  have hactiveB := c.refreshed_activeRounds_eq_pairStop P intensity
+    threshold basePending preCoins freshB oldB
+  change nextA.level = preRounds + firstExitRoundSplit firstA
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds (old oldA))
+      (pendingCoinExtension deleted.nextLabel
+        (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+        (originalSurvivorCoinRestriction preCoins preRounds
+          deleted.nextLabel basePending freshA)) at hlevelA
+  change nextB.level = preRounds + firstExitRoundSplit firstB
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds (old oldB))
+      (pendingCoinExtension deleted.nextLabel
+        (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+        (originalSurvivorCoinRestriction preCoins preRounds
+          deleted.nextLabel basePending freshB)) at hlevelB
+  change firstExitRoundSplit firstA
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds (old oldA))
+      (pendingCoinExtension deleted.nextLabel
+        (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+        (originalSurvivorCoinRestriction preCoins preRounds
+          deleted.nextLabel basePending freshA)) = stopA at hactiveA
+  change firstExitRoundSplit firstB
+      (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+      threshold (shiftCoins rounds (old oldB))
+      (pendingCoinExtension deleted.nextLabel
+        (pendingAfter preCoins preRounds deleted.nextLabel basePending)
+        (originalSurvivorCoinRestriction preCoins preRounds
+          deleted.nextLabel basePending freshB)) = stopB at hactiveB
+  rw [hactiveA] at hlevelA
+  rw [hactiveB] at hlevelB
+  change manuscriptOriginCoinPrefix nextA.level nextA.source.coins =
+    manuscriptOriginCoinPrefix nextB.level nextB.source.coins
+  rw [hlevelA, hlevelB, hstop, hsourceA, hsourceB]
+  simpa [preRounds, hstop] using hsourcePrefix
+
+end Kr25Ssmxt

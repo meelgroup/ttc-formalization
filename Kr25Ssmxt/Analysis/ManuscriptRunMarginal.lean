@@ -5,7 +5,7 @@ namespace Kr25Ssmxt
 
 open MeasureTheory
 
-private theorem measurable_manuscriptEstimate {n : Nat} (b : Nat)
+theorem measurable_manuscriptEstimate {n : Nat} (b : Nat)
     (threshold : Real) :
     Measurable (manuscriptEstimate (n := n) b threshold) := by
   have hcoords : Measurable (fun s : TTCState n =>

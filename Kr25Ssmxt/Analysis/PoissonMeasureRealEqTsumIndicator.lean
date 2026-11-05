@@ -11,7 +11,7 @@ real-valued Poisson PMF used by the Chernoff estimates.
 noncomputable section
 
 open scoped BigOperators NNReal ProbabilityTheory
-open MeasureTheory ProbabilityTheory
+open MeasureTheory ProbabilityTheory Classical
 
 namespace Kr25Ssmxt
 
@@ -23,7 +23,8 @@ INTERNAL: Measure-to-PMF bridge needed to apply the explicit Chernoff sum bound.
 lemma poissonMeasure_real_eq_tsum_indicator (mean : NNReal) (S : Set Nat) :
     (poissonMeasure mean).real S =
       ∑' k : Nat, if k ∈ S then Arlib.Probability.poissonPMF (mean : Real) k else 0 := by
-  rw [← MeasureTheory.integral_indicator_one (MeasurableSet.of_discrete S)]
+  classical
+  rw [← MeasureTheory.integral_indicator_one (show MeasurableSet S from MeasurableSet.of_discrete)]
   rw [ProbabilityTheory.integral_poissonMeasure]
   apply tsum_congr
   intro k

@@ -1,6 +1,7 @@
 import Kr25Ssmxt.Model.Program
 import Kr25Ssmxt.Analysis.MeasurableFixedSfiniteBind
 import Mathlib.Probability.Kernel.MeasurableLIntegral
+import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 
 /-!
 # Forgetting a real-RAM operation trace
@@ -39,6 +40,24 @@ theorem costedCharge_fst {α : Type*} [MeasurableSpace α]
   rw [Measure.map_map measurable_fst (by fun_prop)]
   change law.map id = law
   exact Measure.map_id
+
+theorem costedCharge_isProbabilityMeasure {α : Type*} [MeasurableSpace α]
+    (law : Measure α) [IsProbabilityMeasure law] (operations : Nat) :
+    IsProbabilityMeasure (costedCharge law operations) := by
+  unfold costedCharge
+  exact Measure.isProbabilityMeasure_map (by fun_prop)
+
+/-- A charged law has the same total mass as its output marginal. -/
+theorem costed_probability_of_fst {α : Type*} [MeasurableSpace α]
+    (law : Measure (α × Nat))
+    (hprob : IsProbabilityMeasure (law.map Prod.fst)) :
+    IsProbabilityMeasure law := by
+  apply IsProbabilityMeasure.mk
+  have hmass : (law.map Prod.fst) Set.univ = law Set.univ := by
+    rw [Measure.map_apply measurable_fst MeasurableSet.univ]
+    simp
+  rw [← hmass]
+  exact hprob.measure_univ
 
 set_option maxHeartbeats 800000 in
 theorem costedBind_dirac_eq_map {α β : Type*}
@@ -96,6 +115,20 @@ private theorem measurable_costedContinuation {α β : Type*}
   intro cost
   exact (Measure.measurable_map
     (fun future : β × Nat => (future.1, cost + future.2)) (by fun_prop)).comp hnext
+
+/-- Composing normalized charged kernels preserves total probability. -/
+theorem costedBind_isProbabilityMeasure {α β : Type*}
+    [MeasurableSpace α] [MeasurableSpace β]
+    (first : Measure (α × Nat)) [IsProbabilityMeasure first]
+    (next : α → Measure (β × Nat)) (hnext : Measurable next)
+    (hprob : ∀ x, IsProbabilityMeasure (next x)) :
+    IsProbabilityMeasure (costedBind first next) := by
+  unfold costedBind
+  apply isProbabilityMeasure_bind
+    (measurable_costedContinuation next hnext).aemeasurable
+  filter_upwards with result
+  letI : IsProbabilityMeasure (next result.1) := hprob result.1
+  exact Measure.isProbabilityMeasure_map (by fun_prop)
 
 theorem costedBind_kernel_measurable {X α β : Type*}
     [MeasurableSpace X] [MeasurableSpace α] [MeasurableSpace β]

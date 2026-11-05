@@ -44,6 +44,15 @@ theorem measurable_manuscriptRateThinningResult {n : Nat} (s : TTCState n)
   rw [measurable_comap_iff]
   exact measurable_const.prodMk (hsamples.prodMk measurable_const)
 
+/-- The manuscript's deterministic-rate loop preserves total probability. -/
+theorem manuscriptRateThinUntil_isProbabilityMeasure {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real) :
+    IsProbabilityMeasure (manuscriptRateThinUntil s intensity threshold) := by
+  letI : IsProbabilityMeasure fairCoinStreamLaw :=
+    fairCoinStreamLaw_isProbabilityMeasure
+  exact Measure.isProbabilityMeasure_map
+    (measurable_manuscriptRateThinningResult s intensity threshold).aemeasurable
+
 /-- The charged first loop has precisely the program's uncharged state law. -/
 theorem manuscriptRateThinWithCost_fst {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) :
@@ -57,6 +66,16 @@ theorem manuscriptRateThinWithCost_fst {n : Nat} (s : TTCState n)
   unfold manuscriptRateThinWithCost manuscriptRateThinUntil
   rw [MeasureTheory.Measure.map_map measurable_fst hpair]
   rfl
+
+theorem manuscriptRateThinWithCost_isProbabilityMeasure {n : Nat}
+    (s : TTCState n) (intensity : NNReal) (threshold : Real) :
+    IsProbabilityMeasure (manuscriptRateThinWithCost s intensity threshold) := by
+  letI : IsProbabilityMeasure fairCoinStreamLaw :=
+    fairCoinStreamLaw_isProbabilityMeasure
+  unfold manuscriptRateThinWithCost
+  apply Measure.isProbabilityMeasure_map
+  exact ((measurable_manuscriptRateThinningResult s intensity threshold).prodMk
+    measurable_const).aemeasurable
 
 /-- The first loop's charged cost is deterministic, even though its retained
 copies are random. -/
@@ -131,6 +150,49 @@ theorem manuscriptRateExit_guard {n : Nat} (s : TTCState n)
   exact Nat.sInf_mem (by
     obtain ⟨rounds, hrounds⟩ := manuscriptRateExit_exists s intensity hthreshold
     exact ⟨rounds, hrounds⟩)
+
+/-- Once the current scaled Poisson mean is below the threshold, the first
+while-loop does not halve the rate. -/
+theorem manuscriptRateExit_zero_of_lt {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real)
+    (hbelow : ((intensity * s.rate : NNReal) : Real) < threshold) :
+    manuscriptRateExit s intensity threshold = 0 := by
+  unfold manuscriptRateExit
+  apply Nat.eq_zero_of_not_pos
+  intro hpos
+  have hmin : sInf {rounds : Nat |
+      ((intensity * s.rate / (2 : NNReal) ^ rounds : NNReal) : Real) <
+        threshold} ≤ 0 := by
+    apply Nat.sInf_le
+    simpa using hbelow
+  omega
+
+theorem manuscriptRateThinningResult_of_below {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real)
+    (hbelow : ((intensity * s.rate : NNReal) : Real) < threshold)
+    (coins : Nat × Nat → Bool) :
+    manuscriptRateThinningResult s intensity threshold coins = s := by
+  simp [manuscriptRateThinningResult,
+    manuscriptRateExit_zero_of_lt s intensity threshold hbelow,
+    samplesAfter, survives]
+
+/-- If the second while-loop passes a fixed dyadic level, the hypothetical
+population at that level exceeds its threshold. -/
+theorem manuscript_second_loop_crossing_implies_large_population
+    {n : Nat} (s : TTCState n) (pending : Nat)
+    (threshold : Real) (coins : Nat × Nat → Bool) (rounds : Nat)
+    (hcross : rounds < firstExitRound s pending threshold coins) :
+    threshold <
+      (samplesAfter coins rounds s.samples).card +
+        pendingAfter coins rounds s.nextLabel pending := by
+  by_contra h
+  have hexit : thinningExit s pending threshold coins rounds := by
+    dsimp [thinningExit]
+    exact le_of_not_gt h
+  have hmin : firstExitRound s pending threshold coins ≤ rounds := by
+    unfold firstExitRound
+    exact Nat.sInf_le hexit
+  omega
 
 /-- Every first-loop result has a Poisson mean below the threshold. -/
 theorem manuscriptRateThinningResult_guard {n : Nat} (s : TTCState n)
@@ -247,5 +309,21 @@ theorem manuscriptCountThinWithCost_mass_le_one {n : Nat} (s : TTCState n)
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   simp
+
+theorem manuscriptCountThinWithCost_isProbabilityMeasure {n : Nat}
+    (s : TTCState n) (pending : Nat) (threshold : Real) :
+    IsProbabilityMeasure (manuscriptCountThinWithCost s pending threshold) := by
+  letI : IsProbabilityMeasure fairCoinStreamLaw :=
+    fairCoinStreamLaw_isProbabilityMeasure
+  unfold manuscriptCountThinWithCost
+  apply Measure.isProbabilityMeasure_map
+  have hcost : Measurable (fun coins : Nat × Nat → Bool =>
+      manuscriptCountThinningCost s pending threshold coins) := by
+    unfold manuscriptCountThinningCost
+    exact (measurable_of_countable
+      (fun rounds : Nat => rounds *
+        TTCRuntime.countThinningRoundOperations s.samples.card)).comp
+          (measurable_firstExitRound s pending threshold)
+  exact ((measurable_thinningResult s pending threshold).prodMk hcost).aemeasurable
 
 end Kr25Ssmxt
