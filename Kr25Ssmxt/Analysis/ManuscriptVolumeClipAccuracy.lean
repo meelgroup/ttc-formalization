@@ -87,7 +87,6 @@ theorem community_manuscript_volume_contract_of_bounds
     p.epsilonPrime (p.deltaPrime D.componentCount)
     (div_nonneg p.epsilon_pos.le (by norm_num))
     (hbounds i).1 (hbounds i).2 hspec.2.1 hspec.2.2
-  simpa only [communityManuscriptOracles, communityCV18HitAndRunOracles,
-    hitAndRunSamplingOracles, D] using hclip
+  simpa only [communityManuscriptOracles, D] using hclip
 
 end Kr25Ssmxt

@@ -154,64 +154,10 @@ lemma exact_lattice_point_law_almost_uniform {n : Nat} (P : PolytopeData n) (b :
     have hcenter : 0 ≤ (1 : Real) / S.ncard := by positivity
     constructor <;> nlinarith
 
-lemma exact_sample_batch_iid {n count : Nat} (P : PolytopeData n) (b : Nat)
-    (hprob : IsProbabilityMeasure (exactLatticePointLaw P b)) :
-    IIDBatchOnGood (exactSampleBatchLaw (count := count) P b) (exactLatticePointLaw P b) := by
-  letI : IsProbabilityMeasure (exactLatticePointLaw P b) := hprob
-  let productLaw : Measure (Fin count → LatticePoint n) :=
-    Measure.pi (fun _ : Fin count => exactLatticePointLaw P b)
-  letI : IsProbabilityMeasure productLaw := by
-    dsimp only [productLaw]
-    infer_instance
-  let tag : (Fin count → LatticePoint n) → SampleBatch n count :=
-    fun samples => (true, samples)
-  have htag : Measurable tag := by fun_prop
-  have hgood : (productLaw.map tag) {o | o.1 = true} = 1 := by
-    rw [Measure.map_apply htag (by measurability)]
-    simp [tag]
-  have hae : ∀ᵐ o ∂productLaw.map tag, o ∈ {o | o.1 = true} := by
-    rw [MeasureTheory.ae_map_iff htag.aemeasurable (by measurability)]
-    simp [tag]
-  change ((ProbabilityTheory.cond (productLaw.map tag) {o | o.1 = true}).map Prod.snd) =
-    Measure.pi (fun _ : Fin count => exactLatticePointLaw P b)
-  rw [ProbabilityTheory.cond, hgood, inv_one, one_smul,
-    Measure.restrict_eq_self_of_ae_mem hae]
-  rw [Measure.map_map measurable_snd htag]
-  simpa [Function.comp_def, tag, productLaw] using (Measure.map_id productLaw)
-
 lemma exact_sample_batch_isProbabilityMeasure {n count : Nat} (P : PolytopeData n) (b : Nat)
     (hprob : IsProbabilityMeasure (exactLatticePointLaw P b)) :
     IsProbabilityMeasure (exactSampleBatchLaw (count := count) P b) := by
   letI : IsProbabilityMeasure (exactLatticePointLaw P b) := hprob
   exact Measure.isProbabilityMeasure_map (by fun_prop)
-
-lemma exact_samples_contract {n k : Nat} (hn : 0 < n) (prep : TTCPreprocessor n k)
-    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
-    (params : ApproxParams) :
-    GenerateSamplesContract (exactSemanticOracles prep) F hbounded params := by
-  let D := prep.run F hbounded
-  let choice := prep.choosePrecision D params
-  let b := choice.value
-  intro i count
-  have hset := coded_lattice_points_finite_nonempty hn D params b choice.adequate i
-  have heta : 0 ≤ params.epsilonPrime :=
-    (div_pos params.epsilon_pos (by norm_num)).le
-  have halmost := exact_lattice_point_law_almost_uniform (D.component i) b
-    params.epsilonPrime heta hset.1 hset.2
-  letI : IsProbabilityMeasure (exactLatticePointLaw (D.component i) b) := halmost.1
-  change IsProbabilityMeasure (exactSampleBatchLaw (D.component i) b) ∧
-    (exactSampleBatchLaw (D.component i) b).real {o | o.1 = false} ≤
-      params.deltaPrime D.componentCount ∧ _
-  refine ⟨exact_sample_batch_isProbabilityMeasure (D.component i) b halmost.1, ?_,
-    ⟨exactLatticePointLaw (D.component i) b, halmost, ?_⟩⟩
-  · have hm : 0 < D.componentCount := Nat.zero_lt_of_lt i.isLt
-    have hdelta : 0 ≤ params.deltaPrime D.componentCount := by
-      exact div_nonneg params.delta_pos.le (by positivity)
-    have hzero : (exactSampleBatchLaw (count := count) (D.component i) b)
-        {o : SampleBatch n count | o.1 = false} = 0 := by
-      rw [exactSampleBatchLaw, Measure.map_apply (by fun_prop) (by measurability)]
-      simp
-    simpa [Measure.real, hzero] using hdelta
-  · exact exact_sample_batch_iid (D.component i) b inferInstance
 
 end Kr25Ssmxt

@@ -218,19 +218,6 @@ def communityCV18VolumeLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   else
     Measure.dirac (true, 0)
 
-/-- The concrete query budget really bounds every charged execution of the CV18 program.
-This is the cost claim used by the public runtime theorem; it contains no caller-supplied
-oracle estimate. -/
-def CommunityCV18.MembershipCostCertified {n : Nat} (hn : 3 ≤ n)
-    (P : PolytopeData n) (eta delta : Real) : Prop := by
-  classical
-  exact if h : CommunityCV18.AdmissibleCV18Request eta delta then
-      (CommunityCV18.algorithm
-        (CommunityCV18.params hn P eta delta h)).MembershipCostBound
-        (CommunityCV18.queryBudgetFor hn P eta delta)
-    else
-      True
-
 /-! ## Direct finite-step Hit-and-Run/KV97 law -/
 
 open Arlib.Lattice.Rounding
@@ -347,14 +334,6 @@ def PolytopeData.normalizedHitAndRunBody {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Set (EuclideanSpace Real (Fin n)) :=
   Arlib.Polytope.body P.arlibNormal (P.normalizedHitAndRunOffset b eta)
 
-/-- The canonical geometric parameters passed to the community mixing deadline. -/
-def hitAndRunDiameter {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Real :=
-  Metric.diam (hitAndRunBody P b eta)
-
-def hitAndRunWarmness {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Real :=
-  (volume (hitAndRunBody P b eta) /
-    volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)).toReal
-
 def hitAndRunTolerance {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Real :=
   min 1 ((eta / 8) / (volume (hitAndRunBody P b eta)).toReal)
 
@@ -400,34 +379,6 @@ noncomputable def TTCRuntime.theorem3ParameterFactor
         2 * (Real.log 10 + Real.log 6 + 1 +
           Real.log (1 + 8 / p.epsilonPrime) + 2)) + 20
 
-/-- The exact finite walk length selected from arlib-community's displayed deadline. -/
-def hitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Nat :=
-  Nat.ceil (ArlibCommunity.Algorithms.HitAndRun.deadline n
-    (hitAndRunDiameter P b eta) (hitAndRunWarmness P b eta)
-    (hitAndRunTolerance P b eta))
-
-/-- The runtime budgets of exactly the community implementations selected by
-the community oracle bundle: the syntax-derived CV18 query cap and the finite Hit-and-Run
-deadline. -/
-def communityMembershipRuntimeCertificate {n k : Nat} (hn : 21 ≤ n)
-    {F : LRAFormula n k} (D : Decomposition F) (b : Nat) (p : ApproxParams) :
-    TTCRuntime.TTCMembershipRuntimeCertificate D p where
-  volumeQueryCount := fun i =>
-    CommunityCV18.queryBudgetFor (by omega) (D.component i)
-      p.epsilonPrime (p.deltaPrime D.componentCount)
-  samplerStepCount := fun i => normalizedHitAndRunSteps (D.component i) b p.epsilonPrime
-
-/-- The imported finite-step Hit-and-Run law before randomized rounding. -/
-def hitAndRunContinuousLaw {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
-    Measure (EuclideanSpace Real (Fin n)) :=
-  Arlib.MarkovChains.iterate
-    (Arlib.MarkovChains.lazy
-      (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
-        P.arlibNormal (hitAndRunOffset P b eta)))
-    (Arlib.uniformOn volume
-      (Metric.ball (decimalScale b • toEuclidean P.incenter) 1))
-    (hitAndRunSteps P b eta)
-
 /-- The finite-facet walk in unit-inball coordinates, mapped back to the
 decimal-scaled body before KV97 rounding. -/
 def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
@@ -439,15 +390,6 @@ def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
     (Arlib.uniformOn volume
       (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
     (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b)
-
-/-- TTC's one-point sampler law. Proof arguments document the route certified in Analysis;
-the law itself is the explicit imported algorithm above. -/
-def hitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
-    (_hunit : 1 ≤ decimalScale b * P.inradius)
-    (eta : Real) (_heta0 : 0 < eta) (_heta1 : eta ≤ 1)
-    (_hfinite : (codedLatticePoints P b).Finite)
-    (_hnonempty : (codedLatticePoints P b).Nonempty) : Measure (LatticePoint n) :=
-  acceptedRoundedLatticeLaw (hitAndRunContinuousLaw P b eta) P b
 
 /-- The manuscript sampler uses a unit-inball chart before each finite-facet walk. -/
 def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
@@ -483,29 +425,6 @@ def iidSampleBatchLaw {n count : Nat} (pointLaw : Measure (LatticePoint n)) :
 def failedSampleBatchLaw {n count : Nat} : Measure (SampleBatch n count) :=
   Measure.dirac (false, fun _ => default)
 
-/-- TTC sampling calls routed directly through arlib-community Hit-and-Run and KV97. -/
-def hitAndRunSamplingOracles {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k) :
-    TTCOracles n k := by
-  classical
-  exact
-    { preprocessing := prep
-      computeVolume := fun P _ _ => Measure.dirac
-        (true, ⟨(volume P.carrier).toReal, ENNReal.toReal_nonneg⟩)
-      generateSamples := fun P count b eta _ =>
-        if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
-            (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
-          iidSampleBatchLaw
-            (hitAndRunPointLaw hn P b h.1 eta h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
-        else
-          failedSampleBatchLaw }
-
-/-- The concrete oracle bundle used by TTC: current community CV18 for volume and current
-community finite-step Hit-and-Run followed by KV97 rounding/rejection for sampling. -/
-def communityCV18HitAndRunOracles {n k : Nat} (hn : 21 ≤ n)
-    (prep : TTCPreprocessor n k) : TTCOracles n k :=
-  { hitAndRunSamplingOracles hn prep with
-    computeVolume := communityCV18VolumeLaw (by omega) }
-
 /-- The paper's lower and upper clipping interval for a component volume estimate. -/
 def PolytopeData.manuscriptVolumeLower {n : Nat} (P : PolytopeData n)
     (eta : Real) : NNReal :=
@@ -521,11 +440,13 @@ def PolytopeData.clipManuscriptVolume {n : Nat} (P : PolytopeData n)
   (o.1, max (P.manuscriptVolumeLower eta)
     (min (P.manuscriptVolumeUpper eta) o.2))
 
-/-- The same community oracles, with the manuscript's post-CV18 clipping. -/
+/-- The concrete oracle bundle: community CV18 with the manuscript's post-CV18 clipping, and the
+normalized community Hit-and-Run walk followed by KV97 rounding and rejection. -/
 def communityManuscriptOracles {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) : TTCOracles n k := by
   classical
-  exact { communityCV18HitAndRunOracles hn prep with
+  exact {
+    preprocessing := prep
     computeVolume := fun P eta delta =>
       (communityCV18VolumeLaw (by omega) P eta delta).map
         (P.clipManuscriptVolume eta)

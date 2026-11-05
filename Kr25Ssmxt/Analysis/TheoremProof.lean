@@ -28,7 +28,7 @@ theorem Decomposition.volume_eq_solutionSet {n k : Nat} {F : LRAFormula n k}
 
 /--
 After thinning a coded `t / p` Poisson batch by `2ʳ` and updating the stored rate in the
-same way, its expected contribution to `TTCState.estimate` is `t / p²`.
+same way, its expected contribution to the `|X| / p` estimate is `t / p²`.
 
 INTERNAL: Algebraic diagnosis of the rate convention in `processComponent`.
 -/

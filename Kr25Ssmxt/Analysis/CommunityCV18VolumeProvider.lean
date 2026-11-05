@@ -160,13 +160,6 @@ theorem install_volume_contract {n k : Nat} (hn : 3 ≤ n)
     ComputeVolumeContract (install hn O) F hbounded p :=
   withNormalizedCV18Volume_volume_contract O (provider n hn) F hbounded p
 
-theorem install_samples_contract {n k : Nat} (hn : 3 ≤ n)
-    (O : TTCOracles n k) (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
-    (h : GenerateSamplesContract O F hbounded p) :
-    GenerateSamplesContract (install hn O) F hbounded p :=
-  withNormalizedCV18Volume_samples_contract O (provider n hn) F hbounded p h
-
 /-- The community theorem also supplies an explicit membership-query bound
 for exactly the program used by `provider`. -/
 theorem membershipCostBound {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)

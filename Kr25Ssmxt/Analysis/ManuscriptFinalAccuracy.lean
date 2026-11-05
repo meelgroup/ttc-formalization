@@ -43,8 +43,7 @@ theorem community_manuscriptTTC_volume_accuracy_empty
   have hrun : communityManuscriptTTC hn F hbounded p prep =
       Measure.dirac 0 := by
     simp [communityManuscriptTTC, manuscriptTTC,
-      communityManuscriptOracles, communityCV18HitAndRunOracles,
-      hitAndRunSamplingOracles, hempty]
+      communityManuscriptOracles, hempty]
   rw [hrun, hvolume]
   simp only [ENNReal.toReal_zero]
   rw [Measure.real, Measure.dirac_apply' 0 hset,

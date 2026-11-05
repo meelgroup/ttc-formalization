@@ -290,49 +290,9 @@ def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
   steps * facetScanOperations dimension facets +
     roundPointOperations dimension + rejectionTestOperations dimension facets
 
-/-- Cost of one accepted sample: its Hit-and-Run transitions and final membership test,
-multiplied by the integer upper bound `2` on the paper's expected rejection count. -/
-def acceptedSampleOperations (dimension facets steps : Nat) : Nat :=
-  2 * membershipQueryOperations dimension facets (steps + 1)
-
-/-- Concrete membership-query and walk-step budgets for TTC's geometric calls. -/
-structure TTCMembershipRuntimeCertificate {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) where
-  volumeQueryCount : Fin D.componentCount → Nat
-  samplerStepCount : Fin D.componentCount → Nat
-
 /-- Maximum number of accepted samples charged per component. -/
 def sampleCap (p : ApproxParams) (componentCount : Nat) : Nat :=
   Nat.ceil (p.threshold componentCount)
-
-/-- Total geometric-oracle operations represented by a runtime trace. -/
-def TTCMembershipRuntimeCertificate.operations {n k : Nat} {F : LRAFormula n k}
-    {D : Decomposition F} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate D p) : Nat :=
-  ∑ i : Fin D.componentCount,
-    (membershipQueryOperations n (D.component i).presentation.facetCount
-        (cert.volumeQueryCount i) +
-      sampleCap p D.componentCount *
-        acceptedSampleOperations n (D.component i).presentation.facetCount
-          (cert.samplerStepCount i))
-
-/-- Assumed allowance for CV18 arithmetic outside its charged membership oracle.
-`Qᵢ + 1` also covers a run with no membership call. The factor is a public
-hypothesis, not a bound supplied by the imported CV18 theorem. -/
-def TTCMembershipRuntimeCertificate.cv18NonQueryAllowance {n k : Nat}
-    {F : LRAFormula n k} {D : Decomposition F} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate D p) (factor : Nat) : Nat :=
-  ∑ i : Fin D.componentCount,
-    factor * membershipQueryOperations n (D.component i).presentation.facetCount
-      (cert.volumeQueryCount i + 1)
-
-/-- Volume kernel in Theorem 3 before facets and suppressed factors. -/
-def theorem3VolumeKernel (n : Nat) (rho epsilon : Real) : Real :=
-  max ((n : Real) ^ 3 * rho ^ 2) ((n : Real) ^ 4) / epsilon ^ 2
-
-/-- Per-sample kernel in Theorem 3. -/
-def theorem3SamplingKernel (n : Nat) (rho : Real) : Real :=
-  (n : Real) ^ 5 * rho ^ 2
 
 /-- The largest facet count among TTC's normalized components. -/
 def theorem3RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
@@ -358,37 +318,6 @@ noncomputable def theorem3Rho {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) : Real :=
   max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
     Real.toNNReal ((D.component i).outerRadius / (D.component i).inradius) : NNReal) : Real)
-
-/-- Exact multiplier containing the factors suppressed by the paper's `O` notation. -/
-def theorem3SuppressedFactor (epsilon threshold volumeOverhead samplingOverhead : Real) :
-    Real :=
-  volumeOverhead / epsilon ^ 2 + threshold * samplingOverhead
-
-/-- Geometric monomial in the headline statement of Theorem 3. -/
-def theorem3HeadlineCore (componentCount n rMax : Nat) (rho : Real) : Real :=
-  (componentCount : Real) * (n : Real) ^ 5 * rho ^ 2 * rMax
-
-/-- The exact finite maximum of the concrete volume-query budgets, normalized by the
-volume kernel displayed in Theorem 3.  This is data computed from `cert`, not an oracle
-estimate supplied as a hypothesis. -/
-noncomputable def theorem3VolumeOverhead {n k : Nat} {F : LRAFormula n k}
-    {D : Decomposition F} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate D p) (rho : Real) : Real :=
-  (Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal
-      ((membershipQueryOperations n 1 (cert.volumeQueryCount i) : Real) /
-        theorem3VolumeKernel n rho p.epsilon) : NNReal)
-
-/-- The exact finite maximum of the concrete sampling budgets, normalized by the
-per-sample kernel displayed in Theorem 3.  This is data computed from `cert`, not an
-oracle estimate supplied as a hypothesis. -/
-noncomputable def theorem3SamplingOverhead {n k : Nat} {F : LRAFormula n k}
-    {D : Decomposition F} {p : ApproxParams}
-    (cert : TTCMembershipRuntimeCertificate D p) (rho : Real) : Real :=
-  (Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal
-      ((acceptedSampleOperations n 1 (cert.samplerStepCount i) : Real) /
-        theorem3SamplingKernel n rho) : NNReal)
 
 end TTCRuntime
 

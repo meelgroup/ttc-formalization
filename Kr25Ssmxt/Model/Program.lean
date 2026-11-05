@@ -90,12 +90,6 @@ def AlmostUniformPointwise {n : Nat} (μ : Measure (LatticePoint n))
   IsProbabilityMeasure μ ∧ S.Finite ∧ S.Nonempty ∧ μ Sᶜ = 0 ∧
     ∀ x ∈ S, μ.real {x} ∈ Arlib.relErr η (1 / S.ncard)
 
-/-- A batch's samples are IID from one law after conditioning on its good tag. -/
-def IIDBatchOnGood {n count : Nat} (law : Measure (SampleBatch n count))
-    (pointLaw : Measure (LatticePoint n)) : Prop :=
-  (ProbabilityTheory.cond law {o | o.1 = true}).map Prod.snd =
-    Measure.pi (fun _ : Fin count => pointLaw)
-
 /-- The required relative-volume guarantee for every call made in this TTC run. -/
 def ComputeVolumeContract {n k : Nat} (O : TTCOracles n k)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
@@ -109,26 +103,6 @@ def ComputeVolumeContract {n k : Nat} (O : TTCOracles n k)
       ∀ᵐ o ∂law, o.1 = true →
         (o.2 : Real) ∈ Arlib.relErr p.epsilonPrime
           (volume (D.component i).carrier).toReal
-
-/-- The required batch-level, pointwise, conditionally IID sampling guarantee.
-
-The repaired paper's Hit-and-Run construction is unconditional: independent restarts yield
-the product law and its tag can be constantly true, making the failure bound below zero.
--/
-def GenerateSamplesContract {n k : Nat} (O : TTCOracles n k)
-    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
-    (p : ApproxParams) : Prop :=
-  let D := O.preprocessing.run F hbounded
-  let b := (O.preprocessing.choosePrecision D p).value
-  ∀ (i) (count : Nat),
-    let law := O.generateSamples (D.component i) count b p.epsilonPrime
-      (p.deltaPrime D.componentCount)
-    IsProbabilityMeasure law ∧
-      law.real {o | o.1 = false} ≤ p.deltaPrime D.componentCount ∧
-      ∃ pointLaw : Measure (LatticePoint n),
-        AlmostUniformPointwise pointLaw
-          (codedLatticePoints (D.component i) b) p.epsilonPrime ∧
-        IIDBatchOnGood law pointLaw
 
 /-- A labelled lattice copy; equal points may occur with different labels. -/
 abbrev SampleCopy (n : Nat) := Nat × LatticePoint n
@@ -147,20 +121,11 @@ matches the paper's lattice-supported execution and makes its finite control sta
 instance TTCState.instMeasurableSpace (n : Nat) : MeasurableSpace (TTCState n) :=
   MeasurableSpace.comap (fun s => (s.rate, s.samples, s.nextLabel)) inferInstance
 
-/-- The public estimator `|X| / p`. -/
-def TTCState.estimate {n : Nat} (s : TTCState n) : NNReal :=
-  (s.samples.card : NNReal) / s.rate
-
 /-- Initial state: dyadic rate one and an empty retained multiset. -/
 def TTCState.initial (n : Nat) : TTCState n where
   rate := 1
   samples := ∅
   nextLabel := 0
-
-/-- The lattice count converted back to the ambient volume scale. -/
-def scaledLatticeVolume {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (b : Nat) : NNReal :=
-  (D.latticePoints b).ncard / (10 : NNReal) ^ (b * n)
 
 /-- Remove every retained copy whose point lies in the next component. -/
 def TTCState.removeComponent {n : Nat} (s : TTCState n) (P : PolytopeData n) : TTCState n := by

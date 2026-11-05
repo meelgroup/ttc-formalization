@@ -43,8 +43,7 @@ theorem communityManuscriptTTC_eq_volumeVector_bind
         components (TTCState.initial n)).map
           (manuscriptEstimate b threshold) := by
     simp [communityManuscriptTTC, manuscriptTTC,
-      communityManuscriptOracles, communityCV18HitAndRunOracles,
-      hitAndRunSamplingOracles, D, b, threshold, components, hnonempty]
+      communityManuscriptOracles, D, b, threshold, components, hnonempty]
   let law := communityManuscriptVolumeVectorLaw hn prep p.epsilonPrime
     (p.deltaPrime D.componentCount) components
   let K : (Fin components.length → VolumeOutcome) → Measure (TTCState n) :=

@@ -224,41 +224,4 @@ theorem PolytopeData.exists_hitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ n)
   apply almostUniform_acceptedRoundedLatticeLaw_of_tvLe P b heta0 heta1 hfinite hnonempty mu
   simpa [mu, mu0] using htv
 
-/-- Pointwise correctness of the exact Hit-and-Run/KV97 law declared in `Model.Run`. -/
-theorem PolytopeData.direct_hitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ n)
-    (P : PolytopeData n) (b : Nat)
-    (hunit : 1 ≤ decimalScale b * P.inradius)
-    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hfinite : (codedLatticePoints P b).Finite)
-    (hnonempty : (codedLatticePoints P b).Nonempty) :
-    AlmostUniformPointwise
-      (hitAndRunPointLaw hn P b hunit eta heta0 heta1 hfinite hnonempty)
-      (codedLatticePoints P b) eta := by
-  letI : NeZero n := ⟨by omega⟩
-  let mu := hitAndRunContinuousLaw P b eta
-  let mu0 : Measure (EuclideanSpace Real (Fin n)) :=
-    Arlib.uniformOn volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)
-  have hball0 : volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1) ≠ 0 :=
-    (Metric.measure_ball_pos volume _ one_pos).ne'
-  have hballtop : volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1) ≠ ⊤ :=
-    measure_ball_lt_top.ne
-  letI : IsProbabilityMeasure mu0 :=
-    Arlib.isProbabilityMeasure_uniformOn volume hball0 hballtop
-  letI : IsMarkovKernel
-      (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
-        P.arlibNormal (hitAndRunOffset P b eta)) := by
-    unfold ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
-    infer_instance
-  letI : IsProbabilityMeasure mu := by
-    dsimp only [mu, hitAndRunContinuousLaw,
-      ArlibCommunity.Algorithms.HitAndRun.run,
-      ArlibCommunity.Algorithms.HitAndRun.lazyStep,
-      ArlibCommunity.Algorithms.HitAndRun.step]
-    infer_instance
-  change AlmostUniformPointwise (acceptedRoundedLatticeLaw mu P b)
-    (codedLatticePoints P b) eta
-  apply almostUniform_acceptedRoundedLatticeLaw_of_tvLe P b heta0 heta1
-    hfinite hnonempty mu
-  simpa [mu, hitAndRunBody] using P.direct_hitAndRun_tvLe hn b hunit heta0
-
 end Kr25Ssmxt

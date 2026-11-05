@@ -249,18 +249,8 @@ theorem withNormalizedCV18Volume_volume_contract {n k : Nat}
     P.rescaleCV18Law_spec (V.law P eta delta)
       (V.failure P eta delta hrequest) (V.accuracy P eta delta hrequest)
 
-/-- Replacing `computeVolume` leaves an existing sampling contract unchanged. -/
-theorem withNormalizedCV18Volume_samples_contract {n k : Nat}
-    (O : TTCOracles n k) (V : NormalizedCV18VolumeProvider n)
-    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
-    (params : ApproxParams)
-    (h : GenerateSamplesContract O F hbounded params) :
-    GenerateSamplesContract (O.withNormalizedCV18Volume V) F hbounded params := by
-  simpa only [GenerateSamplesContract, TTCOracles.withNormalizedCV18Volume] using h
-
 #print axioms taggedVolumeLaw_spec
 #print axioms PolytopeData.rescaleTaggedVolumeLaw_spec
 #print axioms withNormalizedCV18Volume_volume_contract
-#print axioms withNormalizedCV18Volume_samples_contract
 
 end Kr25Ssmxt

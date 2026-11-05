@@ -1,4 +1,5 @@
-import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
+import Kr25Ssmxt.Analysis.CommunityCV18VolumeProvider
+import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
 import Kr25Ssmxt.Analysis.ManuscriptRunMarginal
 import Kr25Ssmxt.Analysis.ManuscriptTheoremOneFinal

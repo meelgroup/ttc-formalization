@@ -18,8 +18,7 @@ theorem community_manuscriptTTC_isProbabilityMeasure
   let D := prep.run F hbounded
   by_cases hempty : D.componentCount = 0
   · simp [communityManuscriptTTC, manuscriptTTC,
-      communityManuscriptOracles, communityCV18HitAndRunOracles,
-      hitAndRunSamplingOracles, D, hempty]
+      communityManuscriptOracles, D, hempty]
     infer_instance
   · let b := (prep.choosePrecision D p).value
     let threshold := p.threshold D.componentCount
@@ -65,7 +64,6 @@ theorem community_manuscriptTTC_isProbabilityMeasure
           components (TTCState.initial n)).map
             (manuscriptEstimate b threshold) := by
       simp [communityManuscriptTTC, manuscriptTTC, communityManuscriptOracles,
-        communityCV18HitAndRunOracles, hitAndRunSamplingOracles,
         D, b, threshold, components, hempty]
     rw [hrunequality]
     letI := hcore

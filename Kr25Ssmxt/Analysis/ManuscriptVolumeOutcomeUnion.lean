@@ -162,15 +162,13 @@ theorem communityManuscript_volume_outcomes_accurate
       (p.deltaPrime D.componentCount)
   have hcontract := community_manuscript_volume_contract hn prep F hbounded p
   letI : ∀ i, IsProbabilityMeasure (law i) := fun i => by
-    simpa [law, D, communityManuscriptOracles,
-      communityCV18HitAndRunOracles, hitAndRunSamplingOracles] using
+    simpa [law, D, communityManuscriptOracles] using
       (hcontract i).1
   exact Filter.eventually_all.2 fun i => by
     have hi : ∀ᵐ o ∂law i, o.1 = true →
         (o.2 : Real) ∈ Arlib.relErr p.epsilonPrime
           (volume (D.component i).carrier).toReal := by
-      simpa [law, D, communityManuscriptOracles,
-        communityCV18HitAndRunOracles, hitAndRunSamplingOracles] using
+      simpa [law, D, communityManuscriptOracles] using
         (hcontract i).2.2
     exact (Measure.tendsto_eval_ae_ae (μ := law) (i := i)).eventually hi
 
@@ -201,8 +199,7 @@ theorem communityManuscript_volume_outcomes_good_accurate
       (p.deltaPrime D.componentCount)
   have hcontract := community_manuscript_volume_contract hn prep F hbounded p
   letI : ∀ i, IsProbabilityMeasure (law i) := fun i => by
-    simpa [law, D, communityManuscriptOracles,
-      communityCV18HitAndRunOracles, hitAndRunSamplingOracles] using
+    simpa [law, D, communityManuscriptOracles] using
       (hcontract i).1
   letI : IsProbabilityMeasure (Measure.pi law) := inferInstance
   have hgood := communityManuscript_volume_outcomes_good hn prep F hbounded p
