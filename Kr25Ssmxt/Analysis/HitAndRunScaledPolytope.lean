@@ -44,8 +44,8 @@ theorem dist_le_of_mem_inflated {n : Nat} {ι : Type*}
   exact mul_le_mul_of_nonneg_left (hD x' hx' y' hy') hk.le
 
 /-- Compatibility wrapper for the former `HitAndRunFromInball` API.  It proves that
-the uniform law on an included unit ball is a warm start, then invokes the current
-community Hit-and-Run theorem. -/
+the uniform law on an included unit ball is a warm start, then invokes the public
+arlib-community Hit-and-Run headline theorem `HitAndRun.hitAndRun_mixes`. -/
 theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
     {K : Set (EuclideanSpace Real (Fin n))}
     (hKc : Convex Real K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
@@ -82,10 +82,20 @@ theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
       have hz : z ∈ K := hball (Metric.mem_closedBall_self zero_le_one)
       simpa using hD z hz z hz
     exact Metric.diam_le_of_forall_dist_le hD0 hD
-  apply Arlib.MarkovChains.tvLe_iterate_lazy_hitAndRun_uncond hn hKc hKcl hKm hKb hball
-    hdiam hM heps0 heps1 (S := ∅) MeasurableSet.empty
-  · simp
-  · intro A hA
+  let problem : ArlibCommunity.Algorithms.HitAndRun.Problem n :=
+    { body := K
+      center := z
+      diameter := D
+      convex_body := hKc
+      closed_body := hKcl
+      measurable_body := hKm
+      bounded_body := hKb
+      unitBall_subset := hball
+      diam_le := hdiam }
+  have hdom : ∀ A : Set (EuclideanSpace Real (Fin n)), MeasurableSet A →
+      Arlib.uniformOn volume B (A \ ∅) ≤
+        ENNReal.ofReal M * Arlib.uniformOn volume K A := by
+    intro A hA
     rw [Set.diff_empty, Arlib.uniformOn_apply volume measurableSet_ball hA,
       Arlib.uniformOn_apply volume hKm hA]
     have hinter : volume (A ∩ B) ≤ volume (A ∩ K) :=
@@ -107,7 +117,19 @@ theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
                 rw [ENNReal.mul_inv_cancel hK0 hKtop]
           _ = ((volume B)⁻¹ * volume K) *
               ((volume K)⁻¹ * volume (A ∩ K)) := by ac_rfl
-  · simpa [M, B] using hm
+
+  have hwarm : ArlibCommunity.Algorithms.HitAndRun.WarmStart problem.body
+      (Arlib.uniformOn volume B) M eps ∅ :=
+    ⟨MeasurableSet.empty, by simp, hdom⟩
+  -- The public arlib-community Hit-and-Run headline theorem.
+  have hmix := ArlibCommunity.Algorithms.HitAndRun.hitAndRun_mixes hn problem
+    hM heps0 heps1 hwarm
+    (by simpa [ArlibCommunity.Algorithms.HitAndRun.deadline,
+      Arlib.MarkovChains.hrDeadlineUncond, problem, M, B] using hm)
+  simpa [ArlibCommunity.Algorithms.HitAndRun.run,
+    ArlibCommunity.Algorithms.HitAndRun.lazyStep,
+    ArlibCommunity.Algorithms.HitAndRun.step,
+    ArlibCommunity.Algorithms.HitAndRun.target, problem, B] using hmix
 
 /-- In dimensions covered by Arlib's unconditional Hit-and-Run theorem, every TTC polytope
 whose decimal-scaled inradius is at least one admits an explicit finite-step walk law.
