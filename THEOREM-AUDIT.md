@@ -31,8 +31,35 @@ of the penultimate cutoff to the per-prefix `δ/(6m)` budget
 the remaining levels to the dyadic Chernoff sum `δ/6`
 (`ManuscriptTheoremOneGivenOutcomes.lean`). Integration over the CV18 outcome
 vector, with failure budget `δ/4`, is in `ManuscriptTheoremOneFinal.lean`.
-The older `ttc_volume_accuracy` (about `communityTTC`, conditional on
-`Prior`) is retained unchanged. The text below records the history.
+The older conditional `ttc_volume_accuracy`, its program (`ttc`,
+`processComponent(s)`, `communityTTC`), the `Prior`/`StreamingCoreAccuracy`
+hypothesis, and the proof files used only by them were removed: neither
+current public theorem depends on any of them (checked by a dependency walk),
+and that program is not the manuscript's Algorithm 1 (it draws the Poisson
+count before a single count-thinning loop and outputs `|X|/p`).
+The text below records the history.
+
+Fidelity of `ttc_theorem1_volume_accuracy` to `sections/analysis.tex`
+(`thm:volumettc`) and Algorithm 1 in `sections/algo.tex`:
+- Matches: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`, the scaled
+  intensity `t = Threshold·10^(bn)·VolED`, the overlap deletion, the first
+  loop `while p ≥ Threshold/t`, `N ~ Pois(t p)`, the second loop
+  `while N + |X| > Threshold` with binomial thinning (realised by labelled fair
+  coins), sampling, append, the output `|X|/(p·Threshold·10^(bn))`, and the
+  clipping of VolED to `[(1-ε')(2γ/√n)^n, (1+ε')(2R)^n]`.
+- Extra hypotheses not in the printed statement: a bounded solution set
+  (needed for finite volume and for the clipping radii) and `n ≥ 21`
+  (inherited from the formalized Hit-and-Run mixing theorem; the paper cites
+  Lovász–Vempala without a dimension restriction).
+- `getprec` is abstract: any precision satisfying `PrecisionAdequate`
+  (lattice radius at `η = ε/8` and the sampler radius at `ε'`) is allowed. The
+  printed `getprec(·, ε/96)` radius `64mn/(ε/96)·√log(384r/ε)` dominates both
+  requirements, so the paper's choice is covered, but this is not proved in
+  Lean.
+- The preprocessor's `normalize` step returns full-dimensional components whose
+  union agrees with the solution set almost everywhere; empty or degenerate
+  DNF cubes are dropped (they have volume zero, and `getprec` would otherwise
+  divide by a zero inradius).
 
 `ttc_volume_accuracy` is a conditional accuracy theorem, not yet the manuscript's
 unqualified claim. It assumes `Prior.streamingCoreAccuracy`, dimension at least 21,

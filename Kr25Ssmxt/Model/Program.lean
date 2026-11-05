@@ -232,49 +232,7 @@ def thinUntil {n : Nat} (s : TTCState n) (pending : Nat)
     (threshold : Real) : Measure (TTCState n × Nat) :=
   fairCoinStreamLaw.map (thinningResult s pending threshold)
 
-/-- One component iteration of `ttcCore`. -/
-def processComponent {n k : Nat} (O : TTCOracles n k) (b : Nat)
-    (epsilonPrime deltaPrime threshold : Real) (P : PolytopeData n)
-    (state : TTCState n) : Measure (TTCState n) :=
-  (O.computeVolume P epsilonPrime deltaPrime).bind fun volumeOutcome =>
-    let withoutDuplicates := state.removeComponent P
-    (ProbabilityTheory.poissonMeasure (volumeOutcome.2 * withoutDuplicates.rate)).bind fun pending =>
-      (thinUntil withoutDuplicates pending threshold).bind fun thinned =>
-        (O.generateSamples P thinned.2 b epsilonPrime deltaPrime).bind fun batch =>
-          (thinUntil (thinned.1.addBatch batch.2) 0 threshold).map Prod.fst
-
-/-- Sequentially process the normalized components in DNF order. -/
-def processComponents {n k : Nat} (O : TTCOracles n k) (b : Nat)
-    (epsilonPrime deltaPrime threshold : Real) :
-    List (PolytopeData n) → TTCState n → Measure (TTCState n)
-  | [], state => Measure.dirac state
-  | P :: rest, state =>
-      (processComponent O b epsilonPrime deltaPrime threshold P state).bind
-        (processComponents O b epsilonPrime deltaPrime threshold rest)
-
-/--
-The theoretical TTC output law.  The empty normalized family returns zero before any
-division by `m`; otherwise it selects a repaired precision, executes the streaming core,
-and returns exactly the single nonnegative estimate `|X| / p`.  Accuracy for the nonempty
-branch is conditional on the public high-intensity premise.
--/
-def ttc {n k : Nat} (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
-    (O : TTCOracles n k) : Measure NNReal :=
-  let D := O.preprocessing.run F hbounded
-  if D.componentCount = 0 then
-    Measure.dirac 0
-  else
-    let b := (O.preprocessing.choosePrecision D params).value
-    (processComponents O b params.epsilonPrime (params.deltaPrime D.componentCount)
-      (params.threshold D.componentCount) (List.ofFn D.component) (TTCState.initial n)).map
-        TTCState.estimate
-
-/-! ## TTC as printed in the current manuscript
-
-The older `ttc` core above remains the subject of the existing streaming proof chain.
-The definitions below give the changed algorithm its own law, so that a theorem about
-the older core cannot be mistaken for a theorem about the manuscript program. -/
+/-! ## TTC as printed in the current manuscript -/
 
 /-- The first while guard becomes false after this many rate halvings. -/
 def manuscriptRateExit {n : Nat} (s : TTCState n) (intensity : NNReal)
@@ -446,64 +404,14 @@ def manuscriptTTCWithCost {n k : Nat} (F : LRAFormula n k)
         fun result => (manuscriptEstimate b threshold result.1,
           preprocessingOperations + result.2)
 
-/--
-The nontrivial probabilistic result supplied by the Poissonized finite-union streaming
-analysis.  It is restricted to the regime in which the initial scaled lattice volume is
-large enough for the paper's dyadic concentration argument.  This condition is now a public
-premise of the headline accuracy theorem; the algorithm does not compute it.
-
-This is deliberately a named proposition rather than an axiom.  The headline theorem takes
-its proof through `Prior`, making the borrowed streaming result part of the public theorem
-assumptions.
--/
-def StreamingCoreAccuracy
-    {n k : Nat}
-    (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F))
-    (params : ApproxParams)
-    (O : TTCOracles n k) : Prop :=
-  let D := O.preprocessing.run F hbounded
-  let b := (O.preprocessing.choosePrecision D params).value
-  ComputeVolumeContract O F hbounded params →
-    GenerateSamplesContract O F hbounded params →
-    D.componentCount ≠ 0 →
-    (∀ i,
-      (volume (D.component i).carrier).toReal ∈
-        Arlib.relErr params.latticeEta
-          (((D.component i).carrier ∩ decimalLattice b n).ncard /
-            (10 : Real) ^ (b * n))) →
-    params.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real) →
-    let core := processComponents O b params.epsilonPrime
-      (params.deltaPrime D.componentCount) (params.threshold D.componentCount)
-      (List.ofFn D.component) (TTCState.initial n)
-    (core.map TTCState.estimate).real
-        {estimate | (estimate : Real) ∈
-          Arlib.relErr (params.epsilon / 2) (scaledLatticeVolume D b : Real)} ≥
-      1 - params.delta
-
-#krModelClosure ttc
 #krModelClosure manuscriptTTC
 
 end Kr25Ssmxt
 
-/-!
-# Prior work used by the TTC analysis
-
-A borrowed result is separated from the program body: it appears as a field here and
-therefore remains visible in the headline theorem rather than as an axiom hidden in a proof.
--/
 
 namespace Kr25Ssmxt
 
-/-- Every result this development takes from prior work rather than proving. -/
-structure Prior : Prop where
-  streamingCoreAccuracy :
-    ∀ {n k : Nat} (F : LRAFormula n k)
-      (hbounded : Bornology.IsBounded (solutionSet F))
-      (params : ApproxParams) (O : TTCOracles n k),
-      StreamingCoreAccuracy F hbounded params O
-
-#krSurplusIn Kr25Ssmxt.Model.Program from ttc manuscriptTTC StreamingCoreAccuracy Prior
+#krSurplusIn Kr25Ssmxt.Model.Program from manuscriptTTC
   manuscriptRateThinWithCost manuscriptCountThinWithCost
 
 end Kr25Ssmxt

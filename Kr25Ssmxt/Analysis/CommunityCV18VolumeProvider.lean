@@ -164,30 +164,6 @@ theorem install_samples_contract {n k : Nat} (hn : 3 ≤ n)
     GenerateSamplesContract (install hn O) F hbounded p :=
   withNormalizedCV18Volume_samples_contract O (provider n hn) F hbounded p h
 
-/-- TTC's headline accuracy theorem with the volume premise eliminated by
-the current arlib-community CV18 capstone.  A sampling contract remains an
-independent input, exactly as in TTC's model interface. -/
-theorem ttc_volume_accuracy
-    (hprior : Prior) {n k : Nat} (hn : 3 ≤ n)
-    (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F))
-    (p : ApproxParams) (O : TTCOracles n k)
-    (hsamples : GenerateSamplesContract O F hbounded p)
-    (hregime :
-      let D := O.preprocessing.run F hbounded
-      let b := (O.preprocessing.choosePrecision D p).value
-      D.componentCount = 0 ∨
-        p.threshold D.componentCount / 4 ≤ (scaledLatticeVolume D b : Real)) :
-    IsProbabilityMeasure (Kr25Ssmxt.ttc F hbounded p (install hn O)) ∧
-      (Kr25Ssmxt.ttc F hbounded p (install hn O)).real
-          {estimate | (estimate : Real) ∈
-            Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
-        1 - p.delta := by
-  apply Kr25Ssmxt.ttc_volume_accuracy_proof hprior (by omega) F hbounded p (install hn O)
-    (install_volume_contract hn O F hbounded p)
-    (install_samples_contract hn O F hbounded p hsamples)
-  simpa [install, TTCOracles.withNormalizedCV18Volume] using hregime
-
 /-- The community theorem also supplies an explicit membership-query bound
 for exactly the program used by `provider`. -/
 theorem membershipCostBound {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
@@ -206,7 +182,6 @@ theorem membershipCostBound {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
 #print axioms provider
 #print axioms membershipCostBound
 #print axioms install_volume_contract
-#print axioms ttc_volume_accuracy
 
 end CommunityCV18
 end Kr25Ssmxt

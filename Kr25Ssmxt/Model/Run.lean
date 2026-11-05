@@ -406,7 +406,8 @@ def hitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Nat :
     (hitAndRunTolerance P b eta))
 
 /-- The runtime budgets of exactly the community implementations selected by
-`communityTTC`: the syntax-derived CV18 query cap and the finite Hit-and-Run deadline. -/
+the community oracle bundle: the syntax-derived CV18 query cap and the finite Hit-and-Run
+deadline. -/
 def communityMembershipRuntimeCertificate {n k : Nat} (hn : 21 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (b : Nat) (p : ApproxParams) :
     TTCRuntime.TTCMembershipRuntimeCertificate D p where
@@ -503,12 +504,6 @@ def communityCV18HitAndRunOracles {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) : TTCOracles n k :=
   { hitAndRunSamplingOracles hn prep with
     computeVolume := communityCV18VolumeLaw (by omega) }
-
-/-- TTC with both geometric routines fixed to the imported community implementations. -/
-def communityTTC {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
-    (prep : TTCPreprocessor n k) : Measure NNReal :=
-  ttc F hbounded params (communityCV18HitAndRunOracles hn prep)
 
 /-- The paper's lower and upper clipping interval for a component volume estimate. -/
 def PolytopeData.manuscriptVolumeLower {n : Nat} (P : PolytopeData n)
@@ -744,7 +739,6 @@ noncomputable def TTCRuntime.theorem3UniformComponentBudget
     (2 * TTCRuntime.samplingAttemptOperations n r samplerSteps +
       TTCRuntime.appendCopyOperations)
 
-#krModelClosure communityTTC
 #krModelClosure communityManuscriptTTC
 
 end Kr25Ssmxt
