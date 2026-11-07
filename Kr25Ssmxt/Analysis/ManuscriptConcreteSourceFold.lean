@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ManuscriptFixedLevelProductFold
 
 /-! A single product of the concrete component Poisson tapes yields every

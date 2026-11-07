@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Model.Prelude
 
 /-! The single `GetPrecision` radius at `η = ε / 96` covers both geometric uses

@@ -101,10 +101,11 @@ captures this.
   precision factor and the second-loop and `getprec`/decomposition costs; add
   `minᵢ γᵢ` (the smallest inradius) to the quantities whose polylogarithmic
   factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
-- Model surplus: `samplerRadiusRequirement`, `ApproxParams.latticeEta`,
-  `TTCRuntime.theorem3PrecisionScale` and `getPrecision_adequate` are defined
-  under `Model/` but no longer reached by a public statement (reported by
-  `#krSurplusIn`, alongside older entries).
+- Model surplus: `#krSurplusIn` still reports older `Model/` definitions that no
+  public statement reaches. `samplerRadiusRequirement`, `ApproxParams.latticeEta`
+  and `TTCRuntime.theorem3PrecisionScale` moved to
+  `Analysis/PrecisionRequirements.lean`, and the `getprec` adequacy proof is
+  inlined into `getPrecisionChoice`.
 
 **Removed material.** The older `ttc`/`processComponent(s)` program and
 `communityTTC` (Poisson draw before a single thinning loop, output `|X|/p`), its

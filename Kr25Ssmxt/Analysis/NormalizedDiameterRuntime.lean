@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 import Kr25Ssmxt.Analysis.CV18RoundnessBound

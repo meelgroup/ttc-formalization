@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.NormalizedDiameterRuntime
 import Kr25Ssmxt.Analysis.RateLogBound
 

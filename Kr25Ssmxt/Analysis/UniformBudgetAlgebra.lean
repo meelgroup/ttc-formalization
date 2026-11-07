@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ThresholdCapBound
 
 /-! Elementary arithmetic behind the uniform per-component cost envelope. -/

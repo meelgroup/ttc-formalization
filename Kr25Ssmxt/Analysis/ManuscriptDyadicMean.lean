@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ManuscriptDyadicChernoffSum
 import Kr25Ssmxt.Analysis.ManuscriptDyadicCutoff
 

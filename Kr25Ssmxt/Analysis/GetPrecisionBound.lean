@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
 
 /-! The precision chosen by `getprec` at `ε / 96` is bounded by input data

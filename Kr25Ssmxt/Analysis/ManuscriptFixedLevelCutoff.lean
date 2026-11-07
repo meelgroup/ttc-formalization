@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ManuscriptThresholdTail
 import Kr25Ssmxt.Analysis.ManuscriptFixedLevelIntensity
 import Kr25Ssmxt.Analysis.ManuscriptPointIntensity

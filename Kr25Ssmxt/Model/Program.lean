@@ -55,35 +55,33 @@ noncomputable def getPrecision {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Nat :=
   Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
 
-/-- The precision returned by `getprec` meets its specification. -/
-theorem getPrecision_adequate {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) :
-    PrecisionAdequate D (getPrecision D η) η := by
-  intro i
-  have hγ := (D.component i).inradius_pos
-  have hratio1 : (1 : Real) ≤ getPrecisionRatio D η := le_max_left _ _
-  have hterm : latticeRadiusRequirement D η / (D.component i).inradius ≤
-      getPrecisionRatio D η := by
-    refine (Real.le_coe_toNNReal _).trans (le_trans ?_ (le_max_right _ _))
-    exact NNReal.coe_le_coe.mpr (Finset.le_sup
-      (f := fun i : Fin D.componentCount => Real.toNNReal
-        (latticeRadiusRequirement D η / (D.component i).inradius))
-      (Finset.mem_univ i))
-  have hpow : getPrecisionRatio D η ≤ (10 : Real) ^ getPrecision D η := by
-    have hpos : 0 < getPrecisionRatio D η := by linarith
-    calc getPrecisionRatio D η
-        = (10 : Real) ^ Real.logb 10 (getPrecisionRatio D η) :=
-          (Real.rpow_logb (by norm_num) (by norm_num) hpos).symm
-      _ ≤ (10 : Real) ^ (getPrecision D η : Real) :=
-          Real.rpow_le_rpow_of_exponent_le (by norm_num) (Nat.le_ceil _)
-      _ = (10 : Real) ^ getPrecision D η := Real.rpow_natCast _ _
-  have := (div_le_iff₀ hγ).mp (hterm.trans hpow)
-  linarith
-
-/-- Line 3 of Algorithm `ttc`: `b ← GetPrecision(F_d, M, ε / 96)`. -/
+/-- Line 3 of Algorithm `ttc`: `b ← GetPrecision(F_d, M, ε / 96)`, with the proof that
+the returned precision meets the specification of `getprec`. -/
 noncomputable def getPrecisionChoice {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) : PrecisionChoice D p :=
-  ⟨getPrecision D p.precisionEta, getPrecision_adequate D p.precisionEta⟩
+    (D : Decomposition F) (p : ApproxParams) : PrecisionChoice D p where
+  value := getPrecision D p.precisionEta
+  adequate := by
+    intro i
+    have hγ := (D.component i).inradius_pos
+    have hratio1 : (1 : Real) ≤ getPrecisionRatio D p.precisionEta := le_max_left _ _
+    have hterm : latticeRadiusRequirement D p.precisionEta / (D.component i).inradius ≤
+        getPrecisionRatio D p.precisionEta := by
+      refine (Real.le_coe_toNNReal _).trans (le_trans ?_ (le_max_right _ _))
+      exact NNReal.coe_le_coe.mpr (Finset.le_sup
+        (f := fun i : Fin D.componentCount => Real.toNNReal
+          (latticeRadiusRequirement D p.precisionEta / (D.component i).inradius))
+        (Finset.mem_univ i))
+    have hpow : getPrecisionRatio D p.precisionEta ≤
+        (10 : Real) ^ getPrecision D p.precisionEta := by
+      have hpos : 0 < getPrecisionRatio D p.precisionEta := by linarith
+      calc getPrecisionRatio D p.precisionEta
+          = (10 : Real) ^ Real.logb 10 (getPrecisionRatio D p.precisionEta) :=
+            (Real.rpow_logb (by norm_num) (by norm_num) hpos).symm
+        _ ≤ (10 : Real) ^ (getPrecision D p.precisionEta : Real) :=
+            Real.rpow_le_rpow_of_exponent_le (by norm_num) (Nat.le_ceil _)
+        _ = (10 : Real) ^ getPrecision D p.precisionEta := Real.rpow_natCast _ _
+    have := (div_le_iff₀ hγ).mp (hterm.trans hpow)
+    linarith
 
 /-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input.
 The precision stage is not a parameter: it is `getprec`, see

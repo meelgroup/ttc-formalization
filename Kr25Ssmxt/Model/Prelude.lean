@@ -210,9 +210,6 @@ structure ApproxParams where
 /-- The paper's internal relative-error parameter `ε' = ε / 12`. -/
 def ApproxParams.epsilonPrime (p : ApproxParams) : Real := p.epsilon / 12
 
-/-- The lattice comparison parameter `η = ε / 8`. -/
-def ApproxParams.latticeEta (p : ApproxParams) : Real := p.epsilon / 8
-
 /-- The per-component failure budget `δ' = δ / (4m)`; used only when `m > 0`. -/
 def ApproxParams.deltaPrime (p : ApproxParams) (m : Nat) : Real := p.delta / (4 * m)
 
@@ -227,11 +224,6 @@ def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Real :=
   (64 * D.componentCount * n / η) *
     Real.sqrt (Real.log (4 * D.totalFacets / η))
-
-/-- The stronger inball size required by the pointwise lattice sampler. -/
-def samplerRadiusRequirement {n : Nat} (P : PolytopeData n) (η : Real) : Real :=
-  (512 * n / η) *
-    Real.sqrt (Real.log (32 * P.presentation.facetCount / η))
 
 /-- The accuracy `ε / 96` passed to `GetPrecision` in line 3 of Algorithm `ttc`. -/
 def ApproxParams.precisionEta (p : ApproxParams) : Real := p.epsilon / 96
@@ -308,11 +300,6 @@ noncomputable def theorem3OuterRadiusMax {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) : Real :=
   ((Finset.univ.sup fun i : Fin D.componentCount =>
     Real.toNNReal (D.component i).outerRadius : NNReal) : Real)
-
-/-- The explicit precision and scale factor omitted from the printed
-Theorem 3. -/
-def theorem3PrecisionScale (b : Nat) (outerRadiusMax : Real) : Real :=
-  1 + b + max 0 (Real.log outerRadiusMax)
 
 /-- The reciprocal `1 / minᵢ γᵢ` of the smallest certified inradius; zero for the
 empty family. -/
