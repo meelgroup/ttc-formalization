@@ -8,6 +8,7 @@ Keep this file a pure aggregation of area roots — put content in the modules.
 -/
 
 import Kr25Ssmxt.Model.Theorem
+import Kr25Ssmxt.Analysis.L2LatticeUnion
 import Kr25Ssmxt.Analysis.ManuscriptProbabilityMeasure
 import Kr25Ssmxt.Analysis.ManuscriptPoissonMarking
 import Kr25Ssmxt.Analysis.ManuscriptMarkingMeasure
