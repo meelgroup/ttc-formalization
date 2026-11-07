@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Model.Program
 import Kr25Ssmxt.Analysis.DecimalLatticeComponentComparison
 import Kr25Ssmxt.Analysis.DecimalLatticeUnionComparison
@@ -18,7 +19,7 @@ lemma ttc_volume_accuracy_lattice_comparison
     (D : Decomposition F)
     (params : ApproxParams)
     (b : Nat)
-    (hprecision : PrecisionAdequate D b params.latticeEta params.epsilonPrime) :
+    (hprecision : PrecisionAdequate D b params.precisionEta) :
     (forall i,
       (MeasureTheory.volume (D.component i).carrier).toReal ∈
         Arlib.relErr params.latticeEta
@@ -37,7 +38,7 @@ lemma ttc_volume_accuracy_lattice_comparison
       latticeRadiusRequirement D params.latticeEta ≤
         (10 : Real) ^ b * (D.component i).inradius := by
     intro i
-    exact le_trans (le_max_left _ _) (hprecision i)
+    exact le_trans (le_max_left _ _) (hprecision.split i)
   constructor
   · exact decimal_lattice_component_comparison hn D b params.latticeEta
       hηpos hηle hradius

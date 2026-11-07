@@ -726,7 +726,7 @@ theorem manuscriptSampleAppend_expected_cost_le {n : Nat} {count : Nat}
 theorem certified_community_sample_append_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor count : Nat)
     (delta : Real) (i : Fin D.componentCount) (state : TTCState n) :
     ∫⁻ result, (result.2 : ENNReal) ∂
@@ -750,7 +750,7 @@ costs at most its thinning charge plus the threshold-sized sampling budget. -/
 theorem certified_count_sample_append_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor pending : Nat)
     (i : Fin D.componentCount) (state : TTCState n) :
     ∫⁻ result, (result.2 : ENNReal) ∂
@@ -839,7 +839,7 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
 theorem certified_count_sample_append_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor pending : Nat)
     (i : Fin D.componentCount) (state : TTCState n) :
     (costedBind
@@ -869,7 +869,7 @@ budget once the first rate guard has been reached. -/
 theorem certified_poisson_count_sample_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (rate : NNReal)
     (hsamples : (state.samples.card : Real) ≤ p.threshold D.componentCount)
@@ -951,7 +951,7 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
 theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (intensity : NNReal)
     (hsamples : (state.samples.card : Real) ≤ p.threshold D.componentCount) :
@@ -1063,7 +1063,7 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
 theorem certified_rate_rest_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (intensity : NNReal) :
     (costedBind
@@ -1104,7 +1104,7 @@ estimate, have an explicit expected-operation bound. -/
 theorem certified_deleted_component_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (volumeEstimate : NNReal)
     (hsamples : (state.samples.card : Real) ≤ p.threshold D.componentCount) :
@@ -1202,7 +1202,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
 theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (outcome : VolumeOutcome)
     (hsamples : (state.samples.card : Real) ≤ p.threshold D.componentCount) :
@@ -1339,7 +1339,7 @@ private theorem componentNonVolumeBudget_le_uniform {n : Nat}
 theorem certified_manuscript_component_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n)
     (hsamples : (state.samples.card : Real) ≤ p.threshold D.componentCount) :
@@ -1423,7 +1423,7 @@ theorem certified_manuscript_component_expected_cost {n k : Nat}
 theorem certified_manuscript_component_expected_cost_uniform {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n)
     (hcard : (state.samples.card : Real) ≤ p.threshold D.componentCount)
@@ -1451,7 +1451,7 @@ theorem certified_manuscript_component_expected_cost_uniform {n k : Nat}
 theorem certified_manuscript_component_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) :
     (manuscriptProcessComponentWithCost
@@ -1813,7 +1813,7 @@ private theorem ce_certified_components_kernel_measurable {n k : Nat}
 private theorem certified_component_list_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (components : List (PolytopeData n))
     (hcomponents : ∀ P ∈ components, ∃ i : Fin D.componentCount,
@@ -1852,7 +1852,7 @@ private theorem certified_component_list_mass_le_one {n k : Nat}
 theorem certified_component_list_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (components : List (PolytopeData n))
     (hcomponents : ∀ P ∈ components, ∃ i : Fin D.componentCount,
@@ -1935,7 +1935,7 @@ theorem community_manuscript_expected_cost_finite_sum {n k : Nat}
   rw [communityCosted_preprocessing_eq]
   let D := prep.run F hbounded
   let b := (prep.choosePrecision D p).value
-  have hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime :=
+  have hprecision : PrecisionAdequate D b p.precisionEta :=
     (prep.choosePrecision D p).adequate
   by_cases hempty : D.componentCount = 0
   · simp [communityManuscriptTTCWithCost, manuscriptTTCWithCost,

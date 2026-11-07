@@ -9,7 +9,7 @@ namespace Kr25Ssmxt
 theorem manuscript_union_lattice_nonempty
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount) :
     (D.latticePoints b).Nonempty := by
   let i : Fin D.componentCount := ⟨0, hcomponents⟩
@@ -48,7 +48,7 @@ theorem manuscript_component_lattice_finite
 theorem manuscript_union_lattice_finite
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime) :
+    (hprecision : PrecisionAdequate D b p.precisionEta) :
     (D.latticePoints b).Finite := by
   have hcomponent : ∀ i : Fin D.componentCount,
       ((D.component i).carrier ∩ decimalLattice b n).Finite := by
@@ -63,7 +63,7 @@ theorem manuscript_union_lattice_finite
 theorem manuscript_union_lattice_ncard_pos
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount) :
     0 < (D.latticePoints b).ncard := by
   have hfinite := manuscript_union_lattice_finite hn D p b hprecision
@@ -73,7 +73,7 @@ theorem manuscript_union_lattice_ncard_pos
 theorem manuscript_component_lattice_ncard_le_union
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     ((D.component i).carrier ∩ decimalLattice b n).ncard ≤
       (D.latticePoints b).ncard := by

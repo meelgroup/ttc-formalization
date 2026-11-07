@@ -232,25 +232,27 @@ def samplerRadiusRequirement {n : Nat} (P : PolytopeData n) (η : Real) : Real :
   (512 * n / η) *
     Real.sqrt (Real.log (32 * P.presentation.facetCount / η))
 
-/-- The useful specification of a working precision: both cited geometric results apply. -/
+/-- The accuracy `ε / 96` passed to `GetPrecision` in line 3 of Algorithm `ttc`. -/
+def ApproxParams.precisionEta (p : ApproxParams) : Real := p.epsilon / 96
+
+/-- The specification of `GetPrecision(F_d, M, η)` (Algorithm `getprec`): at precision `b`
+every scaled component has inradius at least `γ = (64 m n / η) √(log (4 r / η))`, with `r`
+the total facet count.  TTC uses it at `η = ε / 96`. -/
 def PrecisionAdequate {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (b : Nat) (latticeEta sampleEta : Real) : Prop :=
-  ∀ i, max (latticeRadiusRequirement D latticeEta)
-      (samplerRadiusRequirement (D.component i) sampleEta) ≤
-    (10 : Real) ^ b * (D.component i).inradius
+    (D : Decomposition F) (b : Nat) (η : Real) : Prop :=
+  ∀ i, latticeRadiusRequirement D η ≤ (10 : Real) ^ b * (D.component i).inradius
 
 /-! ## Runtime vocabulary -/
 
 namespace TTCRuntime
 
-/-- One polytope membership query scans every facet and costs `dimension * facets`
-real-arithmetic operations in the paper's cost model. -/
-def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
-  dimension * facets * queries
-
 /-- One CV18 membership call or one Hit-and-Run chord step scans the facet
 presentation in dimension `n`. -/
 def facetScanOperations (dimension facets : Nat) : Nat := dimension * facets
+
+/-- Each polytope membership query is one facet scan. -/
+def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
+  facetScanOperations dimension facets * queries
 
 /-- Arithmetic to round one proposed point coordinatewise. -/
 def roundPointOperations (dimension : Nat) : Nat := dimension

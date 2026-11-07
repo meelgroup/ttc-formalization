@@ -13,7 +13,7 @@ open Classical MeasureTheory
 theorem communityManuscriptPointLaw_support_codedUnion
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
     (communityManuscriptPointLaw hn D p b hprecision i)
@@ -39,7 +39,7 @@ theorem communityManuscriptPointLaw_support_codedUnion
 theorem communityManuscript_source_product_fixedLevel_incoming
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (level : Nat) :
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset

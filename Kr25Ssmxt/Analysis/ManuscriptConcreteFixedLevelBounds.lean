@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.ManuscriptFixedLevelCertified
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 
@@ -11,7 +12,7 @@ open MeasureTheory
 noncomputable def communityManuscriptPointLaw
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) : Measure (LatticePoint n) := by
   have hn0 : 0 < n := by omega
   have heta0 : 0 < p.epsilonPrime :=
@@ -22,14 +23,14 @@ noncomputable def communityManuscriptPointLaw
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
   have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
     (one_le_samplerRadiusRequirement hn0 (D.component i) heta0 heta1).trans
-      ((le_max_right _ _).trans (hprecision i))
+      ((le_max_right _ _).trans (hprecision.split i))
   exact normalizedHitAndRunPointLaw hn (D.component i) b hunit
     p.epsilonPrime heta0 heta1 hset.1 hset.2
 
 theorem communityManuscriptPointLaw_almostUniform
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     AlmostUniformPointwise
       (communityManuscriptPointLaw hn D p b hprecision i)
@@ -42,7 +43,7 @@ fixed dyadic level has the manuscript's explicit concentration bound. -/
 theorem communityManuscriptFixedLevel_error_bound
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (outcomes : Fin D.componentCount → VolumeOutcome)
     (hgood : ∀ i, (outcomes i).1 = true ∧
@@ -83,7 +84,7 @@ the manuscript's per-prefix cutoff tail budget. -/
 theorem communityManuscriptFixedLevel_cutoff_prefix_budget
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (outcomes : Fin D.componentCount → VolumeOutcome)
     (hgood : ∀ i, (outcomes i).1 = true ∧

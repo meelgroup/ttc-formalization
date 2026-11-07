@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.ManuscriptOriginVolumeFold
 import Kr25Ssmxt.Analysis.ManuscriptOracleNormalization
 
@@ -30,7 +31,7 @@ noncomputable def communityManuscriptCertifiedComponents
         have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
           (one_le_samplerRadiusRequirement hn0 (D.component i)
             heta0 heta1).trans
-            ((le_max_right _ _).trans (choice.adequate i))
+            ((le_max_right _ _).trans (choice.adequate.split i))
         exact ⟨hunit, heta0, heta1, hset.1, hset.2⟩
       volumeProbability :=
         community_manuscript_volume_isProbabilityMeasure hn D p prep i })

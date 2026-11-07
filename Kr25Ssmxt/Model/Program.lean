@@ -33,11 +33,11 @@ open MeasureTheory
 
 namespace Kr25Ssmxt
 
-/-- A certified precision satisfies both geometric uses in the algorithm. -/
+/-- A certified precision: the output of `GetPrecision(F_d, M, ε / 96)`. -/
 structure PrecisionChoice {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) where
   value : Nat
-  adequate : PrecisionAdequate D value p.latticeEta p.epsilonPrime
+  adequate : PrecisionAdequate D value p.precisionEta
 
 /-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input. -/
 structure TTCPreprocessor (n k : Nat) where

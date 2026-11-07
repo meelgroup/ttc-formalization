@@ -24,7 +24,7 @@ theorem Decomposition.codedUnion_eq_iUnion
 theorem Decomposition.codedUnion_finite
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime) :
+    (hprecision : PrecisionAdequate D b p.precisionEta) :
     (D.codedUnionLatticePoints b).Finite := by
   rw [D.codedUnion_eq_iUnion b]
   exact Set.finite_iUnion fun i =>
@@ -64,7 +64,7 @@ theorem Decomposition.codedUnion_ncard_eq_latticePoints
 theorem Decomposition.codedUnion_nonempty
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount) :
     (D.codedUnionLatticePoints b).Nonempty := by
   let i : Fin D.componentCount := ⟨0, hcomponents⟩

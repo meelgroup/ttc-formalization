@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.DecimalLatticeComponentComparison
 import Kr25Ssmxt.Analysis.ProcessComponentsLatticeCountAccuracyCodedCard
@@ -100,7 +101,7 @@ lemma polytope_volume_toReal_pos {n : Nat} (P : PolytopeData n) :
 lemma coded_lattice_points_finite_nonempty
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k} (D : Decomposition F)
     (params : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b params.latticeEta params.epsilonPrime)
+    (hprecision : PrecisionAdequate D b params.precisionEta)
     (i : Fin D.componentCount) :
     (codedLatticePoints (D.component i) b).Finite ∧
       (codedLatticePoints (D.component i) b).Nonempty := by
@@ -113,7 +114,7 @@ lemma coded_lattice_points_finite_nonempty
       latticeRadiusRequirement D params.latticeEta ≤
         (10 : Real) ^ b * (D.component j).inradius := by
     intro j
-    exact (le_max_left _ _).trans (hprecision j)
+    exact (le_max_left _ _).trans (hprecision.split j)
   have hcomparison := decimal_lattice_component_comparison hn D b params.latticeEta
     heta_pos heta_le hradius i
   have hgeometric_ne :

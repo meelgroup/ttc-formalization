@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.AcceptanceBudget
 import Kr25Ssmxt.Analysis.PolytopeCarrierMeasurable
 import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
@@ -91,7 +92,7 @@ needed to bound independent retry costs, with no extra acceptance hypothesis. -/
 theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     (1 / 2 : Real) ≤
       (roundedAcceptanceProbability
@@ -114,14 +115,14 @@ theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
       latticeRadiusRequirement D p.latticeEta ≤
         (10 : Real) ^ b * (D.component j).inradius := by
     intro j
-    exact (le_max_left _ _).trans (hprecision j)
+    exact (le_max_left _ _).trans (hprecision.split j)
   have hbase := scaledBody_volume_le_lattice_count hn0 D b p.latticeEta
     (by dsimp [ApproxParams.latticeEta]; exact div_pos p.epsilon_pos (by norm_num))
     (by linarith) hradius i
   have hfinite := (coded_lattice_points_finite_nonempty hn0 D p b hprecision i).1
   have hsampler : samplerRadiusRequirement (D.component i) p.epsilonPrime ≤
       decimalScale b * (D.component i).inradius := by
-    simpa only [decimalScale] using (le_max_right _ _).trans (hprecision i)
+    simpa only [decimalScale] using (le_max_right _ _).trans (hprecision.split i)
   exact normalizedHitAndRun_acceptance_ge_half_of_base_comparison hn
     (D.component i) b hsample0 hsample8 p.latticeEta hlattice0 hlattice8
     hfinite hsampler hbase
@@ -129,7 +130,7 @@ theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
 theorem certified_community_sampler_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor count : Nat)
     (delta : Real) (i : Fin D.componentCount) :
     ∫⁻ result, (result.2 : ENNReal) ∂
@@ -144,7 +145,7 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
     (one_le_samplerRadiusRequirement hn0 (D.component i)
       (by dsimp [ApproxParams.epsilonPrime]; exact div_pos p.epsilon_pos (by norm_num))
       (by dsimp [ApproxParams.epsilonPrime]; linarith [p.epsilon_le_one])).trans
-      ((le_max_right _ _).trans (hprecision i))
+      ((le_max_right _ _).trans (hprecision.split i))
   have hsample0 : 0 < p.epsilonPrime := by
     dsimp [ApproxParams.epsilonPrime]
     exact div_pos p.epsilon_pos (by norm_num)
@@ -159,7 +160,7 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
 theorem certified_community_sampler_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor count : Nat)
     (delta : Real) (i : Fin D.componentCount) :
     ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
@@ -170,7 +171,7 @@ theorem certified_community_sampler_mass_le_one {n k : Nat}
     (one_le_samplerRadiusRequirement hn0 (D.component i)
       (by dsimp [ApproxParams.epsilonPrime]; exact div_pos p.epsilon_pos (by norm_num))
       (by dsimp [ApproxParams.epsilonPrime]; linarith [p.epsilon_le_one])).trans
-      ((le_max_right _ _).trans (hprecision i))
+      ((le_max_right _ _).trans (hprecision.split i))
   have hsample0 : 0 < p.epsilonPrime := by
     dsimp [ApproxParams.epsilonPrime]
     exact div_pos p.epsilon_pos (by norm_num)

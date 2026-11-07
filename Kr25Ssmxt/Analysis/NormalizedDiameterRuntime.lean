@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 import Kr25Ssmxt.Analysis.CV18RoundnessBound
 
@@ -502,7 +503,7 @@ private theorem log_one_add_mul_le (n : Nat)
 theorem Decomposition.normalizedHitAndRun_log_inv_tolerance_le
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     Real.log (1 / hitAndRunTolerance (D.component i) b p.epsilonPrime) ≤
       (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 +
@@ -523,7 +524,7 @@ theorem Decomposition.normalizedHitAndRun_log_inv_tolerance_le
     linarith [p.epsilon_le_one]
   have hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius := by
     simpa only [P, eta, decimalScale] using
-      (le_max_right _ _).trans (hprecision i)
+      (le_max_right _ _).trans (hprecision.split i)
   have hV : V ≤ R ^ n * C :=
     P.hitAndRunBody_volume_toReal_le_scaled_outer_pow
       (by omega) b heta heta1 hprec
@@ -547,7 +548,7 @@ theorem Decomposition.normalizedHitAndRun_log_inv_tolerance_le
 theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     {n k : Nat} {F : LRAFormula n k} (hn : 0 < n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     Metric.diam ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) ≤
       4 * TTCRuntime.theorem3Rho D := by
@@ -561,7 +562,7 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
   have hprec : samplerRadiusRequirement P p.epsilonPrime ≤
       decimalScale b * P.inradius := by
     simpa only [P, decimalScale] using
-      (le_max_right _ _).trans (hprecision i)
+      (le_max_right _ _).trans (hprecision.split i)
   have hD := P.normalizedHitAndRun_diameter_le_four_ratio hn b heta0 heta1 hprec
   have hratio : P.outerRadius / P.inradius ≤ TTCRuntime.theorem3Rho D := by
     have hnonneg : 0 ≤ P.outerRadius / P.inradius :=
@@ -590,7 +591,7 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
 theorem Decomposition.normalizedHitAndRun_warmness_le_rho_pow
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal ≤
@@ -605,7 +606,7 @@ theorem Decomposition.normalizedHitAndRun_warmness_le_rho_pow
 theorem Decomposition.normalizedHitAndRun_log_warmness_le
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     Real.log ((volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) ≤
@@ -622,7 +623,7 @@ to TTC's common radius ratio. -/
 theorem Decomposition.normalizedHitAndRunSteps_le_rho_deadline
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     normalizedHitAndRunSteps (D.component i) b p.epsilonPrime ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
@@ -664,7 +665,7 @@ theorem Decomposition.normalizedHitAndRunSteps_le_rho_deadline
 theorem Decomposition.normalizedHitAndRun_deadline_log_le
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     Real.log (8 *
       (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
@@ -695,7 +696,7 @@ theorem Decomposition.normalizedHitAndRun_deadline_log_le
 theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     normalizedHitAndRunSteps (D.component i) b p.epsilonPrime ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
@@ -723,7 +724,7 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
 theorem TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision_le_geometric
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision hn p
       D.componentCount b cv18NonQueryFactor (D.component i) ≤
@@ -860,7 +861,7 @@ theorem theorem3_samplerLogEnvelope_le_dimension_precision_polylog
 theorem Decomposition.normalizedHitAndRunSteps_le_theorem3_polylog
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     normalizedHitAndRunSteps (D.component i) b p.epsilonPrime ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 4 *

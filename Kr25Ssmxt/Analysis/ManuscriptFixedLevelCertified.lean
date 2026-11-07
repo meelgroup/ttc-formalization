@@ -38,7 +38,7 @@ theorem manuscriptCertifiedFixedLevelSteps_coverage
 theorem manuscriptCertifiedFixedLevelSteps_envelope
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (pointLaw : Fin D.componentCount → Measure (LatticePoint n))
     (hvolume : ∀ i,
@@ -74,7 +74,7 @@ two-sided Poisson concentration estimate. -/
 theorem manuscriptCertifiedFixedLevel_concentration
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (pointLaw : Fin D.componentCount → Measure (LatticePoint n))
     (hvolume : ∀ i,
@@ -134,7 +134,7 @@ the manuscript's dyadic Chernoff summation. -/
 theorem manuscriptCertifiedFixedLevel_mean_lower
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (pointLaw : Fin D.componentCount → Measure (LatticePoint n))
@@ -233,7 +233,7 @@ union bound, for certified fixed-level component outcomes. -/
 theorem manuscriptCertifiedFixedLevel_error_bound
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (pointLaw : Fin D.componentCount → Measure (LatticePoint n))
@@ -325,7 +325,7 @@ allocated to one of the manuscript's `m` component tests. -/
 theorem manuscriptCertifiedFixedLevel_cutoff_prefix_budget
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (pointLaw : Fin D.componentCount → Measure (LatticePoint n))

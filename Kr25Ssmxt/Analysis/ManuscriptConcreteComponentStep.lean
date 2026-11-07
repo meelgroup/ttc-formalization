@@ -13,7 +13,7 @@ open Classical MeasureTheory
 theorem manuscript_concrete_component_step_envelope
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount)
     (pointLaw : Measure (LatticePoint n))
     (halmost : AlmostUniformPointwise pointLaw
@@ -70,7 +70,7 @@ Hit-and-Run/KV97 point law used by `communityManuscriptTTC`. -/
 theorem manuscript_normalized_component_step_envelope
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount)
     (hunit : 1 ≤ decimalScale b * (D.component i).inradius)
     (hfinite : (codedLatticePoints (D.component i) b).Finite)

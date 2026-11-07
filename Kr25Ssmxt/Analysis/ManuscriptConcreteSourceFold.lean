@@ -20,7 +20,7 @@ theorem manuscriptCertifiedFixedLevelSteps_length
 theorem communityManuscript_source_fixedLevel_fold
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (level : Nat) :
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
@@ -175,7 +175,7 @@ component source has exactly the concrete certified prefix count law. -/
 theorem communityManuscript_source_fixedLevel_total_law
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
     (level : Nat) :
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
@@ -232,7 +232,7 @@ space at every level, ready for a finite stopped-level union bound. -/
 theorem communityManuscript_source_fixedLevel_error_bound
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (outcomes : Fin D.componentCount → VolumeOutcome)
     (hgood : ∀ i, (outcomes i).1 = true ∧

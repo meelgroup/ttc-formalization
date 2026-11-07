@@ -12,7 +12,7 @@ open MeasureTheory
 theorem manuscript_no_first_halving_at_cutoff
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (i : Fin D.componentCount)
     (volumeEstimate : NNReal)
@@ -48,7 +48,7 @@ before the cutoff: it cannot jump past the cutoff in one component. -/
 theorem manuscript_no_first_halving_past_cutoff
     {n k : Nat} (hn : 0 < n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
-    (hprecision : PrecisionAdequate D b p.latticeEta p.epsilonPrime)
+    (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
     (i : Fin D.componentCount)
     (volumeEstimate : NNReal)
