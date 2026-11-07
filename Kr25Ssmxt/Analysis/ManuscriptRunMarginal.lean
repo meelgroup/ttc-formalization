@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.ManuscriptComponentExpectation
 import Kr25Ssmxt.Analysis.ManuscriptSampleAppendMarginal
 

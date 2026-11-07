@@ -28,12 +28,19 @@ theorem PolytopeData.inradius_le_outerRadius {n : Nat}
   let y : Point n := P.incenter - P.inradius • e
   have hx : x ∈ P.carrier := by
     apply P.inball
-    simp [x, Metric.mem_closedBall, dist_eq_norm, norm_smul, he,
-      Real.norm_eq_abs, abs_of_pos P.inradius_pos]
+    change ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
+    have hxc : x - P.incenter = P.inradius • e := by simp [x]
+    rw [hxc, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos]
+    change P.inradius * ‖toEuclidean e‖ ≤ _
+    rw [heE, mul_one]
   have hy : y ∈ P.carrier := by
     apply P.inball
-    simp [y, Metric.mem_closedBall, norm_smul, he,
-      Real.norm_eq_abs, abs_of_pos P.inradius_pos]
+    change ‖(WithLp.toLp 2 (y - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
+    have hyc : y - P.incenter = -(P.inradius • e) := by simp [y]
+    rw [hyc, WithLp.toLp_neg, norm_neg, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs,
+      abs_of_pos P.inradius_pos]
+    change P.inradius * ‖toEuclidean e‖ ≤ _
+    rw [heE, mul_one]
   have hxR := P.outer_bound x hx
   have hyR := P.outer_bound y hy
   have hxy : dist (toEuclidean x) (toEuclidean y) = 2 * P.inradius := by

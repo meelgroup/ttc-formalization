@@ -60,12 +60,24 @@ theorem PolytopeData.innerCube_le_volume {n : Nat} (hn : 0 < n)
   have hsubset : box ⊆ P.carrier := by
     intro x hx
     apply P.inball
-    rw [Metric.mem_closedBall, dist_pi_le_iff P.inradius_pos.le]
-    intro i
-    have hlow := hx.1 i
-    have hhigh := hx.2 i
-    rw [Real.dist_eq]
-    exact abs_le.mpr ⟨by linarith, by linarith⟩
+    change ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
+    rw [EuclideanSpace.norm_eq]
+    have hcoord : ∀ i, ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n)) i‖ ^ 2
+        ≤ r ^ 2 := by
+      intro i
+      have hlow := hx.1 i
+      have hhigh := hx.2 i
+      have habs : |x i - P.incenter i| ≤ r := abs_le.mpr ⟨by linarith, by linarith⟩
+      simpa [Real.norm_eq_abs, sq_abs] using
+        (sq_le_sq₀ (abs_nonneg _) hr).2 habs
+    have hsum := Finset.sum_le_sum fun i (_ : i ∈ Finset.univ) => hcoord i
+    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul] at hsum
+    calc Real.sqrt (∑ i, ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n)) i‖ ^ 2)
+        ≤ Real.sqrt ((n : Real) * r ^ 2) := Real.sqrt_le_sqrt hsum
+      _ = Real.sqrt n * r := by
+          rw [Real.sqrt_mul (Nat.cast_nonneg n), Real.sqrt_sq hr]
+      _ = P.inradius := by
+          dsimp [r]; field_simp
   have hbox : (volume box).toReal = (2 * r) ^ n := by
     change (volume (Set.Icc (fun i : Fin n => P.incenter i - r)
       (fun i => P.incenter i + r))).toReal = _

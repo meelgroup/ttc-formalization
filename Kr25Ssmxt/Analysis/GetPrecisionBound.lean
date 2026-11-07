@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
 
@@ -43,7 +44,7 @@ theorem getPrecision_le_theorem3PrecisionBound {n k : Nat}
       exact Finset.le_sup
         (f := fun i : Fin D.componentCount =>
           Real.toNNReal (1 / (D.component i).inradius)) (Finset.mem_univ i)
-    rw [div_eq_mul_one_div]
+    rw [(D.component i).chebyshevRadius_eq_inradius, div_eq_mul_one_div]
     exact mul_le_mul_of_nonneg_left hinv hγ0
   have hlog : Real.logb 10 (max 1 (γ * c)) ≤
       max 0 (Real.logb 10 γ) + max 0 (Real.logb 10 c) := by

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ManuscriptRunMarginal
 import Kr25Ssmxt.Analysis.ManuscriptOracleNormalization
@@ -64,7 +65,7 @@ theorem community_manuscriptTTC_isProbabilityMeasure
           components (TTCState.initial n)).map
             (manuscriptEstimate b threshold) := by
       simp [communityManuscriptTTC, manuscriptTTC, communityManuscriptOracles,
-        D, b, threshold, components, hempty]
+        TTCPreprocessor.choosePrecision, D, b, threshold, components, hempty]
     rw [hrunequality]
     letI := hcore
     exact Measure.isProbabilityMeasure_map

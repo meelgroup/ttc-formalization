@@ -5,7 +5,7 @@
 unfolds only through `Model/` definitions, and `#krSurplusIn` checks that `Model/`
 contains nothing the public statements do not use.
 
-## Current status (2026-11-07)
+## Current status (2026-11-07, revised)
 
 **Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `db1f401`
 (`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
@@ -78,16 +78,28 @@ captures this.
   finite volume and the clipping radii) and `n ≥ 21` (inherited from the
   formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
   a dimension restriction).
-- `getprec` is concrete (`getPrecision`, `Model/Program.lean`) and is TTC's
-  only precision stage: `TTCPreprocessor.choosePrecision` is
-  `getprec(·, ε/96)`, returning `⌈log₁₀ maxratio⌉` with
-  `maxratio = max(1, maxᵢ γ/γᵢ)`. `PrecisionAdequate` is exactly the printed
-  condition `γ ≤ 10ᵇ γᵢ` at `η = ε/96`, proved by `getPrecision_adequate`.
-  `PrecisionAdequate.split` derives the two uses in the analysis: the union
-  lattice comparison at `ε/8` and the sampler corollary at `ε' = ε/12`
-  (`θ = ε'/8 = ε/96`). One difference remains: `γᵢ` is each component's
-  certified inball radius, not the maximum inscribed radius the paper names;
-  any inball gives a valid, possibly larger, precision.
+- `getprec` is concrete and lives in `Model/Run.lean`, as the `choosePrecision`
+  slot of the oracle bundle (`TTCOracles`, filled by `communityManuscriptOracles`):
+  `getPrecision` returns `⌈log₁₀ maxratio⌉` with `maxratio = max(1, maxᵢ γ/γ̂ᵢ)` at
+  `η = ε/96`. `γ̂ᵢ = MaxInscribedBall(Pᵢ)` is computed by the Chebyshev-centre LP
+  `maximize t s.t. aⱼ·c + t‖aⱼ‖₂ ≤ bⱼ` (`HalfspacePresentation.chebyshevRadius`, its
+  optimum value). `euclideanBall_subset_iff_chebyshevFeasible` shows the LP's feasible
+  pairs are exactly the inscribed `ℓ₂` balls, and `chebyshevRadius_eq_inradius` that its
+  optimum is the component's `inradius`.
+- `PolytopeData.inradius` is the paper's maximal inscribed **`ℓ₂`** radius: `inball`
+  is an `ℓ₂` ball (`euclideanBall`) and `inradius_max` says no larger `ℓ₂` ball fits.
+  So `γᵢ`, `ρ = maxᵢ Rᵢ/γᵢ` and `getprec`'s `b` are the paper's quantities.
+- `PrecisionAdequate` is exactly the printed condition `γ ≤ 10ᵇ γ̂ᵢ` at `η = ε/96`.
+  `PrecisionAdequate.split` derives the two uses in the analysis: the union lattice
+  comparison at `ε/8` and the sampler corollary at `ε' = ε/12` (`θ = ε'/8 = ε/96`).
+- Lemma `lem:nonconv` (lattice points versus volume for a union of polytopes with
+  `ℓ₂` inballs) is proved as in the paper (`Analysis/L2LatticeUnion.lean`): inflate and
+  deflate every facet by `κ = √(2 log 8/η) + √(2 log r)`, bound the randomized-rounding
+  kernel's escape mass with arlib-community's KV97 lemmas, and double count. The
+  constant is `κ/γ ≤ η/(26mn)`, not the printed `η/(32mn)`
+  (`log(8r/η)/log(4r/η)` can reach `3/2`); the one-sided escape bound `η/8` (the paper
+  uses `η/4`) absorbs the difference. `L2LatticeBridge.lean` transfers it to TTC's
+  components; it replaces the earlier cube-based cubulation argument.
 - Preprocessing returns full-dimensional components whose union agrees with the
   solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
   are dropped.
@@ -101,11 +113,14 @@ captures this.
   precision factor and the second-loop and `getprec`/decomposition costs; add
   `minᵢ γᵢ` (the smallest inradius) to the quantities whose polylogarithmic
   factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
+- Manuscript constant in `lem:nonconv`: `(1 + κ/γ)ⁿ ≤ (1 + η/(32mn))ⁿ` should read
+  `η/(26mn)` (or bound the escape by `η/8`); the lemma holds either way.
 - Model surplus: `#krSurplusIn` still reports older `Model/` definitions that no
-  public statement reaches. `samplerRadiusRequirement`, `ApproxParams.latticeEta`
-  and `TTCRuntime.theorem3PrecisionScale` moved to
-  `Analysis/PrecisionRequirements.lean`, and the `getprec` adequacy proof is
-  inlined into `getPrecisionChoice`.
+  public statement reaches, plus the two Chebyshev-LP theorems kept in
+  `Model/Run.lean` on purpose (they discharge `MaxInscribedBall` there).
+  `samplerRadiusRequirement`, `ApproxParams.latticeEta`,
+  `TTCRuntime.theorem3PrecisionScale` and the proof-side alias
+  `TTCPreprocessor.choosePrecision` live under `Analysis/`.
 
 **Removed material.** The older `ttc`/`processComponent(s)` program and
 `communityTTC` (Poisson draw before a single thinning loop, output `|X|/p`), its
@@ -114,7 +129,10 @@ hypothesis, the unnormalized sampler and older oracle bundle, the older runtime
 certificate (`ttc_total_runtime_theorem3`), and the arbitrary-oracle
 label-freshness and dyadic-rate lemmas were removed: none is used by either
 public theorem (checked by a dependency walk), and that program is not the
-manuscript's Algorithm 1.
+manuscript's Algorithm 1. The cube-based cubulation proof of the lattice comparison
+(`Cubulation*`, `IntegerCubulation*`, `ScaledPolytopeInball`, `ScaledUnion*`,
+`HomothetyImageNullMeasurable`) was removed when the comparison moved to the paper's
+`ℓ₂` argument.
 
 **Lean 4.35 notes.** `Measure.map` of a non-measurable function is now a Dirac
 measure, so bind/map bounds carry explicit measurability hypotheses;

@@ -1,4 +1,3 @@
-import Kr25Ssmxt.Analysis.ScaledPolytopeInball
 import Kr25Ssmxt.Model.Run
 import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Convexity.Polytope
 
@@ -129,8 +128,7 @@ theorem PolytopeData.scaledBody_inball {n : Nat} (P : PolytopeData n) (b : Nat) 
   rw [← P.image_decimalScale_eq_scaledBody b]
   let x : Point n := fromEuclidean ((decimalScale b)⁻¹ • y)
   refine ⟨x, P.inball ?_, ?_⟩
-  · rw [Metric.mem_closedBall] at hy ⊢
-    rw [dist_eq_norm] at hy ⊢
+  · rw [Metric.mem_closedBall, dist_eq_norm] at hy
     have hspos := decimalScale_pos b
     have hnorm : ‖(decimalScale b)⁻¹ •
         (y - decimalScale b • toEuclidean P.incenter)‖ ≤ P.inradius := by
@@ -140,20 +138,13 @@ theorem PolytopeData.scaledBody_inball {n : Nat} (P : PolytopeData n) (b : Nat) 
             ≤ (decimalScale b)⁻¹ * (decimalScale b * P.inradius) :=
           mul_le_mul_of_nonneg_left hy (inv_pos.mpr hspos).le
         _ = P.inradius := by field_simp
-    apply (pi_norm_le_iff_of_nonneg P.inradius_pos.le).2
-    intro i
-    have hi := PiLp.norm_apply_le
-      ((decimalScale b)⁻¹ • (y - decimalScale b • toEuclidean P.incenter)) i
-    calc
-      ‖(x - P.incenter) i‖ =
-          ‖((decimalScale b)⁻¹ •
-            (y - decimalScale b • toEuclidean P.incenter)) i‖ := by
-              congr 1
-              simp [x, fromEuclidean, sub_apply, smul_eq_mul, mul_sub,
-                decimalScale_ne_zero]
-      _ ≤ ‖(decimalScale b)⁻¹ •
-          (y - decimalScale b • toEuclidean P.incenter)‖ := hi
-      _ ≤ P.inradius := hnorm
+    change ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
+    have hvec : (WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n)) =
+        (decimalScale b)⁻¹ • (y - decimalScale b • toEuclidean P.incenter) := by
+      ext i
+      simp [x, fromEuclidean, toEuclidean, smul_eq_mul, mul_sub, decimalScale_ne_zero]
+    rw [hvec]
+    exact hnorm
   · ext i
     simp [x, toEuclidean, fromEuclidean, smul_eq_mul, decimalScale_ne_zero]
 

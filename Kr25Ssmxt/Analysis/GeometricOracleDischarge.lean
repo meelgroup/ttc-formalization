@@ -1,6 +1,8 @@
+import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.MathlibCompat
+import Kr25Ssmxt.Analysis.EuclideanInball
 import Kr25Ssmxt.Analysis.DecimalLatticeComponentComparison
 import Kr25Ssmxt.Analysis.ProcessComponentsLatticeCountAccuracyCodedCard
 import Kr25Ssmxt.Analysis.PolytopeCarrierMeasurable
@@ -44,6 +46,7 @@ def exactSampleBatchLaw {n count : Nat} (P : PolytopeData n) (b : Nat) :
 /-- Canonical accuracy-level geometric oracles attached to certified preprocessing. -/
 def exactSemanticOracles {n k : Nat} (prep : TTCPreprocessor n k) : TTCOracles n k where
   preprocessing := prep
+  choosePrecision := fun D p => getPrecisionChoice D p
   computeVolume := fun P _ _ => exactVolumeLaw P
   generateSamples := fun P count b _ _ => exactSampleBatchLaw P b
 
@@ -92,10 +95,7 @@ lemma exact_volume_contract {n k : Nat} (prep : TTCPreprocessor n k)
 
 lemma polytope_volume_toReal_pos {n : Nat} (P : PolytopeData n) :
     0 < (volume P.carrier).toReal := by
-  have hball : 0 < volume (Metric.ball P.incenter P.inradius) :=
-    Metric.isOpen_ball.measure_pos volume (Metric.nonempty_ball.2 P.inradius_pos)
-  have hvolume : 0 < volume P.carrier :=
-    hball.trans_le (measure_mono (Metric.ball_subset_closedBall.trans P.inball))
+  have hvolume : 0 < volume P.carrier := P.volume_carrier_pos
   exact ENNReal.toReal_pos hvolume.ne' P.bounded.measure_lt_top.ne
 
 /-- Adequate precision makes every component's coded lattice set finite and nonempty. -/

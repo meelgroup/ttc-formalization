@@ -11,7 +11,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 This audit surface uses finite syntax for QF-LRA and Mathlib's actual Euclidean,
 set, metric, and measure notions.  A normalized component is represented by its
-finite closed-halfspace presentation together with a certified positive inball
+finite closed-halfspace presentation together with its maximal inscribed `ℓ₂` ball
 and boundedness.  This makes the paper's lattice arguments statements about the
 same carriers whose Lebesgue volume appears in the headline, rather than about
 an unrelated abstract collection of sets.
@@ -146,7 +146,15 @@ structure HalfspacePresentation (n : Nat) where
 def HalfspacePresentation.carrier {n : Nat} (H : HalfspacePresentation n) : Set (Point n) :=
   {x | ∀ i, dotProduct (H.normal i) x ≤ H.offset i}
 
+/-- The closed Euclidean (`ℓ₂`) ball of radius `r` about `c`. -/
+def euclideanBall {n : Nat} (c : Point n) (r : Real) : Set (Point n) :=
+  {x | ‖(WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))‖ ≤ r}
+
 /-- A surviving normalized component, with the geometric read-offs used by the paper.
+
+`inradius` is the paper's `MaxInscribedBall` radius: `inball` says the `ℓ₂` ball of
+that radius about `incenter` lies in the component, and `inradius_max` says no larger
+`ℓ₂` ball does. `getprec` recomputes it by the Chebyshev-centre LP (`Model/Run.lean`).
 
 `outerRadius` is an explicit preprocessing certificate, rather than merely a consequence
 of `bounded`.  CV18's cooling schedule and running-time bound depend quantitatively on this
@@ -157,7 +165,9 @@ structure PolytopeData (n : Nat) where
   incenter : Point n
   inradius : Real
   inradius_pos : 0 < inradius
-  inball : Metric.closedBall incenter inradius ⊆ presentation.carrier
+  inball : euclideanBall incenter inradius ⊆ presentation.carrier
+  inradius_max : ∀ (c : Point n) (r : Real),
+    euclideanBall c r ⊆ presentation.carrier → r ≤ inradius
   bounded : Bornology.IsBounded presentation.carrier
   outerRadius : Real
   outerRadius_nonneg : 0 ≤ outerRadius

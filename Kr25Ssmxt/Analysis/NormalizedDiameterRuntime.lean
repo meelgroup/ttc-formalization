@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.EuclideanInball
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
@@ -306,8 +307,7 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
       (P.presentation.facetCount : Real) Arlib.KV97.cOf_nonneg hcenterBody
   have hcenterNorm : ‖P.scaledIncenter b‖ ≤
       decimalScale b * P.outerRadius := by
-    have hmem : P.incenter ∈ P.carrier :=
-      P.inball (by simp [Metric.mem_closedBall, P.inradius_pos.le])
+    have hmem : P.incenter ∈ P.carrier := P.incenter_mem_carrier
     have hnorm : ‖toEuclidean P.incenter‖ ≤ P.outerRadius :=
       P.outer_bound P.incenter hmem
     dsimp [PolytopeData.scaledIncenter]

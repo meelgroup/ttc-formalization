@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Model.Run
 import Kr25Ssmxt.Analysis.TTCPaperRuntime

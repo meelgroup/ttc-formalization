@@ -41,62 +41,14 @@ structure PrecisionChoice {n k : Nat} {F : LRAFormula n k}
   value : Nat
   adequate : PrecisionAdequate D value p.precisionEta
 
-/-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
-`γ = (64 m n / η) √(log (4 r / η))` to a component's inradius, starting from `1`.
-The inradius is each component's certified inball radius. -/
-noncomputable def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Real :=
-  max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (latticeRadiusRequirement D η / (D.component i).inradius) :
-      NNReal) : Real)
-
-/-- Algorithm `getprec(F_d, M, η)`: return `⌈log₁₀ maxratio⌉`. -/
-noncomputable def getPrecision {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Nat :=
-  Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
-
-/-- Line 3 of Algorithm `ttc`: `b ← GetPrecision(F_d, M, ε / 96)`, with the proof that
-the returned precision meets the specification of `getprec`. -/
-noncomputable def getPrecisionChoice {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) : PrecisionChoice D p where
-  value := getPrecision D p.precisionEta
-  adequate := by
-    intro i
-    have hγ := (D.component i).inradius_pos
-    have hratio1 : (1 : Real) ≤ getPrecisionRatio D p.precisionEta := le_max_left _ _
-    have hterm : latticeRadiusRequirement D p.precisionEta / (D.component i).inradius ≤
-        getPrecisionRatio D p.precisionEta := by
-      refine (Real.le_coe_toNNReal _).trans (le_trans ?_ (le_max_right _ _))
-      exact NNReal.coe_le_coe.mpr (Finset.le_sup
-        (f := fun i : Fin D.componentCount => Real.toNNReal
-          (latticeRadiusRequirement D p.precisionEta / (D.component i).inradius))
-        (Finset.mem_univ i))
-    have hpow : getPrecisionRatio D p.precisionEta ≤
-        (10 : Real) ^ getPrecision D p.precisionEta := by
-      have hpos : 0 < getPrecisionRatio D p.precisionEta := by linarith
-      calc getPrecisionRatio D p.precisionEta
-          = (10 : Real) ^ Real.logb 10 (getPrecisionRatio D p.precisionEta) :=
-            (Real.rpow_logb (by norm_num) (by norm_num) hpos).symm
-        _ ≤ (10 : Real) ^ (getPrecision D p.precisionEta : Real) :=
-            Real.rpow_le_rpow_of_exponent_le (by norm_num) (Nat.le_ceil _)
-        _ = (10 : Real) ^ getPrecision D p.precisionEta := Real.rpow_natCast _ _
-    have := (div_le_iff₀ hγ).mp (hterm.trans hpow)
-    linarith
-
 /-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input.
-The precision stage is not a parameter: it is `getprec`, see
-`TTCPreprocessor.choosePrecision`. -/
+The precision stage `getprec` is the `choosePrecision` slot of `TTCOracles`, discharged in
+`Model/Run.lean` by the Chebyshev-centre LP. -/
 structure TTCPreprocessor (n k : Nat) where
   booleanAbstraction : (F : LRAFormula n k) → BooleanAbstraction F
   toDNF : {F : LRAFormula n k} → (A : BooleanAbstraction F) → DNFResult A
   normalize : {F : LRAFormula n k} → (A : BooleanAbstraction F) →
     DNFResult A → Bornology.IsBounded (solutionSet F) → Decomposition F
-
-/-- TTC's precision stage is always Algorithm `getprec` at `ε / 96`. -/
-noncomputable def TTCPreprocessor.choosePrecision {n k : Nat}
-    (_prep : TTCPreprocessor n k) {F : LRAFormula n k} (D : Decomposition F)
-    (p : ApproxParams) : PrecisionChoice D p :=
-  getPrecisionChoice D p
 
 /-- Boolean abstraction, DNF conversion, and geometric normalization in paper order. -/
 def TTCPreprocessor.run {n k : Nat} (prep : TTCPreprocessor n k)
@@ -130,6 +82,9 @@ abbrev SampleBatch (n count : Nat) := Bool × (Fin count → LatticePoint n)
 /-- The deterministic certified stages and the two randomized geometric oracles. -/
 structure TTCOracles (n k : Nat) where
   preprocessing : TTCPreprocessor n k
+  /-- Line 3 of Algorithm `ttc`: `b ← GetPrecision(F_d, M, ε / 96)`. -/
+  choosePrecision : {F : LRAFormula n k} → (D : Decomposition F) → (p : ApproxParams) →
+    PrecisionChoice D p
   computeVolume : PolytopeData n → Real → Real → Measure VolumeOutcome
   generateSamples : (P : PolytopeData n) → (count b : Nat) →
     Real → Real → Measure (SampleBatch n count)
@@ -347,7 +302,7 @@ def manuscriptTTC {n k : Nat} (F : LRAFormula n k)
   if D.componentCount = 0 then
     Measure.dirac 0
   else
-    let b := (O.preprocessing.choosePrecision D params).value
+    let b := (O.choosePrecision D params).value
     let threshold := params.threshold D.componentCount
     (manuscriptProcessComponents O b params.epsilonPrime
       (params.deltaPrime D.componentCount) threshold
@@ -411,7 +366,7 @@ def manuscriptTTCWithCost {n k : Nat} (F : LRAFormula n k)
   if D.componentCount = 0 then
     Measure.dirac (0, preprocessingOperations)
   else
-    let b := (O.base.preprocessing.choosePrecision D params).value
+    let b := (O.base.choosePrecision D params).value
     let threshold := params.threshold D.componentCount
     (manuscriptProcessComponentsWithCost O b params.epsilonPrime
       (params.deltaPrime D.componentCount) threshold

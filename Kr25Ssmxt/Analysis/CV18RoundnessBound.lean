@@ -1,5 +1,6 @@
 import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
 import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.EuclideanInball
 
 /-! A geometric bound on the concrete CV18 roundness parameter. -/
 
@@ -206,8 +207,7 @@ theorem PolytopeData.cv18OuterRadius_le_two_ratio {n : Nat}
     (P : PolytopeData n) :
     P.cv18OuterRadius ≤ 2 * max 1 (P.outerRadius / P.inradius) := by
   have hcenter : ‖toEuclidean P.incenter‖ ≤ P.outerRadius := by
-    have hmem : P.incenter ∈ P.carrier :=
-      P.inball (by simp [Metric.mem_closedBall, P.inradius_pos.le])
+    have hmem : P.incenter ∈ P.carrier := P.incenter_mem_carrier
     simpa only [toEuclidean] using P.outer_bound P.incenter hmem
   have hratio : (P.outerRadius + ‖toEuclidean P.incenter‖) /
       P.inradius ≤ 2 * (P.outerRadius / P.inradius) := by
