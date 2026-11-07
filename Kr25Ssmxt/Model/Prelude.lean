@@ -4,6 +4,7 @@ import Mathlib.Data.Matrix.Mul
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.Topology.MetricSpace.Bounded
+import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 /-!
 # TTC model vocabulary
@@ -312,6 +313,26 @@ noncomputable def theorem3OuterRadiusMax {n k : Nat} {F : LRAFormula n k}
 Theorem 3. -/
 def theorem3PrecisionScale (b : Nat) (outerRadiusMax : Real) : Real :=
   1 + b + max 0 (Real.log outerRadiusMax)
+
+/-- The reciprocal `1 / minᵢ γᵢ` of the smallest certified inradius; zero for the
+empty family. -/
+noncomputable def theorem3InverseInradiusMax {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) : Real :=
+  ((Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal (1 / (D.component i).inradius) : NNReal) : Real)
+
+/-- An input-only bound on the precision `b` chosen by `getprec` at `ε / 96`:
+`1 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ)`, with `γ` the required radius. -/
+noncomputable def theorem3PrecisionBound {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  1 + max 0 (Real.logb 10 (latticeRadiusRequirement D p.precisionEta)) +
+    max 0 (Real.logb 10 (theorem3InverseInradiusMax D))
+
+/-- The precision scale `1 + b + log⁺ R_max` with `b` replaced by its input-only
+bound. -/
+noncomputable def theorem3InputScale {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  1 + theorem3PrecisionBound D p + max 0 (Real.log (theorem3OuterRadiusMax D))
 
 /-- The paper's common radius ratio `ρ = maxᵢ Rᵢ / γᵢ`, protected below by one.
 The `NNReal` finite supremum gives the empty decomposition the canonical value zero before

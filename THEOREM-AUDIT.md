@@ -5,7 +5,7 @@
 unfolds only through `Model/` definitions, and `#krSurplusIn` checks that `Model/`
 contains nothing the public statements do not use.
 
-## Current status (2026-11-05)
+## Current status (2026-11-07)
 
 **Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `db1f401`
 (`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
@@ -52,12 +52,19 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
 `communityManuscriptTTC`, and its *expected* operation count is at most
-`T_preprocessing + m · 30 n⁵ r_max ρ² (1+b+log⁺R_max)(cap+1)(parameterFactor+1)`.
+`T_preprocessing + m · 30 n⁵ r_max ρ² · S · (cap+1)(parameterFactor+1)` with the
+input-only scale `S = 2 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ) + log⁺R_max`
+(`TTCRuntime.theorem3InputScale`), where `γ = 64mn/(ε/96)·√log(384r/ε)` is the
+radius `getprec` requires. The bound no longer mentions the precision `b`:
+`getPrecision_le_theorem3PrecisionBound` shows `getprec` returns
+`b ≤ 1 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ)`.
 This corrects the printed claim in two ways: it is an expected (not worst-case)
 bound, since the second loop and the rejection sampler have unbounded iteration
-counts; and it carries the precision factor `1+b+log⁺R_max`, which the printed
-bound omits (a two-cube family forces `Ω(b)` first-loop halvings with every
-quantity in the printed bound fixed).
+counts; and it carries a precision factor, which the printed bound omits (a
+two-cube family forces `Ω(b)` first-loop halvings with every quantity in the
+printed bound fixed). In particular the bound grows like `log(1/minᵢ γᵢ)`: a
+very small component forces a fine lattice, and neither `ρ` nor `maxᵢ Rᵢ`
+captures this.
 
 **Fidelity to the manuscript** (`sections/algo.tex`, `sections/analysis.tex`).
 - Matches Algorithm 1: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`,
@@ -71,11 +78,16 @@ quantity in the printed bound fixed).
   finite volume and the clipping radii) and `n ≥ 21` (inherited from the
   formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
   a dimension restriction).
-- `getprec` is abstract: any precision satisfying `PrecisionAdequate` (lattice
-  radius at `η = ε/8`, sampler radius at `ε'`) is allowed. The printed
-  `getprec(·, ε/96)` radius `64mn/(ε/96)·√log(384r/ε)` dominates both
-  requirements, so the paper's choice is covered, but that implication is not
-  proved in Lean.
+- `getprec` is concrete (`getPrecision`, `Model/Program.lean`) and is TTC's
+  only precision stage: `TTCPreprocessor.choosePrecision` is
+  `getprec(·, ε/96)`, returning `⌈log₁₀ maxratio⌉` with
+  `maxratio = max(1, maxᵢ γ/γᵢ)`. `PrecisionAdequate` is exactly the printed
+  condition `γ ≤ 10ᵇ γᵢ` at `η = ε/96`, proved by `getPrecision_adequate`.
+  `PrecisionAdequate.split` derives the two uses in the analysis: the union
+  lattice comparison at `ε/8` and the sampler corollary at `ε' = ε/12`
+  (`θ = ε'/8 = ε/96`). One difference remains: `γᵢ` is each component's
+  certified inball radius, not the maximum inscribed radius the paper names;
+  any inball gives a valid, possibly larger, precision.
 - Preprocessing returns full-dimensional components whose union agrees with the
   solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
   are dropped.
@@ -84,10 +96,15 @@ quantity in the printed bound fixed).
 - A Lean proof that the six scheduled CV18 logarithmic factors in
   `theorem3ParameterFactor` are polylogarithmic in the public parameters (needed
   only for the paper's `Õ` notation; the exact bound is proved).
-- `getprec` as a concrete procedure, with a proof that its output is adequate.
 - Boolean abstraction and DNF conversion (Theorem 2).
 - Manuscript edits: state boundedness; state Theorem 3 in expectation with the
-  `1+b+log⁺R_max` factor and the second-loop and `getprec`/decomposition costs.
+  precision factor and the second-loop and `getprec`/decomposition costs; add
+  `minᵢ γᵢ` (the smallest inradius) to the quantities whose polylogarithmic
+  factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
+- Model surplus: `samplerRadiusRequirement`, `ApproxParams.latticeEta`,
+  `TTCRuntime.theorem3PrecisionScale` and `getPrecision_adequate` are defined
+  under `Model/` but no longer reached by a public statement (reported by
+  `#krSurplusIn`, alongside older entries).
 
 **Removed material.** The older `ttc`/`processComponent(s)` program and
 `communityTTC` (Poisson draw before a single thinning loop, output `|X|/p`), its

@@ -1,4 +1,6 @@
 import Kr25Ssmxt.Model.Prelude
+import Mathlib.Analysis.SpecialFunctions.Log.Base
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.MeasureTheory.MeasurableSpace.Constructions
 import Mathlib.Probability.ConditionalProbability
 import Mathlib.Probability.Distributions.Bernoulli
@@ -39,14 +41,64 @@ structure PrecisionChoice {n k : Nat} {F : LRAFormula n k}
   value : Nat
   adequate : PrecisionAdequate D value p.precisionEta
 
-/-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input. -/
+/-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
+`γ = (64 m n / η) √(log (4 r / η))` to a component's inradius, starting from `1`.
+The inradius is each component's certified inball radius. -/
+noncomputable def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (η : Real) : Real :=
+  max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal (latticeRadiusRequirement D η / (D.component i).inradius) :
+      NNReal) : Real)
+
+/-- Algorithm `getprec(F_d, M, η)`: return `⌈log₁₀ maxratio⌉`. -/
+noncomputable def getPrecision {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (η : Real) : Nat :=
+  Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
+
+/-- The precision returned by `getprec` meets its specification. -/
+theorem getPrecision_adequate {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (η : Real) :
+    PrecisionAdequate D (getPrecision D η) η := by
+  intro i
+  have hγ := (D.component i).inradius_pos
+  have hratio1 : (1 : Real) ≤ getPrecisionRatio D η := le_max_left _ _
+  have hterm : latticeRadiusRequirement D η / (D.component i).inradius ≤
+      getPrecisionRatio D η := by
+    refine (Real.le_coe_toNNReal _).trans (le_trans ?_ (le_max_right _ _))
+    exact NNReal.coe_le_coe.mpr (Finset.le_sup
+      (f := fun i : Fin D.componentCount => Real.toNNReal
+        (latticeRadiusRequirement D η / (D.component i).inradius))
+      (Finset.mem_univ i))
+  have hpow : getPrecisionRatio D η ≤ (10 : Real) ^ getPrecision D η := by
+    have hpos : 0 < getPrecisionRatio D η := by linarith
+    calc getPrecisionRatio D η
+        = (10 : Real) ^ Real.logb 10 (getPrecisionRatio D η) :=
+          (Real.rpow_logb (by norm_num) (by norm_num) hpos).symm
+      _ ≤ (10 : Real) ^ (getPrecision D η : Real) :=
+          Real.rpow_le_rpow_of_exponent_le (by norm_num) (Nat.le_ceil _)
+      _ = (10 : Real) ^ getPrecision D η := Real.rpow_natCast _ _
+  have := (div_le_iff₀ hγ).mp (hterm.trans hpow)
+  linarith
+
+/-- Line 3 of Algorithm `ttc`: `b ← GetPrecision(F_d, M, ε / 96)`. -/
+noncomputable def getPrecisionChoice {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) : PrecisionChoice D p :=
+  ⟨getPrecision D p.precisionEta, getPrecision_adequate D p.precisionEta⟩
+
+/-- Certified deterministic preprocessing carried out by TTC, rather than supplied per input.
+The precision stage is not a parameter: it is `getprec`, see
+`TTCPreprocessor.choosePrecision`. -/
 structure TTCPreprocessor (n k : Nat) where
   booleanAbstraction : (F : LRAFormula n k) → BooleanAbstraction F
   toDNF : {F : LRAFormula n k} → (A : BooleanAbstraction F) → DNFResult A
   normalize : {F : LRAFormula n k} → (A : BooleanAbstraction F) →
     DNFResult A → Bornology.IsBounded (solutionSet F) → Decomposition F
-  choosePrecision : {F : LRAFormula n k} → (D : Decomposition F) →
-    (p : ApproxParams) → PrecisionChoice D p
+
+/-- TTC's precision stage is always Algorithm `getprec` at `ε / 96`. -/
+noncomputable def TTCPreprocessor.choosePrecision {n k : Nat}
+    (_prep : TTCPreprocessor n k) {F : LRAFormula n k} (D : Decomposition F)
+    (p : ApproxParams) : PrecisionChoice D p :=
+  getPrecisionChoice D p
 
 /-- Boolean abstraction, DNF conversion, and geometric normalization in paper order. -/
 def TTCPreprocessor.run {n k : Nat} (prep : TTCPreprocessor n k)

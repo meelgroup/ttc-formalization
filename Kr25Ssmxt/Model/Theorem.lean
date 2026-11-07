@@ -1,6 +1,7 @@
 import Kr25Ssmxt.Analysis.CommunityCV18VolumeProvider
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
+import Kr25Ssmxt.Analysis.GetPrecisionBound
 import Kr25Ssmxt.Analysis.ManuscriptRunMarginal
 import Kr25Ssmxt.Analysis.ManuscriptTheoremOneFinal
 
@@ -46,13 +47,15 @@ theorem ttc_theorem1_volume_accuracy
 
 /-- Corrected Theorem 3: the charged execution has exactly the manuscript TTC
 output law and its expected arithmetic cost has the preprocessing term plus
-the explicit `m n⁵ ρ² r_max (1+b+log⁺ R_max)` scale. -/
+the explicit `m n⁵ ρ² r_max (2 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ) + log⁺ R_max)`
+scale, where `γ` is the radius required by `getprec` at `ε / 96`.  The bound
+depends on the input only: the precision `b` chosen by `getprec` is bounded
+by `1 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ)`. -/
 theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
     let D := prep.run F hbounded
-    let b := (prep.choosePrecision D p).value
     (communityManuscriptTTCWithCost hn F hbounded p prep
       preprocessingOperations 1).map Prod.fst =
         communityManuscriptTTC hn F hbounded p prep ∧
@@ -63,14 +66,13 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
           (TTCRuntime.theorem3RMax D : Real) *
           (TTCRuntime.theorem3Rho D) ^ 2 *
-          TTCRuntime.theorem3PrecisionScale b
-            (TTCRuntime.theorem3OuterRadiusMax D) *
+          TTCRuntime.theorem3InputScale D p *
           ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
           (TTCRuntime.theorem3ParameterFactor hn D p + 1)) := by
   dsimp only
   exact ⟨community_manuscript_costed_output_fst hn F hbounded p prep
     preprocessingOperations 1,
-    ttc_expected_runtime_theorem3_headline_scale hn F hbounded p prep
+    ttc_expected_runtime_theorem3_input_scale hn F hbounded p prep
       preprocessingOperations⟩
 
 #krModelClosureOfType ttc_theorem1_volume_accuracy
