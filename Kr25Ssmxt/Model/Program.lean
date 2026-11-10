@@ -89,26 +89,6 @@ structure TTCOracles (n k : Nat) where
   generateSamples : (P : PolytopeData n) → (count b : Nat) →
     Real → Real → Measure (SampleBatch n count)
 
-/-- Pointwise multiplicative almost-uniformity on one finite lattice set. -/
-def AlmostUniformPointwise {n : Nat} (μ : Measure (LatticePoint n))
-    (S : Set (LatticePoint n)) (η : Real) : Prop :=
-  IsProbabilityMeasure μ ∧ S.Finite ∧ S.Nonempty ∧ μ Sᶜ = 0 ∧
-    ∀ x ∈ S, μ.real {x} ∈ Arlib.relErr η (1 / S.ncard)
-
-/-- The required relative-volume guarantee for every call made in this TTC run. -/
-def ComputeVolumeContract {n k : Nat} (O : TTCOracles n k)
-    (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
-    (p : ApproxParams) : Prop :=
-  let D := O.preprocessing.run F hbounded
-  ∀ i,
-    let law := O.computeVolume (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount)
-    IsProbabilityMeasure law ∧
-      law.real {o | o.1 = false} ≤ p.deltaPrime D.componentCount ∧
-      ∀ᵐ o ∂law, o.1 = true →
-        (o.2 : Real) ∈ Arlib.relErr p.epsilonPrime
-          (volume (D.component i).carrier).toReal
-
 /-- A labelled lattice copy; equal points may occur with different labels. -/
 abbrev SampleCopy (n : Nat) := Nat × LatticePoint n
 
@@ -382,6 +362,6 @@ end Kr25Ssmxt
 namespace Kr25Ssmxt
 
 #krSurplusIn Kr25Ssmxt.Model.Program from manuscriptTTC
-  manuscriptRateThinWithCost manuscriptCountThinWithCost
+  manuscriptRateThinWithCost manuscriptCountThinWithCost manuscriptTTCWithCost
 
 end Kr25Ssmxt

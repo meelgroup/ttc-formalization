@@ -115,12 +115,14 @@ captures this.
   factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
 - Manuscript constant in `lem:nonconv`: `(1 + κ/γ)ⁿ ≤ (1 + η/(32mn))ⁿ` should read
   `η/(26mn)` (or bound the escape by `η/8`); the lemma holds either way.
-- Model surplus: `#krSurplusIn` still reports older `Model/` definitions that no
-  public statement reaches, plus the two Chebyshev-LP theorems kept in
-  `Model/Run.lean` on purpose (they discharge `MaxInscribedBall` there).
-  `samplerRadiusRequirement`, `ApproxParams.latticeEta`,
-  `TTCRuntime.theorem3PrecisionScale` and the proof-side alias
-  `TTCPreprocessor.choosePrecision` live under `Analysis/`.
+- Model surplus: `#krSurplusIn` reports only the two Chebyshev-LP theorems, kept in
+  `Model/Run.lean` on purpose (they discharge `MaxInscribedBall` there), and the paper
+  vocabulary `decimalLattice`, `Decomposition.latticePoints`, `Decomposition.union`.
+  Proof-only definitions live under `Analysis/`: the runtime allowances
+  (`RuntimeBudgets.lean`), the oracle contracts `AlmostUniformPointwise` and
+  `ComputeVolumeContract` (`OracleContracts.lean`), `samplerRadiusRequirement`,
+  `ApproxParams.latticeEta`, `TTCRuntime.theorem3PrecisionScale` and the alias
+  `TTCPreprocessor.choosePrecision`.
 
 **Removed material.** The older `ttc`/`processComponent(s)` program and
 `communityTTC` (Poisson draw before a single thinning loop, output `|X|/p`), its

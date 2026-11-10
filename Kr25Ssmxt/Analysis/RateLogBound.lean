@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
 import Kr25Ssmxt.Model.Run
 
