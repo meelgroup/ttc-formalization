@@ -198,16 +198,16 @@ of independent survival decisions on its distinct copy labels. -/
 theorem TTCState.fixed_round_population_law {n : Nat} (s : TTCState n)
     (pending rounds : Nat) (h : s.LabelsFresh) :
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-      (samplesAfter coins rounds s.samples).card +
+      (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending) =
     (Measure.pi (fun _ : {label : Nat // label ∈
-        (s.samples.image Prod.fst) ∪
+        (s.X.image Prod.fst) ∪
           ((Finset.range pending).image (fun i => s.nextLabel + i))} =>
       ProbabilityTheory.bernoulliMeasure true false
         (survivalProbability rounds))).map
       (fun decisions => (Finset.univ.filter (fun label => decisions label = true)).card) := by
   classical
-  let labels : Finset Nat := (s.samples.image Prod.fst) ∪
+  let labels : Finset Nat := (s.X.image Prod.fst) ∪
     ((Finset.range pending).image (fun i => s.nextLabel + i))
   let decisions : (Nat × Nat → Bool) → (labels → Bool) :=
     fun coins label => labelSurvives rounds (fun r => coins (r, label.1))
@@ -220,7 +220,7 @@ theorem TTCState.fixed_round_population_law {n : Nat} (s : TTCState n)
       (Finset.univ.filter (fun label => bits label = true)).card) := by
     fun_prop
   have hpoint (coins : Nat × Nat → Bool) :
-      (samplesAfter coins rounds s.samples).card +
+      (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending =
       (Finset.univ.filter (fun label : labels => decisions coins label = true)).card := by
     rw [s.thinningPopulation_eq_filter_labels pending rounds coins h]
@@ -237,7 +237,7 @@ theorem TTCState.fixed_round_population_law {n : Nat} (s : TTCState n)
     simpa only [Finset.card_map, Finset.card_attach] using hattach.symm
   calc
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-        (samplesAfter coins rounds s.samples).card +
+        (samplesAfter coins rounds s.X).card +
           pendingAfter coins rounds s.nextLabel pending) =
       fairCoinStreamLaw.map (fun coins =>
         (Finset.univ.filter (fun label : labels => decisions coins label = true)).card) := by

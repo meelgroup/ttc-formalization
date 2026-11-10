@@ -19,17 +19,17 @@ open Classical MeasureTheory
 /-- The window outside of which the fixed-level Chernoff bound applies. -/
 def manuscriptBadWindow (p : ApproxParams) (m count level : Nat) : Set Nat :=
   {j : Nat |
-    (j : Real) < (1 - p.epsilonPrime) * (count : Real) *
-      (Real.toNNReal (p.threshold m * (1 - p.epsilonPrime) ^ 2 *
+    (j : Real) < (1 - p.ε') * (count : Real) *
+      (Real.toNNReal (p.Thresh m * (1 - p.ε') ^ 2 *
         (1 - p.latticeEta) * (1 / (2 : NNReal) ^ level : NNReal)) : Real) ∨
-    (1 + p.epsilonPrime) * (count : Real) *
-      (Real.toNNReal (p.threshold m * (1 + p.epsilonPrime) ^ 2 *
+    (1 + p.ε') * (count : Real) *
+      (Real.toNNReal (p.Thresh m * (1 + p.ε') ^ 2 *
         (1 + p.latticeEta) * (1 / (2 : NNReal) ^ level : NNReal)) : Real) <
       (j : Real)}
 
 theorem ApproxParams.epsilonPrime_lt_one (p : ApproxParams) :
-    p.epsilonPrime < 1 := by
-  dsimp [ApproxParams.epsilonPrime]
+    p.ε' < 1 := by
+  dsimp [ApproxParams.ε']
   linarith [p.epsilon_le_one]
 
 theorem ApproxParams.latticeEta_lt_one (p : ApproxParams) :
@@ -38,8 +38,8 @@ theorem ApproxParams.latticeEta_lt_one (p : ApproxParams) :
   linarith [p.epsilon_le_one]
 
 theorem ApproxParams.epsilonPrime_pos' (p : ApproxParams) :
-    0 < p.epsilonPrime := by
-  dsimp [ApproxParams.epsilonPrime]
+    0 < p.ε' := by
+  dsimp [ApproxParams.ε']
   linarith [p.epsilon_pos]
 
 theorem ApproxParams.latticeEta_pos' (p : ApproxParams) :
@@ -51,9 +51,9 @@ theorem ApproxParams.latticeEta_pos' (p : ApproxParams) :
 gives the manuscript's `ε/2` estimate of the scaled lattice count. -/
 theorem manuscriptEstimate_of_not_badWindow
     {n : Nat} (s : TTCState n) (b count m level : Nat) (p : ApproxParams)
-    (hrate : s.rate = 1 / (2 : NNReal) ^ level)
-    (hwin : s.samples.card ∉ manuscriptBadWindow p m count level) :
-    (manuscriptEstimate b (p.threshold m) s : Real) ∈
+    (hrate : s.p = 1 / (2 : NNReal) ^ level)
+    (hwin : s.X.card ∉ manuscriptBadWindow p m count level) :
+    (Est b (p.Thresh m) s : Real) ∈
       Arlib.relErr (p.epsilon / 2)
         ((count : Real) / (10 : Real) ^ (b * n)) := by
   have hT := p.threshold_pos m
@@ -61,31 +61,31 @@ theorem manuscriptEstimate_of_not_badWindow
   have hl1 := p.latticeEta_lt_one
   have he0 := p.epsilonPrime_pos'
   have hl0 := p.latticeEta_pos'
-  have hrateR : (s.rate : Real) = 1 / (2 : Real) ^ level := by
+  have hrateR : (s.p : Real) = 1 / (2 : Real) ^ level := by
     rw [hrate]
     push_cast
     rfl
-  have hratePos : 0 < (s.rate : Real) := by
+  have hratePos : 0 < (s.p : Real) := by
     rw [hrateR]
     positivity
   have hrate' : (((1 / (2 : NNReal) ^ level : NNReal)) : Real) =
-      (s.rate : Real) := by
+      (s.p : Real) := by
     rw [hrate]
-  have hlowerNN : (Real.toNNReal (p.threshold m * (1 - p.epsilonPrime) ^ 2 *
+  have hlowerNN : (Real.toNNReal (p.Thresh m * (1 - p.ε') ^ 2 *
       (1 - p.latticeEta) * (1 / (2 : NNReal) ^ level : NNReal)) : Real) =
-      p.threshold m * (1 - p.epsilonPrime) ^ 2 * (1 - p.latticeEta) *
-        (s.rate : Real) := by
+      p.Thresh m * (1 - p.ε') ^ 2 * (1 - p.latticeEta) *
+        (s.p : Real) := by
     rw [Real.coe_toNNReal _ (by
       have : 0 ≤ 1 - p.latticeEta := by linarith
       positivity), hrate']
-  have hupperNN : (Real.toNNReal (p.threshold m * (1 + p.epsilonPrime) ^ 2 *
+  have hupperNN : (Real.toNNReal (p.Thresh m * (1 + p.ε') ^ 2 *
       (1 + p.latticeEta) * (1 / (2 : NNReal) ^ level : NNReal)) : Real) =
-      p.threshold m * (1 + p.epsilonPrime) ^ 2 * (1 + p.latticeEta) *
-        (s.rate : Real) := by
+      p.Thresh m * (1 + p.ε') ^ 2 * (1 + p.latticeEta) *
+        (s.p : Real) := by
     rw [Real.coe_toNNReal _ (by positivity), hrate']
   simp only [manuscriptBadWindow, Set.mem_setOf_eq, not_or, not_lt,
     hlowerNN, hupperNN] at hwin
-  apply manuscriptEstimate_of_population_envelope s b count p (p.threshold m)
+  apply manuscriptEstimate_of_population_envelope s b count p (p.Thresh m)
     hT hratePos
   · nlinarith [hwin.1]
   · nlinarith [hwin.2]
@@ -131,7 +131,7 @@ theorem communityManuscriptCertifiedComponents_support
     let S := (D.codedUnion_finite (by omega) p b
       (prep.choosePrecision D p).adequate).toFinset
     ∀ d ∈ communityManuscriptCertifiedComponents hn D p prep,
-      (normalizedHitAndRunPointLaw hn d.polytope b d.route.1 p.epsilonPrime
+      (normalizedHitAndRunPointLaw hn d.polytope b d.route.1 p.ε'
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1 d.route.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0 := by
   intro b S d hd
@@ -156,36 +156,36 @@ theorem communityManuscript_ghost_estimate_bad_le
           true ∧
       ((outcomes (Fin.cast
         (communityManuscriptCertifiedComponents_length hn D p prep).symm i)).2 :
-          Real) ∈ Arlib.relErr p.epsilonPrime
+          Real) ∈ Arlib.relErr p.ε'
             (volume (D.component i).carrier).toReal) :
     let b := (prep.choosePrecision D p).value
-    (manuscriptOriginGivenVolumesLaw hn prep b p.epsilonPrime
-      (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+    (manuscriptOriginGivenVolumesLaw hn prep b p.ε'
+      (p.δ' D.componentCount) (p.Thresh D.componentCount)
       (communityManuscriptCertifiedComponents hn D p prep) outcomes
       (ManuscriptOriginConfiguration.initial n))
-      {c | (manuscriptEstimate b (p.threshold D.componentCount) c.state : Real) ∉
+      {c | (Est b (p.Thresh D.componentCount) c.state : Real) ∉
         Arlib.relErr (p.epsilon / 2)
           (((D.latticePoints b).ncard : Real) / (10 : Real) ^ (b * n))} ≤
       ENNReal.ofReal (p.delta / 6) + ENNReal.ofReal (p.delta / 6) := by
   intro b
   let hprec := (prep.choosePrecision D p).adequate
   let m := D.componentCount
-  let T := p.threshold m
-  let eta := p.epsilonPrime
+  let T := p.Thresh m
+  let eta := p.ε'
   let S := (D.codedUnion_finite (by omega) p b hprec).toFinset
   let comps := communityManuscriptCertifiedComponents hn D p prep
   let N := (D.latticePoints b).ncard
   let level0 := manuscriptDyadicCutoff N - 1
   let hlen := communityManuscriptCertifiedComponents_length hn D p prep
   let o' : Fin m → VolumeOutcome := fun i => outcomes (Fin.cast hlen.symm i)
-  let G := manuscriptOriginGivenVolumesLaw hn prep b eta (p.deltaPrime m) T
+  let G := manuscriptOriginGivenVolumesLaw hn prep b eta (p.δ' m) T
     comps outcomes
   let μ0 := (ManuscriptOriginConfiguration.initial n).refreshLaw
   have hT : 0 < T := p.threshold_pos m
   have _ : IsProbabilityMeasure μ0 :=
     (ManuscriptOriginConfiguration.initial n).refreshLaw_isProbabilityMeasure
   have hG : Measurable G :=
-    measurable_manuscriptOriginGivenVolumesLaw hn prep b eta (p.deltaPrime m)
+    measurable_manuscriptOriginGivenVolumesLaw hn prep b eta (p.δ' m)
       T hT comps outcomes
   have hne : comps ≠ [] := by
     intro h
@@ -195,7 +195,7 @@ theorem communityManuscript_ghost_estimate_bad_le
     omega
   have hν : G (ManuscriptOriginConfiguration.initial n) = μ0.bind G :=
     (manuscriptOriginGivenVolumesLaw_refreshLaw_bind_of_ne_nil hn prep b eta
-      (p.deltaPrime m) T hT comps hne outcomes _).symm
+      (p.δ' m) T hT comps hne outcomes _).symm
   have hstat0 : μ0.bind (fun c => c.refreshLaw) = μ0 :=
     (ManuscriptOriginConfiguration.initial n).refreshLaw_idempotent
   have hM : MeasurableSet {c : ManuscriptOriginConfiguration n | c.MarksIn S} :=
@@ -210,7 +210,7 @@ theorem communityManuscript_ghost_estimate_bad_le
       ManuscriptOriginSourceState.initial] at htag
   have hsupport := communityManuscriptCertifiedComponents_support hn D p prep
   have hmarksν : ∀ᵐ c ∂(μ0.bind G), c.MarksIn S :=
-    manuscriptOriginGivenVolumesLaw_ae_marksIn hn prep b eta (p.deltaPrime m)
+    manuscriptOriginGivenVolumesLaw_ae_marksIn hn prep b eta (p.δ' m)
       T hT S comps hsupport outcomes μ0 hmarks0
   -- fixed-level count laws
   have hcounts : ∀ level : Nat, (μ0.bind G).map
@@ -220,13 +220,13 @@ theorem communityManuscript_ghost_estimate_bad_le
         (1 / (2 : NNReal) ^ level))
         (Measure.pi (fun _ : S => ProbabilityTheory.poissonMeasure 0)) := by
     intro level
-    rw [manuscriptOriginGivenVolumesLaw_fixedLevel hn prep b eta (p.deltaPrime m)
+    rw [manuscriptOriginGivenVolumesLaw_fixedLevel hn prep b eta (p.δ' m)
       T hT S level comps hsupport outcomes μ0 hstat0,
       manuscriptOrigin_initial_refreshLaw_pointCounts level S,
       communityManuscript_givenVolumesSteps_eq_certified hn D p prep S level
         outcomes]
   have hgood' : ∀ i : Fin m, (o' i).1 = true ∧
-      ((o' i).2 : Real) ∈ Arlib.relErr p.epsilonPrime
+      ((o' i).2 : Real) ∈ Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal := hgood
   let pi0 : Measure (S → Nat) :=
     Measure.pi (fun _ : S => ProbabilityTheory.poissonMeasure 0)
@@ -253,7 +253,7 @@ theorem communityManuscript_ghost_estimate_bad_le
     rw [← ofReal_measureReal]
     exact ENNReal.ofReal_le_ofReal h
   have hsteps : ∀ s ∈ manuscriptOriginGivenVolumesSteps hn prep b eta
-      (p.deltaPrime m) T S level0 comps outcomes, s ∈ full := by
+      (p.δ' m) T S level0 comps outcomes, s ∈ full := by
     intro s hs
     rw [communityManuscript_givenVolumesSteps_eq_certified hn D p prep S level0
       outcomes] at hs
@@ -262,7 +262,7 @@ theorem communityManuscript_ghost_estimate_bad_le
       ∀ c : ManuscriptOriginConfiguration n, c.level ≤ level0 →
         c.level + manuscriptRateExit
           (c.state.removeComponent (comps.get i).polytope)
-          (manuscriptIntensity b n T (outcomes i).2) T ≤ level0 := by
+          (ttc.t b n T (outcomes i).2) T ≤ level0 := by
     intro i c hc
     rw [communityManuscriptCertifiedComponents_get_polytope hn D p prep i]
     have hidx : Fin.cast hlen.symm (Fin.cast hlen i) = i := Fin.ext rfl
@@ -271,7 +271,7 @@ theorem communityManuscript_ghost_estimate_bad_le
     have h := manuscript_no_first_halving_past_cutoff (by omega) D p b hprec hm
       (Fin.cast hlen i) (outcomes i).2 hv
       (c.state.removeComponent (D.component (Fin.cast hlen i))) c.level hc
-      c.rate
+      c.p
     change _ ≤ manuscriptDyadicCutoff N - 1 - c.level at h
     change c.level ≤ manuscriptDyadicCutoff N - 1 at hc
     refine le_trans (Nat.add_le_add_left h c.level) ?_
@@ -280,7 +280,7 @@ theorem communityManuscript_ghost_estimate_bad_le
       c.source.pointCounts level0 S) = fixedLevelLaw [] pi0 :=
     manuscriptOrigin_initial_refreshLaw_pointCounts level0 S
   have hcross := manuscriptOriginGivenVolumesLaw_crossing hn prep b eta
-    (p.deltaPrime m) T hT S level0 full Bud hbudget comps hsupport outcomes
+    (p.δ' m) T hT S level0 full Bud hbudget comps hsupport outcomes
     hsteps hnocross μ0 hstat0 hmarks0 [] (by simp) hcounts0
   have hA0 : μ0 {c : ManuscriptOriginConfiguration n | level0 < c.level} = 0 := by
     change ((Measure.infinitePi (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).map
@@ -309,7 +309,7 @@ theorem communityManuscript_ghost_estimate_bad_le
     left
     field_simp
   -- levelwise Chernoff
-  let a := (1 - p.epsilonPrime) * p.epsilonPrime ^ 2 * T / 24
+  let a := (1 - p.ε') * p.ε' ^ 2 * T / 24
   let E : Nat → Set (ManuscriptOriginConfiguration n) := fun level =>
     {c | (∑ x : S, c.source.pointCounts level S x) ∈
       manuscriptBadWindow p m N level}
@@ -353,7 +353,7 @@ theorem communityManuscript_ghost_estimate_bad_le
   -- union bound
   have hsub : ∀ᵐ c ∂(μ0.bind G),
       c ∈ {c : ManuscriptOriginConfiguration n |
-        (manuscriptEstimate b T c.state : Real) ∉
+        (Est b T c.state : Real) ∉
           Arlib.relErr (p.epsilon / 2) ((N : Real) / (10 : Real) ^ (b * n))} →
       c ∈ {c | level0 < c.level} ∪
         ⋃ level ∈ Finset.range (level0 + 1), E level := by
@@ -366,13 +366,13 @@ theorem communityManuscript_ghost_estimate_bad_le
       by_contra hnot
       apply hbad
       have hcard := c.samples_card_eq_sum_pointCounts S hc
-      apply manuscriptEstimate_of_not_badWindow c.state b N m c.level p c.rate
+      apply manuscriptEstimate_of_not_badWindow c.state b N m c.level p c.p
       rw [hcard]
       exact hnot
   show G (ManuscriptOriginConfiguration.initial n) _ ≤ _
   rw [hν]
   calc
-    (μ0.bind G) {c | (manuscriptEstimate b T c.state : Real) ∉
+    (μ0.bind G) {c | (Est b T c.state : Real) ∉
         Arlib.relErr (p.epsilon / 2) ((N : Real) / (10 : Real) ^ (b * n))} ≤
         (μ0.bind G) ({c | level0 < c.level} ∪
           ⋃ level ∈ Finset.range (level0 + 1), E level) :=

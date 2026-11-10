@@ -8,7 +8,7 @@ namespace Kr25Ssmxt
 open MeasureTheory
 
 def TTCState.IsDyadicRate {n : Nat} (s : TTCState n) : Prop :=
-  ∃ level : Nat, s.rate = 1 / (2 : NNReal) ^ level
+  ∃ level : Nat, s.p = 1 / (2 : NNReal) ^ level
 
 theorem TTCState.initial_isDyadicRate (n : Nat) :
     (TTCState.initial n).IsDyadicRate := by
@@ -50,9 +50,9 @@ theorem measurableSet_isDyadicRate {n : Nat} :
     1 / (2 : NNReal) ^ level
   have hgood : MeasurableSet good :=
     (Set.countable_range _).measurableSet
-  have hrate : Measurable (fun s : TTCState n => s.rate) :=
+  have hrate : Measurable (fun s : TTCState n => s.p) :=
     measurable_fst.comp
-      (comap_measurable (fun s : TTCState n => (s.rate, s.samples, s.nextLabel)))
+      (comap_measurable (fun s : TTCState n => (s.p, s.X, s.nextLabel)))
   convert hgood.preimage hrate using 1
   ext s
   simp only [Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_range, good,
@@ -88,8 +88,8 @@ theorem thinUntil_isDyadicRate {n : Nat}
 theorem manuscript_sample_append_isDyadicRate {n k : Nat}
     (O : TTCOracles n k) (P : PolytopeData n)
     (s : TTCState n) (count b : Nat)
-    (epsilonPrime deltaPrime : Real) (h : s.IsDyadicRate) :
-    ∀ᵐ result ∂(O.generateSamples P count b epsilonPrime deltaPrime).map
+    (ε' δ' : Real) (h : s.IsDyadicRate) :
+    ∀ᵐ result ∂(O.GenerateSamples P count b ε' δ').map
       (fun batch => s.addBatch batch.2), result.IsDyadicRate := by
   have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch.2) :=
     measurable_addBatch.comp (measurable_const.prodMk measurable_snd)

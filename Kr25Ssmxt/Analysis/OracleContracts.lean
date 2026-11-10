@@ -24,12 +24,12 @@ def ComputeVolumeContract {n k : Nat} (O : TTCOracles n k)
     (p : ApproxParams) : Prop :=
   let D := O.preprocessing.run F hbounded
   ∀ i,
-    let law := O.computeVolume (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount)
+    let law := O.ComputeVolume (D.component i) p.ε'
+      (p.δ' D.componentCount)
     IsProbabilityMeasure law ∧
-      law.real {o | o.1 = false} ≤ p.deltaPrime D.componentCount ∧
+      law.real {o | o.1 = false} ≤ p.δ' D.componentCount ∧
       ∀ᵐ o ∂law, o.1 = true →
-        (o.2 : Real) ∈ Arlib.relErr p.epsilonPrime
+        (o.2 : Real) ∈ Arlib.relErr p.ε'
           (volume (D.component i).carrier).toReal
 
 end Kr25Ssmxt

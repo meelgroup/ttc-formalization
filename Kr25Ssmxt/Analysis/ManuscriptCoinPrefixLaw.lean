@@ -45,8 +45,8 @@ theorem survives_coinPrefix_iff (rounds upto label : Nat)
 theorem samplesAfter_coinPrefix {n : Nat}
     (s : TTCState n) (rounds upto : Nat) (hupto : upto ≤ rounds)
     (coins : Nat × Nat → Bool) :
-    samplesAfter (coinPrefix rounds coins) upto s.samples =
-      samplesAfter coins upto s.samples := by
+    samplesAfter (coinPrefix rounds coins) upto s.X =
+      samplesAfter coins upto s.X := by
   classical
   ext copy
   simp only [samplesAfter, Finset.mem_filter]

@@ -258,7 +258,7 @@ component and original Poisson-copy index. -/
 def ManuscriptOriginMarked {n : Nat} (s : TTCState n)
     (origin : Nat → Nat × Nat)
     (marks : Nat × Nat → LatticePoint n) : Prop :=
-  ∀ copy ∈ s.samples, copy.2 = marks (origin copy.1)
+  ∀ copy ∈ s.X, copy.2 = marks (origin copy.1)
 
 theorem manuscriptOriginMarked_initial {n : Nat}
     (origin : Nat → Nat × Nat)
@@ -283,7 +283,7 @@ theorem manuscriptOriginMarked_samplesAfter {n : Nat}
     (h : ManuscriptOriginMarked s origin marks)
     (coins : Nat × Nat → Bool) (rounds : Nat) :
     ManuscriptOriginMarked
-      {s with samples := samplesAfter coins rounds s.samples}
+      {s with X := samplesAfter coins rounds s.X}
       origin marks := by
   classical
   intro copy hcopy
@@ -327,7 +327,7 @@ theorem manuscriptOriginMarked_addBatch {n count : Nat}
       marks := by
   classical
   intro copy hcopy
-  change copy ∈ s.samples ∪
+  change copy ∈ s.X ∪
     (Finset.univ.image fun i : Fin count =>
       (s.nextLabel + i.val, marks (component, index i))) at hcopy
   rcases Finset.mem_union.mp hcopy with hold | hnew
@@ -427,7 +427,7 @@ current dyadic level. -/
 def ManuscriptOriginSurvives {n : Nat} (s : TTCState n)
     (origin : Nat → Nat × Nat)
     (sources : Nat → Nat × Nat → Bool) (level : Nat) : Prop :=
-  ∀ copy ∈ s.samples,
+  ∀ copy ∈ s.X,
     survives (sources (origin copy.1).1) level (origin copy.1).2
 
 theorem manuscriptOriginSurvives_initial {n : Nat}
@@ -452,14 +452,14 @@ theorem manuscriptOriginSurvives_thin {n : Nat}
     (sources : Nat → Nat × Nat → Bool) (level rounds : Nat)
     (h : ManuscriptOriginSurvives s origin sources level) :
     ManuscriptOriginSurvives
-      ({ rate := s.rate
-         samples := samplesAfter
-           (manuscriptSourceOldCoins origin sources level) rounds s.samples
+      ({ p := s.p
+         X := samplesAfter
+           (manuscriptSourceOldCoins origin sources level) rounds s.X
          nextLabel := s.nextLabel } : TTCState n)
       origin sources (level + rounds) := by
   classical
   intro copy hcopy
-  have hold : copy ∈ s.samples := (Finset.mem_filter.mp hcopy).1
+  have hold : copy ∈ s.X := (Finset.mem_filter.mp hcopy).1
   have hfuture : survives
       (shiftCoins level (sources (origin copy.1).1)) rounds
       (origin copy.1).2 := by
@@ -472,14 +472,14 @@ theorem manuscriptOriginSurvives_thin {n : Nat}
 theorem manuscriptOriginSurvives_thin_of_samples {n : Nat}
     (s t : TTCState n) (origin : Nat → Nat × Nat)
     (sources : Nat → Nat × Nat → Bool) (level rounds : Nat)
-    (hsamples : t.samples = samplesAfter
-      (manuscriptSourceOldCoins origin sources level) rounds s.samples)
+    (hsamples : t.X = samplesAfter
+      (manuscriptSourceOldCoins origin sources level) rounds s.X)
     (h : ManuscriptOriginSurvives s origin sources level) :
     ManuscriptOriginSurvives t origin sources (level + rounds) := by
   classical
   intro copy hcopy
   rw [hsamples] at hcopy
-  have hold : copy ∈ s.samples := (Finset.mem_filter.mp hcopy).1
+  have hold : copy ∈ s.X := (Finset.mem_filter.mp hcopy).1
   have hfuture : survives
       (shiftCoins level (sources (origin copy.1).1)) rounds
       (origin copy.1).2 := by
@@ -521,9 +521,9 @@ theorem manuscriptOriginSurvives_twoLoops {n : Nat}
   have hshift : shiftCoins rounds oldCoins =
       manuscriptSourceOldCoins origin sources (level + rounds) :=
     shiftCoins_sourceOldCoins origin sources level rounds
-  have hsamples : second.1.samples = samplesAfter
+  have hsamples : second.1.X = samplesAfter
       (manuscriptSourceOldCoins origin sources (level + rounds))
-      activeRounds first.samples := by
+      activeRounds first.X := by
     rw [← hshift]
     rfl
   exact manuscriptOriginSurvives_thin_of_samples first second.1 origin
@@ -569,7 +569,7 @@ theorem manuscriptOriginSurvives_appendSource {n count : Nat}
       level := by
   classical
   intro copy hcopy
-  change copy ∈ s.samples ∪
+  change copy ∈ s.X ∪
     (Finset.univ.image fun i : Fin count =>
       (s.nextLabel + i.val, points i)) at hcopy
   rcases Finset.mem_union.mp hcopy with hstored | hadded
@@ -587,7 +587,7 @@ theorem manuscriptOriginSurvives_appendSource {n count : Nat}
 
 def ManuscriptOriginValid {n : Nat} (s : TTCState n)
     (origin : Nat → Nat × Nat) (valid : Finset (Nat × Nat)) : Prop :=
-  ∀ copy ∈ s.samples, origin copy.1 ∈ valid
+  ∀ copy ∈ s.X, origin copy.1 ∈ valid
 
 theorem manuscriptOriginValid_initial {n : Nat}
     (origin : Nat → Nat × Nat) :
@@ -643,7 +643,7 @@ theorem manuscriptOriginValid_appendSource {n count : Nat}
       (valid ∪ newTags) := by
   classical
   intro copy hcopy
-  change copy ∈ s.samples ∪
+  change copy ∈ s.X ∪
     (Finset.univ.image fun i : Fin count =>
       (s.nextLabel + i.val, points i)) at hcopy
   rcases Finset.mem_union.mp hcopy with hstored | hadded
@@ -661,7 +661,7 @@ def ManuscriptOriginComplete {n : Nat} (s : TTCState n)
     (origin : Nat → Nat × Nat) (valid : Finset (Nat × Nat))
     (sources : Nat → Nat × Nat → Bool) (level : Nat) : Prop :=
   ∀ tag ∈ valid, survives (sources tag.1) level tag.2 →
-    ∃ copy ∈ s.samples, origin copy.1 = tag
+    ∃ copy ∈ s.X, origin copy.1 = tag
 
 theorem manuscriptOriginComplete_initial {n : Nat}
     (origin : Nat → Nat × Nat)
@@ -699,8 +699,8 @@ theorem manuscriptOriginComplete_thin_of_samples {n : Nat}
     (s t : TTCState n) (origin : Nat → Nat × Nat)
     (valid : Finset (Nat × Nat))
     (sources : Nat → Nat × Nat → Bool) (level rounds : Nat)
-    (hsamples : t.samples = samplesAfter
-      (manuscriptSourceOldCoins origin sources level) rounds s.samples)
+    (hsamples : t.X = samplesAfter
+      (manuscriptSourceOldCoins origin sources level) rounds s.X)
     (hcomplete : ManuscriptOriginComplete s origin valid sources level) :
     ManuscriptOriginComplete t origin valid sources (level + rounds) := by
   classical
@@ -775,7 +775,7 @@ theorem manuscriptOriginComplete_appendSource {n count : Nat}
       simpa [manuscriptCoinsAppend, Nat.ne_of_lt hlt] using hsurv
     obtain ⟨copy, hcopy, horigin⟩ := hcomplete tag hold hsurvOld
     refine ⟨copy, ?_, ?_⟩
-    · change copy ∈ s.samples ∪
+    · change copy ∈ s.X ∪
         (Finset.univ.image fun i => (s.nextLabel + i.val, points i))
       exact Finset.mem_union_left _ hcopy
     · rw [manuscriptOriginAppend_old origin component s.nextLabel count index
@@ -790,8 +790,8 @@ theorem manuscriptOriginComplete_appendSource {n count : Nat}
       simpa [manuscriptCoinsAppend] using hsurv
     obtain ⟨i, hi⟩ := hcover k hkBound hsurvNew
     let copy : SampleCopy n := (s.nextLabel + i.val, points i)
-    have hcopy : copy ∈ (s.addBatch points).samples := by
-      change copy ∈ s.samples ∪
+    have hcopy : copy ∈ (s.addBatch points).X := by
+      change copy ∈ s.X ∪
         (Finset.univ.image fun j => (s.nextLabel + j.val, points j))
       exact Finset.mem_union_right _
         (Finset.mem_image.mpr ⟨i, Finset.mem_univ _, rfl⟩)

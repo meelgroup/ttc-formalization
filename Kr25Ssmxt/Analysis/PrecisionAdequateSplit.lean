@@ -23,7 +23,7 @@ theorem Decomposition.facetCount_le_totalFacets {n k : Nat}
 theorem samplerRadiusRequirement_le_precisionEta {n k : Nat}
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
-    samplerRadiusRequirement (D.component i) p.epsilonPrime ≤
+    samplerRadiusRequirement (D.component i) p.ε' ≤
       latticeRadiusRequirement D p.precisionEta := by
   have hε := p.epsilon_pos
   have hm : (1 : Real) ≤ D.componentCount := by
@@ -34,7 +34,7 @@ theorem samplerRadiusRequirement_le_precisionEta {n k : Nat}
     exact_mod_cast D.facetCount_le_totalFacets i
   have hn : (0 : Real) ≤ n := Nat.cast_nonneg n
   unfold samplerRadiusRequirement latticeRadiusRequirement
-    ApproxParams.epsilonPrime ApproxParams.precisionEta
+    ApproxParams.ε' ApproxParams.precisionEta
   simp only [div_div_eq_mul_div]
   apply mul_le_mul
   · apply div_le_div_of_nonneg_right _ hε.le
@@ -77,7 +77,7 @@ theorem PrecisionAdequate.split {n k : Nat} {F : LRAFormula n k}
     {D : Decomposition F} {b : Nat} {p : ApproxParams}
     (h : PrecisionAdequate D b p.precisionEta) (i : Fin D.componentCount) :
     max (latticeRadiusRequirement D p.latticeEta)
-        (samplerRadiusRequirement (D.component i) p.epsilonPrime) ≤
+        (samplerRadiusRequirement (D.component i) p.ε') ≤
       (10 : Real) ^ b * (D.component i).inradius :=
   max_le ((latticeRadiusRequirement_latticeEta_le_precisionEta D p i).trans (h i))
     ((samplerRadiusRequirement_le_precisionEta D p i).trans (h i))

@@ -138,7 +138,7 @@ theorem communityManuscript_adaptive_batch_from_iid_tape
         tape (s.nextLabel +
           (pendingSurvivorIndices coins rounds s.nextLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins rounds s.nextLabel pending) i))) =
-      (communityManuscriptOracles hn prep).generateSamples P
+      (communityManuscriptOracles hn prep).GenerateSamples P
         (thinningResult s pending threshold coins).2 b eta delta := by
   dsimp only
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta

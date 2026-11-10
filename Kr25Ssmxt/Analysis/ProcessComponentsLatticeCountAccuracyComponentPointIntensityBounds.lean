@@ -19,21 +19,21 @@ intensity within the product of the volume, lattice, and point-mass error factor
 PAPER: sections/analysis.tex:215-229
 -/
 lemma process_components_lattice_count_accuracy_component_point_intensity_bounds
-    (volumeEstimate componentVolume pointMass rate scale epsilonPrime latticeEta : Real)
+    (volumeEstimate componentVolume pointMass rate scale ε' latticeEta : Real)
     (cardinality : Nat)
     (hcardinality : 0 < cardinality)
     (hrate : 0 ≤ rate) (hscale : 0 < scale)
-    (hepsilonPrime : 0 ≤ epsilonPrime) (hepsilonPrime_le_one : epsilonPrime ≤ 1)
+    (hepsilonPrime : 0 ≤ ε') (hepsilonPrime_le_one : ε' ≤ 1)
     (hlatticeEta : 0 ≤ latticeEta) (hlatticeEta_le_one : latticeEta ≤ 1)
-    (hvolumeEstimate : volumeEstimate ∈ Arlib.relErr epsilonPrime componentVolume)
+    (hvolumeEstimate : volumeEstimate ∈ Arlib.relErr ε' componentVolume)
     (hcomponentVolume : componentVolume ∈
       Arlib.relErr latticeEta ((cardinality : Real) / scale))
     (hpointMass : pointMass ∈
-      Arlib.relErr epsilonPrime (1 / (cardinality : Real))) :
-    (1 - epsilonPrime) ^ 2 * (1 - latticeEta) * (rate / scale) ≤
+      Arlib.relErr ε' (1 / (cardinality : Real))) :
+    (1 - ε') ^ 2 * (1 - latticeEta) * (rate / scale) ≤
         volumeEstimate * rate * pointMass ∧
       volumeEstimate * rate * pointMass ≤
-        (1 + epsilonPrime) ^ 2 * (1 + latticeEta) * (rate / scale) := by
+        (1 + ε') ^ 2 * (1 + latticeEta) * (rate / scale) := by
   have hC : 0 < (cardinality : Real) := by
     exact_mod_cast hcardinality
   have hC0 : (cardinality : Real) ≠ 0 := ne_of_gt hC
@@ -46,8 +46,8 @@ lemma process_components_lattice_count_accuracy_component_point_intensity_bounds
   have hpointLower := Arlib.relErr.lower hpointMass
   have hpointUpper := Arlib.relErr.upper hpointMass
 
-  have hepsilonMinus : 0 ≤ 1 - epsilonPrime := by linarith
-  have hepsilonPlus : 0 ≤ 1 + epsilonPrime := by linarith
+  have hepsilonMinus : 0 ≤ 1 - ε' := by linarith
+  have hepsilonPlus : 0 ≤ 1 + ε' := by linarith
   have hlatticeMinus : 0 ≤ 1 - latticeEta := by linarith
   have hlatticePlus : 0 ≤ 1 + latticeEta := by linarith
   have hcardinalityScale : 0 ≤ (cardinality : Real) / scale :=
@@ -56,22 +56,22 @@ lemma process_components_lattice_count_accuracy_component_point_intensity_bounds
     div_nonneg zero_le_one (le_of_lt hC)
 
   have hvolumeEstimateLower :
-      (1 - epsilonPrime) *
+      (1 - ε') *
           ((1 - latticeEta) * ((cardinality : Real) / scale)) ≤ volumeEstimate := by
     calc
-      (1 - epsilonPrime) *
+      (1 - ε') *
           ((1 - latticeEta) * ((cardinality : Real) / scale)) ≤
-          (1 - epsilonPrime) * componentVolume :=
+          (1 - ε') * componentVolume :=
         mul_le_mul_of_nonneg_left hcomponentLower hepsilonMinus
       _ ≤ volumeEstimate := hvolumeLower
   have hvolumeEstimateUpper :
       volumeEstimate ≤
-        (1 + epsilonPrime) *
+        (1 + ε') *
           ((1 + latticeEta) * ((cardinality : Real) / scale)) := by
     calc
-      volumeEstimate ≤ (1 + epsilonPrime) * componentVolume := hvolumeUpper
+      volumeEstimate ≤ (1 + ε') * componentVolume := hvolumeUpper
       _ ≤
-          (1 + epsilonPrime) *
+          (1 + ε') *
             ((1 + latticeEta) * ((cardinality : Real) / scale)) :=
         mul_le_mul_of_nonneg_left hcomponentUpper hepsilonPlus
 
@@ -82,55 +82,55 @@ lemma process_components_lattice_count_accuracy_component_point_intensity_bounds
   have hvolumeRateNonneg : 0 ≤ volumeEstimate * rate :=
     mul_nonneg hvolumeEstimateNonneg hrate
   have hpointLowerNonneg :
-      0 ≤ (1 - epsilonPrime) * (1 / (cardinality : Real)) :=
+      0 ≤ (1 - ε') * (1 / (cardinality : Real)) :=
     mul_nonneg hepsilonMinus hcardinalityInv
   have hpointUpperNonneg :
-      0 ≤ (1 + epsilonPrime) * (1 / (cardinality : Real)) :=
+      0 ≤ (1 + ε') * (1 / (cardinality : Real)) :=
     mul_nonneg hepsilonPlus hcardinalityInv
 
   have hlowerProduct :
-      ((1 - epsilonPrime) *
+      ((1 - ε') *
             ((1 - latticeEta) * ((cardinality : Real) / scale))) * rate *
-          ((1 - epsilonPrime) * (1 / (cardinality : Real))) ≤
+          ((1 - ε') * (1 / (cardinality : Real))) ≤
         volumeEstimate * rate * pointMass := by
     calc
-      ((1 - epsilonPrime) *
+      ((1 - ε') *
             ((1 - latticeEta) * ((cardinality : Real) / scale))) * rate *
-          ((1 - epsilonPrime) * (1 / (cardinality : Real))) ≤
+          ((1 - ε') * (1 / (cardinality : Real))) ≤
           volumeEstimate * rate *
-            ((1 - epsilonPrime) * (1 / (cardinality : Real))) := by
+            ((1 - ε') * (1 / (cardinality : Real))) := by
         apply mul_le_mul_of_nonneg_right _ hpointLowerNonneg
         exact mul_le_mul_of_nonneg_right hvolumeEstimateLower hrate
       _ ≤ volumeEstimate * rate * pointMass :=
         mul_le_mul_of_nonneg_left hpointLower hvolumeRateNonneg
   have hupperProduct :
       volumeEstimate * rate * pointMass ≤
-        ((1 + epsilonPrime) *
+        ((1 + ε') *
             ((1 + latticeEta) * ((cardinality : Real) / scale))) * rate *
-          ((1 + epsilonPrime) * (1 / (cardinality : Real))) := by
+          ((1 + ε') * (1 / (cardinality : Real))) := by
     calc
       volumeEstimate * rate * pointMass ≤
           volumeEstimate * rate *
-            ((1 + epsilonPrime) * (1 / (cardinality : Real))) :=
+            ((1 + ε') * (1 / (cardinality : Real))) :=
         mul_le_mul_of_nonneg_left hpointUpper hvolumeRateNonneg
       _ ≤
-          ((1 + epsilonPrime) *
+          ((1 + ε') *
               ((1 + latticeEta) * ((cardinality : Real) / scale))) * rate *
-            ((1 + epsilonPrime) * (1 / (cardinality : Real))) := by
+            ((1 + ε') * (1 / (cardinality : Real))) := by
         apply mul_le_mul_of_nonneg_right _ hpointUpperNonneg
         exact mul_le_mul_of_nonneg_right hvolumeEstimateUpper hrate
 
   have hlowerIdentity :
-      ((1 - epsilonPrime) *
+      ((1 - ε') *
             ((1 - latticeEta) * ((cardinality : Real) / scale))) * rate *
-          ((1 - epsilonPrime) * (1 / (cardinality : Real))) =
-        (1 - epsilonPrime) ^ 2 * (1 - latticeEta) * (rate / scale) := by
+          ((1 - ε') * (1 / (cardinality : Real))) =
+        (1 - ε') ^ 2 * (1 - latticeEta) * (rate / scale) := by
     field_simp [hC0, hscale0]
   have hupperIdentity :
-      ((1 + epsilonPrime) *
+      ((1 + ε') *
             ((1 + latticeEta) * ((cardinality : Real) / scale))) * rate *
-          ((1 + epsilonPrime) * (1 / (cardinality : Real))) =
-        (1 + epsilonPrime) ^ 2 * (1 + latticeEta) * (rate / scale) := by
+          ((1 + ε') * (1 / (cardinality : Real))) =
+        (1 + ε') ^ 2 * (1 + latticeEta) * (rate / scale) := by
     field_simp [hC0, hscale0]
 
   constructor

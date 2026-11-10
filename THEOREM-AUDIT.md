@@ -12,7 +12,7 @@ contains nothing the public statements do not use.
 with no errors and no `sorry`. Both public theorems depend only on `propext`,
 `Classical.choice` and `Quot.sound`.
 
-**Public theorems** (`Model/Theorem.lean`), both about `communityManuscriptTTC`,
+**Public theorems** (`Model/Theorem.lean`), both about `ttc`,
 the manuscript's Algorithm 1 with the concrete oracles:
 
 | Paper | Lean | Status |
@@ -51,7 +51,7 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
    volume estimate (`ManuscriptTheoremOneFinal.lean`).
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
-`communityManuscriptTTC`, and its *expected* operation count is at most
+`ttc`, and its *expected* operation count is at most
 `T_preprocessing + m · 30 n⁵ r_max ρ² · S · (cap+1)(parameterFactor+1)` with the
 input-only scale `S = 2 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ) + log⁺R_max`
 (`TTCRuntime.theorem3InputScale`), where `γ = 64mn/(ε/96)·√log(384r/ε)` is the
@@ -65,6 +65,15 @@ two-cube family forces `Ω(b)` first-loop halvings with every quantity in the
 printed bound fixed). In particular the bound grows like `log(1/minᵢ γᵢ)`: a
 very small component forces a fine lattice, and neither `ρ` nor `maxᵢ Rᵢ`
 captures this.
+
+**Names and layout.** `Model/Program.lean` and `Model/Run.lean` follow Algorithm `ttc`
+line by line, with section headers quoting the paper's line labels, and use the paper's
+names: `ttc` (the algorithm of the theorems), `ttcWith` (the same algorithm with its
+subroutines as slots), `GetPrecision`, `MaxInscribedBall`, `ComputeVolume`,
+`GenerateSamples`, `Thresh`, `ε'`, `δ'`, `t` (`ttc.t`), `Poisson`, `Est`, and the state
+fields `p` and `X`. Steps without a paper name (the coin-flip realisation of "remove every
+element with probability 1/2", the charged run, the sampler's charts) keep descriptive
+names.
 
 **Fidelity to the manuscript** (`sections/algo.tex`, `sections/analysis.tex`).
 - Matches Algorithm 1: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`,
@@ -80,11 +89,11 @@ captures this.
   a dimension restriction).
 - `getprec` is concrete and lives in `Model/Run.lean`, as the `choosePrecision`
   slot of the oracle bundle (`TTCOracles`, filled by `communityManuscriptOracles`):
-  `getPrecision` returns `⌈log₁₀ maxratio⌉` with `maxratio = max(1, maxᵢ γ/γ̂ᵢ)` at
+  `GetPrecision` returns `⌈log₁₀ maxratio⌉` with `maxratio = max(1, maxᵢ γ/γ̂ᵢ)` at
   `η = ε/96`. `γ̂ᵢ = MaxInscribedBall(Pᵢ)` is computed by the Chebyshev-centre LP
-  `maximize t s.t. aⱼ·c + t‖aⱼ‖₂ ≤ bⱼ` (`HalfspacePresentation.chebyshevRadius`, its
+  `maximize t s.t. aⱼ·c + t‖aⱼ‖₂ ≤ bⱼ` (`HalfspacePresentation.MaxInscribedBall`, its
   optimum value). `euclideanBall_subset_iff_chebyshevFeasible` shows the LP's feasible
-  pairs are exactly the inscribed `ℓ₂` balls, and `chebyshevRadius_eq_inradius` that its
+  pairs are exactly the inscribed `ℓ₂` balls, and `MaxInscribedBall_eq_inradius` that its
   optimum is the component's `inradius`.
 - `PolytopeData.inradius` is the paper's maximal inscribed **`ℓ₂`** radius: `inball`
   is an `ℓ₂` ball (`euclideanBall`) and `inradius_max` says no larger `ℓ₂` ball fits.
@@ -161,7 +170,7 @@ a finite `NNReal` estimate.
 current program, and `ManuscriptLatticeAccuracy.lean` proves the deterministic
 step from a lattice-count guarantee to volume accuracy for any probability
 output law. `ManuscriptProbabilityMeasure.lean` now proves that the full
-`communityManuscriptTTC` output law has total mass one without `Prior` or a
+`ttc` output law has total mass one without `Prior` or a
 streaming hypothesis. `ManuscriptPoissonMarking.lean` records the imported exact
 Poisson marking and half-thinning identities, and
 `ManuscriptPointIntensity.lean` proves the per-point scaled intensity bounds.
@@ -252,7 +261,7 @@ normalized Hit-and-Run diameter is at most `4ρ`, its warmness is at most
 with `2^68 n²ρ²` outside the logarithm. The scaled inflated body lies in a
 ball of radius `5·10^b R_i+1`, whose logarithm is at most
 `b log 10 + log 6 + log⁺ R_max`. The TV-tolerance logarithm is bounded by
-`n` times this term plus logarithms of `1+8/epsilonPrime` and the dimension's
+`n` times this term plus logarithms of `1+8/ε'` and the dimension's
 unit-ball volume. The public `ttc_expected_runtime_geometric` theorem now
 uses the resulting concrete sampler-step envelope. These are proved Lean
 inequalities. `CV18RoundnessBound.lean` also specializes the imported query cap
@@ -273,7 +282,7 @@ counter. The only axioms in this result are Lean's standard `propext`,
 also proves the dimension's unit-ball volume is at most `2^n`, hence its
 logarithmic contribution is at most `2n`, and derives an explicit selected
 sampler-step bound with `2^68 n^4 ρ² (1+b+log⁺R_max)` outside a factor
-depending logarithmically on `ρ` and `1/epsilonPrime`.
+depending logarithmically on `ρ` and `1/ε'`.
 
 `ThresholdCapBound.lean` proves the sample cap is at most the ceiling of
 `27 log(24/δ)/epsilonPrime² + 15(log(6/δ)+log m)` for nonempty decompositions.
@@ -297,7 +306,7 @@ and composes the marginal identity through count thinning, a jointly measurable
 varying-state Poisson kernel, rate thinning, deletion, the outer CV18
 volume bind, and the component sequence. `ManuscriptRunMarginal.lean` proves
 that forgetting all operation counts, including after the final estimate,
-gives exactly `communityManuscriptTTC`.
+gives exactly `ttc`.
 
 `ttc_theorem3_corrected_expected_runtime` combines this output identity and
 the explicit expected-cost bound in one public statement. Still required for
@@ -363,13 +372,13 @@ rounds and at most four rounds in expectation under the formalized guard. The ap
 derives at most `3/2` rejection attempts in expectation. Thus these omissions
 need Lean proofs but do not invalidate the corrected expected arithmetic bound
 under the agreed unit charges and CV18 non-query hypothesis.
-The `communityManuscriptTTC` law records only an estimate, not an execution cost. The
+The `ttc` law records only an estimate, not an execution cost. The
 certificate fixes the imported CV18 query budget and the normalized Hit-and-Run walk deadline,
 but the finite-supremum overheads have no proved polynomial/polylogarithmic
 envelope.
 
 The costed run now has a proved output marginal equal to
-`communityManuscriptTTC` and an explicit finite expected-cost bound.
+`ttc` and an explicit finite expected-cost bound.
 Theorem 1's high-probability
 control of a small rate does not alone bound the expected number of rounds on
 the exceptional event.
@@ -384,7 +393,7 @@ proved expected-cost bound.
 cutoff with preprocessing, the concrete geometric certificate, and an explicit
 extra-work budget. Its hypotheses still expose the marginal equality and
 final envelope, but the former is now proved separately.
-Its marginal-equality hypothesis now names `communityManuscriptTTC` rather
+Its marginal-equality hypothesis now names `ttc` rather
 than the older `communityTTC` law. `ManuscriptThinningCosts.lean` constructs
 costed laws for both manuscript thinning loops and proves that forgetting
 their charges recovers exactly the corresponding uncharged loop laws. It also
@@ -402,21 +411,21 @@ performs a rate-controlled thinning loop **before** that draw; binomially thins
 the pending count in the second loop; and divides the output by
 `p * Threshold * 10^(b*n)`.
 
-`Model/Program.lean` now defines `manuscriptTTC` with those two loops, the
+`Model/Program.lean` now defines `ttcWith` with those two loops, the
 scaled Poisson intensity, and the output normalization. `Model/Run.lean`
-defines `communityManuscriptTTC` and applies the paper's radius-based clipping
+defines `ttc` and applies the paper's radius-based clipping
 to concrete CV18 outcomes. Multiplicity is retained through labelled copies.
 The old `ttc` and `communityTTC` definitions remain because the current
 probability proof chain unfolds them. In particular, the public
 `ttc_volume_accuracy` theorem **still concerns the old program**, and no
-accuracy theorem has yet been proved for `communityManuscriptTTC`.
+accuracy theorem has yet been proved for `ttc`.
 
 The older `ttc` core in `Model/Program.lean` is **not** the manuscript's TTC probability
 program. In the manuscript, line 24 sets
 `t = Threshold * 10^(b*n) * VolED(P)`, line 32 performs a deterministic
 rate-based halving loop before drawing `N ~ Poisson(t*p)`, and line 46 returns
 `|X| / (p * Threshold * 10^(b*n))`. The current `processComponent` draws
-`Poisson(volumeOutcome * state.rate)` before a single count-based thinning
+`Poisson(volumeOutcome * state.p)` before a single count-based thinning
 loop, while `TTCState.initial` sets `rate = 1` and `TTCState.estimate` returns
 `|X| / rate`. These laws differ: with positive probability the realized
 Poisson count is below `Threshold` even when the manuscript's first loop
@@ -427,7 +436,7 @@ manuscript's `getprec` implementation.
 
 `Model/Run.lean` does import and connect CV18 and finite-step Hit-and-Run/KV97,
 but `communityTTC` is merely `ttc` with those oracles. The new
-`communityManuscriptTTC` uses the corrected core and clipped volume law. The
+`ttc` uses the corrected core and clipped volume law. The
 current accuracy theorem, its `Prior`
 hypothesis, and the probability/measurability chain are all about the current
 `processComponent` law. A faithful replacement requires new proofs of that
@@ -448,7 +457,7 @@ trace: it draws a geometric number of failed proposals and charges each attempt
 for its finite walk, coordinate rounding and membership test. Forgetting this
 charge provably recovers the conditional accepted-point law. The corresponding
 independent batch sums these charges and has the manuscript batch law as its
-first marginal. The main `communityManuscriptTTC` consumes the uncharged
+first marginal. The main `ttc` consumes the uncharged
 marginal; the costed whole-run law is now proved to forget to that same law,
 and its expected-cost bound is proved. The revised appendix
 specifies tolerance `ε/(16W)` with `W=(2R)^n` and an actual rejection loop with
@@ -494,7 +503,7 @@ penultimate dyadic cutoff, the upper envelope and the union's lattice count
 give a total mean below two thirds of the threshold, yielding the explicit
 `exp(-Threshold/15)` upper-tail bound. These results concern an analysis
 process with prescribed component rates. Its coupling to the adaptive
-`communityManuscriptTTC` execution, including the stopping level and
+`ttc` execution, including the stopping level and
 conditioning on successful oracle outcomes, remains open. Thus the public
 Theorem 1 declaration still concerns the older core and requires `Prior`.
 The live program is also proved to retain a dyadic rate almost surely at
@@ -508,7 +517,7 @@ The manuscript threshold inequalities now give the explicit cutoff budget
 `δ/6`. The count envelope is proved to imply an `ε/2` relative estimate of
 the scaled lattice count at a positive rate. The empty-decomposition case and
 the deterministic conversion from an `ε/2` scaled-lattice estimate to an `ε`
-volume estimate are proved for `communityManuscriptTTC`. The latter is an
+volume estimate are proved for `ttc`. The latter is an
 internal conditional assembly lemma; its stochastic lattice-estimate premise
 has not yet been discharged for the adaptive run.
 
@@ -686,7 +695,7 @@ preserving. This removes the need to track CV18 draws inside the coin-source
 coupling: the concentration proof may condition on the complete independent
 volume outcome vector, with its good-outcome event already bounded separately.
 The same conditioning equality is now proved for the public
-`communityManuscriptTTC` output measure in the nonempty branch.
+`ttc` output measure in the nonempty branch.
 For the coin coupling, a ghost source-tail refresh replaces every unobserved
 future coin while preserving the current executable state, absolute level,
 origin history, marks, survival, and reverse-completeness invariants. The
@@ -984,7 +993,7 @@ step budget grows at least on the order of `10^(2b)` for large `b`. The abstract
 arbitrarily large ones. This is a bound on the walk length selected by the
 older Lean implementation, not an inherent cost of sampling from the scaled
 polytope or a refutation of the manuscript's intended arithmetic bound.
-`communityManuscriptTTC` now uses the normalized walk and the runtime
+`ttc` now uses the normalized walk and the runtime
 certificate charges its normalized deadline.
 Both radii scale by `10^b`, so their ratio is unchanged. A similarity-normalized
 walk can use that ratio in the mixing deadline; its tighter TV tolerance affects
@@ -992,7 +1001,7 @@ only a logarithm. The deterministic first halving loop also takes only
 `O(n(1+b+log⁺ R_max))` rounds under the clipping bound.
 
 A proof of the proposed shape for the concrete Lean run uses the normalized
-sampler now in `communityManuscriptTTC`: Hit-and-Run runs on a
+sampler now in `ttc`: Hit-and-Run runs on a
 similarity-normalized body with unit inradius and maps samples back before
 KV97 rounding. The walk deadline can depend on the radius ratio instead of the
 absolute decimal-scaled diameter. The imported CV18 result bounds membership

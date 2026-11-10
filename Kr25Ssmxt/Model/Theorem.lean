@@ -12,14 +12,15 @@ open MeasureTheory
 /-!
 # The public TTC theorems
 
-Both statements concern `communityManuscriptTTC`, the TTC algorithm printed in the
+Both statements concern `ttc`, the TTC algorithm printed in the
 current manuscript (Algorithm 1), run with the concrete arlib-community CV18 volume
 oracle (clipped as in the paper) and the normalized Hit-and-Run/KV97 sampler.
 
 * Theorem 1: the output is an `ε`-relative estimate of the volume of the projected
   solution set with probability at least `1 - δ`. No prior-work hypothesis is assumed.
 * Theorem 3 (corrected): the charged execution has exactly the same output law, and its
-  expected operation count has the explicit `m n⁵ ρ² r_max (1+b+log⁺ R_max)` scale.
+  expected operation count has the explicit input-only scale
+  `m n⁵ ρ² r_max (2 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ) + log⁺ R_max)`.
   A Lean polylogarithmic estimate for the imported CV18 scheduled factors remains open.
 -/
 
@@ -38,7 +39,7 @@ theorem ttc_theorem1_volume_accuracy
     (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams)
     (prep : TTCPreprocessor n k) :
-    (communityManuscriptTTC hn F hbounded params prep).real
+    (ttc hn F hbounded params prep).real
         {estimate | (estimate : Real) ∈
           Arlib.relErr params.epsilon
             (MeasureTheory.volume (solutionSet F)).toReal} ≥
@@ -58,7 +59,7 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     (communityManuscriptTTCWithCost hn F hbounded p prep
       preprocessingOperations 1).map Prod.fst =
-        communityManuscriptTTC hn F hbounded p prep ∧
+        ttc hn F hbounded p prep ∧
     (∫⁻ result, (result.2 : ENNReal) ∂
       communityManuscriptTTCWithCost hn F hbounded p prep
         preprocessingOperations 1) ≤
@@ -79,14 +80,14 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
 #krModelClosureOfType ttc_theorem3_corrected_expected_runtime
 #krSurplusIn Kr25Ssmxt.Model from ttc_theorem1_volume_accuracy
   ttc_theorem3_corrected_expected_runtime
-  communityManuscriptTTC
+  ttc
   TTCRuntime.deletionPassOperations TTCRuntime.rateThinningRoundOperations
   TTCRuntime.countThinningRoundOperations TTCRuntime.samplingAttemptOperations
   TTCRuntime.poissonDrawOperations TTCRuntime.appendCopyOperations
   manuscriptRateThinWithCost manuscriptCountThinWithCost
 
 /-!
-Both public statements are recursively sealed above.  `communityManuscriptTTC` and every
+Both public statements are recursively sealed above.  `ttc` and every
 executable adapter it unfolds are defined under `Model/`; `Analysis/` is used only to prove the two
 statements.
 -/

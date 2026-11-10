@@ -82,9 +82,9 @@ theorem clog_two_ceil_decimal_mul_le (k : Nat) (u : Real) :
 
 theorem manuscript_intensity_div_threshold (b n : Nat)
     {threshold : Real} (hthreshold : 0 < threshold) (volume : NNReal) :
-    ((manuscriptIntensity b n threshold volume : NNReal) : Real) / threshold =
+    ((ttc.t b n threshold volume : NNReal) : Real) / threshold =
       (10 : Real) ^ (b * n) * (volume : Real) := by
-  unfold manuscriptIntensity
+  unfold ttc.t
   push_cast
   rw [Real.coe_toNNReal _ hthreshold.le]
   field_simp
@@ -92,7 +92,7 @@ theorem manuscript_intensity_div_threshold (b n : Nat)
 theorem manuscript_rate_clog_le_linear_precision (b n : Nat)
     {threshold : Real} (hthreshold : 0 < threshold) (volume : NNReal) :
     Nat.clog 2
-        (Nat.ceil (((manuscriptIntensity b n threshold volume : NNReal) : Real) /
+        (Nat.ceil (((ttc.t b n threshold volume : NNReal) : Real) /
           threshold) + 1) ≤
       4 * (b * n) + Nat.clog 2 (Nat.ceil (volume : Real) + 1) := by
   rw [manuscript_intensity_div_threshold b n hthreshold volume]
@@ -100,11 +100,11 @@ theorem manuscript_rate_clog_le_linear_precision (b n : Nat)
 
 theorem clipped_component_rate_clog_le_linear_precision {n : Nat}
     (P : PolytopeData n) (p : ApproxParams) (m b : Nat) :
-    let v := max (P.manuscriptVolumeLower p.epsilonPrime)
-      (P.manuscriptVolumeUpper p.epsilonPrime)
+    let v := max (P.manuscriptVolumeLower p.ε')
+      (P.manuscriptVolumeUpper p.ε')
     Nat.clog 2
-        (Nat.ceil (((manuscriptIntensity b n (p.threshold m) v : NNReal) : Real) /
-          p.threshold m) + 1) ≤
+        (Nat.ceil (((ttc.t b n (p.Thresh m) v : NNReal) : Real) /
+          p.Thresh m) + 1) ≤
       4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) := by
   exact manuscript_rate_clog_le_linear_precision b n
     (p.threshold_pos m) _

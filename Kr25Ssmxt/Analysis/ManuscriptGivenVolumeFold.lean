@@ -63,7 +63,7 @@ theorem measurable_communityManuscriptComponentGivenVolume
   unfold communityManuscriptComponentGivenVolume
   exact (community_manuscript_deletion_tail_fst hn prep 1 P b eta delta
     threshold hthreshold z.1
-    (manuscriptIntensity b n threshold z.2.2)).symm
+    (ttc.t b n threshold z.2.2)).symm
 
 theorem communityManuscriptComponentGivenVolume_isProbabilityMeasure
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -75,7 +75,7 @@ theorem communityManuscriptComponentGivenVolume_isProbabilityMeasure
         threshold outcome state) := by
   have hmass := community_manuscript_deletion_tail_mass_one
     hn prep 1 P b eta delta threshold hthreshold state
-    (manuscriptIntensity b n threshold outcome.2)
+    (ttc.t b n threshold outcome.2)
   have hmap : IsProbabilityMeasure
       ((communityCostedComponentTail hn prep 1 P b eta delta threshold
         state outcome).map Prod.fst) := by
@@ -87,7 +87,7 @@ theorem communityManuscriptComponentGivenVolume_isProbabilityMeasure
   unfold communityManuscriptComponentGivenVolume
   rw [← community_manuscript_deletion_tail_fst hn prep 1 P b eta delta
     threshold hthreshold state
-    (manuscriptIntensity b n threshold outcome.2)]
+    (ttc.t b n threshold outcome.2)]
   exact hmap
 
 noncomputable def communityManuscriptComponentsGivenVolumes
@@ -185,24 +185,24 @@ theorem measurable_communityManuscriptProcessComponents
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).computeVolume P eta delta)) :
+      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)) :
     Measurable (manuscriptProcessComponents
       (communityManuscriptOracles hn prep) b eta delta threshold components) := by
   induction components with
   | nil => exact Measure.measurable_dirac
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).computeVolume P eta delta) :=
+          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) :=
         hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).computeVolume Q eta delta) := by
+          ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
       let first : TTCState n → Measure (TTCState n) := fun state =>
         manuscriptProcessComponent (communityManuscriptOracles hn prep)
           b eta delta threshold P state
       have hfirst : Measurable first := by
-        let volumeLaw := (communityManuscriptOracles hn prep).computeVolume
+        let volumeLaw := (communityManuscriptOracles hn prep).ComputeVolume
           P eta delta
         have hbase := measurable_parametric_probability_bind
           (fun _ : TTCState n => volumeLaw) measurable_const
@@ -228,7 +228,7 @@ theorem communityManuscriptProcessComponents_eq_volumeVector_bind
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).computeVolume P eta delta))
+      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta))
     (state : TTCState n) :
     manuscriptProcessComponents (communityManuscriptOracles hn prep)
       b eta delta threshold components state =
@@ -242,13 +242,13 @@ theorem communityManuscriptProcessComponents_eq_volumeVector_bind
         communityManuscriptComponentsGivenVolumes]
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).computeVolume P eta delta) :=
+          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) :=
         hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).computeVolume Q eta delta) := by
+          ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
-      let μ := (communityManuscriptOracles hn prep).computeVolume P eta delta
+      let μ := (communityManuscriptOracles hn prep).ComputeVolume P eta delta
       let ν := communityManuscriptVolumeVectorLaw hn prep eta delta rest
       let G : VolumeOutcome → Measure (TTCState n) := fun outcome =>
         communityManuscriptComponentGivenVolume hn prep P b eta delta

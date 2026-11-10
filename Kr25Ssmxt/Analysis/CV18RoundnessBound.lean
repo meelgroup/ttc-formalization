@@ -300,11 +300,11 @@ theorem Decomposition.communityCV18_queryBudget_le_envelope
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
-    CommunityCV18.queryBudgetFor (by omega) (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount) ≤
+    CommunityCV18.queryBudgetFor (by omega) (D.component i) p.ε'
+      (p.δ' D.componentCount) ≤
       TTCRuntime.theorem3CV18QueryEnvelope hn D p i := by
   have h := D.communityCV18_queryBudget_le_rho_polylog hn i
-    p.epsilonPrime (p.deltaPrime D.componentCount)
+    p.ε' (p.δ' D.componentCount)
     (CommunityCV18.admissibleTTCRequest D p i)
   have hc := Nat.ceil_mono h
   rw [Nat.ceil_natCast] at hc
@@ -316,18 +316,18 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
     (i : Fin D.componentCount) :
     TTCRuntime.theorem3CV18QueryEnvelope hn D p i ≤
       TTCRuntime.theorem3CV18QueryMax hn D p := by
-  let q := CommunityCV18.params (by omega) (D.component i) p.epsilonPrime
-    (p.deltaPrime D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
+  let q := CommunityCV18.params (by omega) (D.component i) p.ε'
+    (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
   have hlog0 : 0 ≤ TTCRuntime.theorem3CV18LogEnvelope q :=
     TTCRuntime.theorem3CV18LogEnvelope_nonneg q
   have hsup : Real.toNNReal (TTCRuntime.theorem3CV18LogEnvelope q) ≤
       (Finset.univ.sup fun j : Fin D.componentCount =>
-        let qj := CommunityCV18.params (by omega) (D.component j) p.epsilonPrime
-          (p.deltaPrime D.componentCount) (CommunityCV18.admissibleTTCRequest D p j)
+        let qj := CommunityCV18.params (by omega) (D.component j) p.ε'
+          (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p j)
         Real.toNNReal (TTCRuntime.theorem3CV18LogEnvelope qj) : NNReal) :=
     Finset.le_sup (f := fun j : Fin D.componentCount =>
-      let qj := CommunityCV18.params (by omega) (D.component j) p.epsilonPrime
-        (p.deltaPrime D.componentCount) (CommunityCV18.admissibleTTCRequest D p j)
+      let qj := CommunityCV18.params (by omega) (D.component j) p.ε'
+        (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p j)
       Real.toNNReal (TTCRuntime.theorem3CV18LogEnvelope qj)) (Finset.mem_univ i)
   have hlog : TTCRuntime.theorem3CV18LogEnvelope q ≤
       TTCRuntime.theorem3CV18LogMax hn D p := by
@@ -344,7 +344,7 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
       ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
       + 1) *
       (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 /
-      (p.epsilonPrime / 2) ^ 2 := by
+      (p.ε' / 2) ^ 2 := by
     positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
   exact mul_le_mul_of_nonneg_left hlog hcoeff
 

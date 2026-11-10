@@ -151,7 +151,7 @@ theorem communityManuscriptFutureSourceKernel_eq_allocated_extension
     (hfresh : state.LabelsFresh) :
     communityManuscriptFutureSourceKernel hn P b eta threshold hroute
       outcome state level =
-    let intensity := manuscriptIntensity b n threshold outcome.2
+    let intensity := ttc.t b n threshold outcome.2
     let deleted := state.removeComponent P
     let rounds := manuscriptRateExit deleted intensity threshold
     (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
@@ -280,7 +280,7 @@ noncomputable def communityManuscriptFiniteCoinSourceKernel
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n) (level : Nat) :
     Measure (TTCState n) :=
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let rounds := manuscriptRateExit deleted intensity threshold
   (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
@@ -318,10 +318,10 @@ theorem communityManuscriptFutureSourceKernel_eq_finiteCoinSourceKernel
   intro preCoins
   exact communityManuscript_originTape_finiteCoinBlocks
     hn prep P b eta delta threshold hroute (state.removeComponent P)
-    (manuscriptIntensity b n threshold outcome.2)
+    (ttc.t b n threshold outcome.2)
     (state.labelsFresh_removeComponent P hfresh) preCoins
     (level + manuscriptRateExit (state.removeComponent P)
-      (manuscriptIntensity b n threshold outcome.2) threshold) basePending
+      (ttc.t b n threshold outcome.2) threshold) basePending
 
 theorem communityManuscriptComponentGivenVolume_eq_finiteCoinSourceKernel
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -331,7 +331,7 @@ theorem communityManuscriptComponentGivenVolume_eq_finiteCoinSourceKernel
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n)
-    (level : Nat) (hrate : state.rate = 1 / (2 : NNReal) ^ level)
+    (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level)
     (hfresh : state.LabelsFresh) :
     communityManuscriptComponentGivenVolume hn prep P b eta delta threshold
       outcome state =

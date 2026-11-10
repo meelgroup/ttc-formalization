@@ -177,7 +177,7 @@ theorem manuscriptOriginGivenVolumesLaw_crossing
       ∀ c : ManuscriptOriginConfiguration n, c.level ≤ level0 →
         c.level + manuscriptRateExit
           (c.state.removeComponent (components.get i).polytope)
-          (manuscriptIntensity b n threshold (outcomes i).2) threshold ≤ level0)
+          (ttc.t b n threshold (outcomes i).2) threshold ≤ level0)
     (μ : Measure (ManuscriptOriginConfiguration n))
     (hstationary : μ.bind (fun c => c.refreshLaw) = μ)
     (hmarks : ∀ᵐ c ∂μ, c.MarksIn S)
@@ -195,7 +195,7 @@ theorem manuscriptOriginGivenVolumesLaw_crossing
       rw [Measure.bind_dirac]
       simp
   | cons d rest ih =>
-      let intensity := manuscriptIntensity b n threshold (outcomes 0).2
+      let intensity := ttc.t b n threshold (outcomes 0).2
       let R := manuscriptOriginRefreshedComponentLaw hn d.polytope b eta
         threshold d.route intensity
       let G := manuscriptOriginGivenVolumesLaw hn prep b eta delta threshold

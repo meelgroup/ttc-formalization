@@ -116,15 +116,15 @@ theorem expected_pendingAfter (firstLabel count rounds : Nat) :
 /-- Expected combined retained and pending population at a fixed round. -/
 theorem expected_thinning_population {n : Nat} (s : TTCState n)
     (pending rounds : Nat) :
-    ∫⁻ coins, (((samplesAfter coins rounds s.samples).card +
+    ∫⁻ coins, (((samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending : Nat) : ENNReal)
         ∂fairCoinStreamLaw =
-      (s.samples.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds := by
+      (s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds := by
   have hmeas : Measurable (fun coins : Nat × Nat → Bool =>
-      ((samplesAfter coins rounds s.samples).card : ENNReal)) := by
+      ((samplesAfter coins rounds s.X).card : ENNReal)) := by
     exact (measurable_of_countable (fun q : Nat => (q : ENNReal))).comp
       (by simpa [samplesAfter] using
-        measurable_survivorCount s.samples (fun copy => copy.1) rounds)
+        measurable_survivorCount s.X (fun copy => copy.1) rounds)
   simp only [Nat.cast_add]
   rw [lintegral_add_left hmeas, expected_samplesAfter_card,
     expected_pendingAfter]
@@ -135,17 +135,17 @@ thinning guard. -/
 theorem thinning_population_tail {n : Nat} (s : TTCState n)
     (pending rounds cutoff : Nat) (hcutoff : 0 < cutoff) :
     fairCoinStreamLaw {coins | cutoff ≤
-      (samplesAfter coins rounds s.samples).card +
+      (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending} ≤
-      ((s.samples.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
+      ((s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
         cutoff := by
   let f : (Nat × Nat → Bool) → ENNReal := fun coins =>
-    (((samplesAfter coins rounds s.samples).card +
+    (((samplesAfter coins rounds s.X).card +
       pendingAfter coins rounds s.nextLabel pending : Nat) : ENNReal)
   have hsample : Measurable (fun coins : Nat × Nat → Bool =>
-      (samplesAfter coins rounds s.samples).card) := by
+      (samplesAfter coins rounds s.X).card) := by
     simpa [samplesAfter] using
-      measurable_survivorCount s.samples (fun copy => copy.1) rounds
+      measurable_survivorCount s.X (fun copy => copy.1) rounds
   have hpending : Measurable (fun coins : Nat × Nat → Bool =>
       pendingAfter coins rounds s.nextLabel pending) := by
     simpa [pendingAfter] using
@@ -160,10 +160,10 @@ theorem thinning_population_tail {n : Nat} (s : TTCState n)
   change fairCoinStreamLaw {coins | (cutoff : ENNReal) ≤ f coins} ≤
     (∫⁻ coins, f coins ∂fairCoinStreamLaw) / cutoff at hmarkov
   rw [show (∫⁻ coins, f coins ∂fairCoinStreamLaw) =
-      (s.samples.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds from
+      (s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds from
     expected_thinning_population s pending rounds] at hmarkov
   have hset : {coins | cutoff ≤
-      (samplesAfter coins rounds s.samples).card +
+      (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending} =
       {coins | (cutoff : ENNReal) ≤ f coins} := by
     ext coins
@@ -179,15 +179,15 @@ theorem firstExitRound_tail {n : Nat} (s : TTCState n)
     (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     fairCoinStreamLaw {coins | rounds < firstExitRound s pending threshold coins} ≤
-      ((s.samples.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
+      ((s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
         cutoff := by
   have hsubset :
       {coins | rounds < firstExitRound s pending threshold coins} ⊆
-      {coins | cutoff ≤ (samplesAfter coins rounds s.samples).card +
+      {coins | cutoff ≤ (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending} := by
     intro coins hcoins
     by_contra hsmall
-    have hsmall' : (samplesAfter coins rounds s.samples).card +
+    have hsmall' : (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending < cutoff :=
       Nat.lt_of_not_ge hsmall
     have hexit : thinningExit s pending threshold coins rounds := by
@@ -205,7 +205,7 @@ real manuscript threshold. -/
 theorem firstExitRound_tail_floor {n : Nat} (s : TTCState n)
     (pending rounds : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     fairCoinStreamLaw {coins | rounds < firstExitRound s pending threshold coins} ≤
-      ((s.samples.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
+      ((s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
         (Nat.floor threshold + 1) := by
   have htail := firstExitRound_tail s pending rounds (Nat.floor threshold + 1)
     threshold (Nat.succ_pos _) (by
@@ -221,7 +221,7 @@ theorem expected_firstExitRound_le {n : Nat} (s : TTCState n)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     ∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
         ∂fairCoinStreamLaw ≤
-      2 * ((s.samples.card + pending : ENNReal) / cutoff) := by
+      2 * ((s.X.card + pending : ENNReal) / cutoff) := by
   rw [lintegral_nat_eq_tsum_tail fairCoinStreamLaw
     (firstExitRound s pending threshold)
     (measurable_firstExitRound s pending threshold)]
@@ -229,22 +229,22 @@ theorem expected_firstExitRound_le {n : Nat} (s : TTCState n)
     (∑' rounds : Nat, fairCoinStreamLaw
         {coins | rounds < firstExitRound s pending threshold coins}) ≤
         ∑' rounds : Nat,
-          ((s.samples.card + pending : ENNReal) *
+          ((s.X.card + pending : ENNReal) *
             (1 / 2 : ENNReal) ^ rounds) / cutoff := by
       exact ENNReal.tsum_le_tsum (fun rounds =>
         firstExitRound_tail s pending rounds cutoff threshold hcutoff hthreshold)
-    _ = ((s.samples.card + pending : ENNReal) / cutoff) *
+    _ = ((s.X.card + pending : ENNReal) / cutoff) *
         (∑' rounds : Nat, (1 / 2 : ENNReal) ^ rounds) := by
       have hterm (rounds : Nat) :
-          ((s.samples.card + pending : ENNReal) *
+          ((s.X.card + pending : ENNReal) *
             (1 / 2 : ENNReal) ^ rounds) / cutoff =
-          ((s.samples.card + pending : ENNReal) / cutoff) *
+          ((s.X.card + pending : ENNReal) / cutoff) *
             (1 / 2 : ENNReal) ^ rounds := by
         simp only [div_eq_mul_inv]
         ac_rfl
       simp_rw [hterm]
       exact ENNReal.tsum_mul_left
-    _ = 2 * ((s.samples.card + pending : ENNReal) / cutoff) := by
+    _ = 2 * ((s.X.card + pending : ENNReal) / cutoff) := by
       rw [ENNReal.tsum_geometric]
       norm_num
       ac_rfl
@@ -253,7 +253,7 @@ theorem expected_firstExitRound_le_floor {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     ∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
         ∂fairCoinStreamLaw ≤
-      2 * ((s.samples.card + pending : ENNReal) / (Nat.floor threshold + 1)) := by
+      2 * ((s.X.card + pending : ENNReal) / (Nat.floor threshold + 1)) := by
   have hbound := expected_firstExitRound_le s pending
     (Nat.floor threshold + 1) threshold (Nat.succ_pos _) (by
       intro q hq
@@ -266,7 +266,7 @@ theorem manuscriptCountThinWithCost_expected_eq {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) :
     ∫⁻ result, (result.2 : ENNReal) ∂
         manuscriptCountThinWithCost s pending threshold =
-      (TTCRuntime.countThinningRoundOperations s.samples.card : ENNReal) *
+      (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
         (∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) := by
   have hcost : Measurable (fun coins : Nat × Nat → Bool =>
@@ -274,7 +274,7 @@ theorem manuscriptCountThinWithCost_expected_eq {n : Nat} (s : TTCState n)
     unfold manuscriptCountThinningCost
     exact (measurable_of_countable
       (fun rounds : Nat => rounds *
-        TTCRuntime.countThinningRoundOperations s.samples.card)).comp
+        TTCRuntime.countThinningRoundOperations s.X.card)).comp
       (measurable_firstExitRound s pending threshold)
   have hpair : Measurable (fun coins : Nat × Nat → Bool =>
       (thinningResult s pending threshold coins,
@@ -288,7 +288,7 @@ theorem manuscriptCountThinWithCost_expected_eq {n : Nat} (s : TTCState n)
     (measurable_of_countable (fun q : Nat => (q : ENNReal))).comp
       (measurable_firstExitRound s pending threshold)
   rw [lintegral_mul_const
-    (TTCRuntime.countThinningRoundOperations s.samples.card : ENNReal) hmeas]
+    (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) hmeas]
   rw [mul_comm (∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
     ∂fairCoinStreamLaw)]
 
@@ -298,8 +298,8 @@ theorem manuscriptCountThinWithCost_expected_le {n : Nat} (s : TTCState n)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     ∫⁻ result, (result.2 : ENNReal) ∂
         manuscriptCountThinWithCost s pending threshold ≤
-      (TTCRuntime.countThinningRoundOperations s.samples.card : ENNReal) *
-        (2 * ((s.samples.card + pending : ENNReal) / cutoff)) := by
+      (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
+        (2 * ((s.X.card + pending : ENNReal) / cutoff)) := by
   rw [manuscriptCountThinWithCost_expected_eq]
   exact mul_le_mul_of_nonneg_left
     (expected_firstExitRound_le s pending cutoff threshold hcutoff hthreshold)
@@ -314,17 +314,17 @@ theorem never_thinningExit_null {n : Nat} (s : TTCState n)
   let never : Set (Nat × Nat → Bool) :=
     {coins | ∀ rounds, ¬ thinningExit s pending threshold coins rounds}
   have hbound (rounds : Nat) : fairCoinStreamLaw never ≤
-      ((s.samples.card + pending : NNReal) : ENNReal) *
+      ((s.X.card + pending : NNReal) : ENNReal) *
         (1 / 2 : ENNReal) ^ rounds := by
     have hsubset : never ⊆ {coins | 1 ≤
-        (samplesAfter coins rounds s.samples).card +
+        (samplesAfter coins rounds s.X).card +
           pendingAfter coins rounds s.nextLabel pending} := by
       intro coins hcoins
       have hnot := hcoins rounds
-      have hpos : 0 < (samplesAfter coins rounds s.samples).card +
+      have hpos : 0 < (samplesAfter coins rounds s.X).card +
           pendingAfter coins rounds s.nextLabel pending := by
         by_contra h
-        have hz : (samplesAfter coins rounds s.samples).card +
+        have hz : (samplesAfter coins rounds s.X).card +
             pendingAfter coins rounds s.nextLabel pending = 0 := Nat.eq_zero_of_not_pos h
         apply hnot
         unfold thinningExit
@@ -358,7 +358,7 @@ theorem firstExitRound_guard_ae {n : Nat} (s : TTCState n)
 /-- Appending a batch cannot create more stored copies than its length. -/
 theorem TTCState.addBatch_card_le {n count : Nat} (s : TTCState n)
     (points : Fin count → LatticePoint n) :
-    (s.addBatch points).samples.card ≤ s.samples.card + count := by
+    (s.addBatch points).X.card ≤ s.X.card + count := by
   classical
   unfold TTCState.addBatch
   dsimp
@@ -374,22 +374,22 @@ almost surely. -/
 theorem thinUntil_population_le_ae {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     ∀ᵐ result ∂thinUntil s pending threshold,
-      ((result.1.samples.card + result.2 : Nat) : Real) ≤ threshold := by
+      ((result.1.X.card + result.2 : Nat) : Real) ≤ threshold := by
   have hmap : Measurable (thinningResult s pending threshold) :=
     measurable_thinningResult s pending threshold
   have hset : MeasurableSet {result : TTCState n × Nat |
-      ((result.1.samples.card + result.2 : Nat) : Real) ≤ threshold} := by
+      ((result.1.X.card + result.2 : Nat) : Real) ≤ threshold} := by
     have hcoords : Measurable (fun state : TTCState n =>
-        (state.rate, state.samples, state.nextLabel)) := comap_measurable _
+        (state.p, state.X, state.nextLabel)) := comap_measurable _
     have hsamples : Measurable (fun result : TTCState n × Nat =>
-        result.1.samples) :=
+        result.1.X) :=
       ((measurable_fst.comp measurable_snd).comp hcoords).comp measurable_fst
     have hcard : Measurable (fun result : TTCState n × Nat =>
-        result.1.samples.card) :=
+        result.1.X.card) :=
       (measurable_of_countable (fun copies : Finset (SampleCopy n) => copies.card)).comp
         hsamples
     have htotal : Measurable (fun result : TTCState n × Nat =>
-        result.1.samples.card + result.2) := hcard.add measurable_snd
+        result.1.X.card + result.2) := hcard.add measurable_snd
     exact ((measurable_of_countable (fun q : Nat => (q : Real))).comp htotal)
       measurableSet_Iic
   unfold thinUntil
@@ -402,20 +402,20 @@ result law used by the runtime program. -/
 theorem manuscriptCountThinWithCost_population_le_ae {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     ∀ᵐ result ∂manuscriptCountThinWithCost s pending threshold,
-      ((result.1.1.samples.card + result.1.2 : Nat) : Real) ≤ threshold := by
+      ((result.1.1.X.card + result.1.2 : Nat) : Real) ≤ threshold := by
   have hset : MeasurableSet {result : TTCState n × Nat |
-      ((result.1.samples.card + result.2 : Nat) : Real) ≤ threshold} := by
+      ((result.1.X.card + result.2 : Nat) : Real) ≤ threshold} := by
     have hcoords : Measurable (fun state : TTCState n =>
-        (state.rate, state.samples, state.nextLabel)) := comap_measurable _
+        (state.p, state.X, state.nextLabel)) := comap_measurable _
     have hsamples : Measurable (fun result : TTCState n × Nat =>
-        result.1.samples) :=
+        result.1.X) :=
       ((measurable_fst.comp measurable_snd).comp hcoords).comp measurable_fst
     have hcard : Measurable (fun result : TTCState n × Nat =>
-        result.1.samples.card) :=
+        result.1.X.card) :=
       (measurable_of_countable (fun copies : Finset (SampleCopy n) => copies.card)).comp
         hsamples
     have htotal : Measurable (fun result : TTCState n × Nat =>
-        result.1.samples.card + result.2) := hcard.add measurable_snd
+        result.1.X.card + result.2) := hcard.add measurable_snd
     exact ((measurable_of_countable (fun q : Nat => (q : Real))).comp htotal)
       measurableSet_Iic
   have hbase := thinUntil_population_le_ae s pending threshold hthreshold
@@ -429,11 +429,11 @@ theorem thinningResult_addBatch_card_le {n : Nat} (s : TTCState n)
     (hguard : thinningExit s pending threshold coins
       (firstExitRound s pending threshold coins))
     (points : Fin (thinningResult s pending threshold coins).2 → LatticePoint n) :
-    (((thinningResult s pending threshold coins).1.addBatch points).samples.card : Real) ≤
+    (((thinningResult s pending threshold coins).1.addBatch points).X.card : Real) ≤
       threshold := by
   have hcard := TTCState.addBatch_card_le
     (thinningResult s pending threshold coins).1 points
-  have hguard' : ((thinningResult s pending threshold coins).1.samples.card +
+  have hguard' : ((thinningResult s pending threshold coins).1.X.card +
       (thinningResult s pending threshold coins).2 : Nat) ≤
       threshold := by
     simpa [thinningResult, thinningExit, Nat.cast_add] using hguard
@@ -441,7 +441,7 @@ theorem thinningResult_addBatch_card_le {n : Nat} (s : TTCState n)
 
 theorem TTCState.removeComponent_card_le {n : Nat} (s : TTCState n)
     (P : PolytopeData n) :
-    (s.removeComponent P).samples.card ≤ s.samples.card := by
+    (s.removeComponent P).X.card ≤ s.X.card := by
   classical
   unfold TTCState.removeComponent
   dsimp
@@ -450,19 +450,19 @@ theorem TTCState.removeComponent_card_le {n : Nat} (s : TTCState n)
 theorem deletionPassOperations_le {n : Nat} (s : TTCState n)
     (P : PolytopeData n) :
     TTCRuntime.deletionPassOperations n P.presentation.facetCount
-      s.samples.card (s.samples.card - (s.removeComponent P).samples.card) ≤
-      s.samples.card * (TTCRuntime.facetScanOperations n
+      s.X.card (s.X.card - (s.removeComponent P).X.card) ≤
+      s.X.card * (TTCRuntime.facetScanOperations n
         P.presentation.facetCount + 1) := by
   unfold TTCRuntime.deletionPassOperations TTCRuntime.deleteCopyOperations
-  have hremove : s.samples.card - (s.removeComponent P).samples.card ≤
-      s.samples.card := Nat.sub_le _ _
+  have hremove : s.X.card - (s.removeComponent P).X.card ≤
+      s.X.card := Nat.sub_le _ _
   simp only [Nat.mul_add, mul_one]
   omega
 
 theorem manuscriptRateThinningResult_card_le {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) (coins : Nat × Nat → Bool) :
-    (manuscriptRateThinningResult s intensity threshold coins).samples.card ≤
-      s.samples.card := by
+    (manuscriptRateThinningResult s intensity threshold coins).X.card ≤
+      s.X.card := by
   dsimp only [manuscriptRateThinningResult]
   unfold samplesAfter
   exact Finset.card_filter_le _ _

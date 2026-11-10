@@ -154,7 +154,7 @@ theorem manuscriptOriginGivenVolumesLaw_map_state
       change (Measure.dirac c).map _ = Measure.dirac c.state
       exact Measure.map_dirac' measurable_manuscriptOriginConfiguration_state c
   | cons d rest ih =>
-      let intensity := manuscriptIntensity b n threshold (outcomes 0).2
+      let intensity := ttc.t b n threshold (outcomes 0).2
       let R := manuscriptOriginRefreshedComponentLaw hn d.polytope b eta
         threshold d.route intensity
       let G := manuscriptOriginGivenVolumesLaw hn prep b eta delta threshold

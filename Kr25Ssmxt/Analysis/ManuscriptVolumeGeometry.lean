@@ -130,12 +130,12 @@ theorem community_manuscript_volume_contract
   apply community_manuscript_volume_contract_of_bounds hn prep F hbounded p
   dsimp only
   intro i
-  have heta0 : 0 ≤ p.epsilonPrime :=
+  have heta0 : 0 ≤ p.ε' :=
     (div_pos p.epsilon_pos (by norm_num)).le
-  have heta1 : p.epsilonPrime ≤ 1 := by
-    dsimp only [ApproxParams.epsilonPrime]
+  have heta1 : p.ε' ≤ 1 := by
+    dsimp only [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   exact ((prep.run F hbounded).component i).manuscriptVolume_bounds
-    (by omega : 0 < n) p.epsilonPrime heta0 heta1
+    (by omega : 0 < n) p.ε' heta0 heta1
 
 end Kr25Ssmxt

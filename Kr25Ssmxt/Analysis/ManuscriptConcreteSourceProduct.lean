@@ -44,31 +44,31 @@ theorem communityManuscript_source_product_fixedLevel_incoming
     (volumeEstimate : Fin D.componentCount → NNReal)
     (level : Nat) :
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
-    let threshold := p.threshold D.componentCount
+    let threshold := p.Thresh D.componentCount
     let pointLaw := communityManuscriptPointLaw hn D p b hprecision
     let sourceLaw : Fin D.componentCount → Measure (ManuscriptPoissonTape n) :=
       fun i => manuscriptPoissonTapeLaw
-        (manuscriptIntensity b n threshold (volumeEstimate i)) (pointLaw i)
+        (ttc.t b n threshold (volumeEstimate i)) (pointLaw i)
     (Measure.pi sourceLaw).map
       (fun sources i => manuscriptPoissonTapePointCounts S 0 level (sources i)) =
     Measure.pi (fun i : Fin D.componentCount =>
       Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
         (Real.toNNReal ((pointLaw i).real {(x.1 : LatticePoint n)} *
-          ((manuscriptIntensity b n threshold (volumeEstimate i) *
+          ((ttc.t b n threshold (volumeEstimate i) *
             (1 / (2 : NNReal) ^ level) : NNReal) : Real))))) := by
   dsimp only
   let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
   let pointLaw := communityManuscriptPointLaw hn D p b hprecision
   have halmost (i : Fin D.componentCount) :
       AlmostUniformPointwise (pointLaw i)
-        (codedLatticePoints (D.component i) b) p.epsilonPrime :=
+        (codedLatticePoints (D.component i) b) p.ε' :=
     communityManuscriptPointLaw_almostUniform hn D p b hprecision i
   have hsupport (i : Fin D.componentCount) :
       (pointLaw i) (S : Set (LatticePoint n))ᶜ = 0 := by
     exact communityManuscriptPointLaw_support_codedUnion
       hn D p b hprecision i
   have hprod := manuscriptPoissonTape_product_fixedLevel_pointCounts
-    (fun i => manuscriptIntensity b n (p.threshold D.componentCount)
+    (fun i => ttc.t b n (p.Thresh D.componentCount)
       (volumeEstimate i)) pointLaw (fun i => (halmost i).1)
     S hsupport (fun _ => 0) level
   calc
@@ -76,7 +76,7 @@ theorem communityManuscript_source_product_fixedLevel_incoming
         Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
           (Real.toNNReal ((pointLaw i).real {(x.1 : LatticePoint n)} *
             ((unitInterval.toNNReal (survivalProbability level) *
-              manuscriptIntensity b n (p.threshold D.componentCount)
+              ttc.t b n (p.Thresh D.componentCount)
                 (volumeEstimate i) : NNReal) : Real))))) := hprod
     _ = _ := by
       congr 1

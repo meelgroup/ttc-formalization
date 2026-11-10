@@ -17,15 +17,15 @@ theorem manuscript_no_first_halving_at_cutoff
     (i : Fin D.componentCount)
     (volumeEstimate : NNReal)
     (hvolume : (volumeEstimate : Real) ∈
-      Arlib.relErr p.epsilonPrime
+      Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal)
     (s : TTCState n)
-    (hrate : (s.rate : Real) =
+    (hrate : (s.p : Real) =
       1 / (2 : Real) ^
         (manuscriptDyadicCutoff (D.latticePoints b).ncard - 1)) :
     manuscriptRateExit s
-      (manuscriptIntensity b n (p.threshold D.componentCount) volumeEstimate)
-      (p.threshold D.componentCount) = 0 := by
+      (ttc.t b n (p.Thresh D.componentCount) volumeEstimate)
+      (p.Thresh D.componentCount) = 0 := by
   let count := (D.latticePoints b).ncard
   have hcount : 0 < count :=
     manuscript_union_lattice_ncard_pos hn D p b hprecision hcomponents
@@ -34,13 +34,13 @@ theorem manuscript_no_first_halving_at_cutoff
     manuscript_component_lattice_ncard_le_union hn D p b hprecision i
   have hlattice := (ttc_volume_accuracy_lattice_comparison hn D p b hprecision).1 i
   have hintensity := manuscriptIntensity_le_four_thirds n b p
-    (p.threshold D.componentCount) (p.threshold_pos D.componentCount).le
+    (p.Thresh D.componentCount) (p.threshold_pos D.componentCount).le
     volumeEstimate (volume (D.component i).carrier).toReal
     ((D.component i).carrier ∩ decimalLattice b n).ncard count
     hcomponentCount hvolume hlattice
   exact manuscriptRateExit_zero_at_cutoff s
-    (manuscriptIntensity b n (p.threshold D.componentCount) volumeEstimate)
-    count hcount (p.threshold D.componentCount)
+    (ttc.t b n (p.Thresh D.componentCount) volumeEstimate)
+    count hcount (p.Thresh D.componentCount)
     (p.threshold_pos D.componentCount) hrate hintensity
 
 /-- The same bound applies to a first while-loop entered at any dyadic level
@@ -53,14 +53,14 @@ theorem manuscript_no_first_halving_past_cutoff
     (i : Fin D.componentCount)
     (volumeEstimate : NNReal)
     (hvolume : (volumeEstimate : Real) ∈
-      Arlib.relErr p.epsilonPrime
+      Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal)
     (s : TTCState n) (level : Nat)
     (hlevel : level ≤ manuscriptDyadicCutoff (D.latticePoints b).ncard - 1)
-    (hrate : s.rate = 1 / (2 : NNReal) ^ level) :
+    (hrate : s.p = 1 / (2 : NNReal) ^ level) :
     manuscriptRateExit s
-      (manuscriptIntensity b n (p.threshold D.componentCount) volumeEstimate)
-      (p.threshold D.componentCount) ≤
+      (ttc.t b n (p.Thresh D.componentCount) volumeEstimate)
+      (p.Thresh D.componentCount) ≤
         manuscriptDyadicCutoff (D.latticePoints b).ncard - 1 - level := by
   let count := (D.latticePoints b).ncard
   have hcount : 0 < count :=
@@ -71,13 +71,13 @@ theorem manuscript_no_first_halving_past_cutoff
   have hlattice :=
     (ttc_volume_accuracy_lattice_comparison hn D p b hprecision).1 i
   have hintensity := manuscriptIntensity_le_four_thirds n b p
-    (p.threshold D.componentCount) (p.threshold_pos D.componentCount).le
+    (p.Thresh D.componentCount) (p.threshold_pos D.componentCount).le
     volumeEstimate (volume (D.component i).carrier).toReal
     ((D.component i).carrier ∩ decimalLattice b n).ncard count
     hcomponentCount hvolume hlattice
   exact manuscriptRateExit_le_cutoff_gap s
-    (manuscriptIntensity b n (p.threshold D.componentCount) volumeEstimate)
-    count hcount (p.threshold D.componentCount)
+    (ttc.t b n (p.Thresh D.componentCount) volumeEstimate)
+    count hcount (p.Thresh D.componentCount)
     (p.threshold_pos D.componentCount) level hlevel hrate hintensity
 
 /-- If the count-thinning loop jumps across the cutoff, its fixed-level
@@ -91,7 +91,7 @@ theorem manuscript_second_loop_jump_past_cutoff_large_population
       level + firstExitRound s pending threshold coins) :
     threshold <
       (samplesAfter coins
-        (manuscriptDyadicCutoff count - 1 - level) s.samples).card +
+        (manuscriptDyadicCutoff count - 1 - level) s.X).card +
       pendingAfter coins
         (manuscriptDyadicCutoff count - 1 - level)
         s.nextLabel pending := by

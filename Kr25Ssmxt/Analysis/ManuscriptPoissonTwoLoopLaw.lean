@@ -13,10 +13,10 @@ theorem manuscript_poisson_twoLoops_oneCoinStream
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
     (manuscriptRateThinUntil s intensity threshold).bind (fun first =>
-      (poissonMeasure (intensity * first.rate)).bind fun pending =>
+      (poissonMeasure (intensity * first.p)).bind fun pending =>
         thinUntil first pending threshold) =
     (poissonMeasure
-      (intensity * (s.rate /
+      (intensity * (s.p /
         (2 : NNReal) ^ manuscriptRateExit s intensity threshold))).bind
       (fun pending => fairCoinStreamLaw.map fun coins =>
         thinningResult
@@ -24,20 +24,20 @@ theorem manuscript_poisson_twoLoops_oneCoinStream
           pending threshold
           (shiftCoins (manuscriptRateExit s intensity threshold) coins)) := by
   let rounds := manuscriptRateExit s intensity threshold
-  let mean := intensity * (s.rate / (2 : NNReal) ^ rounds)
+  let mean := intensity * (s.p / (2 : NNReal) ^ rounds)
   let firstResult := manuscriptRateThinningResult s intensity threshold
   let firstLaw := manuscriptRateThinUntil s intensity threshold
   let pendingLaw : TTCState n → Measure Nat :=
-    fun first => poissonMeasure (intensity * first.rate)
+    fun first => poissonMeasure (intensity * first.p)
   let pendingJoint : TTCState n → Measure (TTCState n × Nat) :=
     fun first => (pendingLaw first).map (Prod.mk first)
   let K : TTCState n × Nat → Measure (TTCState n × Nat) :=
     fun pair => thinUntil pair.1 pair.2 threshold
-  have hrate : Measurable (fun first : TTCState n => first.rate) :=
+  have hrate : Measurable (fun first : TTCState n => first.p) :=
     measurable_fst.comp
       (comap_measurable
         (fun first : TTCState n =>
-          (first.rate, first.samples, first.nextLabel)))
+          (first.p, first.X, first.nextLabel)))
   have hpendingLaw : Measurable pendingLaw :=
     measurable_poissonMeasure.comp (measurable_const.mul hrate)
   have hpendingJoint : Measurable pendingJoint :=

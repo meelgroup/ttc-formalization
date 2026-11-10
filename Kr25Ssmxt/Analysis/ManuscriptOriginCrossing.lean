@@ -31,10 +31,10 @@ theorem lt_population_of_lt_firstExitRoundSplit {n : Nat}
     (s : TTCState n) (pending : Nat) (threshold : Real)
     (old fresh : Nat × Nat → Bool) (r : Nat)
     (h : r < firstExitRoundSplit s pending threshold old fresh) :
-    threshold < (samplesAfter old r s.samples).card +
+    threshold < (samplesAfter old r s.X).card +
       pendingAfter fresh r s.nextLabel pending := by
   by_contra hle
-  have hmem : r ∈ {rounds | (samplesAfter old rounds s.samples).card +
+  have hmem : r ∈ {rounds | (samplesAfter old rounds s.X).card +
       pendingAfter fresh rounds s.nextLabel pending ≤ threshold} :=
     le_of_not_gt hle
   have hinf := Nat.sInf_le hmem
@@ -55,7 +55,7 @@ theorem ManuscriptOriginConfiguration.split_population_le_survivors
         (manuscriptSourceOldCoins d.origin d.source.coins d.level)) r0
       (manuscriptRateThinningResult (d.state.removeComponent P) intensity
         threshold
-        (manuscriptSourceOldCoins d.origin d.source.coins d.level)).samples).card +
+        (manuscriptSourceOldCoins d.origin d.source.coins d.level)).X).card +
       pendingAfter
         (pendingCoinExtension d.state.nextLabel
           (pendingAfter preCoins (d.level + manuscriptRateExit
@@ -102,7 +102,7 @@ theorem ManuscriptOriginConfiguration.split_population_le_survivors
       preCoins := preCoins
       futureCoins := fresh
       tape := tape } with hstep
-  set O := samplesAfter (shiftCoins rounds oldCoins) r0 first.samples with hO
+  set O := samplesAfter (shiftCoins rounds oldCoins) r0 first.X with hO
   set N := ((Finset.range basePending).filter (fun k =>
       Kr25Ssmxt.survives (spliceCoins preCoins fresh preRounds)
         (preRounds + r0) (d.state.nextLabel + k))) with hN
@@ -112,11 +112,11 @@ theorem ManuscriptOriginConfiguration.split_population_le_survivors
   let f : SampleCopy n → Nat × Nat := fun copy => d.origin copy.1
   let g : Nat → Nat × Nat := fun k => (d.source.processed, d.state.nextLabel + k)
   -- facts about old copies
-  have hOsub : ∀ copy ∈ O, copy ∈ d.state.samples ∧
+  have hOsub : ∀ copy ∈ O, copy ∈ d.state.X ∧
       copy.2.toPoint ∉ P.carrier := by
     intro copy hcopy
-    have h1 : copy ∈ first.samples := (Finset.mem_filter.mp hcopy).1
-    have h2 : copy ∈ deleted.samples := (Finset.mem_filter.mp h1).1
+    have h1 : copy ∈ first.X := (Finset.mem_filter.mp hcopy).1
+    have h2 : copy ∈ deleted.X := (Finset.mem_filter.mp h1).1
     exact Finset.mem_filter.mp h2
   have hdeletedSurv : ManuscriptOriginSurvives deleted d.origin
       d.source.coins d.level :=
@@ -127,7 +127,7 @@ theorem ManuscriptOriginConfiguration.split_population_le_survivors
     manuscriptOriginSurvives_thin_of_samples deleted first d.origin
       d.source.coins d.level rounds rfl hdeletedSurv
   have hOSurv : ManuscriptOriginSurvives
-      ({ rate := first.rate, samples := O, nextLabel := first.nextLabel } :
+      ({ p := first.p, X := O, nextLabel := first.nextLabel } :
         TTCState n) d.origin d.source.coins (d.level + rounds + r0) := by
     apply manuscriptOriginSurvives_thin_of_samples first _ d.origin
       d.source.coins (d.level + rounds) r0 _ hfirstSurv

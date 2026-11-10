@@ -29,13 +29,13 @@ lemma measurable_thinningResult_joint {n : Nat} (threshold : Real) :
     measurable_fst.comp measurable_fst
   have hstateCoords : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        (z.1.1.rate, z.1.1.samples, z.1.1.nextLabel)) :=
+        (z.1.1.p, z.1.1.X, z.1.1.nextLabel)) :=
     (comap_measurable _).comp hstateIn
   have hrateIn : Measurable
-      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.rate) :=
+      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.p) :=
     measurable_fst.comp hstateCoords
   have hsamplesIn : Measurable
-      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.samples) :=
+      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.X) :=
     (measurable_fst.comp measurable_snd).comp hstateCoords
   have hnextLabel : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.nextLabel) :=
@@ -65,12 +65,12 @@ lemma measurable_thinningResult_joint {n : Nat} (threshold : Real) :
     exact measurableSet_survives rounds label
   have hsamples : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        samplesAfter z.2 (exitRound z) z.1.1.samples) := by
+        samplesAfter z.2 (exitRound z) z.1.1.X) := by
     rw [measurable_finset_iff]
     intro copy
     have hmem : Measurable
         (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-          copy ∈ z.1.1.samples) :=
+          copy ∈ z.1.1.X) :=
       (measurable_finset_mem copy).comp hsamplesIn
     have hsurvives : Measurable
         (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
@@ -97,19 +97,19 @@ lemma measurable_thinningResult_joint {n : Nat} (threshold : Real) :
     exact measurable_id.div_const ((2 : NNReal) ^ rounds)
   have hrate : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        z.1.1.rate / (2 : NNReal) ^ exitRound z) :=
+        z.1.1.p / (2 : NNReal) ^ exitRound z) :=
     hrateJoint.comp (hrateIn.prodMk hexitRound)
   have hstate : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        { rate := z.1.1.rate / (2 : NNReal) ^ exitRound z
-          samples := samplesAfter z.2 (exitRound z) z.1.1.samples
+        { p := z.1.1.p / (2 : NNReal) ^ exitRound z
+          X := samplesAfter z.2 (exitRound z) z.1.1.X
           nextLabel := z.1.1.nextLabel : TTCState n }) := by
     rw [measurable_comap_iff]
     exact hrate.prodMk (hsamples.prodMk hnextLabel)
   change Measurable
     (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-      ({ rate := z.1.1.rate / (2 : NNReal) ^ exitRound z
-         samples := samplesAfter z.2 (exitRound z) z.1.1.samples
+      ({ p := z.1.1.p / (2 : NNReal) ^ exitRound z
+         X := samplesAfter z.2 (exitRound z) z.1.1.X
          nextLabel := z.1.1.nextLabel : TTCState n },
        pendingAfter z.2 (exitRound z) z.1.1.nextLabel z.1.2))
   exact hstate.prodMk hpending

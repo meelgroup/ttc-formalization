@@ -55,26 +55,26 @@ theorem manuscript_two_loops_samples_splice {n : Nat}
     (pending : Nat) (first second : Nat × Nat → Bool) :
     (thinningResult
       (manuscriptRateThinningResult s intensity threshold first)
-      pending threshold second).1.samples =
+      pending threshold second).1.X =
     samplesAfter (spliceCoins first second
       (manuscriptRateExit s intensity threshold))
       (manuscriptRateExit s intensity threshold +
         firstExitRound
           (manuscriptRateThinningResult s intensity threshold first)
-          pending threshold second) s.samples := by
+          pending threshold second) s.X := by
   exact samplesAfter_spliceCoins first second
     (manuscriptRateExit s intensity threshold)
     (firstExitRound
       (manuscriptRateThinningResult s intensity threshold first)
-      pending threshold second) s.samples
+      pending threshold second) s.X
 
 theorem manuscript_two_loops_rate_add {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (pending : Nat) (first second : Nat × Nat → Bool) :
     (thinningResult
       (manuscriptRateThinningResult s intensity threshold first)
-      pending threshold second).1.rate =
-    s.rate / (2 : NNReal) ^
+      pending threshold second).1.p =
+    s.p / (2 : NNReal) ^
       (manuscriptRateExit s intensity threshold +
         firstExitRound
           (manuscriptRateThinningResult s intensity threshold first)
@@ -100,7 +100,7 @@ theorem manuscript_two_loops_addBatch_pointCount {n : Nat}
         (manuscriptRateExit deleted intensity threshold))
         (manuscriptRateExit deleted intensity threshold +
           firstExitRound firstState pending threshold second)
-        deleted.samples).filter (fun copy => copy.2 = x)).card +
+        deleted.X).filter (fun copy => copy.2 = x)).card +
         Arlib.Probability.colourCount batch x := by
   classical
   dsimp only
@@ -117,7 +117,7 @@ theorem manuscript_two_loops_addBatch_pointCount {n : Nat}
   rw [TTCState.pointCount_addBatch secondState batch x hsecond]
   have hsamples := manuscript_two_loops_samples_splice deleted intensity
     threshold pending first second
-  change (secondState.samples.filter (fun copy => copy.2 = x)).card +
+  change (secondState.X.filter (fun copy => copy.2 = x)).card +
     Arlib.Probability.colourCount batch x = _
   rw [hsamples]
 

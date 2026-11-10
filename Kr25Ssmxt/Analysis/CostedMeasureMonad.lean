@@ -19,7 +19,7 @@ instance TTCState.instMeasurableSingletonClass (n : Nat) :
     MeasurableSingletonClass (TTCState n) where
   measurableSet_singleton s := by
     let f : TTCState n → NNReal × Finset (SampleCopy n) × Nat :=
-      fun t => (t.rate, t.samples, t.nextLabel)
+      fun t => (t.p, t.X, t.nextLabel)
     have hinj : Function.Injective f := by
       intro x y h
       cases x

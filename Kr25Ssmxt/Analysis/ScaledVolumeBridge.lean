@@ -97,14 +97,14 @@ theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
     (i : Fin D.componentCount) :
     (1 / 2 : Real) ≤
       (roundedAcceptanceProbability
-        (normalizedHitAndRunContinuousLaw (D.component i) b p.epsilonPrime)
+        (normalizedHitAndRunContinuousLaw (D.component i) b p.ε')
         (D.component i) b : Real) := by
   have hn0 : 0 < n := by omega
-  have hsample0 : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+  have hsample0 : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     exact div_pos p.epsilon_pos (by norm_num)
-  have hsample8 : p.epsilonPrime ≤ 1 / 8 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have hsample8 : p.ε' ≤ 1 / 8 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   have hlattice0 : 0 ≤ p.latticeEta := by
     dsimp [ApproxParams.latticeEta]
@@ -121,7 +121,7 @@ theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
     (by dsimp [ApproxParams.latticeEta]; exact div_pos p.epsilon_pos (by norm_num))
     (by linarith) hradius i
   have hfinite := (coded_lattice_points_finite_nonempty hn0 D p b hprecision i).1
-  have hsampler : samplerRadiusRequirement (D.component i) p.epsilonPrime ≤
+  have hsampler : samplerRadiusRequirement (D.component i) p.ε' ≤
       decimalScale b * (D.component i).inradius := by
     simpa only [decimalScale] using (le_max_right _ _).trans (hprecision.split i)
   exact normalizedHitAndRun_acceptance_ge_half_of_base_comparison hn
@@ -136,25 +136,25 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
     (delta : Real) (i : Fin D.componentCount) :
     ∫⁻ result, (result.2 : ENNReal) ∂
       (communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
-        (D.component i) count b p.epsilonPrime delta ≤
+        (D.component i) count b p.ε' delta ≤
       count * (2 * TTCRuntime.samplingAttemptOperations n
         (D.component i).presentation.facetCount
-        (normalizedHitAndRunSteps (D.component i) b p.epsilonPrime)) := by
+        (normalizedHitAndRunSteps (D.component i) b p.ε')) := by
   have hn0 : 0 < n := by omega
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
   have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
     (one_le_samplerRadiusRequirement hn0 (D.component i)
-      (by dsimp [ApproxParams.epsilonPrime]; exact div_pos p.epsilon_pos (by norm_num))
-      (by dsimp [ApproxParams.epsilonPrime]; linarith [p.epsilon_le_one])).trans
+      (by dsimp [ApproxParams.ε']; exact div_pos p.epsilon_pos (by norm_num))
+      (by dsimp [ApproxParams.ε']; linarith [p.epsilon_le_one])).trans
       ((le_max_right _ _).trans (hprecision.split i))
-  have hsample0 : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+  have hsample0 : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     exact div_pos p.epsilon_pos (by norm_num)
-  have hsample1 : p.epsilonPrime ≤ 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have hsample1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   exact communityManuscriptCosted_samples_expected_cost hn prep factor
-    (D.component i) count b p.epsilonPrime delta
+    (D.component i) count b p.ε' delta
     ⟨hunit, hsample0, hsample1, hset.1, hset.2⟩
     (certified_normalizedHitAndRun_acceptance_ge_half hn D p b hprecision i)
 
@@ -165,22 +165,22 @@ theorem certified_community_sampler_mass_le_one {n k : Nat}
     (prep : TTCPreprocessor n k) (factor count : Nat)
     (delta : Real) (i : Fin D.componentCount) :
     ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
-      (D.component i) count b p.epsilonPrime delta) Set.univ ≤ 1 := by
+      (D.component i) count b p.ε' delta) Set.univ ≤ 1 := by
   have hn0 : 0 < n := by omega
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
   have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
     (one_le_samplerRadiusRequirement hn0 (D.component i)
-      (by dsimp [ApproxParams.epsilonPrime]; exact div_pos p.epsilon_pos (by norm_num))
-      (by dsimp [ApproxParams.epsilonPrime]; linarith [p.epsilon_le_one])).trans
+      (by dsimp [ApproxParams.ε']; exact div_pos p.epsilon_pos (by norm_num))
+      (by dsimp [ApproxParams.ε']; linarith [p.epsilon_le_one])).trans
       ((le_max_right _ _).trans (hprecision.split i))
-  have hsample0 : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+  have hsample0 : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     exact div_pos p.epsilon_pos (by norm_num)
-  have hsample1 : p.epsilonPrime ≤ 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have hsample1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   exact communityManuscriptCosted_samples_mass_le_one hn prep factor
-    (D.component i) count b p.epsilonPrime delta
+    (D.component i) count b p.ε' delta
     ⟨hunit, hsample0, hsample1, hset.1, hset.2⟩
 
 end Kr25Ssmxt

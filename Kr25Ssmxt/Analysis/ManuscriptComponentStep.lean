@@ -19,7 +19,7 @@ noncomputable def manuscriptComponentFixedLevelStep
   deleted := T
   incoming := fun x => Real.toNNReal
     (pointLaw.real {(x.1 : LatticePoint n)} *
-      ((manuscriptIntensity b n threshold volumeEstimate * rate : NNReal) : Real))
+      ((ttc.t b n threshold volumeEstimate * rate : NNReal) : Real))
 
 theorem manuscriptComponentFixedLevelStep_envelope
     {n : Nat} (S : Finset (LatticePoint n)) (T : Finset S)
@@ -28,53 +28,53 @@ theorem manuscriptComponentFixedLevelStep_envelope
     (volumeEstimate rate : NNReal)
     (componentVolume : Real) (cardinality : Nat)
     (hcardinality : 0 < cardinality)
-    (epsilonPrime latticeEta : Real)
-    (hepsilonPrime : 0 ≤ epsilonPrime)
-    (hepsilonPrime_le_one : epsilonPrime ≤ 1)
+    (ε' latticeEta : Real)
+    (hepsilonPrime : 0 ≤ ε')
+    (hepsilonPrime_le_one : ε' ≤ 1)
     (hlatticeEta : 0 ≤ latticeEta)
     (hlatticeEta_le_one : latticeEta ≤ 1)
     (hvolume : (volumeEstimate : Real) ∈
-      Arlib.relErr epsilonPrime componentVolume)
+      Arlib.relErr ε' componentVolume)
     (hlattice : componentVolume ∈ Arlib.relErr latticeEta
       ((cardinality : Real) / (10 : Real) ^ (b * n)))
     (hpoint : ∀ x ∈ T,
       pointLaw.real {(x.1 : LatticePoint n)} ∈
-        Arlib.relErr epsilonPrime (1 / (cardinality : Real)))
+        Arlib.relErr ε' (1 / (cardinality : Real)))
     (hzero : ∀ x : S, x ∉ T →
       pointLaw.real {(x.1 : LatticePoint n)} = 0) :
     (manuscriptComponentFixedLevelStep S T pointLaw b threshold
       volumeEstimate rate).RateEnvelope
-        (Real.toNNReal (threshold * (1 - epsilonPrime) ^ 2 *
+        (Real.toNNReal (threshold * (1 - ε') ^ 2 *
           (1 - latticeEta) * rate))
-        (Real.toNNReal (threshold * (1 + epsilonPrime) ^ 2 *
+        (Real.toNNReal (threshold * (1 + ε') ^ 2 *
           (1 + latticeEta) * rate)) := by
   constructor
   · intro x hx
     have hbounds := manuscript_point_intensity_bounds n b threshold hthreshold
       volumeEstimate componentVolume (pointLaw.real {(x.1 : LatticePoint n)})
-      rate cardinality hcardinality epsilonPrime latticeEta
+      rate cardinality hcardinality ε' latticeEta
       hepsilonPrime hepsilonPrime_le_one hlatticeEta hlatticeEta_le_one
       hvolume hlattice (hpoint x hx)
     constructor
     · apply Real.toNNReal_mono
       calc
-        threshold * (1 - epsilonPrime) ^ 2 * (1 - latticeEta) *
+        threshold * (1 - ε') ^ 2 * (1 - latticeEta) *
             (rate : Real) ≤
-          (manuscriptIntensity b n threshold volumeEstimate : Real) *
+          (ttc.t b n threshold volumeEstimate : Real) *
             rate * pointLaw.real {(x.1 : LatticePoint n)} := hbounds.1
         _ = pointLaw.real {(x.1 : LatticePoint n)} *
-              ((manuscriptIntensity b n threshold volumeEstimate * rate : NNReal) : Real) := by
+              ((ttc.t b n threshold volumeEstimate * rate : NNReal) : Real) := by
           rw [NNReal.coe_mul]
           ring
     · apply Real.toNNReal_mono
       calc
         pointLaw.real {(x.1 : LatticePoint n)} *
-            ((manuscriptIntensity b n threshold volumeEstimate * rate : NNReal) : Real) =
-          (manuscriptIntensity b n threshold volumeEstimate : Real) *
+            ((ttc.t b n threshold volumeEstimate * rate : NNReal) : Real) =
+          (ttc.t b n threshold volumeEstimate : Real) *
             rate * pointLaw.real {(x.1 : LatticePoint n)} := by
           rw [NNReal.coe_mul]
           ring
-        _ ≤ threshold * (1 + epsilonPrime) ^ 2 *
+        _ ≤ threshold * (1 + ε') ^ 2 *
             (1 + latticeEta) * (rate : Real) := hbounds.2
   · intro x hx
     simp [manuscriptComponentFixedLevelStep, hzero x hx]
@@ -101,28 +101,28 @@ theorem manuscriptComponentFixedLevelStep_envelope_of_almostUniform
     (b : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold)
     (volumeEstimate rate : NNReal)
     (componentVolume : Real)
-    (epsilonPrime latticeEta : Real)
-    (hepsilonPrime : 0 ≤ epsilonPrime)
-    (hepsilonPrime_le_one : epsilonPrime ≤ 1)
+    (ε' latticeEta : Real)
+    (hepsilonPrime : 0 ≤ ε')
+    (hepsilonPrime_le_one : ε' ≤ 1)
     (hlatticeEta : 0 ≤ latticeEta)
     (hlatticeEta_le_one : latticeEta ≤ 1)
     (hvolume : (volumeEstimate : Real) ∈
-      Arlib.relErr epsilonPrime componentVolume)
+      Arlib.relErr ε' componentVolume)
     (hlattice : componentVolume ∈ Arlib.relErr latticeEta
       ((U.ncard : Real) / (10 : Real) ^ (b * n)))
-    (halmost : AlmostUniformPointwise pointLaw U epsilonPrime)
+    (halmost : AlmostUniformPointwise pointLaw U ε')
     (hT : ∀ x : S, x ∈ T ↔ x.1 ∈ U) :
     (manuscriptComponentFixedLevelStep S T pointLaw b threshold
       volumeEstimate rate).RateEnvelope
-        (Real.toNNReal (threshold * (1 - epsilonPrime) ^ 2 *
+        (Real.toNNReal (threshold * (1 - ε') ^ 2 *
           (1 - latticeEta) * rate))
-        (Real.toNNReal (threshold * (1 + epsilonPrime) ^ 2 *
+        (Real.toNNReal (threshold * (1 + ε') ^ 2 *
           (1 + latticeEta) * rate)) := by
   have hcard : 0 < U.ncard :=
     (Set.ncard_pos halmost.2.1).mpr halmost.2.2.1
   apply manuscriptComponentFixedLevelStep_envelope S T pointLaw b
     threshold hthreshold volumeEstimate rate componentVolume U.ncard hcard
-    epsilonPrime latticeEta hepsilonPrime hepsilonPrime_le_one
+    ε' latticeEta hepsilonPrime hepsilonPrime_le_one
     hlatticeEta hlatticeEta_le_one hvolume hlattice
   · intro x hx
     exact halmost.2.2.2.2 x.1 ((hT x).mp hx)

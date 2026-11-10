@@ -48,8 +48,8 @@ def exactSampleBatchLaw {n count : Nat} (P : PolytopeData n) (b : Nat) :
 def exactSemanticOracles {n k : Nat} (prep : TTCPreprocessor n k) : TTCOracles n k where
   preprocessing := prep
   choosePrecision := fun D p => getPrecisionChoice D p
-  computeVolume := fun P _ _ => exactVolumeLaw P
-  generateSamples := fun P count b _ _ => exactSampleBatchLaw P b
+  ComputeVolume := fun P _ _ => exactVolumeLaw P
+  GenerateSamples := fun P count b _ _ => exactSampleBatchLaw P b
 
 set_option maxHeartbeats 800000 in
 lemma exact_volume_law_specification {n : Nat} (P : PolytopeData n) (eta delta : Real)
@@ -85,13 +85,13 @@ lemma exact_volume_contract {n k : Nat} (prep : TTCPreprocessor n k)
     (params : ApproxParams) :
     ComputeVolumeContract (exactSemanticOracles prep) F hbounded params := by
   intro i
-  have heta : 0 ≤ params.epsilonPrime :=
+  have heta : 0 ≤ params.ε' :=
     (div_pos params.epsilon_pos (by norm_num)).le
-  have hdelta : 0 ≤ params.deltaPrime (prep.run F hbounded).componentCount := by
+  have hdelta : 0 ≤ params.δ' (prep.run F hbounded).componentCount := by
     exact div_nonneg params.delta_pos.le (by positivity)
   simpa [exactSemanticOracles] using
     exact_volume_law_specification ((prep.run F hbounded).component i)
-      params.epsilonPrime (params.deltaPrime (prep.run F hbounded).componentCount)
+      params.ε' (params.δ' (prep.run F hbounded).componentCount)
       heta hdelta
 
 lemma polytope_volume_toReal_pos {n : Nat} (P : PolytopeData n) :

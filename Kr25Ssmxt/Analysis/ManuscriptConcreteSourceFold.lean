@@ -27,18 +27,18 @@ theorem communityManuscript_source_fixedLevel_fold
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
     let pointLaw := communityManuscriptPointLaw hn D p b hprecision
     let steps := manuscriptCertifiedFixedLevelSteps D b S
-      (p.threshold D.componentCount) volumeEstimate pointLaw
+      (p.Thresh D.componentCount) volumeEstimate pointLaw
         (1 / (2 : NNReal) ^ level)
     let sourceLaw : Fin D.componentCount → Measure (ManuscriptPoissonTape n) :=
       fun i => manuscriptPoissonTapeLaw
-        (manuscriptIntensity b n (p.threshold D.componentCount)
+        (ttc.t b n (p.Thresh D.componentCount)
           (volumeEstimate i)) (pointLaw i)
     (Measure.pi sourceLaw).map
       (fun sources => fixedLevelFold steps (fun _ => 0)
         (fun i => manuscriptPoissonTapePointCounts S 0 level
           (sources (Fin.cast (by
             exact manuscriptCertifiedFixedLevelSteps_length D b S
-              (p.threshold D.componentCount) volumeEstimate pointLaw
+              (p.Thresh D.componentCount) volumeEstimate pointLaw
                 (1 / (2 : NNReal) ^ level)) i)))) =
       fixedLevelLaw steps
         (Measure.pi (fun _ : S => ProbabilityTheory.poissonMeasure 0)) := by
@@ -47,11 +47,11 @@ theorem communityManuscript_source_fixedLevel_fold
   let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
   let pointLaw := communityManuscriptPointLaw hn D p b hprecision
   let steps := manuscriptCertifiedFixedLevelSteps D b S
-    (p.threshold D.componentCount) volumeEstimate pointLaw
+    (p.Thresh D.componentCount) volumeEstimate pointLaw
       (1 / (2 : NNReal) ^ level)
   let sourceLaw : Fin D.componentCount → Measure (ManuscriptPoissonTape n) :=
     fun i => manuscriptPoissonTapeLaw
-      (manuscriptIntensity b n (p.threshold D.componentCount)
+      (ttc.t b n (p.Thresh D.componentCount)
         (volumeEstimate i)) (pointLaw i)
   have hlength : steps.length = D.componentCount := by
     simp [steps, manuscriptCertifiedFixedLevelSteps, fixedLevelComponentSteps]
@@ -80,7 +80,7 @@ theorem communityManuscript_source_fixedLevel_fold
       hn D p b hprecision (e.symm i)
     letI : IsProbabilityMeasure (pointLaw (e.symm i)) := hprob (e.symm i)
     have h := manuscriptPoissonTapeLaw_fixedLevel_pointCounts
-      (manuscriptIntensity b n (p.threshold D.componentCount)
+      (ttc.t b n (p.Thresh D.componentCount)
         (volumeEstimate (e.symm i)))
       (pointLaw (e.symm i)) S hsupport 0 level
     change (sourceLaw (e.symm i)).map
@@ -95,7 +95,7 @@ theorem communityManuscript_source_fixedLevel_fold
         ({ deleted := componentDeletedCodes S (D.component j)
            incoming := fun y : S => Real.toNNReal
              ((pointLaw j).real {(y.1 : LatticePoint n)} *
-               ((manuscriptIntensity b n (p.threshold D.componentCount)
+               ((ttc.t b n (p.Thresh D.componentCount)
                  (volumeEstimate j) *
                  (1 / (2 : NNReal) ^ level) : NNReal) : Real)) } :
           FixedLevelStep S)) i
@@ -103,7 +103,7 @@ theorem communityManuscript_source_fixedLevel_fold
         ({ deleted := componentDeletedCodes S (D.component j)
            incoming := fun y : S => Real.toNNReal
              ((pointLaw j).real {(y.1 : LatticePoint n)} *
-               ((manuscriptIntensity b n (p.threshold D.componentCount)
+               ((ttc.t b n (p.Thresh D.componentCount)
                  (volumeEstimate j) *
                  (1 / (2 : NNReal) ^ level) : NNReal) : Real)) } :
           FixedLevelStep S)).get i).incoming x
@@ -111,11 +111,11 @@ theorem communityManuscript_source_fixedLevel_fold
     change Real.toNNReal
         ((pointLaw (e.symm i)).real {(x.1 : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability level) *
-            manuscriptIntensity b n (p.threshold D.componentCount)
+            ttc.t b n (p.Thresh D.componentCount)
               (volumeEstimate (e.symm i)) : NNReal) : Real)) =
       Real.toNNReal
         ((pointLaw (Fin.cast hlength i)).real {(x.1 : LatticePoint n)} *
-          ((manuscriptIntensity b n (p.threshold D.componentCount)
+          ((ttc.t b n (p.Thresh D.componentCount)
               (volumeEstimate (Fin.cast hlength i)) *
               (1 / (2 : NNReal) ^ level) : NNReal) : Real))
     have hindex : e.symm i = Fin.cast hlength i := Fin.ext rfl
@@ -182,18 +182,18 @@ theorem communityManuscript_source_fixedLevel_total_law
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
     let pointLaw := communityManuscriptPointLaw hn D p b hprecision
     let steps := manuscriptCertifiedFixedLevelSteps D b S
-      (p.threshold D.componentCount) volumeEstimate pointLaw
+      (p.Thresh D.componentCount) volumeEstimate pointLaw
         (1 / (2 : NNReal) ^ level)
     let sourceLaw : Fin D.componentCount → Measure (ManuscriptPoissonTape n) :=
       fun i => manuscriptPoissonTapeLaw
-        (manuscriptIntensity b n (p.threshold D.componentCount)
+        (ttc.t b n (p.Thresh D.componentCount)
           (volumeEstimate i)) (pointLaw i)
     (Measure.pi sourceLaw).map
       (fun sources => ∑ x : S, fixedLevelFold steps (fun _ => 0)
         (fun i => manuscriptPoissonTapePointCounts S 0 level
           (sources (Fin.cast (by
             exact manuscriptCertifiedFixedLevelSteps_length D b S
-              (p.threshold D.componentCount) volumeEstimate pointLaw
+              (p.Thresh D.componentCount) volumeEstimate pointLaw
                 (1 / (2 : NNReal) ^ level)) i))) x) =
       (fixedLevelLaw steps
         (Measure.pi (fun _ : S => ProbabilityTheory.poissonMeasure 0))).map
@@ -202,14 +202,14 @@ theorem communityManuscript_source_fixedLevel_total_law
   let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
   let pointLaw := communityManuscriptPointLaw hn D p b hprecision
   let steps := manuscriptCertifiedFixedLevelSteps D b S
-    (p.threshold D.componentCount) volumeEstimate pointLaw
+    (p.Thresh D.componentCount) volumeEstimate pointLaw
       (1 / (2 : NNReal) ^ level)
   let sourceLaw : Fin D.componentCount → Measure (ManuscriptPoissonTape n) :=
     fun i => manuscriptPoissonTapeLaw
-      (manuscriptIntensity b n (p.threshold D.componentCount)
+      (ttc.t b n (p.Thresh D.componentCount)
         (volumeEstimate i)) (pointLaw i)
   let hlength := manuscriptCertifiedFixedLevelSteps_length D b S
-    (p.threshold D.componentCount) volumeEstimate pointLaw
+    (p.Thresh D.componentCount) volumeEstimate pointLaw
       (1 / (2 : NNReal) ^ level)
   let counts : (Fin D.componentCount → ManuscriptPoissonTape n) → (S → Nat) :=
     fun sources => fixedLevelFold steps (fun _ => 0)
@@ -237,7 +237,7 @@ theorem communityManuscript_source_fixedLevel_error_bound
     (hcomponents : 0 < D.componentCount)
     (outcomes : Fin D.componentCount → VolumeOutcome)
     (hgood : ∀ i, (outcomes i).1 = true ∧
-      ((outcomes i).2 : Real) ∈ Arlib.relErr p.epsilonPrime
+      ((outcomes i).2 : Real) ∈ Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal)
     (level : Nat)
     (hlevel : level ≤ manuscriptDyadicCutoff (D.latticePoints b).ncard - 1) :
@@ -245,31 +245,31 @@ theorem communityManuscript_source_fixedLevel_error_bound
     let pointLaw := communityManuscriptPointLaw hn D p b hprecision
     let volumeEstimate := fun i : Fin D.componentCount => (outcomes i).2
     let steps := manuscriptCertifiedFixedLevelSteps D b S
-      (p.threshold D.componentCount) volumeEstimate pointLaw
+      (p.Thresh D.componentCount) volumeEstimate pointLaw
         (1 / (2 : NNReal) ^ level)
     let sourceLaw : Fin D.componentCount → Measure (ManuscriptPoissonTape n) :=
       fun i => manuscriptPoissonTapeLaw
-        (manuscriptIntensity b n (p.threshold D.componentCount)
+        (ttc.t b n (p.Thresh D.componentCount)
           (volumeEstimate i)) (pointLaw i)
-    let lower := Real.toNNReal (p.threshold D.componentCount *
-      (1 - p.epsilonPrime) ^ 2 * (1 - p.latticeEta) *
+    let lower := Real.toNNReal (p.Thresh D.componentCount *
+      (1 - p.ε') ^ 2 * (1 - p.latticeEta) *
       (1 / (2 : NNReal) ^ level))
-    let upper := Real.toNNReal (p.threshold D.componentCount *
-      (1 + p.epsilonPrime) ^ 2 * (1 + p.latticeEta) *
+    let upper := Real.toNNReal (p.Thresh D.componentCount *
+      (1 + p.ε') ^ 2 * (1 + p.latticeEta) *
       (1 / (2 : NNReal) ^ level))
-    let a := (1 - p.epsilonPrime) * p.epsilonPrime ^ 2 *
-      p.threshold D.componentCount / 24
+    let a := (1 - p.ε') * p.ε' ^ 2 *
+      p.Thresh D.componentCount / 24
     ((Measure.pi sourceLaw).map
       (fun sources => ∑ x : S, fixedLevelFold steps (fun _ => 0)
         (fun i => manuscriptPoissonTapePointCounts S 0 level
           (sources (Fin.cast (by
             exact manuscriptCertifiedFixedLevelSteps_length D b S
-              (p.threshold D.componentCount) volumeEstimate pointLaw
+              (p.Thresh D.componentCount) volumeEstimate pointLaw
                 (1 / (2 : NNReal) ^ level)) i))) x)).real
       {count : Nat |
-        (count : Real) < (1 - p.epsilonPrime) *
+        (count : Real) < (1 - p.ε') *
           ((D.latticePoints b).ncard : Real) * lower ∨
-        (1 + p.epsilonPrime) *
+        (1 + p.ε') *
           ((D.latticePoints b).ncard : Real) * upper < count} ≤
       2 * Real.exp (-a * (2 : Real) ^
         (manuscriptDyadicCutoff (D.latticePoints b).ncard - 1 - level)) := by

@@ -110,9 +110,9 @@ theorem communityManuscript_volume_outcomes_good
     (hcomponents : 0 < (prep.run F hbounded).componentCount) :
     let D := prep.run F hbounded
     let law : Fin D.componentCount → Measure VolumeOutcome :=
-      fun i => (communityManuscriptOracles hn prep).computeVolume
-        (D.component i) p.epsilonPrime
-        (p.deltaPrime D.componentCount)
+      fun i => (communityManuscriptOracles hn prep).ComputeVolume
+        (D.component i) p.ε'
+        (p.δ' D.componentCount)
     (Measure.pi law).real
       {outcomes | ∀ i : Fin D.componentCount,
         (outcomes i).1 = true} ≥
@@ -120,20 +120,20 @@ theorem communityManuscript_volume_outcomes_good
   dsimp only
   let D := prep.run F hbounded
   let law : Fin D.componentCount → Measure VolumeOutcome :=
-    fun i => (communityManuscriptOracles hn prep).computeVolume
-      (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount)
+    fun i => (communityManuscriptOracles hn prep).ComputeVolume
+      (D.component i) p.ε'
+      (p.δ' D.componentCount)
   have hcontract := community_manuscript_volume_contract hn prep F hbounded p
   have hgood := manuscript_independent_volume_outcomes_good
-    D.componentCount law (fun _ => p.deltaPrime D.componentCount)
+    D.componentCount law (fun _ => p.δ' D.componentCount)
     (fun i => (hcontract i).1)
     (fun i => (hcontract i).2.1)
   have hsum : (∑ _i : Fin D.componentCount,
-      p.deltaPrime D.componentCount) = p.delta / 4 := by
+      p.δ' D.componentCount) = p.delta / 4 := by
     have hm : (D.componentCount : Real) ≠ 0 := by
       exact_mod_cast (Nat.ne_of_gt hcomponents)
     simp only [Finset.sum_const, Finset.card_fin,
-      nsmul_eq_mul, ApproxParams.deltaPrime]
+      nsmul_eq_mul, ApproxParams.δ']
     field_simp
   simpa only [hsum] using hgood
 
@@ -146,27 +146,27 @@ theorem communityManuscript_volume_outcomes_accurate
     (p : ApproxParams) :
     let D := prep.run F hbounded
     let law : Fin D.componentCount → Measure VolumeOutcome :=
-      fun i => (communityManuscriptOracles hn prep).computeVolume
-        (D.component i) p.epsilonPrime
-        (p.deltaPrime D.componentCount)
+      fun i => (communityManuscriptOracles hn prep).ComputeVolume
+        (D.component i) p.ε'
+        (p.δ' D.componentCount)
     ∀ᵐ outcomes ∂Measure.pi law,
       ∀ i : Fin D.componentCount,
         (outcomes i).1 = true →
-          ((outcomes i).2 : Real) ∈ Arlib.relErr p.epsilonPrime
+          ((outcomes i).2 : Real) ∈ Arlib.relErr p.ε'
             (volume (D.component i).carrier).toReal := by
   dsimp only
   let D := prep.run F hbounded
   let law : Fin D.componentCount → Measure VolumeOutcome :=
-    fun i => (communityManuscriptOracles hn prep).computeVolume
-      (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount)
+    fun i => (communityManuscriptOracles hn prep).ComputeVolume
+      (D.component i) p.ε'
+      (p.δ' D.componentCount)
   have hcontract := community_manuscript_volume_contract hn prep F hbounded p
   letI : ∀ i, IsProbabilityMeasure (law i) := fun i => by
     simpa [law, D, communityManuscriptOracles] using
       (hcontract i).1
   exact Filter.eventually_all.2 fun i => by
     have hi : ∀ᵐ o ∂law i, o.1 = true →
-        (o.2 : Real) ∈ Arlib.relErr p.epsilonPrime
+        (o.2 : Real) ∈ Arlib.relErr p.ε'
           (volume (D.component i).carrier).toReal := by
       simpa [law, D, communityManuscriptOracles] using
         (hcontract i).2.2
@@ -182,21 +182,21 @@ theorem communityManuscript_volume_outcomes_good_accurate
     (hcomponents : 0 < (prep.run F hbounded).componentCount) :
     let D := prep.run F hbounded
     let law : Fin D.componentCount → Measure VolumeOutcome :=
-      fun i => (communityManuscriptOracles hn prep).computeVolume
-        (D.component i) p.epsilonPrime
-        (p.deltaPrime D.componentCount)
+      fun i => (communityManuscriptOracles hn prep).ComputeVolume
+        (D.component i) p.ε'
+        (p.δ' D.componentCount)
     (Measure.pi law).real
       {outcomes | ∀ i : Fin D.componentCount,
         (outcomes i).1 = true ∧
-          ((outcomes i).2 : Real) ∈ Arlib.relErr p.epsilonPrime
+          ((outcomes i).2 : Real) ∈ Arlib.relErr p.ε'
             (volume (D.component i).carrier).toReal} ≥
       1 - p.delta / 4 := by
   dsimp only
   let D := prep.run F hbounded
   let law : Fin D.componentCount → Measure VolumeOutcome :=
-    fun i => (communityManuscriptOracles hn prep).computeVolume
-      (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount)
+    fun i => (communityManuscriptOracles hn prep).ComputeVolume
+      (D.component i) p.ε'
+      (p.δ' D.componentCount)
   have hcontract := community_manuscript_volume_contract hn prep F hbounded p
   letI : ∀ i, IsProbabilityMeasure (law i) := fun i => by
     simpa [law, D, communityManuscriptOracles] using
@@ -211,7 +211,7 @@ theorem communityManuscript_volume_outcomes_good_accurate
       (Measure.pi law).real
         {outcomes | ∀ i : Fin D.componentCount,
           (outcomes i).1 = true ∧
-            ((outcomes i).2 : Real) ∈ Arlib.relErr p.epsilonPrime
+            ((outcomes i).2 : Real) ∈ Arlib.relErr p.ε'
               (volume (D.component i).carrier).toReal} := by
     unfold Measure.real
     apply ENNReal.toReal_mono (by finiteness)

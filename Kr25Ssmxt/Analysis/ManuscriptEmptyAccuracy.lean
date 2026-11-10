@@ -12,8 +12,8 @@ theorem manuscriptTTC_empty_accuracy
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (O : TTCOracles n k)
     (hempty : (O.preprocessing.run F hbounded).componentCount = 0) :
-    IsProbabilityMeasure (manuscriptTTC F hbounded p O) ∧
-    (manuscriptTTC F hbounded p O).real
+    IsProbabilityMeasure (ttcWith F hbounded p O) ∧
+    (ttcWith F hbounded p O).real
       {estimate | (estimate : Real) ∈
         Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
       1 - p.delta := by
@@ -36,7 +36,7 @@ theorem manuscriptTTC_empty_accuracy
   have hset : MeasurableSet
       {estimate : NNReal | (estimate : Real) ∈ Arlib.relErr p.epsilon 0} :=
     measurableSet_Icc.preimage (by fun_prop)
-  simp only [manuscriptTTC, hempty, if_pos, hvolume]
+  simp only [ttcWith, hempty, if_pos, hvolume]
   constructor
   · infer_instance
   · have hmem : (0 : NNReal) ∈

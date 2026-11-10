@@ -35,7 +35,7 @@ theorem community_manuscript_sample_append_fst {n k : Nat} (hn : 21 ≤ n)
         P count b eta delta)
       (fun batch => costedCharge (Measure.dirac (state.addBatch batch.2))
         (count * TTCRuntime.appendCopyOperations))).map Prod.fst =
-      ((communityManuscriptOracles hn prep).generateSamples
+      ((communityManuscriptOracles hn prep).GenerateSamples
         P count b eta delta).map (fun batch => state.addBatch batch.2) := by
   let f : SampleBatch n count → TTCState n := fun batch => state.addBatch batch.2
   have hf : Measurable f := by
@@ -126,7 +126,7 @@ theorem community_manuscript_count_sample_append_fst
           (Measure.dirac (second.1.addBatch batch.2))
           (second.2 * TTCRuntime.appendCopyOperations)))).map Prod.fst =
       (thinUntil state pending threshold).bind fun second =>
-        ((communityManuscriptOracles hn prep).generateSamples
+        ((communityManuscriptOracles hn prep).GenerateSamples
           P second.2 b eta delta).map (fun batch => second.1.addBatch batch.2) := by
   rw [costedBind_fst _ _
     (community_manuscript_sample_append_kernel_measurable hn prep factor P b eta delta)]
@@ -165,7 +165,7 @@ theorem community_manuscript_poisson_count_sample_append_fst
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) :
     (costedBind
-      (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.rate))
+      (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.p))
         TTCRuntime.poissonDrawOperations)
       (fun pending => costedBind
         (manuscriptCountThinWithCost state pending threshold)
@@ -175,11 +175,11 @@ theorem community_manuscript_poisson_count_sample_append_fst
           (fun batch => costedCharge
             (Measure.dirac (second.1.addBatch batch.2))
             (second.2 * TTCRuntime.appendCopyOperations))))).map Prod.fst =
-      (ProbabilityTheory.poissonMeasure (intensity * state.rate)).bind fun pending =>
+      (ProbabilityTheory.poissonMeasure (intensity * state.p)).bind fun pending =>
         (thinUntil state pending threshold).bind fun second =>
-          ((communityManuscriptOracles hn prep).generateSamples
+          ((communityManuscriptOracles hn prep).GenerateSamples
             P second.2 b eta delta).map (fun batch => second.1.addBatch batch.2) := by
-  let μ := ProbabilityTheory.poissonMeasure (intensity * state.rate)
+  let μ := ProbabilityTheory.poissonMeasure (intensity * state.p)
   let next : Nat → Measure (TTCState n × Nat) := fun pending =>
     costedBind (manuscriptCountThinWithCost state pending threshold)
       (fun second => costedBind
@@ -233,7 +233,7 @@ private noncomputable def communityCostedPoissonCountSampleAppend
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) : Measure (TTCState n × Nat) :=
   costedBind
-    (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.rate))
+    (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.p))
       TTCRuntime.poissonDrawOperations)
     (fun pending => communityCostedCountSampleAppend hn prep factor P b eta delta
       threshold (state, pending))
@@ -256,14 +256,14 @@ theorem community_manuscript_poisson_count_sample_append_kernel_measurable
         threshold z.1 z.2) := by
   let X := TTCState n × NNReal
   let law : X → Measure Nat := fun z =>
-    ProbabilityTheory.poissonMeasure (z.2 * z.1.rate)
+    ProbabilityTheory.poissonMeasure (z.2 * z.1.p)
   let next : X × Nat → Measure (TTCState n × Nat) := fun z =>
     communityCostedCountSampleAppend hn prep factor P b eta delta threshold
       (z.1.1, z.2)
   have hcoords : Measurable (fun z : X =>
-      (z.1.rate, z.1.samples, z.1.nextLabel)) :=
+      (z.1.p, z.1.X, z.1.nextLabel)) :=
     (comap_measurable _).comp measurable_fst
-  have hrate : Measurable (fun z : X => z.1.rate) :=
+  have hrate : Measurable (fun z : X => z.1.p) :=
     measurable_fst.comp hcoords
   have hlaw : Measurable law :=
     measurable_poissonMeasure.comp (measurable_snd.mul hrate)
@@ -368,9 +368,9 @@ theorem community_manuscript_rate_poisson_tail_fst
     (communityCostedRateTail hn prep factor P b eta delta threshold
       state intensity).map Prod.fst =
       (manuscriptRateThinUntil state intensity threshold).bind fun first =>
-        (ProbabilityTheory.poissonMeasure (intensity * first.rate)).bind fun pending =>
+        (ProbabilityTheory.poissonMeasure (intensity * first.p)).bind fun pending =>
           (thinUntil first pending threshold).bind fun second =>
-            ((communityManuscriptOracles hn prep).generateSamples
+            ((communityManuscriptOracles hn prep).GenerateSamples
               P second.2 b eta delta).map
               (fun batch => second.1.addBatch batch.2) := by
   unfold communityCostedRateTail
@@ -401,8 +401,8 @@ private noncomputable def communityCostedDeletionTail
     (intensity : NNReal) : Measure (TTCState n × Nat) :=
   let deleted := state.removeComponent P
   let deletionCost := TTCRuntime.deletionPassOperations n
-    P.presentation.facetCount state.samples.card
-      (state.samples.card - deleted.samples.card)
+    P.presentation.facetCount state.X.card
+      (state.X.card - deleted.X.card)
   costedBind (costedCharge (Measure.dirac deleted) deletionCost)
     (fun afterDeletion => communityCostedRateTail hn prep factor P b eta delta
       threshold afterDeletion intensity)
@@ -412,21 +412,21 @@ theorem community_manuscript_deletion_pair_measurable {n : Nat}
     Measurable (fun state : TTCState n =>
       (state.removeComponent P,
         TTCRuntime.deletionPassOperations n P.presentation.facetCount
-          state.samples.card
-          (state.samples.card - (state.removeComponent P).samples.card))) := by
+          state.X.card
+          (state.X.card - (state.removeComponent P).X.card))) := by
   have hcoords : Measurable (fun s : TTCState n =>
-      (s.rate, s.samples, s.nextLabel)) := comap_measurable _
-  have hsamples : Measurable (fun s : TTCState n => s.samples) :=
+      (s.p, s.X, s.nextLabel)) := comap_measurable _
+  have hsamples : Measurable (fun s : TTCState n => s.X) :=
     (measurable_fst.comp measurable_snd).comp hcoords
-  have hcard : Measurable (fun s : TTCState n => s.samples.card) :=
+  have hcard : Measurable (fun s : TTCState n => s.X.card) :=
     (measurable_of_countable (fun copies : Finset (SampleCopy n) =>
       copies.card)).comp hsamples
   have hdeleted : Measurable (fun s : TTCState n => s.removeComponent P) :=
     measurable_removeComponent P
   have hcost : Measurable (fun s : TTCState n =>
       TTCRuntime.deletionPassOperations n P.presentation.facetCount
-        s.samples.card
-        (s.samples.card - (s.removeComponent P).samples.card)) := by
+        s.X.card
+        (s.X.card - (s.removeComponent P).X.card)) := by
     let f : Nat × Nat → Nat := fun counts =>
       TTCRuntime.deletionPassOperations n P.presentation.facetCount counts.1
         (counts.1 - counts.2)
@@ -444,7 +444,7 @@ theorem community_manuscript_deletion_tail_joint_measurable
   let first : TTCState n × NNReal → Measure (TTCState n × Nat) := fun z =>
     let deleted := z.1.removeComponent P
     let cost := TTCRuntime.deletionPassOperations n P.presentation.facetCount
-      z.1.samples.card (z.1.samples.card - deleted.samples.card)
+      z.1.X.card (z.1.X.card - deleted.X.card)
     costedCharge (Measure.dirac deleted) cost
   let next : (TTCState n × NNReal) × TTCState n →
       Measure (TTCState n × Nat) := fun z =>
@@ -452,8 +452,8 @@ theorem community_manuscript_deletion_tail_joint_measurable
   have hpair : Measurable (fun z : TTCState n × NNReal =>
       (z.1.removeComponent P,
         TTCRuntime.deletionPassOperations n P.presentation.facetCount
-          z.1.samples.card
-          (z.1.samples.card - (z.1.removeComponent P).samples.card))) :=
+          z.1.X.card
+          (z.1.X.card - (z.1.removeComponent P).X.card))) :=
     (community_manuscript_deletion_pair_measurable P).comp measurable_fst
   have hfirst : Measurable first := by
     have hdirac := Measure.measurable_dirac.comp hpair
@@ -461,8 +461,8 @@ theorem community_manuscript_deletion_tail_joint_measurable
         Measure.dirac
           (z.1.removeComponent P,
             TTCRuntime.deletionPassOperations n P.presentation.facetCount
-              z.1.samples.card
-              (z.1.samples.card - (z.1.removeComponent P).samples.card))) := by
+              z.1.X.card
+              (z.1.X.card - (z.1.removeComponent P).X.card))) := by
       funext z
       simp only [first, costedCharge, Measure.map_dirac]
     rw [heq]
@@ -503,16 +503,16 @@ theorem community_manuscript_deletion_tail_fst
       state intensity).map Prod.fst =
       (manuscriptRateThinUntil (state.removeComponent P) intensity threshold).bind
         fun first =>
-          (ProbabilityTheory.poissonMeasure (intensity * first.rate)).bind
+          (ProbabilityTheory.poissonMeasure (intensity * first.p)).bind
             fun pending =>
               (thinUntil first pending threshold).bind fun second =>
-                ((communityManuscriptOracles hn prep).generateSamples
+                ((communityManuscriptOracles hn prep).GenerateSamples
                   P second.2 b eta delta).map
                   (fun batch => second.1.addBatch batch.2) := by
   let deleted := state.removeComponent P
   let deletionCost := TTCRuntime.deletionPassOperations n
-    P.presentation.facetCount state.samples.card
-      (state.samples.card - deleted.samples.card)
+    P.presentation.facetCount state.X.card
+      (state.X.card - deleted.X.card)
   have hpair : Measurable (fun s : TTCState n => (s, intensity)) :=
     measurable_id.prodMk measurable_const
   have hnext : Measurable (fun s : TTCState n =>
@@ -545,8 +545,8 @@ theorem community_manuscript_deletion_tail_kernel_measurable
         state intensity) := by
   let deleted := state.removeComponent P
   let deletionCost := TTCRuntime.deletionPassOperations n
-    P.presentation.facetCount state.samples.card
-      (state.samples.card - deleted.samples.card)
+    P.presentation.facetCount state.X.card
+      (state.X.card - deleted.X.card)
   let shift : TTCState n × Nat → TTCState n × Nat :=
     fun future => (future.1, deletionCost + future.2)
   have htail : Measurable (fun intensity : NNReal =>
@@ -596,7 +596,7 @@ noncomputable def communityCostedComponentTail
     (eta delta threshold : Real) (state : TTCState n)
     (outcome : VolumeOutcome) : Measure (TTCState n × Nat) :=
   communityCostedDeletionTail hn prep factor P b eta delta threshold state
-    (manuscriptIntensity b n threshold outcome.2)
+    (ttc.t b n threshold outcome.2)
 
 theorem community_manuscript_component_tail_measurable
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -606,8 +606,8 @@ theorem community_manuscript_component_tail_measurable
     Measurable (communityCostedComponentTail hn prep factor P b eta delta
       threshold state) := by
   have hintensity : Measurable (fun outcome : VolumeOutcome =>
-      manuscriptIntensity b n threshold outcome.2) := by
-    unfold manuscriptIntensity
+      ttc.t b n threshold outcome.2) := by
+    unfold ttc.t
     exact (measurable_const.mul measurable_snd)
   exact (community_manuscript_deletion_tail_kernel_measurable hn prep factor P b
     eta delta threshold hthreshold state).comp hintensity
@@ -620,11 +620,11 @@ theorem community_manuscript_component_tail_joint_measurable
       communityCostedComponentTail hn prep factor P b eta delta threshold
         z.1 z.2) := by
   have hintensity : Measurable (fun outcome : VolumeOutcome =>
-      manuscriptIntensity b n threshold outcome.2) := by
-    unfold manuscriptIntensity
+      ttc.t b n threshold outcome.2) := by
+    unfold ttc.t
     exact measurable_const.mul measurable_snd
   have hpair : Measurable (fun z : TTCState n × VolumeOutcome =>
-      (z.1, manuscriptIntensity b n threshold z.2.2)) :=
+      (z.1, ttc.t b n threshold z.2.2)) :=
     measurable_fst.prodMk (hintensity.comp measurable_snd)
   have hcomp := (community_manuscript_deletion_tail_joint_measurable hn prep
     factor P b eta delta threshold hthreshold).comp hpair
@@ -633,7 +633,7 @@ theorem community_manuscript_component_tail_joint_measurable
       communityCostedDeletionTail hn prep factor P b eta delta threshold
         z.1 z.2) ∘
       (fun z : TTCState n × VolumeOutcome =>
-        (z.1, manuscriptIntensity b n threshold z.2.2)))
+        (z.1, ttc.t b n threshold z.2.2)))
   exact hcomp
 
 theorem community_manuscript_component_fst
@@ -659,7 +659,7 @@ theorem community_manuscript_component_fst
   congr 1
   funext outcome
   exact community_manuscript_deletion_tail_fst hn prep factor P b eta delta
-    threshold hthreshold state (manuscriptIntensity b n threshold outcome.2)
+    threshold hthreshold state (ttc.t b n threshold outcome.2)
 
 theorem community_manuscript_component_kernel_measurable
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -857,7 +857,7 @@ theorem community_manuscript_poisson_count_sample_append_isProbabilityMeasure
       (communityCostedPoissonCountSampleAppend hn prep factor P b eta delta
         threshold state intensity) := by
   letI : IsProbabilityMeasure
-      (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.rate))
+      (costedCharge (ProbabilityTheory.poissonMeasure (intensity * state.p))
         TTCRuntime.poissonDrawOperations) :=
     costedCharge_isProbabilityMeasure _ _
   unfold communityCostedPoissonCountSampleAppend
@@ -911,8 +911,8 @@ theorem community_manuscript_deletion_tail_mass_one
       state intensity) Set.univ = 1 := by
   let deleted := state.removeComponent P
   let deletionCost := TTCRuntime.deletionPassOperations n
-    P.presentation.facetCount state.samples.card
-      (state.samples.card - deleted.samples.card)
+    P.presentation.facetCount state.X.card
+      (state.X.card - deleted.X.card)
   have hpair : Measurable (fun s : TTCState n => (s, intensity)) :=
     measurable_id.prodMk measurable_const
   have hbase := community_manuscript_costed_rate_tail_measurable hn prep factor
@@ -963,7 +963,7 @@ theorem community_manuscript_component_mass_one
           state)) :=
     costedBind_isProbabilityMeasure _ _ hnext (fun outcome =>
       ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b eta delta
-        threshold hthreshold state (manuscriptIntensity b n threshold outcome.2)⟩)
+        threshold hthreshold state (ttc.t b n threshold outcome.2)⟩)
   exact hprob.measure_univ
 
 set_option maxHeartbeats 800000 in

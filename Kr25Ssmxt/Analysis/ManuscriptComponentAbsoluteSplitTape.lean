@@ -18,9 +18,9 @@ theorem communityManuscriptComponentGivenVolume_absolute_split_tape
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n)
-    (level : Nat) (hrate : state.rate = 1 / (2 : NNReal) ^ level)
+    (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level)
     (hfresh : state.LabelsFresh) :
-    let intensity := manuscriptIntensity b n threshold outcome.2
+    let intensity := ttc.t b n threshold outcome.2
     let deleted := state.removeComponent P
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
@@ -48,7 +48,7 @@ theorem communityManuscriptComponentGivenVolume_absolute_split_tape
       second.1.addBatch
         (fun i : Fin second.2 => tape (second.1.nextLabel + i.val))
   let deleted := state.removeComponent P
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   let source : Measure (TTCState n × Nat) :=
     (poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>

@@ -66,26 +66,26 @@ theorem community_manuscript_volume_contract_of_bounds
     (hbounds :
       let D := prep.run F hbounded
       ∀ i : Fin D.componentCount,
-        ((D.component i).manuscriptVolumeLower p.epsilonPrime : Real) ≤
+        ((D.component i).manuscriptVolumeLower p.ε' : Real) ≤
           (volume (D.component i).carrier).toReal ∧
         (volume (D.component i).carrier).toReal ≤
-          ((D.component i).manuscriptVolumeUpper p.epsilonPrime : Real)) :
+          ((D.component i).manuscriptVolumeUpper p.ε' : Real)) :
     ComputeVolumeContract (communityManuscriptOracles hn prep)
       F hbounded p := by
   let D := prep.run F hbounded
   intro i
   have hn3 : 3 ≤ n := by omega
   have hspec := CommunityCV18.communityCV18VolumeLaw_spec
-    hn3 (D.component i) p.epsilonPrime
-    (p.deltaPrime D.componentCount)
+    hn3 (D.component i) p.ε'
+    (p.δ' D.componentCount)
     (PaperRuntime.ttc_request_admissible D p i)
   letI : IsProbabilityMeasure
-      (communityCV18VolumeLaw hn3 (D.component i) p.epsilonPrime
-        (p.deltaPrime D.componentCount)) := hspec.1
+      (communityCV18VolumeLaw hn3 (D.component i) p.ε'
+        (p.δ' D.componentCount)) := hspec.1
   have hclip := (D.component i).clipManuscriptVolumeLaw_spec
-    (communityCV18VolumeLaw hn3 (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount))
-    p.epsilonPrime (p.deltaPrime D.componentCount)
+    (communityCV18VolumeLaw hn3 (D.component i) p.ε'
+      (p.δ' D.componentCount))
+    p.ε' (p.δ' D.componentCount)
     (div_nonneg p.epsilon_pos.le (by norm_num))
     (hbounds i).1 (hbounds i).2 hspec.2.1 hspec.2.2
   simpa only [communityManuscriptOracles, D] using hclip

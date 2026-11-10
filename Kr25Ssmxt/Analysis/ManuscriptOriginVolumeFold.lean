@@ -17,7 +17,7 @@ structure ManuscriptOriginCertifiedComponent
     (codedLatticePoints polytope b).Finite ∧
     (codedLatticePoints polytope b).Nonempty
   volumeProbability : IsProbabilityMeasure
-    ((communityManuscriptOracles hn prep).computeVolume polytope eta delta)
+    ((communityManuscriptOracles hn prep).ComputeVolume polytope eta delta)
 
 noncomputable def communityManuscriptOriginComponentsLaw
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -46,7 +46,7 @@ theorem measurable_communityManuscriptOriginComponentsLaw
           hn prep d.polytope b eta delta threshold d.route) := by
         exact measurable_manuscriptOriginComponentVolumeLaw hn d.polytope
           b eta threshold hthreshold d.route
-          ((communityManuscriptOracles hn prep).computeVolume d.polytope
+          ((communityManuscriptOracles hn prep).ComputeVolume d.polytope
             eta delta) d.volumeProbability
       exact (Measure.measurable_bind' ih).comp hstep
 
@@ -69,7 +69,7 @@ theorem communityManuscriptOriginComponentsLaw_isProbabilityMeasure
             eta delta threshold d.route c) :=
         manuscriptOriginComponentVolumeLaw_isProbabilityMeasure hn
           d.polytope b eta threshold hthreshold d.route
-          ((communityManuscriptOracles hn prep).computeVolume d.polytope
+          ((communityManuscriptOracles hn prep).ComputeVolume d.polytope
             eta delta) d.volumeProbability c
       change IsProbabilityMeasure
         ((communityManuscriptOriginComponentLaw hn prep d.polytope b
@@ -114,7 +114,7 @@ theorem communityManuscriptOriginComponentsLaw_map_state
           delta threshold hthreshold rest
       have hvolRest : ∀ P ∈ rest.map (fun d => d.polytope),
           IsProbabilityMeasure
-            ((communityManuscriptOracles hn prep).computeVolume P eta
+            ((communityManuscriptOracles hn prep).ComputeVolume P eta
               delta) := by
         intro P hP
         obtain ⟨d', _, rfl⟩ := List.mem_map.mp hP

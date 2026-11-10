@@ -53,10 +53,10 @@ theorem samplesAfter_congr_allocated {n : Nat}
     (coins other : Nat × Nat → Bool)
     (hagrees : ∀ round label, label < s.nextLabel →
       coins (round, label) = other (round, label)) :
-    samplesAfter coins rounds s.samples =
-      samplesAfter other rounds s.samples := by
+    samplesAfter coins rounds s.X =
+      samplesAfter other rounds s.X := by
   ext copy
-  by_cases hcopy : copy ∈ s.samples
+  by_cases hcopy : copy ∈ s.X
   · simp only [samplesAfter, Finset.mem_filter, hcopy, true_and]
     unfold survives
     constructor <;> intro hsurv round hround

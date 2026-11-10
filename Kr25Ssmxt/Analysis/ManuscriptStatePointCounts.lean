@@ -13,7 +13,7 @@ open Classical
 def TTCState.pointCount {n : Nat} (s : TTCState n)
     (x : LatticePoint n) : Nat := by
   classical
-  exact (s.samples.filter fun copy => copy.2 = x).card
+  exact (s.X.filter fun copy => copy.2 = x).card
 
 def TTCState.pointCounts {n : Nat} (s : TTCState n)
     (S : Finset (LatticePoint n)) : S → Nat :=
@@ -26,22 +26,22 @@ theorem TTCState.pointCount_removeComponent {n : Nat}
   classical
   by_cases hx : x.toPoint ∈ P.carrier
   · have hfilter :
-        ((s.samples.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
+        ((s.X.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
           fun copy => copy.2 = x) = ∅ := by
       ext copy
       by_cases hc : copy.2 = x <;> simp [hc, hx]
-    change ((s.samples.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
+    change ((s.X.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
         fun copy => copy.2 = x).card =
       if x.toPoint ∈ P.carrier then 0 else s.pointCount x
     rw [hfilter, if_pos hx]
     simp
   · have hfilter :
-        ((s.samples.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
+        ((s.X.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
           fun copy => copy.2 = x) =
-        (s.samples.filter fun copy => copy.2 = x) := by
+        (s.X.filter fun copy => copy.2 = x) := by
       ext copy
       by_cases hc : copy.2 = x <;> simp [hc, hx]
-    change ((s.samples.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
+    change ((s.X.filter fun copy => copy.2.toPoint ∉ P.carrier).filter
         fun copy => copy.2 = x).card =
       if x.toPoint ∈ P.carrier then 0 else s.pointCount x
     rw [hfilter, if_neg hx]
@@ -55,7 +55,7 @@ theorem TTCState.pointCount_addBatch {n count : Nat}
   classical
   let added : Finset (SampleCopy n) :=
     Finset.univ.image fun i : Fin count => (s.nextLabel + i.val, batch i)
-  have hdisjoint : Disjoint s.samples added := by
+  have hdisjoint : Disjoint s.X added := by
     apply Finset.disjoint_left.mpr
     intro copy hstored hadd
     obtain ⟨i, _, heq⟩ := Finset.mem_image.mp hadd
@@ -74,8 +74,8 @@ theorem TTCState.pointCount_addBatch {n count : Nat}
     rw [Finset.filter_image]
     rw [Finset.card_image_of_injective _ hinj]
     rfl
-  change ((s.samples ∪ added).filter fun copy => copy.2 = x).card =
-    (s.samples.filter fun copy => copy.2 = x).card + colourCount batch x
+  change ((s.X ∪ added).filter fun copy => copy.2 = x).card =
+    (s.X.filter fun copy => copy.2 = x).card + colourCount batch x
   rw [Finset.filter_union,
     Finset.card_union_of_disjoint (Finset.disjoint_filter_filter hdisjoint),
     hadded]

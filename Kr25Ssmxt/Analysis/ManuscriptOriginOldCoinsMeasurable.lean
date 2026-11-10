@@ -66,7 +66,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_controls
     (show Measurable (fun s : TTCState n => s.nextLabel) from
       (measurable_snd.comp measurable_snd).comp
         (comap_measurable (fun s : TTCState n =>
-          (s.rate, s.samples, s.nextLabel)))).comp hdeleted
+          (s.p, s.X, s.nextLabel)))).comp hdeleted
   exact (measurable_manuscriptOriginConfiguration_level.add hround).prodMk
     hlabel
 

@@ -10,66 +10,66 @@ namespace Kr25Ssmxt
 theorem manuscriptEstimate_of_population_envelope
     {n : Nat} (s : TTCState n) (b count : Nat)
     (p : ApproxParams) (threshold : Real) (hthreshold : 0 < threshold)
-    (hrate : 0 < (s.rate : Real))
+    (hrate : 0 < (s.p : Real))
     (hlower :
-      (1 - p.epsilonPrime) ^ 3 * (1 - p.latticeEta) *
-        threshold * count * (s.rate : Real) ≤ s.samples.card)
+      (1 - p.ε') ^ 3 * (1 - p.latticeEta) *
+        threshold * count * (s.p : Real) ≤ s.X.card)
     (hupper :
-      (s.samples.card : Real) ≤
-        (1 + p.epsilonPrime) ^ 3 * (1 + p.latticeEta) *
-          threshold * count * (s.rate : Real)) :
-    (manuscriptEstimate b threshold s : Real) ∈
+      (s.X.card : Real) ≤
+        (1 + p.ε') ^ 3 * (1 + p.latticeEta) *
+          threshold * count * (s.p : Real)) :
+    (Est b threshold s : Real) ∈
       Arlib.relErr (p.epsilon / 2)
         ((count : Real) / (10 : Real) ^ (b * n)) := by
   let scale : Real := (10 : Real) ^ (b * n)
   have hscale : 0 < scale := by dsimp [scale]; positivity
-  have hdenom : 0 < (s.rate : Real) * threshold * scale := by positivity
+  have hdenom : 0 < (s.p : Real) * threshold * scale := by positivity
   have hcount : (0 : Real) ≤ count := Nat.cast_nonneg _
   have hbase := process_components_lattice_count_accuracy_parameter_envelope p
-  have hmult : 0 ≤ (count : Real) * threshold * (s.rate : Real) := by positivity
+  have hmult : 0 ≤ (count : Real) * threshold * (s.p : Real) := by positivity
   have htargetLower :
-      (1 - p.epsilon / 2) * count * (s.rate : Real) * threshold ≤
-        (s.samples.card : Real) := by
+      (1 - p.epsilon / 2) * count * (s.p : Real) * threshold ≤
+        (s.X.card : Real) := by
     calc
-      (1 - p.epsilon / 2) * count * (s.rate : Real) * threshold ≤
-          (1 - p.epsilonPrime) ^ 3 * (1 - p.latticeEta) *
-            threshold * count * (s.rate : Real) := by
+      (1 - p.epsilon / 2) * count * (s.p : Real) * threshold ≤
+          (1 - p.ε') ^ 3 * (1 - p.latticeEta) *
+            threshold * count * (s.p : Real) := by
         have h := mul_le_mul_of_nonneg_right hbase.1 hmult
         nlinarith
-      _ ≤ (s.samples.card : Real) := hlower
+      _ ≤ (s.X.card : Real) := hlower
   have htargetUpper :
-      (s.samples.card : Real) ≤
-        (1 + p.epsilon / 2) * count * (s.rate : Real) * threshold := by
+      (s.X.card : Real) ≤
+        (1 + p.epsilon / 2) * count * (s.p : Real) * threshold := by
     calc
-      (s.samples.card : Real) ≤
-          (1 + p.epsilonPrime) ^ 3 * (1 + p.latticeEta) *
-            threshold * count * (s.rate : Real) := hupper
-      _ ≤ (1 + p.epsilon / 2) * count * (s.rate : Real) * threshold := by
+      (s.X.card : Real) ≤
+          (1 + p.ε') ^ 3 * (1 + p.latticeEta) *
+            threshold * count * (s.p : Real) := hupper
+      _ ≤ (1 + p.epsilon / 2) * count * (s.p : Real) * threshold := by
         have h := mul_le_mul_of_nonneg_right hbase.2 hmult
         nlinarith
-  have hestimate : (manuscriptEstimate b threshold s : Real) =
-      (s.samples.card : Real) / ((s.rate : Real) * threshold * scale) := by
-    simp [manuscriptEstimate, scale, Real.coe_toNNReal threshold hthreshold.le]
+  have hestimate : (Est b threshold s : Real) =
+      (s.X.card : Real) / ((s.p : Real) * threshold * scale) := by
+    simp [Est, scale, Real.coe_toNNReal threshold hthreshold.le]
   rw [Arlib.mem_relErr, hestimate]
   constructor
   · change (1 - p.epsilon / 2) * ((count : Real) / scale) ≤
-        (s.samples.card : Real) / ((s.rate : Real) * threshold * scale)
+        (s.X.card : Real) / ((s.p : Real) * threshold * scale)
     rw [← mul_div_assoc]
     apply (div_le_div_iff₀ hscale hdenom).2
     calc
-      ((1 - p.epsilon / 2) * count) * ((s.rate : Real) * threshold * scale) =
-          ((1 - p.epsilon / 2) * count * (s.rate : Real) * threshold) * scale := by ring
-      _ ≤ (s.samples.card : Real) * scale :=
+      ((1 - p.epsilon / 2) * count) * ((s.p : Real) * threshold * scale) =
+          ((1 - p.epsilon / 2) * count * (s.p : Real) * threshold) * scale := by ring
+      _ ≤ (s.X.card : Real) * scale :=
         mul_le_mul_of_nonneg_right htargetLower hscale.le
-  · change (s.samples.card : Real) / ((s.rate : Real) * threshold * scale) ≤
+  · change (s.X.card : Real) / ((s.p : Real) * threshold * scale) ≤
         (1 + p.epsilon / 2) * ((count : Real) / scale)
     rw [← mul_div_assoc]
     apply (div_le_div_iff₀ hdenom hscale).2
     calc
-      (s.samples.card : Real) * scale ≤
-          ((1 + p.epsilon / 2) * count * (s.rate : Real) * threshold) * scale :=
+      (s.X.card : Real) * scale ≤
+          ((1 + p.epsilon / 2) * count * (s.p : Real) * threshold) * scale :=
         mul_le_mul_of_nonneg_right htargetUpper hscale.le
       _ = ((1 + p.epsilon / 2) * count) *
-            ((s.rate : Real) * threshold * scale) := by ring
+            ((s.p : Real) * threshold * scale) := by ring
 
 end Kr25Ssmxt

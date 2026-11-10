@@ -19,13 +19,13 @@ noncomputable def manuscriptOriginComponentVolumeLaw
     Measure (ManuscriptOriginConfiguration n) :=
   volumeLaw.bind fun outcome =>
     manuscriptOriginRefreshedComponentLaw hn P b eta threshold hroute
-      (manuscriptIntensity b n threshold outcome.2) c
+      (ttc.t b n threshold outcome.2) c
 
 theorem measurable_manuscriptIntensity_outcome
     {n : Nat} (b : Nat) (threshold : Real) :
     Measurable (fun z : ManuscriptOriginConfiguration n × VolumeOutcome =>
-      manuscriptIntensity b n threshold z.2.2) := by
-  unfold manuscriptIntensity
+      ttc.t b n threshold z.2.2) := by
+  unfold ttc.t
   exact (measurable_const.mul measurable_const).mul
     (measurable_snd.comp measurable_snd)
 
@@ -43,13 +43,13 @@ theorem measurable_manuscriptOriginComponentVolumeLaw
       hroute volumeLaw) := by
   have hpair : Measurable (fun z :
       ManuscriptOriginConfiguration n × VolumeOutcome =>
-      (z.1, manuscriptIntensity b n threshold z.2.2)) :=
+      (z.1, ttc.t b n threshold z.2.2)) :=
     measurable_fst.prodMk
       (measurable_manuscriptIntensity_outcome b threshold)
   have hnext : Measurable (fun z :
       ManuscriptOriginConfiguration n × VolumeOutcome =>
       manuscriptOriginRefreshedComponentLaw hn P b eta threshold hroute
-        (manuscriptIntensity b n threshold z.2.2) z.1) := by
+        (ttc.t b n threshold z.2.2) z.1) := by
     have hcomp :=
       (measurable_manuscriptOriginRefreshedComponentLaw_intensity hn P b
         eta threshold hthreshold hroute).comp hpair
@@ -59,7 +59,7 @@ theorem measurable_manuscriptOriginComponentVolumeLaw
     measurable_const (fun _ => hvolume)
     (fun z : ManuscriptOriginConfiguration n × VolumeOutcome =>
       manuscriptOriginRefreshedComponentLaw hn P b eta threshold hroute
-        (manuscriptIntensity b n threshold z.2.2) z.1) hnext
+        (ttc.t b n threshold z.2.2) z.1) hnext
 
 theorem measurable_manuscriptOriginRefreshedComponentLaw_outcome
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
@@ -71,11 +71,11 @@ theorem measurable_manuscriptOriginRefreshedComponentLaw_outcome
     (c : ManuscriptOriginConfiguration n) :
     Measurable (fun outcome : VolumeOutcome =>
       manuscriptOriginRefreshedComponentLaw hn P b eta threshold hroute
-        (manuscriptIntensity b n threshold outcome.2) c) := by
+        (ttc.t b n threshold outcome.2) c) := by
   have hpair : Measurable (fun outcome : VolumeOutcome =>
-      (c, manuscriptIntensity b n threshold outcome.2)) := by
+      (c, ttc.t b n threshold outcome.2)) := by
     apply measurable_const.prodMk
-    unfold manuscriptIntensity
+    unfold ttc.t
     exact (measurable_const.mul measurable_const).mul measurable_snd
   have hcomp :=
     (measurable_manuscriptOriginRefreshedComponentLaw_intensity hn P b
@@ -102,7 +102,7 @@ theorem manuscriptOriginComponentVolumeLaw_isProbabilityMeasure
     (Filter.Eventually.of_forall (fun outcome =>
       manuscriptOriginRefreshedComponentLaw_isProbabilityMeasure hn P b
         eta threshold hthreshold hroute
-        (manuscriptIntensity b n threshold outcome.2) c))
+        (ttc.t b n threshold outcome.2) c))
 
 set_option maxHeartbeats 1000000 in
 theorem manuscriptOriginComponentVolumeLaw_map_state
@@ -123,7 +123,7 @@ theorem manuscriptOriginComponentVolumeLaw_map_state
         threshold outcome c.state) := by
   let K : VolumeOutcome → Measure (ManuscriptOriginConfiguration n) :=
     fun outcome => manuscriptOriginRefreshedComponentLaw hn P b eta
-      threshold hroute (manuscriptIntensity b n threshold outcome.2) c
+      threshold hroute (ttc.t b n threshold outcome.2) c
   have hK : Measurable K :=
     measurable_manuscriptOriginRefreshedComponentLaw_outcome hn P b eta
       threshold hthreshold hroute c
@@ -148,7 +148,7 @@ noncomputable def communityManuscriptOriginComponentLaw
     (c : ManuscriptOriginConfiguration n) :
     Measure (ManuscriptOriginConfiguration n) :=
   manuscriptOriginComponentVolumeLaw hn P b eta threshold hroute
-    ((communityManuscriptOracles hn prep).computeVolume P eta delta) c
+    ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) c
 
 theorem communityManuscriptOriginComponentLaw_map_state
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -167,7 +167,7 @@ theorem communityManuscriptOriginComponentLaw_map_state
   unfold communityManuscriptOriginComponentLaw
   rw [manuscriptOriginComponentVolumeLaw_map_state hn prep P b eta delta
     threshold hthreshold hroute
-    ((communityManuscriptOracles hn prep).computeVolume P eta delta) c]
+    ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) c]
   rfl
 
 end Kr25Ssmxt

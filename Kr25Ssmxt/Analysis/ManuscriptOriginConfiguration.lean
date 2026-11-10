@@ -12,7 +12,7 @@ structure ManuscriptOriginConfiguration (n : Nat) where
   source : ManuscriptOriginSourceState n
   origin : Nat → Nat × Nat
   level : Nat
-  rate : state.rate = 1 / (2 : NNReal) ^ level
+  p : state.p = 1 / (2 : NNReal) ^ level
   fresh : state.LabelsFresh
   history : ManuscriptOriginHistory state.nextLabel source.processed origin
   valid : ManuscriptOriginValid state origin source.valid
@@ -28,7 +28,7 @@ noncomputable def ManuscriptOriginConfiguration.initial (n : Nat) :
   source := ManuscriptOriginSourceState.initial
   origin := fun _ => (0, 0)
   level := 0
-  rate := by simp [TTCState.initial]
+  p := by simp [TTCState.initial]
   fresh := TTCState.initial_labelsFresh n
   history := manuscriptOriginHistory_initial _
   valid := manuscriptOriginValid_initial _
@@ -81,12 +81,12 @@ noncomputable def ManuscriptOriginConfiguration.advance
     second.1.nextLabel second.2 index
   let nextState := second.1.addBatch points
   let nextSource := c.source.step step
-  have hnextRate : nextState.rate =
+  have hnextRate : nextState.p =
       1 / (2 : NNReal) ^ (preRounds + activeRounds) := by
-    change (c.state.rate / (2 : NNReal) ^ rounds) /
+    change (c.state.p / (2 : NNReal) ^ rounds) /
       (2 : NNReal) ^ activeRounds =
       1 / (2 : NNReal) ^ (c.level + rounds + activeRounds)
-    rw [c.rate]
+    rw [c.p]
     simp only [pow_add, div_eq_mul_inv, mul_inv_rev]
     ac_rfl
   have hdeletedFresh : deleted.LabelsFresh :=
@@ -148,14 +148,14 @@ noncomputable def ManuscriptOriginConfiguration.advance
         (c.source.valid.filter fun tag =>
           (c.source.marks tag).toPoint ∉ P.carrier) := by
       intro copy hcopy
-      have hcopyFirst : copy ∈ first.samples := by
+      have hcopyFirst : copy ∈ first.X := by
         have h := hcopy
         change copy ∈ samplesAfter (shiftCoins rounds oldCoins)
-          activeRounds first.samples at h
+          activeRounds first.X at h
         exact (Finset.mem_filter.mp h).1
-      have hcopyDeleted : copy ∈ deleted.samples := by
+      have hcopyDeleted : copy ∈ deleted.X := by
         have h := hcopyFirst
-        change copy ∈ samplesAfter oldCoins rounds deleted.samples at h
+        change copy ∈ samplesAfter oldCoins rounds deleted.X at h
         exact (Finset.mem_filter.mp h).1
       apply Finset.mem_filter.mpr
       constructor
@@ -207,9 +207,9 @@ noncomputable def ManuscriptOriginConfiguration.advance
       have hshift : shiftCoins rounds oldCoins =
           manuscriptSourceOldCoins c.origin c.source.coins preRounds :=
         shiftCoins_sourceOldCoins c.origin c.source.coins c.level rounds
-      have hsamples : second.1.samples = samplesAfter
+      have hsamples : second.1.X = samplesAfter
           (manuscriptSourceOldCoins c.origin c.source.coins preRounds)
-          activeRounds first.samples := by
+          activeRounds first.X := by
         rw [← hshift]
         rfl
       exact manuscriptOriginComplete_thin_of_samples first second.1
@@ -236,7 +236,7 @@ noncomputable def ManuscriptOriginConfiguration.advance
           source := nextSource
           origin := nextOrigin
           level := preRounds + activeRounds
-          rate := hnextRate
+          p := hnextRate
           fresh := hnextFresh
           history := hnextHistory
           valid := hnextValid

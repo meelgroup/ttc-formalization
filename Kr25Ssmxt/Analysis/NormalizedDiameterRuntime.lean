@@ -507,22 +507,22 @@ theorem Decomposition.normalizedHitAndRun_log_inv_tolerance_le
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    Real.log (1 / hitAndRunTolerance (D.component i) b p.epsilonPrime) ≤
+    Real.log (1 / hitAndRunTolerance (D.component i) b p.ε') ≤
       (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 +
         max 0 (Real.log (TTCRuntime.theorem3OuterRadiusMax D))) +
-        Real.log (1 + 8 / p.epsilonPrime) +
+        Real.log (1 + 8 / p.ε') +
         Real.log (1 +
           (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) := by
   let P := D.component i
-  let eta := p.epsilonPrime
+  let eta := p.ε'
   let R := 5 * decimalScale b * P.outerRadius + 1
   let V := (volume (hitAndRunBody P b eta)).toReal
   let C := (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
   have heta : 0 < eta := by
-    dsimp [eta, ApproxParams.epsilonPrime]
+    dsimp [eta, ApproxParams.ε']
     positivity [p.epsilon_pos]
   have heta1 : eta ≤ 1 := by
-    dsimp [eta, ApproxParams.epsilonPrime]
+    dsimp [eta, ApproxParams.ε']
     linarith [p.epsilon_le_one]
   have hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius := by
     simpa only [P, eta, decimalScale] using
@@ -552,16 +552,16 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    Metric.diam ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) ≤
+    Metric.diam ((D.component i).normalizedHitAndRunBody b p.ε') ≤
       4 * TTCRuntime.theorem3Rho D := by
   let P := D.component i
-  have heta0 : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+  have heta0 : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
-  have heta1 : p.epsilonPrime ≤ 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have heta1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
-  have hprec : samplerRadiusRequirement P p.epsilonPrime ≤
+  have hprec : samplerRadiusRequirement P p.ε' ≤
       decimalScale b * P.inradius := by
     simpa only [P, decimalScale] using
       (le_max_right _ _).trans (hprecision.split i)
@@ -595,11 +595,11 @@ theorem Decomposition.normalizedHitAndRun_warmness_le_rho_pow
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+    (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal ≤
         (4 * TTCRuntime.theorem3Rho D + 1) ^ n := by
   apply (D.component i).normalizedHitAndRun_warmness_le_diameter_pow
-    (by omega) b p.epsilonPrime (4 * TTCRuntime.theorem3Rho D)
+    (by omega) b p.ε' (4 * TTCRuntime.theorem3Rho D)
   · unfold TTCRuntime.theorem3Rho
     positivity
   · exact D.normalizedHitAndRun_diameter_le_four_rho
@@ -610,13 +610,13 @@ theorem Decomposition.normalizedHitAndRun_log_warmness_le
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    Real.log ((volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+    Real.log ((volume ((D.component i).normalizedHitAndRunBody b p.ε') /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) ≤
       (n : Real) * Real.log (4 * TTCRuntime.theorem3Rho D + 1) := by
-  have hM0 := (D.component i).normalizedHitAndRun_warmness_ge_one b p.epsilonPrime
+  have hM0 := (D.component i).normalizedHitAndRun_warmness_ge_one b p.ε'
   have hM := D.normalizedHitAndRun_warmness_le_rho_pow hn b p hprecision i
   have hlog := Real.log_le_log (by linarith : 0 <
-    (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+    (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) hM
   simpa only [Real.log_pow] using hlog
 
@@ -627,21 +627,21 @@ theorem Decomposition.normalizedHitAndRunSteps_le_rho_deadline
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    normalizedHitAndRunSteps (D.component i) b p.epsilonPrime ≤
+    normalizedHitAndRunSteps (D.component i) b p.ε' ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
         (TTCRuntime.theorem3Rho D) ^ 2 *
         Real.log (8 *
-          (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+          (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
             volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-          (hitAndRunTolerance (D.component i) b p.epsilonPrime) ^ 2)) := by
-  let d := Metric.diam ((D.component i).normalizedHitAndRunBody b p.epsilonPrime)
+          (hitAndRunTolerance (D.component i) b p.ε') ^ 2)) := by
+  let d := Metric.diam ((D.component i).normalizedHitAndRunBody b p.ε')
   let rho := TTCRuntime.theorem3Rho D
-  let M := (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+  let M := (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
     volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-  let nu := hitAndRunTolerance (D.component i) b p.epsilonPrime
+  let nu := hitAndRunTolerance (D.component i) b p.ε'
   have hlog : 0 ≤ Real.log (8 * M / nu ^ 2) := by
     apply (D.component i).normalizedHitAndRun_deadline_log_nonneg b
-    dsimp [ApproxParams.epsilonPrime]
+    dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
   have hd : d ≤ 4 * rho := D.normalizedHitAndRun_diameter_le_four_rho
     (by omega) b p hprecision i
@@ -670,18 +670,18 @@ theorem Decomposition.normalizedHitAndRun_deadline_log_le
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     Real.log (8 *
-      (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+      (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
         volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-      (hitAndRunTolerance (D.component i) b p.epsilonPrime) ^ 2) ≤
+      (hitAndRunTolerance (D.component i) b p.ε') ^ 2) ≤
       Real.log 8 + (n : Real) * Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
-        2 * Real.log (1 / hitAndRunTolerance (D.component i) b p.epsilonPrime) := by
-  let M := (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+        2 * Real.log (1 / hitAndRunTolerance (D.component i) b p.ε') := by
+  let M := (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
     volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-  let nu := hitAndRunTolerance (D.component i) b p.epsilonPrime
+  let nu := hitAndRunTolerance (D.component i) b p.ε'
   have hM : 0 < M := lt_of_lt_of_le zero_lt_one
-    ((D.component i).normalizedHitAndRun_warmness_ge_one b p.epsilonPrime)
-  have heta : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+    ((D.component i).normalizedHitAndRun_warmness_ge_one b p.ε')
+  have heta : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
   have hnu : 0 < nu := (D.component i).hitAndRunTolerance_pos b heta
   have hlogM := D.normalizedHitAndRun_log_warmness_le hn b p hprecision i
@@ -700,22 +700,22 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    normalizedHitAndRunSteps (D.component i) b p.epsilonPrime ≤
+    normalizedHitAndRunSteps (D.component i) b p.ε' ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
         (TTCRuntime.theorem3Rho D) ^ 2 *
         TTCRuntime.theorem3SamplerLogEnvelope n b
           (TTCRuntime.theorem3Rho D)
-          (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime) := by
+          (TTCRuntime.theorem3OuterRadiusMax D) p.ε') := by
   have hstep := D.normalizedHitAndRunSteps_le_rho_deadline hn b p hprecision i
   have hlog := D.normalizedHitAndRun_deadline_log_le hn b p hprecision i
   have hnu := D.normalizedHitAndRun_log_inv_tolerance_le hn b p hprecision i
   have henvelope :
       Real.log (8 *
-        (volume ((D.component i).normalizedHitAndRunBody b p.epsilonPrime) /
+        (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
           volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-        (hitAndRunTolerance (D.component i) b p.epsilonPrime) ^ 2) ≤
+        (hitAndRunTolerance (D.component i) b p.ε') ^ 2) ≤
       TTCRuntime.theorem3SamplerLogEnvelope n b (TTCRuntime.theorem3Rho D)
-        (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime := by
+        (TTCRuntime.theorem3OuterRadiusMax D) p.ε' := by
     unfold TTCRuntime.theorem3SamplerLogEnvelope
     linarith
   exact hstep.trans (Nat.ceil_mono (by
@@ -865,20 +865,20 @@ theorem Decomposition.normalizedHitAndRunSteps_le_theorem3_polylog
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    normalizedHitAndRunSteps (D.component i) b p.epsilonPrime ≤
+    normalizedHitAndRunSteps (D.component i) b p.ε' ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 4 *
         (TTCRuntime.theorem3Rho D) ^ 2 *
         TTCRuntime.theorem3PrecisionScale b
           (TTCRuntime.theorem3OuterRadiusMax D) *
         (Real.log 8 + Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
           2 * (Real.log 10 + Real.log 6 + 1 +
-            Real.log (1 + 8 / p.epsilonPrime) + 2))) := by
+            Real.log (1 + 8 / p.ε') + 2))) := by
   have hstep := D.normalizedHitAndRunSteps_le_explicitEnvelope hn b p hprecision i
   have henv := theorem3_samplerLogEnvelope_le_dimension_precision_polylog
     n b (by omega : 1 ≤ n) (TTCRuntime.theorem3Rho D)
-    (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime
+    (TTCRuntime.theorem3OuterRadiusMax D) p.ε'
     (by unfold TTCRuntime.theorem3Rho; exact le_max_left _ _)
-    (by dsimp [ApproxParams.epsilonPrime]; positivity [p.epsilon_pos])
+    (by dsimp [ApproxParams.ε']; positivity [p.epsilon_pos])
   apply hstep.trans
   apply Nat.ceil_mono
   have hfactor : 0 ≤ (2 : Real) ^ 68 * (n : Real) ^ 2 *

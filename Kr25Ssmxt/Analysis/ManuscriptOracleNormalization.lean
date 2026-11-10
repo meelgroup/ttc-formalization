@@ -13,26 +13,26 @@ theorem community_manuscript_volume_isProbabilityMeasure
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (i : Fin D.componentCount) :
     IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).computeVolume
-        (D.component i) p.epsilonPrime (p.deltaPrime D.componentCount)) := by
+      ((communityManuscriptOracles hn prep).ComputeVolume
+        (D.component i) p.ε' (p.δ' D.componentCount)) := by
   letI : IsProbabilityMeasure
-      (communityCV18VolumeLaw (by omega) (D.component i) p.epsilonPrime
-        (p.deltaPrime D.componentCount)) :=
+      (communityCV18VolumeLaw (by omega) (D.component i) p.ε'
+        (p.δ' D.componentCount)) :=
     (CommunityCV18.communityCV18VolumeLaw_spec (by omega) (D.component i)
-      p.epsilonPrime (p.deltaPrime D.componentCount)
+      p.ε' (p.δ' D.componentCount)
       (PaperRuntime.ttc_request_admissible D p i)).1
   change IsProbabilityMeasure
-    ((communityCV18VolumeLaw (by omega) (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount)).map
-      ((D.component i).clipManuscriptVolume p.epsilonPrime))
+    ((communityCV18VolumeLaw (by omega) (D.component i) p.ε'
+      (p.δ' D.componentCount)).map
+      ((D.component i).clipManuscriptVolume p.ε'))
   exact Measure.isProbabilityMeasure_map
-    ((D.component i).measurable_clipManuscriptVolume p.epsilonPrime).aemeasurable
+    ((D.component i).measurable_clipManuscriptVolume p.ε').aemeasurable
 
 theorem community_manuscript_samples_isProbabilityMeasure
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
     IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).generateSamples
+      ((communityManuscriptOracles hn prep).GenerateSamples
         P count b eta delta) := by
   classical
   by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
@@ -56,7 +56,7 @@ theorem community_manuscript_costed_volume_isProbabilityMeasure
     (factor : Nat) (i : Fin D.componentCount) :
     IsProbabilityMeasure
       ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
-        (D.component i) p.epsilonPrime (p.deltaPrime D.componentCount)) := by
+        (D.component i) p.ε' (p.δ' D.componentCount)) := by
   apply costed_probability_of_fst
   rw [communityManuscriptCosted_volume_fst]
   exact community_manuscript_volume_isProbabilityMeasure hn D p prep i

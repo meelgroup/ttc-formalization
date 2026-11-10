@@ -12,15 +12,15 @@ theorem measurable_manuscriptRateExit_joint {n : Nat}
     Measurable (fun z : TTCState n × NNReal =>
       manuscriptRateExit z.1 z.2 threshold) := by
   let guard (j : Nat) : TTCState n × NNReal → Prop := fun z =>
-    ((z.2 * z.1.rate / (2 : NNReal) ^ j : NNReal) : Real) < threshold
+    ((z.2 * z.1.p / (2 : NNReal) ^ j : NNReal) : Real) < threshold
   have hguard (j : Nat) : MeasurableSet {z | guard j z} := by
     have hcoords : Measurable (fun z : TTCState n × NNReal =>
-        (z.1.rate, z.1.samples, z.1.nextLabel)) :=
+        (z.1.p, z.1.X, z.1.nextLabel)) :=
       (comap_measurable _).comp measurable_fst
-    have hrate : Measurable (fun z : TTCState n × NNReal => z.1.rate) :=
+    have hrate : Measurable (fun z : TTCState n × NNReal => z.1.p) :=
       measurable_fst.comp hcoords
     have hval : Measurable (fun z : TTCState n × NNReal =>
-        ((z.2 * z.1.rate / (2 : NNReal) ^ j : NNReal) : Real)) := by
+        ((z.2 * z.1.p / (2 : NNReal) ^ j : NNReal) : Real)) := by
       fun_prop
     exact hval measurableSet_Iio
   have hfiber (k : Nat) :
@@ -50,19 +50,19 @@ theorem measurable_manuscriptRateExit_joint {n : Nat}
         exact Nat.sInf_le hg
       · unfold manuscriptRateExit
         have hnonempty : {rounds : Nat |
-            ((z.2 * z.1.rate / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}.Nonempty :=
+            ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}.Nonempty :=
           manuscriptRateExit_exists z.1 z.2 hthreshold
         have hmem := Nat.sInf_mem hnonempty
         by_contra hnot
         have hjk : sInf {rounds : Nat |
-            ((z.2 * z.1.rate / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold} < k := by
+            ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold} < k := by
           omega
         have hbad : ¬guard
             (sInf {rounds : Nat |
-              ((z.2 * z.1.rate / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}) z := by
+              ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}) z := by
           simpa only [if_pos hjk, Set.mem_compl_iff, Set.mem_setOf_eq] using
             hprior (sInf {rounds : Nat |
-              ((z.2 * z.1.rate / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold})
+              ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold})
         exact hbad hmem
   apply measurable_to_countable'
   intro k
@@ -88,13 +88,13 @@ theorem measurable_manuscriptRateThinningResult_joint {n : Nat}
     measurable_fst.comp measurable_fst
   have hcoords : Measurable
       (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-        (z.1.1.rate, z.1.1.samples, z.1.1.nextLabel)) :=
+        (z.1.1.p, z.1.1.X, z.1.1.nextLabel)) :=
     (comap_measurable _).comp hstate
   have hrate : Measurable
-      (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) => z.1.1.rate) :=
+      (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) => z.1.1.p) :=
     measurable_fst.comp hcoords
   have hsamples : Measurable
-      (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) => z.1.1.samples) :=
+      (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) => z.1.1.X) :=
     (measurable_fst.comp measurable_snd).comp hcoords
   have hnext : Measurable
       (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) => z.1.1.nextLabel) :=
@@ -116,7 +116,7 @@ theorem measurable_manuscriptRateThinningResult_joint {n : Nat}
     exact measurableSet_survives j label
   have hretained : Measurable
       (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-        samplesAfter z.2 (rounds z) z.1.1.samples) := by
+        samplesAfter z.2 (rounds z) z.1.1.X) := by
     rw [measurable_finset_iff]
     intro copy
     have hmem := (measurable_finset_mem copy).comp hsamples
@@ -130,11 +130,11 @@ theorem measurable_manuscriptRateThinningResult_joint {n : Nat}
     exact measurable_id.div_const ((2 : NNReal) ^ j)
   have hnewRate : Measurable
       (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-        z.1.1.rate / (2 : NNReal) ^ rounds z) :=
+        z.1.1.p / (2 : NNReal) ^ rounds z) :=
     hrateJoint.comp (hrate.prodMk hrounds)
   change Measurable (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-    { rate := z.1.1.rate / (2 : NNReal) ^ rounds z
-      samples := samplesAfter z.2 (rounds z) z.1.1.samples
+    { p := z.1.1.p / (2 : NNReal) ^ rounds z
+      X := samplesAfter z.2 (rounds z) z.1.1.X
       nextLabel := z.1.1.nextLabel : TTCState n })
   rw [measurable_comap_iff]
   exact hnewRate.prodMk (hretained.prodMk hnext)
@@ -144,11 +144,11 @@ theorem measurable_manuscriptRateThinningCost_joint {n : Nat}
     Measurable (fun z : TTCState n × NNReal =>
       manuscriptRateThinningCost z.1 z.2 threshold) := by
   have hcoords : Measurable (fun z : TTCState n × NNReal =>
-      (z.1.rate, z.1.samples, z.1.nextLabel)) :=
+      (z.1.p, z.1.X, z.1.nextLabel)) :=
     (comap_measurable _).comp measurable_fst
-  have hsamples : Measurable (fun z : TTCState n × NNReal => z.1.samples) :=
+  have hsamples : Measurable (fun z : TTCState n × NNReal => z.1.X) :=
     (measurable_fst.comp measurable_snd).comp hcoords
-  have hcard : Measurable (fun z : TTCState n × NNReal => z.1.samples.card) :=
+  have hcard : Measurable (fun z : TTCState n × NNReal => z.1.X.card) :=
     (measurable_of_countable (fun s : Finset (SampleCopy n) => s.card)).comp hsamples
   unfold manuscriptRateThinningCost
   exact (measurable_manuscriptRateExit_joint threshold hthreshold).mul
@@ -195,13 +195,13 @@ theorem measurable_manuscriptCountThinningCost_joint {n : Nat}
     measurable_firstExitRound_joint threshold
   have hcoords : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        (z.1.1.rate, z.1.1.samples, z.1.1.nextLabel)) :=
+        (z.1.1.p, z.1.1.X, z.1.1.nextLabel)) :=
     (comap_measurable _).comp (measurable_fst.comp measurable_fst)
   have hsamples : Measurable
-      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.samples) :=
+      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.X) :=
     (measurable_fst.comp measurable_snd).comp hcoords
   have hcard : Measurable
-      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.samples.card) :=
+      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.X.card) :=
     (measurable_of_countable (fun s : Finset (SampleCopy n) => s.card)).comp hsamples
   unfold manuscriptCountThinningCost
   exact hrounds.mul

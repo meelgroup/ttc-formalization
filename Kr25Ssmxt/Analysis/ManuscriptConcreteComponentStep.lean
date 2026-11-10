@@ -19,21 +19,21 @@ theorem manuscript_concrete_component_step_envelope
     (i : Fin D.componentCount)
     (pointLaw : Measure (LatticePoint n))
     (halmost : AlmostUniformPointwise pointLaw
-      (codedLatticePoints (D.component i) b) p.epsilonPrime)
+      (codedLatticePoints (D.component i) b) p.ε')
     (volumeEstimate : NNReal)
     (hvolume : (volumeEstimate : Real) ∈
-      Arlib.relErr p.epsilonPrime
+      Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal)
     (rate : NNReal) :
     let S := (D.codedUnion_finite hn p b hprecision).toFinset
     let T : Finset S := Finset.univ.filter
       (fun x : S => x.1.toPoint ∈ (D.component i).carrier)
     (manuscriptComponentFixedLevelStep S T pointLaw b
-      (p.threshold D.componentCount) volumeEstimate rate).RateEnvelope
-        (Real.toNNReal (p.threshold D.componentCount *
-          (1 - p.epsilonPrime) ^ 2 * (1 - p.latticeEta) * rate))
-        (Real.toNNReal (p.threshold D.componentCount *
-          (1 + p.epsilonPrime) ^ 2 * (1 + p.latticeEta) * rate)) := by
+      (p.Thresh D.componentCount) volumeEstimate rate).RateEnvelope
+        (Real.toNNReal (p.Thresh D.componentCount *
+          (1 - p.ε') ^ 2 * (1 - p.latticeEta) * rate))
+        (Real.toNNReal (p.Thresh D.componentCount *
+          (1 + p.ε') ^ 2 * (1 + p.latticeEta) * rate)) := by
   let S := (D.codedUnion_finite hn p b hprecision).toFinset
   let T : Finset S := Finset.univ.filter
     (fun x : S => x.1.toPoint ∈ (D.component i).carrier)
@@ -50,10 +50,10 @@ theorem manuscript_concrete_component_step_envelope
           (10 : Real) ^ (b * n)) := by
     rw [process_components_lattice_count_accuracy_coded_card]
     exact (ttc_volume_accuracy_lattice_comparison hn D p b hprecision).1 i
-  have heps0 : 0 ≤ p.epsilonPrime :=
+  have heps0 : 0 ≤ p.ε' :=
     (div_pos p.epsilon_pos (by norm_num)).le
-  have heps1 : p.epsilonPrime ≤ 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have heps1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   have heta0 : 0 ≤ p.latticeEta :=
     (div_pos p.epsilon_pos (by norm_num)).le
@@ -62,13 +62,13 @@ theorem manuscript_concrete_component_step_envelope
     linarith [p.epsilon_le_one]
   exact manuscriptComponentFixedLevelStep_envelope_of_almostUniform
     S T pointLaw (codedLatticePoints (D.component i) b)
-    b (p.threshold D.componentCount) (p.threshold_pos D.componentCount).le
+    b (p.Thresh D.componentCount) (p.threshold_pos D.componentCount).le
     volumeEstimate rate (volume (D.component i).carrier).toReal
-    p.epsilonPrime p.latticeEta heps0 heps1 heta0 heta1
+    p.ε' p.latticeEta heps0 heps1 heta0 heta1
     hvolume hlattice halmost hT
 
 /-- Instantiate the component envelope with the normalized finite-step
-Hit-and-Run/KV97 point law used by `communityManuscriptTTC`. -/
+Hit-and-Run/KV97 point law used by `ttc`. -/
 theorem manuscript_normalized_component_step_envelope
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
@@ -79,32 +79,32 @@ theorem manuscript_normalized_component_step_envelope
     (hnonempty : (codedLatticePoints (D.component i) b).Nonempty)
     (volumeEstimate : NNReal)
     (hvolume : (volumeEstimate : Real) ∈
-      Arlib.relErr p.epsilonPrime
+      Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal)
     (rate : NNReal) :
     let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b hunit
-      p.epsilonPrime
+      p.ε'
       (div_pos p.epsilon_pos (by norm_num))
-      (by dsimp [ApproxParams.epsilonPrime]; linarith [p.epsilon_le_one])
+      (by dsimp [ApproxParams.ε']; linarith [p.epsilon_le_one])
       hfinite hnonempty
     let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
     let T : Finset S := Finset.univ.filter
       (fun x : S => x.1.toPoint ∈ (D.component i).carrier)
     (manuscriptComponentFixedLevelStep S T pointLaw b
-      (p.threshold D.componentCount) volumeEstimate rate).RateEnvelope
-        (Real.toNNReal (p.threshold D.componentCount *
-          (1 - p.epsilonPrime) ^ 2 * (1 - p.latticeEta) * rate))
-        (Real.toNNReal (p.threshold D.componentCount *
-          (1 + p.epsilonPrime) ^ 2 * (1 + p.latticeEta) * rate)) := by
-  have heta0 : 0 < p.epsilonPrime :=
+      (p.Thresh D.componentCount) volumeEstimate rate).RateEnvelope
+        (Real.toNNReal (p.Thresh D.componentCount *
+          (1 - p.ε') ^ 2 * (1 - p.latticeEta) * rate))
+        (Real.toNNReal (p.Thresh D.componentCount *
+          (1 + p.ε') ^ 2 * (1 + p.latticeEta) * rate)) := by
+  have heta0 : 0 < p.ε' :=
     div_pos p.epsilon_pos (by norm_num)
-  have heta1 : p.epsilonPrime ≤ 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have heta1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b hunit
-    p.epsilonPrime heta0 heta1 hfinite hnonempty
+    p.ε' heta0 heta1 hfinite hnonempty
   have halmost : AlmostUniformPointwise pointLaw
-      (codedLatticePoints (D.component i) b) p.epsilonPrime :=
+      (codedLatticePoints (D.component i) b) p.ε' :=
     (D.component i).normalizedHitAndRun_latticePointLaw hn b hunit
       heta0 heta1 hfinite hnonempty
   exact manuscript_concrete_component_step_envelope
@@ -120,7 +120,7 @@ theorem communityManuscript_generateSamples_eq_iid
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :
-    (communityManuscriptOracles hn prep).generateSamples
+    (communityManuscriptOracles hn prep).GenerateSamples
       P count b eta delta =
     iidSampleBatchLaw (normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) := by

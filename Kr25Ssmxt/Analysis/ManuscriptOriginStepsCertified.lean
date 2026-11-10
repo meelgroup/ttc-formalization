@@ -23,7 +23,7 @@ noncomputable def manuscriptOriginGivenVolumesStep
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1
           d.route.2.2.2.2).real {(x : LatticePoint n)} *
         ((unitInterval.toNNReal (survivalProbability level) *
-          manuscriptIntensity b n threshold o.2 : NNReal) : Real)) }
+          ttc.t b n threshold o.2 : NNReal) : Real)) }
 
 theorem manuscriptOriginGivenVolumesSteps_eq_ofFn_get
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -57,11 +57,11 @@ theorem communityManuscript_givenVolumesSteps_eq_certified
     (outcomes : Fin (communityManuscriptCertifiedComponents hn D p prep).length →
       VolumeOutcome) :
     manuscriptOriginGivenVolumesSteps hn prep (prep.choosePrecision D p).value
-        p.epsilonPrime (p.deltaPrime D.componentCount)
-        (p.threshold D.componentCount) S level
+        p.ε' (p.δ' D.componentCount)
+        (p.Thresh D.componentCount) S level
         (communityManuscriptCertifiedComponents hn D p prep) outcomes =
       manuscriptCertifiedFixedLevelSteps D (prep.choosePrecision D p).value S
-        (p.threshold D.componentCount)
+        (p.Thresh D.componentCount)
         (fun i => (outcomes (Fin.cast
           (communityManuscriptCertifiedComponents_length hn D p prep).symm
             i)).2)

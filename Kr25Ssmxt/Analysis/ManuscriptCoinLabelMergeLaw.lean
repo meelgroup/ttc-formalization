@@ -112,11 +112,11 @@ theorem survives_mergeCoins_fresh
 theorem samplesAfter_mergeCoins_old
     {n : Nat} (s : TTCState n) (rounds : Nat)
     (old fresh : Nat × Nat → Bool) (hfresh : s.LabelsFresh) :
-    samplesAfter (mergeCoinsAtLabel s.nextLabel old fresh) rounds s.samples =
-      samplesAfter old rounds s.samples := by
+    samplesAfter (mergeCoinsAtLabel s.nextLabel old fresh) rounds s.X =
+      samplesAfter old rounds s.X := by
   classical
   ext copy
-  by_cases hc : copy ∈ s.samples
+  by_cases hc : copy ∈ s.X
   · simp only [samplesAfter, Finset.mem_filter, hc, true_and]
     exact survives_mergeCoins_old s.nextLabel rounds copy.1
       (hfresh.1 copy hc) old fresh
@@ -300,7 +300,7 @@ theorem pendingCoinExtension_restriction (firstLabel pending : Nat)
 /-- The thinning loop with separated coin arrays for stored and pending copies. -/
 noncomputable def firstExitRoundSplit {n : Nat} (s : TTCState n) (pending : Nat)
     (threshold : Real) (old fresh : Nat × Nat → Bool) : Nat :=
-  sInf {rounds | (samplesAfter old rounds s.samples).card +
+  sInf {rounds | (samplesAfter old rounds s.X).card +
     pendingAfter fresh rounds s.nextLabel pending ≤ threshold}
 
 theorem firstExitRoundSplit_fresh_coins_congr {n : Nat}
@@ -328,8 +328,8 @@ theorem firstExitRound_mergeCoinsAtLabel {n : Nat} (s : TTCState n)
 noncomputable def thinningResultSplit {n : Nat} (s : TTCState n) (pending : Nat)
     (threshold : Real) (old fresh : Nat × Nat → Bool) : TTCState n × Nat :=
   let rounds := firstExitRoundSplit s pending threshold old fresh
-  ({ rate := s.rate / (2 : NNReal) ^ rounds
-     samples := samplesAfter old rounds s.samples
+  ({ p := s.p / (2 : NNReal) ^ rounds
+     X := samplesAfter old rounds s.X
      nextLabel := s.nextLabel },
    pendingAfter fresh rounds s.nextLabel pending)
 

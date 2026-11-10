@@ -36,9 +36,9 @@ the source point counts on `S` at the current level. -/
 theorem ManuscriptOriginConfiguration.samples_card_eq_sum_pointCounts
     {n : Nat} (c : ManuscriptOriginConfiguration n)
     (S : Finset (LatticePoint n)) (hmarks : c.MarksIn S) :
-    c.state.samples.card = ∑ x : S, c.source.pointCounts c.level S x := by
+    c.state.X.card = ∑ x : S, c.source.pointCounts c.level S x := by
   have hfib := Finset.card_eq_sum_card_fiberwise
-    (s := c.state.samples) (t := S) (f := fun copy => copy.2)
+    (s := c.state.X) (t := S) (f := fun copy => copy.2)
     (fun copy hcopy => by
       have hm := c.marked copy hcopy
       have hv := c.valid copy hcopy

@@ -111,9 +111,9 @@ stored and pending copies is exactly binomial. -/
 theorem TTCState.fixed_round_population_binomial_law {n : Nat}
     (s : TTCState n) (pending rounds : Nat) (h : s.LabelsFresh) :
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-      (samplesAfter coins rounds s.samples).card +
+      (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending) =
-      ProbabilityTheory.binomial (s.samples.card + pending)
+      ProbabilityTheory.binomial (s.X.card + pending)
         (survivalProbability rounds) := by
   classical
   rw [s.fixed_round_population_law pending rounds h,
@@ -130,7 +130,7 @@ theorem manuscript_poisson_pendingAfter_law (mean : NNReal)
       ProbabilityTheory.poissonMeasure
         (unitInterval.toNNReal (survivalProbability rounds) * mean) := by
   let s : TTCState 0 :=
-    { rate := 1, samples := ∅, nextLabel := firstLabel }
+    { p := 1, X := ∅, nextLabel := firstLabel }
   have hs : s.LabelsFresh := by
     simp [s, TTCState.LabelsFresh]
   have hbin (pending : Nat) :

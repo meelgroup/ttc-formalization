@@ -12,8 +12,8 @@ theorem communityManuscriptComponentGivenVolume_absolute_predraw
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (outcome : VolumeOutcome) (state : TTCState n)
-    (level : Nat) (hrate : state.rate = 1 / (2 : NNReal) ^ level) :
-    let intensity := manuscriptIntensity b n threshold outcome.2
+    (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :
+    let intensity := ttc.t b n threshold outcome.2
     let deleted := state.removeComponent P
     communityManuscriptComponentGivenVolume hn prep P b eta delta threshold
       outcome state =
@@ -28,13 +28,13 @@ theorem communityManuscriptComponentGivenVolume_absolute_predraw
             threshold
             (shiftCoins (manuscriptRateExit deleted intensity threshold)
               activeCoins)).bind fun second =>
-        ((communityManuscriptOracles hn prep).generateSamples P second.2
+        ((communityManuscriptOracles hn prep).GenerateSamples P second.2
           b eta delta).map fun batch => second.1.addBatch batch.2 := by
   dsimp only
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hK : Measurable K := by
     have hcost := community_manuscript_sample_append_kernel_measurable
@@ -53,16 +53,16 @@ theorem communityManuscriptComponentGivenVolume_absolute_predraw
     exact (Measure.measurable_map _ measurable_fst).comp hcost
   let firstLaw := manuscriptRateThinUntil deleted intensity threshold
   let pendingLaw : TTCState n → Measure Nat :=
-    fun first => poissonMeasure (intensity * first.rate)
+    fun first => poissonMeasure (intensity * first.p)
   let secondLaw : TTCState n → Measure (TTCState n × Nat) :=
     fun first => (pendingLaw first).bind fun pending =>
       thinUntil first pending threshold
-  have hrateDeleted : deleted.rate = 1 / (2 : NNReal) ^ level := hrate
-  have hstateRate : Measurable (fun first : TTCState n => first.rate) :=
+  have hrateDeleted : deleted.p = 1 / (2 : NNReal) ^ level := hrate
+  have hstateRate : Measurable (fun first : TTCState n => first.p) :=
     measurable_fst.comp
       (comap_measurable
         (fun first : TTCState n =>
-          (first.rate, first.samples, first.nextLabel)))
+          (first.p, first.X, first.nextLabel)))
   have hpending : Measurable pendingLaw :=
     measurable_poissonMeasure.comp (measurable_const.mul hstateRate)
   have hsecond : Measurable secondLaw :=

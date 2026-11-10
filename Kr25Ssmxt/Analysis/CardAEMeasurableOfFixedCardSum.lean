@@ -20,8 +20,8 @@ the final estimator map.
 -/
 lemma card_aemeasurable_of_fixedCard_sum {n : Nat} {ι : Type*} [Countable ι]
     (ν : ι → Measure (TTCState n)) (fixedCard : ι → Nat)
-    (hcard : ∀ i, ∀ᵐ s ∂ν i, s.samples.card = fixedCard i) :
-    AEMeasurable (fun s : TTCState n => s.samples.card) (Measure.sum ν) := by
+    (hcard : ∀ i, ∀ᵐ s ∂ν i, s.X.card = fixedCard i) :
+    AEMeasurable (fun s : TTCState n => s.X.card) (Measure.sum ν) := by
   apply AEMeasurable.sum_measure
   intro i
   apply aemeasurable_const.congr

@@ -65,25 +65,25 @@ theorem dyadic_poisson_chernoff_sum_reverse
 Chernoff failures by its `δ/6` allocation. -/
 theorem ApproxParams.dyadic_chernoff_budget
     (p : ApproxParams) (m lastLevel : Nat) :
-    let a := (1 - p.epsilonPrime) * p.epsilonPrime ^ 2 *
-      p.threshold m / 24
+    let a := (1 - p.ε') * p.ε' ^ 2 *
+      p.Thresh m / 24
     (∑ j ∈ range (lastLevel + 1),
       2 * Real.exp (-a * (2 : Real) ^ (lastLevel - j))) ≤
       p.delta / 6 := by
-  let a := (1 - p.epsilonPrime) * p.epsilonPrime ^ 2 *
-    p.threshold m / 24
-  have heps : p.epsilonPrime < 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  let a := (1 - p.ε') * p.ε' ^ 2 *
+    p.Thresh m / 24
+  have heps : p.ε' < 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   have ha : 0 ≤ a := by
     dsimp [a]
-    have hfactor : 0 ≤ 1 - p.epsilonPrime := by linarith
+    have hfactor : 0 ≤ 1 - p.ε' := by linarith
     have hthreshold := p.threshold_pos m
     positivity
   have hbudget := p.concentration_tail_budget m
   have hbudget' : 4 * Real.exp (-a) ≤ p.delta / 6 := by
     have harg : -a =
-        -(1 - p.epsilonPrime) * p.epsilonPrime ^ 2 * p.threshold m / 24 := by
+        -(1 - p.ε') * p.ε' ^ 2 * p.Thresh m / 24 := by
       dsimp [a]
       ring
     rw [harg]

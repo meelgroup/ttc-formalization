@@ -24,7 +24,7 @@ theorem communityManuscript_poisson_append_pointCounts_law
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun count =>
-      ((communityManuscriptOracles hn prep).generateSamples
+      ((communityManuscriptOracles hn prep).GenerateSamples
         P count b eta delta).map
         (fun batch => (s.addBatch batch.2).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
@@ -61,7 +61,7 @@ theorem communityManuscript_poisson_delete_append_pointCounts_law
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun count =>
-      ((communityManuscriptOracles hn prep).generateSamples
+      ((communityManuscriptOracles hn prep).GenerateSamples
         P count b eta delta).map
         (fun batch => ((s.removeComponent P).addBatch batch.2).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
@@ -93,7 +93,7 @@ theorem communityManuscript_fixed_round_append_pointCounts_law
     ((poissonMeasure mean).bind fun pending =>
       (fairCoinStreamLaw.map (fun coins =>
         pendingAfter coins rounds firstLabel pending)).bind fun count =>
-        ((communityManuscriptOracles hn prep).generateSamples
+        ((communityManuscriptOracles hn prep).GenerateSamples
           P count b eta delta).map
           (fun batch => (s.addBatch batch.2).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
@@ -105,7 +105,7 @@ theorem communityManuscript_fixed_round_append_pointCounts_law
     fairCoinStreamLaw.map (fun coins =>
       pendingAfter coins rounds firstLabel pending)
   let G : Nat → Measure (S → Nat) := fun count =>
-    ((communityManuscriptOracles hn prep).generateSamples
+    ((communityManuscriptOracles hn prep).GenerateSamples
       P count b eta delta).map
       (fun batch => (s.addBatch batch.2).pointCounts S)
   change (poissonMeasure mean).bind (fun pending => (K pending).bind G) = _
@@ -141,7 +141,7 @@ theorem communityManuscript_fixed_round_delete_append_pointCounts_law
     ((poissonMeasure mean).bind fun pending =>
       (fairCoinStreamLaw.map (fun coins =>
         pendingAfter coins rounds firstLabel pending)).bind fun count =>
-        ((communityManuscriptOracles hn prep).generateSamples
+        ((communityManuscriptOracles hn prep).GenerateSamples
           P count b eta delta).map
           (fun batch => ((s.removeComponent P).addBatch batch.2).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal

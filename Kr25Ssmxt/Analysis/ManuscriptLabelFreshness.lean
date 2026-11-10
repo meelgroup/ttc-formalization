@@ -11,8 +11,8 @@ open Classical
 /-- All stored labels precede the next unused label, and no two stored copies
 share a label. -/
 def TTCState.LabelsFresh {n : Nat} (s : TTCState n) : Prop :=
-  (∀ c ∈ s.samples, c.1 < s.nextLabel) ∧
-    (∀ c ∈ s.samples, ∀ d ∈ s.samples, c.1 = d.1 → c = d)
+  (∀ c ∈ s.X, c.1 < s.nextLabel) ∧
+    (∀ c ∈ s.X, ∀ d ∈ s.X, c.1 = d.1 → c = d)
 
 theorem TTCState.initial_labelsFresh (n : Nat) :
     (TTCState.initial n).LabelsFresh := by
@@ -40,8 +40,8 @@ theorem TTCState.labelsFresh_addBatch {n count : Nat}
       ∃ i : Fin count, c = (s.nextLabel + i.val, points i) := by
     rcases Finset.mem_image.mp hc with ⟨i, _, rfl⟩
     exact ⟨i, rfl⟩
-  change (∀ c ∈ s.samples ∪ added, c.1 < s.nextLabel + count) ∧
-    (∀ c ∈ s.samples ∪ added, ∀ d ∈ s.samples ∪ added,
+  change (∀ c ∈ s.X ∪ added, c.1 < s.nextLabel + count) ∧
+    (∀ c ∈ s.X ∪ added, ∀ d ∈ s.X ∪ added,
       c.1 = d.1 → c = d)
   constructor
   · intro c hc
@@ -68,7 +68,7 @@ theorem TTCState.labelsFresh_addBatch {n count : Nat}
 theorem TTCState.labelsFresh_samplesAfter {n : Nat}
     (s : TTCState n) (coins : Nat × Nat → Bool) (rounds : Nat)
     (h : s.LabelsFresh) :
-    ({s with samples := samplesAfter coins rounds s.samples}).LabelsFresh := by
+    ({s with X := samplesAfter coins rounds s.X}).LabelsFresh := by
   classical
   unfold TTCState.LabelsFresh at h ⊢
   constructor
@@ -96,11 +96,11 @@ theorem thinningResult_labelsFresh {n : Nat}
 the expected number of copies. -/
 theorem TTCState.populationLabels_card {n : Nat} (s : TTCState n)
     (pending : Nat) (h : s.LabelsFresh) :
-    ((s.samples.image Prod.fst) ∪
+    ((s.X.image Prod.fst) ∪
       ((Finset.range pending).image (fun i => s.nextLabel + i))).card =
-      s.samples.card + pending := by
+      s.X.card + pending := by
   classical
-  have hstored : (s.samples.image Prod.fst).card = s.samples.card := by
+  have hstored : (s.X.image Prod.fst).card = s.X.card := by
     apply Finset.card_image_of_injOn
     intro c hc d hd heq
     exact h.2 c hc d hd heq
@@ -110,7 +110,7 @@ theorem TTCState.populationLabels_card {n : Nat} (s : TTCState n)
     · simp
     · intro a b hab
       exact Nat.add_left_cancel hab
-  have hdisjoint : Disjoint (s.samples.image Prod.fst)
+  have hdisjoint : Disjoint (s.X.image Prod.fst)
       ((Finset.range pending).image (fun i => s.nextLabel + i)) := by
     apply Finset.disjoint_left.mpr
     intro label hstoredLabel hpendingLabel
@@ -125,18 +125,18 @@ finite set of distinct labels. -/
 theorem TTCState.thinningPopulation_eq_filter_labels {n : Nat}
     (s : TTCState n) (pending rounds : Nat)
     (coins : Nat × Nat → Bool) (h : s.LabelsFresh) :
-    (samplesAfter coins rounds s.samples).card +
+    (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending =
-      (((s.samples.image Prod.fst) ∪
+      (((s.X.image Prod.fst) ∪
         ((Finset.range pending).image (fun i => s.nextLabel + i))).filter
           (fun label => survives coins rounds label)).card := by
   classical
-  have hstored : ((s.samples.image Prod.fst).filter
+  have hstored : ((s.X.image Prod.fst).filter
       (fun label => survives coins rounds label)).card =
-      (samplesAfter coins rounds s.samples).card := by
-    have hset : (s.samples.image Prod.fst).filter
+      (samplesAfter coins rounds s.X).card := by
+    have hset : (s.X.image Prod.fst).filter
         (fun label => survives coins rounds label) =
-        (samplesAfter coins rounds s.samples).image Prod.fst := by
+        (samplesAfter coins rounds s.X).image Prod.fst := by
       ext label
       simp [samplesAfter, and_comm]
     rw [hset]
@@ -162,7 +162,7 @@ theorem TTCState.thinningPopulation_eq_filter_labels {n : Nat}
     · rfl
     · intro a b hab
       exact Nat.add_left_cancel hab
-  have hdisjoint : Disjoint (s.samples.image Prod.fst)
+  have hdisjoint : Disjoint (s.X.image Prod.fst)
       ((Finset.range pending).image (fun i => s.nextLabel + i)) := by
     apply Finset.disjoint_left.mpr
     intro label hstoredLabel hpendingLabel

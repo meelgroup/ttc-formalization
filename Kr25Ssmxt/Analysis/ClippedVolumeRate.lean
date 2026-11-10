@@ -106,19 +106,19 @@ theorem Decomposition.clippedVolume_clog_le_outerRadiusMax
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
-    let v := max ((D.component i).manuscriptVolumeLower p.epsilonPrime)
-      ((D.component i).manuscriptVolumeUpper p.epsilonPrime)
+    let v := max ((D.component i).manuscriptVolumeLower p.ε')
+      ((D.component i).manuscriptVolumeUpper p.ε')
     Nat.clog 2 (Nat.ceil (v : Real) + 1) ≤
       2 + n * Nat.clog 2
         (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1) := by
   let P := D.component i
-  let v := max (P.manuscriptVolumeLower p.epsilonPrime)
-    (P.manuscriptVolumeUpper p.epsilonPrime)
-  have heta0 : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+  let v := max (P.manuscriptVolumeLower p.ε')
+    (P.manuscriptVolumeUpper p.ε')
+  have heta0 : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
-  have heta1 : p.epsilonPrime ≤ 1 := by
-    dsimp [ApproxParams.epsilonPrime]
+  have heta1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   have hv := P.manuscriptVolumeClip_le_outer_pow hn heta0 heta1
   have hR := D.component_outerRadius_le_theorem3OuterRadiusMax i
@@ -148,15 +148,15 @@ theorem Decomposition.manuscriptRate_clog_le_precision_outerRadius
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (i : Fin D.componentCount) :
-    let v := max ((D.component i).manuscriptVolumeLower p.epsilonPrime)
-      ((D.component i).manuscriptVolumeUpper p.epsilonPrime)
+    let v := max ((D.component i).manuscriptVolumeLower p.ε')
+      ((D.component i).manuscriptVolumeUpper p.ε')
     Nat.clog 2
-      (Nat.ceil (((manuscriptIntensity b n (p.threshold D.componentCount) v : NNReal) :
-        Real) / p.threshold D.componentCount) + 1) ≤
+      (Nat.ceil (((ttc.t b n (p.Thresh D.componentCount) v : NNReal) :
+        Real) / p.Thresh D.componentCount) + 1) ≤
       4 * (b * n) + 2 + n * Nat.clog 2
         (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1) := by
-  let v := max ((D.component i).manuscriptVolumeLower p.epsilonPrime)
-    ((D.component i).manuscriptVolumeUpper p.epsilonPrime)
+  let v := max ((D.component i).manuscriptVolumeLower p.ε')
+    ((D.component i).manuscriptVolumeUpper p.ε')
   have hfirst := manuscript_rate_clog_le_linear_precision b n
     (p.threshold_pos D.componentCount) v
   have hsecond := D.clippedVolume_clog_le_outerRadiusMax hn p i

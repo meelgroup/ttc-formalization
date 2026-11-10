@@ -52,16 +52,16 @@ theorem community_manuscriptTTC_lattice_estimate
     (hm : 0 < (prep.run F hbounded).componentCount) :
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
-    (communityManuscriptTTC hn F hbounded p prep).real
+    (ttc hn F hbounded p prep).real
       {estimate | (estimate : Real) ∈
         Arlib.relErr (p.epsilon / 2)
           ((D.latticePoints b).ncard / (10 : Real) ^ (b * n))} ≥
       1 - p.delta := by
   intro D b
   let m := D.componentCount
-  let T := p.threshold m
-  let eta := p.epsilonPrime
-  let delta' := p.deltaPrime m
+  let T := p.Thresh m
+  let eta := p.ε'
+  let delta' := p.δ' m
   let N := (D.latticePoints b).ncard
   let comps := communityManuscriptCertifiedComponents hn D p prep
   let components := List.ofFn D.component
@@ -78,19 +78,19 @@ theorem community_manuscriptTTC_lattice_estimate
   let law := communityManuscriptVolumeVectorLaw hn prep eta delta' components
   let K : (Fin components.length → VolumeOutcome) → Measure NNReal :=
     fun o => (communityManuscriptComponentsGivenVolumes hn prep b eta delta' T
-      components o (TTCState.initial n)).map (manuscriptEstimate b T)
-  have hTTC : communityManuscriptTTC hn F hbounded p prep = law.bind K :=
+      components o (TTCState.initial n)).map (Est b T)
+  have hTTC : ttc hn F hbounded p prep = law.bind K :=
     communityManuscriptTTC_eq_volumeVector_bind hn F hbounded p prep
       (Nat.pos_iff_ne_zero.mp hm)
   let good : Set (Fin components.length → VolumeOutcome) :=
     {o | ∀ i, (o i).1 = true ∧
-      ((o i).2 : Real) ∈ Arlib.relErr p.epsilonPrime
+      ((o i).2 : Real) ∈ Arlib.relErr p.ε'
         (volume (components.get i).carrier).toReal}
   have hgoodMeas : MeasurableSet good :=
     measurableSet_volumeOutcome_good _ (fun _ => measurableSet_Icc)
   have hT : 0 < T := p.threshold_pos m
   have hvolumeU : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).computeVolume P eta delta') := by
+      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta') := by
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
     exact ((community_manuscript_volume_contract hn prep F hbounded p) i).1
@@ -127,7 +127,7 @@ theorem community_manuscriptTTC_lattice_estimate
       prep b eta delta' T hT components o (TTCState.initial n)
     have hKo : K o Bad = (communityManuscriptComponentsGivenVolumes hn prep b
         eta delta' T components o (TTCState.initial n))
-          ((manuscriptEstimate b T) ⁻¹' Bad) :=
+          ((Est b T) ⁻¹' Bad) :=
       Measure.map_apply (measurable_manuscriptEstimate b T) hBad
     by_cases ho : o ∈ good
     · have hexec : communityManuscriptComponentsGivenVolumes hn prep b eta delta'
@@ -143,7 +143,7 @@ theorem community_manuscriptTTC_lattice_estimate
       have hgood' : ∀ i : Fin D.componentCount,
           ((fun j => o (tr j)) (Fin.cast hlen.symm i)).1 = true ∧
           (((fun j => o (tr j)) (Fin.cast hlen.symm i)).2 : Real) ∈
-            Arlib.relErr p.epsilonPrime (volume (D.component i).carrier).toReal := by
+            Arlib.relErr p.ε' (volume (D.component i).carrier).toReal := by
         intro i
         have h := ho (tr (Fin.cast hlen.symm i))
         have hget : components.get (tr (Fin.cast hlen.symm i)) = D.component i := by
@@ -161,7 +161,7 @@ theorem community_manuscriptTTC_lattice_estimate
         simp [Set.indicator, ho]
       rw [hind, hKo]
       exact prob_le_one.trans le_self_add
-  have _ : IsProbabilityMeasure (communityManuscriptTTC hn F hbounded p prep) :=
+  have _ : IsProbabilityMeasure (ttc hn F hbounded p prep) :=
     community_manuscriptTTC_isProbabilityMeasure hn F hbounded p prep
   have hKmeas : Measurable K := by
     have hcoords : Measurable
@@ -171,7 +171,7 @@ theorem community_manuscriptTTC_lattice_estimate
     have h := (measurable_communityManuscriptComponentsGivenVolumes hn prep b
       eta delta' T hT components).comp hcoords
     exact (Measure.measurable_map _ (measurable_manuscriptEstimate b T)).comp h
-  have hTTCBad : (communityManuscriptTTC hn F hbounded p prep) Bad ≤
+  have hTTCBad : (ttc hn F hbounded p prep) Bad ≤
       ENNReal.ofReal (p.delta / 4) +
         (ENNReal.ofReal (p.delta / 6) + ENNReal.ofReal (p.delta / 6)) := by
     rw [hTTC]
@@ -187,7 +187,7 @@ theorem community_manuscriptTTC_lattice_estimate
         rw [lintegral_add_right _ measurable_const, lintegral_indicator_one
           hgoodMeas.compl, lintegral_const, measure_univ, mul_one]
       _ ≤ _ := by gcongr
-  have hreal : (communityManuscriptTTC hn F hbounded p prep).real Bad ≤
+  have hreal : (ttc hn F hbounded p prep).real Bad ≤
       p.delta / 4 + (p.delta / 6 + p.delta / 6) := by
     have hd := p.delta_pos
     rw [← ENNReal.ofReal_add (by positivity) (by positivity),
@@ -197,13 +197,13 @@ theorem community_manuscriptTTC_lattice_estimate
   have hset : {estimate : NNReal | (estimate : Real) ∈ target} = Badᶜ := by
     ext e
     simp [Bad]
-  change (communityManuscriptTTC hn F hbounded p prep).real
+  change (ttc hn F hbounded p prep).real
     {estimate : NNReal | (estimate : Real) ∈ target} ≥ 1 - p.delta
   rw [hset, measureReal_compl hBad, probReal_univ]
   linarith [p.delta_pos]
 
 /-- **Manuscript Theorem 1** for the current TTC program
-(`communityManuscriptTTC`): with the concrete CV18 and Hit-and-Run/KV97
+(`ttc`): with the concrete CV18 and Hit-and-Run/KV97
 oracles, the output is an `ε`-relative estimate of the volume of the
 existentially projected solution set with probability at least `1 - δ`.
 There is no `Prior` hypothesis and no regime premise. -/
@@ -212,7 +212,7 @@ theorem community_manuscriptTTC_volume_accuracy
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k) :
-    (communityManuscriptTTC hn F hbounded p prep).real
+    (ttc hn F hbounded p prep).real
       {estimate | (estimate : Real) ∈
         Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
       1 - p.delta := by

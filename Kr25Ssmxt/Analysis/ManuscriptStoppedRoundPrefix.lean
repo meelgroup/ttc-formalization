@@ -184,14 +184,14 @@ theorem thinningResult_congr_of_stoppedRoundPrefix
     thinningResult s pending threshold coins =
       thinningResult s pending threshold coins' := by
   let r := firstExitRound s pending threshold coins
-  have hsamples : samplesAfter coins r s.samples =
-      samplesAfter coins' r s.samples := by
+  have hsamples : samplesAfter coins r s.X =
+      samplesAfter coins' r s.X := by
     calc
-      samplesAfter coins r s.samples =
-        samplesAfter (coinPrefix r coins) r s.samples :=
+      samplesAfter coins r s.X =
+        samplesAfter (coinPrefix r coins) r s.X :=
           (samplesAfter_coinPrefix s r r (le_refl r) coins).symm
-      _ = samplesAfter (coinPrefix r coins') r s.samples := by rw [hprefix]
-      _ = samplesAfter coins' r s.samples :=
+      _ = samplesAfter (coinPrefix r coins') r s.X := by rw [hprefix]
+      _ = samplesAfter coins' r s.X :=
         samplesAfter_coinPrefix s r r (le_refl r) coins'
   have hpending : pendingAfter coins r s.nextLabel pending =
       pendingAfter coins' r s.nextLabel pending := by
@@ -213,8 +213,8 @@ the underlying source, after a time-local read of that source. -/
 noncomputable def thinningResultAtObserved {n : Nat} (s : TTCState n) (pending : Nat)
     (read : (Nat × Nat → Bool) → Nat × Nat → Bool)
     (observation : Nat × (Nat × Nat → Bool)) : TTCState n × Nat :=
-  ({ rate := s.rate / (2 : NNReal) ^ observation.1
-     samples := samplesAfter (read observation.2) observation.1 s.samples
+  ({ p := s.p / (2 : NNReal) ^ observation.1
+     X := samplesAfter (read observation.2) observation.1 s.X
      nextLabel := s.nextLabel },
    pendingAfter (read observation.2) observation.1 s.nextLabel pending)
 
@@ -226,14 +226,14 @@ theorem measurable_thinningResultAtObserved
   apply measurable_from_prod_countable_right
   intro rounds
   have hsamples : Measurable (fun coins : Nat × Nat → Bool =>
-      samplesAfter (read coins) rounds s.samples) :=
-    (measurable_samplesAfter_fixed rounds s.samples).comp hread
+      samplesAfter (read coins) rounds s.X) :=
+    (measurable_samplesAfter_fixed rounds s.X).comp hread
   have hpending : Measurable (fun coins : Nat × Nat → Bool =>
       pendingAfter (read coins) rounds s.nextLabel pending) :=
     (measurable_pendingAfter_fixed rounds s.nextLabel pending).comp hread
   have hstate : Measurable (fun coins : Nat × Nat → Bool =>
-      { rate := s.rate / (2 : NNReal) ^ rounds
-        samples := samplesAfter (read coins) rounds s.samples
+      { p := s.p / (2 : NNReal) ^ rounds
+        X := samplesAfter (read coins) rounds s.X
         nextLabel := s.nextLabel : TTCState n }) := by
     rw [measurable_comap_iff]
     exact measurable_const.prodMk (hsamples.prodMk measurable_const)
@@ -252,15 +252,15 @@ theorem thinningResult_eq_atObserved
         (r, coinPrefix r coins) := by
   let r := firstExitRound s pending threshold (read coins)
   have hprefix := hlocal r coins
-  have hsamples : samplesAfter (read coins) r s.samples =
-      samplesAfter (read (coinPrefix r coins)) r s.samples := by
+  have hsamples : samplesAfter (read coins) r s.X =
+      samplesAfter (read (coinPrefix r coins)) r s.X := by
     calc
-      samplesAfter (read coins) r s.samples =
-        samplesAfter (coinPrefix r (read coins)) r s.samples :=
+      samplesAfter (read coins) r s.X =
+        samplesAfter (coinPrefix r (read coins)) r s.X :=
           (samplesAfter_coinPrefix s r r (le_refl r) (read coins)).symm
       _ = samplesAfter (coinPrefix r
-          (read (coinPrefix r coins))) r s.samples := by rw [hprefix]
-      _ = samplesAfter (read (coinPrefix r coins)) r s.samples :=
+          (read (coinPrefix r coins))) r s.X := by rw [hprefix]
+      _ = samplesAfter (read (coinPrefix r coins)) r s.X :=
         samplesAfter_coinPrefix s r r (le_refl r)
           (read (coinPrefix r coins))
   have hpending : pendingAfter (read coins) r s.nextLabel pending =

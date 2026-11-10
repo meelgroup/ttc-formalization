@@ -14,9 +14,9 @@ theorem measurableSet_labelsFresh {n : Nat} :
     {x | (∀ c ∈ x.1, c.1 < x.2) ∧
       (∀ c ∈ x.1, ∀ d ∈ x.1, c.1 = d.1 → c = d)}
   have hgood : MeasurableSet good := good.to_countable.measurableSet
-  have hpair : Measurable (fun s : TTCState n => (s.samples, s.nextLabel)) :=
+  have hpair : Measurable (fun s : TTCState n => (s.X, s.nextLabel)) :=
     measurable_snd.comp
-      (comap_measurable (fun s : TTCState n => (s.rate, s.samples, s.nextLabel)))
+      (comap_measurable (fun s : TTCState n => (s.p, s.X, s.nextLabel)))
   convert hgood.preimage hpair using 1
   ext s
   rfl
@@ -79,8 +79,8 @@ theorem thinUntil_labelsFresh {n : Nat} (s : TTCState n)
 
 theorem manuscript_sample_append_labelsFresh {n k : Nat} (O : TTCOracles n k)
     (P : PolytopeData n) (s : TTCState n) (count b : Nat)
-    (epsilonPrime deltaPrime : Real) (h : s.LabelsFresh) :
-    ∀ᵐ result ∂(O.generateSamples P count b epsilonPrime deltaPrime).map
+    (ε' δ' : Real) (h : s.LabelsFresh) :
+    ∀ᵐ result ∂(O.GenerateSamples P count b ε' δ').map
       (fun batch => s.addBatch batch.2), result.LabelsFresh := by
   have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch.2) :=
     measurable_addBatch.comp (measurable_const.prodMk measurable_snd)

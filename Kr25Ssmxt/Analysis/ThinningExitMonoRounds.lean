@@ -25,7 +25,7 @@ lemma thinningExit_mono_rounds {n : Nat} (s : TTCState n) (pending : Nat)
     intro label hsurvives r hlt
     exact hsurvives r (lt_of_lt_of_le hlt hr)
   have hsamplesSubset :
-      samplesAfter coins r₂ s.samples ⊆ samplesAfter coins r₁ s.samples := by
+      samplesAfter coins r₂ s.X ⊆ samplesAfter coins r₁ s.X := by
     intro copy hcopy
     simp only [samplesAfter, Finset.mem_filter] at hcopy ⊢
     exact ⟨hcopy.1, hsurvives copy.1 hcopy.2⟩
@@ -38,8 +38,8 @@ lemma thinningExit_mono_rounds {n : Nat} (s : TTCState n) (pending : Nat)
     simp only [Finset.mem_filter] at hi ⊢
     exact ⟨hi.1, hsurvives (s.nextLabel + i) hi.2⟩
   have hsamplesCard :
-      (samplesAfter coins r₂ s.samples).card ≤
-        (samplesAfter coins r₁ s.samples).card :=
+      (samplesAfter coins r₂ s.X).card ≤
+        (samplesAfter coins r₁ s.X).card :=
     Finset.card_le_card hsamplesSubset
   have hpendingCard :
       pendingAfter coins r₂ s.nextLabel pending ≤

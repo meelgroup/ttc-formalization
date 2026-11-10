@@ -121,16 +121,16 @@ theorem thinningResult_eq_of_stop_and_prefix_eq
     thinningResult s pending threshold coins =
       thinningResult s pending threshold coins' := by
   let rounds := firstExitRound s pending threshold coins
-  have hsamples : samplesAfter coins rounds s.samples =
-      samplesAfter coins' rounds s.samples := by
+  have hsamples : samplesAfter coins rounds s.X =
+      samplesAfter coins' rounds s.X := by
     calc
-      samplesAfter coins rounds s.samples =
-        samplesAfter (coinPrefix rounds coins) rounds s.samples :=
+      samplesAfter coins rounds s.X =
+        samplesAfter (coinPrefix rounds coins) rounds s.X :=
           (samplesAfter_coinPrefix s rounds rounds
             (le_refl rounds) coins).symm
-      _ = samplesAfter (coinPrefix rounds coins') rounds s.samples := by
+      _ = samplesAfter (coinPrefix rounds coins') rounds s.X := by
         rw [hprefix]
-      _ = samplesAfter coins' rounds s.samples :=
+      _ = samplesAfter coins' rounds s.X :=
         samplesAfter_coinPrefix s rounds rounds
           (le_refl rounds) coins'
   have hpending : pendingAfter coins rounds s.nextLabel pending =

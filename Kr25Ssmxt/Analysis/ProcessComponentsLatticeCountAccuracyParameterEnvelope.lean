@@ -13,7 +13,7 @@ noncomputable section
 
 namespace Kr25Ssmxt
 
-/-- The three `epsilonPrime` factors and one lattice-comparison factor used in the
+/-- The three `ε'` factors and one lattice-comparison factor used in the
 component-prefix invariant lie inside the final `epsilon / 2` envelope.
 
 INTERNAL: scalar arithmetic in the assembly of `process_components_lattice_count_accuracy`.
@@ -21,10 +21,10 @@ INTERNAL: scalar arithmetic in the assembly of `process_components_lattice_count
 lemma process_components_lattice_count_accuracy_parameter_envelope
     (params : ApproxParams) :
     1 - params.epsilon / 2 ≤
-        (1 - params.epsilonPrime) ^ 3 * (1 - params.latticeEta) ∧
-      (1 + params.epsilonPrime) ^ 3 * (1 + params.latticeEta) ≤
+        (1 - params.ε') ^ 3 * (1 - params.latticeEta) ∧
+      (1 + params.ε') ^ 3 * (1 + params.latticeEta) ≤
         1 + params.epsilon / 2 := by
-  dsimp only [ApproxParams.epsilonPrime, ApproxParams.latticeEta]
+  dsimp only [ApproxParams.ε', ApproxParams.latticeEta]
   have he0 : 0 ≤ params.epsilon := le_of_lt params.epsilon_pos
   have he2 : params.epsilon ^ 2 ≤ params.epsilon := by
     nlinarith [mul_nonneg he0 (sub_nonneg.mpr params.epsilon_le_one)]

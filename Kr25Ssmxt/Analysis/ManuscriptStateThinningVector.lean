@@ -11,29 +11,29 @@ open Classical MeasureTheory
 
 noncomputable def TTCState.pointCountsFromDecisions {n : Nat}
     (s : TTCState n) (S : Finset (LatticePoint n))
-    (decisions : s.samples.image Prod.fst → Bool) : S → Nat :=
-  fun x => (s.samples.filter fun copy =>
+    (decisions : s.X.image Prod.fst → Bool) : S → Nat :=
+  fun x => (s.X.filter fun copy =>
     copy.2 = x.1 ∧
-      (if h : copy.1 ∈ s.samples.image Prod.fst then
+      (if h : copy.1 ∈ s.X.image Prod.fst then
         decisions ⟨copy.1, h⟩ else false) = true).card
 
 theorem TTCState.pointCounts_samplesAfter_eq_decisions {n : Nat}
     (s : TTCState n) (S : Finset (LatticePoint n))
     (coins : Nat × Nat → Bool) (rounds : Nat) :
-    ({s with samples := samplesAfter coins rounds s.samples}).pointCounts S =
+    ({s with X := samplesAfter coins rounds s.X}).pointCounts S =
       s.pointCountsFromDecisions S
         (fun label => labelSurvives rounds (fun r => coins (r, label.1))) := by
   funext x
-  change ((samplesAfter coins rounds s.samples).filter
+  change ((samplesAfter coins rounds s.X).filter
     fun copy => copy.2 = x.1).card =
-    (s.samples.filter fun copy =>
+    (s.X.filter fun copy =>
       copy.2 = x.1 ∧
-        (if h : copy.1 ∈ s.samples.image Prod.fst then
+        (if h : copy.1 ∈ s.X.image Prod.fst then
           labelSurvives rounds (fun r => coins (r, copy.1)) else false) = true).card
   congr 1
   ext copy
-  by_cases hc : copy ∈ s.samples
-  · have hl : copy.1 ∈ s.samples.image Prod.fst :=
+  by_cases hc : copy ∈ s.X
+  · have hl : copy.1 ∈ s.X.image Prod.fst :=
       Finset.mem_image.mpr ⟨copy, hc, rfl⟩
     have hsurv :
         labelSurvives rounds (fun r => coins (r, copy.1)) = true ↔
@@ -49,13 +49,13 @@ theorem TTCState.fixed_round_pointCounts_law {n : Nat}
     (s : TTCState n) (S : Finset (LatticePoint n))
     (rounds : Nat) :
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-      ({s with samples := samplesAfter coins rounds s.samples}).pointCounts S) =
-    (Measure.pi (fun _ : s.samples.image Prod.fst =>
+      ({s with X := samplesAfter coins rounds s.X}).pointCounts S) =
+    (Measure.pi (fun _ : s.X.image Prod.fst =>
       ProbabilityTheory.bernoulliMeasure true false
         (survivalProbability rounds))).map
       (s.pointCountsFromDecisions S) := by
   let decisions : (Nat × Nat → Bool) →
-      (s.samples.image Prod.fst → Bool) :=
+      (s.X.image Prod.fst → Bool) :=
     fun coins label => labelSurvives rounds (fun r => coins (r, label.1))
   have hdecisions : Measurable decisions := by
     exact Measurable.of_eval (fun label =>
@@ -65,7 +65,7 @@ theorem TTCState.fixed_round_pointCounts_law {n : Nat}
     Measurable.of_discrete
   calc
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-        ({s with samples := samplesAfter coins rounds s.samples}).pointCounts S) =
+        ({s with X := samplesAfter coins rounds s.X}).pointCounts S) =
       fairCoinStreamLaw.map
         (s.pointCountsFromDecisions S ∘ decisions) := by
           congr 1
@@ -76,7 +76,7 @@ theorem TTCState.fixed_round_pointCounts_law {n : Nat}
           rw [Measure.map_map hcount hdecisions]
     _ = _ := by
       rw [fairCoinStreamLaw_survivalVector_finite rounds
-        (s.samples.image Prod.fst)]
+        (s.X.image Prod.fst)]
 
 /-- Stored point counts and the pending count use the same independent
 label-indexed survival decisions.  This joint law is the fixed-round bridge
@@ -85,7 +85,7 @@ theorem TTCState.fixed_round_pointCounts_pending_law {n : Nat}
     (s : TTCState n) (S : Finset (LatticePoint n))
     (pending rounds : Nat) :
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-      (({s with samples := samplesAfter coins rounds s.samples}).pointCounts S,
+      (({s with X := samplesAfter coins rounds s.X}).pointCounts S,
         pendingAfter coins rounds s.nextLabel pending)) =
     (Measure.infinitePi (fun _ : Nat =>
       ProbabilityTheory.bernoulliMeasure true false
@@ -109,7 +109,7 @@ theorem TTCState.fixed_round_pointCounts_pending_law {n : Nat}
     have hstored : Measurable (fun bits : Nat → Bool =>
         s.pointCountsFromDecisions S (fun label => bits label.1)) := by
       have hrestrict : Measurable (fun bits : Nat → Bool =>
-          fun label : s.samples.image Prod.fst => bits label.1) :=
+          fun label : s.X.image Prod.fst => bits label.1) :=
         Measurable.of_eval (fun label => measurable_pi_apply label.1)
       exact (Measurable.of_discrete :
         Measurable (s.pointCountsFromDecisions S)).comp hrestrict
@@ -136,7 +136,7 @@ theorem TTCState.fixed_round_pointCounts_pending_law {n : Nat}
           exact hif.add ih
     exact hstored.prodMk (hpending (Finset.range pending))
   have hpoint (coins : Nat × Nat → Bool) :
-      (({s with samples := samplesAfter coins rounds s.samples}).pointCounts S,
+      (({s with X := samplesAfter coins rounds s.X}).pointCounts S,
         pendingAfter coins rounds s.nextLabel pending) =
       output (decisions coins) := by
     apply Prod.ext
@@ -148,7 +148,7 @@ theorem TTCState.fixed_round_pointCounts_pending_law {n : Nat}
       simp [labelSurvives, survives]
   calc
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-        (({s with samples := samplesAfter coins rounds s.samples}).pointCounts S,
+        (({s with X := samplesAfter coins rounds s.X}).pointCounts S,
           pendingAfter coins rounds s.nextLabel pending)) =
       fairCoinStreamLaw.map (output ∘ decisions) := by
         congr 1
@@ -167,11 +167,11 @@ theorem TTCState.fixed_round_pointCount_binomial_law {n : Nat}
     (s : TTCState n) (x : LatticePoint n) (rounds : Nat)
     (h : s.LabelsFresh) :
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-      ({s with samples := samplesAfter coins rounds s.samples}).pointCount x) =
+      ({s with X := samplesAfter coins rounds s.X}).pointCount x) =
     ProbabilityTheory.binomial (s.pointCount x)
       (survivalProbability rounds) := by
   let restricted : TTCState n :=
-    {s with samples := s.samples.filter (fun copy => copy.2 = x)}
+    {s with X := s.X.filter (fun copy => copy.2 = x)}
   have hrestricted : restricted.LabelsFresh := by
     unfold TTCState.LabelsFresh at h ⊢
     constructor
@@ -182,21 +182,21 @@ theorem TTCState.fixed_round_pointCount_binomial_law {n : Nat}
         other (Finset.mem_filter.mp ho).1 heq
   have hbin := restricted.fixed_round_population_binomial_law 0 rounds hrestricted
   have hpoint (coins : Nat × Nat → Bool) :
-      ({s with samples := samplesAfter coins rounds s.samples}).pointCount x =
-      (samplesAfter coins rounds restricted.samples).card := by
-    change ((samplesAfter coins rounds s.samples).filter
+      ({s with X := samplesAfter coins rounds s.X}).pointCount x =
+      (samplesAfter coins rounds restricted.X).card := by
+    change ((samplesAfter coins rounds s.X).filter
       fun copy => copy.2 = x).card =
-      (samplesAfter coins rounds (s.samples.filter
+      (samplesAfter coins rounds (s.X.filter
         fun copy => copy.2 = x)).card
     congr 1
     ext copy
     simp [samplesAfter, and_comm, and_left_comm]
-  have hsize : restricted.samples.card = s.pointCount x := rfl
+  have hsize : restricted.X.card = s.pointCount x := rfl
   calc
     fairCoinStreamLaw.map (fun coins : Nat × Nat → Bool =>
-        ({s with samples := samplesAfter coins rounds s.samples}).pointCount x) =
+        ({s with X := samplesAfter coins rounds s.X}).pointCount x) =
       fairCoinStreamLaw.map (fun coins =>
-        (samplesAfter coins rounds restricted.samples).card) := by
+        (samplesAfter coins rounds restricted.X).card) := by
           congr 1
           funext coins
           exact hpoint coins

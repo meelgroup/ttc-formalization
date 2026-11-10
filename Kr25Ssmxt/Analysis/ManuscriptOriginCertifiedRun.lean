@@ -15,15 +15,15 @@ noncomputable def communityManuscriptCertifiedComponents
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     List (ManuscriptOriginCertifiedComponent n k hn prep
-      (prep.choosePrecision D p).value p.epsilonPrime
-      (p.deltaPrime D.componentCount)) := by
+      (prep.choosePrecision D p).value p.ε'
+      (p.δ' D.componentCount)) := by
   let choice := prep.choosePrecision D p
   let b := choice.value
   have hn0 : 0 < n := lt_of_lt_of_le (by norm_num) hn
-  have heta0 : 0 < p.epsilonPrime :=
+  have heta0 : 0 < p.ε' :=
     div_pos p.epsilon_pos (by norm_num)
-  have heta1 : p.epsilonPrime ≤ 1 := by
-    dsimp only [ApproxParams.epsilonPrime]
+  have heta1 : p.ε' ≤ 1 := by
+    dsimp only [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   exact List.ofFn (fun i : Fin D.componentCount =>
     { polytope := D.component i
@@ -52,19 +52,19 @@ theorem communityManuscriptCertifiedRun_map_state
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     let b := (prep.choosePrecision D p).value
-    let threshold := p.threshold D.componentCount
-    (communityManuscriptOriginComponentsLaw hn prep b p.epsilonPrime
-      (p.deltaPrime D.componentCount) threshold
+    let threshold := p.Thresh D.componentCount
+    (communityManuscriptOriginComponentsLaw hn prep b p.ε'
+      (p.δ' D.componentCount) threshold
       (communityManuscriptCertifiedComponents hn D p prep)
       (ManuscriptOriginConfiguration.initial n)).map
         (fun next : ManuscriptOriginConfiguration n => next.state) =
     manuscriptProcessComponents (communityManuscriptOracles hn prep)
-      b p.epsilonPrime (p.deltaPrime D.componentCount) threshold
+      b p.ε' (p.δ' D.componentCount) threshold
       (List.ofFn D.component) (TTCState.initial n) := by
   dsimp only
   rw [communityManuscriptOriginComponentsLaw_map_state hn prep
-    (prep.choosePrecision D p).value p.epsilonPrime
-    (p.deltaPrime D.componentCount) (p.threshold D.componentCount)
+    (prep.choosePrecision D p).value p.ε'
+    (p.δ' D.componentCount) (p.Thresh D.componentCount)
     (p.threshold_pos D.componentCount)
     (communityManuscriptCertifiedComponents hn D p prep)
     (ManuscriptOriginConfiguration.initial n)]

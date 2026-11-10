@@ -21,7 +21,7 @@ theorem communityManuscript_adaptive_tape_append_law
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((thinUntil s pending threshold).bind fun thinned =>
-      ((communityManuscriptOracles hn prep).generateSamples P thinned.2
+      ((communityManuscriptOracles hn prep).GenerateSamples P thinned.2
         b eta delta).map fun batch => thinned.1.addBatch batch.2) =
     fairCoinStreamLaw.bind fun coins =>
       (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
@@ -38,7 +38,7 @@ theorem communityManuscript_adaptive_tape_append_law
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun thinned =>
-    ((communityManuscriptOracles hn prep).generateSamples P thinned.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P thinned.2
       b eta delta).map fun batch => thinned.1.addBatch batch.2
   have hK : Measurable K := by
     have hcost := community_manuscript_sample_append_kernel_measurable

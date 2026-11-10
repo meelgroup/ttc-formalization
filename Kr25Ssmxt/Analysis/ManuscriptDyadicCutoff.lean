@@ -88,7 +88,7 @@ theorem manuscriptRateExit_zero_at_cutoff
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (count : Nat) (hcount : 0 < count)
     (threshold : Real) (hthreshold : 0 < threshold)
-    (hrate : (s.rate : Real) =
+    (hrate : (s.p : Real) =
       1 / (2 : Real) ^ (manuscriptDyadicCutoff count - 1))
     (hintensity : (intensity : Real) ≤
       (4 / 3) * threshold * count) :
@@ -106,7 +106,7 @@ theorem manuscriptRateExit_le_cutoff_gap
     (threshold : Real) (hthreshold : 0 < threshold)
     (level : Nat)
     (hlevel : level ≤ manuscriptDyadicCutoff count - 1)
-    (hrate : s.rate = 1 / (2 : NNReal) ^ level)
+    (hrate : s.p = 1 / (2 : NNReal) ^ level)
     (hintensity : (intensity : Real) ≤
       (4 / 3) * threshold * count) :
     manuscriptRateExit s intensity threshold ≤
@@ -114,7 +114,7 @@ theorem manuscriptRateExit_le_cutoff_gap
   let d := manuscriptDyadicCutoff count - 1
   have hgap : level + (d - level) = d := Nat.add_sub_of_le hlevel
   have hguard :
-      ((intensity * s.rate / (2 : NNReal) ^ (d - level) : NNReal) : Real) <
+      ((intensity * s.p / (2 : NNReal) ^ (d - level) : NNReal) : Real) <
         threshold := by
     rw [hrate]
     have hdenom : (0 : NNReal) < (2 : NNReal) ^ level := by positivity

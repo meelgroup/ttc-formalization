@@ -189,7 +189,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_source_joint
       c.state.nextLabel) :=
     ((measurable_snd.comp measurable_snd).comp
       (comap_measurable (fun s : TTCState n =>
-        (s.rate, s.samples, s.nextLabel)))).comp hstate
+        (s.p, s.X, s.nextLabel)))).comp hstate
   have hround : Measurable (fun c : ManuscriptOriginConfiguration n =>
       manuscriptRateExit (c.state.removeComponent P) intensity
         threshold) :=

@@ -14,27 +14,27 @@ theorem manuscript_firstLoop_poisson_joint_law
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
     (manuscriptRateThinUntil s intensity threshold).bind (fun first =>
-      (poissonMeasure (intensity * first.rate)).map
+      (poissonMeasure (intensity * first.p)).map
         (Prod.mk first)) =
     (fairCoinStreamLaw.prod
       (poissonMeasure
-        (intensity * (s.rate /
+        (intensity * (s.p /
           (2 : NNReal) ^ manuscriptRateExit s intensity threshold)))).map
       (fun pair =>
         (manuscriptRateThinningResult s intensity threshold pair.1,
           pair.2)) := by
   let firstResult := manuscriptRateThinningResult s intensity threshold
-  let mean := intensity * (s.rate /
+  let mean := intensity * (s.p /
     (2 : NNReal) ^ manuscriptRateExit s intensity threshold)
   let law : TTCState n → Measure Nat :=
-    fun first => poissonMeasure (intensity * first.rate)
+    fun first => poissonMeasure (intensity * first.p)
   let K : TTCState n → Measure (TTCState n × Nat) :=
     fun first => (law first).map (Prod.mk first)
-  have hrate : Measurable (fun first : TTCState n => first.rate) := by
+  have hrate : Measurable (fun first : TTCState n => first.p) := by
     exact measurable_fst.comp
       (comap_measurable
         (fun first : TTCState n =>
-          (first.rate, first.samples, first.nextLabel)))
+          (first.p, first.X, first.nextLabel)))
   have hlaw : Measurable law :=
     measurable_poissonMeasure.comp (measurable_const.mul hrate)
   have hK : Measurable K :=

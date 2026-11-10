@@ -28,7 +28,7 @@ theorem communityManuscript_active_finite_origin_tape
         (manuscriptRateThinningResult s intensity threshold pair.1)
         pending threshold (shiftCoins rounds pair.1) pair.2
     (coinLaw.map result).bind (fun second =>
-      ((communityManuscriptOracles hn prep).generateSamples P second.2
+      ((communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta).map fun batch => second.1.addBatch batch.2) =
     coinLaw.bind fun pair =>
       let second := result pair
@@ -51,7 +51,7 @@ theorem communityManuscript_active_finite_origin_tape
       (manuscriptRateThinningResult s intensity threshold pair.1)
       pending threshold (shiftCoins rounds pair.1) pair.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hresult : Measurable result :=
     measurable_manuscript_active_finite_result s intensity threshold pending
@@ -112,7 +112,7 @@ theorem measurable_communityManuscriptOriginTapeKernel
       pending threshold
       (shiftCoins (manuscriptRateExit s intensity threshold) pair.1) pair.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hresult : Measurable result :=
     measurable_manuscript_active_finite_result s intensity threshold pending
@@ -186,7 +186,7 @@ noncomputable def communityManuscriptOriginSourceKernel
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n) (level : Nat) :
     Measure (TTCState n) :=
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let rounds := manuscriptRateExit deleted intensity threshold
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
@@ -220,16 +220,16 @@ theorem communityManuscriptComponentGivenVolume_eq_originSourceKernel
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n)
-    (level : Nat) (hrate : state.rate = 1 / (2 : NNReal) ^ level)
+    (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level)
     (hfresh : state.LabelsFresh) :
     communityManuscriptComponentGivenVolume hn prep P b eta delta threshold
       outcome state =
     communityManuscriptOriginSourceKernel hn P b eta threshold hroute
       outcome state level := by
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hK : Measurable K :=
     measurable_communityManuscript_sampleAppend_kernel hn prep P b eta delta
@@ -292,7 +292,7 @@ noncomputable def communityManuscriptFutureSourceKernel
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n) (level : Nat) :
     Measure (TTCState n) :=
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let rounds := manuscriptRateExit deleted intensity threshold
   (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
@@ -311,7 +311,7 @@ theorem communityManuscriptComponentGivenVolume_eq_futureSourceKernel
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n)
-    (level : Nat) (hrate : state.rate = 1 / (2 : NNReal) ^ level)
+    (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level)
     (hfresh : state.LabelsFresh) :
     communityManuscriptComponentGivenVolume hn prep P b eta delta threshold
       outcome state =
@@ -329,9 +329,9 @@ theorem communityManuscriptComponentGivenVolume_eq_futureSourceKernel
   intro preCoins
   exact communityManuscript_originTape_futureCoins
     hn prep P b eta delta threshold hroute (state.removeComponent P)
-    (manuscriptIntensity b n threshold outcome.2)
+    (ttc.t b n threshold outcome.2)
     (state.labelsFresh_removeComponent P hfresh) preCoins
     (level + manuscriptRateExit (state.removeComponent P)
-      (manuscriptIntensity b n threshold outcome.2) threshold) basePending
+      (ttc.t b n threshold outcome.2) threshold) basePending
 
 end Kr25Ssmxt

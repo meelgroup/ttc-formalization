@@ -218,15 +218,15 @@ structure ApproxParams where
   delta_le_one : delta ≤ 1
 
 /-- The paper's internal relative-error parameter `ε' = ε / 12`. -/
-def ApproxParams.epsilonPrime (p : ApproxParams) : Real := p.epsilon / 12
+def ApproxParams.ε' (p : ApproxParams) : Real := p.epsilon / 12
 
 /-- The per-component failure budget `δ' = δ / (4m)`; used only when `m > 0`. -/
-def ApproxParams.deltaPrime (p : ApproxParams) (m : Nat) : Real := p.delta / (4 * m)
+def ApproxParams.δ' (p : ApproxParams) (m : Nat) : Real := p.delta / (4 * m)
 
 /-- The threshold printed in Algorithm `ttc`; used only in the nonempty branch. -/
-def ApproxParams.threshold (p : ApproxParams) (m : Nat) : Real :=
+def ApproxParams.Thresh (p : ApproxParams) (m : Nat) : Real :=
   max (24 * Real.log (24 / p.delta) /
-      ((1 - p.epsilonPrime) * p.epsilonPrime ^ 2))
+      ((1 - p.ε') * p.ε' ^ 2))
     (15 * (Real.log (6 / p.delta) + Real.log m))
 
 /-- The inball size required by the finite-union lattice comparison. -/
@@ -297,7 +297,7 @@ def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
 
 /-- Maximum number of accepted samples charged per component. -/
 def sampleCap (p : ApproxParams) (componentCount : Nat) : Nat :=
-  Nat.ceil (p.threshold componentCount)
+  Nat.ceil (p.Thresh componentCount)
 
 /-- The largest facet count among TTC's normalized components. -/
 def theorem3RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=

@@ -123,7 +123,7 @@ noncomputable def ManuscriptOriginConfiguration.refreshFuture
     coins := manuscriptRefreshedSourceCoins c.source.coins c.level future }
   origin := c.origin
   level := c.level
-  rate := c.rate
+  p := c.p
   fresh := c.fresh
   history := c.history
   valid := c.valid
@@ -632,7 +632,7 @@ theorem ManuscriptOriginConfiguration.refreshFuture_component_state_law
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (c : ManuscriptOriginConfiguration n) (outcome : VolumeOutcome) :
-    let intensity := manuscriptIntensity b n threshold outcome.2
+    let intensity := ttc.t b n threshold outcome.2
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     (ProbabilityTheory.poissonMeasure intensity).bind (fun basePending =>
@@ -646,10 +646,10 @@ theorem ManuscriptOriginConfiguration.refreshFuture_component_state_law
       communityManuscriptComponentGivenVolume hn prep P b eta delta
         threshold outcome c.state := by
   dsimp only
-  let intensity := manuscriptIntensity b n threshold outcome.2
+  let intensity := ttc.t b n threshold outcome.2
   have hgiven := communityManuscriptComponentGivenVolume_eq_finiteCoinSourceKernel
     hn prep P b eta delta threshold hroute outcome c.state c.level
-      c.rate c.fresh
+      c.p c.fresh
   rw [hgiven]
   unfold communityManuscriptFiniteCoinSourceKernel
   apply Measure.bind_congr_right
@@ -671,9 +671,9 @@ theorem ManuscriptOriginConfiguration.refreshFuture_programComponent_law
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (c : ManuscriptOriginConfiguration n) :
-    ((communityManuscriptOracles hn prep).computeVolume P eta delta).bind
+    ((communityManuscriptOracles hn prep).ComputeVolume P eta delta).bind
       (fun outcome =>
-        let intensity := manuscriptIntensity b n threshold outcome.2
+        let intensity := ttc.t b n threshold outcome.2
         let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
           hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
         (ProbabilityTheory.poissonMeasure intensity).bind

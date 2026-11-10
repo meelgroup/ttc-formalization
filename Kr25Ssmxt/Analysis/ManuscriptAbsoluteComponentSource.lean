@@ -12,9 +12,9 @@ open MeasureTheory ProbabilityTheory
 theorem manuscript_poisson_twoLoops_absolute_predraw
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (level : Nat)
-    (hrate : s.rate = 1 / (2 : NNReal) ^ level) :
+    (hrate : s.p = 1 / (2 : NNReal) ^ level) :
     (manuscriptRateThinUntil s intensity threshold).bind (fun first =>
-      (poissonMeasure (intensity * first.rate)).bind fun pending =>
+      (poissonMeasure (intensity * first.p)).bind fun pending =>
         thinUntil first pending threshold) =
     (poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
@@ -34,16 +34,16 @@ theorem manuscript_poisson_twoLoops_absolute_predraw
         (manuscriptRateThinningResult s intensity threshold coins)
         pending threshold (shiftCoins rounds coins)
   have hK : Measurable K := Measurable.of_discrete
-  have hmean : intensity * (s.rate / (2 : NNReal) ^ rounds) =
+  have hmean : intensity * (s.p / (2 : NNReal) ^ rounds) =
       intensity / (2 : NNReal) ^ (level + rounds) := by
     rw [hrate, pow_add]
     simp only [div_eq_mul_inv, mul_inv_rev]
     ac_rfl
   calc
     (manuscriptRateThinUntil s intensity threshold).bind (fun first =>
-        (poissonMeasure (intensity * first.rate)).bind fun pending =>
+        (poissonMeasure (intensity * first.p)).bind fun pending =>
           thinUntil first pending threshold) =
-      (poissonMeasure (intensity * (s.rate / (2 : NNReal) ^ rounds))).bind K := by
+      (poissonMeasure (intensity * (s.p / (2 : NNReal) ^ rounds))).bind K := by
         exact manuscript_poisson_twoLoops_oneCoinStream s intensity threshold
     _ = (poissonMeasure (intensity / (2 : NNReal) ^ (level + rounds))).bind K := by
           rw [hmean]

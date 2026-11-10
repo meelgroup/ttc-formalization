@@ -9,8 +9,8 @@ namespace Kr25Ssmxt
 
 theorem ApproxParams.lower_intensity_factor
     (p : ApproxParams) :
-    (1 - p.epsilonPrime) * (1 - p.latticeEta) ≥ 1 / 2 := by
-  dsimp [ApproxParams.epsilonPrime, ApproxParams.latticeEta]
+    (1 - p.ε') * (1 - p.latticeEta) ≥ 1 / 2 := by
+  dsimp [ApproxParams.ε', ApproxParams.latticeEta]
   have he : 0 ≤ p.epsilon := p.epsilon_pos.le
   have he2 : p.epsilon ^ 2 ≤ p.epsilon := by
     nlinarith [mul_nonneg he (sub_nonneg.mpr p.epsilon_le_one)]
@@ -20,10 +20,10 @@ theorem manuscript_dyadic_mean_lower
     (p : ApproxParams) (m count : Nat) (hcount : 0 < count)
     (level : Nat)
     (hlevel : level ≤ manuscriptDyadicCutoff count - 1) :
-    ((count : Real) * p.threshold m *
-      (1 - p.epsilonPrime) ^ 2 * (1 - p.latticeEta)) /
+    ((count : Real) * p.Thresh m *
+      (1 - p.ε') ^ 2 * (1 - p.latticeEta)) /
         (2 : Real) ^ level ≥
-      (1 - p.epsilonPrime) * p.threshold m / 8 *
+      (1 - p.ε') * p.Thresh m / 8 *
         (2 : Real) ^ (manuscriptDyadicCutoff count - 1 - level) := by
   let d := manuscriptDyadicCutoff count - 1
   have hpowLevel : 0 < (2 : Real) ^ level := by positivity
@@ -38,16 +38,16 @@ theorem manuscript_dyadic_mean_lower
         (2 : Real) ^ (d - level) / 4 := by
     apply (div_le_div_iff₀ (by norm_num : (0 : Real) < 4) hpowLevel).2
     nlinarith [hpoweq, hprevious]
-  have hfactor : (1 - p.epsilonPrime) / 2 ≤
-      (1 - p.epsilonPrime) ^ 2 * (1 - p.latticeEta) := by
-    have hnonneg : 0 ≤ 1 - p.epsilonPrime := by
-      dsimp [ApproxParams.epsilonPrime]
+  have hfactor : (1 - p.ε') / 2 ≤
+      (1 - p.ε') ^ 2 * (1 - p.latticeEta) := by
+    have hnonneg : 0 ≤ 1 - p.ε' := by
+      dsimp [ApproxParams.ε']
       linarith [p.epsilon_le_one]
     have h := mul_le_mul_of_nonneg_left (p.lower_intensity_factor)
       hnonneg
     nlinarith
-  have hscale : 0 ≤ (1 - p.epsilonPrime) ^ 2 *
-      (1 - p.latticeEta) * p.threshold m := by
+  have hscale : 0 ≤ (1 - p.ε') ^ 2 *
+      (1 - p.latticeEta) * p.Thresh m := by
     have hnonneg : 0 ≤ 1 - p.latticeEta := by
       dsimp [ApproxParams.latticeEta]
       linarith [p.epsilon_le_one]

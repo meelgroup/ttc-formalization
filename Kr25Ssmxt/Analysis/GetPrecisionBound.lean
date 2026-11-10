@@ -21,7 +21,7 @@ theorem latticeRadiusRequirement_precisionEta_nonneg {n k : Nat}
 /-- `getprec`'s output is at most `1 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ)`. -/
 theorem getPrecision_le_theorem3PrecisionBound {n k : Nat}
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams) :
-    (getPrecision D p.precisionEta : Real) ≤
+    (GetPrecision D p.precisionEta : Real) ≤
       TTCRuntime.theorem3PrecisionBound D p := by
   set γ := latticeRadiusRequirement D p.precisionEta with hγdef
   set c := TTCRuntime.theorem3InverseInradiusMax D with hcdef
@@ -44,7 +44,7 @@ theorem getPrecision_le_theorem3PrecisionBound {n k : Nat}
       exact Finset.le_sup
         (f := fun i : Fin D.componentCount =>
           Real.toNNReal (1 / (D.component i).inradius)) (Finset.mem_univ i)
-    rw [(D.component i).chebyshevRadius_eq_inradius, div_eq_mul_one_div]
+    rw [(D.component i).MaxInscribedBall_eq_inradius, div_eq_mul_one_div]
     exact mul_le_mul_of_nonneg_left hinv hγ0
   have hlog : Real.logb 10 (max 1 (γ * c)) ≤
       max 0 (Real.logb 10 γ) + max 0 (Real.logb 10 c) := by
@@ -63,7 +63,7 @@ theorem getPrecision_le_theorem3PrecisionBound {n k : Nat}
         · rw [← heq, mul_zero] at h; linarith
       rw [Real.logb_mul hγpos.ne' hcpos.ne']
       exact add_le_add (le_max_right _ _) (le_max_right _ _)
-  have hceil : (getPrecision D p.precisionEta : Real) <
+  have hceil : (GetPrecision D p.precisionEta : Real) <
       Real.logb 10 (getPrecisionRatio D p.precisionEta) + 1 :=
     Nat.ceil_lt_add_one (Real.logb_nonneg h10 hratio1)
   have hmono : Real.logb 10 (getPrecisionRatio D p.precisionEta) ≤
@@ -81,7 +81,7 @@ theorem theorem3PrecisionScale_le_inputScale {n k : Nat}
       TTCRuntime.theorem3InputScale D p := by
   have h := getPrecision_le_theorem3PrecisionBound D p
   unfold TTCRuntime.theorem3PrecisionScale TTCRuntime.theorem3InputScale
-  change 1 + (getPrecision D p.precisionEta : Real) + _ ≤ _
+  change 1 + (GetPrecision D p.precisionEta : Real) + _ ≤ _
   linarith
 
 theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
@@ -93,12 +93,12 @@ theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
   have hrho : 1 ≤ TTCRuntime.theorem3Rho D := le_max_left _ _
   have hlogrho : 0 ≤ Real.log (4 * TTCRuntime.theorem3Rho D + 1) :=
     Real.log_nonneg (by linarith)
-  have heps : 0 < p.epsilonPrime := by
-    dsimp [ApproxParams.epsilonPrime]
+  have heps : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
-  have hlogeta : 0 ≤ Real.log (1 + 8 / p.epsilonPrime) := by
+  have hlogeta : 0 ≤ Real.log (1 + 8 / p.ε') := by
     apply Real.log_nonneg
-    have : 0 ≤ 8 / p.epsilonPrime := div_nonneg (by norm_num) heps.le
+    have : 0 ≤ 8 / p.ε' := div_nonneg (by norm_num) heps.le
     linarith
   have hL : 0 ≤ TTCRuntime.theorem3ParameterFactor hn D p := by
     unfold TTCRuntime.theorem3ParameterFactor

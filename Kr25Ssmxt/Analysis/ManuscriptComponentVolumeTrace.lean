@@ -34,7 +34,7 @@ theorem communityManuscriptComponentVolumeTrace_fst
   · intro outcome
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (manuscriptIntensity b n threshold outcome.2)⟩
+      (ttc.t b n threshold outcome.2)⟩
 
 theorem communityManuscriptComponentVolumeTrace_snd
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -58,7 +58,7 @@ theorem communityManuscriptComponentVolumeTrace_snd
   · intro outcome
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (manuscriptIntensity b n threshold outcome.2)⟩
+      (ttc.t b n threshold outcome.2)⟩
 
 /-- Forgetting the oracle's operation charge recovers the exact clipped CV18
 outcome law used by the uncharged manuscript program. -/
@@ -69,7 +69,7 @@ theorem communityManuscriptComponentVolumeTrace_volumeOutcome
     (state : TTCState n) :
     (communityManuscriptComponentVolumeTrace hn prep factor P b eta delta
       threshold state).map (fun result => result.1.1) =
-    (communityManuscriptOracles hn prep).computeVolume P eta delta := by
+    (communityManuscriptOracles hn prep).ComputeVolume P eta delta := by
   have hfst := communityManuscriptComponentVolumeTrace_fst hn prep factor P
     b eta delta threshold hthreshold state
   have hvolume := communityManuscriptCosted_volume_fst hn prep factor
@@ -117,7 +117,7 @@ theorem communityManuscriptComponentVolumeTrace_measurable
       IsProbabilityMeasure (tail z) := by
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold z.1
-      (manuscriptIntensity b n threshold z.2.1.2)⟩
+      (ttc.t b n threshold z.2.1.2)⟩
   let out : (TTCState n × (VolumeOutcome × Nat)) ×
       (TTCState n × Nat) →
       (VolumeOutcome × Nat) × (TTCState n × Nat) :=
@@ -164,6 +164,6 @@ theorem communityManuscriptComponentVolumeTrace_isProbabilityMeasure
   · intro outcome
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (manuscriptIntensity b n threshold outcome.2)⟩
+      (ttc.t b n threshold outcome.2)⟩
 
 end Kr25Ssmxt

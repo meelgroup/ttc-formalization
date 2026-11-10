@@ -31,7 +31,7 @@ theorem manuscriptState_pointCounts_eq_originSource
     s.pointCounts S =
       manuscriptOriginSourcePointCounts valid marks sources level S := by
   funext x
-  let stateCopies := s.samples.filter fun copy => copy.2 = x.1
+  let stateCopies := s.X.filter fun copy => copy.2 = x.1
   let sourceTags := valid.filter fun tag =>
     survives (sources tag.1) level tag.2 ∧ marks tag = x.1
   have hsets : stateCopies.image (fun copy => origin copy.1) = sourceTags := by
@@ -39,7 +39,7 @@ theorem manuscriptState_pointCounts_eq_originSource
     constructor
     · intro htag
       obtain ⟨copy, hcopy, horigin⟩ := Finset.mem_image.mp htag
-      have hstored : copy ∈ s.samples := (Finset.mem_filter.mp hcopy).1
+      have hstored : copy ∈ s.X := (Finset.mem_filter.mp hcopy).1
       have hpoint : copy.2 = x.1 := (Finset.mem_filter.mp hcopy).2
       apply Finset.mem_filter.mpr
       constructor
@@ -65,9 +65,9 @@ theorem manuscriptState_pointCounts_eq_originSource
   have hinj : Set.InjOn (fun copy : SampleCopy n => origin copy.1)
       (stateCopies : Set (SampleCopy n)) := by
     intro a ha b hb hab
-    have ha' : a ∈ s.samples :=
+    have ha' : a ∈ s.X :=
       (Finset.mem_filter.mp (show a ∈ stateCopies from ha)).1
-    have hb' : b ∈ s.samples :=
+    have hb' : b ∈ s.X :=
       (Finset.mem_filter.mp (show b ∈ stateCopies from hb)).1
     have hlabel : a.1 = b.1 :=
       hhistory.2 a.1 b.1 (hfresh.1 a ha') (hfresh.1 b hb') hab

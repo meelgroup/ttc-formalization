@@ -19,7 +19,7 @@ theorem communityManuscriptCosted_volume_fst {n k : Nat} (hn : 21 ≤ n)
     (P : PolytopeData n) (eta delta : Real) :
     ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost P eta delta).map
         Prod.fst =
-      (communityManuscriptOracles hn prep).computeVolume P eta delta := by
+      (communityManuscriptOracles hn prep).ComputeVolume P eta delta := by
   simp only [communityManuscriptCostedOracles]
   exact costedCharge_fst _ _
 
@@ -27,7 +27,7 @@ theorem communityManuscriptCosted_volume_expected_cost {n k : Nat}
     (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (eta delta : Real)
     [IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).computeVolume P eta delta)] :
+      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)] :
     ∫⁻ result, (result.2 : ENNReal) ∂
       (communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
         P eta delta =
@@ -37,7 +37,7 @@ theorem communityManuscriptCosted_volume_expected_cost {n k : Nat}
         (CommunityCV18.queryBudgetFor (by omega) P eta delta + 1) := by
   simpa only [communityManuscriptCostedOracles, Nat.cast_add, Nat.cast_mul] using
     (costedCharge_expected_cost
-    ((communityManuscriptOracles hn prep).computeVolume P eta delta)
+    ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)
     (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P eta delta) +
       factor * TTCRuntime.membershipQueryOperations n P.presentation.facetCount
@@ -48,7 +48,7 @@ theorem communityManuscriptCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
     ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
       P count b eta delta).map Prod.fst =
-      (communityManuscriptOracles hn prep).generateSamples P count b eta delta := by
+      (communityManuscriptOracles hn prep).GenerateSamples P count b eta delta := by
   classical
   by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty

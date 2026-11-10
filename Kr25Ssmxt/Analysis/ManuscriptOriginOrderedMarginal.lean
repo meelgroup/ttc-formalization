@@ -200,12 +200,12 @@ theorem manuscriptOriginOrderedComponentLaw_map_state_eq_givenVolume
       (codedLatticePoints P b).Nonempty)
     (c : ManuscriptOriginConfiguration n) (outcome : VolumeOutcome) :
     (manuscriptOriginOrderedComponentLaw hn P b eta threshold hroute
-      (manuscriptIntensity b n threshold outcome.2) c).map
+      (ttc.t b n threshold outcome.2) c).map
         (fun next : ManuscriptOriginConfiguration n => next.state) =
     communityManuscriptComponentGivenVolume hn prep P b eta delta
       threshold outcome c.state := by
   rw [manuscriptOriginOrderedComponentLaw_map_state hn P b eta threshold
-    hthreshold hroute (manuscriptIntensity b n threshold outcome.2) c]
+    hthreshold hroute (ttc.t b n threshold outcome.2) c]
   exact c.refreshFuture_component_state_law hn prep P b eta delta
     threshold hroute outcome
 
@@ -219,13 +219,13 @@ theorem manuscriptOriginRefreshedComponentLaw_map_state_eq_givenVolume
       (codedLatticePoints P b).Nonempty)
     (c : ManuscriptOriginConfiguration n) (outcome : VolumeOutcome) :
     (manuscriptOriginRefreshedComponentLaw hn P b eta threshold hroute
-      (manuscriptIntensity b n threshold outcome.2) c).map
+      (ttc.t b n threshold outcome.2) c).map
         (fun next : ManuscriptOriginConfiguration n => next.state) =
     communityManuscriptComponentGivenVolume hn prep P b eta delta
       threshold outcome c.state := by
   rw [manuscriptOriginRefreshedComponentLaw_eq_ordered hn P b eta
     threshold hthreshold hroute
-    (manuscriptIntensity b n threshold outcome.2) c]
+    (ttc.t b n threshold outcome.2) c]
   exact manuscriptOriginOrderedComponentLaw_map_state_eq_givenVolume hn
     prep P b eta delta threshold hthreshold hroute c outcome
 

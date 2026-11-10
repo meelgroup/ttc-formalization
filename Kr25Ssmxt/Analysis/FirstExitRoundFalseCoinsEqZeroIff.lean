@@ -17,7 +17,7 @@ emptiness.
 INTERNAL: elementary specialization computing the zero fiber.
 -/
 lemma firstExitRound_falseCoins_eq_zero_iff (s : TTCState 1) :
-    firstExitRound s 0 0 (fun _ => false) = 0 ↔ s.samples = ∅ := by
+    firstExitRound s 0 0 (fun _ => false) = 0 ↔ s.X = ∅ := by
   rw [firstExitRound, Nat.sInf_eq_zero]
   have hexitOne : thinningExit s 0 0 (fun _ => false) 1 := by
     simp [thinningExit, samplesAfter, pendingAfter, survives]

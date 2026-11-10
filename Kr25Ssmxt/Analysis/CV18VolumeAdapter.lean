@@ -138,7 +138,7 @@ theorem PolytopeData.rescaleCV18Law_spec {n : Nat} (P : PolytopeData n)
 
 /-- Direct composition for a normalized CV18 estimator: tag its proved success event, then
 rescale its estimate back to TTC coordinates.  This is the exact adapter consumed by a future
-`computeVolume` implementation based on the costed Arlib CV18 capstone. -/
+`ComputeVolume` implementation based on the costed Arlib CV18 capstone. -/
 theorem PolytopeData.rescaleTaggedVolumeLaw_spec {n : Nat} (P : PolytopeData n)
     {Omega : Type*} [MeasurableSpace Omega]
     (mu : Measure Omega) [IsProbabilityMeasure mu]
@@ -212,7 +212,7 @@ noncomputable def NormalizedCV18VolumeProvider.ofAdmissible {n : Nat}
 def TTCOracles.withNormalizedCV18Volume {n k : Nat} (O : TTCOracles n k)
     (V : NormalizedCV18VolumeProvider n) : TTCOracles n k :=
   { O with
-    computeVolume := fun P eta delta => P.rescaleCV18Law (V.law P eta delta) }
+    ComputeVolume := fun P eta delta => P.rescaleCV18Law (V.law P eta delta) }
 
 /-- A normalized CV18 provider discharges TTC's volume contract after the proved affine
 rescaling of each preprocessed component. -/
@@ -224,22 +224,22 @@ theorem withNormalizedCV18Volume_volume_contract {n k : Nat}
   let D := O.preprocessing.run F hbounded
   intro i
   let P := D.component i
-  let eta := params.epsilonPrime
-  let delta := params.deltaPrime D.componentCount
+  let eta := params.ε'
+  let delta := params.δ' D.componentCount
   have hcount : 0 < D.componentCount := lt_of_le_of_lt (Nat.zero_le i) i.isLt
   have heta0 : 0 < eta := by
-    dsimp only [eta, ApproxParams.epsilonPrime]
+    dsimp only [eta, ApproxParams.ε']
     exact div_pos params.epsilon_pos (by norm_num)
   have heta1 : eta <= 1 := by
-    dsimp only [eta, ApproxParams.epsilonPrime]
+    dsimp only [eta, ApproxParams.ε']
     linarith [params.epsilon_le_one]
   have hdenom : 0 < (4 * D.componentCount : Real) := by
     exact_mod_cast Nat.mul_pos (by norm_num : 0 < 4) hcount
   have hdelta0 : 0 < delta := by
-    dsimp only [delta, ApproxParams.deltaPrime]
+    dsimp only [delta, ApproxParams.δ']
     exact div_pos params.delta_pos hdenom
   have hdelta1 : delta <= 1 := by
-    dsimp only [delta, ApproxParams.deltaPrime]
+    dsimp only [delta, ApproxParams.δ']
     rw [div_le_iff₀ hdenom]
     have hcountR : (1 : Real) <= D.componentCount := by exact_mod_cast hcount
     nlinarith [params.delta_le_one]

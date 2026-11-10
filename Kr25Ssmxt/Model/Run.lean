@@ -8,12 +8,21 @@ import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.MarkovChain
 import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Probability.Rejection
 
 /-!
-# The concrete TTC run
+# Algorithm `ttc` with its concrete subroutines
 
-This file is the executable part of the audit surface. It imports the current
-arlib-community CV18 and Hit-and-Run algorithms directly and adapts their laws to TTC's
-component representation. Proofs that these definitions meet TTC's contracts remain under
-`Analysis/`; no TTC definition in this file depends on an `Analysis/` declaration.
+`Model/Program.lean` states Algorithm `ttc` with its subroutines as slots. This file fills
+them, in the order the algorithm calls them:
+
+* `GetPrecision` (line `line:getprec`, Algorithm `getprec`), with `MaxInscribedBall`
+  computed by the Chebyshev-centre LP;
+* `ComputeVolume` (line `line:volume`): arlib-community's CV18 volume algorithm, followed by
+  the manuscript's clipping;
+* `GenerateSamples` (line `line:sample`): arlib-community's Hit-and-Run walk, KV97
+  randomized rounding and rejection.
+
+`ttc` assembles them; it is the algorithm Theorems 1 and 3 are about. Proofs that these
+definitions meet their specifications are under `Analysis/`; no definition here depends on
+an `Analysis/` declaration.
 -/
 
 noncomputable section
@@ -47,7 +56,7 @@ def PolytopeData.scaledBody {n : Nat} (P : PolytopeData n) (b : Nat) :
     Set (EuclideanSpace Real (Fin n)) :=
   Arlib.Polytope.body P.arlibNormal (P.scaledOffset b)
 
-/-! ## `MaxInscribedBall` by the Chebyshev-centre LP
+/-! ## Line `line:prec:getmaxball`: `MaxInscribedBall` by the Chebyshev-centre LP
 
 Line 7 of Algorithm `getprec` computes the radius `γ̂` of the largest ball inscribed in a
 component "using an LP algorithm". For `P = {x | aⱼ · x ≤ bⱼ}` this is the Chebyshev-centre
@@ -55,10 +64,10 @@ linear program
 
   `maximize t  subject to  aⱼ · c + t ‖aⱼ‖₂ ≤ bⱼ  for every facet j`
 
-in the variables `(c, t)`. `chebyshevRadius` is its optimum value. The LP's feasible pairs
+in the variables `(c, t)`. `MaxInscribedBall` is its optimum value. The LP's feasible pairs
 are exactly the `ℓ₂` balls inside the component (`euclideanBall_subset_iff_chebyshevFeasible`),
 so its optimum is the maximal inscribed radius, i.e. the component's `inradius`
-(`PolytopeData.chebyshevRadius_eq_inradius`). -/
+(`PolytopeData.MaxInscribedBall_eq_inradius`). -/
 
 /-- The constraints of the Chebyshev-centre LP at the point `(c, t)`. -/
 def HalfspacePresentation.chebyshevFeasible {n : Nat} (H : HalfspacePresentation n)
@@ -66,7 +75,7 @@ def HalfspacePresentation.chebyshevFeasible {n : Nat} (H : HalfspacePresentation
   ∀ j, dotProduct (H.normal j) c + t * ‖toEuclidean (H.normal j)‖ ≤ H.offset j
 
 /-- The optimum value of the Chebyshev-centre LP. -/
-def HalfspacePresentation.chebyshevRadius {n : Nat} (H : HalfspacePresentation n) : Real :=
+def HalfspacePresentation.MaxInscribedBall {n : Nat} (H : HalfspacePresentation n) : Real :=
   sSup {t | ∃ c, H.chebyshevFeasible c t}
 
 /-- An `ℓ₂` ball of radius `t ≥ 0` lies in the carrier exactly when `(c, t)` is LP-feasible. -/
@@ -124,8 +133,8 @@ theorem euclideanBall_subset_iff_chebyshevFeasible {n : Nat} (H : HalfspacePrese
 
 /-- The Chebyshev-centre LP recovers the maximal inscribed radius: its optimum value is the
 component's `inradius`. -/
-theorem PolytopeData.chebyshevRadius_eq_inradius {n : Nat} (P : PolytopeData n) :
-    P.presentation.chebyshevRadius = P.inradius := by
+theorem PolytopeData.MaxInscribedBall_eq_inradius {n : Nat} (P : PolytopeData n) :
+    P.presentation.MaxInscribedBall = P.inradius := by
   apply IsGreatest.csSup_eq
   refine ⟨⟨P.incenter, (euclideanBall_subset_iff_chebyshevFeasible _ _
     P.inradius_pos.le).mp P.inball⟩, ?_⟩
@@ -136,17 +145,19 @@ theorem PolytopeData.chebyshevRadius_eq_inradius {n : Nat} (P : PolytopeData n) 
     exact P.inradius_max c t
       ((euclideanBall_subset_iff_chebyshevFeasible _ _ ht).mpr hc)
 
+/-! ## Line `line:getprec`: `GetPrecision` (Algorithm `getprec`) -/
+
 /-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
 `γ = (64 m n / η) √(log (4 r / η))` to a component's maximal inscribed radius `γ̂`,
 starting from `1`. `γ̂` is computed by the Chebyshev-centre LP (line 7 of `getprec`). -/
 def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Real :=
   max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (latticeRadiusRequirement D η / (D.component i).presentation.chebyshevRadius) :
+    Real.toNNReal (latticeRadiusRequirement D η / (D.component i).presentation.MaxInscribedBall) :
       NNReal) : Real)
 
 /-- Algorithm `getprec(F_d, M, η)`: return `⌈log₁₀ maxratio⌉`. -/
-def getPrecision {n k : Nat} {F : LRAFormula n k}
+def GetPrecision {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Nat :=
   Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
 
@@ -154,31 +165,33 @@ def getPrecision {n k : Nat} {F : LRAFormula n k}
 the returned precision meets the specification of `getprec`. -/
 def getPrecisionChoice {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) : PrecisionChoice D p where
-  value := getPrecision D p.precisionEta
+  value := GetPrecision D p.precisionEta
   adequate := by
     intro i
     have hγ := (D.component i).inradius_pos
-    rw [← (D.component i).chebyshevRadius_eq_inradius] at hγ ⊢
+    rw [← (D.component i).MaxInscribedBall_eq_inradius] at hγ ⊢
     have hratio1 : (1 : Real) ≤ getPrecisionRatio D p.precisionEta := le_max_left _ _
-    have hterm : latticeRadiusRequirement D p.precisionEta / (D.component i).presentation.chebyshevRadius ≤
+    have hterm : latticeRadiusRequirement D p.precisionEta / (D.component i).presentation.MaxInscribedBall ≤
         getPrecisionRatio D p.precisionEta := by
       refine (Real.le_coe_toNNReal _).trans (le_trans ?_ (le_max_right _ _))
       exact NNReal.coe_le_coe.mpr (Finset.le_sup
         (f := fun i : Fin D.componentCount => Real.toNNReal
-          (latticeRadiusRequirement D p.precisionEta / (D.component i).presentation.chebyshevRadius))
+          (latticeRadiusRequirement D p.precisionEta / (D.component i).presentation.MaxInscribedBall))
         (Finset.mem_univ i))
     have hpow : getPrecisionRatio D p.precisionEta ≤
-        (10 : Real) ^ getPrecision D p.precisionEta := by
+        (10 : Real) ^ GetPrecision D p.precisionEta := by
       have hpos : 0 < getPrecisionRatio D p.precisionEta := by linarith
       calc getPrecisionRatio D p.precisionEta
           = (10 : Real) ^ Real.logb 10 (getPrecisionRatio D p.precisionEta) :=
             (Real.rpow_logb (by norm_num) (by norm_num) hpos).symm
-        _ ≤ (10 : Real) ^ (getPrecision D p.precisionEta : Real) :=
+        _ ≤ (10 : Real) ^ (GetPrecision D p.precisionEta : Real) :=
             Real.rpow_le_rpow_of_exponent_le (by norm_num) (Nat.le_ceil _)
-        _ = (10 : Real) ^ getPrecision D p.precisionEta := Real.rpow_natCast _ _
+        _ = (10 : Real) ^ GetPrecision D p.precisionEta := Real.rpow_natCast _ _
     have := (div_le_iff₀ hγ).mp (hterm.trans hpow)
     linarith
 
+
+/-! ## Line `line:volume`: `ComputeVolume` is CV18 on the normalized component, then clipping -/
 
 /-- Pull the component back along `y ↦ inradius • y + incenter`. -/
 def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
@@ -186,7 +199,7 @@ def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
   (fun y => P.inradius • y + toEuclidean P.incenter) ⁻¹'
     Arlib.Polytope.body P.arlibNormal P.presentation.offset
 
-/-! ## Direct CV18 law -/
+
 
 namespace CommunityCV18
 
@@ -237,16 +250,16 @@ def queryBudgetFor {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
 parameter domain. -/
 theorem admissibleTTCRequest {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (i : Fin D.componentCount) :
-    AdmissibleCV18Request p.epsilonPrime (p.deltaPrime D.componentCount) := by
+    AdmissibleCV18Request p.ε' (p.δ' D.componentCount) := by
   have hcount : 0 < D.componentCount := lt_of_le_of_lt (Nat.zero_le i) i.isLt
   have hdenom : 0 < (4 * D.componentCount : Real) := by
     exact_mod_cast Nat.mul_pos (by norm_num : 0 < 4) hcount
   refine ⟨?_, ?_, ?_, ?_⟩
   · exact div_pos p.epsilon_pos (by norm_num)
-  · dsimp only [ApproxParams.epsilonPrime]
+  · dsimp only [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   · exact div_pos p.delta_pos hdenom
-  · dsimp only [ApproxParams.deltaPrime]
+  · dsimp only [ApproxParams.δ']
     rw [div_le_iff₀ hdenom]
     have hcountR : (1 : Real) ≤ D.componentCount := by exact_mod_cast hcount
     nlinarith [p.delta_le_one]
@@ -280,30 +293,6 @@ def taggedLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
 
 end CommunityCV18
 
-/-- The six logarithmic factors in the scheduled amplified CV18 query rate.
-The exact terminal scale and block mixing error are retained. -/
-noncomputable def TTCRuntime.theorem3CV18LogEnvelope
-    (q : ArlibCommunity.Algorithms.CV18.VolumeParams) : Real :=
-  ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.p) *
-  ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.eps) ^ 2 *
-  ArlibCommunity.Algorithms.CV18.protectedLog ((q.n : Real) / q.eps) ^ 2 *
-  ArlibCommunity.Algorithms.CV18.protectedLog
-    (ArlibCommunity.Algorithms.CV18.volumeTerminalScale q) ^ 2 *
-  ArlibCommunity.Algorithms.CV18.figureOneScheduledAccuracyLog q *
-  ArlibCommunity.Algorithms.CV18.protectedLog
-    (1 / ArlibCommunity.Algorithms.CV18.figureOneCorrectedBlockMixingError q
-      (ArlibCommunity.Algorithms.CV18.figureOneSafeRetryCount q - 1)) ^ 2
-
-/-- Largest of the explicit scheduled CV18 logarithmic products across TTC's
-normalized components. The empty family's value is zero. -/
-noncomputable def TTCRuntime.theorem3CV18LogMax
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (p : ApproxParams) : Real :=
-  ((Finset.univ.sup fun i : Fin D.componentCount =>
-    let q := CommunityCV18.params (by omega) (D.component i) p.epsilonPrime
-      (p.deltaPrime D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
-    Real.toNNReal (TTCRuntime.theorem3CV18LogEnvelope q) : NNReal) : Real)
-
 /-- The positive determinant of TTC's inverse normalization chart. -/
 def PolytopeData.cv18VolumeScale {n : Nat} (P : PolytopeData n) : NNReal :=
   ⟨P.inradius ^ n, pow_nonneg P.inradius_pos.le n⟩
@@ -327,7 +316,22 @@ def communityCV18VolumeLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   else
     Measure.dirac (true, 0)
 
-/-! ## Direct finite-step Hit-and-Run/KV97 law -/
+/-- The paper's lower and upper clipping interval for a component volume estimate. -/
+def PolytopeData.manuscriptVolumeLower {n : Nat} (P : PolytopeData n)
+    (eta : Real) : NNReal :=
+  Real.toNNReal ((1 - eta) * (2 * P.inradius / Real.sqrt n) ^ n)
+
+def PolytopeData.manuscriptVolumeUpper {n : Nat} (P : PolytopeData n)
+    (eta : Real) : NNReal :=
+  Real.toNNReal ((1 + eta) * (2 * P.outerRadius) ^ n)
+
+/-- Clip a CV18 result while preserving its diagnostic success tag. -/
+def PolytopeData.clipManuscriptVolume {n : Nat} (P : PolytopeData n)
+    (eta : Real) (o : VolumeOutcome) : VolumeOutcome :=
+  (o.1, max (P.manuscriptVolumeLower eta)
+    (min (P.manuscriptVolumeUpper eta) o.2))
+
+/-! ## Line `line:sample`: `GenerateSamples` is Hit-and-Run, KV97 rounding and rejection -/
 
 open Arlib.Lattice.Rounding
 
@@ -456,19 +460,6 @@ def normalizedHitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat)
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
     (hitAndRunTolerance P b eta))
 
-/-- The explicit factors suppressed in the corrected Theorem 3 headline after
-the oracle rates and the thinning counter are put on a common scale. -/
-noncomputable def TTCRuntime.theorem3ParameterFactor
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (p : ApproxParams) : Real :=
-  45 * (64 *
-      ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant + 1) *
-      TTCRuntime.theorem3CV18LogMax hn D p / (p.epsilonPrime / 2) ^ 2 +
-    (2 : Real) ^ 68 *
-      (Real.log 8 + Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
-        2 * (Real.log 10 + Real.log 6 + 1 +
-          Real.log (1 + 8 / p.epsilonPrime) + 2)) + 20
-
 /-- The finite-facet walk in unit-inball coordinates, mapped back to the
 decimal-scaled body before KV97 rounding. -/
 def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
@@ -515,20 +506,7 @@ def iidSampleBatchLaw {n count : Nat} (pointLaw : Measure (LatticePoint n)) :
 def failedSampleBatchLaw {n count : Nat} : Measure (SampleBatch n count) :=
   Measure.dirac (false, fun _ => default)
 
-/-- The paper's lower and upper clipping interval for a component volume estimate. -/
-def PolytopeData.manuscriptVolumeLower {n : Nat} (P : PolytopeData n)
-    (eta : Real) : NNReal :=
-  Real.toNNReal ((1 - eta) * (2 * P.inradius / Real.sqrt n) ^ n)
-
-def PolytopeData.manuscriptVolumeUpper {n : Nat} (P : PolytopeData n)
-    (eta : Real) : NNReal :=
-  Real.toNNReal ((1 + eta) * (2 * P.outerRadius) ^ n)
-
-/-- Clip a CV18 result while preserving its diagnostic success tag. -/
-def PolytopeData.clipManuscriptVolume {n : Nat} (P : PolytopeData n)
-    (eta : Real) (o : VolumeOutcome) : VolumeOutcome :=
-  (o.1, max (P.manuscriptVolumeLower eta)
-    (min (P.manuscriptVolumeUpper eta) o.2))
+/-! ## Algorithm `ttc` -/
 
 /-- The concrete oracle bundle: community CV18 with the manuscript's post-CV18 clipping, and the
 normalized community Hit-and-Run walk followed by KV97 rounding and rejection. -/
@@ -538,21 +516,23 @@ def communityManuscriptOracles {n k : Nat} (hn : 21 ≤ n)
   exact {
     preprocessing := prep
     choosePrecision := fun D p => getPrecisionChoice D p
-    computeVolume := fun P eta delta =>
+    ComputeVolume := fun P eta delta =>
       (communityCV18VolumeLaw (by omega) P eta delta).map
         (P.clipManuscriptVolume eta)
-    generateSamples := fun P count b eta _ =>
+    GenerateSamples := fun P count b eta _ =>
       if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
           (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
         iidSampleBatchLaw
           (normalizedHitAndRunPointLaw hn P b h.1 eta h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
       else failedSampleBatchLaw }
 
-/-- The current manuscript TTC control flow with concrete CV18 and Hit-and-Run calls. -/
-def communityManuscriptTTC {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
+/-- **Algorithm `ttc`** with `GetPrecision`, `ComputeVolume` and `GenerateSamples` as above. -/
+def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
     (prep : TTCPreprocessor n k) : Measure NNReal :=
-  manuscriptTTC F hbounded params (communityManuscriptOracles hn prep)
+  ttcWith F hbounded params (communityManuscriptOracles hn prep)
+
+/-! ## The charged run (Theorem 3) -/
 
 /-- Charged implementations of the manuscript's two geometric calls. The
 CV18 charge includes its certified membership-query budget and the public
@@ -571,7 +551,7 @@ def communityManuscriptCostedOracles {n k : Nat} (hn : 21 ≤ n)
           TTCRuntime.membershipQueryOperations n P.presentation.facetCount
             (queries + 1)
         costedCharge
-          ((communityManuscriptOracles hn prep).computeVolume P eta delta)
+          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)
           (membership + nonQuery)
       generateSamplesWithCost := fun P count b eta _ =>
         if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
@@ -587,6 +567,45 @@ def communityManuscriptTTCWithCost {n k : Nat} (hn : 21 ≤ n)
     (communityManuscriptCostedOracles hn prep cv18NonQueryFactor)
     preprocessingOperations
 
-#krModelClosure communityManuscriptTTC
+/-! ## Constants in the Theorem 3 bound -/
+
+/-- The six logarithmic factors in the scheduled amplified CV18 query rate.
+The exact terminal scale and block mixing error are retained. -/
+noncomputable def TTCRuntime.theorem3CV18LogEnvelope
+    (q : ArlibCommunity.Algorithms.CV18.VolumeParams) : Real :=
+  ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.p) *
+  ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.eps) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.protectedLog ((q.n : Real) / q.eps) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.protectedLog
+    (ArlibCommunity.Algorithms.CV18.volumeTerminalScale q) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.figureOneScheduledAccuracyLog q *
+  ArlibCommunity.Algorithms.CV18.protectedLog
+    (1 / ArlibCommunity.Algorithms.CV18.figureOneCorrectedBlockMixingError q
+      (ArlibCommunity.Algorithms.CV18.figureOneSafeRetryCount q - 1)) ^ 2
+
+/-- Largest of the explicit scheduled CV18 logarithmic products across TTC's
+normalized components. The empty family's value is zero. -/
+noncomputable def TTCRuntime.theorem3CV18LogMax
+    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  ((Finset.univ.sup fun i : Fin D.componentCount =>
+    let q := CommunityCV18.params (by omega) (D.component i) p.ε'
+      (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
+    Real.toNNReal (TTCRuntime.theorem3CV18LogEnvelope q) : NNReal) : Real)
+
+/-- The explicit factors suppressed in the corrected Theorem 3 headline after
+the oracle rates and the thinning counter are put on a common scale. -/
+noncomputable def TTCRuntime.theorem3ParameterFactor
+    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  45 * (64 *
+      ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant + 1) *
+      TTCRuntime.theorem3CV18LogMax hn D p / (p.ε' / 2) ^ 2 +
+    (2 : Real) ^ 68 *
+      (Real.log 8 + Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
+        2 * (Real.log 10 + Real.log 6 + 1 +
+          Real.log (1 + 8 / p.ε') + 2)) + 20
+
+#krModelClosure ttc
 
 end Kr25Ssmxt

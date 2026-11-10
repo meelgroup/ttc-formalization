@@ -15,12 +15,12 @@ theorem survivalProbability_toNNReal (rounds : Nat) :
 theorem manuscript_poisson_predraw_after_rate_halving
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
-    (poissonMeasure (intensity * s.rate)).bind (fun baseCount =>
+    (poissonMeasure (intensity * s.p)).bind (fun baseCount =>
       fairCoinStreamLaw.map (fun coins => pendingAfter coins
         (manuscriptRateExit s intensity threshold) s.nextLabel baseCount)) =
       poissonMeasure
         (intensity * (manuscriptRateThinningResult s intensity threshold
-          (fun _ => true)).rate) := by
+          (fun _ => true)).p) := by
   rw [manuscript_poisson_pendingAfter_law]
   rw [survivalProbability_toNNReal]
   simp only [manuscriptRateThinningResult]

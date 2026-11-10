@@ -11,12 +11,12 @@ theorem measurable_communityManuscript_sampleAppend_kernel
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta : Real) :
     Measurable (fun second : TTCState n × Nat =>
-      ((communityManuscriptOracles hn prep).generateSamples P second.2
+      ((communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta).map fun batch => second.1.addBatch batch.2) := by
   have hcost := community_manuscript_sample_append_kernel_measurable
     hn prep 1 P b eta delta
   have heq : (fun second : TTCState n × Nat =>
-      ((communityManuscriptOracles hn prep).generateSamples P second.2
+      ((communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta).map fun batch => second.1.addBatch batch.2) =
       (fun second =>
         (costedBind
@@ -41,7 +41,7 @@ theorem communityManuscript_sampleAppend_from_iidTape
     (second : TTCState n × Nat) :
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
       b eta delta).map (fun batch => second.1.addBatch batch.2) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
@@ -71,7 +71,7 @@ theorem communityManuscript_sampleAppend_from_iidTape
     measurable_const.prodMk
       (Measurable.of_eval (fun i => measurable_pi_apply (labels i)))
   have hsample : tapeLaw.map select =
-      (communityManuscriptOracles hn prep).generateSamples P second.2
+      (communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta := by
     calc
       tapeLaw.map select =
@@ -87,7 +87,7 @@ theorem communityManuscript_sampleAppend_from_iidTape
   have hf : Measurable f :=
     measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
   calc
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta).map f =
       (tapeLaw.map select).map f := by rw [hsample]
     _ = tapeLaw.map (f ∘ select) := by
@@ -108,7 +108,7 @@ theorem communityManuscript_sampleAppend_from_iidTape_at_labels
     (labels : Fin second.2 → Nat) (hlabels : Function.Injective labels) :
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
       b eta delta).map (fun batch => second.1.addBatch batch.2) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
@@ -133,7 +133,7 @@ theorem communityManuscript_sampleAppend_from_iidTape_at_labels
   have hselect : Measurable select :=
     measurable_const.prodMk hpointsMeas
   have hsample : tapeLaw.map select =
-      (communityManuscriptOracles hn prep).generateSamples P second.2
+      (communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta := by
     calc
       tapeLaw.map select =
@@ -149,7 +149,7 @@ theorem communityManuscript_sampleAppend_from_iidTape_at_labels
   have hf : Measurable f :=
     measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
   calc
-    ((communityManuscriptOracles hn prep).generateSamples P second.2
+    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
         b eta delta).map f =
       (tapeLaw.map select).map f := by rw [hsample]
     _ = tapeLaw.map (f ∘ select) := by
@@ -166,8 +166,8 @@ theorem communityManuscriptComponentGivenVolume_absolute_tape
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n)
-    (level : Nat) (hrate : state.rate = 1 / (2 : NNReal) ^ level) :
-    let intensity := manuscriptIntensity b n threshold outcome.2
+    (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :
+    let intensity := ttc.t b n threshold outcome.2
     let deleted := state.removeComponent P
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2

@@ -22,13 +22,13 @@ lemma measurable_firstExitRound_joint {n : Nat} (threshold : Real) :
   let Control := (Finset (SampleCopy n) × Nat) × Nat
   let control : (TTCState n × Nat) × (Nat × Nat → Bool) →
       Control × (Nat × Nat → Bool) := fun z =>
-    (((z.1.1.samples, z.1.1.nextLabel), z.1.2), z.2)
+    (((z.1.1.X, z.1.1.nextLabel), z.1.2), z.2)
   have hstateCoords : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        (z.1.1.rate, z.1.1.samples, z.1.1.nextLabel)) :=
+        (z.1.1.p, z.1.1.X, z.1.1.nextLabel)) :=
     (comap_measurable _).comp (measurable_fst.comp measurable_fst)
   have hsamples : Measurable
-      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.samples) :=
+      (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.X) :=
     (measurable_fst.comp measurable_snd).comp hstateCoords
   have hnext : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.nextLabel) :=
@@ -46,13 +46,13 @@ lemma measurable_firstExitRound_joint {n : Nat} (threshold : Real) :
         thinningExit z.1.1 z.1.2 threshold z.2 rounds} := by
     have hcontrolExit : Measurable (fun q : Control × (Nat × Nat → Bool) =>
         thinningExit
-          ({ rate := 1, samples := q.1.1.1, nextLabel := q.1.1.2 } : TTCState n)
+          ({ p := 1, X := q.1.1.1, nextLabel := q.1.1.2 } : TTCState n)
           q.1.2 threshold q.2 rounds) := by
       apply measurable_from_prod_countable_right
       intro c
       exact measurableSet_setOfPred.mp
         (measurableSet_thinningExit
-          ({ rate := 1, samples := c.1.1, nextLabel := c.1.2 } : TTCState n)
+          ({ p := 1, X := c.1.1, nextLabel := c.1.2 } : TTCState n)
           c.2 threshold rounds)
     exact (hcontrolExit.comp hcontrol).setOf
   apply measurable_to_countable'

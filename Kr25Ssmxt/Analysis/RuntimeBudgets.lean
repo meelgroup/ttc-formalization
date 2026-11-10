@@ -17,12 +17,12 @@ imported scheduled complexity rate. -/
 noncomputable def TTCRuntime.theorem3CV18QueryEnvelope
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (i : Fin D.componentCount) : Nat :=
-  let q := CommunityCV18.params (by omega) (D.component i) p.epsilonPrime
-    (p.deltaPrime D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
+  let q := CommunityCV18.params (by omega) (D.component i) p.ε'
+    (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
   Nat.ceil (45 * (64 *
     ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
     + 1) *
-    (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (p.epsilonPrime / 2) ^ 2 *
+    (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogEnvelope q)
 
 /-- Uniform CV18 query cap after maximizing only its logarithmic product
@@ -33,7 +33,7 @@ noncomputable def TTCRuntime.theorem3CV18QueryMax
   Nat.ceil (45 * (64 *
     ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
     + 1) *
-    (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (p.epsilonPrime / 2) ^ 2 *
+    (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogMax hn D p)
 
 /-- Explicit logarithmic envelope for the normalized TTC sampler deadline.
@@ -62,23 +62,23 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudget {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.sampleCap p m
-  let upperIntensity := manuscriptIntensity b n (p.threshold m)
-    (max (P.manuscriptVolumeLower p.epsilonPrime)
-      (P.manuscriptVolumeUpper p.epsilonPrime))
+  let upperIntensity := ttc.t b n (p.Thresh m)
+    (max (P.manuscriptVolumeLower p.ε')
+      (P.manuscriptVolumeUpper p.ε'))
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime (p.deltaPrime m)) +
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime (p.deltaPrime m) + 1) :
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m) + 1) :
       ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  (Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.threshold m) + 1) : ENNReal) *
+  (Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) : ENNReal) *
     TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *
     (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-      (normalizedHitAndRunSteps P b p.epsilonPrime) +
+      (normalizedHitAndRunSteps P b p.ε') +
       TTCRuntime.appendCopyOperations)
 
 /-- The same component allowance with decimal precision exposed linearly.
@@ -87,13 +87,13 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision {n
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.sampleCap p m
-  let v := max (P.manuscriptVolumeLower p.epsilonPrime)
-    (P.manuscriptVolumeUpper p.epsilonPrime)
+  let v := max (P.manuscriptVolumeLower p.ε')
+    (P.manuscriptVolumeUpper p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime (p.deltaPrime m)) +
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime (p.deltaPrime m) + 1) :
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m) + 1) :
       ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   ((4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) : Nat) : ENNReal) *
@@ -102,7 +102,7 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision {n
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *
     (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-      (normalizedHitAndRunSteps P b p.epsilonPrime) +
+      (normalizedHitAndRunSteps P b p.ε') +
       TTCRuntime.appendCopyOperations)
 
 /-- Component budget after replacing the concrete sampler walk length by the
@@ -113,20 +113,20 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometric
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
   let cap := TTCRuntime.sampleCap p D.componentCount
-  let v := max (P.manuscriptVolumeLower p.epsilonPrime)
-    (P.manuscriptVolumeUpper p.epsilonPrime)
+  let v := max (P.manuscriptVolumeLower p.ε')
+    (P.manuscriptVolumeUpper p.ε')
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
     (TTCRuntime.theorem3Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
       (TTCRuntime.theorem3Rho D)
-      (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime)
+      (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime
-        (p.deltaPrime D.componentCount)) +
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε'
+        (p.δ' D.componentCount)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime
-        (p.deltaPrime D.componentCount) + 1) : ENNReal) +
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε'
+        (p.δ' D.componentCount) + 1) : ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   ((4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) : Nat) : ENNReal) *
     TTCRuntime.rateThinningRoundOperations cap +
@@ -148,14 +148,14 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip
     (TTCRuntime.theorem3Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
       (TTCRuntime.theorem3Rho D)
-      (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime)
+      (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime
-        (p.deltaPrime D.componentCount)) +
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε'
+        (p.δ' D.componentCount)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.epsilonPrime
-        (p.deltaPrime D.componentCount) + 1) : ENNReal) +
+      (CommunityCV18.queryBudgetFor (by omega) P p.ε'
+        (p.δ' D.componentCount) + 1) : ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   ((4 * (b * n) + (2 + n * Nat.clog 2
       (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1)) : Nat) : ENNReal) *
@@ -179,7 +179,7 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetTheorem3
     (TTCRuntime.theorem3Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
       (TTCRuntime.theorem3Rho D)
-      (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime)
+      (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount queries +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount (queries + 1) : ENNReal) +
@@ -206,7 +206,7 @@ noncomputable def TTCRuntime.theorem3UniformComponentBudget
     (TTCRuntime.theorem3Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
       (TTCRuntime.theorem3Rho D)
-      (TTCRuntime.theorem3OuterRadiusMax D) p.epsilonPrime)
+      (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n r queries +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n r (queries + 1) :
       ENNReal) +
