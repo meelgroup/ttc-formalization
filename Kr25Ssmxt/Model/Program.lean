@@ -60,12 +60,6 @@ abbrev SampleCopy (n : Nat) := Nat × LatticePoint n
 
 /-! ## Lines `line:boolabs`, `line:allsat`, `line:getprec`: preprocessing and precision -/
 
-/-- A certified precision: the output of `GetPrecision(F_d, M, ε / 96)`. -/
-structure PrecisionChoice {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) where
-  value : Nat
-  adequate : PrecisionAdequate D value p.precisionEta
-
 /-- `BooleanAbstraction`, `toDNF`, and the normalization of the DNF cubes into
 full-dimensional polytopes. -/
 structure TTCPreprocessor (n k : Nat) where
@@ -87,8 +81,7 @@ structure TTCOracles (n k : Nat) where
   /-- `BooleanAbstraction` and `toDNF` (lines `line:boolabs`, `line:allsat`). -/
   preprocessing : TTCPreprocessor n k
   /-- `b ← GetPrecision(F_d, M, ε / 96)` (line `line:getprec`). -/
-  choosePrecision : {F : LRAFormula n k} → (D : Decomposition F) → (p : ApproxParams) →
-    PrecisionChoice D p
+  choosePrecision : {F : LRAFormula n k} → (D : Decomposition F) → (p : ApproxParams) → Nat
   /-- `ComputeVolume(Pᵢ, ε', δ')` (line `line:volume`). -/
   ComputeVolume : PolytopeData n → Real → Real → Measure VolumeOutcome
   /-- `GenerateSamples(Pᵢ, Nᵢ, b, ε', δ')` (line `line:sample`). -/
@@ -271,7 +264,7 @@ def ttcPseudocode {n k : Nat} (F : LRAFormula n k)
   if D.componentCount = 0 then
     Measure.dirac 0
   else
-    let b := (O.choosePrecision D params).value
+    let b := O.choosePrecision D params
     let Thresh := params.Thresh D.componentCount
     (ttcPseudocode.loop O b params.ε'
       (params.δ' D.componentCount) Thresh
@@ -375,7 +368,7 @@ def ttcPseudocodeWithCost {n k : Nat} (F : LRAFormula n k)
   if D.componentCount = 0 then
     Measure.dirac (0, preprocessingOperations)
   else
-    let b := (O.base.choosePrecision D params).value
+    let b := O.base.choosePrecision D params
     let Thresh := params.Thresh D.componentCount
     (ttcPseudocode.loopWithCost O b params.ε'
       (params.δ' D.componentCount) Thresh

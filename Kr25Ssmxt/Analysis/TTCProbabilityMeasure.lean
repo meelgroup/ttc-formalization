@@ -65,7 +65,7 @@ theorem community_ttc_isProbabilityMeasure
           components (TTCState.initial n)).map
             (Est b threshold) := by
       simp [ttc, ttcPseudocode, ttcSubroutines,
-        TTCPreprocessor.choosePrecision, D, b, threshold, components, hempty]
+        TTCPreprocessor.choosePrecision, getPrecisionChoice, D, b, threshold, components, hempty]
     rw [hrunequality]
     letI := hcore
     exact Measure.isProbabilityMeasure_map

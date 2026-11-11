@@ -44,7 +44,7 @@ theorem communityTTC_eq_volumeVector_bind
         components (TTCState.initial n)).map
           (Est b threshold) := by
     simp [ttc, ttcPseudocode,
-      ttcSubroutines, TTCPreprocessor.choosePrecision, D, b, threshold,
+      ttcSubroutines, TTCPreprocessor.choosePrecision, getPrecisionChoice, D, b, threshold,
       components, hnonempty]
   let law := communityVolumeVectorLaw hn prep p.ε'
     (p.δ' D.componentCount) components

@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.OracleContracts
 import Kr25Ssmxt.Analysis.AbsolutePoissonTape
 import Kr25Ssmxt.Analysis.ConcreteFixedLevelBounds

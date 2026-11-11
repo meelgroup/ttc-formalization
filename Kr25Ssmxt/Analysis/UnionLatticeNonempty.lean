@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.GeometricOracleDischarge
 
 /-! Adequate precision and a nonempty decomposition give at least one lattice

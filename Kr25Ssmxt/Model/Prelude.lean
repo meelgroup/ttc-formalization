@@ -238,13 +238,6 @@ def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
 /-- The accuracy `ε / 96` passed to `GetPrecision` in line 3 of Algorithm `ttc`. -/
 def ApproxParams.precisionEta (p : ApproxParams) : Real := p.epsilon / 96
 
-/-- The specification of `GetPrecision(F_d, M, η)` (Algorithm `getprec`): at precision `b`
-every scaled component has inradius at least `γ = (64 m n / η) √(log (4 r / η))`, with `r`
-the total facet count.  TTC uses it at `η = ε / 96`. -/
-def PrecisionAdequate {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (b : Nat) (η : Real) : Prop :=
-  ∀ i, latticeRadiusRequirement D η ≤ (10 : Real) ^ b * (D.component i).inradius
-
 /-! ## Runtime vocabulary -/
 
 namespace TTCRuntime

@@ -92,9 +92,11 @@ names.
   `GetPrecision` returns `⌈log₁₀ maxratio⌉` with `maxratio = max(1, maxᵢ γ/γ̂ᵢ)` at
   `η = ε/96`. `γ̂ᵢ = MaxInscribedBall(Pᵢ)` is computed by the Chebyshev-centre LP
   `maximize t s.t. aⱼ·c + t‖aⱼ‖₂ ≤ bⱼ` (`HalfspacePresentation.MaxInscribedBall`, its
-  optimum value). `euclideanBall_subset_iff_chebyshevFeasible` shows the LP's feasible
-  pairs are exactly the inscribed `ℓ₂` balls, and `MaxInscribedBall_eq_inradius` that its
-  optimum is the component's `inradius`.
+  optimum value). In `Analysis/PrecisionChoice.lean`,
+  `euclideanBall_subset_iff_chebyshevFeasible` shows the LP's feasible pairs are exactly
+  the inscribed `ℓ₂` balls, `MaxInscribedBall_eq_inradius` that its optimum is the
+  component's `inradius`, and `getPrecisionChoice` that `GetPrecision`'s output is
+  adequate.
 - `PolytopeData.inradius` is the paper's maximal inscribed **`ℓ₂`** radius: `inball`
   is an `ℓ₂` ball (`euclideanBall`) and `inradius_max` says no larger `ℓ₂` ball fits.
   So `γᵢ`, `ρ = maxᵢ Rᵢ/γᵢ` and `getprec`'s `b` are the paper's quantities.
@@ -124,13 +126,18 @@ names.
   factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
 - Paper constant in `lem:nonconv`: `(1 + κ/γ)ⁿ ≤ (1 + η/(32mn))ⁿ` should read
   `η/(26mn)` (or bound the escape by `η/8`); the lemma holds either way.
-- Model surplus: `#krSurplusIn` reports only the two Chebyshev-LP theorems, kept in
-  `Model/Run.lean` on purpose (they discharge `MaxInscribedBall` there), and the paper
-  vocabulary `decimalLattice`, `Decomposition.latticePoints`, `Decomposition.union`.
-  Proof-only definitions live under `Analysis/`: the runtime allowances
-  (`RuntimeBudgets.lean`), the oracle contracts `AlmostUniformPointwise` and
-  `ComputeVolumeContract` (`OracleContracts.lean`), `samplerRadiusRequirement`,
-  `ApproxParams.latticeEta`, `TTCRuntime.theorem3PrecisionScale` and the alias
+- Model contents: `Model/Program.lean` and `Model/Run.lean` contain definitions only (no
+  theorems; the one instance gives `TTCState` its measurable structure). Proofs that the
+  Model's definitions behave as specified are under `Analysis/`: the LP and `GetPrecision`
+  adequacy (`PrecisionChoice.lean`, together with `PrecisionChoice` itself), the CV18
+  parameter range (`CV18Admissible.lean`), and the KV97 rounding kernel with its
+  measurability (`IntegerRoundingBridge.lean`). `#krSurplusIn` reports only the paper
+  vocabulary `decimalLattice`, `Decomposition.latticePoints`, `Decomposition.union` and the
+  reader alias `ttc.t`. Proof-only definitions also live under `Analysis/`: the runtime
+  allowances (`RuntimeBudgets.lean`), the oracle contracts `AlmostUniformPointwise` and
+  `ComputeVolumeContract` (`OracleContracts.lean`), `PrecisionAdequate`,
+  `samplerRadiusRequirement`, `ApproxParams.latticeEta` and
+  `TTCRuntime.theorem3PrecisionScale` (`PrecisionRequirements.lean`), and the alias
   `TTCPreprocessor.choosePrecision`.
 
 **Removed material.** The older `ttc`/`processComponent(s)` program and

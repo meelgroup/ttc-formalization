@@ -78,73 +78,6 @@ def HalfspacePresentation.chebyshevFeasible {n : Nat} (H : HalfspacePresentation
 def HalfspacePresentation.MaxInscribedBall {n : Nat} (H : HalfspacePresentation n) : Real :=
   sSup {t | ∃ c, H.chebyshevFeasible c t}
 
-/-- An `ℓ₂` ball of radius `t ≥ 0` lies in the carrier exactly when `(c, t)` is LP-feasible. -/
-theorem euclideanBall_subset_iff_chebyshevFeasible {n : Nat} (H : HalfspacePresentation n)
-    (c : Point n) {t : Real} (ht : 0 ≤ t) :
-    euclideanBall c t ⊆ H.carrier ↔ H.chebyshevFeasible c t := by
-  constructor
-  · intro hsub j
-    by_cases ha : toEuclidean (H.normal j) = 0
-    · have hc : c ∈ euclideanBall c t := by simpa [euclideanBall] using ht
-      have := hsub hc j
-      rw [ha, norm_zero, mul_zero, add_zero]
-      exact this
-    · set a := toEuclidean (H.normal j)
-      have hpos : 0 < ‖a‖ := norm_pos_iff.mpr ha
-      let x : Point n := c + (t / ‖a‖) • H.normal j
-      have hx : x ∈ euclideanBall c t := by
-        change ‖(WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))‖ ≤ t
-        have hxc : x - c = (t / ‖a‖) • H.normal j := by simp [x]
-        rw [hxc, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs,
-          abs_of_nonneg (div_nonneg ht hpos.le)]
-        change t / ‖a‖ * ‖a‖ ≤ t
-        rw [div_mul_cancel₀ _ hpos.ne']
-      have hdot := hsub hx j
-      have hself : dotProduct (H.normal j) (H.normal j) = ‖a‖ ^ 2 := by
-        rw [← real_inner_self_eq_norm_sq]
-        change dotProduct (H.normal j) (H.normal j) =
-          dotProduct (H.normal j) (H.normal j)
-        rfl
-      have hexp : dotProduct (H.normal j) x =
-          dotProduct (H.normal j) c + t * ‖a‖ := by
-        simp only [x, dotProduct_add, dotProduct_smul, smul_eq_mul, hself]
-        field_simp
-      change dotProduct (H.normal j) x ≤ H.offset j at hdot
-      linarith
-  · intro hfeas x hx j
-    change dotProduct (H.normal j) x ≤ H.offset j
-    have hx' : ‖(WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))‖ ≤ t := hx
-    have hcs : dotProduct (H.normal j) (x - c) ≤
-        ‖toEuclidean (H.normal j)‖ * ‖(WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))‖ := by
-      have := real_inner_le_norm (toEuclidean (H.normal j))
-        (WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))
-      have heq : ⟪toEuclidean (H.normal j),
-          (WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))⟫_Real =
-          dotProduct (H.normal j) (x - c) := by
-        change dotProduct (x - c) (H.normal j) = _
-        exact dotProduct_comm _ _
-      linarith
-    have hsplit : dotProduct (H.normal j) x =
-        dotProduct (H.normal j) c + dotProduct (H.normal j) (x - c) := by
-      rw [dotProduct_sub]; ring
-    have hnorm := norm_nonneg (toEuclidean (H.normal j))
-    have := hfeas j
-    nlinarith
-
-/-- The Chebyshev-centre LP recovers the maximal inscribed radius: its optimum value is the
-component's `inradius`. -/
-theorem PolytopeData.MaxInscribedBall_eq_inradius {n : Nat} (P : PolytopeData n) :
-    P.presentation.MaxInscribedBall = P.inradius := by
-  apply IsGreatest.csSup_eq
-  refine ⟨⟨P.incenter, (euclideanBall_subset_iff_chebyshevFeasible _ _
-    P.inradius_pos.le).mp P.inball⟩, ?_⟩
-  rintro t ⟨c, hc⟩
-  by_cases ht : t < 0
-  · linarith [P.inradius_pos]
-  · push_neg at ht
-    exact P.inradius_max c t
-      ((euclideanBall_subset_iff_chebyshevFeasible _ _ ht).mpr hc)
-
 /-! ## Line `line:getprec`: `GetPrecision` (Algorithm `getprec`) -/
 
 /-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
@@ -160,38 +93,6 @@ def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
 def GetPrecision {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Nat :=
   Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
-
-/-- Line 3 of Algorithm `ttc`: `b ← GetPrecision(F_d, M, ε / 96)`, with the proof that
-the returned precision meets the specification of `getprec`. -/
-def getPrecisionChoice {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) : PrecisionChoice D p where
-  value := GetPrecision D p.precisionEta
-  adequate := by
-    intro i
-    have hγ := (D.component i).inradius_pos
-    rw [← (D.component i).MaxInscribedBall_eq_inradius] at hγ ⊢
-    have hratio1 : (1 : Real) ≤ getPrecisionRatio D p.precisionEta := le_max_left _ _
-    have hterm : latticeRadiusRequirement D p.precisionEta / (D.component i).presentation.MaxInscribedBall ≤
-        getPrecisionRatio D p.precisionEta := by
-      refine (Real.le_coe_toNNReal _).trans (le_trans ?_ (le_max_right _ _))
-      exact NNReal.coe_le_coe.mpr (Finset.le_sup
-        (f := fun i : Fin D.componentCount => Real.toNNReal
-          (latticeRadiusRequirement D p.precisionEta / (D.component i).presentation.MaxInscribedBall))
-        (Finset.mem_univ i))
-    have hpow : getPrecisionRatio D p.precisionEta ≤
-        (10 : Real) ^ GetPrecision D p.precisionEta := by
-      have hpos : 0 < getPrecisionRatio D p.precisionEta := by linarith
-      calc getPrecisionRatio D p.precisionEta
-          = (10 : Real) ^ Real.logb 10 (getPrecisionRatio D p.precisionEta) :=
-            (Real.rpow_logb (by norm_num) (by norm_num) hpos).symm
-        _ ≤ (10 : Real) ^ (GetPrecision D p.precisionEta : Real) :=
-            Real.rpow_le_rpow_of_exponent_le (by norm_num) (Nat.le_ceil _)
-        _ = (10 : Real) ^ GetPrecision D p.precisionEta := Real.rpow_natCast _ _
-    have := (div_le_iff₀ hγ).mp (hterm.trans hpow)
-    linarith
-
-
-/-! ## Line `line:volume`: `ComputeVolume` is CV18 on the normalized component, then clipping -/
 
 /-- Pull the component back along `y ↦ inradius • y + incenter`. -/
 def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
@@ -245,24 +146,6 @@ def queryBudgetFor {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     queryBudget (params hn P eta delta h)
   else
     0
-
-/-- Every component request made by TTC is within the imported CV18
-parameter domain. -/
-theorem admissibleTTCRequest {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) (i : Fin D.componentCount) :
-    AdmissibleCV18Request p.ε' (p.δ' D.componentCount) := by
-  have hcount : 0 < D.componentCount := lt_of_le_of_lt (Nat.zero_le i) i.isLt
-  have hdenom : 0 < (4 * D.componentCount : Real) := by
-    exact_mod_cast Nat.mul_pos (by norm_num : 0 < 4) hcount
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · exact div_pos p.epsilon_pos (by norm_num)
-  · dsimp only [ApproxParams.ε']
-    linarith [p.epsilon_le_one]
-  · exact div_pos p.delta_pos hdenom
-  · dsimp only [ApproxParams.δ']
-    rw [div_le_iff₀ hdenom]
-    have hcountR : (1 : Real) ≤ D.componentCount := by exact_mod_cast hcount
-    nlinarith [p.delta_le_one]
 
 /-- Exact finite-facet membership in the normalized TTC component. -/
 noncomputable def query {n : Nat} (P : PolytopeData n) :
@@ -339,38 +222,10 @@ open Arlib.Lattice.Rounding
 def kv97LatEmb (n : Nat) (z : Fin n → Int) : EuclideanSpace Real (Fin n) :=
   WithLp.toLp 2 fun i => (z i : Real)
 
-/-- The current community randomized-rounding law as a Markov kernel. -/
-def kv97RoundingKernel (n : Nat) :
-    Kernel (EuclideanSpace Real (Fin n)) (Fin n → Int) where
-  toFun p := roundLaw (WithLp.ofLp p)
-  measurable' := by
-    apply Measure.measurable_of_measurable_coe
-    intro s hs
-    have heq : (fun p : EuclideanSpace Real (Fin n) => roundLaw (WithLp.ofLp p) s) =
-        fun p => ∑' z : Fin n → Int,
-          s.indicator (fun z => roundLaw (WithLp.ofLp p) {z}) z := by
-      funext p
-      exact (Measure.tsum_indicator_apply_singleton (roundLaw (WithLp.ofLp p)) s hs).symm
-    rw [heq]
-    apply Measurable.tsum
-    intro z
-    by_cases hz : z ∈ s
-    · simp only [Set.indicator_of_mem hz, roundLaw_singleton]
-      change Measurable fun p => ENNReal.ofReal (prodTent (kv97LatEmb n z) p)
-      exact (measurable_prodTent (kv97LatEmb n z)).ennreal_ofReal
-    · simp only [Set.indicator_of_notMem hz]
-      fun_prop
-
-instance (n : Nat) : IsMarkovKernel (kv97RoundingKernel n) := by
-  constructor
-  intro p
-  change IsProbabilityMeasure (roundLaw (WithLp.ofLp p))
-  infer_instance
-
 /-- Draw from a continuous law, then round every coordinate independently. -/
 def kv97RoundedMeasureLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) : Measure (Fin n → Int) :=
-  mu.bind (kv97RoundingKernel n)
+  mu.bind fun p => roundLaw (WithLp.ofLp p)
 
 /-- Attach TTC's decimal precision to an integer vector returned by KV97. -/
 def encodeInteger {n : Nat} (b : Nat) (z : Fin n → Int) : LatticePoint n := (b, z)
@@ -515,7 +370,7 @@ def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
   classical
   exact {
     preprocessing := prep
-    choosePrecision := fun D p => getPrecisionChoice D p
+    choosePrecision := fun D p => GetPrecision D p.precisionEta
     ComputeVolume := fun P eta delta =>
       (communityCV18VolumeLaw (by omega) P eta delta).map
         (P.clipVolume eta)
@@ -588,15 +443,17 @@ noncomputable def TTCRuntime.theorem3CV18LogEnvelope
     (1 / ArlibCommunity.Algorithms.CV18.figureOneCorrectedBlockMixingError q
       (ArlibCommunity.Algorithms.CV18.figureOneSafeRetryCount q - 1)) ^ 2
 
+open Classical in
 /-- Largest of the explicit scheduled CV18 logarithmic products across TTC's
 normalized components. The empty family's value is zero. -/
 noncomputable def TTCRuntime.theorem3CV18LogMax
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) : Real :=
   ((Finset.univ.sup fun i : Fin D.componentCount =>
-    let q := CommunityCV18.params (by omega) (D.component i) p.ε'
-      (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
-    Real.toNNReal (TTCRuntime.theorem3CV18LogEnvelope q) : NNReal) : Real)
+    Real.toNNReal (if h : CommunityCV18.AdmissibleCV18Request p.ε' (p.δ' D.componentCount)
+      then TTCRuntime.theorem3CV18LogEnvelope
+        (CommunityCV18.params (by omega) (D.component i) p.ε' (p.δ' D.componentCount) h)
+      else 0) : NNReal) : Real)
 
 /-- The explicit factors suppressed in the corrected Theorem 3 headline after
 the oracle rates and the thinning counter are put on a common scale. -/

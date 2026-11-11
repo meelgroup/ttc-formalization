@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.UnionLatticeNonempty
 import Kr25Ssmxt.Analysis.ProcessComponentsLatticeCountAccuracyCodedCard
 

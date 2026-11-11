@@ -47,7 +47,7 @@ def exactSampleBatchLaw {n count : Nat} (P : PolytopeData n) (b : Nat) :
 /-- Canonical accuracy-level geometric oracles attached to certified preprocessing. -/
 def exactSemanticOracles {n k : Nat} (prep : TTCPreprocessor n k) : TTCOracles n k where
   preprocessing := prep
-  choosePrecision := fun D p => getPrecisionChoice D p
+  choosePrecision := fun D p => GetPrecision D p.precisionEta
   ComputeVolume := fun P _ _ => exactVolumeLaw P
   GenerateSamples := fun P count b _ _ => exactSampleBatchLaw P b
 

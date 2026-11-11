@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.CV18Admissible
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ThresholdCapBound
@@ -106,11 +107,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
       mul_nonneg (sub_nonneg.mpr hH) (sub_nonneg.mpr hrho2)]
   have hLcv : 0 ≤ Lcv := by
     dsimp [Lcv, theorem3CV18LogMax]
-    exact_mod_cast (show (0 : NNReal) ≤ Finset.univ.sup
-      (fun i : Fin D.componentCount =>
-        let q := CommunityCV18.params (by omega) (D.component i) p.ε'
-          (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
-        Real.toNNReal (theorem3CV18LogEnvelope q)) by exact bot_le)
+    exact NNReal.coe_nonneg _
   have hA : 0 ≤ A := by
     dsimp [A]
     positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]

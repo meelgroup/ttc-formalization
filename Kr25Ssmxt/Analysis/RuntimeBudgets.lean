@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.CV18Admissible
 import Kr25Ssmxt.Model.Run
 
 /-! # Intermediate runtime allowances

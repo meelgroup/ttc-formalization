@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.CV18Admissible
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
 import Kr25Ssmxt.Model.Run
@@ -337,6 +338,7 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
         (Real.coe_toNNReal _ hlog0).symm
       _ ≤ _ := by
         unfold TTCRuntime.theorem3CV18LogMax
+        simp only [dif_pos (CommunityCV18.admissibleTTCRequest D p i)]
         exact_mod_cast hsup
   unfold TTCRuntime.theorem3CV18QueryEnvelope TTCRuntime.theorem3CV18QueryMax
   apply Nat.ceil_mono

@@ -15,6 +15,46 @@ are exactly TTC's `codedLatticePoints`.
 
 noncomputable section
 
+namespace Kr25Ssmxt
+
+open MeasureTheory ProbabilityTheory
+open Arlib.Lattice.Rounding
+
+/-- The current community randomized-rounding law as a Markov kernel. -/
+def kv97RoundingKernel (n : Nat) :
+    Kernel (EuclideanSpace Real (Fin n)) (Fin n → Int) where
+  toFun p := roundLaw (WithLp.ofLp p)
+  measurable' := by
+    apply Measure.measurable_of_measurable_coe
+    intro s hs
+    have heq : (fun p : EuclideanSpace Real (Fin n) => roundLaw (WithLp.ofLp p) s) =
+        fun p => ∑' z : Fin n → Int,
+          s.indicator (fun z => roundLaw (WithLp.ofLp p) {z}) z := by
+      funext p
+      exact (Measure.tsum_indicator_apply_singleton (roundLaw (WithLp.ofLp p)) s hs).symm
+    rw [heq]
+    apply Measurable.tsum
+    intro z
+    by_cases hz : z ∈ s
+    · simp only [Set.indicator_of_mem hz, roundLaw_singleton]
+      change Measurable fun p => ENNReal.ofReal (prodTent (kv97LatEmb n z) p)
+      exact (measurable_prodTent (kv97LatEmb n z)).ennreal_ofReal
+    · simp only [Set.indicator_of_notMem hz]
+      fun_prop
+
+instance (n : Nat) : IsMarkovKernel (kv97RoundingKernel n) := by
+  constructor
+  intro p
+  change IsProbabilityMeasure (roundLaw (WithLp.ofLp p))
+  infer_instance
+
+/-- `kv97RoundedMeasureLaw` is the bind with the rounding kernel. -/
+theorem kv97RoundedMeasureLaw_eq_bind_kernel {n : Nat}
+    (mu : Measure (EuclideanSpace Real (Fin n))) :
+    kv97RoundedMeasureLaw mu = mu.bind (kv97RoundingKernel n) := rfl
+
+end Kr25Ssmxt
+
 namespace Arlib.KV97
 
 open MeasureTheory ProbabilityTheory
@@ -23,14 +63,14 @@ open Arlib.Lattice.Rounding
 theorem isProbabilityMeasure_roundedMeasureLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure mu] :
     IsProbabilityMeasure (Kr25Ssmxt.kv97RoundedMeasureLaw mu) := by
-  unfold Kr25Ssmxt.kv97RoundedMeasureLaw
+  rw [Kr25Ssmxt.kv97RoundedMeasureLaw_eq_bind_kernel]
   infer_instance
 
 theorem roundedMeasureLaw_singleton {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) (z : Fin n → Int) :
     Kr25Ssmxt.kv97RoundedMeasureLaw mu {z} =
       ∫⁻ p, ENNReal.ofReal (prodTent (Kr25Ssmxt.kv97LatEmb n z) p) ∂mu := by
-  rw [Kr25Ssmxt.kv97RoundedMeasureLaw,
+  rw [Kr25Ssmxt.kv97RoundedMeasureLaw_eq_bind_kernel,
     Measure.bind_apply (by measurability) (Kr25Ssmxt.kv97RoundingKernel n).aemeasurable]
   apply lintegral_congr
   intro p
