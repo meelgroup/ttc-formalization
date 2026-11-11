@@ -63,34 +63,34 @@ theorem communityManuscriptOriginTapeKernel_congr_allocated
     communityManuscriptOriginTapeKernel hn P b eta threshold hroute s intensity
       preCoins preRounds basePending (other, fresh) := by
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := manuscriptRateExit s intensity threshold
-  have hfirst : manuscriptRateThinningResult s intensity threshold old =
-      manuscriptRateThinningResult s intensity threshold other :=
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  have hfirst : ttcPseudocode.firstLoopResult s intensity threshold old =
+      ttcPseudocode.firstLoopResult s intensity threshold other :=
     manuscriptRateThinningResult_congr_allocated s intensity threshold
       hfresh old other hagrees
-  have hfirstFresh : (manuscriptRateThinningResult s intensity threshold old).LabelsFresh :=
+  have hfirstFresh : (ttcPseudocode.firstLoopResult s intensity threshold old).LabelsFresh :=
     manuscriptRateThinningResult_labelsFresh s intensity threshold old hfresh
   have hshift : ∀ round label, label <
-      (manuscriptRateThinningResult s intensity threshold old).nextLabel →
+      (ttcPseudocode.firstLoopResult s intensity threshold old).nextLabel →
       shiftCoins rounds old (round, label) =
         shiftCoins rounds other (round, label) := by
     intro round label hlabel
     simpa [shiftCoins, Nat.add_comm] using
       hagrees (round + rounds) label
-        (by simpa [manuscriptRateThinningResult] using hlabel)
+        (by simpa [ttcPseudocode.firstLoopResult] using hlabel)
   have hactive : firstExitRoundSplit
-      (manuscriptRateThinningResult s intensity threshold old) pending threshold
+      (ttcPseudocode.firstLoopResult s intensity threshold old) pending threshold
       (shiftCoins rounds old) (pendingCoinExtension s.nextLabel pending fresh) =
       firstExitRoundSplit
-        (manuscriptRateThinningResult s intensity threshold other) pending threshold
+        (ttcPseudocode.firstLoopResult s intensity threshold other) pending threshold
         (shiftCoins rounds other) (pendingCoinExtension s.nextLabel pending fresh) := by
     rw [← hfirst]
     exact firstExitRoundSplit_congr_old_allocated _ _ _ hfirstFresh _ _ _ hshift
   have hsecond : thinningResultSplitFinite
-      (manuscriptRateThinningResult s intensity threshold old) pending threshold
+      (ttcPseudocode.firstLoopResult s intensity threshold old) pending threshold
       (shiftCoins rounds old) fresh =
       thinningResultSplitFinite
-        (manuscriptRateThinningResult s intensity threshold other) pending threshold
+        (ttcPseudocode.firstLoopResult s intensity threshold other) pending threshold
         (shiftCoins rounds other) fresh := by
     rw [← hfirst]
     exact thinningResultSplitFinite_congr_old_allocated _ _ _ hfirstFresh _ _ _ hshift
@@ -99,18 +99,18 @@ theorem communityManuscriptOriginTapeKernel_congr_allocated
   funext tape
   change tapeAppend preCoins preRounds s.nextLabel basePending fresh
     (thinningResultSplitFinite
-      (manuscriptRateThinningResult s intensity threshold old) pending threshold
+      (ttcPseudocode.firstLoopResult s intensity threshold old) pending threshold
       (shiftCoins rounds old) fresh)
     (firstExitRoundSplit
-      (manuscriptRateThinningResult s intensity threshold old) pending threshold
+      (ttcPseudocode.firstLoopResult s intensity threshold old) pending threshold
       (shiftCoins rounds old) (pendingCoinExtension s.nextLabel pending fresh))
     (by rfl) tape =
     tapeAppend preCoins preRounds s.nextLabel basePending fresh
       (thinningResultSplitFinite
-        (manuscriptRateThinningResult s intensity threshold other) pending threshold
+        (ttcPseudocode.firstLoopResult s intensity threshold other) pending threshold
         (shiftCoins rounds other) fresh)
       (firstExitRoundSplit
-        (manuscriptRateThinningResult s intensity threshold other) pending threshold
+        (ttcPseudocode.firstLoopResult s intensity threshold other) pending threshold
         (shiftCoins rounds other) (pendingCoinExtension s.nextLabel pending fresh))
       (by rfl) tape
   exact tapeAppend_congr preCoins preRounds s.nextLabel basePending fresh
@@ -151,9 +151,9 @@ theorem communityManuscriptFutureSourceKernel_eq_allocated_extension
     (hfresh : state.LabelsFresh) :
     communityManuscriptFutureSourceKernel hn P b eta threshold hroute
       outcome state level =
-    let intensity := ttc.t b n threshold outcome.2
+    let intensity := ttcPseudocode.t b n threshold outcome.2
     let deleted := state.removeComponent P
-    let rounds := manuscriptRateExit deleted intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
     (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         (fairCoinStreamLaw.prod fairCoinStreamLaw).bind fun pair =>
@@ -280,9 +280,9 @@ noncomputable def communityManuscriptFiniteCoinSourceKernel
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n) (level : Nat) :
     Measure (TTCState n) :=
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
     fairCoinStreamLaw.bind fun preCoins =>
       let pending := pendingAfter preCoins (level + rounds)
@@ -318,10 +318,10 @@ theorem communityManuscriptFutureSourceKernel_eq_finiteCoinSourceKernel
   intro preCoins
   exact communityManuscript_originTape_finiteCoinBlocks
     hn prep P b eta delta threshold hroute (state.removeComponent P)
-    (ttc.t b n threshold outcome.2)
+    (ttcPseudocode.t b n threshold outcome.2)
     (state.labelsFresh_removeComponent P hfresh) preCoins
-    (level + manuscriptRateExit (state.removeComponent P)
-      (ttc.t b n threshold outcome.2) threshold) basePending
+    (level + ttcPseudocode.firstLoopExit (state.removeComponent P)
+      (ttcPseudocode.t b n threshold outcome.2) threshold) basePending
 
 theorem communityManuscriptComponentGivenVolume_eq_finiteCoinSourceKernel
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)

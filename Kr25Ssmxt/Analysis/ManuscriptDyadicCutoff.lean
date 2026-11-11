@@ -92,7 +92,7 @@ theorem manuscriptRateExit_zero_at_cutoff
       1 / (2 : Real) ^ (manuscriptDyadicCutoff count - 1))
     (hintensity : (intensity : Real) ≤
       (4 / 3) * threshold * count) :
-    manuscriptRateExit s intensity threshold = 0 := by
+    ttcPseudocode.firstLoopExit s intensity threshold = 0 := by
   apply manuscriptRateExit_zero_of_lt
   rw [NNReal.coe_mul, hrate, mul_one_div]
   exact manuscriptDyadicCutoff_intensity_below count hcount threshold
@@ -109,7 +109,7 @@ theorem manuscriptRateExit_le_cutoff_gap
     (hrate : s.p = 1 / (2 : NNReal) ^ level)
     (hintensity : (intensity : Real) ≤
       (4 / 3) * threshold * count) :
-    manuscriptRateExit s intensity threshold ≤
+    ttcPseudocode.firstLoopExit s intensity threshold ≤
       manuscriptDyadicCutoff count - 1 - level := by
   let d := manuscriptDyadicCutoff count - 1
   have hgap : level + (d - level) = d := Nat.add_sub_of_le hlevel
@@ -136,7 +136,7 @@ theorem manuscriptRateExit_le_cutoff_gap
     simpa only [NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat] using
       manuscriptDyadicCutoff_intensity_below count hcount threshold
         (intensity : Real) hthreshold hintensity
-  unfold manuscriptRateExit
+  unfold ttcPseudocode.firstLoopExit
   exact Nat.sInf_le hguard
 
 end Kr25Ssmxt

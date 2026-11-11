@@ -63,7 +63,7 @@ theorem measurable_communityManuscriptComponentGivenVolume
   unfold communityManuscriptComponentGivenVolume
   exact (community_manuscript_deletion_tail_fst hn prep 1 P b eta delta
     threshold hthreshold z.1
-    (ttc.t b n threshold z.2.2)).symm
+    (ttcPseudocode.t b n threshold z.2.2)).symm
 
 theorem communityManuscriptComponentGivenVolume_isProbabilityMeasure
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -75,7 +75,7 @@ theorem communityManuscriptComponentGivenVolume_isProbabilityMeasure
         threshold outcome state) := by
   have hmass := community_manuscript_deletion_tail_mass_one
     hn prep 1 P b eta delta threshold hthreshold state
-    (ttc.t b n threshold outcome.2)
+    (ttcPseudocode.t b n threshold outcome.2)
   have hmap : IsProbabilityMeasure
       ((communityCostedComponentTail hn prep 1 P b eta delta threshold
         state outcome).map Prod.fst) := by
@@ -87,7 +87,7 @@ theorem communityManuscriptComponentGivenVolume_isProbabilityMeasure
   unfold communityManuscriptComponentGivenVolume
   rw [← community_manuscript_deletion_tail_fst hn prep 1 P b eta delta
     threshold hthreshold state
-    (ttc.t b n threshold outcome.2)]
+    (ttcPseudocode.t b n threshold outcome.2)]
   exact hmap
 
 noncomputable def communityManuscriptComponentsGivenVolumes
@@ -185,24 +185,24 @@ theorem measurable_communityManuscriptProcessComponents
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)) :
-    Measurable (manuscriptProcessComponents
-      (communityManuscriptOracles hn prep) b eta delta threshold components) := by
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta)) :
+    Measurable (ttcPseudocode.loop
+      (ttcSubroutines hn prep) b eta delta threshold components) := by
   induction components with
   | nil => exact Measure.measurable_dirac
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) :=
+          ((ttcSubroutines hn prep).ComputeVolume P eta delta) :=
         hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
+          ((ttcSubroutines hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
       let first : TTCState n → Measure (TTCState n) := fun state =>
-        manuscriptProcessComponent (communityManuscriptOracles hn prep)
+        ttcPseudocode.step (ttcSubroutines hn prep)
           b eta delta threshold P state
       have hfirst : Measurable first := by
-        let volumeLaw := (communityManuscriptOracles hn prep).ComputeVolume
+        let volumeLaw := (ttcSubroutines hn prep).ComputeVolume
           P eta delta
         have hbase := measurable_parametric_probability_bind
           (fun _ : TTCState n => volumeLaw) measurable_const
@@ -218,7 +218,7 @@ theorem measurable_communityManuscriptProcessComponents
               threshold outcome state)
         exact hbase
       change Measurable (fun state => (first state).bind
-        (manuscriptProcessComponents (communityManuscriptOracles hn prep)
+        (ttcPseudocode.loop (ttcSubroutines hn prep)
           b eta delta threshold rest))
       exact (Measure.measurable_bind' (ih hvolRest)).comp hfirst
 
@@ -228,9 +228,9 @@ theorem communityManuscriptProcessComponents_eq_volumeVector_bind
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta))
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta))
     (state : TTCState n) :
-    manuscriptProcessComponents (communityManuscriptOracles hn prep)
+    ttcPseudocode.loop (ttcSubroutines hn prep)
       b eta delta threshold components state =
     (communityManuscriptVolumeVectorLaw hn prep eta delta components).bind
       (fun outcomes =>
@@ -238,17 +238,17 @@ theorem communityManuscriptProcessComponents_eq_volumeVector_bind
           threshold components outcomes state) := by
   induction components generalizing state with
   | nil =>
-      simp [manuscriptProcessComponents, communityManuscriptVolumeVectorLaw,
+      simp [ttcPseudocode.loop, communityManuscriptVolumeVectorLaw,
         communityManuscriptComponentsGivenVolumes]
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) :=
+          ((ttcSubroutines hn prep).ComputeVolume P eta delta) :=
         hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
+          ((ttcSubroutines hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
-      let μ := (communityManuscriptOracles hn prep).ComputeVolume P eta delta
+      let μ := (ttcSubroutines hn prep).ComputeVolume P eta delta
       let ν := communityManuscriptVolumeVectorLaw hn prep eta delta rest
       let G : VolumeOutcome → Measure (TTCState n) := fun outcome =>
         communityManuscriptComponentGivenVolume hn prep P b eta delta
@@ -277,7 +277,7 @@ theorem communityManuscriptProcessComponents_eq_volumeVector_bind
           (fun z : TTCState n × (Fin rest.length → VolumeOutcome) =>
             R z.2 z.1) := hR.comp measurable_swap
       have htail : Measurable
-          (manuscriptProcessComponents (communityManuscriptOracles hn prep)
+          (ttcPseudocode.loop (ttcSubroutines hn prep)
             b eta delta threshold rest) :=
         measurable_communityManuscriptProcessComponents
           hn prep b eta delta threshold hthreshold rest hvolRest
@@ -294,11 +294,11 @@ theorem communityManuscriptProcessComponents_eq_volumeVector_bind
             hcoords
         exact h
       calc
-        manuscriptProcessComponents (communityManuscriptOracles hn prep)
+        ttcPseudocode.loop (ttcSubroutines hn prep)
             b eta delta threshold (P :: rest) state =
           μ.bind (fun outcome => (G outcome).bind
-            (manuscriptProcessComponents
-              (communityManuscriptOracles hn prep)
+            (ttcPseudocode.loop
+              (ttcSubroutines hn prep)
               b eta delta threshold rest)) := by
                 change (μ.bind G).bind _ = _
                 exact Measure.bind_bind hG.aemeasurable htail.aemeasurable

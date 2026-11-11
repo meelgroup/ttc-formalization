@@ -68,9 +68,9 @@ captures this.
 
 **Names and layout.** `Model/Program.lean` and `Model/Run.lean` follow Algorithm `ttc`
 line by line, with section headers quoting the paper's line labels, and use the paper's
-names: `ttc` (the algorithm of the theorems), `ttcWith` (the same algorithm with its
+names: `ttc` (the algorithm of the theorems), `ttcPseudocode` (the same algorithm with its
 subroutines as slots), `GetPrecision`, `MaxInscribedBall`, `ComputeVolume`,
-`GenerateSamples`, `Thresh`, `ε'`, `δ'`, `t` (`ttc.t`), `Poisson`, `Est`, and the state
+`GenerateSamples`, `Thresh`, `ε'`, `δ'`, `t` (`ttcPseudocode.t`), `Poisson`, `Est`, and the state
 fields `p` and `X`. Steps without a paper name (the coin-flip realisation of "remove every
 element with probability 1/2", the charged run, the sampler's charts) keep descriptive
 names.
@@ -88,7 +88,7 @@ names.
   formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
   a dimension restriction).
 - `getprec` is concrete and lives in `Model/Run.lean`, as the `choosePrecision`
-  slot of the oracle bundle (`TTCOracles`, filled by `communityManuscriptOracles`):
+  slot of the oracle bundle (`TTCOracles`, filled by `ttcSubroutines`):
   `GetPrecision` returns `⌈log₁₀ maxratio⌉` with `maxratio = max(1, maxᵢ γ/γ̂ᵢ)` at
   `η = ε/96`. `γ̂ᵢ = MaxInscribedBall(Pᵢ)` is computed by the Chebyshev-centre LP
   `maximize t s.t. aⱼ·c + t‖aⱼ‖₂ ≤ bⱼ` (`HalfspacePresentation.MaxInscribedBall`, its
@@ -411,7 +411,7 @@ performs a rate-controlled thinning loop **before** that draw; binomially thins
 the pending count in the second loop; and divides the output by
 `p * Threshold * 10^(b*n)`.
 
-`Model/Program.lean` now defines `ttcWith` with those two loops, the
+`Model/Program.lean` now defines `ttcPseudocode` with those two loops, the
 scaled Poisson intensity, and the output normalization. `Model/Run.lean`
 defines `ttc` and applies the paper's radius-based clipping
 to concrete CV18 outcomes. Multiplicity is retained through labelled copies.
@@ -779,11 +779,11 @@ map as a bind over the fixed independent source measure.
 `ManuscriptOriginVolumeKernel.lean` integrates an arbitrary probability law
 of CV18 outcomes into a measurable ghost component transition, proves it has
 total mass one, and proves that its executable-state marginal is exactly the
-current `manuscriptProcessComponent` for the concrete clipped CV18 law.
+current `ttcPseudocode.step` for the concrete clipped CV18 law.
 `ManuscriptOriginVolumeFold.lean` iterates the ghost transition through any
 finite list of components equipped with the geometric route and normalized
 CV18 volume law. Its output remains a probability measure and its state
-marginal is exactly the executable `manuscriptProcessComponents` law.
+marginal is exactly the executable `ttcPseudocode.loop` law.
 `ManuscriptOriginCertifiedRun.lean` supplies the geometric routes and clipped
 CV18 probability laws for the preprocessor's actual component list and proves
 that the resulting ghost run projects to the manuscript's executable

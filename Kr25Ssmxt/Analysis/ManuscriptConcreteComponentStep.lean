@@ -120,10 +120,10 @@ theorem communityManuscript_generateSamples_eq_iid
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :
-    (communityManuscriptOracles hn prep).GenerateSamples
+    (ttcSubroutines hn prep).GenerateSamples
       P count b eta delta =
     iidSampleBatchLaw (normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) := by
-  simp only [communityManuscriptOracles, dif_pos hroute]
+  simp only [ttcSubroutines, dif_pos hroute]
 
 end Kr25Ssmxt

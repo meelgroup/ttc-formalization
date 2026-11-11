@@ -18,7 +18,7 @@ INTERNAL: countable-control measurability for the unbounded thinning loop.
 -/
 lemma measurable_firstExitRound_joint {n : Nat} (threshold : Real) :
     Measurable (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-      firstExitRound z.1.1 z.1.2 threshold z.2) := by
+      ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2) := by
   let Control := (Finset (SampleCopy n) × Nat) × Nat
   let control : (TTCState n × Nat) × (Nat × Nat → Bool) →
       Control × (Nat × Nat → Bool) := fun z =>
@@ -43,9 +43,9 @@ lemma measurable_firstExitRound_joint {n : Nat} (threshold : Real) :
     ((hsamples.prodMk hnext).prodMk hpending).prodMk hcoins
   have hexit (rounds : Nat) : MeasurableSet
       {z : (TTCState n × Nat) × (Nat × Nat → Bool) |
-        thinningExit z.1.1 z.1.2 threshold z.2 rounds} := by
+        ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 rounds} := by
     have hcontrolExit : Measurable (fun q : Control × (Nat × Nat → Bool) =>
-        thinningExit
+        ttcPseudocode.secondLoopExit
           ({ p := 1, X := q.1.1.1, nextLabel := q.1.1.2 } : TTCState n)
           q.1.2 threshold q.2 rounds) := by
       apply measurable_from_prod_countable_right
@@ -61,13 +61,13 @@ lemma measurable_firstExitRound_joint {n : Nat} (threshold : Real) :
   | zero =>
       have hfiber :
           (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-            firstExitRound z.1.1 z.1.2 threshold z.2) ⁻¹' {0} =
-            {z | thinningExit z.1.1 z.1.2 threshold z.2 0} ∪
-              ⋂ r, {z | thinningExit z.1.1 z.1.2 threshold z.2 r}ᶜ := by
+            ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2) ⁻¹' {0} =
+            {z | ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 0} ∪
+              ⋂ r, {z | ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 r}ᶜ := by
         ext z
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union,
           Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_compl_iff]
-        rw [firstExitRound, Nat.sInf_eq_zero]
+        rw [ttcPseudocode.secondLoopExitRound, Nat.sInf_eq_zero]
         constructor
         · rintro (h | h)
           · exact Or.inl h
@@ -80,15 +80,15 @@ lemma measurable_firstExitRound_joint {n : Nat} (threshold : Real) :
   | succ k =>
       have hfiber :
           (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-            firstExitRound z.1.1 z.1.2 threshold z.2) ⁻¹' {k + 1} =
-            {z | thinningExit z.1.1 z.1.2 threshold z.2 (k + 1)} ∩
-              {z | thinningExit z.1.1 z.1.2 threshold z.2 k}ᶜ := by
+            ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2) ⁻¹' {k + 1} =
+            {z | ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 (k + 1)} ∩
+              {z | ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 k}ᶜ := by
         ext z
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_inter_iff,
           Set.mem_ofPred_eq, Set.mem_compl_iff]
         have hup : ∀ r₁ r₂ : Nat, r₁ ≤ r₂ →
-            r₁ ∈ {r | thinningExit z.1.1 z.1.2 threshold z.2 r} →
-            r₂ ∈ {r | thinningExit z.1.1 z.1.2 threshold z.2 r} := by
+            r₁ ∈ {r | ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 r} →
+            r₂ ∈ {r | ttcPseudocode.secondLoopExit z.1.1 z.1.2 threshold z.2 r} := by
           intro r₁ r₂ hr h
           exact thinningExit_mono_rounds z.1.1 z.1.2 threshold z.2 hr h
         exact Nat.sInf_upward_closed_eq_succ_iff hup k

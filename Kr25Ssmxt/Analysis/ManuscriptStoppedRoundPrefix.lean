@@ -143,7 +143,7 @@ theorem fairCoinStreamLaw_firstExit_localRead_stoppedRoundPrefix_shift_law
     (hlocal : ∀ r coins,
       coinPrefix r (read (coinPrefix r coins)) =
         coinPrefix r (read coins)) :
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         ((stop coins, coinPrefix (stop coins) coins),
@@ -151,7 +151,7 @@ theorem fairCoinStreamLaw_firstExit_localRead_stoppedRoundPrefix_shift_law
     (fairCoinStreamLaw.map
       (fun coins => (stop coins, coinPrefix (stop coins) coins))).prod
       fairCoinStreamLaw := by
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let event := fun r => read ⁻¹' firstExitPrefixEvent s pending threshold r
   have hstop : Measurable stop :=
     (measurable_firstExitRound s pending threshold).comp hread
@@ -176,14 +176,14 @@ coins in its stopped prefix. -/
 theorem thinningResult_congr_of_stoppedRoundPrefix
     {n : Nat} (s : TTCState n) (pending : Nat) (threshold : Real)
     (coins coins' : Nat × Nat → Bool)
-    (hround : firstExitRound s pending threshold coins =
-      firstExitRound s pending threshold coins')
-    (hprefix : coinPrefix (firstExitRound s pending threshold coins)
+    (hround : ttcPseudocode.secondLoopExitRound s pending threshold coins =
+      ttcPseudocode.secondLoopExitRound s pending threshold coins')
+    (hprefix : coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold coins)
         coins =
-      coinPrefix (firstExitRound s pending threshold coins) coins') :
-    thinningResult s pending threshold coins =
-      thinningResult s pending threshold coins' := by
-  let r := firstExitRound s pending threshold coins
+      coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins') :
+    ttcPseudocode.secondLoopResult s pending threshold coins =
+      ttcPseudocode.secondLoopResult s pending threshold coins' := by
+  let r := ttcPseudocode.secondLoopExitRound s pending threshold coins
   have hsamples : samplesAfter coins r s.X =
       samplesAfter coins' r s.X := by
     calc
@@ -205,7 +205,7 @@ theorem thinningResult_congr_of_stoppedRoundPrefix
       _ = pendingAfter coins' r s.nextLabel pending :=
         pendingAfter_coinPrefix r r s.nextLabel pending
           (le_refl r) coins'
-  simp only [thinningResult]
+  simp only [ttcPseudocode.secondLoopResult]
   rw [← hround, hsamples, hpending]
 
 /-- Reconstruct the thinning output from a stopped round and a prefix of
@@ -246,11 +246,11 @@ theorem thinningResult_eq_atObserved
       coinPrefix r (read (coinPrefix r coins)) =
         coinPrefix r (read coins))
     (coins : Nat × Nat → Bool) :
-    let r := firstExitRound s pending threshold (read coins)
-    thinningResult s pending threshold (read coins) =
+    let r := ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
+    ttcPseudocode.secondLoopResult s pending threshold (read coins) =
       thinningResultAtObserved s pending read
         (r, coinPrefix r coins) := by
-  let r := firstExitRound s pending threshold (read coins)
+  let r := ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   have hprefix := hlocal r coins
   have hsamples : samplesAfter (read coins) r s.X =
       samplesAfter (read (coinPrefix r coins)) r s.X := by
@@ -276,7 +276,7 @@ theorem thinningResult_eq_atObserved
       _ = pendingAfter (read (coinPrefix r coins)) r s.nextLabel pending :=
         pendingAfter_coinPrefix r r s.nextLabel pending
           (le_refl r) (read (coinPrefix r coins))
-  simp only [thinningResult, thinningResultAtObserved]
+  simp only [ttcPseudocode.secondLoopResult, thinningResultAtObserved]
   rw [hsamples, hpending]
 
 end Kr25Ssmxt

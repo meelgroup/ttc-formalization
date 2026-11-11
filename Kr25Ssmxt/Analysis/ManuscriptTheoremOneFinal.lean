@@ -90,7 +90,7 @@ theorem community_manuscriptTTC_lattice_estimate
     measurableSet_volumeOutcome_good _ (fun _ => measurableSet_Icc)
   have hT : 0 < T := p.threshold_pos m
   have hvolumeU : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta') := by
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta') := by
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
     exact ((community_manuscript_volume_contract hn prep F hbounded p) i).1
@@ -99,7 +99,7 @@ theorem community_manuscriptTTC_lattice_estimate
       components hvolumeU
   -- the CV18 outcome vector is good with probability at least 1 - δ/4
   have hvolumeC : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep 1).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep 1).computeVolumeWithCost
         P eta delta') := by
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP

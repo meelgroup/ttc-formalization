@@ -58,8 +58,8 @@ theorem ae_bind_of_ae {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 theorem manuscriptRateThinUntil_labelsFresh {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) (h : s.LabelsFresh) :
-    ∀ᵐ t ∂manuscriptRateThinUntil s intensity threshold, t.LabelsFresh := by
-  unfold manuscriptRateThinUntil
+    ∀ᵐ t ∂ttcPseudocode.firstLoop s intensity threshold, t.LabelsFresh := by
+  unfold ttcPseudocode.firstLoop
   rw [ae_map_iff
     (measurable_manuscriptRateThinningResult s intensity threshold).aemeasurable
     measurableSet_labelsFresh]
@@ -68,11 +68,11 @@ theorem manuscriptRateThinUntil_labelsFresh {n : Nat} (s : TTCState n)
 
 theorem thinUntil_labelsFresh {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (h : s.LabelsFresh) :
-    ∀ᵐ result ∂thinUntil s pending threshold, result.1.LabelsFresh := by
+    ∀ᵐ result ∂ttcPseudocode.secondLoop s pending threshold, result.1.LabelsFresh := by
   have hset : MeasurableSet
       {result : TTCState n × Nat | result.1.LabelsFresh} :=
     measurableSet_labelsFresh.preimage measurable_fst
-  unfold thinUntil
+  unfold ttcPseudocode.secondLoop
   rw [ae_map_iff (measurable_thinningResult s pending threshold).aemeasurable hset]
   exact Filter.Eventually.of_forall fun coins =>
     thinningResult_labelsFresh s pending threshold coins h

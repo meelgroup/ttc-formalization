@@ -10,7 +10,7 @@ open MeasureTheory Function
 
 noncomputable def stoppedCoinPrefix {n : Nat} (s : TTCState n) (pending : Nat)
     (threshold : Real) (coins : Nat × Nat → Bool) : Nat × Nat → Bool :=
-  coinPrefix (firstExitRound s pending threshold coins) coins
+  coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins
 
 theorem measurable_stoppedCoinPrefix {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) :
@@ -29,13 +29,13 @@ theorem firstExitRound_stoppedPrefix_shift_law {n : Nat}
     fairCoinStreamLaw.map
       (fun coins =>
         (stoppedCoinPrefix s pending threshold coins,
-          shiftCoins (firstExitRound s pending threshold coins) coins)) =
+          shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) =
     (fairCoinStreamLaw.map (stoppedCoinPrefix s pending threshold)).prod
       fairCoinStreamLaw := by
   classical
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
-  let stop := firstExitRound s pending threshold
+  let stop := ttcPseudocode.secondLoopExitRound s pending threshold
   let observed := stoppedCoinPrefix s pending threshold
   let output : (Nat × Nat → Bool) →
       (Nat × Nat → Bool) × (Nat × Nat → Bool) :=
@@ -153,7 +153,7 @@ theorem firstExitRound_stoppedPrefix_globalFuture_law {n : Nat}
       (fun coins =>
         (stoppedCoinPrefix s pending threshold coins,
           manuscriptGlobalCoinRead
-            (shiftCoins (firstExitRound s pending threshold coins) coins))) =
+            (shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins))) =
     (fairCoinStreamLaw.map
       (stoppedCoinPrefix s pending threshold)).prod
       (Measure.infinitePi
@@ -161,7 +161,7 @@ theorem firstExitRound_stoppedPrefix_globalFuture_law {n : Nat}
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   let observed := stoppedCoinPrefix s pending threshold
-  let stop := firstExitRound s pending threshold
+  let stop := ttcPseudocode.secondLoopExitRound s pending threshold
   let reindex : ((Nat × Nat → Bool) × (Nat × Nat → Bool)) →
       (Nat × Nat → Bool) × (Nat × (Nat × Nat) → Bool) :=
     Prod.map id manuscriptGlobalCoinRead
@@ -218,7 +218,7 @@ theorem firstExitRound_stoppedPrefix_originFuture_bind
       let pre := stoppedCoinPrefix s pending threshold coins
       K pre (fun pair =>
         manuscriptGlobalCoinRead
-          (shiftCoins (firstExitRound s pending threshold coins) coins)
+          (shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)
           (manuscriptOriginCoinIndex (nextLabel pre)
             (origin pre) pair))) =
     (fairCoinStreamLaw.map
@@ -227,7 +227,7 @@ theorem firstExitRound_stoppedPrefix_originFuture_bind
           (fun _ : Nat × Fin (nextLabel pre) => fairCoinLaw)).bind
           (K pre)) := by
   let observed := stoppedCoinPrefix s pending threshold
-  let stop := firstExitRound s pending threshold
+  let stop := ttcPseudocode.secondLoopExitRound s pending threshold
   let sourceLaw : Measure (Nat × (Nat × Nat) → Bool) :=
     Measure.infinitePi (fun _ => fairCoinLaw)
   let preLaw := fairCoinStreamLaw.map observed
@@ -303,17 +303,17 @@ theorem firstExitRoundSplit_stoppedPrefix_shift_law {n : Nat}
       (Nat × Nat → Bool) × (Nat × Nat → Bool) :=
     fun coins =>
       (stoppedCoinPrefix s pending threshold coins,
-        shiftCoins (firstExitRound s pending threshold coins) coins)
+        shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)
   have hmerge : Measurable merge :=
     measurable_mergeCoinsAtLabel_pair s.nextLabel
   have hH : Measurable H :=
     (measurable_stoppedCoinPrefix s pending threshold).prodMk
       ((measurable_stoppedCoinPair
-        (firstExitRound s pending threshold)
+        (ttcPseudocode.secondLoopExitRound s pending threshold)
         (measurable_firstExitRound s pending threshold)).snd)
   have hpath (pair : (Nat × Nat → Bool) × (Nat × Nat → Bool)) :
       firstExitRoundSplit s pending threshold pair.1 pair.2 =
-        firstExitRound s pending threshold (merge pair) :=
+        ttcPseudocode.secondLoopExitRound s pending threshold (merge pair) :=
     (firstExitRound_mergeCoinsAtLabel s pending threshold pair.1 pair.2
       hfresh).symm
   have hleft : (fairCoinStreamLaw.prod fairCoinStreamLaw).map
@@ -376,18 +376,18 @@ theorem firstExitRoundSplit_stoppedPrefix_globalFuture_law {n : Nat}
     fun coins =>
       (stoppedCoinPrefix s pending threshold coins,
         manuscriptGlobalCoinRead
-          (shiftCoins (firstExitRound s pending threshold coins) coins))
+          (shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins))
   have hmerge : Measurable merge :=
     measurable_mergeCoinsAtLabel_pair s.nextLabel
   have hH : Measurable H :=
     (measurable_stoppedCoinPrefix s pending threshold).prodMk
       (measurable_manuscriptGlobalCoinRead.comp
         ((measurable_stoppedCoinPair
-          (firstExitRound s pending threshold)
+          (ttcPseudocode.secondLoopExitRound s pending threshold)
           (measurable_firstExitRound s pending threshold)).snd))
   have hpath (pair : (Nat × Nat → Bool) × (Nat × Nat → Bool)) :
       firstExitRoundSplit s pending threshold pair.1 pair.2 =
-        firstExitRound s pending threshold (merge pair) :=
+        ttcPseudocode.secondLoopExitRound s pending threshold (merge pair) :=
     (firstExitRound_mergeCoinsAtLabel s pending threshold pair.1 pair.2
       hfresh).symm
   have hleft : (fairCoinStreamLaw.prod fairCoinStreamLaw).map
@@ -477,25 +477,25 @@ theorem firstExitRoundSplit_stoppedPrefix_originFuture_bind
   have hmerge : Measurable merge :=
     measurable_mergeCoinsAtLabel_pair s.nextLabel
   have hpath (pair : (Nat × Nat → Bool) × (Nat × Nat → Bool)) :
-      stop pair = firstExitRound s pending threshold (merge pair) :=
+      stop pair = ttcPseudocode.secondLoopExitRound s pending threshold (merge pair) :=
     (firstExitRound_mergeCoinsAtLabel s pending threshold pair.1 pair.2
       hfresh).symm
   have hH : Measurable
       (fun coins =>
         (stoppedCoinPrefix s pending threshold coins,
           manuscriptGlobalCoinRead
-            (shiftCoins (firstExitRound s pending threshold coins) coins))) :=
+            (shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins))) :=
     (measurable_stoppedCoinPrefix s pending threshold).prodMk
       (measurable_manuscriptGlobalCoinRead.comp
         ((measurable_stoppedCoinPair
-          (firstExitRound s pending threshold)
+          (ttcPseudocode.secondLoopExitRound s pending threshold)
           (measurable_firstExitRound s pending threshold)).snd))
   have hsplit : Measurable (fun pair => (observed pair, source pair)) := by
     have heq : (fun pair => (observed pair, source pair)) =
         (fun coins =>
           (stoppedCoinPrefix s pending threshold coins,
             manuscriptGlobalCoinRead
-              (shiftCoins (firstExitRound s pending threshold coins)
+              (shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins)
                 coins))) ∘ merge := by
       funext pair
       simp only [Function.comp_apply, observed, source,

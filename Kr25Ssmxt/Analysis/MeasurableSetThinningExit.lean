@@ -17,7 +17,7 @@ INTERNAL: Measurable fixed-round pieces for the first-exit construction.
 lemma measurableSet_thinningExit {n : Nat} (s : TTCState n) (pending : Nat)
     (threshold : Real) (rounds : Nat) :
     MeasurableSet {coins : Nat × Nat → Bool |
-      thinningExit s pending threshold coins rounds} := by
+      ttcPseudocode.secondLoopExit s pending threshold coins rounds} := by
   have hsamples : Measurable (fun coins : Nat × Nat → Bool =>
       (samplesAfter coins rounds s.X).card) := by
     simpa [samplesAfter] using
@@ -38,7 +38,7 @@ lemma measurableSet_thinningExit {n : Nat} (s : TTCState n) (pending : Nat)
     (measurable_of_countable (fun q : Nat => (q : Real))).comp htotal
   convert hreal (measurableSet_Iic : MeasurableSet (Set.Iic threshold)) using 1
   ext coins
-  simp [thinningExit]
+  simp [ttcPseudocode.secondLoopExit]
 
 end Kr25Ssmxt
 

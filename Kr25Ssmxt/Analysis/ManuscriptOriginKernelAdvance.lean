@@ -16,8 +16,8 @@ noncomputable def communityManuscriptOriginTapeResult
         Bool))
     (tape : Nat → LatticePoint n) : TTCState n :=
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := manuscriptRateExit s intensity threshold
-  let first := manuscriptRateThinningResult s intensity threshold pair.1
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let first := ttcPseudocode.firstLoopResult s intensity threshold pair.1
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds pair.1) pair.2
   let activeRounds := firstExitRoundSplit first pending threshold
@@ -36,8 +36,8 @@ theorem measurable_communityManuscriptOriginTapeResult
     Measurable (communityManuscriptOriginTapeResult s intensity threshold
       preCoins preRounds basePending pair) := by
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := manuscriptRateExit s intensity threshold
-  let first := manuscriptRateThinningResult s intensity threshold pair.1
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let first := ttcPseudocode.firstLoopResult s intensity threshold pair.1
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds pair.1) pair.2
   let activeRounds := firstExitRoundSplit first pending threshold
@@ -77,7 +77,7 @@ theorem ManuscriptOriginConfiguration.advance_state_eq_tapeResult
     (basePending : Nat) (preCoins future : Nat × Nat → Bool)
     (tape : Nat → LatticePoint n) :
     let deleted := c.state.removeComponent P
-    let preRounds := c.level + manuscriptRateExit deleted intensity threshold
+    let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
     let fresh := originalSurvivorCoinRestriction preCoins preRounds
       deleted.nextLabel basePending future
     (c.advance P intensity threshold basePending preCoins future tape).state =
@@ -98,7 +98,7 @@ theorem ManuscriptOriginConfiguration.advance_state_tapeLaw
     (c : ManuscriptOriginConfiguration n) (intensity : NNReal)
     (basePending : Nat) (preCoins future : Nat × Nat → Bool) :
     let deleted := c.state.removeComponent P
-    let preRounds := c.level + manuscriptRateExit deleted intensity threshold
+    let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
     let fresh := originalSurvivorCoinRestriction preCoins preRounds
       deleted.nextLabel basePending future
     (Measure.infinitePi (fun _ : Nat =>

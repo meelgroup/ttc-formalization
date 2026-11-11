@@ -161,18 +161,18 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_origin_eq_observed
     (oldFuture : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n) :
     let deleted := c.state.removeComponent P
-    let rounds := manuscriptRateExit deleted intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
     let preRounds := c.level + rounds
     let old := manuscriptSourceOldCoins c.origin
       (c.refreshFuture oldFuture).source.coins c.level
-    let first := manuscriptRateThinningResult deleted intensity threshold old
+    let first := ttcPseudocode.firstLoopResult deleted intensity threshold old
     ((c.refreshFuture oldFuture).advance P intensity threshold
       basePending preCoins fresh tape).origin =
     manuscriptObservedOrigin first threshold preCoins preRounds
       basePending c.origin c.source.processed
       (manuscriptGlobalSourceShift rounds oldFuture, fresh) := by
   let deleted := c.state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let old := manuscriptSourceOldCoins c.origin
     (c.refreshFuture oldFuture).source.coins c.level
   have hshift : shiftCoins rounds old =
@@ -203,15 +203,15 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_observedRepresentative_e
     (oldA oldB : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n)
     (hfirst : manuscriptGlobalSourcePrefix
-        (manuscriptRateExit (c.state.removeComponent P)
+        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldA =
       manuscriptGlobalSourcePrefix
-        (manuscriptRateExit (c.state.removeComponent P)
+        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldB)
     (hsecond :
       let deleted := c.state.removeComponent P
-      let rounds := manuscriptRateExit deleted intensity threshold
-      let first := manuscriptRateThinningResult deleted intensity threshold
+      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+      let first := ttcPseudocode.firstLoopResult deleted intensity threshold
         (manuscriptSourceOldCoins c.origin
           (c.refreshFuture oldA).source.coins c.level)
       let preRounds := c.level + rounds
@@ -226,12 +226,12 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_observedRepresentative_e
       ((c.refreshFuture oldB).advance P intensity threshold basePending
         preCoins freshB tape).observedRepresentative := by
   let deleted := c.state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
-  let firstA := manuscriptRateThinningResult deleted intensity threshold
+  let firstA := ttcPseudocode.firstLoopResult deleted intensity threshold
     (manuscriptSourceOldCoins c.origin
       (c.refreshFuture oldA).source.coins c.level)
-  let firstB := manuscriptRateThinningResult deleted intensity threshold
+  let firstB := ttcPseudocode.firstLoopResult deleted intensity threshold
     (manuscriptSourceOldCoins c.origin
       (c.refreshFuture oldB).source.coins c.level)
   have hF : firstA = firstB :=
@@ -323,9 +323,9 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_unusedTail_eq_combined
     (oldFuture : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n) :
     let deleted := c.state.removeComponent P
-    let rounds := manuscriptRateExit deleted intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
     let preRounds := c.level + rounds
-    let first := manuscriptRateThinningResult deleted intensity threshold
+    let first := ttcPseudocode.firstLoopResult deleted intensity threshold
       (manuscriptSourceOldCoins c.origin
         (c.refreshFuture oldFuture).source.coins c.level)
     ((c.refreshFuture oldFuture).advance P intensity threshold
@@ -335,9 +335,9 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_unusedTail_eq_combined
           basePending c.origin
           (manuscriptGlobalSourceShift rounds oldFuture, fresh)) := by
   let deleted := c.state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
-  let first := manuscriptRateThinningResult deleted intensity threshold
+  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
     (manuscriptSourceOldCoins c.origin
       (c.refreshFuture oldFuture).source.coins c.level)
   let stop := manuscriptSurvivorPairStop first threshold preCoins preRounds

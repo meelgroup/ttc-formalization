@@ -10,7 +10,7 @@ open MeasureTheory
 theorem measurable_manuscriptRateExit_joint {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      manuscriptRateExit z.1 z.2 threshold) := by
+      ttcPseudocode.firstLoopExit z.1 z.2 threshold) := by
   let guard (j : Nat) : TTCState n × NNReal → Prop := fun z =>
     ((z.2 * z.1.p / (2 : NNReal) ^ j : NNReal) : Real) < threshold
   have hguard (j : Nat) : MeasurableSet {z | guard j z} := by
@@ -24,7 +24,7 @@ theorem measurable_manuscriptRateExit_joint {n : Nat}
       fun_prop
     exact hval measurableSet_Iio
   have hfiber (k : Nat) :
-      (fun z : TTCState n × NNReal => manuscriptRateExit z.1 z.2 threshold) ⁻¹' {k} =
+      (fun z : TTCState n × NNReal => ttcPseudocode.firstLoopExit z.1 z.2 threshold) ⁻¹' {k} =
         {z | guard k z} ∩ ⋂ j : Nat,
           (if j < k then {z | guard j z}ᶜ else Set.univ) := by
     ext z
@@ -39,16 +39,16 @@ theorem measurable_manuscriptRateExit_joint {n : Nat}
       split_ifs with hj
       · simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
         intro hjg
-        have hle : manuscriptRateExit z.1 z.2 threshold ≤ j := by
-          unfold manuscriptRateExit
+        have hle : ttcPseudocode.firstLoopExit z.1 z.2 threshold ≤ j := by
+          unfold ttcPseudocode.firstLoopExit
           exact Nat.sInf_le hjg
         omega
       · simp
     · rintro ⟨hg, hprior⟩
       apply le_antisymm
-      · unfold manuscriptRateExit
+      · unfold ttcPseudocode.firstLoopExit
         exact Nat.sInf_le hg
-      · unfold manuscriptRateExit
+      · unfold ttcPseudocode.firstLoopExit
         have hnonempty : {rounds : Nat |
             ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}.Nonempty :=
           manuscriptRateExit_exists z.1 z.2 hthreshold
@@ -77,10 +77,10 @@ theorem measurable_manuscriptRateExit_joint {n : Nat}
 theorem measurable_manuscriptRateThinningResult_joint {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-      manuscriptRateThinningResult z.1.1 z.1.2 threshold z.2) := by
+      ttcPseudocode.firstLoopResult z.1.1 z.1.2 threshold z.2) := by
   classical
   let rounds := fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-    manuscriptRateExit z.1.1 z.1.2 threshold
+    ttcPseudocode.firstLoopExit z.1.1 z.1.2 threshold
   have hrounds : Measurable rounds :=
     (measurable_manuscriptRateExit_joint threshold hthreshold).comp measurable_fst
   have hstate : Measurable
@@ -142,7 +142,7 @@ theorem measurable_manuscriptRateThinningResult_joint {n : Nat}
 theorem measurable_manuscriptRateThinningCost_joint {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      manuscriptRateThinningCost z.1 z.2 threshold) := by
+      ttcPseudocode.firstLoopCost z.1 z.2 threshold) := by
   have hcoords : Measurable (fun z : TTCState n × NNReal =>
       (z.1.p, z.1.X, z.1.nextLabel)) :=
     (comap_measurable _).comp measurable_fst
@@ -150,19 +150,19 @@ theorem measurable_manuscriptRateThinningCost_joint {n : Nat}
     (measurable_fst.comp measurable_snd).comp hcoords
   have hcard : Measurable (fun z : TTCState n × NNReal => z.1.X.card) :=
     (measurable_of_countable (fun s : Finset (SampleCopy n) => s.card)).comp hsamples
-  unfold manuscriptRateThinningCost
+  unfold ttcPseudocode.firstLoopCost
   exact (measurable_manuscriptRateExit_joint threshold hthreshold).mul
     ((measurable_of_countable TTCRuntime.rateThinningRoundOperations).comp hcard)
 
 theorem manuscriptRateThinWithCost_kernel_measurable {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      manuscriptRateThinWithCost z.1 z.2 threshold) := by
+      ttcPseudocode.firstLoopWithCost z.1 z.2 threshold) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   let G := fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-    (manuscriptRateThinningResult z.1.1 z.1.2 threshold z.2,
-      manuscriptRateThinningCost z.1.1 z.1.2 threshold)
+    (ttcPseudocode.firstLoopResult z.1.1 z.1.2 threshold z.2,
+      ttcPseudocode.firstLoopCost z.1.1 z.1.2 threshold)
   have hG : Measurable G :=
     (measurable_manuscriptRateThinningResult_joint threshold hthreshold).prodMk
       ((measurable_manuscriptRateThinningCost_joint threshold hthreshold).comp measurable_fst)
@@ -177,10 +177,10 @@ theorem manuscriptRateThinWithCost_kernel_measurable {n : Nat}
       (fun z : TTCState n × NNReal =>
         (fairCoinStreamLaw.map (Prod.mk z)).map G) =
       (fun z : TTCState n × NNReal =>
-        manuscriptRateThinWithCost z.1 z.2 threshold) := by
+        ttcPseudocode.firstLoopWithCost z.1 z.2 threshold) := by
     funext z
     rw [Measure.map_map hG measurable_prodMk_left]
-    unfold manuscriptRateThinWithCost
+    unfold ttcPseudocode.firstLoopWithCost
     rfl
   rw [← heq]
   exact hmap
@@ -188,10 +188,10 @@ theorem manuscriptRateThinWithCost_kernel_measurable {n : Nat}
 theorem measurable_manuscriptCountThinningCost_joint {n : Nat}
     (threshold : Real) :
     Measurable (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-      manuscriptCountThinningCost z.1.1 z.1.2 threshold z.2) := by
+      ttcPseudocode.secondLoopCost z.1.1 z.1.2 threshold z.2) := by
   have hrounds : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-        firstExitRound z.1.1 z.1.2 threshold z.2) :=
+        ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2) :=
     measurable_firstExitRound_joint threshold
   have hcoords : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
@@ -203,19 +203,19 @@ theorem measurable_manuscriptCountThinningCost_joint {n : Nat}
   have hcard : Measurable
       (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) => z.1.1.X.card) :=
     (measurable_of_countable (fun s : Finset (SampleCopy n) => s.card)).comp hsamples
-  unfold manuscriptCountThinningCost
+  unfold ttcPseudocode.secondLoopCost
   exact hrounds.mul
     ((measurable_of_countable TTCRuntime.countThinningRoundOperations).comp hcard)
 
 theorem manuscriptCountThinWithCost_kernel_measurable {n : Nat}
     (threshold : Real) :
     Measurable (fun z : TTCState n × Nat =>
-      manuscriptCountThinWithCost z.1 z.2 threshold) := by
+      ttcPseudocode.secondLoopWithCost z.1 z.2 threshold) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   let G := fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-    (thinningResult z.1.1 z.1.2 threshold z.2,
-      manuscriptCountThinningCost z.1.1 z.1.2 threshold z.2)
+    (ttcPseudocode.secondLoopResult z.1.1 z.1.2 threshold z.2,
+      ttcPseudocode.secondLoopCost z.1.1 z.1.2 threshold z.2)
   have hG : Measurable G :=
     (measurable_thinningResult_joint threshold).prodMk
       (measurable_manuscriptCountThinningCost_joint threshold)
@@ -230,10 +230,10 @@ theorem manuscriptCountThinWithCost_kernel_measurable {n : Nat}
       (fun z : TTCState n × Nat =>
         (fairCoinStreamLaw.map (Prod.mk z)).map G) =
       (fun z : TTCState n × Nat =>
-        manuscriptCountThinWithCost z.1 z.2 threshold) := by
+        ttcPseudocode.secondLoopWithCost z.1 z.2 threshold) := by
     funext z
     rw [Measure.map_map hG measurable_prodMk_left]
-    unfold manuscriptCountThinWithCost
+    unfold ttcPseudocode.secondLoopWithCost
     rfl
   rw [← heq]
   exact hmap

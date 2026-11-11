@@ -16,7 +16,7 @@ them, in the order the algorithm calls them:
 * `GetPrecision` (line `line:getprec`, Algorithm `getprec`), with `MaxInscribedBall`
   computed by the Chebyshev-centre LP;
 * `ComputeVolume` (line `line:volume`): arlib-community's CV18 volume algorithm, followed by
-  the manuscript's clipping;
+  the paper's clipping;
 * `GenerateSamples` (line `line:sample`): arlib-community's Hit-and-Run walk, KV97
   randomized rounding and rejection.
 
@@ -317,19 +317,19 @@ def communityCV18VolumeLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     Measure.dirac (true, 0)
 
 /-- The paper's lower and upper clipping interval for a component volume estimate. -/
-def PolytopeData.manuscriptVolumeLower {n : Nat} (P : PolytopeData n)
+def PolytopeData.volumeClipLower {n : Nat} (P : PolytopeData n)
     (eta : Real) : NNReal :=
   Real.toNNReal ((1 - eta) * (2 * P.inradius / Real.sqrt n) ^ n)
 
-def PolytopeData.manuscriptVolumeUpper {n : Nat} (P : PolytopeData n)
+def PolytopeData.volumeClipUpper {n : Nat} (P : PolytopeData n)
     (eta : Real) : NNReal :=
   Real.toNNReal ((1 + eta) * (2 * P.outerRadius) ^ n)
 
 /-- Clip a CV18 result while preserving its diagnostic success tag. -/
-def PolytopeData.clipManuscriptVolume {n : Nat} (P : PolytopeData n)
+def PolytopeData.clipVolume {n : Nat} (P : PolytopeData n)
     (eta : Real) (o : VolumeOutcome) : VolumeOutcome :=
-  (o.1, max (P.manuscriptVolumeLower eta)
-    (min (P.manuscriptVolumeUpper eta) o.2))
+  (o.1, max (P.volumeClipLower eta)
+    (min (P.volumeClipUpper eta) o.2))
 
 /-! ## Line `line:sample`: `GenerateSamples` is Hit-and-Run, KV97 rounding and rejection -/
 
@@ -417,7 +417,7 @@ def hitAndRunOffset {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
 
 /-! ## Similarity-normalized finite-facet walk
 
-The manuscript's sampler bound uses the ratio of outer and inner radii. The
+The paper's sampler bound uses the ratio of outer and inner radii. The
 chart below gives its walk a unit inball before selecting its deadline.
 `Analysis/NormalizedHitAndRunGeometry.lean` proves the mapped law satisfies
 the KV97 TV contract. -/
@@ -472,7 +472,7 @@ def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
       (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
     (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b)
 
-/-- The manuscript sampler uses a unit-inball chart before each finite-facet walk. -/
+/-- The paper sampler uses a unit-inball chart before each finite-facet walk. -/
 def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
     (P : PolytopeData n) (b : Nat)
     (_hunit : 1 ≤ decimalScale b * P.inradius)
@@ -508,9 +508,9 @@ def failedSampleBatchLaw {n count : Nat} : Measure (SampleBatch n count) :=
 
 /-! ## Algorithm `ttc` -/
 
-/-- The concrete oracle bundle: community CV18 with the manuscript's post-CV18 clipping, and the
+/-- The concrete oracle bundle: community CV18 with the paper's post-CV18 clipping, and the
 normalized community Hit-and-Run walk followed by KV97 rounding and rejection. -/
-def communityManuscriptOracles {n k : Nat} (hn : 21 ≤ n)
+def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) : TTCOracles n k := by
   classical
   exact {
@@ -518,7 +518,7 @@ def communityManuscriptOracles {n k : Nat} (hn : 21 ≤ n)
     choosePrecision := fun D p => getPrecisionChoice D p
     ComputeVolume := fun P eta delta =>
       (communityCV18VolumeLaw (by omega) P eta delta).map
-        (P.clipManuscriptVolume eta)
+        (P.clipVolume eta)
     GenerateSamples := fun P count b eta _ =>
       if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
           (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
@@ -530,19 +530,24 @@ def communityManuscriptOracles {n k : Nat} (hn : 21 ≤ n)
 def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
     (prep : TTCPreprocessor n k) : Measure NNReal :=
-  ttcWith F hbounded params (communityManuscriptOracles hn prep)
+  ttcPseudocode F hbounded params (ttcSubroutines hn prep)
+
+/-- `t = Thresh · 10^{bn} · ComputeVolume(Pᵢ)` (line `line:volume`) of `ttc`; the same
+quantity as `ttcPseudocode.t`. -/
+abbrev ttc.t (b n : Nat) (Thresh : Real) (volumeEstimate : NNReal) : NNReal :=
+  ttcPseudocode.t b n Thresh volumeEstimate
 
 /-! ## The charged run (Theorem 3) -/
 
-/-- Charged implementations of the manuscript's two geometric calls. The
+/-- Charged implementations of the paper's two geometric calls. The
 CV18 charge includes its certified membership-query budget and the public
 non-query allowance factor; the sampler retains its random retry count. -/
-def communityManuscriptCostedOracles {n k : Nat} (hn : 21 ≤ n)
+def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) (cv18NonQueryFactor : Nat) :
     CostedTTCOracles n k := by
   classical
   exact
-    { base := communityManuscriptOracles hn prep
+    { base := ttcSubroutines hn prep
       computeVolumeWithCost := fun P eta delta =>
         let queries := CommunityCV18.queryBudgetFor (by omega) P eta delta
         let membership := TTCRuntime.membershipQueryOperations n
@@ -551,7 +556,7 @@ def communityManuscriptCostedOracles {n k : Nat} (hn : 21 ≤ n)
           TTCRuntime.membershipQueryOperations n P.presentation.facetCount
             (queries + 1)
         costedCharge
-          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)
+          ((ttcSubroutines hn prep).ComputeVolume P eta delta)
           (membership + nonQuery)
       generateSamplesWithCost := fun P count b eta _ =>
         if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
@@ -559,12 +564,12 @@ def communityManuscriptCostedOracles {n k : Nat} (hn : 21 ≤ n)
           normalizedHitAndRunBatchWithCostLaw P count b eta
         else costedCharge failedSampleBatchLaw 0 }
 
-def communityManuscriptTTCWithCost {n k : Nat} (hn : 21 ≤ n)
+def ttcWithCost {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations cv18NonQueryFactor : Nat) : Measure (NNReal × Nat) :=
-  manuscriptTTCWithCost F hbounded params
-    (communityManuscriptCostedOracles hn prep cv18NonQueryFactor)
+  ttcPseudocodeWithCost F hbounded params
+    (ttcCostedSubroutines hn prep cv18NonQueryFactor)
     preprocessingOperations
 
 /-! ## Constants in the Theorem 3 bound -/

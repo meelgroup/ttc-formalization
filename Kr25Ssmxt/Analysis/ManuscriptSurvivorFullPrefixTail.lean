@@ -113,14 +113,14 @@ theorem originalSurvivorExtension_prefix_eq_of_futurePrefix
 theorem thinningResult_eq_of_stop_and_prefix_eq
     {n : Nat} (s : TTCState n) (pending : Nat) (threshold : Real)
     (coins coins' : Nat × Nat → Bool)
-    (hstop : firstExitRound s pending threshold coins =
-      firstExitRound s pending threshold coins')
+    (hstop : ttcPseudocode.secondLoopExitRound s pending threshold coins =
+      ttcPseudocode.secondLoopExitRound s pending threshold coins')
     (hprefix : coinPrefix
-        (firstExitRound s pending threshold coins) coins =
-      coinPrefix (firstExitRound s pending threshold coins) coins') :
-    thinningResult s pending threshold coins =
-      thinningResult s pending threshold coins' := by
-  let rounds := firstExitRound s pending threshold coins
+        (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins =
+      coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins') :
+    ttcPseudocode.secondLoopResult s pending threshold coins =
+      ttcPseudocode.secondLoopResult s pending threshold coins' := by
+  let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
   have hsamples : samplesAfter coins rounds s.X =
       samplesAfter coins' rounds s.X := by
     calc
@@ -145,7 +145,7 @@ theorem thinningResult_eq_of_stop_and_prefix_eq
       _ = pendingAfter coins' rounds s.nextLabel pending :=
         pendingAfter_coinPrefix rounds rounds s.nextLabel pending
           (le_refl rounds) coins'
-  simp only [thinningResult]
+  simp only [ttcPseudocode.secondLoopResult]
   rw [← hstop]
   rw [hsamples, hpending]
 
@@ -161,7 +161,7 @@ theorem thinningResultSplitFinite_pairRead
     let active := originalSurvivorCoinRestriction preCoins preRounds
       s.nextLabel basePending z.2
     thinningResultSplitFinite s pending threshold old active =
-      thinningResult s pending threshold
+      ttcPseudocode.secondLoopResult s pending threshold
         (manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
           basePending origin z) := by
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
@@ -196,7 +196,7 @@ theorem thinningResultSplitFinite_pairRead
     _ = thinningResultSplit s pending threshold old fresh :=
       thinningResultSplit_fresh_coins_congr s pending threshold old
         _ _ hcoin
-    _ = thinningResult s pending threshold
+    _ = ttcPseudocode.secondLoopResult s pending threshold
         (manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
           basePending origin z) := by
       rw [hread]
@@ -248,7 +248,7 @@ theorem firstExitRoundSplit_pairRead
       firstExitRoundSplit s pending threshold old fresh :=
         firstExitRoundSplit_fresh_coins_congr s pending threshold old
           _ _ hcoin
-    _ = firstExitRound s pending threshold
+    _ = ttcPseudocode.secondLoopExitRound s pending threshold
         (manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
           basePending origin z) := by
       rw [hread]
@@ -307,8 +307,8 @@ theorem thinningResultSplitFinite_eq_of_fullObservation_eq
     manuscriptSurvivorPairRead_prefix_eq_of_fullPrefixes preCoins
       preRounds s.nextLabel basePending origin a b (stop a)
       (congrArg Prod.fst hsource) (congrArg Prod.snd hsource)
-  have hresult : thinningResult s pending threshold (read a) =
-      thinningResult s pending threshold (read b) :=
+  have hresult : ttcPseudocode.secondLoopResult s pending threshold (read a) =
+      ttcPseudocode.secondLoopResult s pending threshold (read b) :=
     thinningResult_eq_of_stop_and_prefix_eq s pending threshold
       (read a) (read b) hstop hread
   calc
@@ -317,10 +317,10 @@ theorem thinningResultSplitFinite_eq_of_fullObservation_eq
           (pair.1, (origin pair.2).2)))
         (originalSurvivorCoinRestriction preCoins preRounds
           s.nextLabel basePending a.2) =
-      thinningResult s pending threshold (read a) :=
+      ttcPseudocode.secondLoopResult s pending threshold (read a) :=
         thinningResultSplitFinite_pairRead s threshold preCoins
           preRounds basePending origin a hfresh
-    _ = thinningResult s pending threshold (read b) := hresult
+    _ = ttcPseudocode.secondLoopResult s pending threshold (read b) := hresult
     _ = thinningResultSplitFinite s pending threshold
         (fun pair => b.1 ((origin pair.2).1,
           (pair.1, (origin pair.2).2)))
@@ -378,7 +378,7 @@ theorem manuscriptSurvivorPair_fullPrefix_tail_product
     basePending origin
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
   let stop : (Nat × Nat → Bool) → Nat :=
-    fun coins => firstExitRound s pending threshold (read coins)
+    fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let rawObs : (Nat × Nat → Bool) → Nat × (Nat × Nat → Bool) :=
     fun coins => (stop coins, coinPrefix (stop coins) coins)
   let project : (Nat × (Nat × Nat → Bool)) →

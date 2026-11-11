@@ -99,10 +99,10 @@ theorem PolytopeData.innerCube_le_volume {n : Nat} (hn : 0 < n)
 theorem PolytopeData.manuscriptVolume_bounds {n : Nat}
     (hn : 0 < n) (P : PolytopeData n) (eta : Real)
     (heta0 : 0 ≤ eta) (heta1 : eta ≤ 1) :
-    (P.manuscriptVolumeLower eta : Real) ≤
+    (P.volumeClipLower eta : Real) ≤
       (volume P.carrier).toReal ∧
     (volume P.carrier).toReal ≤
-      (P.manuscriptVolumeUpper eta : Real) := by
+      (P.volumeClipUpper eta : Real) := by
   have hbaseLower := P.innerCube_le_volume hn
   have hbaseUpper := P.volume_le_outerCube
   have hlowFactor : 0 ≤ 1 - eta := by linarith
@@ -114,10 +114,10 @@ theorem PolytopeData.manuscriptVolume_bounds {n : Nat}
   have hhighPower : 0 ≤ (2 * P.outerRadius) ^ n := by
     exact pow_nonneg (mul_nonneg (by norm_num) P.outerRadius_nonneg) _
   constructor
-  · unfold PolytopeData.manuscriptVolumeLower
+  · unfold PolytopeData.volumeClipLower
     rw [Real.coe_toNNReal _ (mul_nonneg hlowFactor hlowPower)]
     nlinarith
-  · unfold PolytopeData.manuscriptVolumeUpper
+  · unfold PolytopeData.volumeClipUpper
     rw [Real.coe_toNNReal _ (mul_nonneg hhighFactor hhighPower)]
     nlinarith
 
@@ -125,7 +125,7 @@ theorem community_manuscript_volume_contract
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams) :
-    ComputeVolumeContract (communityManuscriptOracles hn prep)
+    ComputeVolumeContract (ttcSubroutines hn prep)
       F hbounded p := by
   apply community_manuscript_volume_contract_of_bounds hn prep F hbounded p
   dsimp only

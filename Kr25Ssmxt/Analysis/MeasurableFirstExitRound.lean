@@ -17,21 +17,21 @@ The least thinning-exit round, with `sInf ∅ = 0`, is measurable in the coin st
 INTERNAL: Measurability of the only unbounded control-flow choice in thinning.
 -/
 lemma measurable_firstExitRound {n : Nat} (s : TTCState n) (pending : Nat)
-    (threshold : Real) : Measurable (firstExitRound s pending threshold) := by
+    (threshold : Real) : Measurable (ttcPseudocode.secondLoopExitRound s pending threshold) := by
   apply measurable_to_countable'
   intro k
   cases k with
   | zero =>
       have hfiber :
-          (firstExitRound s pending threshold) ⁻¹' {0} =
+          (ttcPseudocode.secondLoopExitRound s pending threshold) ⁻¹' {0} =
             {coins : Nat × Nat → Bool |
-              thinningExit s pending threshold coins 0} ∪
+              ttcPseudocode.secondLoopExit s pending threshold coins 0} ∪
             ⋂ r, {coins : Nat × Nat → Bool |
-              thinningExit s pending threshold coins r}ᶜ := by
+              ttcPseudocode.secondLoopExit s pending threshold coins r}ᶜ := by
         ext coins
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union,
           Set.mem_setOf_eq, Set.mem_iInter, Set.mem_compl_iff]
-        rw [firstExitRound, Nat.sInf_eq_zero]
+        rw [ttcPseudocode.secondLoopExitRound, Nat.sInf_eq_zero]
         constructor
         · rintro (hexit | hempty)
           · exact Or.inl hexit
@@ -50,17 +50,17 @@ lemma measurable_firstExitRound {n : Nat} (s : TTCState n) (pending : Nat)
           (measurableSet_thinningExit s pending threshold r).compl)
   | succ k =>
       have hfiber :
-          (firstExitRound s pending threshold) ⁻¹' {k + 1} =
+          (ttcPseudocode.secondLoopExitRound s pending threshold) ⁻¹' {k + 1} =
             {coins : Nat × Nat → Bool |
-              thinningExit s pending threshold coins (k + 1)} ∩
+              ttcPseudocode.secondLoopExit s pending threshold coins (k + 1)} ∩
             {coins : Nat × Nat → Bool |
-              thinningExit s pending threshold coins k}ᶜ := by
+              ttcPseudocode.secondLoopExit s pending threshold coins k}ᶜ := by
         ext coins
         simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_inter_iff,
           Set.mem_setOf_eq, Set.mem_compl_iff]
         have hup : ∀ r₁ r₂ : Nat, r₁ ≤ r₂ →
-            r₁ ∈ {r | thinningExit s pending threshold coins r} →
-            r₂ ∈ {r | thinningExit s pending threshold coins r} := by
+            r₁ ∈ {r | ttcPseudocode.secondLoopExit s pending threshold coins r} →
+            r₂ ∈ {r | ttcPseudocode.secondLoopExit s pending threshold coins r} := by
           intro r₁ r₂ hr hexit
           exact thinningExit_mono_rounds s pending threshold coins hr hexit
         exact Nat.sInf_upward_closed_eq_succ_iff hup k

@@ -112,7 +112,7 @@ theorem ttc_expected_runtime_theorem3_input_scale {n k : Nat} (hn : 21 ≤ n)
     (preprocessingOperations : Nat) :
     let D := prep.run F hbounded
     ∫⁻ result, (result.2 : ENNReal) ∂
-      communityManuscriptTTCWithCost hn F hbounded p prep
+      ttcWithCost hn F hbounded p prep
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *

@@ -14,7 +14,7 @@ noncomputable def communityManuscriptComponentVolumeTrace
     (eta delta threshold : Real) (state : TTCState n) :
     Measure ((VolumeOutcome × Nat) × (TTCState n × Nat)) :=
   costedBindTrace
-    ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+    ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
       P eta delta)
     (communityCostedComponentTail hn prep factor P b eta delta threshold state)
 
@@ -25,7 +25,7 @@ theorem communityManuscriptComponentVolumeTrace_fst
     (state : TTCState n) :
     (communityManuscriptComponentVolumeTrace hn prep factor P b eta delta
       threshold state).map Prod.fst =
-    (communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+    (ttcCostedSubroutines hn prep factor).computeVolumeWithCost
       P eta delta := by
   unfold communityManuscriptComponentVolumeTrace
   apply costedBindTrace_fst
@@ -34,7 +34,7 @@ theorem communityManuscriptComponentVolumeTrace_fst
   · intro outcome
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (ttc.t b n threshold outcome.2)⟩
+      (ttcPseudocode.t b n threshold outcome.2)⟩
 
 theorem communityManuscriptComponentVolumeTrace_snd
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -43,12 +43,12 @@ theorem communityManuscriptComponentVolumeTrace_snd
     (state : TTCState n) :
     (communityManuscriptComponentVolumeTrace hn prep factor P b eta delta
       threshold state).map Prod.snd =
-    manuscriptProcessComponentWithCost
-      (communityManuscriptCostedOracles hn prep factor)
+    ttcPseudocode.stepWithCost
+      (ttcCostedSubroutines hn prep factor)
       b eta delta threshold P state := by
   unfold communityManuscriptComponentVolumeTrace
   change (costedBindTrace
-    ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+    ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
       P eta delta)
     (communityCostedComponentTail hn prep factor P b eta delta threshold state)).map
       Prod.snd = costedBind _ _
@@ -58,7 +58,7 @@ theorem communityManuscriptComponentVolumeTrace_snd
   · intro outcome
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (ttc.t b n threshold outcome.2)⟩
+      (ttcPseudocode.t b n threshold outcome.2)⟩
 
 /-- Forgetting the oracle's operation charge recovers the exact clipped CV18
 outcome law used by the uncharged manuscript program. -/
@@ -69,7 +69,7 @@ theorem communityManuscriptComponentVolumeTrace_volumeOutcome
     (state : TTCState n) :
     (communityManuscriptComponentVolumeTrace hn prep factor P b eta delta
       threshold state).map (fun result => result.1.1) =
-    (communityManuscriptOracles hn prep).ComputeVolume P eta delta := by
+    (ttcSubroutines hn prep).ComputeVolume P eta delta := by
   have hfst := communityManuscriptComponentVolumeTrace_fst hn prep factor P
     b eta delta threshold hthreshold state
   have hvolume := communityManuscriptCosted_volume_fst hn prep factor
@@ -91,11 +91,11 @@ theorem communityManuscriptComponentVolumeTrace_measurable
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (hvolume : IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta)) :
     Measurable (communityManuscriptComponentVolumeTrace hn prep factor P b
       eta delta threshold) := by
-  let first := (communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+  let first := (ttcCostedSubroutines hn prep factor).computeVolumeWithCost
     P eta delta
   let tail : TTCState n × (VolumeOutcome × Nat) →
       Measure (TTCState n × Nat) := fun z =>
@@ -117,7 +117,7 @@ theorem communityManuscriptComponentVolumeTrace_measurable
       IsProbabilityMeasure (tail z) := by
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold z.1
-      (ttc.t b n threshold z.2.1.2)⟩
+      (ttcPseudocode.t b n threshold z.2.1.2)⟩
   let out : (TTCState n × (VolumeOutcome × Nat)) ×
       (TTCState n × Nat) →
       (VolumeOutcome × Nat) × (TTCState n × Nat) :=
@@ -149,13 +149,13 @@ theorem communityManuscriptComponentVolumeTrace_isProbabilityMeasure
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n)
     (hvolume : IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta)) :
     IsProbabilityMeasure
       (communityManuscriptComponentVolumeTrace hn prep factor P b eta delta
         threshold state) := by
   letI : IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta) := hvolume
   unfold communityManuscriptComponentVolumeTrace
   apply costedBindTrace_isProbabilityMeasure
@@ -164,6 +164,6 @@ theorem communityManuscriptComponentVolumeTrace_isProbabilityMeasure
   · intro outcome
     exact ⟨community_manuscript_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (ttc.t b n threshold outcome.2)⟩
+      (ttcPseudocode.t b n threshold outcome.2)⟩
 
 end Kr25Ssmxt

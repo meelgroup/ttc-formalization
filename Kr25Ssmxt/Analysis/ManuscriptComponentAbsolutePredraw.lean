@@ -13,35 +13,35 @@ theorem communityManuscriptComponentGivenVolume_absolute_predraw
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (outcome : VolumeOutcome) (state : TTCState n)
     (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :
-    let intensity := ttc.t b n threshold outcome.2
+    let intensity := ttcPseudocode.t b n threshold outcome.2
     let deleted := state.removeComponent P
     communityManuscriptComponentGivenVolume hn prep P b eta delta threshold
       outcome state =
     ((poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
-          thinningResult
-            (manuscriptRateThinningResult deleted intensity threshold activeCoins)
+          ttcPseudocode.secondLoopResult
+            (ttcPseudocode.firstLoopResult deleted intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + manuscriptRateExit deleted intensity threshold)
+              (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
               deleted.nextLabel basePending)
             threshold
-            (shiftCoins (manuscriptRateExit deleted intensity threshold)
+            (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
               activeCoins)).bind fun second =>
-        ((communityManuscriptOracles hn prep).GenerateSamples P second.2
+        ((ttcSubroutines hn prep).GenerateSamples P second.2
           b eta delta).map fun batch => second.1.addBatch batch.2 := by
   dsimp only
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
+    ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hK : Measurable K := by
     have hcost := community_manuscript_sample_append_kernel_measurable
       hn prep 1 P b eta delta
     have heq : K = fun second : TTCState n × Nat =>
         (costedBind
-          ((communityManuscriptCostedOracles hn prep 1).generateSamplesWithCost
+          ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
             P second.2 b eta delta)
           (fun batch => costedCharge
             (Measure.dirac (second.1.addBatch batch.2))
@@ -51,12 +51,12 @@ theorem communityManuscriptComponentGivenVolume_absolute_predraw
         second.2 b eta delta second.1).symm
     rw [heq]
     exact (Measure.measurable_map _ measurable_fst).comp hcost
-  let firstLaw := manuscriptRateThinUntil deleted intensity threshold
+  let firstLaw := ttcPseudocode.firstLoop deleted intensity threshold
   let pendingLaw : TTCState n → Measure Nat :=
     fun first => poissonMeasure (intensity * first.p)
   let secondLaw : TTCState n → Measure (TTCState n × Nat) :=
     fun first => (pendingLaw first).bind fun pending =>
-      thinUntil first pending threshold
+      ttcPseudocode.secondLoop first pending threshold
   have hrateDeleted : deleted.p = 1 / (2 : NNReal) ^ level := hrate
   have hstateRate : Measurable (fun first : TTCState n => first.p) :=
     measurable_fst.comp
@@ -68,19 +68,19 @@ theorem communityManuscriptComponentGivenVolume_absolute_predraw
   have hsecond : Measurable secondLaw :=
     measurable_parametric_probability_bind pendingLaw hpending
       (fun _ => inferInstance)
-      (fun pair : TTCState n × Nat => thinUntil pair.1 pair.2 threshold)
+      (fun pair : TTCState n × Nat => ttcPseudocode.secondLoop pair.1 pair.2 threshold)
       (thinUntil_kernel_measurable threshold)
   unfold communityManuscriptComponentGivenVolume
   change firstLaw.bind (fun first =>
     (pendingLaw first).bind fun pending =>
-      (thinUntil first pending threshold).bind K) = _
+      (ttcPseudocode.secondLoop first pending threshold).bind K) = _
   have hinner (first : TTCState n) :
       (pendingLaw first).bind (fun pending =>
-        (thinUntil first pending threshold).bind K) =
+        (ttcPseudocode.secondLoop first pending threshold).bind K) =
       (secondLaw first).bind K := by
     exact (Measure.bind_bind
       (Measurable.of_discrete :
-        Measurable (fun pending : Nat => thinUntil first pending threshold)).aemeasurable
+        Measurable (fun pending : Nat => ttcPseudocode.secondLoop first pending threshold)).aemeasurable
       hK.aemeasurable).symm
   simp_rw [hinner]
   rw [← Measure.bind_bind hsecond.aemeasurable hK.aemeasurable]

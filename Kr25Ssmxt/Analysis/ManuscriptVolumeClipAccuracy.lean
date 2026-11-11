@@ -31,29 +31,29 @@ open MeasureTheory
 theorem PolytopeData.clipManuscriptVolumeLaw_spec {n : Nat}
     (P : PolytopeData n) (mu : Measure VolumeOutcome)
     [IsProbabilityMeasure mu] (eta delta : Real) (heta : 0 ≤ eta)
-    (hlower : (P.manuscriptVolumeLower eta : Real) ≤
+    (hlower : (P.volumeClipLower eta : Real) ≤
       (volume P.carrier).toReal)
     (hupper : (volume P.carrier).toReal ≤
-      (P.manuscriptVolumeUpper eta : Real))
+      (P.volumeClipUpper eta : Real))
     (hfail : mu.real {o | o.1 = false} ≤ delta)
     (hacc : ∀ᵐ o ∂mu, o.1 = true →
       (o.2 : Real) ∈ Arlib.relErr eta (volume P.carrier).toReal) :
-    IsProbabilityMeasure (mu.map (P.clipManuscriptVolume eta)) ∧
-      (mu.map (P.clipManuscriptVolume eta)).real {o | o.1 = false} ≤ delta ∧
-      ∀ᵐ o ∂mu.map (P.clipManuscriptVolume eta), o.1 = true →
+    IsProbabilityMeasure (mu.map (P.clipVolume eta)) ∧
+      (mu.map (P.clipVolume eta)).real {o | o.1 = false} ≤ delta ∧
+      ∀ᵐ o ∂mu.map (P.clipVolume eta), o.1 = true →
         (o.2 : Real) ∈ Arlib.relErr eta (volume P.carrier).toReal := by
-  have hmap : Measurable (P.clipManuscriptVolume eta) :=
+  have hmap : Measurable (P.clipVolume eta) :=
     P.measurable_clipManuscriptVolume eta
   refine ⟨Measure.isProbabilityMeasure_map hmap.aemeasurable, ?_, ?_⟩
   · rw [Measure.real, Measure.map_apply hmap (by measurability)]
-    simpa [Measure.real, PolytopeData.clipManuscriptVolume] using hfail
+    simpa [Measure.real, PolytopeData.clipVolume] using hfail
   · rw [ae_map_iff hmap.aemeasurable (by measurability)]
     filter_upwards [hacc] with o ho
     intro htag
     have htrue : 0 ≤ (volume P.carrier).toReal := ENNReal.toReal_nonneg
     have hraw := ho htag
-    change ((max (P.manuscriptVolumeLower eta)
-      (min (P.manuscriptVolumeUpper eta) o.2) : NNReal) : Real) ∈
+    change ((max (P.volumeClipLower eta)
+      (min (P.volumeClipUpper eta) o.2) : NNReal) : Real) ∈
         Arlib.relErr eta (volume P.carrier).toReal
     simpa only [NNReal.coe_max, NNReal.coe_min] using
       (manuscript_volume_clip_preserves_relErr _ _ _ _ _
@@ -66,11 +66,11 @@ theorem community_manuscript_volume_contract_of_bounds
     (hbounds :
       let D := prep.run F hbounded
       ∀ i : Fin D.componentCount,
-        ((D.component i).manuscriptVolumeLower p.ε' : Real) ≤
+        ((D.component i).volumeClipLower p.ε' : Real) ≤
           (volume (D.component i).carrier).toReal ∧
         (volume (D.component i).carrier).toReal ≤
-          ((D.component i).manuscriptVolumeUpper p.ε' : Real)) :
-    ComputeVolumeContract (communityManuscriptOracles hn prep)
+          ((D.component i).volumeClipUpper p.ε' : Real)) :
+    ComputeVolumeContract (ttcSubroutines hn prep)
       F hbounded p := by
   let D := prep.run F hbounded
   intro i
@@ -88,6 +88,6 @@ theorem community_manuscript_volume_contract_of_bounds
     p.ε' (p.δ' D.componentCount)
     (div_nonneg p.epsilon_pos.le (by norm_num))
     (hbounds i).1 (hbounds i).2 hspec.2.1 hspec.2.2
-  simpa only [communityManuscriptOracles, D] using hclip
+  simpa only [ttcSubroutines, D] using hclip
 
 end Kr25Ssmxt

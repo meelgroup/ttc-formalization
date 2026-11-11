@@ -18,8 +18,8 @@ the coin stream.
 INTERNAL: Giry-monad bookkeeping for the paper's unbounded thinning loop.
 -/
 lemma measurable_thinningResult {n : Nat} (s : TTCState n) (pending : Nat)
-    (threshold : Real) : Measurable (thinningResult s pending threshold) := by
-  let exitRound := firstExitRound s pending threshold
+    (threshold : Real) : Measurable (ttcPseudocode.secondLoopResult s pending threshold) := by
+  let exitRound := ttcPseudocode.secondLoopExitRound s pending threshold
   have hexitRound : Measurable exitRound :=
     measurable_firstExitRound s pending threshold
   have hcoinsRound : Measurable (fun coins : Nat × Nat → Bool =>

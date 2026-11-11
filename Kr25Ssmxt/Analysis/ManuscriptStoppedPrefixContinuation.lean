@@ -46,11 +46,11 @@ theorem firstExitRoundSplit_stoppedPrefix_shift_bind
         (Nat × Nat → Bool) × (Nat × Nat → Bool) :=
       fun coins =>
         (stoppedCoinPrefix s pending threshold coins,
-          shiftCoins (firstExitRound s pending threshold coins) coins)
+          shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)
     have hH : Measurable H :=
       (measurable_stoppedCoinPrefix s pending threshold).prodMk
         ((measurable_stoppedCoinPair
-          (firstExitRound s pending threshold)
+          (ttcPseudocode.secondLoopExitRound s pending threshold)
           (measurable_firstExitRound s pending threshold)).snd)
     have hpath : split = H ∘ merge := by
       funext pair

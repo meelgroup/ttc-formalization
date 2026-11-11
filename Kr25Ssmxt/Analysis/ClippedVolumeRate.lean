@@ -63,7 +63,7 @@ theorem PolytopeData.inradius_le_outerRadius {n : Nat}
 theorem PolytopeData.manuscriptVolumeClip_le_outer_pow {n : Nat}
     (P : PolytopeData n) (hn : 21 ≤ n) {eta : Real}
     (heta0 : 0 < eta) (heta1 : eta ≤ 1) :
-    max (P.manuscriptVolumeLower eta) (P.manuscriptVolumeUpper eta) ≤
+    max (P.volumeClipLower eta) (P.volumeClipUpper eta) ≤
       Real.toNNReal (2 * (4 * P.outerRadius) ^ n) := by
   have hγR : P.inradius ≤ P.outerRadius :=
     P.inradius_le_outerRadius (by omega)
@@ -85,7 +85,7 @@ theorem PolytopeData.manuscriptVolumeClip_le_outer_pow {n : Nat}
     gcongr
     nlinarith
   apply max_le
-  · unfold PolytopeData.manuscriptVolumeLower
+  · unfold PolytopeData.volumeClipLower
     apply Real.toNNReal_mono
     have hcoeff : 0 ≤ 1 - eta := by linarith
     have hcoeff2 : 1 - eta ≤ 2 := by linarith
@@ -94,7 +94,7 @@ theorem PolytopeData.manuscriptVolumeClip_le_outer_pow {n : Nat}
           2 * (2 * P.inradius / Real.sqrt n) ^ n := by
         gcongr
       _ ≤ 2 * (4 * P.outerRadius) ^ n := by gcongr
-  · unfold PolytopeData.manuscriptVolumeUpper
+  · unfold PolytopeData.volumeClipUpper
     apply Real.toNNReal_mono
     have hcoeff : 1 + eta ≤ 2 := by linarith
     calc
@@ -106,14 +106,14 @@ theorem Decomposition.clippedVolume_clog_le_outerRadiusMax
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
-    let v := max ((D.component i).manuscriptVolumeLower p.ε')
-      ((D.component i).manuscriptVolumeUpper p.ε')
+    let v := max ((D.component i).volumeClipLower p.ε')
+      ((D.component i).volumeClipUpper p.ε')
     Nat.clog 2 (Nat.ceil (v : Real) + 1) ≤
       2 + n * Nat.clog 2
         (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1) := by
   let P := D.component i
-  let v := max (P.manuscriptVolumeLower p.ε')
-    (P.manuscriptVolumeUpper p.ε')
+  let v := max (P.volumeClipLower p.ε')
+    (P.volumeClipUpper p.ε')
   have heta0 : 0 < p.ε' := by
     dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
@@ -148,15 +148,15 @@ theorem Decomposition.manuscriptRate_clog_le_precision_outerRadius
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (i : Fin D.componentCount) :
-    let v := max ((D.component i).manuscriptVolumeLower p.ε')
-      ((D.component i).manuscriptVolumeUpper p.ε')
+    let v := max ((D.component i).volumeClipLower p.ε')
+      ((D.component i).volumeClipUpper p.ε')
     Nat.clog 2
-      (Nat.ceil (((ttc.t b n (p.Thresh D.componentCount) v : NNReal) :
+      (Nat.ceil (((ttcPseudocode.t b n (p.Thresh D.componentCount) v : NNReal) :
         Real) / p.Thresh D.componentCount) + 1) ≤
       4 * (b * n) + 2 + n * Nat.clog 2
         (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1) := by
-  let v := max ((D.component i).manuscriptVolumeLower p.ε')
-    ((D.component i).manuscriptVolumeUpper p.ε')
+  let v := max ((D.component i).volumeClipLower p.ε')
+    ((D.component i).volumeClipUpper p.ε')
   have hfirst := manuscript_rate_clog_le_linear_precision b n
     (p.threshold_pos D.componentCount) v
   have hsecond := D.clippedVolume_clog_le_outerRadiusMax hn p i

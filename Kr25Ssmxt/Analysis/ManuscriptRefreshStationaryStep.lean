@@ -68,7 +68,7 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_tailFair_of_prefix
     (hthreshold : 0 < threshold)
     (basePending : Nat) (preCoins : Nat × Nat → Bool)
     (tape : Nat → LatticePoint n) (pre : Nat × (Nat × Nat) → Bool) :
-    let rounds := manuscriptRateExit (c.state.removeComponent P)
+    let rounds := ttcPseudocode.firstLoopExit (c.state.removeComponent P)
       intensity threshold
     ManuscriptOriginTailFair
       (((Measure.infinitePi
@@ -91,11 +91,11 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_tailFair_of_prefix
     dsimp [μ]
     infer_instance
   let deleted := c.state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let glue := manuscriptGlobalSourceGlue rounds pre
   let firstOf : (Nat × (Nat × Nat) → Bool) → TTCState n := fun old =>
-    manuscriptRateThinningResult deleted intensity threshold
+    ttcPseudocode.firstLoopResult deleted intensity threshold
       (manuscriptSourceOldCoins c.origin
         (c.refreshFuture old).source.coins c.level)
   let first := firstOf (glue (fun _ => false))
@@ -167,7 +167,7 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_tailFair_of_prefix
     rw [hcomp]
     exact fairCoinStreamLaw_jointSurvivorRead preCoins preRounds
       first.nextLabel basePending c.source.processed c.origin hhistory
-  have hguard : ∀ᵐ y ∂μ, thinningExit first pending threshold (read y)
+  have hguard : ∀ᵐ y ∂μ, ttcPseudocode.secondLoopExit first pending threshold (read y)
       (manuscriptSurvivorPairStop first threshold preCoins preRounds
         basePending c.origin y) := by
     have h := firstExitRound_guard_ae first pending threshold hthreshold.le
@@ -242,7 +242,7 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_tailFair
   let _ : IsProbabilityMeasure μ := by
     dsimp [μ]
     infer_instance
-  let rounds := manuscriptRateExit (c.state.removeComponent P)
+  let rounds := ttcPseudocode.firstLoopExit (c.state.removeComponent P)
     intensity threshold
   let lam := sourceLaw.map (manuscriptGlobalSourcePrefix rounds)
   let split : (Nat × (Nat × Nat) → Bool) × (Nat × Nat → Bool) →

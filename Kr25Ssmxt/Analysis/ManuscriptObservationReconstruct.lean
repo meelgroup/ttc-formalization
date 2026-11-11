@@ -74,28 +74,28 @@ theorem coinPrefix_idem (rounds : Nat) (coins : Nat × Nat → Bool) :
 observed strictly before it. -/
 theorem firstExitRound_eq_of_prefix_eq {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (coins other : Nat × Nat → Bool)
-    (hexit : thinningExit s pending threshold coins
-      (firstExitRound s pending threshold coins))
-    (hprefix : coinPrefix (firstExitRound s pending threshold coins) other =
-      coinPrefix (firstExitRound s pending threshold coins) coins) :
-    firstExitRound s pending threshold other =
-      firstExitRound s pending threshold coins := by
-  let k := firstExitRound s pending threshold coins
-  have hiff : ∀ r ≤ k, thinningExit s pending threshold other r ↔
-      thinningExit s pending threshold coins r := by
+    (hexit : ttcPseudocode.secondLoopExit s pending threshold coins
+      (ttcPseudocode.secondLoopExitRound s pending threshold coins))
+    (hprefix : coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold coins) other =
+      coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins) :
+    ttcPseudocode.secondLoopExitRound s pending threshold other =
+      ttcPseudocode.secondLoopExitRound s pending threshold coins := by
+  let k := ttcPseudocode.secondLoopExitRound s pending threshold coins
+  have hiff : ∀ r ≤ k, ttcPseudocode.secondLoopExit s pending threshold other r ↔
+      ttcPseudocode.secondLoopExit s pending threshold coins r := by
     intro r hr
     rw [← thinningExit_coinPrefix_iff s pending k r hr threshold other,
       ← thinningExit_coinPrefix_iff s pending k r hr threshold coins]
     rw [hprefix]
-  have hexitOther : thinningExit s pending threshold other k :=
+  have hexitOther : ttcPseudocode.secondLoopExit s pending threshold other k :=
     (hiff k le_rfl).2 hexit
-  have hle : firstExitRound s pending threshold other ≤ k :=
+  have hle : ttcPseudocode.secondLoopExitRound s pending threshold other ≤ k :=
     Nat.sInf_le hexitOther
-  have hmem : thinningExit s pending threshold other
-      (firstExitRound s pending threshold other) :=
-    Nat.sInf_mem (s := {r | thinningExit s pending threshold other r})
+  have hmem : ttcPseudocode.secondLoopExit s pending threshold other
+      (ttcPseudocode.secondLoopExitRound s pending threshold other) :=
+    Nat.sInf_mem (s := {r | ttcPseudocode.secondLoopExit s pending threshold other r})
       ⟨k, hexitOther⟩
-  have hge : k ≤ firstExitRound s pending threshold other :=
+  have hge : k ≤ ttcPseudocode.secondLoopExitRound s pending threshold other :=
     Nat.sInf_le ((hiff _ hle).1 hmem)
   exact le_antisymm hle hge
 
@@ -106,7 +106,7 @@ theorem manuscriptSurvivorPairFullObservation_reconstruct
     (preCoins : Nat × Nat → Bool) (preRounds basePending : Nat)
     (origin : Nat → Nat × Nat)
     (y : (Nat × (Nat × Nat) → Bool) × (Nat × Nat → Bool))
-    (hexit : thinningExit s
+    (hexit : ttcPseudocode.secondLoopExit s
       (pendingAfter preCoins preRounds s.nextLabel basePending) threshold
       (manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
         basePending origin y)

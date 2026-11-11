@@ -138,12 +138,12 @@ theorem firstExitRound_shift_law {n : Nat}
     (s : TTCState n) (pending : Nat) (threshold : Real)
     (hthreshold : 0 ≤ threshold) :
     fairCoinStreamLaw.map
-      (fun coins => (firstExitRound s pending threshold coins,
-        shiftCoins (firstExitRound s pending threshold coins) coins)) =
-    (fairCoinStreamLaw.map (firstExitRound s pending threshold)).prod
+      (fun coins => (ttcPseudocode.secondLoopExitRound s pending threshold coins,
+        shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) =
+    (fairCoinStreamLaw.map (ttcPseudocode.secondLoopExitRound s pending threshold)).prod
       fairCoinStreamLaw := by
   exact fairCoinStreamLaw_stopped_shift
-    (firstExitRound s pending threshold)
+    (ttcPseudocode.secondLoopExitRound s pending threshold)
     (measurable_firstExitRound s pending threshold)
     (fun rounds B hB => firstExitRound_event_shift_indep s pending
       threshold hthreshold rounds B hB)
@@ -164,16 +164,16 @@ theorem firstExitRoundSplit_merged_shift_law {n : Nat}
     mergeCoinsAtLabel s.nextLabel pair.1 pair.2
   have hmerge : Measurable merge :=
     measurable_mergeCoinsAtLabel_pair s.nextLabel
-  have hstop : Measurable (firstExitRound s pending threshold) :=
+  have hstop : Measurable (ttcPseudocode.secondLoopExitRound s pending threshold) :=
     measurable_firstExitRound s pending threshold
   have hpath (pair : (Nat × Nat → Bool) × (Nat × Nat → Bool)) :
       firstExitRoundSplit s pending threshold pair.1 pair.2 =
-      firstExitRound s pending threshold (merge pair) :=
+      ttcPseudocode.secondLoopExitRound s pending threshold (merge pair) :=
     (firstExitRound_mergeCoinsAtLabel s pending threshold pair.1
       pair.2 hfresh).symm
   have hpair : Measurable (fun coins =>
-      (firstExitRound s pending threshold coins,
-        shiftCoins (firstExitRound s pending threshold coins) coins)) :=
+      (ttcPseudocode.secondLoopExitRound s pending threshold coins,
+        shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) :=
     measurable_stoppedCoinPair _ hstop
   calc
     (fairCoinStreamLaw.prod fairCoinStreamLaw).map
@@ -181,23 +181,23 @@ theorem firstExitRoundSplit_merged_shift_law {n : Nat}
           let rounds := firstExitRoundSplit s pending threshold pair.1 pair.2
           (rounds, shiftCoins rounds (merge pair))) =
       (fairCoinStreamLaw.prod fairCoinStreamLaw).map
-        ((fun coins => (firstExitRound s pending threshold coins,
-          shiftCoins (firstExitRound s pending threshold coins) coins)) ∘
+        ((fun coins => (ttcPseudocode.secondLoopExitRound s pending threshold coins,
+          shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) ∘
             merge) := by
               congr 1
               funext pair
               simp only [Function.comp_apply]
               rw [← hpath pair]
     _ = ((fairCoinStreamLaw.prod fairCoinStreamLaw).map merge).map
-        (fun coins => (firstExitRound s pending threshold coins,
-          shiftCoins (firstExitRound s pending threshold coins) coins)) := by
+        (fun coins => (ttcPseudocode.secondLoopExitRound s pending threshold coins,
+          shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) := by
             rw [Measure.map_map hpair hmerge]
     _ = fairCoinStreamLaw.map
-        (fun coins => (firstExitRound s pending threshold coins,
-          shiftCoins (firstExitRound s pending threshold coins) coins)) := by
+        (fun coins => (ttcPseudocode.secondLoopExitRound s pending threshold coins,
+          shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) := by
             rw [fairCoinStreamLaw_mergeLabels s.nextLabel]
     _ = (fairCoinStreamLaw.map
-        (firstExitRound s pending threshold)).prod fairCoinStreamLaw :=
+        (ttcPseudocode.secondLoopExitRound s pending threshold)).prod fairCoinStreamLaw :=
           firstExitRound_shift_law s pending threshold hthreshold
     _ = ((fairCoinStreamLaw.prod fairCoinStreamLaw).map
         (fun pair => firstExitRoundSplit s pending threshold pair.1 pair.2)).prod
@@ -206,15 +206,15 @@ theorem firstExitRoundSplit_merged_shift_law {n : Nat}
                 (fun pair => firstExitRoundSplit s pending threshold pair.1
                   pair.2) =
                 fairCoinStreamLaw.map
-                  (firstExitRound s pending threshold) := by
+                  (ttcPseudocode.secondLoopExitRound s pending threshold) := by
               calc
                 _ = (fairCoinStreamLaw.prod fairCoinStreamLaw).map
-                    ((firstExitRound s pending threshold) ∘ merge) := by
+                    ((ttcPseudocode.secondLoopExitRound s pending threshold) ∘ merge) := by
                       congr 1
                       funext pair
                       exact hpath pair
                 _ = ((fairCoinStreamLaw.prod fairCoinStreamLaw).map merge).map
-                    (firstExitRound s pending threshold) := by
+                    (ttcPseudocode.secondLoopExitRound s pending threshold) := by
                       rw [Measure.map_map hstop hmerge]
                 _ = _ := by rw [fairCoinStreamLaw_mergeLabels s.nextLabel]
             rw [hstopMap]

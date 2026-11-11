@@ -38,8 +38,8 @@ theorem manuscript_point_intensity_bounds
     (hpointMass : pointMass ∈
       Arlib.relErr ε' (1 / (cardinality : Real))) :
     threshold * (1 - ε') ^ 2 * (1 - latticeEta) * (rate : Real) ≤
-      (ttc.t b n threshold volumeEstimate : Real) * rate * pointMass ∧
-    (ttc.t b n threshold volumeEstimate : Real) * rate * pointMass ≤
+      (ttcPseudocode.t b n threshold volumeEstimate : Real) * rate * pointMass ∧
+    (ttcPseudocode.t b n threshold volumeEstimate : Real) * rate * pointMass ≤
       threshold * (1 + ε') ^ 2 * (1 + latticeEta) * (rate : Real) := by
   let scale : Real := (10 : Real) ^ (b * n)
   have hscale : 0 < scale := by dsimp [scale]; positivity
@@ -48,9 +48,9 @@ theorem manuscript_point_intensity_bounds
     ε' latticeEta cardinality hcardinality
     rate.coe_nonneg hscale hepsilonPrime hepsilonPrime_le_one
     hlatticeEta hlatticeEta_le_one hvolumeEstimate hcomponentVolume hpointMass
-  have hintensity : (ttc.t b n threshold volumeEstimate : Real) =
+  have hintensity : (ttcPseudocode.t b n threshold volumeEstimate : Real) =
       threshold * scale * volumeEstimate := by
-    simp [ttc.t, scale, Real.coe_toNNReal threshold hthreshold]
+    simp [ttcPseudocode.t, scale, Real.coe_toNNReal threshold hthreshold]
   have hfactor : 0 ≤ threshold * scale := mul_nonneg hthreshold hscale.le
   constructor
   · have h := mul_le_mul_of_nonneg_left hbase.1 hfactor
@@ -88,7 +88,7 @@ theorem manuscriptIntensity_le_four_thirds
       Arlib.relErr p.ε' trueVolume)
     (hlattice : trueVolume ∈ Arlib.relErr p.latticeEta
       ((componentCount : Real) / (10 : Real) ^ (b * n))) :
-    (ttc.t b n threshold volumeEstimate : Real) ≤
+    (ttcPseudocode.t b n threshold volumeEstimate : Real) ≤
       (4 / 3) * threshold * totalCount := by
   let scale : Real := (10 : Real) ^ (b * n)
   have hscale : 0 < scale := by dsimp [scale]; positivity
@@ -115,9 +115,9 @@ theorem manuscriptIntensity_le_four_thirds
         field_simp
   have hcountR : (componentCount : Real) ≤ totalCount := by exact_mod_cast hcount
   have hnonneg : 0 ≤ (componentCount : Real) := Nat.cast_nonneg _
-  have hintensity : (ttc.t b n threshold volumeEstimate : Real) =
+  have hintensity : (ttcPseudocode.t b n threshold volumeEstimate : Real) =
       threshold * scale * volumeEstimate := by
-    simp [ttc.t, scale, Real.coe_toNNReal threshold hthreshold]
+    simp [ttcPseudocode.t, scale, Real.coe_toNNReal threshold hthreshold]
   rw [hintensity]
   calc
     threshold * scale * volumeEstimate = threshold * (scale * volumeEstimate) := by ring

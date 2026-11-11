@@ -13,8 +13,16 @@ open MeasureTheory
 # The public TTC theorems
 
 Both statements concern `ttc`, the TTC algorithm printed in the
-current manuscript (Algorithm 1), run with the concrete arlib-community CV18 volume
+current paper (Algorithm 1), run with the concrete arlib-community CV18 volume
 oracle (clipped as in the paper) and the normalized Hit-and-Run/KV97 sampler.
+
+Where the definitions are:
+* `Model/Program.lean` — `ttcPseudocode F params O`: Algorithm 1's control flow (loops, thinning,
+  Poisson draw, output `Est`) with its subroutines `O` left open.
+* `Model/Run.lean` — the concrete subroutines (`GetPrecision` via the Chebyshev LP,
+  `ComputeVolume` = CV18 + clipping, `GenerateSamples` = Hit-and-Run + KV97 rounding +
+  rejection), and `ttc := ttcPseudocode F params (those subroutines)`, the object of Theorem 1.
+  `ttcWithCost` is the same run with operation counts, the object of Theorem 3.
 
 * Theorem 1: the output is an `ε`-relative estimate of the volume of the projected
   solution set with probability at least `1 - δ`. No prior-work hypothesis is assumed.
@@ -24,7 +32,7 @@ oracle (clipped as in the paper) and the normalized Hit-and-Run/KV97 sampler.
   A Lean polylogarithmic estimate for the imported CV18 scheduled factors remains open.
 -/
 
-/-- Theorem 1 for the current manuscript TTC program: with the concrete
+/-- Theorem 1 for the current paper TTC program: with the concrete
 CV18 and normalized Hit-and-Run/KV97 oracles, the output is within relative
 error `ε` of the Lebesgue volume of the existentially projected solution set
 with probability at least `1 - δ`.  It has no prior-work hypothesis and no
@@ -46,7 +54,7 @@ theorem ttc_theorem1_volume_accuracy
       1 - params.delta := by
   exact community_manuscriptTTC_volume_accuracy hn F hbounded params prep
 
-/-- Corrected Theorem 3: the charged execution has exactly the manuscript TTC
+/-- Corrected Theorem 3: the charged execution has exactly the paper TTC
 output law and its expected arithmetic cost has the preprocessing term plus
 the explicit `m n⁵ ρ² r_max (2 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ) + log⁺ R_max)`
 scale, where `γ` is the radius required by `getprec` at `ε / 96`.  The bound
@@ -57,11 +65,11 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
     let D := prep.run F hbounded
-    (communityManuscriptTTCWithCost hn F hbounded p prep
+    (ttcWithCost hn F hbounded p prep
       preprocessingOperations 1).map Prod.fst =
         ttc hn F hbounded p prep ∧
     (∫⁻ result, (result.2 : ENNReal) ∂
-      communityManuscriptTTCWithCost hn F hbounded p prep
+      ttcWithCost hn F hbounded p prep
         preprocessingOperations 1) ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
@@ -84,7 +92,7 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
   TTCRuntime.deletionPassOperations TTCRuntime.rateThinningRoundOperations
   TTCRuntime.countThinningRoundOperations TTCRuntime.samplingAttemptOperations
   TTCRuntime.poissonDrawOperations TTCRuntime.appendCopyOperations
-  manuscriptRateThinWithCost manuscriptCountThinWithCost
+  ttcPseudocode.firstLoopWithCost ttcPseudocode.secondLoopWithCost
 
 /-!
 Both public statements are recursively sealed above.  `ttc` and every

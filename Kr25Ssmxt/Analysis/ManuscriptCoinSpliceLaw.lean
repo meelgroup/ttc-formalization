@@ -110,16 +110,16 @@ theorem shiftCoins_spliceCoins
 theorem manuscriptRateThinningResult_spliceCoins
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (first second : Nat × Nat → Bool) :
-    manuscriptRateThinningResult s intensity threshold
-      (spliceCoins first second (manuscriptRateExit s intensity threshold)) =
-    manuscriptRateThinningResult s intensity threshold first := by
-  let rounds := manuscriptRateExit s intensity threshold
+    ttcPseudocode.firstLoopResult s intensity threshold
+      (spliceCoins first second (ttcPseudocode.firstLoopExit s intensity threshold)) =
+    ttcPseudocode.firstLoopResult s intensity threshold first := by
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
   have hsurv (label : Nat) :
       survives (spliceCoins first second rounds) rounds label ↔
         survives first rounds label := by
     have h := survives_spliceCoins first second rounds 0 label
     simpa [survives] using h
-  simp only [manuscriptRateThinningResult]
+  simp only [ttcPseudocode.firstLoopResult]
   congr 1
   ext copy
   simp only [samplesAfter, Finset.mem_filter]

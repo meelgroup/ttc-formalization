@@ -81,16 +81,16 @@ theorem TTCState.labelsFresh_samplesAfter {n : Nat}
 theorem manuscriptRateThinningResult_labelsFresh {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) (h : s.LabelsFresh) :
-    (manuscriptRateThinningResult s intensity threshold coins).LabelsFresh := by
+    (ttcPseudocode.firstLoopResult s intensity threshold coins).LabelsFresh := by
   exact s.labelsFresh_samplesAfter coins
-    (manuscriptRateExit s intensity threshold) h
+    (ttcPseudocode.firstLoopExit s intensity threshold) h
 
 theorem thinningResult_labelsFresh {n : Nat}
     (s : TTCState n) (pending : Nat) (threshold : Real)
     (coins : Nat × Nat → Bool) (h : s.LabelsFresh) :
-    (thinningResult s pending threshold coins).1.LabelsFresh := by
+    (ttcPseudocode.secondLoopResult s pending threshold coins).1.LabelsFresh := by
   exact s.labelsFresh_samplesAfter coins
-    (firstExitRound s pending threshold coins) h
+    (ttcPseudocode.secondLoopExitRound s pending threshold coins) h
 
 /-- Labels of stored and pending copies are disjoint; the union has exactly
 the expected number of copies. -/

@@ -58,7 +58,7 @@ theorem communityManuscriptCertifiedRun_map_state
       (communityManuscriptCertifiedComponents hn D p prep)
       (ManuscriptOriginConfiguration.initial n)).map
         (fun next : ManuscriptOriginConfiguration n => next.state) =
-    manuscriptProcessComponents (communityManuscriptOracles hn prep)
+    ttcPseudocode.loop (ttcSubroutines hn prep)
       b p.ε' (p.δ' D.componentCount) threshold
       (List.ofFn D.component) (TTCState.initial n) := by
   dsimp only

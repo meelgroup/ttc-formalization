@@ -33,18 +33,18 @@ theorem communityManuscriptTTC_eq_volumeVector_bind
   let threshold := p.Thresh D.componentCount
   let components := List.ofFn D.component
   have hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P p.ε'
+      ((ttcSubroutines hn prep).ComputeVolume P p.ε'
         (p.δ' D.componentCount)) := by
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
     exact ((community_manuscript_volume_contract hn prep F hbounded p) i).1
   have hrun : ttc hn F hbounded p prep =
-      (manuscriptProcessComponents (communityManuscriptOracles hn prep)
+      (ttcPseudocode.loop (ttcSubroutines hn prep)
         b p.ε' (p.δ' D.componentCount) threshold
         components (TTCState.initial n)).map
           (Est b threshold) := by
-    simp [ttc, ttcWith,
-      communityManuscriptOracles, TTCPreprocessor.choosePrecision, D, b, threshold,
+    simp [ttc, ttcPseudocode,
+      ttcSubroutines, TTCPreprocessor.choosePrecision, D, b, threshold,
       components, hnonempty]
   let law := communityManuscriptVolumeVectorLaw hn prep p.ε'
     (p.δ' D.componentCount) components

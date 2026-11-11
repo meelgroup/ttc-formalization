@@ -18,29 +18,29 @@ theorem community_manuscriptTTC_isProbabilityMeasure
     IsProbabilityMeasure (ttc hn F hbounded p prep) := by
   let D := prep.run F hbounded
   by_cases hempty : D.componentCount = 0
-  · simp [ttc, ttcWith,
-      communityManuscriptOracles, D, hempty]
+  · simp [ttc, ttcPseudocode,
+      ttcSubroutines, D, hempty]
     infer_instance
   · let b := (prep.choosePrecision D p).value
     let threshold := p.Thresh D.componentCount
     let components := List.ofFn D.component
     have hvolume : ∀ P ∈ components,
         IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep 1).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep 1).computeVolumeWithCost
             P p.ε' (p.δ' D.componentCount)) := by
       intro P hP
       obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
       exact community_manuscript_costed_volume_isProbabilityMeasure
         hn D p prep 1 i
-    let core := manuscriptProcessComponentsWithCost
-      (communityManuscriptCostedOracles hn prep 1) b p.ε'
+    let core := ttcPseudocode.loopWithCost
+      (ttcCostedSubroutines hn prep 1) b p.ε'
       (p.δ' D.componentCount) threshold components (TTCState.initial n)
     letI : IsProbabilityMeasure core :=
       ⟨community_manuscript_components_mass_one hn prep 1 b p.ε'
         (p.δ' D.componentCount) threshold (p.threshold_pos D.componentCount)
         components hvolume (TTCState.initial n)⟩
     have hvolumeMass : ∀ P ∈ components,
-        ((communityManuscriptCostedOracles hn prep 1).computeVolumeWithCost
+        ((ttcCostedSubroutines hn prep 1).computeVolumeWithCost
           P p.ε' (p.δ' D.componentCount)) Set.univ ≤ 1 := by
       intro P hP
       letI := hvolume P hP
@@ -50,21 +50,21 @@ theorem community_manuscriptTTC_isProbabilityMeasure
       (p.threshold_pos D.componentCount) components hvolumeMass
       (TTCState.initial n)
     have hcore : IsProbabilityMeasure
-        (manuscriptProcessComponents (communityManuscriptOracles hn prep)
+        (ttcPseudocode.loop (ttcSubroutines hn prep)
           b p.ε' (p.δ' D.componentCount) threshold
           components (TTCState.initial n)) := by
       rw [← hcoreEq]
       exact Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
-    have hprep : (communityManuscriptOracles hn prep).preprocessing = prep := rfl
+    have hprep : (ttcSubroutines hn prep).preprocessing = prep := rfl
     have hempty' :
-        ((communityManuscriptOracles hn prep).preprocessing.run F hbounded).componentCount
+        ((ttcSubroutines hn prep).preprocessing.run F hbounded).componentCount
           ≠ 0 := by simpa only [hprep, D] using hempty
     have hrunequality : ttc hn F hbounded p prep =
-        (manuscriptProcessComponents (communityManuscriptOracles hn prep)
+        (ttcPseudocode.loop (ttcSubroutines hn prep)
           b p.ε' (p.δ' D.componentCount) threshold
           components (TTCState.initial n)).map
             (Est b threshold) := by
-      simp [ttc, ttcWith, communityManuscriptOracles,
+      simp [ttc, ttcPseudocode, ttcSubroutines,
         TTCPreprocessor.choosePrecision, D, b, threshold, components, hempty]
     rw [hrunequality]
     letI := hcore

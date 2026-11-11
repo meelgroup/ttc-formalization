@@ -11,17 +11,17 @@ coin stream, rather than only for fixed state and count.
 namespace Kr25Ssmxt
 
 /--
-For a fixed threshold, `thinningResult` is jointly measurable in all runtime
+For a fixed threshold, `ttcPseudocode.secondLoopResult` is jointly measurable in all runtime
 inputs and the coin stream.
 
-INTERNAL: joint transition measurability needed to parameterize `thinUntil`.
+INTERNAL: joint transition measurability needed to parameterize `ttcPseudocode.secondLoop`.
 -/
 lemma measurable_thinningResult_joint {n : Nat} (threshold : Real) :
     Measurable (fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-      thinningResult z.1.1 z.1.2 threshold z.2) := by
+      ttcPseudocode.secondLoopResult z.1.1 z.1.2 threshold z.2) := by
   classical
   let exitRound := fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-    firstExitRound z.1.1 z.1.2 threshold z.2
+    ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2
   have hexitRound : Measurable exitRound :=
     measurable_firstExitRound_joint threshold
   have hstateIn : Measurable

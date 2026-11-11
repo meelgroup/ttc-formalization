@@ -196,7 +196,7 @@ theorem manuscriptJointMergedRead_stoppedPrefix_shift_law
     (processed : Nat) (origin : Nat → Nat × Nat)
     (hhistory : ManuscriptOriginHistory s.nextLabel processed origin) :
     let read := manuscriptJointMergedRead origin s.nextLabel
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         (coinPrefix (stop coins) coins, shiftCoins (stop coins) coins)) =
@@ -204,7 +204,7 @@ theorem manuscriptJointMergedRead_stoppedPrefix_shift_law
       (fun coins => coinPrefix (stop coins) coins)).prod
       fairCoinStreamLaw := by
   let read := manuscriptJointMergedRead origin s.nextLabel
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let event := fun r => read ⁻¹' firstExitPrefixEvent s pending threshold r
   have hread : Measurable read :=
     measurable_manuscriptJointMergedRead origin s.nextLabel
@@ -344,7 +344,7 @@ theorem manuscriptJointMergedRead_stoppedPrefix_jointTail_law
     (hthreshold : 0 ≤ threshold)
     (processed : Nat) (origin : Nat → Nat × Nat)
     (hhistory : ManuscriptOriginHistory s.nextLabel processed origin) :
-    let stop := fun coins => firstExitRound s pending threshold
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold
       (manuscriptJointMergedRead origin s.nextLabel coins)
     fairCoinStreamLaw.map
       (fun coins =>
@@ -356,7 +356,7 @@ theorem manuscriptJointMergedRead_stoppedPrefix_jointTail_law
       ((Measure.infinitePi
         (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
         fairCoinStreamLaw) := by
-  let stop := fun coins => firstExitRound s pending threshold
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold
     (manuscriptJointMergedRead origin s.nextLabel coins)
   let observed : (Nat × Nat → Bool) → Nat × Nat → Bool :=
     fun coins => coinPrefix (stop coins) coins
@@ -545,7 +545,7 @@ theorem manuscriptJoint_localRead_stoppedPrefix_jointTail_law
     (hlocal : ∀ r coins,
       coinPrefix r (read (coinPrefix r coins)) =
         coinPrefix r (read coins)) :
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         (coinPrefix (stop coins) coins,
@@ -556,7 +556,7 @@ theorem manuscriptJoint_localRead_stoppedPrefix_jointTail_law
       ((Measure.infinitePi
         (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
         fairCoinStreamLaw) := by
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let observed : (Nat × Nat → Bool) → Nat × Nat → Bool :=
     fun coins => coinPrefix (stop coins) coins
   let split : (Nat × Nat → Bool) →
@@ -614,7 +614,7 @@ theorem manuscriptJoint_localRead_stoppedRoundPrefix_jointTail_law
     (hlocal : ∀ r coins,
       coinPrefix r (read (coinPrefix r coins)) =
         coinPrefix r (read coins)) :
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         ((stop coins, coinPrefix (stop coins) coins),
@@ -625,7 +625,7 @@ theorem manuscriptJoint_localRead_stoppedRoundPrefix_jointTail_law
       ((Measure.infinitePi
         (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
         fairCoinStreamLaw) := by
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let observed : (Nat × Nat → Bool) →
       Nat × (Nat × Nat → Bool) :=
     fun coins => (stop coins, coinPrefix (stop coins) coins)
@@ -688,7 +688,7 @@ theorem manuscriptJoint_localRead_stoppedReadPrefix_jointTail_law
     (hlocal : ∀ r coins,
       coinPrefix r (read (coinPrefix r coins)) =
         coinPrefix r (read coins)) :
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         ((stop coins, coinPrefix (stop coins) (read coins)),
@@ -700,7 +700,7 @@ theorem manuscriptJoint_localRead_stoppedReadPrefix_jointTail_law
       ((Measure.infinitePi
         (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
         fairCoinStreamLaw) := by
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let rawObs : (Nat × Nat → Bool) → Nat × (Nat × Nat → Bool) :=
     fun coins => (stop coins, coinPrefix (stop coins) coins)
   let actualObs : (Nat × Nat → Bool) → Nat × (Nat × Nat → Bool) :=

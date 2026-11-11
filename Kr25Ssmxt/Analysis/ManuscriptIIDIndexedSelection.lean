@@ -132,14 +132,14 @@ theorem communityManuscript_adaptive_batch_from_iid_tape
     (s : TTCState n) (pending : Nat) (coins : Nat × Nat → Bool) :
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
-    let rounds := firstExitRound s pending threshold coins
+    let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
-      (fun tape => (true, fun (i : Fin (thinningResult s pending threshold coins).2) =>
+      (fun tape => (true, fun (i : Fin (ttcPseudocode.secondLoopResult s pending threshold coins).2) =>
         tape (s.nextLabel +
           (pendingSurvivorIndices coins rounds s.nextLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins rounds s.nextLabel pending) i))) =
-      (communityManuscriptOracles hn prep).GenerateSamples P
-        (thinningResult s pending threshold coins).2 b eta delta := by
+      (ttcSubroutines hn prep).GenerateSamples P
+        (ttcPseudocode.secondLoopResult s pending threshold coins).2 b eta delta := by
   dsimp only
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
@@ -148,15 +148,15 @@ theorem communityManuscript_adaptive_batch_from_iid_tape
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2).1
   change (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => (true, fun (i : Fin
-        (pendingAfter coins (firstExitRound s pending threshold coins)
+        (pendingAfter coins (ttcPseudocode.secondLoopExitRound s pending threshold coins)
           s.nextLabel pending)) =>
         tape (s.nextLabel +
-          (pendingSurvivorIndices coins (firstExitRound s pending threshold coins)
+          (pendingSurvivorIndices coins (ttcPseudocode.secondLoopExitRound s pending threshold coins)
             s.nextLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins
-              (firstExitRound s pending threshold coins) s.nextLabel pending) i))) = _
+              (ttcPseudocode.secondLoopExitRound s pending threshold coins) s.nextLabel pending) i))) = _
   rw [iid_tape_pending_survivors_batch pointLaw coins
-    (firstExitRound s pending threshold coins) s.nextLabel pending]
+    (ttcPseudocode.secondLoopExitRound s pending threshold coins) s.nextLabel pending]
   exact (communityManuscript_generateSamples_eq_iid hn prep P _ b eta delta
     hroute).symm
 

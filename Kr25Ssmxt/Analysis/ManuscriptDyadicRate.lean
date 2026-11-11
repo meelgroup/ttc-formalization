@@ -27,20 +27,20 @@ theorem TTCState.isDyadicRate_addBatch {n count : Nat}
 theorem manuscriptRateThinningResult_isDyadicRate {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) (h : s.IsDyadicRate) :
-    (manuscriptRateThinningResult s intensity threshold coins).IsDyadicRate := by
+    (ttcPseudocode.firstLoopResult s intensity threshold coins).IsDyadicRate := by
   obtain ⟨level, hrate⟩ := h
-  refine ⟨level + manuscriptRateExit s intensity threshold, ?_⟩
-  simp only [manuscriptRateThinningResult, hrate, pow_add,
+  refine ⟨level + ttcPseudocode.firstLoopExit s intensity threshold, ?_⟩
+  simp only [ttcPseudocode.firstLoopResult, hrate, pow_add,
     div_eq_mul_inv, mul_inv_rev]
   ac_rfl
 
 theorem thinningResult_isDyadicRate {n : Nat}
     (s : TTCState n) (pending : Nat) (threshold : Real)
     (coins : Nat × Nat → Bool) (h : s.IsDyadicRate) :
-    (thinningResult s pending threshold coins).1.IsDyadicRate := by
+    (ttcPseudocode.secondLoopResult s pending threshold coins).1.IsDyadicRate := by
   obtain ⟨level, hrate⟩ := h
-  refine ⟨level + firstExitRound s pending threshold coins, ?_⟩
-  simp only [thinningResult, hrate, pow_add,
+  refine ⟨level + ttcPseudocode.secondLoopExitRound s pending threshold coins, ?_⟩
+  simp only [ttcPseudocode.secondLoopResult, hrate, pow_add,
     div_eq_mul_inv, mul_inv_rev]
   ac_rfl
 
@@ -62,9 +62,9 @@ theorem measurableSet_isDyadicRate {n : Nat} :
 theorem manuscriptRateThinUntil_isDyadicRate {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (h : s.IsDyadicRate) :
-    ∀ᵐ t ∂manuscriptRateThinUntil s intensity threshold,
+    ∀ᵐ t ∂ttcPseudocode.firstLoop s intensity threshold,
       t.IsDyadicRate := by
-  unfold manuscriptRateThinUntil
+  unfold ttcPseudocode.firstLoop
   rw [ae_map_iff
     (measurable_manuscriptRateThinningResult s intensity threshold).aemeasurable
     measurableSet_isDyadicRate]
@@ -74,12 +74,12 @@ theorem manuscriptRateThinUntil_isDyadicRate {n : Nat}
 theorem thinUntil_isDyadicRate {n : Nat}
     (s : TTCState n) (pending : Nat) (threshold : Real)
     (h : s.IsDyadicRate) :
-    ∀ᵐ result ∂thinUntil s pending threshold,
+    ∀ᵐ result ∂ttcPseudocode.secondLoop s pending threshold,
       result.1.IsDyadicRate := by
   have hset : MeasurableSet
       {result : TTCState n × Nat | result.1.IsDyadicRate} :=
     measurableSet_isDyadicRate.preimage measurable_fst
-  unfold thinUntil
+  unfold ttcPseudocode.secondLoop
   rw [ae_map_iff
     (measurable_thinningResult s pending threshold).aemeasurable hset]
   exact Filter.Eventually.of_forall fun coins =>

@@ -132,7 +132,7 @@ theorem firstExitRoundSplit_originalSurvivors_eq_jointRead
       s.nextLabel basePending (manuscriptJointFreshRead coins)
     firstExitRoundSplit s pending threshold old
       (pendingCoinExtension s.nextLabel pending active) =
-    firstExitRound s pending threshold
+    ttcPseudocode.secondLoopExitRound s pending threshold
       (manuscriptJointSurvivorRead preCoins preRounds s.nextLabel
         basePending origin coins) := by
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
@@ -166,7 +166,7 @@ theorem firstExitRoundSplit_originalSurvivors_eq_jointRead
       firstExitRoundSplit s pending threshold old fresh :=
         firstExitRoundSplit_fresh_coins_congr s pending threshold old
           _ _ hcoin
-    _ = firstExitRound s pending threshold
+    _ = ttcPseudocode.secondLoopExitRound s pending threshold
         (manuscriptJointSurvivorRead preCoins preRounds s.nextLabel
           basePending origin coins) := by
       rw [hread]
@@ -184,7 +184,7 @@ theorem thinningResultSplitFinite_originalSurvivors_eq_jointRead
     let active := originalSurvivorCoinRestriction preCoins preRounds
       s.nextLabel basePending (manuscriptJointFreshRead coins)
     thinningResultSplitFinite s pending threshold old active =
-    thinningResult s pending threshold
+    ttcPseudocode.secondLoopResult s pending threshold
       (manuscriptJointSurvivorRead preCoins preRounds s.nextLabel
         basePending origin coins) := by
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
@@ -219,7 +219,7 @@ theorem thinningResultSplitFinite_originalSurvivors_eq_jointRead
     _ = thinningResultSplit s pending threshold old fresh :=
       thinningResultSplit_fresh_coins_congr s pending threshold old
         _ _ hcoin
-    _ = thinningResult s pending threshold
+    _ = ttcPseudocode.secondLoopResult s pending threshold
         (manuscriptJointSurvivorRead preCoins preRounds s.nextLabel
           basePending origin coins) := by
       rw [hread]
@@ -238,7 +238,7 @@ theorem thinningResultSplitFinite_originalSurvivors_atObserved
       s.nextLabel basePending (manuscriptJointFreshRead coins)
     let read := manuscriptJointSurvivorRead preCoins preRounds s.nextLabel
       basePending origin
-    let stop := firstExitRound s pending threshold (read coins)
+    let stop := ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     thinningResultSplitFinite s pending threshold old active =
       thinningResultAtObserved s pending read
         (stop, coinPrefix stop coins) := by
@@ -251,12 +251,12 @@ theorem thinningResultSplitFinite_originalSurvivors_atObserved
           ((origin pair.2).1, (pair.1, (origin pair.2).2)))
         (originalSurvivorCoinRestriction preCoins preRounds s.nextLabel
           basePending (manuscriptJointFreshRead coins)) =
-      thinningResult s pending threshold (read coins) :=
+      ttcPseudocode.secondLoopResult s pending threshold (read coins) :=
         thinningResultSplitFinite_originalSurvivors_eq_jointRead s
           threshold preCoins preRounds basePending origin coins hfresh
     _ = thinningResultAtObserved s pending read
-        (firstExitRound s pending threshold (read coins),
-          coinPrefix (firstExitRound s pending threshold (read coins))
+        (ttcPseudocode.secondLoopExitRound s pending threshold (read coins),
+          coinPrefix (ttcPseudocode.secondLoopExitRound s pending threshold (read coins))
             coins) :=
       thinningResult_eq_atObserved s pending threshold read
         (fun r coins => manuscriptJointSurvivorRead_prefix_local
@@ -274,7 +274,7 @@ theorem manuscriptJointSurvivorRead_stoppedPrefix_jointTail_law
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
     let read := manuscriptJointSurvivorRead preCoins preRounds
       s.nextLabel basePending origin
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         (coinPrefix (stop coins) coins,
@@ -306,7 +306,7 @@ theorem manuscriptJointSurvivorRead_stoppedRoundPrefix_jointTail_law
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
     let read := manuscriptJointSurvivorRead preCoins preRounds
       s.nextLabel basePending origin
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         ((stop coins, coinPrefix (stop coins) coins),
@@ -338,7 +338,7 @@ theorem manuscriptJointSurvivorRead_stoppedReadPrefix_jointTail_law
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
     let read := manuscriptJointSurvivorRead preCoins preRounds
       s.nextLabel basePending origin
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         ((stop coins, coinPrefix (stop coins) (read coins)),
@@ -375,7 +375,7 @@ theorem manuscriptJointSurvivorRead_stoppedPrefix_combinedTail_law
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
     let read := manuscriptJointSurvivorRead preCoins preRounds
       s.nextLabel basePending origin
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         (coinPrefix (stop coins) coins,
@@ -393,7 +393,7 @@ theorem manuscriptJointSurvivorRead_stoppedPrefix_combinedTail_law
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
   let read := manuscriptJointSurvivorRead preCoins preRounds
     s.nextLabel basePending origin
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let observed : (Nat × Nat → Bool) → Nat × Nat → Bool :=
     fun coins => coinPrefix (stop coins) coins
   let pairTail : (Nat × Nat → Bool) →

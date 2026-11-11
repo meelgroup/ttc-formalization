@@ -62,9 +62,9 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudget {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.sampleCap p m
-  let upperIntensity := ttc.t b n (p.Thresh m)
-    (max (P.manuscriptVolumeLower p.ε')
-      (P.manuscriptVolumeUpper p.ε'))
+  let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
+    (max (P.volumeClipLower p.ε')
+      (P.volumeClipUpper p.ε'))
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
@@ -87,8 +87,8 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision {n
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.sampleCap p m
-  let v := max (P.manuscriptVolumeLower p.ε')
-    (P.manuscriptVolumeUpper p.ε')
+  let v := max (P.volumeClipLower p.ε')
+    (P.volumeClipUpper p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
@@ -113,8 +113,8 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometric
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
   let cap := TTCRuntime.sampleCap p D.componentCount
-  let v := max (P.manuscriptVolumeLower p.ε')
-    (P.manuscriptVolumeUpper p.ε')
+  let v := max (P.volumeClipLower p.ε')
+    (P.volumeClipUpper p.ε')
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
     (TTCRuntime.theorem3Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b

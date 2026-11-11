@@ -17,27 +17,27 @@ open MeasureTheory
 theorem communityManuscriptCosted_volume_fst {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (eta delta : Real) :
-    ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost P eta delta).map
+    ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost P eta delta).map
         Prod.fst =
-      (communityManuscriptOracles hn prep).ComputeVolume P eta delta := by
-  simp only [communityManuscriptCostedOracles]
+      (ttcSubroutines hn prep).ComputeVolume P eta delta := by
+  simp only [ttcCostedSubroutines]
   exact costedCharge_fst _ _
 
 theorem communityManuscriptCosted_volume_expected_cost {n k : Nat}
     (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (eta delta : Real)
     [IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)] :
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta)] :
     ∫⁻ result, (result.2 : ENNReal) ∂
-      (communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      (ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta =
       TTCRuntime.membershipQueryOperations n P.presentation.facetCount
         (CommunityCV18.queryBudgetFor (by omega) P eta delta) +
       factor * TTCRuntime.membershipQueryOperations n P.presentation.facetCount
         (CommunityCV18.queryBudgetFor (by omega) P eta delta + 1) := by
-  simpa only [communityManuscriptCostedOracles, Nat.cast_add, Nat.cast_mul] using
+  simpa only [ttcCostedSubroutines, Nat.cast_add, Nat.cast_mul] using
     (costedCharge_expected_cost
-    ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)
+    ((ttcSubroutines hn prep).ComputeVolume P eta delta)
     (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P eta delta) +
       factor * TTCRuntime.membershipQueryOperations n P.presentation.facetCount
@@ -46,9 +46,9 @@ theorem communityManuscriptCosted_volume_expected_cost {n k : Nat}
 theorem communityManuscriptCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
-    ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+    ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
       P count b eta delta).map Prod.fst =
-      (communityManuscriptOracles hn prep).GenerateSamples P count b eta delta := by
+      (ttcSubroutines hn prep).GenerateSamples P count b eta delta := by
   classical
   by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
@@ -57,10 +57,10 @@ theorem communityManuscriptCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
     letI : IsProbabilityMeasure
         (acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b) :=
       halmost.1
-    simpa only [communityManuscriptCostedOracles, communityManuscriptOracles,
+    simpa only [ttcCostedSubroutines, ttcSubroutines,
       dif_pos h, normalizedHitAndRunPointLaw] using
       normalizedHitAndRunBatchWithCostLaw_fst P count b eta
-  · simpa only [communityManuscriptCostedOracles, communityManuscriptOracles,
+  · simpa only [ttcCostedSubroutines, ttcSubroutines,
       dif_neg h] using (costedCharge_fst (failedSampleBatchLaw (n := n) (count := count)) 0)
 
 theorem communityManuscriptCosted_samples_expected_cost {n k : Nat}
@@ -71,7 +71,7 @@ theorem communityManuscriptCosted_samples_expected_cost {n k : Nat}
     (haccept : (1 / 2 : Real) ≤
       (roundedAcceptanceProbability (normalizedHitAndRunContinuousLaw P b eta) P b : Real)) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-      (communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+      (ttcCostedSubroutines hn prep factor).generateSamplesWithCost
         P count b eta delta ≤
       count * (2 * TTCRuntime.samplingAttemptOperations n
         P.presentation.facetCount (normalizedHitAndRunSteps P b eta)) := by
@@ -80,7 +80,7 @@ theorem communityManuscriptCosted_samples_expected_cost {n k : Nat}
   letI : IsProbabilityMeasure
       (acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b) :=
     halmost.1
-  simpa only [communityManuscriptCostedOracles, dif_pos h] using
+  simpa only [ttcCostedSubroutines, dif_pos h] using
     normalizedHitAndRunBatchWithCost_expected_bound P count b eta haccept
 
 theorem communityManuscriptCosted_samples_mass_le_one {n k : Nat}
@@ -88,7 +88,7 @@ theorem communityManuscriptCosted_samples_mass_le_one {n k : Nat}
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
     (h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty) :
-    ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+    ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
       P count b eta delta) Set.univ ≤ 1 := by
   have halmost := P.normalizedHitAndRun_latticePointLaw hn b h.1
     h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
@@ -108,7 +108,7 @@ theorem communityManuscriptCosted_samples_mass_le_one {n k : Nat}
     unfold normalizedHitAndRunBatchWithCostLaw
     rw [Measure.map_apply (by fun_prop) MeasurableSet.univ]
     simp
-  simpa only [communityManuscriptCostedOracles, dif_pos h] using
+  simpa only [ttcCostedSubroutines, dif_pos h] using
     hbatch
 
 end Kr25Ssmxt

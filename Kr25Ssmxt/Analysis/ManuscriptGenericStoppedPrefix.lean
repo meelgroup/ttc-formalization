@@ -226,14 +226,14 @@ theorem fairCoinStreamLaw_firstExit_localRead_stoppedPrefix_shift_law
     (hlocal : ∀ r coins,
       coinPrefix r (read (coinPrefix r coins)) =
         coinPrefix r (read coins)) :
-    let stop := fun coins => firstExitRound s pending threshold (read coins)
+    let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
     fairCoinStreamLaw.map
       (fun coins =>
         (coinPrefix (stop coins) coins, shiftCoins (stop coins) coins)) =
     (fairCoinStreamLaw.map
       (fun coins => coinPrefix (stop coins) coins)).prod
       fairCoinStreamLaw := by
-  let stop := fun coins => firstExitRound s pending threshold (read coins)
+  let stop := fun coins => ttcPseudocode.secondLoopExitRound s pending threshold (read coins)
   let event := fun r => read ⁻¹' firstExitPrefixEvent s pending threshold r
   have hstop : Measurable stop :=
     (measurable_firstExitRound s pending threshold).comp hread

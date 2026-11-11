@@ -16,13 +16,13 @@ theorem communityManuscriptComponentsVolumeTrace_good_accurate
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta))
     (hfail : ∀ P ∈ components,
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta).real
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta).real
         {o | o.1 = false} ≤ budget)
     (haccuracy : ∀ P ∈ components,
-      ∀ᵐ o ∂(communityManuscriptOracles hn prep).ComputeVolume P eta delta,
+      ∀ᵐ o ∂(ttcSubroutines hn prep).ComputeVolume P eta delta,
         o.1 = true → (o.2 : Real) ∈ Arlib.relErr eta (volume P.carrier).toReal)
     (state : TTCState n) :
     (communityManuscriptComponentsVolumeTrace hn prep factor b eta delta
@@ -34,7 +34,7 @@ theorem communityManuscriptComponentsVolumeTrace_good_accurate
       1 - components.length * budget := by
   classical
   let law : Fin components.length → Measure VolumeOutcome :=
-    fun i => (communityManuscriptOracles hn prep).ComputeVolume
+    fun i => (ttcSubroutines hn prep).ComputeVolume
       (components.get i) eta delta
   let good : Set (Fin components.length → VolumeOutcome) :=
     {outcomes | ∀ i : Fin components.length,
@@ -58,11 +58,11 @@ theorem communityManuscriptComponentsVolumeTrace_good_accurate
     factor b eta delta threshold hthreshold components hvolume state
   have hprob (i : Fin components.length) : IsProbabilityMeasure (law i) := by
     letI : IsProbabilityMeasure
-        ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+        ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
           (components.get i) eta delta) :=
       hvolume (components.get i) (List.get_mem components i)
     change IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume
+      ((ttcSubroutines hn prep).ComputeVolume
         (components.get i) eta delta)
     rw [← communityManuscriptCosted_volume_fst hn prep factor
       (components.get i) eta delta]
@@ -110,7 +110,7 @@ theorem communityManuscript_components_volume_trace_good_accurate
   let b := (prep.choosePrecision D p).value
   let components : List (PolytopeData n) := List.ofFn D.component
   have hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P p.ε' (p.δ' D.componentCount)) := by
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
@@ -118,14 +118,14 @@ theorem communityManuscript_components_volume_trace_good_accurate
       factor i
   have hcontract := community_manuscript_volume_contract hn prep F hbounded p
   have hfail : ∀ P ∈ components,
-      ((communityManuscriptOracles hn prep).ComputeVolume P p.ε'
+      ((ttcSubroutines hn prep).ComputeVolume P p.ε'
         (p.δ' D.componentCount)).real {o | o.1 = false} ≤
           p.δ' D.componentCount := by
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
     exact (hcontract i).2.1
   have haccuracy : ∀ P ∈ components,
-      ∀ᵐ o ∂(communityManuscriptOracles hn prep).ComputeVolume P p.ε'
+      ∀ᵐ o ∂(ttcSubroutines hn prep).ComputeVolume P p.ε'
         (p.δ' D.componentCount),
         o.1 = true →
           (o.2 : Real) ∈ Arlib.relErr p.ε' (volume P.carrier).toReal := by

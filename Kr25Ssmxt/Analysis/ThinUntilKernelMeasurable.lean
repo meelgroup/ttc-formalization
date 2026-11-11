@@ -11,17 +11,17 @@ transition used by both thinning calls in `processComponent`.
 namespace Kr25Ssmxt
 
 /--
-For a fixed threshold, `thinUntil` is a measurable kernel in the state and
+For a fixed threshold, `ttcPseudocode.secondLoop` is a measurable kernel in the state and
 pending count.
 
 INTERNAL: measure-valued kernel bookkeeping for the TTC thinning loop.
 -/
 lemma thinUntil_kernel_measurable {n : Nat} (threshold : Real) :
-    Measurable (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold) := by
+    Measurable (fun z : TTCState n × Nat => ttcPseudocode.secondLoop z.1 z.2 threshold) := by
   let _ : MeasureTheory.IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   let G := fun z : (TTCState n × Nat) × (Nat × Nat → Bool) =>
-    thinningResult z.1.1 z.1.2 threshold z.2
+    ttcPseudocode.secondLoopResult z.1.1 z.1.2 threshold z.2
   have hG : Measurable G := measurable_thinningResult_joint threshold
   have hpair : Measurable
       (fun z : TTCState n × Nat => fairCoinStreamLaw.map (Prod.mk z)) :=
@@ -33,10 +33,10 @@ lemma thinUntil_kernel_measurable {n : Nat} (threshold : Real) :
   have heq :
       (fun z : TTCState n × Nat =>
         (fairCoinStreamLaw.map (Prod.mk z)).map G) =
-      (fun z : TTCState n × Nat => thinUntil z.1 z.2 threshold) := by
+      (fun z : TTCState n × Nat => ttcPseudocode.secondLoop z.1 z.2 threshold) := by
     funext z
     rw [MeasureTheory.Measure.map_map hG measurable_prodMk_left]
-    unfold thinUntil
+    unfold ttcPseudocode.secondLoop
     congr 1
   rw [← heq]
   exact hmap

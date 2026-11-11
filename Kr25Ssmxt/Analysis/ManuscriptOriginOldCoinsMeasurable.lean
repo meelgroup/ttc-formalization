@@ -49,7 +49,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_controls
     {n : Nat} (P : PolytopeData n) (intensity : NNReal)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
-      (c.level + manuscriptRateExit (c.state.removeComponent P)
+      (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
         intensity threshold, (c.state.removeComponent P).nextLabel)) := by
   have hstate : Measurable (fun c : ManuscriptOriginConfiguration n =>
       c.state) := measurable_manuscriptOriginConfiguration_state
@@ -57,7 +57,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_controls
       c.state.removeComponent P) :=
     (measurable_removeComponent P).comp hstate
   have hround : Measurable (fun c : ManuscriptOriginConfiguration n =>
-      manuscriptRateExit (c.state.removeComponent P) intensity
+      ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
         threshold) :=
     (measurable_manuscriptRateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_const)
@@ -76,7 +76,7 @@ theorem ManuscriptOriginConfiguration.measurable_activeFullCoins
     (basePending : Nat) (preCoins future : Nat × Nat → Bool) :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
       let deleted := c.state.removeComponent P
-      let preRounds := c.level + manuscriptRateExit deleted intensity
+      let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity
         threshold
       pendingCoinExtension deleted.nextLabel
         (pendingAfter preCoins preRounds deleted.nextLabel basePending)

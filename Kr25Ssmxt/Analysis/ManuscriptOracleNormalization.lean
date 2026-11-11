@@ -13,7 +13,7 @@ theorem community_manuscript_volume_isProbabilityMeasure
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (i : Fin D.componentCount) :
     IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume
+      ((ttcSubroutines hn prep).ComputeVolume
         (D.component i) p.ε' (p.δ' D.componentCount)) := by
   letI : IsProbabilityMeasure
       (communityCV18VolumeLaw (by omega) (D.component i) p.ε'
@@ -24,7 +24,7 @@ theorem community_manuscript_volume_isProbabilityMeasure
   change IsProbabilityMeasure
     ((communityCV18VolumeLaw (by omega) (D.component i) p.ε'
       (p.δ' D.componentCount)).map
-      ((D.component i).clipManuscriptVolume p.ε'))
+      ((D.component i).clipVolume p.ε'))
   exact Measure.isProbabilityMeasure_map
     ((D.component i).measurable_clipManuscriptVolume p.ε').aemeasurable
 
@@ -32,7 +32,7 @@ theorem community_manuscript_samples_isProbabilityMeasure
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
     IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).GenerateSamples
+      ((ttcSubroutines hn prep).GenerateSamples
         P count b eta delta) := by
   classical
   by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
@@ -42,11 +42,11 @@ theorem community_manuscript_samples_isProbabilityMeasure
     letI : IsProbabilityMeasure
         (normalizedHitAndRunPointLaw hn P b h.1 eta
           h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2) := hpoint.1
-    simpa only [communityManuscriptOracles, dif_pos h] using
+    simpa only [ttcSubroutines, dif_pos h] using
       (iidSampleBatchLaw_isProbabilityMeasure
         (normalizedHitAndRunPointLaw hn P b h.1 eta
           h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2))
-  · simp only [communityManuscriptOracles, dif_neg h]
+  · simp only [ttcSubroutines, dif_neg h]
     unfold failedSampleBatchLaw
     infer_instance
 
@@ -55,7 +55,7 @@ theorem community_manuscript_costed_volume_isProbabilityMeasure
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (factor : Nat) (i : Fin D.componentCount) :
     IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         (D.component i) p.ε' (p.δ' D.componentCount)) := by
   apply costed_probability_of_fst
   rw [communityManuscriptCosted_volume_fst]
@@ -66,7 +66,7 @@ theorem community_manuscript_costed_samples_isProbabilityMeasure
     (factor : Nat) (P : PolytopeData n) (count b : Nat)
     (eta delta : Real) :
     IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).generateSamplesWithCost
+      ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
         P count b eta delta) := by
   apply costed_probability_of_fst
   rw [communityManuscriptCosted_samples_fst]

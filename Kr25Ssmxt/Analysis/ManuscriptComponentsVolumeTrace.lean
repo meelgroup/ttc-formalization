@@ -119,7 +119,7 @@ noncomputable def communityManuscriptVolumeVectorLaw
       Measure (Fin components.length → VolumeOutcome)
   | [] => Measure.dirac Fin.elim0
   | P :: rest =>
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta).bind
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
         fun outcome =>
           (communityManuscriptVolumeVectorLaw hn prep eta delta rest).map
             (Fin.cons outcome)
@@ -130,7 +130,7 @@ theorem communityManuscriptVolumeVectorLaw_isProbabilityMeasure
     (eta delta : Real) (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components,
       IsProbabilityMeasure
-        ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)) :
+        ((ttcSubroutines hn prep).ComputeVolume P eta delta)) :
     IsProbabilityMeasure
       (communityManuscriptVolumeVectorLaw hn prep eta delta components) := by
   induction components with
@@ -139,11 +139,11 @@ theorem communityManuscriptVolumeVectorLaw_isProbabilityMeasure
       infer_instance
   | cons P rest ih =>
       letI : IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).ComputeVolume P eta delta) :=
+          ((ttcSubroutines hn prep).ComputeVolume P eta delta) :=
         hvolume P (by simp)
       have hrest : ∀ Q ∈ rest,
           IsProbabilityMeasure
-            ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
+            ((ttcSubroutines hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
       letI : IsProbabilityMeasure
@@ -167,7 +167,7 @@ theorem communityManuscriptVolumeVectorLaw_isProbabilityMeasure
           ((measurable_finCons_volumeOutcome rest.length).comp
             (measurable_const.prodMk measurable_id)).aemeasurable
       have hbind : IsProbabilityMeasure
-          (((communityManuscriptOracles hn prep).ComputeVolume P eta delta).bind K) :=
+          (((ttcSubroutines hn prep).ComputeVolume P eta delta).bind K) :=
         isProbabilityMeasure_bind hK.aemeasurable
           (Filter.Eventually.of_forall hKprob)
       simpa only [communityManuscriptVolumeVectorLaw, K] using hbind
@@ -177,10 +177,10 @@ theorem communityManuscriptVolumeVectorLaw_eq_pi
     (eta delta : Real) (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components,
       IsProbabilityMeasure
-        ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)) :
+        ((ttcSubroutines hn prep).ComputeVolume P eta delta)) :
     communityManuscriptVolumeVectorLaw hn prep eta delta components =
       Measure.pi (fun i : Fin components.length =>
-        (communityManuscriptOracles hn prep).ComputeVolume
+        (ttcSubroutines hn prep).ComputeVolume
           (components.get i) eta delta) := by
   induction components with
   | nil =>
@@ -189,11 +189,11 @@ theorem communityManuscriptVolumeVectorLaw_eq_pi
   | cons P rest ih =>
       have hrest : ∀ Q ∈ rest,
           IsProbabilityMeasure
-            ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
+            ((ttcSubroutines hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
       let law : Fin (rest.length + 1) → Measure VolumeOutcome :=
-        fun i => (communityManuscriptOracles hn prep).ComputeVolume
+        fun i => (ttcSubroutines hn prep).ComputeVolume
           ((P :: rest).get i) eta delta
       have hprob (i : Fin (rest.length + 1)) :
           IsProbabilityMeasure (law i) := by
@@ -209,7 +209,7 @@ theorem communityManuscriptComponentsVolumeTrace_measurable_probability
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta)) :
     Measurable (communityManuscriptComponentsVolumeTrace hn prep factor b
       eta delta threshold components) ∧
@@ -227,10 +227,10 @@ theorem communityManuscriptComponentsVolumeTrace_measurable_probability
         infer_instance
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
             P eta delta) := hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
             Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
@@ -321,7 +321,7 @@ theorem communityManuscriptComponentsVolumeTrace_volume_marginal
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta))
     (state : TTCState n) :
     (communityManuscriptComponentsVolumeTrace hn prep factor b eta delta
@@ -333,10 +333,10 @@ theorem communityManuscriptComponentsVolumeTrace_volume_marginal
         communityManuscriptVolumeVectorLaw]
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
             P eta delta) := hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
             Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
@@ -356,10 +356,10 @@ theorem communityManuscriptComponentsVolumeTrace_volume_marginal
           threshold rest hrest.1 hrest.2
       let vectorRest := communityManuscriptVolumeVectorLaw hn prep eta delta rest
       have hvolRestBase : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptOracles hn prep).ComputeVolume Q eta delta) := by
+          ((ttcSubroutines hn prep).ComputeVolume Q eta delta) := by
         intro Q hQ
         letI : IsProbabilityMeasure
-            ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+            ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
               Q eta delta) := hvolRest Q hQ
         rw [← communityManuscriptCosted_volume_fst hn prep factor Q eta delta]
         exact Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
@@ -403,11 +403,11 @@ theorem communityManuscriptComponentsVolumeTrace_volume_marginal
             rfl
           _ = K c.1.1 := by rw [ih hvolRest c.2.1]
       have hcurrent : current.map (fun c => c.1.1) =
-          (communityManuscriptOracles hn prep).ComputeVolume P eta delta :=
+          (ttcSubroutines hn prep).ComputeVolume P eta delta :=
         communityManuscriptComponentVolumeTrace_volumeOutcome hn prep factor
           P b eta delta threshold hthreshold state
       change (current.bind G).map Prod.fst =
-        ((communityManuscriptOracles hn prep).ComputeVolume P eta delta).bind K
+        ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind K
       rw [map_bind_measure current G Prod.fst hG.aemeasurable measurable_fst]
       simp_rw [hpoint]
       rw [← bind_mapped_measure current (fun c => c.1.1) (by fun_prop) K hK]
@@ -421,20 +421,20 @@ theorem communityManuscriptComponentsVolumeTrace_volume_pi
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta))
     (state : TTCState n) :
     (communityManuscriptComponentsVolumeTrace hn prep factor b eta delta
       threshold components state).map Prod.fst =
       Measure.pi (fun i : Fin components.length =>
-        (communityManuscriptOracles hn prep).ComputeVolume
+        (ttcSubroutines hn prep).ComputeVolume
           (components.get i) eta delta) := by
   rw [communityManuscriptComponentsVolumeTrace_volume_marginal hn prep factor
     b eta delta threshold hthreshold components hvolume state]
   apply communityManuscriptVolumeVectorLaw_eq_pi
   intro P hP
   letI : IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta) := hvolume P hP
   rw [← communityManuscriptCosted_volume_fst hn prep factor P eta delta]
   exact Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
@@ -446,24 +446,24 @@ theorem communityManuscriptComponentsVolumeTrace_run_marginal
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
-      ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+      ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta))
     (state : TTCState n) :
     (communityManuscriptComponentsVolumeTrace hn prep factor b eta delta
       threshold components state).map Prod.snd =
-    manuscriptProcessComponentsWithCost
-      (communityManuscriptCostedOracles hn prep factor)
+    ttcPseudocode.loopWithCost
+      (ttcCostedSubroutines hn prep factor)
       b eta delta threshold components state := by
   induction components generalizing state with
   | nil =>
       simp [communityManuscriptComponentsVolumeTrace,
-        manuscriptProcessComponentsWithCost]
+        ttcPseudocode.loopWithCost]
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
             P eta delta) := hvolume P (by simp)
       have hvolRest : ∀ Q ∈ rest, IsProbabilityMeasure
-          ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+          ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
             Q eta delta) := by
         intro Q hQ
         exact hvolume Q (by simp [hQ])
@@ -482,19 +482,19 @@ theorem communityManuscriptComponentsVolumeTrace_run_marginal
         communityManuscript_trace_tail_measurable hn prep factor b eta delta
           threshold rest hrest.1 hrest.2
       let K : (TTCState n × Nat) → Measure (TTCState n × Nat) :=
-        fun c => (manuscriptProcessComponentsWithCost
-          (communityManuscriptCostedOracles hn prep factor)
+        fun c => (ttcPseudocode.loopWithCost
+          (ttcCostedSubroutines hn prep factor)
           b eta delta threshold rest c.1).map fun future =>
             (future.1, c.2 + future.2)
       have htailMeas : Measurable (fun s : TTCState n =>
-          manuscriptProcessComponentsWithCost
-            (communityManuscriptCostedOracles hn prep factor)
+          ttcPseudocode.loopWithCost
+            (ttcCostedSubroutines hn prep factor)
             b eta delta threshold rest s) := by
         apply community_manuscript_components_kernel_measurable hn prep factor
           b eta delta threshold hthreshold rest
         intro Q hQ
         letI : IsProbabilityMeasure
-            ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+            ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
               Q eta delta) := hvolRest Q hQ
         simp
       have hK : Measurable K :=
@@ -522,18 +522,18 @@ theorem communityManuscriptComponentsVolumeTrace_run_marginal
             rfl
           _ = K c.2 := by rw [ih hvolRest c.2.1]
       have hcurrent : current.map Prod.snd =
-          manuscriptProcessComponentWithCost
-            (communityManuscriptCostedOracles hn prep factor)
+          ttcPseudocode.stepWithCost
+            (ttcCostedSubroutines hn prep factor)
             b eta delta threshold P state :=
         communityManuscriptComponentVolumeTrace_snd hn prep factor P b
           eta delta threshold hthreshold state
       change (current.bind G).map Prod.snd =
         costedBind
-          (manuscriptProcessComponentWithCost
-            (communityManuscriptCostedOracles hn prep factor)
+          (ttcPseudocode.stepWithCost
+            (ttcCostedSubroutines hn prep factor)
             b eta delta threshold P state)
-          (manuscriptProcessComponentsWithCost
-            (communityManuscriptCostedOracles hn prep factor)
+          (ttcPseudocode.loopWithCost
+            (ttcCostedSubroutines hn prep factor)
             b eta delta threshold rest)
       rw [map_bind_measure current G Prod.snd hG.aemeasurable measurable_snd]
       simp_rw [hpoint]

@@ -12,27 +12,27 @@ open MeasureTheory ProbabilityTheory
 theorem manuscript_poisson_twoLoops_oneCoinStream
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
-    (manuscriptRateThinUntil s intensity threshold).bind (fun first =>
+    (ttcPseudocode.firstLoop s intensity threshold).bind (fun first =>
       (poissonMeasure (intensity * first.p)).bind fun pending =>
-        thinUntil first pending threshold) =
+        ttcPseudocode.secondLoop first pending threshold) =
     (poissonMeasure
       (intensity * (s.p /
-        (2 : NNReal) ^ manuscriptRateExit s intensity threshold))).bind
+        (2 : NNReal) ^ ttcPseudocode.firstLoopExit s intensity threshold))).bind
       (fun pending => fairCoinStreamLaw.map fun coins =>
-        thinningResult
-          (manuscriptRateThinningResult s intensity threshold coins)
+        ttcPseudocode.secondLoopResult
+          (ttcPseudocode.firstLoopResult s intensity threshold coins)
           pending threshold
-          (shiftCoins (manuscriptRateExit s intensity threshold) coins)) := by
-  let rounds := manuscriptRateExit s intensity threshold
+          (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) coins)) := by
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
   let mean := intensity * (s.p / (2 : NNReal) ^ rounds)
-  let firstResult := manuscriptRateThinningResult s intensity threshold
-  let firstLaw := manuscriptRateThinUntil s intensity threshold
+  let firstResult := ttcPseudocode.firstLoopResult s intensity threshold
+  let firstLaw := ttcPseudocode.firstLoop s intensity threshold
   let pendingLaw : TTCState n → Measure Nat :=
     fun first => poissonMeasure (intensity * first.p)
   let pendingJoint : TTCState n → Measure (TTCState n × Nat) :=
     fun first => (pendingLaw first).map (Prod.mk first)
   let K : TTCState n × Nat → Measure (TTCState n × Nat) :=
-    fun pair => thinUntil pair.1 pair.2 threshold
+    fun pair => ttcPseudocode.secondLoop pair.1 pair.2 threshold
   have hrate : Measurable (fun first : TTCState n => first.p) :=
     measurable_fst.comp
       (comap_measurable
@@ -65,7 +65,7 @@ theorem manuscript_poisson_twoLoops_oneCoinStream
     (hfirst.comp measurable_fst).prodMk measurable_snd
   calc
     firstLaw.bind (fun first =>
-        (pendingLaw first).bind fun pending => thinUntil first pending threshold) =
+        (pendingLaw first).bind fun pending => ttcPseudocode.secondLoop first pending threshold) =
       (firstLaw.bind pendingJoint).bind K := by
         rw [Measure.bind_bind hpendingJoint.aemeasurable hK.aemeasurable]
         congr 1
@@ -85,7 +85,7 @@ theorem manuscript_poisson_twoLoops_oneCoinStream
             (poissonMeasure mean) G hG
     _ = (poissonMeasure mean).bind (fun pending =>
         (fairCoinStreamLaw.map firstResult).bind
-          (fun first => thinUntil first pending threshold)) := by
+          (fun first => ttcPseudocode.secondLoop first pending threshold)) := by
           rw [Measure.prod_eq_bind_map]
           rw [Measure.bind_bind
             Measurable.map_prodMk_left.aemeasurable hH.aemeasurable]
@@ -94,7 +94,7 @@ theorem manuscript_poisson_twoLoops_oneCoinStream
           rw [bind_mapped_measure fairCoinStreamLaw (Prod.mk pending)
             measurable_prodMk_left H hH]
           rw [bind_mapped_measure fairCoinStreamLaw firstResult hfirst
-            (fun first => thinUntil first pending threshold)
+            (fun first => ttcPseudocode.secondLoop first pending threshold)
             ((thinUntil_kernel_measurable threshold).comp
               (measurable_id.prodMk measurable_const))]
           rfl

@@ -178,11 +178,11 @@ theorem firstExitRound_tail {n : Nat} (s : TTCState n)
     (pending rounds cutoff : Nat) (threshold : Real)
     (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
-    fairCoinStreamLaw {coins | rounds < firstExitRound s pending threshold coins} ≤
+    fairCoinStreamLaw {coins | rounds < ttcPseudocode.secondLoopExitRound s pending threshold coins} ≤
       ((s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
         cutoff := by
   have hsubset :
-      {coins | rounds < firstExitRound s pending threshold coins} ⊆
+      {coins | rounds < ttcPseudocode.secondLoopExitRound s pending threshold coins} ⊆
       {coins | cutoff ≤ (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending} := by
     intro coins hcoins
@@ -190,11 +190,11 @@ theorem firstExitRound_tail {n : Nat} (s : TTCState n)
     have hsmall' : (samplesAfter coins rounds s.X).card +
         pendingAfter coins rounds s.nextLabel pending < cutoff :=
       Nat.lt_of_not_ge hsmall
-    have hexit : thinningExit s pending threshold coins rounds := by
-      unfold thinningExit
+    have hexit : ttcPseudocode.secondLoopExit s pending threshold coins rounds := by
+      unfold ttcPseudocode.secondLoopExit
       simpa only [Nat.cast_add] using hthreshold _ hsmall'
-    have hround : firstExitRound s pending threshold coins ≤ rounds := by
-      unfold firstExitRound
+    have hround : ttcPseudocode.secondLoopExitRound s pending threshold coins ≤ rounds := by
+      unfold ttcPseudocode.secondLoopExitRound
       exact Nat.sInf_le hexit
     exact (not_le_of_gt hcoins) hround
   exact (measure_mono hsubset).trans
@@ -204,7 +204,7 @@ theorem firstExitRound_tail {n : Nat} (s : TTCState n)
 real manuscript threshold. -/
 theorem firstExitRound_tail_floor {n : Nat} (s : TTCState n)
     (pending rounds : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
-    fairCoinStreamLaw {coins | rounds < firstExitRound s pending threshold coins} ≤
+    fairCoinStreamLaw {coins | rounds < ttcPseudocode.secondLoopExitRound s pending threshold coins} ≤
       ((s.X.card + pending : ENNReal) * (1 / 2 : ENNReal) ^ rounds) /
         (Nat.floor threshold + 1) := by
   have htail := firstExitRound_tail s pending rounds (Nat.floor threshold + 1)
@@ -219,15 +219,15 @@ in its entry population divided by the integer guard cutoff. -/
 theorem expected_firstExitRound_le {n : Nat} (s : TTCState n)
     (pending cutoff : Nat) (threshold : Real) (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
-    ∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
+    ∫⁻ coins, (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
         ∂fairCoinStreamLaw ≤
       2 * ((s.X.card + pending : ENNReal) / cutoff) := by
   rw [lintegral_nat_eq_tsum_tail fairCoinStreamLaw
-    (firstExitRound s pending threshold)
+    (ttcPseudocode.secondLoopExitRound s pending threshold)
     (measurable_firstExitRound s pending threshold)]
   calc
     (∑' rounds : Nat, fairCoinStreamLaw
-        {coins | rounds < firstExitRound s pending threshold coins}) ≤
+        {coins | rounds < ttcPseudocode.secondLoopExitRound s pending threshold coins}) ≤
         ∑' rounds : Nat,
           ((s.X.card + pending : ENNReal) *
             (1 / 2 : ENNReal) ^ rounds) / cutoff := by
@@ -251,7 +251,7 @@ theorem expected_firstExitRound_le {n : Nat} (s : TTCState n)
 
 theorem expected_firstExitRound_le_floor {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
-    ∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
+    ∫⁻ coins, (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
         ∂fairCoinStreamLaw ≤
       2 * ((s.X.card + pending : ENNReal) / (Nat.floor threshold + 1)) := by
   have hbound := expected_firstExitRound_le s pending
@@ -265,31 +265,31 @@ theorem expected_firstExitRound_le_floor {n : Nat} (s : TTCState n)
 theorem manuscriptCountThinWithCost_expected_eq {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-        manuscriptCountThinWithCost s pending threshold =
+        ttcPseudocode.secondLoopWithCost s pending threshold =
       (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
-        (∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
+        (∫⁻ coins, (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) := by
   have hcost : Measurable (fun coins : Nat × Nat → Bool =>
-      manuscriptCountThinningCost s pending threshold coins) := by
-    unfold manuscriptCountThinningCost
+      ttcPseudocode.secondLoopCost s pending threshold coins) := by
+    unfold ttcPseudocode.secondLoopCost
     exact (measurable_of_countable
       (fun rounds : Nat => rounds *
         TTCRuntime.countThinningRoundOperations s.X.card)).comp
       (measurable_firstExitRound s pending threshold)
   have hpair : Measurable (fun coins : Nat × Nat → Bool =>
-      (thinningResult s pending threshold coins,
-        manuscriptCountThinningCost s pending threshold coins)) :=
+      (ttcPseudocode.secondLoopResult s pending threshold coins,
+        ttcPseudocode.secondLoopCost s pending threshold coins)) :=
     (measurable_thinningResult s pending threshold).prodMk hcost
-  unfold manuscriptCountThinWithCost
+  unfold ttcPseudocode.secondLoopWithCost
   rw [lintegral_map (by fun_prop) hpair]
-  simp only [manuscriptCountThinningCost, Nat.cast_mul]
+  simp only [ttcPseudocode.secondLoopCost, Nat.cast_mul]
   have hmeas : Measurable (fun coins : Nat × Nat → Bool =>
-      (firstExitRound s pending threshold coins : ENNReal)) :=
+      (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)) :=
     (measurable_of_countable (fun q : Nat => (q : ENNReal))).comp
       (measurable_firstExitRound s pending threshold)
   rw [lintegral_mul_const
     (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) hmeas]
-  rw [mul_comm (∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
+  rw [mul_comm (∫⁻ coins, (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
     ∂fairCoinStreamLaw)]
 
 /-- The charged count-thinning law inherits the finite first-exit mean. -/
@@ -297,7 +297,7 @@ theorem manuscriptCountThinWithCost_expected_le {n : Nat} (s : TTCState n)
     (pending cutoff : Nat) (threshold : Real) (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-        manuscriptCountThinWithCost s pending threshold ≤
+        ttcPseudocode.secondLoopWithCost s pending threshold ≤
       (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
         (2 * ((s.X.card + pending : ENNReal) / cutoff)) := by
   rw [manuscriptCountThinWithCost_expected_eq]
@@ -310,9 +310,9 @@ surely. This removes the `sInf ∅ = 0` totalization branch from analysis. -/
 theorem never_thinningExit_null {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     fairCoinStreamLaw {coins | ∀ rounds,
-      ¬ thinningExit s pending threshold coins rounds} = 0 := by
+      ¬ ttcPseudocode.secondLoopExit s pending threshold coins rounds} = 0 := by
   let never : Set (Nat × Nat → Bool) :=
-    {coins | ∀ rounds, ¬ thinningExit s pending threshold coins rounds}
+    {coins | ∀ rounds, ¬ ttcPseudocode.secondLoopExit s pending threshold coins rounds}
   have hbound (rounds : Nat) : fairCoinStreamLaw never ≤
       ((s.X.card + pending : NNReal) : ENNReal) *
         (1 / 2 : ENNReal) ^ rounds := by
@@ -327,7 +327,7 @@ theorem never_thinningExit_null {n : Nat} (s : TTCState n)
         have hz : (samplesAfter coins rounds s.X).card +
             pendingAfter coins rounds s.nextLabel pending = 0 := Nat.eq_zero_of_not_pos h
         apply hnot
-        unfold thinningExit
+        unfold ttcPseudocode.secondLoopExit
         simpa only [← Nat.cast_add, hz, Nat.cast_zero] using hthreshold
       exact hpos
     have ht := (measure_mono hsubset).trans
@@ -341,17 +341,17 @@ theorem never_thinningExit_null {n : Nat} (s : TTCState n)
 theorem firstExitRound_guard_ae {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     ∀ᵐ coins ∂fairCoinStreamLaw,
-      thinningExit s pending threshold coins
-        (firstExitRound s pending threshold coins) := by
+      ttcPseudocode.secondLoopExit s pending threshold coins
+        (ttcPseudocode.secondLoopExitRound s pending threshold coins) := by
   rw [ae_iff]
   apply measure_mono_null ?_ (never_thinningExit_null s pending threshold hthreshold)
   intro coins hbad
   intro rounds hexit
-  have hs : ({r : Nat | thinningExit s pending threshold coins r}).Nonempty :=
+  have hs : ({r : Nat | ttcPseudocode.secondLoopExit s pending threshold coins r}).Nonempty :=
     ⟨rounds, hexit⟩
-  have hleast : thinningExit s pending threshold coins
-      (firstExitRound s pending threshold coins) := by
-    unfold firstExitRound
+  have hleast : ttcPseudocode.secondLoopExit s pending threshold coins
+      (ttcPseudocode.secondLoopExitRound s pending threshold coins) := by
+    unfold ttcPseudocode.secondLoopExitRound
     exact Nat.sInf_mem hs
   exact hbad hleast
 
@@ -373,9 +373,9 @@ theorem TTCState.addBatch_card_le {n count : Nat} (s : TTCState n)
 almost surely. -/
 theorem thinUntil_population_le_ae {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
-    ∀ᵐ result ∂thinUntil s pending threshold,
+    ∀ᵐ result ∂ttcPseudocode.secondLoop s pending threshold,
       ((result.1.X.card + result.2 : Nat) : Real) ≤ threshold := by
-  have hmap : Measurable (thinningResult s pending threshold) :=
+  have hmap : Measurable (ttcPseudocode.secondLoopResult s pending threshold) :=
     measurable_thinningResult s pending threshold
   have hset : MeasurableSet {result : TTCState n × Nat |
       ((result.1.X.card + result.2 : Nat) : Real) ≤ threshold} := by
@@ -392,16 +392,16 @@ theorem thinUntil_population_le_ae {n : Nat} (s : TTCState n)
         result.1.X.card + result.2) := hcard.add measurable_snd
     exact ((measurable_of_countable (fun q : Nat => (q : Real))).comp htotal)
       measurableSet_Iic
-  unfold thinUntil
+  unfold ttcPseudocode.secondLoop
   rw [ae_map_iff hmap.aemeasurable hset]
   filter_upwards [firstExitRound_guard_ae s pending threshold hthreshold] with coins hcoins
-  simpa only [thinningResult, Nat.cast_add, thinningExit] using hcoins
+  simpa only [ttcPseudocode.secondLoopResult, Nat.cast_add, ttcPseudocode.secondLoopExit] using hcoins
 
 /-- Forgetting the charged round count transports the same exit guard to the
 result law used by the runtime program. -/
 theorem manuscriptCountThinWithCost_population_le_ae {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
-    ∀ᵐ result ∂manuscriptCountThinWithCost s pending threshold,
+    ∀ᵐ result ∂ttcPseudocode.secondLoopWithCost s pending threshold,
       ((result.1.1.X.card + result.1.2 : Nat) : Real) ≤ threshold := by
   have hset : MeasurableSet {result : TTCState n × Nat |
       ((result.1.X.card + result.2 : Nat) : Real) ≤ threshold} := by
@@ -426,17 +426,17 @@ theorem manuscriptCountThinWithCost_population_le_ae {n : Nat} (s : TTCState n)
 stored population below the same threshold. -/
 theorem thinningResult_addBatch_card_le {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (coins : Nat × Nat → Bool)
-    (hguard : thinningExit s pending threshold coins
-      (firstExitRound s pending threshold coins))
-    (points : Fin (thinningResult s pending threshold coins).2 → LatticePoint n) :
-    (((thinningResult s pending threshold coins).1.addBatch points).X.card : Real) ≤
+    (hguard : ttcPseudocode.secondLoopExit s pending threshold coins
+      (ttcPseudocode.secondLoopExitRound s pending threshold coins))
+    (points : Fin (ttcPseudocode.secondLoopResult s pending threshold coins).2 → LatticePoint n) :
+    (((ttcPseudocode.secondLoopResult s pending threshold coins).1.addBatch points).X.card : Real) ≤
       threshold := by
   have hcard := TTCState.addBatch_card_le
-    (thinningResult s pending threshold coins).1 points
-  have hguard' : ((thinningResult s pending threshold coins).1.X.card +
-      (thinningResult s pending threshold coins).2 : Nat) ≤
+    (ttcPseudocode.secondLoopResult s pending threshold coins).1 points
+  have hguard' : ((ttcPseudocode.secondLoopResult s pending threshold coins).1.X.card +
+      (ttcPseudocode.secondLoopResult s pending threshold coins).2 : Nat) ≤
       threshold := by
-    simpa [thinningResult, thinningExit, Nat.cast_add] using hguard
+    simpa [ttcPseudocode.secondLoopResult, ttcPseudocode.secondLoopExit, Nat.cast_add] using hguard
   exact (Nat.cast_le.mpr hcard).trans hguard'
 
 theorem TTCState.removeComponent_card_le {n : Nat} (s : TTCState n)
@@ -461,9 +461,9 @@ theorem deletionPassOperations_le {n : Nat} (s : TTCState n)
 
 theorem manuscriptRateThinningResult_card_le {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) (coins : Nat × Nat → Bool) :
-    (manuscriptRateThinningResult s intensity threshold coins).X.card ≤
+    (ttcPseudocode.firstLoopResult s intensity threshold coins).X.card ≤
       s.X.card := by
-  dsimp only [manuscriptRateThinningResult]
+  dsimp only [ttcPseudocode.firstLoopResult]
   unfold samplesAfter
   exact Finset.card_filter_le _ _
 

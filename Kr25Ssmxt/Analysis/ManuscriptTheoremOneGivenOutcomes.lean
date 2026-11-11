@@ -260,9 +260,9 @@ theorem communityManuscript_ghost_estimate_bad_le
     exact hs
   have hnocross : ∀ i : Fin comps.length,
       ∀ c : ManuscriptOriginConfiguration n, c.level ≤ level0 →
-        c.level + manuscriptRateExit
+        c.level + ttcPseudocode.firstLoopExit
           (c.state.removeComponent (comps.get i).polytope)
-          (ttc.t b n T (outcomes i).2) T ≤ level0 := by
+          (ttcPseudocode.t b n T (outcomes i).2) T ≤ level0 := by
     intro i c hc
     rw [communityManuscriptCertifiedComponents_get_polytope hn D p prep i]
     have hidx : Fin.cast hlen.symm (Fin.cast hlen i) = i := Fin.ext rfl

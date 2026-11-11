@@ -16,8 +16,8 @@ INTERNAL: Order property needed to identify successor fibers of the least exit r
 -/
 lemma thinningExit_mono_rounds {n : Nat} (s : TTCState n) (pending : Nat)
     (threshold : Real) (coins : Nat × Nat → Bool) {r₁ r₂ : Nat} (hr : r₁ ≤ r₂) :
-    thinningExit s pending threshold coins r₁ →
-      thinningExit s pending threshold coins r₂ := by
+    ttcPseudocode.secondLoopExit s pending threshold coins r₁ →
+      ttcPseudocode.secondLoopExit s pending threshold coins r₂ := by
   classical
   intro hexit
   have hsurvives : ∀ label,

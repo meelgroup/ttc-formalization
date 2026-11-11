@@ -191,13 +191,13 @@ theorem ManuscriptOriginConfiguration.measurable_advance_source_joint
       (comap_measurable (fun s : TTCState n =>
         (s.p, s.X, s.nextLabel)))).comp hstate
   have hround : Measurable (fun c : ManuscriptOriginConfiguration n =>
-      manuscriptRateExit (c.state.removeComponent P) intensity
+      ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
         threshold) :=
     (measurable_manuscriptRateExit_joint threshold hthreshold).comp
       (((measurable_removeComponent P).comp hstate).prodMk
         measurable_const)
   have hpre : Measurable (fun c : ManuscriptOriginConfiguration n =>
-      c.level + manuscriptRateExit (c.state.removeComponent P)
+      c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
         intensity threshold) :=
     measurable_manuscriptOriginConfiguration_level.add hround
   have heq : (fun z : ManuscriptOriginConfiguration n ×
@@ -208,7 +208,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_source_joint
         { component := P
           firstLabel := z.1.state.nextLabel
           basePending := basePending
-          preRounds := z.1.level + manuscriptRateExit
+          preRounds := z.1.level + ttcPseudocode.firstLoopExit
             (z.1.state.removeComponent P) intensity threshold
           preCoins := preCoins
           futureCoins := future

@@ -28,27 +28,27 @@ theorem community_manuscript_costed_output_fst {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations factor : Nat) :
-    (communityManuscriptTTCWithCost hn F hbounded p prep
+    (ttcWithCost hn F hbounded p prep
       preprocessingOperations factor).map Prod.fst =
       ttc hn F hbounded p prep := by
   let D := prep.run F hbounded
-  have hprep : (communityManuscriptOracles hn prep).preprocessing = prep := rfl
+  have hprep : (ttcSubroutines hn prep).preprocessing = prep := rfl
   by_cases hempty : D.componentCount = 0
   · have hempty' :
-        ((communityManuscriptOracles hn prep).preprocessing.run F hbounded).componentCount
+        ((ttcSubroutines hn prep).preprocessing.run F hbounded).componentCount
           = 0 := by simpa only [hprep, D] using hempty
-    simp [communityManuscriptTTCWithCost, ttc,
-      manuscriptTTCWithCost, ttcWith, communityManuscriptCostedOracles,
+    simp [ttcWithCost, ttc,
+      ttcPseudocodeWithCost, ttcPseudocode, ttcCostedSubroutines,
       hempty']
   · let b := (prep.choosePrecision D p).value
     let threshold := p.Thresh D.componentCount
     have hvolume : ∀ P ∈ List.ofFn D.component,
-        ((communityManuscriptCostedOracles hn prep factor).computeVolumeWithCost
+        ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
           P p.ε' (p.δ' D.componentCount)) Set.univ ≤ 1 := by
       intro P hP
       obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
       apply costedCharge_mass_le_one
-      dsimp only [communityManuscriptOracles]
+      dsimp only [ttcSubroutines]
       rw [Measure.map_apply
         ((D.component i).measurable_clipManuscriptVolume p.ε')
         MeasurableSet.univ]
@@ -58,19 +58,19 @@ theorem community_manuscript_costed_output_fst {n k : Nat} (hn : 21 ≤ n)
       (p.threshold_pos D.componentCount) (List.ofFn D.component) hvolume
       (TTCState.initial n)
     have hempty' :
-        ((communityManuscriptOracles hn prep).preprocessing.run F hbounded).componentCount
+        ((ttcSubroutines hn prep).preprocessing.run F hbounded).componentCount
           ≠ 0 := by simpa only [hprep, D] using hempty
-    simp only [communityManuscriptTTCWithCost, ttc,
-      manuscriptTTCWithCost, ttcWith, communityManuscriptCostedOracles,
+    simp only [ttcWithCost, ttc,
+      ttcPseudocodeWithCost, ttcPseudocode, ttcCostedSubroutines,
       if_neg hempty']
     simp only [hempty', ↓reduceIte]
-    change ((manuscriptProcessComponentsWithCost
-      (communityManuscriptCostedOracles hn prep factor)
+    change ((ttcPseudocode.loopWithCost
+      (ttcCostedSubroutines hn prep factor)
       b p.ε' (p.δ' D.componentCount) threshold
       (List.ofFn D.component) (TTCState.initial n)).map
         (fun result => (Est b threshold result.1,
           preprocessingOperations + result.2))).map Prod.fst =
-      (manuscriptProcessComponents (communityManuscriptOracles hn prep)
+      (ttcPseudocode.loop (ttcSubroutines hn prep)
         b p.ε' (p.δ' D.componentCount) threshold
         (List.ofFn D.component) (TTCState.initial n)).map
           (Est b threshold)
@@ -82,8 +82,8 @@ theorem community_manuscript_costed_output_fst {n k : Nat} (hn : 21 ≤ n)
       (hestimate.comp measurable_fst).prodMk
         (measurable_const.add measurable_snd)
     rw [Measure.map_map measurable_fst houtput]
-    change (manuscriptProcessComponentsWithCost
-      (communityManuscriptCostedOracles hn prep factor)
+    change (ttcPseudocode.loopWithCost
+      (ttcCostedSubroutines hn prep factor)
       b p.ε' (p.δ' D.componentCount) threshold
       (List.ofFn D.component) (TTCState.initial n)).map
         (Est b threshold ∘ Prod.fst) = _

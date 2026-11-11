@@ -296,7 +296,7 @@ theorem manuscriptOriginMarked_rateThinningResult {n : Nat}
     (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) :
     ManuscriptOriginMarked
-      (manuscriptRateThinningResult s intensity threshold coins)
+      (ttcPseudocode.firstLoopResult s intensity threshold coins)
       origin marks := by
   classical
   intro copy hcopy
@@ -496,8 +496,8 @@ theorem manuscriptOriginSurvives_twoLoops {n : Nat}
     (activeCoins : Nat × Fin pending → Bool)
     (h : ManuscriptOriginSurvives s origin sources level) :
     let oldCoins := manuscriptSourceOldCoins origin sources level
-    let rounds := manuscriptRateExit s intensity threshold
-    let first := manuscriptRateThinningResult s intensity threshold oldCoins
+    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+    let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
     let activeRounds := firstExitRoundSplit first pending threshold
       (shiftCoins rounds oldCoins)
       (pendingCoinExtension s.nextLabel pending activeCoins)
@@ -507,8 +507,8 @@ theorem manuscriptOriginSurvives_twoLoops {n : Nat}
       (level + rounds + activeRounds) := by
   dsimp only
   let oldCoins := manuscriptSourceOldCoins origin sources level
-  let rounds := manuscriptRateExit s intensity threshold
-  let first := manuscriptRateThinningResult s intensity threshold oldCoins
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
   let activeRounds := firstExitRoundSplit first pending threshold
     (shiftCoins rounds oldCoins)
     (pendingCoinExtension s.nextLabel pending activeCoins)
@@ -611,7 +611,7 @@ theorem manuscriptOriginValid_rateThinningResult {n : Nat}
     (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) :
     ManuscriptOriginValid
-      (manuscriptRateThinningResult s intensity threshold coins)
+      (ttcPseudocode.firstLoopResult s intensity threshold coins)
       origin valid := by
   classical
   intro copy hcopy

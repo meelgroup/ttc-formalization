@@ -53,33 +53,33 @@ dyadic-level coin blocks on all stored copies. -/
 theorem manuscript_two_loops_samples_splice {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (pending : Nat) (first second : Nat × Nat → Bool) :
-    (thinningResult
-      (manuscriptRateThinningResult s intensity threshold first)
+    (ttcPseudocode.secondLoopResult
+      (ttcPseudocode.firstLoopResult s intensity threshold first)
       pending threshold second).1.X =
     samplesAfter (spliceCoins first second
-      (manuscriptRateExit s intensity threshold))
-      (manuscriptRateExit s intensity threshold +
-        firstExitRound
-          (manuscriptRateThinningResult s intensity threshold first)
+      (ttcPseudocode.firstLoopExit s intensity threshold))
+      (ttcPseudocode.firstLoopExit s intensity threshold +
+        ttcPseudocode.secondLoopExitRound
+          (ttcPseudocode.firstLoopResult s intensity threshold first)
           pending threshold second) s.X := by
   exact samplesAfter_spliceCoins first second
-    (manuscriptRateExit s intensity threshold)
-    (firstExitRound
-      (manuscriptRateThinningResult s intensity threshold first)
+    (ttcPseudocode.firstLoopExit s intensity threshold)
+    (ttcPseudocode.secondLoopExitRound
+      (ttcPseudocode.firstLoopResult s intensity threshold first)
       pending threshold second) s.X
 
 theorem manuscript_two_loops_rate_add {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (pending : Nat) (first second : Nat × Nat → Bool) :
-    (thinningResult
-      (manuscriptRateThinningResult s intensity threshold first)
+    (ttcPseudocode.secondLoopResult
+      (ttcPseudocode.firstLoopResult s intensity threshold first)
       pending threshold second).1.p =
     s.p / (2 : NNReal) ^
-      (manuscriptRateExit s intensity threshold +
-        firstExitRound
-          (manuscriptRateThinningResult s intensity threshold first)
+      (ttcPseudocode.firstLoopExit s intensity threshold +
+        ttcPseudocode.secondLoopExitRound
+          (ttcPseudocode.firstLoopResult s intensity threshold first)
           pending threshold second) := by
-  simp only [thinningResult, manuscriptRateThinningResult,
+  simp only [ttcPseudocode.secondLoopResult, ttcPseudocode.firstLoopResult,
     pow_add, div_eq_mul_inv, mul_inv_rev, mul_assoc]
   ac_rfl
 
@@ -93,20 +93,20 @@ theorem manuscript_two_loops_addBatch_pointCount {n : Nat}
     {count : Nat} (batch : Fin count → LatticePoint n)
     (x : LatticePoint n) (hfresh : s.LabelsFresh) :
     let deleted := s.removeComponent P
-    let firstState := manuscriptRateThinningResult deleted intensity threshold first
-    let secondState := (thinningResult firstState pending threshold second).1
+    let firstState := ttcPseudocode.firstLoopResult deleted intensity threshold first
+    let secondState := (ttcPseudocode.secondLoopResult firstState pending threshold second).1
     (secondState.addBatch batch).pointCount x =
       ((samplesAfter (spliceCoins first second
-        (manuscriptRateExit deleted intensity threshold))
-        (manuscriptRateExit deleted intensity threshold +
-          firstExitRound firstState pending threshold second)
+        (ttcPseudocode.firstLoopExit deleted intensity threshold))
+        (ttcPseudocode.firstLoopExit deleted intensity threshold +
+          ttcPseudocode.secondLoopExitRound firstState pending threshold second)
         deleted.X).filter (fun copy => copy.2 = x)).card +
         Arlib.Probability.colourCount batch x := by
   classical
   dsimp only
   let deleted := s.removeComponent P
-  let firstState := manuscriptRateThinningResult deleted intensity threshold first
-  let secondState := (thinningResult firstState pending threshold second).1
+  let firstState := ttcPseudocode.firstLoopResult deleted intensity threshold first
+  let secondState := (ttcPseudocode.secondLoopResult firstState pending threshold second).1
   have hdeleted : deleted.LabelsFresh :=
     s.labelsFresh_removeComponent P hfresh
   have hfirst : firstState.LabelsFresh :=

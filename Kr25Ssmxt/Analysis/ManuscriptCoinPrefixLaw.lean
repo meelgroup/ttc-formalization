@@ -70,9 +70,9 @@ theorem thinningExit_coinPrefix_iff {n : Nat}
     (s : TTCState n) (pending rounds upto : Nat)
     (hupto : upto ≤ rounds) (threshold : Real)
     (coins : Nat × Nat → Bool) :
-    thinningExit s pending threshold (coinPrefix rounds coins) upto ↔
-      thinningExit s pending threshold coins upto := by
-  simp only [thinningExit,
+    ttcPseudocode.secondLoopExit s pending threshold (coinPrefix rounds coins) upto ↔
+      ttcPseudocode.secondLoopExit s pending threshold coins upto := by
+  simp only [ttcPseudocode.secondLoopExit,
     samplesAfter_coinPrefix s rounds upto hupto coins,
     pendingAfter_coinPrefix rounds upto s.nextLabel pending hupto coins]
 

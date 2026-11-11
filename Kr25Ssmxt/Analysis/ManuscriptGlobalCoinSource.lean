@@ -118,16 +118,16 @@ theorem firstExitRound_globalFuture_law {n : Nat}
     (hthreshold : 0 ≤ threshold) :
     fairCoinStreamLaw.map
       (fun coins =>
-        let rounds := firstExitRound s pending threshold coins
+        let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
         (rounds, manuscriptGlobalCoinRead (shiftCoins rounds coins))) =
-    (fairCoinStreamLaw.map (firstExitRound s pending threshold)).prod
+    (fairCoinStreamLaw.map (ttcPseudocode.secondLoopExitRound s pending threshold)).prod
       (Measure.infinitePi
         (fun _ : Nat × (Nat × Nat) => fairCoinLaw)) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   let stopped : (Nat × Nat → Bool) →
       Nat × (Nat × Nat → Bool) := fun coins =>
-    let rounds := firstExitRound s pending threshold coins
+    let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
     (rounds, shiftCoins rounds coins)
   have hstopped : Measurable stopped :=
     measurable_stoppedCoinPair _
@@ -141,21 +141,21 @@ theorem firstExitRound_globalFuture_law {n : Nat}
   calc
     fairCoinStreamLaw.map
         (fun coins =>
-          let rounds := firstExitRound s pending threshold coins
+          let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
           (rounds, manuscriptGlobalCoinRead (shiftCoins rounds coins))) =
       (fairCoinStreamLaw.map stopped).map reindex := by
         rw [Measure.map_map hreindex hstopped]
         rfl
     _ = ((fairCoinStreamLaw.map
-        (firstExitRound s pending threshold)).prod
+        (ttcPseudocode.secondLoopExitRound s pending threshold)).prod
           fairCoinStreamLaw).map reindex := by
             rw [firstExitRound_shift_law s pending threshold hthreshold]
     _ = ((fairCoinStreamLaw.map
-        (firstExitRound s pending threshold)).map id).prod
+        (ttcPseudocode.secondLoopExitRound s pending threshold)).map id).prod
           (fairCoinStreamLaw.map manuscriptGlobalCoinRead) := by
             exact (Measure.map_prod_map
               (fairCoinStreamLaw.map
-                (firstExitRound s pending threshold)) fairCoinStreamLaw
+                (ttcPseudocode.secondLoopExitRound s pending threshold)) fairCoinStreamLaw
               measurable_id measurable_manuscriptGlobalCoinRead).symm
     _ = _ := by
       rw [Measure.map_id, fairCoinStreamLaw_globalCoinRead]
@@ -187,8 +187,8 @@ theorem firstExitRoundSplit_merged_globalFuture_law {n : Nat}
     have hmerge := measurable_mergeCoinsAtLabel_pair s.nextLabel
     have hpath : stopped =
         (fun coins =>
-          (firstExitRound s pending threshold coins,
-            shiftCoins (firstExitRound s pending threshold coins) coins)) ∘
+          (ttcPseudocode.secondLoopExitRound s pending threshold coins,
+            shiftCoins (ttcPseudocode.secondLoopExitRound s pending threshold coins) coins)) ∘
           merge := by
       funext pair
       simp [stopped, merge, Function.comp_def,
@@ -301,12 +301,12 @@ theorem firstExitRound_originFuture_law {n : Nat}
     (hhistory : ManuscriptOriginHistory nextLabel processed origin) :
     fairCoinStreamLaw.map
       (fun coins =>
-        let rounds := firstExitRound s pending threshold coins
+        let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
         (rounds, fun pair : Nat × Fin nextLabel =>
           manuscriptGlobalCoinRead (shiftCoins rounds coins)
             (manuscriptOriginCoinIndex nextLabel origin pair))) =
     (fairCoinStreamLaw.map
-      (firstExitRound s pending threshold)).prod
+      (ttcPseudocode.secondLoopExitRound s pending threshold)).prod
       (Measure.infinitePi
         (fun _ : Nat × Fin nextLabel => fairCoinLaw)) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
@@ -326,12 +326,12 @@ theorem firstExitRound_originFuture_law {n : Nat}
       measurable_pi_apply (manuscriptOriginCoinIndex nextLabel origin pair))
   let stopped : (Nat × Nat → Bool) →
       Nat × (Nat × (Nat × Nat) → Bool) := fun coins =>
-    let rounds := firstExitRound s pending threshold coins
+    let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
     (rounds, manuscriptGlobalCoinRead (shiftCoins rounds coins))
   have hstopped : Measurable stopped := by
     let base : (Nat × Nat → Bool) → Nat × (Nat × Nat → Bool) :=
       fun coins =>
-        let rounds := firstExitRound s pending threshold coins
+        let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
         (rounds, shiftCoins rounds coins)
     have hbase : Measurable base :=
       measurable_stoppedCoinPair _
@@ -345,7 +345,7 @@ theorem firstExitRound_originFuture_law {n : Nat}
   calc
     fairCoinStreamLaw.map
         (fun coins =>
-          let rounds := firstExitRound s pending threshold coins
+          let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
           (rounds, fun pair : Nat × Fin nextLabel =>
             manuscriptGlobalCoinRead (shiftCoins rounds coins)
               (manuscriptOriginCoinIndex nextLabel origin pair))) =
@@ -353,10 +353,10 @@ theorem firstExitRound_originFuture_law {n : Nat}
         rw [Measure.map_map hreindex hstopped]
         rfl
     _ = ((fairCoinStreamLaw.map
-        (firstExitRound s pending threshold)).prod sourceLaw).map reindex := by
+        (ttcPseudocode.secondLoopExitRound s pending threshold)).prod sourceLaw).map reindex := by
           rw [firstExitRound_globalFuture_law s pending threshold hthreshold]
     _ = ((fairCoinStreamLaw.map
-        (firstExitRound s pending threshold)).map id).prod
+        (ttcPseudocode.secondLoopExitRound s pending threshold)).map id).prod
           (sourceLaw.map oldRead) := by
             exact (Measure.map_prod_map _ sourceLaw measurable_id
               holdRead).symm
@@ -364,7 +364,7 @@ theorem firstExitRound_originFuture_law {n : Nat}
       rw [Measure.map_id]
       exact congrArg
         ((fairCoinStreamLaw.map
-          (firstExitRound s pending threshold)).prod)
+          (ttcPseudocode.secondLoopExitRound s pending threshold)).prod)
         (manuscript_origin_coins_on_allocated_labels nextLabel processed
           origin hhistory)
 

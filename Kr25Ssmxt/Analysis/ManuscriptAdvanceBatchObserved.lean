@@ -142,22 +142,22 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_state_eq_observedBatch
     (oldFuture : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n) :
     let deleted := c.state.removeComponent P
-    let rounds := manuscriptRateExit deleted intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
     let preRounds := c.level + rounds
     let old := manuscriptSourceOldCoins c.origin
       (c.refreshFuture oldFuture).source.coins c.level
-    let first := manuscriptRateThinningResult deleted intensity threshold old
+    let first := ttcPseudocode.firstLoopResult deleted intensity threshold old
     ((c.refreshFuture oldFuture).advance P intensity threshold
       basePending preCoins fresh tape).state =
     manuscriptObservedBatchState first threshold preCoins preRounds
       basePending c.origin tape
       (manuscriptGlobalSourceShift rounds oldFuture, fresh) := by
   let deleted := c.state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let old := manuscriptSourceOldCoins c.origin
     (c.refreshFuture oldFuture).source.coins c.level
-  let first := manuscriptRateThinningResult deleted intensity threshold old
+  let first := ttcPseudocode.firstLoopResult deleted intensity threshold old
   have hshift : shiftCoins rounds old =
       (fun pair : Nat × Nat =>
         manuscriptGlobalSourceShift rounds oldFuture

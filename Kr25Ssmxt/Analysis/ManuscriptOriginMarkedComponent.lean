@@ -17,7 +17,7 @@ theorem communityManuscript_active_finite_origin_tape
     (s : TTCState n) (intensity : NNReal) (hfresh : s.LabelsFresh)
     (preCoins : Nat × Nat → Bool) (preRounds basePending : Nat) :
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-    let rounds := manuscriptRateExit s intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     let coinLaw := fairCoinStreamLaw.prod
@@ -25,15 +25,15 @@ theorem communityManuscript_active_finite_origin_tape
     let result := fun pair : (Nat × Nat → Bool) ×
         (Nat × Fin pending → Bool) =>
       thinningResultSplitFinite
-        (manuscriptRateThinningResult s intensity threshold pair.1)
+        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
         pending threshold (shiftCoins rounds pair.1) pair.2
     (coinLaw.map result).bind (fun second =>
-      ((communityManuscriptOracles hn prep).GenerateSamples P second.2
+      ((ttcSubroutines hn prep).GenerateSamples P second.2
         b eta delta).map fun batch => second.1.addBatch batch.2) =
     coinLaw.bind fun pair =>
       let second := result pair
       let activeRounds := firstExitRoundSplit
-        (manuscriptRateThinningResult s intensity threshold pair.1)
+        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
         pending threshold (shiftCoins rounds pair.1)
         (pendingCoinExtension s.nextLabel pending pair.2)
       (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
@@ -42,16 +42,16 @@ theorem communityManuscript_active_finite_origin_tape
             basePending pair.2 activeRounds i)) := by
   dsimp only
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := manuscriptRateExit s intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
   let coinLaw := fairCoinStreamLaw.prod
     (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))
   let result : (Nat × Nat → Bool) × (Nat × Fin pending → Bool) →
       TTCState n × Nat := fun pair =>
     thinningResultSplitFinite
-      (manuscriptRateThinningResult s intensity threshold pair.1)
+      (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
       pending threshold (shiftCoins rounds pair.1) pair.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
+    ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hresult : Measurable result :=
     measurable_manuscript_active_finite_result s intensity threshold pending
@@ -79,8 +79,8 @@ noncomputable def communityManuscriptOriginTapeKernel
       (Nat × Fin (pendingAfter preCoins preRounds s.nextLabel basePending) →
         Bool)) : Measure (TTCState n) :=
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := manuscriptRateExit s intensity threshold
-  let first := manuscriptRateThinningResult s intensity threshold pair.1
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let first := ttcPseudocode.firstLoopResult s intensity threshold pair.1
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds pair.1) pair.2
   let activeRounds := firstExitRoundSplit first pending threshold
@@ -108,11 +108,11 @@ theorem measurable_communityManuscriptOriginTapeKernel
   let result : (Nat × Nat → Bool) × (Nat × Fin pending → Bool) →
       TTCState n × Nat := fun pair =>
     thinningResultSplitFinite
-      (manuscriptRateThinningResult s intensity threshold pair.1)
+      (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
       pending threshold
-      (shiftCoins (manuscriptRateExit s intensity threshold) pair.1) pair.2
+      (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1) pair.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
+    ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hresult : Measurable result :=
     measurable_manuscript_active_finite_result s intensity threshold pending
@@ -186,9 +186,9 @@ noncomputable def communityManuscriptOriginSourceKernel
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n) (level : Nat) :
     Measure (TTCState n) :=
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
@@ -198,7 +198,7 @@ noncomputable def communityManuscriptOriginSourceKernel
       (fairCoinStreamLaw.prod
         (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).bind
         fun pair =>
-          let first := manuscriptRateThinningResult deleted intensity threshold
+          let first := ttcPseudocode.firstLoopResult deleted intensity threshold
             pair.1
           let second := thinningResultSplitFinite first pending threshold
             (shiftCoins rounds pair.1) pair.2
@@ -226,10 +226,10 @@ theorem communityManuscriptComponentGivenVolume_eq_originSourceKernel
       outcome state =
     communityManuscriptOriginSourceKernel hn P b eta threshold hroute
       outcome state level := by
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
-    ((communityManuscriptOracles hn prep).GenerateSamples P second.2
+    ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta delta).map fun batch => second.1.addBatch batch.2
   have hK : Measurable K :=
     measurable_communityManuscript_sampleAppend_kernel hn prep P b eta delta
@@ -237,13 +237,13 @@ theorem communityManuscriptComponentGivenVolume_eq_originSourceKernel
     (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
-          thinningResult
-            (manuscriptRateThinningResult deleted intensity threshold activeCoins)
+          ttcPseudocode.secondLoopResult
+            (ttcPseudocode.firstLoopResult deleted intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + manuscriptRateExit deleted intensity threshold)
+              (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
               deleted.nextLabel basePending)
             threshold
-            (shiftCoins (manuscriptRateExit deleted intensity threshold)
+            (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
               activeCoins)
   let finiteSource : Measure (TTCState n × Nat) :=
     (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
@@ -279,7 +279,7 @@ theorem communityManuscriptComponentGivenVolume_eq_originSourceKernel
       exact communityManuscript_active_finite_origin_tape
         hn prep P b eta delta threshold hroute deleted intensity
         (state.labelsFresh_removeComponent P hfresh) preCoins
-        (level + manuscriptRateExit deleted intensity threshold) basePending
+        (level + ttcPseudocode.firstLoopExit deleted intensity threshold) basePending
 
 /-- The same source law with a full future fair-coin stream in place of the
 finite survivor-indexed coin block. -/
@@ -292,9 +292,9 @@ noncomputable def communityManuscriptFutureSourceKernel
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n) (level : Nat) :
     Measure (TTCState n) :=
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
     fairCoinStreamLaw.bind fun preCoins =>
       (fairCoinStreamLaw.prod fairCoinStreamLaw).bind fun pair =>
@@ -329,9 +329,9 @@ theorem communityManuscriptComponentGivenVolume_eq_futureSourceKernel
   intro preCoins
   exact communityManuscript_originTape_futureCoins
     hn prep P b eta delta threshold hroute (state.removeComponent P)
-    (ttc.t b n threshold outcome.2)
+    (ttcPseudocode.t b n threshold outcome.2)
     (state.labelsFresh_removeComponent P hfresh) preCoins
-    (level + manuscriptRateExit (state.removeComponent P)
-      (ttc.t b n threshold outcome.2) threshold) basePending
+    (level + ttcPseudocode.firstLoopExit (state.removeComponent P)
+      (ttcPseudocode.t b n threshold outcome.2) threshold) basePending
 
 end Kr25Ssmxt

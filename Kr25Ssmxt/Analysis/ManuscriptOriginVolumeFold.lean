@@ -17,7 +17,7 @@ structure ManuscriptOriginCertifiedComponent
     (codedLatticePoints polytope b).Finite ∧
     (codedLatticePoints polytope b).Nonempty
   volumeProbability : IsProbabilityMeasure
-    ((communityManuscriptOracles hn prep).ComputeVolume polytope eta delta)
+    ((ttcSubroutines hn prep).ComputeVolume polytope eta delta)
 
 noncomputable def communityManuscriptOriginComponentsLaw
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -46,7 +46,7 @@ theorem measurable_communityManuscriptOriginComponentsLaw
           hn prep d.polytope b eta delta threshold d.route) := by
         exact measurable_manuscriptOriginComponentVolumeLaw hn d.polytope
           b eta threshold hthreshold d.route
-          ((communityManuscriptOracles hn prep).ComputeVolume d.polytope
+          ((ttcSubroutines hn prep).ComputeVolume d.polytope
             eta delta) d.volumeProbability
       exact (Measure.measurable_bind' ih).comp hstep
 
@@ -69,7 +69,7 @@ theorem communityManuscriptOriginComponentsLaw_isProbabilityMeasure
             eta delta threshold d.route c) :=
         manuscriptOriginComponentVolumeLaw_isProbabilityMeasure hn
           d.polytope b eta threshold hthreshold d.route
-          ((communityManuscriptOracles hn prep).ComputeVolume d.polytope
+          ((ttcSubroutines hn prep).ComputeVolume d.polytope
             eta delta) d.volumeProbability c
       change IsProbabilityMeasure
         ((communityManuscriptOriginComponentLaw hn prep d.polytope b
@@ -91,7 +91,7 @@ theorem communityManuscriptOriginComponentsLaw_map_state
     (communityManuscriptOriginComponentsLaw hn prep b eta delta
       threshold components c).map
         (fun next : ManuscriptOriginConfiguration n => next.state) =
-    manuscriptProcessComponents (communityManuscriptOracles hn prep)
+    ttcPseudocode.loop (ttcSubroutines hn prep)
       b eta delta threshold (components.map (fun d => d.polytope))
       c.state := by
   induction components generalizing c with
@@ -106,15 +106,15 @@ theorem communityManuscriptOriginComponentsLaw_map_state
         b eta delta threshold d.route c
       let tail := communityManuscriptOriginComponentsLaw hn prep b eta
         delta threshold rest
-      let programTail := manuscriptProcessComponents
-        (communityManuscriptOracles hn prep) b eta delta threshold
+      let programTail := ttcPseudocode.loop
+        (ttcSubroutines hn prep) b eta delta threshold
         (rest.map (fun d => d.polytope))
       have htail : Measurable tail :=
         measurable_communityManuscriptOriginComponentsLaw hn prep b eta
           delta threshold hthreshold rest
       have hvolRest : ∀ P ∈ rest.map (fun d => d.polytope),
           IsProbabilityMeasure
-            ((communityManuscriptOracles hn prep).ComputeVolume P eta
+            ((ttcSubroutines hn prep).ComputeVolume P eta
               delta) := by
         intro P hP
         obtain ⟨d', _, rfl⟩ := List.mem_map.mp hP
@@ -144,12 +144,12 @@ theorem communityManuscriptOriginComponentsLaw_map_state
           exact (bind_mapped_measure step (fun next => next.state)
             measurable_manuscriptOriginConfiguration_state programTail
             hprogram).symm
-        _ = (manuscriptProcessComponent
-            (communityManuscriptOracles hn prep) b eta delta threshold
+        _ = (ttcPseudocode.step
+            (ttcSubroutines hn prep) b eta delta threshold
             d.polytope c.state).bind programTail := by
           rw [communityManuscriptOriginComponentLaw_map_state hn prep
             d.polytope b eta delta threshold hthreshold d.route c]
-        _ = manuscriptProcessComponents (communityManuscriptOracles hn prep)
+        _ = ttcPseudocode.loop (ttcSubroutines hn prep)
             b eta delta threshold
             ((d :: rest).map (fun d => d.polytope)) c.state := rfl
 

@@ -19,7 +19,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_firstState
     {n : Nat} (P : PolytopeData n) (intensity : NNReal)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
-      manuscriptRateThinningResult (c.state.removeComponent P)
+      ttcPseudocode.firstLoopResult (c.state.removeComponent P)
         intensity threshold
         (manuscriptSourceOldCoins c.origin c.source.coins c.level)) := by
   have hdeleted : Measurable (fun c : ManuscriptOriginConfiguration n =>
@@ -37,7 +37,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_pending
     (basePending : Nat) (preCoins : Nat × Nat → Bool) :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
       pendingAfter preCoins
-        (c.level + manuscriptRateExit (c.state.removeComponent P)
+        (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
           intensity threshold)
         (c.state.removeComponent P).nextLabel basePending) := by
   exact (measurable_of_countable
@@ -52,7 +52,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_shiftedOldCoins
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
       shiftCoins
-        (manuscriptRateExit (c.state.removeComponent P) intensity
+        (ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
           threshold)
         (manuscriptSourceOldCoins c.origin c.source.coins c.level)) := by
   have hdeleted : Measurable (fun c : ManuscriptOriginConfiguration n =>
@@ -60,7 +60,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_shiftedOldCoins
     (measurable_removeComponent P).comp
       measurable_manuscriptOriginConfiguration_state
   have hround : Measurable (fun c : ManuscriptOriginConfiguration n =>
-      manuscriptRateExit (c.state.removeComponent P) intensity
+      ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
         threshold) :=
     (measurable_manuscriptRateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_const)
@@ -74,10 +74,10 @@ theorem ManuscriptOriginConfiguration.measurable_advance_mergedCoins
     (basePending : Nat) (preCoins future : Nat × Nat → Bool) :
     Measurable (fun c : ManuscriptOriginConfiguration n =>
       let deleted := c.state.removeComponent P
-      let preRounds := c.level + manuscriptRateExit deleted intensity
+      let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity
         threshold
       mergeCoinsAtLabel deleted.nextLabel
-        (shiftCoins (manuscriptRateExit deleted intensity threshold)
+        (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
           (manuscriptSourceOldCoins c.origin c.source.coins c.level))
         (pendingCoinExtension deleted.nextLabel
           (pendingAfter preCoins preRounds deleted.nextLabel basePending)
@@ -102,11 +102,11 @@ private noncomputable def manuscriptOriginMergedExitInput
     ManuscriptOriginConfiguration n →
       (TTCState n × Nat) × (Nat × Nat → Bool) := fun c =>
       let deleted := c.state.removeComponent P
-      let rounds := manuscriptRateExit deleted intensity threshold
+      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
       let preRounds := c.level + rounds
       let pending := pendingAfter preCoins preRounds deleted.nextLabel
         basePending
-      let first := manuscriptRateThinningResult deleted intensity
+      let first := ttcPseudocode.firstLoopResult deleted intensity
         threshold (manuscriptSourceOldCoins c.origin c.source.coins c.level)
       ((first, pending),
         (mergeCoinsAtLabel deleted.nextLabel
@@ -140,7 +140,7 @@ private noncomputable def manuscriptOriginMergedExit
   fun c =>
     let z := manuscriptOriginMergedExitInput P intensity threshold
       basePending preCoins future c
-    firstExitRound z.1.1 z.1.2 threshold z.2
+    ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2
 
 theorem ManuscriptOriginConfiguration.measurable_advance_mergedExit
     {n : Nat} (P : PolytopeData n) (intensity : NNReal)
@@ -149,7 +149,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_mergedExit
     Measurable (manuscriptOriginMergedExit P intensity threshold
       basePending preCoins future) := by
   change Measurable ((fun z : (TTCState n × Nat) ×
-    (Nat × Nat → Bool) => firstExitRound z.1.1 z.1.2 threshold z.2) ∘
+    (Nat × Nat → Bool) => ttcPseudocode.secondLoopExitRound z.1.1 z.1.2 threshold z.2) ∘
       manuscriptOriginMergedExitInput P intensity threshold
         basePending preCoins future)
   exact (measurable_firstExitRound_joint threshold).comp
@@ -163,12 +163,12 @@ noncomputable def manuscriptOriginSplitExit
     ManuscriptOriginConfiguration n → Nat := fun c =>
   let deleted := c.state.removeComponent P
   let oldCoins := manuscriptSourceOldCoins c.origin c.source.coins c.level
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
-  let first := manuscriptRateThinningResult deleted intensity threshold
+  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
     oldCoins
   firstExitRoundSplit first pending threshold (shiftCoins rounds oldCoins)
     (pendingCoinExtension deleted.nextLabel pending activeCoins)
@@ -187,22 +187,22 @@ private theorem manuscriptOriginSplitExit_eq_mergedExit
   let oldCoins := manuscriptSourceOldCoins c.origin c.source.coins c.level
   have hdeleted : deleted.LabelsFresh :=
     c.state.labelsFresh_removeComponent P c.fresh
-  have hfirst : (manuscriptRateThinningResult deleted intensity threshold
+  have hfirst : (ttcPseudocode.firstLoopResult deleted intensity threshold
       oldCoins).LabelsFresh :=
     manuscriptRateThinningResult_labelsFresh deleted intensity threshold
       oldCoins hdeleted
   exact (firstExitRound_mergeCoinsAtLabel
-    (manuscriptRateThinningResult deleted intensity threshold oldCoins)
+    (ttcPseudocode.firstLoopResult deleted intensity threshold oldCoins)
     (pendingAfter preCoins
-      (c.level + manuscriptRateExit deleted intensity threshold)
+      (c.level + ttcPseudocode.firstLoopExit deleted intensity threshold)
       deleted.nextLabel basePending) threshold
-    (shiftCoins (manuscriptRateExit deleted intensity threshold) oldCoins)
+    (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold) oldCoins)
     (pendingCoinExtension deleted.nextLabel
       (pendingAfter preCoins
-        (c.level + manuscriptRateExit deleted intensity threshold)
+        (c.level + ttcPseudocode.firstLoopExit deleted intensity threshold)
         deleted.nextLabel basePending)
       (originalSurvivorCoinRestriction preCoins
-        (c.level + manuscriptRateExit deleted intensity threshold)
+        (c.level + ttcPseudocode.firstLoopExit deleted intensity threshold)
         deleted.nextLabel basePending future)) hfirst).symm
 
 theorem ManuscriptOriginConfiguration.measurable_advance_activeRounds
@@ -232,7 +232,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_level_joint
       (z.1.advance P intensity threshold basePending preCoins future
         z.2).level) := by
   have hpre : Measurable (fun c : ManuscriptOriginConfiguration n =>
-      c.level + manuscriptRateExit (c.state.removeComponent P)
+      c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
         intensity threshold) :=
     measurable_fst.comp
       (ManuscriptOriginConfiguration.measurable_advance_controls
@@ -242,7 +242,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_level_joint
       (z.1.advance P intensity threshold basePending preCoins future
         z.2).level) =
       (fun z =>
-        z.1.level + manuscriptRateExit (z.1.state.removeComponent P)
+        z.1.level + ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
           intensity threshold +
         manuscriptOriginSplitExit P intensity threshold basePending
           preCoins future z.1) := by
@@ -262,7 +262,7 @@ noncomputable def manuscriptOriginMergedSecondResult
     (c : ManuscriptOriginConfiguration n) : TTCState n × Nat :=
   let z := manuscriptOriginMergedExitInput P intensity threshold basePending
     preCoins future c
-  thinningResult z.1.1 z.1.2 threshold z.2
+  ttcPseudocode.secondLoopResult z.1.1 z.1.2 threshold z.2
 
 theorem measurable_manuscriptOriginMergedSecondResult
     {n : Nat} (P : PolytopeData n) (intensity : NNReal)
@@ -271,7 +271,7 @@ theorem measurable_manuscriptOriginMergedSecondResult
     Measurable (manuscriptOriginMergedSecondResult P intensity threshold
       basePending preCoins future) := by
   change Measurable ((fun z : (TTCState n × Nat) ×
-    (Nat × Nat → Bool) => thinningResult z.1.1 z.1.2 threshold z.2) ∘
+    (Nat × Nat → Bool) => ttcPseudocode.secondLoopResult z.1.1 z.1.2 threshold z.2) ∘
       manuscriptOriginMergedExitInput P intensity threshold
         basePending preCoins future)
   exact (measurable_thinningResult_joint threshold).comp
@@ -288,23 +288,23 @@ theorem manuscriptOriginMergedSecondResult_eq_splitFinite
       preCoins future c =
     let deleted := c.state.removeComponent P
     let oldCoins := manuscriptSourceOldCoins c.origin c.source.coins c.level
-    let rounds := manuscriptRateExit deleted intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
     let preRounds := c.level + rounds
     let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
     let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
       deleted.nextLabel basePending future
-    let first := manuscriptRateThinningResult deleted intensity threshold
+    let first := ttcPseudocode.firstLoopResult deleted intensity threshold
       oldCoins
     thinningResultSplitFinite first pending threshold
       (shiftCoins rounds oldCoins) activeCoins := by
   let deleted := c.state.removeComponent P
   let oldCoins := manuscriptSourceOldCoins c.origin c.source.coins c.level
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
-  let first := manuscriptRateThinningResult deleted intensity threshold
+  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
     oldCoins
   have hdeleted : deleted.LabelsFresh :=
     c.state.labelsFresh_removeComponent P c.fresh

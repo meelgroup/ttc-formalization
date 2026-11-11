@@ -13,13 +13,13 @@ theorem measurable_manuscript_active_finite_result
     Measurable (fun pair : (Nat × Nat → Bool) ×
         (Nat × Fin pending → Bool) =>
       thinningResultSplitFinite
-        (manuscriptRateThinningResult s intensity threshold pair.1)
+        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
         pending threshold
-        (shiftCoins (manuscriptRateExit s intensity threshold) pair.1)
+        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1)
         pair.2) := by
-  let rounds := manuscriptRateExit s intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
   let first : (Nat × Nat → Bool) → TTCState n :=
-    manuscriptRateThinningResult s intensity threshold
+    ttcPseudocode.firstLoopResult s intensity threshold
   have hfirst : Measurable first :=
     measurable_manuscriptRateThinningResult s intensity threshold
   have hmerge : Measurable
@@ -34,7 +34,7 @@ theorem measurable_manuscript_active_finite_result
       (Nat × Fin pending → Bool) =>
       thinningResultSplitFinite (first pair.1) pending threshold
         (shiftCoins rounds pair.1) pair.2) =
-      (fun pair => thinningResult (first pair.1) pending threshold
+      (fun pair => ttcPseudocode.secondLoopResult (first pair.1) pending threshold
         (mergeCoinsAtLabel s.nextLabel (shiftCoins rounds pair.1)
           (pendingCoinExtension s.nextLabel pending pair.2))) := by
     funext pair
@@ -50,20 +50,20 @@ theorem measurable_manuscript_active_finite_result
 theorem manuscript_absolute_active_finite_coin_law
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (pending : Nat) (hfresh : s.LabelsFresh) :
-    let rounds := manuscriptRateExit s intensity threshold
+    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
     fairCoinStreamLaw.map (fun coins =>
-      thinningResult
-        (manuscriptRateThinningResult s intensity threshold coins)
+      ttcPseudocode.secondLoopResult
+        (ttcPseudocode.firstLoopResult s intensity threshold coins)
         pending threshold (shiftCoins rounds coins)) =
     (fairCoinStreamLaw.prod
       (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).map
       (fun pair => thinningResultSplitFinite
-        (manuscriptRateThinningResult s intensity threshold pair.1)
+        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
         pending threshold (shiftCoins rounds pair.1) pair.2) := by
   dsimp only
-  let rounds := manuscriptRateExit s intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
   let first : (Nat × Nat → Bool) → TTCState n :=
-    manuscriptRateThinningResult s intensity threshold
+    ttcPseudocode.firstLoopResult s intensity threshold
   let project : (Nat × Nat → Bool) × (Nat × Nat → Bool) →
       (Nat × Nat → Bool) × (Nat × Fin pending → Bool) :=
     fun pair => (pair.1,
@@ -85,7 +85,7 @@ theorem manuscript_absolute_active_finite_coin_law
           measurable_snd))
   have hresult : Measurable result := by
     have heq : result = fun pair =>
-        thinningResult (first pair.1) pending threshold
+        ttcPseudocode.secondLoopResult (first pair.1) pending threshold
           (mergeCoinsAtLabel s.nextLabel (shiftCoins rounds pair.1)
             (pendingCoinExtension s.nextLabel pending pair.2)) := by
       funext pair
@@ -110,7 +110,7 @@ theorem manuscript_absolute_active_finite_coin_law
       (shiftCoins rounds pair.1) (shiftCoins rounds pair.2)
   calc
     fairCoinStreamLaw.map (fun coins =>
-        thinningResult (first coins) pending threshold
+        ttcPseudocode.secondLoopResult (first coins) pending threshold
           (shiftCoins rounds coins)) =
       (fairCoinStreamLaw.prod fairCoinStreamLaw).map (fun pair =>
         thinningResultSplit (first pair.1) pending threshold

@@ -54,12 +54,12 @@ noncomputable def ManuscriptOriginConfiguration.advance
     ManuscriptOriginConfiguration n := by
   let deleted := c.state.removeComponent P
   let oldCoins := manuscriptSourceOldCoins c.origin c.source.coins c.level
-  let rounds := manuscriptRateExit deleted intensity threshold
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
-  let first := manuscriptRateThinningResult deleted intensity threshold oldCoins
+  let first := ttcPseudocode.firstLoopResult deleted intensity threshold oldCoins
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds oldCoins) activeCoins
   let activeRounds := firstExitRoundSplit first pending threshold
@@ -255,7 +255,7 @@ theorem ManuscriptOriginConfiguration.advance_source
         { component := P
           firstLabel := c.state.nextLabel
           basePending := basePending
-          preRounds := c.level + manuscriptRateExit
+          preRounds := c.level + ttcPseudocode.firstLoopExit
             (c.state.removeComponent P) intensity threshold
           preCoins := preCoins
           futureCoins := future
@@ -268,14 +268,14 @@ theorem ManuscriptOriginConfiguration.advance_level
     (tape : Nat → LatticePoint n) :
     (c.advance P intensity threshold basePending preCoins future tape).level =
       let deleted := c.state.removeComponent P
-      let rounds := manuscriptRateExit deleted intensity threshold
+      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
       let preRounds := c.level + rounds
       let pending := pendingAfter preCoins preRounds deleted.nextLabel
         basePending
       let oldCoins := manuscriptSourceOldCoins c.origin c.source.coins c.level
       let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
         deleted.nextLabel basePending future
-      let first := manuscriptRateThinningResult deleted intensity threshold
+      let first := ttcPseudocode.firstLoopResult deleted intensity threshold
         oldCoins
       preRounds + firstExitRoundSplit first pending threshold
         (shiftCoins rounds oldCoins)
@@ -295,7 +295,7 @@ theorem ManuscriptOriginConfiguration.advance_pointCounts
       manuscriptPoissonTapePointCounts S c.state.nextLabel next.level
         (basePending,
           spliceCoins preCoins future
-            (c.level + manuscriptRateExit (c.state.removeComponent P)
+            (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
               intensity threshold), tape) x := by
   dsimp only
   let next := c.advance P intensity threshold basePending preCoins future tape
@@ -306,7 +306,7 @@ theorem ManuscriptOriginConfiguration.advance_pointCounts
     { component := P
       firstLabel := c.state.nextLabel
       basePending := basePending
-      preRounds := c.level + manuscriptRateExit
+      preRounds := c.level + ttcPseudocode.firstLoopExit
         (c.state.removeComponent P) intensity threshold
       preCoins := preCoins
       futureCoins := future

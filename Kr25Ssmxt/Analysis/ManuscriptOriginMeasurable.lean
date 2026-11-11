@@ -720,7 +720,7 @@ theorem measurable_firstExitRoundSplitFinite_pair
           measurable_snd))
   have hround : Measurable (fun pair : (Nat × Nat → Bool) ×
       (Nat × Fin pending → Bool) =>
-      firstExitRound s pending threshold
+      ttcPseudocode.secondLoopExitRound s pending threshold
         (mergeCoinsAtLabel s.nextLabel pair.1
           (pendingCoinExtension s.nextLabel pending pair.2))) :=
     (measurable_firstExitRound s pending threshold).comp hmerge
@@ -737,7 +737,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_tape
       c.advance P intensity threshold basePending preCoins future tape) := by
   rw [measurable_comap_iff]
   let deleted := c.state.removeComponent P
-  let preRounds := c.level + manuscriptRateExit deleted intensity threshold
+  let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
   let fresh := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
   have hstate : Measurable (fun tape : Nat → LatticePoint n =>
@@ -831,11 +831,11 @@ theorem ManuscriptOriginConfiguration.tapeAdvanceLaw_map_state
       preCoins future).map (fun next => next.state) =
     communityManuscriptOriginTapeKernel hn P b eta threshold hroute
       (c.state.removeComponent P) intensity preCoins
-      (c.level + manuscriptRateExit (c.state.removeComponent P)
+      (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
         intensity threshold) basePending
       (manuscriptSourceOldCoins c.origin c.source.coins c.level,
         originalSurvivorCoinRestriction preCoins
-          (c.level + manuscriptRateExit (c.state.removeComponent P)
+          (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
             intensity threshold)
           (c.state.removeComponent P).nextLabel basePending future) := by
   unfold ManuscriptOriginConfiguration.tapeAdvanceLaw

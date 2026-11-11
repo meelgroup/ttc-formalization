@@ -5,7 +5,7 @@ import Kr25Ssmxt.Model.Run
 namespace Kr25Ssmxt
 
 /-- TTC's precision stage, Algorithm `getprec` at `ε / 96`: the `choosePrecision` slot of
-`communityManuscriptOracles` (definitionally). -/
+`ttcSubroutines` (definitionally). -/
 noncomputable def TTCPreprocessor.choosePrecision {n k : Nat}
     (_prep : TTCPreprocessor n k) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) : PrecisionChoice D p :=

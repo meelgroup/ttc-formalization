@@ -19,18 +19,18 @@ theorem measurable_shiftCoins (rounds : Nat) :
 theorem manuscript_twoLoops_givenPending_eq_oneCoinStream
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (pending : Nat) :
-    (manuscriptRateThinUntil s intensity threshold).bind
-      (fun first => thinUntil first pending threshold) =
+    (ttcPseudocode.firstLoop s intensity threshold).bind
+      (fun first => ttcPseudocode.secondLoop first pending threshold) =
     fairCoinStreamLaw.map (fun coins =>
-      thinningResult
-        (manuscriptRateThinningResult s intensity threshold coins)
+      ttcPseudocode.secondLoopResult
+        (ttcPseudocode.firstLoopResult s intensity threshold coins)
         pending threshold
-        (shiftCoins (manuscriptRateExit s intensity threshold) coins)) := by
+        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) coins)) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
-  let rounds := manuscriptRateExit s intensity threshold
-  let firstResult := manuscriptRateThinningResult s intensity threshold
-  let K := fun first : TTCState n => thinUntil first pending threshold
+  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let firstResult := ttcPseudocode.firstLoopResult s intensity threshold
+  let K := fun first : TTCState n => ttcPseudocode.secondLoop first pending threshold
   have hK : Measurable K :=
     (thinUntil_kernel_measurable threshold).comp
       (measurable_id.prodMk measurable_const)
@@ -38,13 +38,13 @@ theorem manuscript_twoLoops_givenPending_eq_oneCoinStream
     measurable_manuscriptRateThinningResult s intensity threshold
   let pairResult :
       (Nat × Nat → Bool) × (Nat × Nat → Bool) → TTCState n × Nat :=
-    fun pair => thinningResult (firstResult pair.1) pending threshold pair.2
+    fun pair => ttcPseudocode.secondLoopResult (firstResult pair.1) pending threshold pair.2
   have hpair : Measurable pairResult :=
     (measurable_thinningResult_joint threshold).comp
       (((hfirst.comp measurable_fst).prodMk measurable_const).prodMk
         measurable_snd)
   let oneResult : (Nat × Nat → Bool) → TTCState n × Nat :=
-    fun coins => thinningResult (firstResult coins) pending threshold
+    fun coins => ttcPseudocode.secondLoopResult (firstResult coins) pending threshold
       (shiftCoins rounds coins)
   have hone : Measurable oneResult :=
     (measurable_thinningResult_joint threshold).comp

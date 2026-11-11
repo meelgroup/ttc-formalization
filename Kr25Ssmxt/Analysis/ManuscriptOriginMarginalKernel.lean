@@ -16,9 +16,9 @@ noncomputable def communityManuscriptGhostStateStep
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (c : ManuscriptOriginConfiguration n) : Measure (TTCState n) :=
-  ((communityManuscriptOracles hn prep).ComputeVolume P eta delta).bind
+  ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
     (fun outcome =>
-      let intensity := ttc.t b n threshold outcome.2
+      let intensity := ttcPseudocode.t b n threshold outcome.2
       let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
         hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
       (ProbabilityTheory.poissonMeasure intensity).bind
@@ -42,7 +42,7 @@ theorem communityManuscriptGhostStateStep_eq_program
     (c : ManuscriptOriginConfiguration n) :
     communityManuscriptGhostStateStep hn prep P b eta delta threshold
       hroute c =
-    manuscriptProcessComponent (communityManuscriptOracles hn prep)
+    ttcPseudocode.step (ttcSubroutines hn prep)
       b eta delta threshold P c.state :=
   c.refreshFuture_programComponent_law hn prep P b eta delta threshold
     hroute
@@ -52,10 +52,10 @@ theorem measurable_communityManuscript_programComponent
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hvolume : IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta)) :
-    Measurable (manuscriptProcessComponent
-      (communityManuscriptOracles hn prep) b eta delta threshold P) := by
-  let volumeLaw := (communityManuscriptOracles hn prep).ComputeVolume
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta)) :
+    Measurable (ttcPseudocode.step
+      (ttcSubroutines hn prep) b eta delta threshold P) := by
+  let volumeLaw := (ttcSubroutines hn prep).ComputeVolume
     P eta delta
   have hbase := measurable_parametric_probability_bind
     (fun _ : TTCState n => volumeLaw) measurable_const
@@ -82,14 +82,14 @@ theorem communityManuscriptGhostStateStep_bind_eq_program
       (codedLatticePoints P b).Nonempty)
     (hthreshold : 0 < threshold)
     (hvolume : IsProbabilityMeasure
-      ((communityManuscriptOracles hn prep).ComputeVolume P eta delta))
+      ((ttcSubroutines hn prep).ComputeVolume P eta delta))
     (μ : Measure (ManuscriptOriginConfiguration n)) :
     μ.bind (communityManuscriptGhostStateStep hn prep P b eta delta
       threshold hroute) =
     (μ.map (fun c => c.state)).bind
-      (manuscriptProcessComponent (communityManuscriptOracles hn prep)
+      (ttcPseudocode.step (ttcSubroutines hn prep)
         b eta delta threshold P) := by
-  let program := manuscriptProcessComponent (communityManuscriptOracles hn prep)
+  let program := ttcPseudocode.step (ttcSubroutines hn prep)
     b eta delta threshold P
   have hprogram : Measurable program :=
     measurable_communityManuscript_programComponent hn prep P b eta delta

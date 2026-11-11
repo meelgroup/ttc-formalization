@@ -12,12 +12,12 @@ noncomputable def communityManuscriptComponentGivenVolume
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (outcome : VolumeOutcome) (state : TTCState n) : Measure (TTCState n) :=
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
-  (manuscriptRateThinUntil deleted intensity threshold).bind fun first =>
+  (ttcPseudocode.firstLoop deleted intensity threshold).bind fun first =>
     (poissonMeasure (intensity * first.p)).bind fun pending =>
-      (thinUntil first pending threshold).bind fun second =>
-        ((communityManuscriptOracles hn prep).GenerateSamples P second.2 b eta
+      (ttcPseudocode.secondLoop first pending threshold).bind fun second =>
+        ((ttcSubroutines hn prep).GenerateSamples P second.2 b eta
           delta).map fun batch => second.1.addBatch batch.2
 
 noncomputable def communityManuscriptComponentPredrawTape
@@ -30,35 +30,35 @@ noncomputable def communityManuscriptComponentPredrawTape
     (outcome : VolumeOutcome) (state : TTCState n) : Measure (TTCState n) :=
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
-  let rounds := manuscriptRateExit deleted intensity threshold
-  (manuscriptRateThinUntil deleted intensity threshold).bind fun first =>
+  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  (ttcPseudocode.firstLoop deleted intensity threshold).bind fun first =>
     ((poissonMeasure ((intensity * first.p) * (2 : NNReal) ^ rounds)).bind fun basePending =>
       fairCoinStreamLaw.map fun preCoins =>
         pendingAfter preCoins rounds deleted.nextLabel basePending).bind fun pending =>
       fairCoinStreamLaw.bind fun secondCoins =>
         (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun pointTape =>
-          (thinningResult first pending threshold secondCoins).1.addBatch
-            (fun (i : Fin (thinningResult first pending threshold secondCoins).2) =>
+          (ttcPseudocode.secondLoopResult first pending threshold secondCoins).1.addBatch
+            (fun (i : Fin (ttcPseudocode.secondLoopResult first pending threshold secondCoins).2) =>
               pointTape (first.nextLabel +
                 (pendingSurvivorIndices secondCoins
-                  (firstExitRound first pending threshold secondCoins)
+                  (ttcPseudocode.secondLoopExitRound first pending threshold secondCoins)
                   first.nextLabel pending).orderEmbOfFin
                   (pendingSurvivorIndices_card secondCoins
-                    (firstExitRound first pending threshold secondCoins)
+                    (ttcPseudocode.secondLoopExitRound first pending threshold secondCoins)
                     first.nextLabel pending) i))
 
 theorem manuscriptRateThinUntil_predraw_mean
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
-    ∀ᵐ first ∂manuscriptRateThinUntil s intensity threshold,
+    ∀ᵐ first ∂ttcPseudocode.firstLoop s intensity threshold,
       (intensity * first.p) *
-        (2 : NNReal) ^ (manuscriptRateExit s intensity threshold) =
+        (2 : NNReal) ^ (ttcPseudocode.firstLoopExit s intensity threshold) =
       intensity * s.p := by
   have hset : MeasurableSet {first : TTCState n |
       (intensity * first.p) *
-        (2 : NNReal) ^ (manuscriptRateExit s intensity threshold) =
+        (2 : NNReal) ^ (ttcPseudocode.firstLoopExit s intensity threshold) =
       intensity * s.p} := by
     have hrate : Measurable (fun first : TTCState n => first.p) :=
       measurable_fst.comp
@@ -68,19 +68,19 @@ theorem manuscriptRateThinUntil_predraw_mean
     change MeasurableSet
       ((fun first : TTCState n =>
         (intensity * first.p) *
-          (2 : NNReal) ^ (manuscriptRateExit s intensity threshold)) ⁻¹'
+          (2 : NNReal) ^ (ttcPseudocode.firstLoopExit s intensity threshold)) ⁻¹'
         {intensity * s.p})
     exact (measurableSet_singleton (intensity * s.p)).preimage
       ((measurable_const.mul hrate).mul_const _)
-  unfold manuscriptRateThinUntil
+  unfold ttcPseudocode.firstLoop
   rw [ae_map_iff
     (measurable_manuscriptRateThinningResult s intensity threshold).aemeasurable
     hset]
   apply Filter.Eventually.of_forall
   intro coins
-  simp only [manuscriptRateThinningResult]
+  simp only [ttcPseudocode.firstLoopResult]
   have hpow : (2 : NNReal) ^
-      manuscriptRateExit s intensity threshold ≠ 0 :=
+      ttcPseudocode.firstLoopExit s intensity threshold ≠ 0 :=
     pow_ne_zero _ (by norm_num)
   simp [div_eq_mul_inv, mul_assoc]
 
@@ -98,7 +98,7 @@ theorem communityManuscriptComponentPredrawTape_eq_givenVolume
       outcome state := by
   unfold communityManuscriptComponentPredrawTape
     communityManuscriptComponentGivenVolume
-  let intensity := ttc.t b n threshold outcome.2
+  let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
@@ -107,7 +107,7 @@ theorem communityManuscriptComponentPredrawTape_eq_givenVolume
   intro first
   dsimp only
   rw [manuscript_poisson_predraw_at_fixed_rounds
-    (intensity * first.p) (manuscriptRateExit deleted intensity threshold)
+    (intensity * first.p) (ttcPseudocode.firstLoopExit deleted intensity threshold)
     deleted.nextLabel]
   apply Measure.bind_congr_right
   apply Filter.Eventually.of_forall
@@ -126,12 +126,12 @@ theorem communityManuscriptProcessComponent_eq_predrawTape
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (state : TTCState n) :
-    manuscriptProcessComponent (communityManuscriptOracles hn prep) b eta
+    ttcPseudocode.step (ttcSubroutines hn prep) b eta
       delta threshold P state =
-    ((communityManuscriptOracles hn prep).ComputeVolume P eta delta).bind
+    ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
       fun outcome => communityManuscriptComponentPredrawTape hn prep P b eta
         delta threshold hroute outcome state := by
-  unfold manuscriptProcessComponent
+  unfold ttcPseudocode.step
   simp_rw [communityManuscriptComponentPredrawTape_eq_givenVolume hn prep P b
     eta delta threshold hroute]
   rfl

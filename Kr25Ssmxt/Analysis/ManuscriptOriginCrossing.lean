@@ -48,31 +48,31 @@ theorem ManuscriptOriginConfiguration.split_population_le_survivors
     (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
     (basePending : Nat) (preCoins fresh : Nat × Nat → Bool)
     (tape : Nat → LatticePoint n) (r0 level0 : Nat)
-    (hlevel : level0 = d.level + manuscriptRateExit (d.state.removeComponent P)
+    (hlevel : level0 = d.level + ttcPseudocode.firstLoopExit (d.state.removeComponent P)
       intensity threshold + r0) :
-    (samplesAfter (shiftCoins (manuscriptRateExit (d.state.removeComponent P)
+    (samplesAfter (shiftCoins (ttcPseudocode.firstLoopExit (d.state.removeComponent P)
         intensity threshold)
         (manuscriptSourceOldCoins d.origin d.source.coins d.level)) r0
-      (manuscriptRateThinningResult (d.state.removeComponent P) intensity
+      (ttcPseudocode.firstLoopResult (d.state.removeComponent P) intensity
         threshold
         (manuscriptSourceOldCoins d.origin d.source.coins d.level)).X).card +
       pendingAfter
         (pendingCoinExtension d.state.nextLabel
-          (pendingAfter preCoins (d.level + manuscriptRateExit
+          (pendingAfter preCoins (d.level + ttcPseudocode.firstLoopExit
             (d.state.removeComponent P) intensity threshold)
             d.state.nextLabel basePending)
           (originalSurvivorCoinRestriction preCoins
-            (d.level + manuscriptRateExit (d.state.removeComponent P)
+            (d.level + ttcPseudocode.firstLoopExit (d.state.removeComponent P)
               intensity threshold) d.state.nextLabel basePending fresh))
         r0 d.state.nextLabel
-        (pendingAfter preCoins (d.level + manuscriptRateExit
+        (pendingAfter preCoins (d.level + ttcPseudocode.firstLoopExit
             (d.state.removeComponent P) intensity threshold)
             d.state.nextLabel basePending) ≤
     ((d.source.step
         { component := P
           firstLabel := d.state.nextLabel
           basePending := basePending
-          preRounds := d.level + manuscriptRateExit
+          preRounds := d.level + ttcPseudocode.firstLoopExit
             (d.state.removeComponent P) intensity threshold
           preCoins := preCoins
           futureCoins := fresh
@@ -81,18 +81,18 @@ theorem ManuscriptOriginConfiguration.split_population_le_survivors
         { component := P
           firstLabel := d.state.nextLabel
           basePending := basePending
-          preRounds := d.level + manuscriptRateExit
+          preRounds := d.level + ttcPseudocode.firstLoopExit
             (d.state.removeComponent P) intensity threshold
           preCoins := preCoins
           futureCoins := fresh
           tape := tape }).coins tag.1) level0 tag.2).card := by
   classical
   set deleted := d.state.removeComponent P with hdeleted
-  set rounds := manuscriptRateExit deleted intensity threshold with hrounds
+  set rounds := ttcPseudocode.firstLoopExit deleted intensity threshold with hrounds
   set preRounds := d.level + rounds with hpreRounds
   set oldCoins := manuscriptSourceOldCoins d.origin d.source.coins d.level
     with holdCoins
-  set first := manuscriptRateThinningResult deleted intensity threshold
+  set first := ttcPseudocode.firstLoopResult deleted intensity threshold
     oldCoins with hfirst
   set step : ManuscriptOriginSourceStep n :=
     { component := P
@@ -206,7 +206,7 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_crossing
     (basePending : Nat) (preCoins fresh : Nat × Nat → Bool)
     (oldFuture : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n) (level0 : Nat)
-    (hfirst : c.level + manuscriptRateExit (c.state.removeComponent P)
+    (hfirst : c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
       intensity threshold ≤ level0)
     (hcross : level0 < ((c.refreshFuture oldFuture).advance P intensity
       threshold basePending preCoins fresh tape).level)
@@ -218,7 +218,7 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_crossing
         level0 S x : Nat) : Real) := by
   classical
   set d := c.refreshFuture oldFuture with hd
-  have hfirst' : d.level + manuscriptRateExit (d.state.removeComponent P)
+  have hfirst' : d.level + ttcPseudocode.firstLoopExit (d.state.removeComponent P)
       intensity threshold ≤ level0 := hfirst
   clear_value d
   have hm := hmarks
@@ -228,24 +228,24 @@ theorem ManuscriptOriginConfiguration.refreshed_advance_crossing
   dsimp only at hcross
   rw [ManuscriptOriginConfiguration.advance_source,
     manuscriptOriginSourceState_sum_pointCounts_eq_card _ _ _ hm]
-  set r0 := level0 - (d.level + manuscriptRateExit (d.state.removeComponent P)
+  set r0 := level0 - (d.level + ttcPseudocode.firstLoopExit (d.state.removeComponent P)
     intensity threshold) with hr0def
-  have hlevel : level0 = d.level + manuscriptRateExit
+  have hlevel : level0 = d.level + ttcPseudocode.firstLoopExit
       (d.state.removeComponent P) intensity threshold + r0 := by omega
   have hr0 : r0 < firstExitRoundSplit
-      (manuscriptRateThinningResult (d.state.removeComponent P) intensity
+      (ttcPseudocode.firstLoopResult (d.state.removeComponent P) intensity
         threshold (manuscriptSourceOldCoins d.origin d.source.coins d.level))
-      (pendingAfter preCoins (d.level + manuscriptRateExit
+      (pendingAfter preCoins (d.level + ttcPseudocode.firstLoopExit
         (d.state.removeComponent P) intensity threshold)
         (d.state.removeComponent P).nextLabel basePending) threshold
-      (shiftCoins (manuscriptRateExit (d.state.removeComponent P) intensity
+      (shiftCoins (ttcPseudocode.firstLoopExit (d.state.removeComponent P) intensity
         threshold) (manuscriptSourceOldCoins d.origin d.source.coins d.level))
       (pendingCoinExtension (d.state.removeComponent P).nextLabel
-        (pendingAfter preCoins (d.level + manuscriptRateExit
+        (pendingAfter preCoins (d.level + ttcPseudocode.firstLoopExit
           (d.state.removeComponent P) intensity threshold)
           (d.state.removeComponent P).nextLabel basePending)
         (originalSurvivorCoinRestriction preCoins
-          (d.level + manuscriptRateExit (d.state.removeComponent P)
+          (d.level + ttcPseudocode.firstLoopExit (d.state.removeComponent P)
             intensity threshold)
           (d.state.removeComponent P).nextLabel basePending fresh)) := by
     omega

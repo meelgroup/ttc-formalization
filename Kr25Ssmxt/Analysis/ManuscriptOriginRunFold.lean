@@ -22,7 +22,7 @@ noncomputable def ManuscriptOriginInput.sourceStep {n : Nat}
   component := d.component
   firstLabel := c.state.nextLabel
   basePending := d.basePending
-  preRounds := c.level + manuscriptRateExit
+  preRounds := c.level + ttcPseudocode.firstLoopExit
     (c.state.removeComponent d.component) d.intensity d.threshold
   preCoins := d.preCoins
   futureCoins := d.futureCoins

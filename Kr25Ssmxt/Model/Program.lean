@@ -121,7 +121,7 @@ def TTCState.initial (n : Nat) : TTCState n where
 /-! ## Line `line:volume`: `t ← Thresh · 10^{bn} · ComputeVolume(Pᵢ, ε', δ')` -/
 
 /-- `t = Thresh · 10^{bn} · v` for a `ComputeVolume` estimate `v`. -/
-def ttc.t (b n : Nat) (Thresh : Real) (volumeEstimate : NNReal) : NNReal :=
+def ttcPseudocode.t (b n : Nat) (Thresh : Real) (volumeEstimate : NNReal) : NNReal :=
   Real.toNNReal Thresh * (10 : NNReal) ^ (b * n) * volumeEstimate
 
 /-! ## Line `line:inside-remove`: remove from `X` every `s ∈ Pᵢ` -/
@@ -165,23 +165,23 @@ def pendingAfter (coins : Nat × Nat → Bool) (rounds firstLabel count : Nat) :
 /-! ## Line `line:prob-remove`: `while p ≥ Thresh / t`, halve `X` and `p` -/
 
 /-- The first `while` guard becomes false after this many halvings. -/
-def manuscriptRateExit {n : Nat} (s : TTCState n) (t : NNReal)
+def ttcPseudocode.firstLoopExit {n : Nat} (s : TTCState n) (t : NNReal)
     (Thresh : Real) : Nat :=
   sInf {rounds : Nat |
     ((t * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) < Thresh}
 
 /-- The state when the first `while` loop exits. -/
-def manuscriptRateThinningResult {n : Nat} (s : TTCState n)
+def ttcPseudocode.firstLoopResult {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) (coins : Nat × Nat → Bool) : TTCState n :=
-  let rounds := manuscriptRateExit s t Thresh
+  let rounds := ttcPseudocode.firstLoopExit s t Thresh
   { p := s.p / (2 : NNReal) ^ rounds
     X := samplesAfter coins rounds s.X
     nextLabel := s.nextLabel }
 
 /-- The first `while` loop. -/
-def manuscriptRateThinUntil {n : Nat} (s : TTCState n)
+def ttcPseudocode.firstLoop {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) : Measure (TTCState n) :=
-  fairCoinStreamLaw.map (manuscriptRateThinningResult s t Thresh)
+  fairCoinStreamLaw.map (ttcPseudocode.firstLoopResult s t Thresh)
 
 /-! ## `Nᵢ ← Poisson(t · p)` -/
 
@@ -192,29 +192,29 @@ abbrev Poisson (rate : NNReal) : Measure ℕ := ProbabilityTheory.poissonMeasure
 `while Nᵢ + |X| > Thresh`, halve `X`, `Nᵢ ← Binomial(Nᵢ, 1/2)`, `p ← p / 2` -/
 
 /-- The second `while` guard has become false after `rounds` halvings. -/
-def thinningExit {n : Nat} (s : TTCState n) (N : Nat) (Thresh : Real)
+def ttcPseudocode.secondLoopExit {n : Nat} (s : TTCState n) (N : Nat) (Thresh : Real)
     (coins : Nat × Nat → Bool) (rounds : Nat) : Prop :=
   (samplesAfter coins rounds s.X).card +
       pendingAfter coins rounds s.nextLabel N ≤ Thresh
 
 /-- First-exit round, with `sInf ∅ = 0` only on a nonterminating coin stream. -/
-def firstExitRound {n : Nat} (s : TTCState n) (N : Nat) (Thresh : Real)
+def ttcPseudocode.secondLoopExitRound {n : Nat} (s : TTCState n) (N : Nat) (Thresh : Real)
     (coins : Nat × Nat → Bool) : Nat :=
-  sInf {rounds | thinningExit s N Thresh coins rounds}
+  sInf {rounds | ttcPseudocode.secondLoopExit s N Thresh coins rounds}
 
 /-- The state and `Nᵢ` when the second `while` loop exits. -/
-def thinningResult {n : Nat} (s : TTCState n) (N : Nat) (Thresh : Real)
+def ttcPseudocode.secondLoopResult {n : Nat} (s : TTCState n) (N : Nat) (Thresh : Real)
     (coins : Nat × Nat → Bool) : TTCState n × Nat :=
-  let rounds := firstExitRound s N Thresh coins
+  let rounds := ttcPseudocode.secondLoopExitRound s N Thresh coins
   ({ p := s.p / (2 : NNReal) ^ rounds
      X := samplesAfter coins rounds s.X
      nextLabel := s.nextLabel },
    pendingAfter coins rounds s.nextLabel N)
 
 /-- The second `while` loop. -/
-def thinUntil {n : Nat} (s : TTCState n) (N : Nat)
+def ttcPseudocode.secondLoop {n : Nat} (s : TTCState n) (N : Nat)
     (Thresh : Real) : Measure (TTCState n × Nat) :=
-  fairCoinStreamLaw.map (thinningResult s N Thresh)
+  fairCoinStreamLaw.map (ttcPseudocode.secondLoopResult s N Thresh)
 
 /-! ## Line `line:sample`: `S ← GenerateSamples(Pᵢ, Nᵢ, b, ε', δ')`; `X.Append(S)` -/
 
@@ -241,30 +241,30 @@ def Est {n : Nat} (b : Nat) (Thresh : Real)
 
 /-- One iteration of the `for` loop (lines `line:final-for-sketch-begin` to
 `line:final-for-sketch-end`) on the polytope `Pᵢ`. -/
-def manuscriptProcessComponent {n k : Nat} (O : TTCOracles n k) (b : Nat)
+def ttcPseudocode.step {n k : Nat} (O : TTCOracles n k) (b : Nat)
     (ε' δ' Thresh : Real) (P : PolytopeData n)
     (state : TTCState n) : Measure (TTCState n) :=
   (O.ComputeVolume P ε' δ').bind fun volumeOutcome =>
-    let t := ttc.t b n Thresh volumeOutcome.2
+    let t := ttcPseudocode.t b n Thresh volumeOutcome.2
     let withoutDuplicates := state.removeComponent P
-    (manuscriptRateThinUntil withoutDuplicates t Thresh).bind fun firstThinned =>
+    (ttcPseudocode.firstLoop withoutDuplicates t Thresh).bind fun firstThinned =>
       (Poisson (t * firstThinned.p)).bind fun N =>
-        (thinUntil firstThinned N Thresh).bind fun secondThinned =>
+        (ttcPseudocode.secondLoop firstThinned N Thresh).bind fun secondThinned =>
           (O.GenerateSamples P secondThinned.2 b ε' δ').map fun S =>
             secondThinned.1.addBatch S.2
 
 /-- The `for` loop over `P₁, …, Pₘ`. -/
-def manuscriptProcessComponents {n k : Nat} (O : TTCOracles n k) (b : Nat)
+def ttcPseudocode.loop {n k : Nat} (O : TTCOracles n k) (b : Nat)
     (ε' δ' Thresh : Real) :
     List (PolytopeData n) → TTCState n → Measure (TTCState n)
   | [], state => Measure.dirac state
   | P :: rest, state =>
-      (manuscriptProcessComponent O b ε' δ' Thresh P state).bind
-        (manuscriptProcessComponents O b ε' δ' Thresh rest)
+      (ttcPseudocode.step O b ε' δ' Thresh P state).bind
+        (ttcPseudocode.loop O b ε' δ' Thresh rest)
 
 /-- Algorithm `ttc(F, ε, δ)` with the subroutines `O`. An empty decomposition has volume
 zero and outputs `0`. -/
-def ttcWith {n k : Nat} (F : LRAFormula n k)
+def ttcPseudocode {n k : Nat} (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
     (O : TTCOracles n k) : Measure NNReal :=
   let D := O.preprocessing.run F hbounded
@@ -273,7 +273,7 @@ def ttcWith {n k : Nat} (F : LRAFormula n k)
   else
     let b := (O.choosePrecision D params).value
     let Thresh := params.Thresh D.componentCount
-    (manuscriptProcessComponents O b params.ε'
+    (ttcPseudocode.loop O b params.ε'
       (params.δ' D.componentCount) Thresh
       (List.ofFn D.component) (TTCState.initial n)).map
         (Est b Thresh)
@@ -295,31 +295,31 @@ def costedCharge {α : Type*} [MeasurableSpace α]
 
 /-- An upper charge for the first loop: each round visits at most the copies
 present at entry, and performs its guard and rate update. -/
-def manuscriptRateThinningCost {n : Nat} (s : TTCState n)
+def ttcPseudocode.firstLoopCost {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) : Nat :=
-  manuscriptRateExit s t Thresh *
+  ttcPseudocode.firstLoopExit s t Thresh *
     TTCRuntime.rateThinningRoundOperations s.X.card
 
 /-- The first loop with its charged rounds retained in the result. -/
-def manuscriptRateThinWithCost {n : Nat} (s : TTCState n)
+def ttcPseudocode.firstLoopWithCost {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) : Measure (TTCState n × Nat) :=
   fairCoinStreamLaw.map fun coins =>
-    (manuscriptRateThinningResult s t Thresh coins,
-      manuscriptRateThinningCost s t Thresh)
+    (ttcPseudocode.firstLoopResult s t Thresh coins,
+      ttcPseudocode.firstLoopCost s t Thresh)
 
 /-- An upper charge for the second loop. The pending count is represented by
 one binomial draw per round, regardless of its numeric value. -/
-def manuscriptCountThinningCost {n : Nat} (s : TTCState n) (N : Nat)
+def ttcPseudocode.secondLoopCost {n : Nat} (s : TTCState n) (N : Nat)
     (Thresh : Real) (coins : Nat × Nat → Bool) : Nat :=
-  firstExitRound s N Thresh coins *
+  ttcPseudocode.secondLoopExitRound s N Thresh coins *
     TTCRuntime.countThinningRoundOperations s.X.card
 
 /-- The second loop with its charged rounds retained. -/
-def manuscriptCountThinWithCost {n : Nat} (s : TTCState n) (N : Nat)
+def ttcPseudocode.secondLoopWithCost {n : Nat} (s : TTCState n) (N : Nat)
     (Thresh : Real) : Measure ((TTCState n × Nat) × Nat) :=
   fairCoinStreamLaw.map fun coins =>
-    (thinningResult s N Thresh coins,
-      manuscriptCountThinningCost s N Thresh coins)
+    (ttcPseudocode.secondLoopResult s N Thresh coins,
+      ttcPseudocode.secondLoopCost s N Thresh coins)
 
 /-- Charged implementations of `ComputeVolume` and `GenerateSamples`. -/
 structure CostedTTCOracles (n k : Nat) where
@@ -331,24 +331,24 @@ structure CostedTTCOracles (n k : Nat) where
 
 /-- One charged iteration of the `for` loop, using the fixed real-RAM charges in `Prelude`.
 The oracle fields retain their own charges, including retries. -/
-def manuscriptProcessComponentWithCost {n k : Nat} (O : CostedTTCOracles n k)
+def ttcPseudocode.stepWithCost {n k : Nat} (O : CostedTTCOracles n k)
     (b : Nat) (ε' δ' Thresh : Real) (P : PolytopeData n)
     (state : TTCState n) : Measure (TTCState n × Nat) :=
   costedBind (O.computeVolumeWithCost P ε' δ') fun volumeOutcome =>
-    let t := ttc.t b n Thresh volumeOutcome.2
+    let t := ttcPseudocode.t b n Thresh volumeOutcome.2
     let withoutDuplicates := state.removeComponent P
     let deletionCost := TTCRuntime.deletionPassOperations n
       P.presentation.facetCount state.X.card
         (state.X.card - withoutDuplicates.X.card)
     costedBind (costedCharge (Measure.dirac withoutDuplicates) deletionCost)
       fun deleted =>
-        costedBind (manuscriptRateThinWithCost deleted t Thresh)
+        costedBind (ttcPseudocode.firstLoopWithCost deleted t Thresh)
           fun firstThinned =>
             costedBind
               (costedCharge (Poisson (t * firstThinned.p))
                 TTCRuntime.poissonDrawOperations)
               fun N =>
-                costedBind (manuscriptCountThinWithCost firstThinned N Thresh)
+                costedBind (ttcPseudocode.secondLoopWithCost firstThinned N Thresh)
                   fun secondThinned =>
                     costedBind
                       (O.generateSamplesWithCost P secondThinned.2 b ε' δ')
@@ -356,18 +356,18 @@ def manuscriptProcessComponentWithCost {n k : Nat} (O : CostedTTCOracles n k)
                         costedCharge (Measure.dirac (secondThinned.1.addBatch S.2))
                           (secondThinned.2 * TTCRuntime.appendCopyOperations)
 
-/-- The charged `for` loop, in the manuscript's component order. -/
-def manuscriptProcessComponentsWithCost {n k : Nat} (O : CostedTTCOracles n k)
+/-- The charged `for` loop, in the paper's component order. -/
+def ttcPseudocode.loopWithCost {n k : Nat} (O : CostedTTCOracles n k)
     (b : Nat) (ε' δ' Thresh : Real) :
     List (PolytopeData n) → TTCState n → Measure (TTCState n × Nat)
   | [], state => Measure.dirac (state, 0)
   | P :: rest, state =>
       costedBind
-        (manuscriptProcessComponentWithCost O b ε' δ' Thresh P state)
-        (manuscriptProcessComponentsWithCost O b ε' δ' Thresh rest)
+        (ttcPseudocode.stepWithCost O b ε' δ' Thresh P state)
+        (ttcPseudocode.loopWithCost O b ε' δ' Thresh rest)
 
 /-- A charged `ttc` law whose first coordinate is the output `Est`. -/
-def manuscriptTTCWithCost {n k : Nat} (F : LRAFormula n k)
+def ttcPseudocodeWithCost {n k : Nat} (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
     (O : CostedTTCOracles n k) (preprocessingOperations : Nat) :
     Measure (NNReal × Nat) :=
@@ -377,20 +377,20 @@ def manuscriptTTCWithCost {n k : Nat} (F : LRAFormula n k)
   else
     let b := (O.base.choosePrecision D params).value
     let Thresh := params.Thresh D.componentCount
-    (manuscriptProcessComponentsWithCost O b params.ε'
+    (ttcPseudocode.loopWithCost O b params.ε'
       (params.δ' D.componentCount) Thresh
       (List.ofFn D.component) (TTCState.initial n)).map
         fun result => (Est b Thresh result.1,
           preprocessingOperations + result.2)
 
-#krModelClosure ttcWith
+#krModelClosure ttcPseudocode
 
 end Kr25Ssmxt
 
 
 namespace Kr25Ssmxt
 
-#krSurplusIn Kr25Ssmxt.Model.Program from ttcWith
-  manuscriptRateThinWithCost manuscriptCountThinWithCost manuscriptTTCWithCost
+#krSurplusIn Kr25Ssmxt.Model.Program from ttcPseudocode
+  ttcPseudocode.firstLoopWithCost ttcPseudocode.secondLoopWithCost ttcPseudocodeWithCost
 
 end Kr25Ssmxt

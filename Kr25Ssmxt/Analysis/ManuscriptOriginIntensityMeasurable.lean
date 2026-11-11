@@ -12,14 +12,14 @@ theorem ManuscriptOriginConfiguration.measurable_advance_controls_intensity
     {n : Nat} (P : PolytopeData n)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : ManuscriptOriginConfiguration n × NNReal =>
-      (z.1.level + manuscriptRateExit (z.1.state.removeComponent P)
+      (z.1.level + ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
         z.2 threshold, (z.1.state.removeComponent P).nextLabel)) := by
   have hdeleted : Measurable (fun z : ManuscriptOriginConfiguration n ×
       NNReal => z.1.state.removeComponent P) :=
     (measurable_removeComponent P).comp
       (measurable_manuscriptOriginConfiguration_state.comp measurable_fst)
   have hround : Measurable (fun z : ManuscriptOriginConfiguration n ×
-      NNReal => manuscriptRateExit (z.1.state.removeComponent P)
+      NNReal => ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
         z.2 threshold) :=
     (measurable_manuscriptRateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_snd)
@@ -37,7 +37,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_firstState_intensity
     {n : Nat} (P : PolytopeData n)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : ManuscriptOriginConfiguration n × NNReal =>
-      manuscriptRateThinningResult (z.1.state.removeComponent P)
+      ttcPseudocode.firstLoopResult (z.1.state.removeComponent P)
         z.2 threshold
         (manuscriptSourceOldCoins z.1.origin z.1.source.coins
           z.1.level)) := by
@@ -58,14 +58,14 @@ theorem ManuscriptOriginConfiguration.measurable_advance_shiftedOldCoins_intensi
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : ManuscriptOriginConfiguration n × NNReal =>
       shiftCoins
-        (manuscriptRateExit (z.1.state.removeComponent P) z.2 threshold)
+        (ttcPseudocode.firstLoopExit (z.1.state.removeComponent P) z.2 threshold)
         (manuscriptSourceOldCoins z.1.origin z.1.source.coins z.1.level)) := by
   have hdeleted : Measurable (fun z : ManuscriptOriginConfiguration n ×
       NNReal => z.1.state.removeComponent P) :=
     (measurable_removeComponent P).comp
       (measurable_manuscriptOriginConfiguration_state.comp measurable_fst)
   have hround : Measurable (fun z : ManuscriptOriginConfiguration n ×
-      NNReal => manuscriptRateExit (z.1.state.removeComponent P)
+      NNReal => ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
         z.2 threshold) :=
     (measurable_manuscriptRateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_snd)
@@ -81,13 +81,13 @@ theorem ManuscriptOriginConfiguration.measurable_pending_coinPair_intensity
     Measurable (fun z : (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       pendingAfter z.2.1
-        (z.1.1.level + manuscriptRateExit
+        (z.1.1.level + ttcPseudocode.firstLoopExit
           (z.1.1.state.removeComponent P) z.1.2 threshold)
         (z.1.1.state.removeComponent P).nextLabel basePending) := by
   have hcontrols : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.1.level + manuscriptRateExit
+      (z.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold,
         (z.1.1.state.removeComponent P).nextLabel)) :=
     (ManuscriptOriginConfiguration.measurable_advance_controls_intensity
@@ -105,7 +105,7 @@ theorem ManuscriptOriginConfiguration.measurable_activeFullCoins_coinPair_intens
     Measurable (fun z : (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       let deleted := z.1.1.state.removeComponent P
-      let preRounds := z.1.1.level + manuscriptRateExit deleted z.1.2
+      let preRounds := z.1.1.level + ttcPseudocode.firstLoopExit deleted z.1.2
         threshold
       pendingCoinExtension deleted.nextLabel
         (pendingAfter z.2.1 preRounds deleted.nextLabel basePending)
@@ -123,7 +123,7 @@ theorem ManuscriptOriginConfiguration.measurable_mergedCoins_coinPair_intensity
     Measurable (fun z : (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       let deleted := z.1.1.state.removeComponent P
-      let rounds := manuscriptRateExit deleted z.1.2 threshold
+      let rounds := ttcPseudocode.firstLoopExit deleted z.1.2 threshold
       let preRounds := z.1.1.level + rounds
       mergeCoinsAtLabel deleted.nextLabel
         (shiftCoins rounds
@@ -144,7 +144,7 @@ theorem ManuscriptOriginConfiguration.measurable_mergedCoins_coinPair_intensity
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       shiftCoins
-        (manuscriptRateExit (z.1.1.state.removeComponent P)
+        (ttcPseudocode.firstLoopExit (z.1.1.state.removeComponent P)
           z.1.2 threshold)
         (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
           z.1.1.level)) :=
@@ -168,7 +168,7 @@ theorem ManuscriptOriginConfiguration.measurable_secondExit_coinPair_intensity
   have hfirst : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      manuscriptRateThinningResult (z.1.1.state.removeComponent P)
+      ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
         z.1.2 threshold
         (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
           z.1.1.level)) :=
@@ -214,7 +214,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_level_coinPair_intensit
       ((ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
-      z.1.1.1.level + manuscriptRateExit
+      z.1.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.1.state.removeComponent P) z.1.1.2 threshold) :=
     (measurable_fst.comp
       (ManuscriptOriginConfiguration.measurable_advance_controls_intensity
@@ -234,7 +234,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_level_coinPair_intensit
         (Nat → LatticePoint n) =>
       (z.1.1.1.advance P z.1.1.2 threshold basePending
         z.1.2.1 z.1.2.2 z.2).level) =
-      (fun z => z.1.1.1.level + manuscriptRateExit
+      (fun z => z.1.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.1.state.removeComponent P) z.1.1.2 threshold +
         manuscriptOriginCoinPairSplitExit P z.1.1.2 threshold
           basePending (z.1.1.1, z.1.2)) := by
@@ -264,7 +264,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_source_coinPair_intensi
       ((ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
-      (z.1.1.1.level + manuscriptRateExit
+      (z.1.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.1.state.removeComponent P) z.1.1.2 threshold,
         (z.1.1.1.state.removeComponent P).nextLabel)) :=
     (ManuscriptOriginConfiguration.measurable_advance_controls_intensity
@@ -275,7 +275,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_source_coinPair_intensi
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
       ((z.1.1.1.state.removeComponent P).nextLabel,
-        z.1.1.1.level + manuscriptRateExit
+        z.1.1.1.level + ttcPseudocode.firstLoopExit
           (z.1.1.1.state.removeComponent P) z.1.1.2 threshold)) :=
     (measurable_snd.comp hcontrols).prodMk
       (measurable_fst.comp hcontrols)
@@ -297,7 +297,7 @@ theorem ManuscriptOriginConfiguration.measurable_advance_source_coinPair_intensi
         z.1.2.1 z.1.2.2 z.2).source) =
       (fun z => manuscriptOriginSourceStepCoinPair P basePending
         (((z.1.1.1.state.removeComponent P).nextLabel,
-            z.1.1.1.level + manuscriptRateExit
+            z.1.1.1.level + ttcPseudocode.firstLoopExit
               (z.1.1.1.state.removeComponent P) z.1.1.2 threshold),
           ((z.1.1.1.source, z.2), z.1.2))) := by
     funext z
@@ -320,13 +320,13 @@ theorem measurable_manuscriptOriginCoinPairSecondCountFormula_intensity
           (z.1.1, z.2))
         (z.1.1.state.removeComponent P).nextLabel
         (pendingAfter z.2.1
-          (z.1.1.level + manuscriptRateExit
+          (z.1.1.level + ttcPseudocode.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)) := by
   have hcontrols : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.1.level + manuscriptRateExit
+      (z.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold,
         (z.1.1.state.removeComponent P).nextLabel)) :=
     (ManuscriptOriginConfiguration.measurable_advance_controls_intensity
@@ -368,7 +368,7 @@ theorem measurable_manuscriptOriginCoinPairSecondCount_intensity
           (z.1.1, z.2))
         (z.1.1.state.removeComponent P).nextLabel
         (pendingAfter z.2.1
-          (z.1.1.level + manuscriptRateExit
+          (z.1.1.level + ttcPseudocode.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)) := by
     funext z
@@ -389,7 +389,7 @@ theorem measurable_manuscriptOriginCoinPairIndex_intensity
   have hcontrols : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.1.level + manuscriptRateExit
+      (z.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold,
         (z.1.1.state.removeComponent P).nextLabel)) :=
     (ManuscriptOriginConfiguration.measurable_advance_controls_intensity
@@ -397,7 +397,7 @@ theorem measurable_manuscriptOriginCoinPairIndex_intensity
   have hpre : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      z.1.1.level + manuscriptRateExit
+      z.1.1.level + ttcPseudocode.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold) :=
     measurable_fst.comp hcontrols
   have hlabel : Measurable (fun z :
@@ -417,7 +417,7 @@ theorem measurable_manuscriptOriginCoinPairIndex_intensity
       fun i : Nat => twoStageSurvivorLabelOrZero z.2.1
         (manuscriptOriginCoinPairActiveFull P z.1.2 threshold
           basePending (z.1.1, z.2))
-        (z.1.1.level + manuscriptRateExit
+        (z.1.1.level + ttcPseudocode.firstLoopExit
           (z.1.1.state.removeComponent P) z.1.2 threshold)
         (z.1.1.state.removeComponent P).nextLabel basePending
         (manuscriptOriginCoinPairSplitExit P z.1.2 threshold
@@ -437,7 +437,7 @@ theorem measurable_manuscriptOriginCoinPairIndex_intensity
       (fun z => fun i : Nat => twoStageSurvivorLabelOrZero z.2.1
         (manuscriptOriginCoinPairActiveFull P z.1.2 threshold
           basePending (z.1.1, z.2))
-        (z.1.1.level + manuscriptRateExit
+        (z.1.1.level + ttcPseudocode.firstLoopExit
           (z.1.1.state.removeComponent P) z.1.2 threshold)
         (z.1.1.state.removeComponent P).nextLabel basePending
         (manuscriptOriginCoinPairSplitExit P z.1.2 threshold
@@ -545,7 +545,7 @@ theorem measurable_manuscriptOriginCoinPairMergedSecondResult_intensity
   have hfirst : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      manuscriptRateThinningResult (z.1.1.state.removeComponent P)
+      ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
         z.1.2 threshold
         (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
           z.1.1.level)) :=
@@ -560,19 +560,19 @@ theorem measurable_manuscriptOriginCoinPairMergedSecondResult_intensity
   have hformula : Measurable (fun z :
       (ManuscriptOriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      thinningResult
-        (manuscriptRateThinningResult (z.1.1.state.removeComponent P)
+      ttcPseudocode.secondLoopResult
+        (ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
           z.1.2 threshold
           (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
             z.1.1.level))
         (pendingAfter z.2.1
-          (z.1.1.level + manuscriptRateExit
+          (z.1.1.level + ttcPseudocode.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)
         threshold
         (mergeCoinsAtLabel (z.1.1.state.removeComponent P).nextLabel
           (shiftCoins
-            (manuscriptRateExit (z.1.1.state.removeComponent P)
+            (ttcPseudocode.firstLoopExit (z.1.1.state.removeComponent P)
               z.1.2 threshold)
             (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
               z.1.1.level))
@@ -584,19 +584,19 @@ theorem measurable_manuscriptOriginCoinPairMergedSecondResult_intensity
       ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       manuscriptOriginCoinPairMergedSecondResult P z.1.2 threshold
         basePending (z.1.1, z.2)) =
-      (fun z => thinningResult
-        (manuscriptRateThinningResult (z.1.1.state.removeComponent P)
+      (fun z => ttcPseudocode.secondLoopResult
+        (ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
           z.1.2 threshold
           (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
             z.1.1.level))
         (pendingAfter z.2.1
-          (z.1.1.level + manuscriptRateExit
+          (z.1.1.level + ttcPseudocode.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)
         threshold
         (mergeCoinsAtLabel (z.1.1.state.removeComponent P).nextLabel
           (shiftCoins
-            (manuscriptRateExit (z.1.1.state.removeComponent P)
+            (ttcPseudocode.firstLoopExit (z.1.1.state.removeComponent P)
               z.1.2 threshold)
             (manuscriptSourceOldCoins z.1.1.origin z.1.1.source.coins
               z.1.1.level))

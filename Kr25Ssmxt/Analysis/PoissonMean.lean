@@ -84,14 +84,14 @@ theorem poisson_averaged_firstExitRound_le {n : Nat} (s : TTCState n)
     (r : NNReal) (cutoff : Nat) (threshold : Real) (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     ∫⁻ pending : Nat, (∫⁻ coins,
-        (firstExitRound s pending threshold coins : ENNReal)
+        (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) ∂poissonMeasure r ≤
       2 * ((s.X.card + (r : ENNReal)) / cutoff) := by
   have hpoint (pending : Nat) :=
     expected_firstExitRound_le s pending cutoff threshold hcutoff hthreshold
   calc
     (∫⁻ pending : Nat, (∫⁻ coins,
-        (firstExitRound s pending threshold coins : ENNReal)
+        (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) ∂poissonMeasure r) ≤
         ∫⁻ pending : Nat,
           2 * ((s.X.card + pending : ENNReal) / cutoff)
@@ -113,22 +113,22 @@ theorem poisson_averaged_countThinCost_le {n : Nat} (s : TTCState n)
     (r : NNReal) (cutoff : Nat) (threshold : Real) (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     ∫⁻ pending : Nat, (∫⁻ result, (result.2 : ENNReal) ∂
-      manuscriptCountThinWithCost s pending threshold) ∂poissonMeasure r ≤
+      ttcPseudocode.secondLoopWithCost s pending threshold) ∂poissonMeasure r ≤
       (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
         (2 * ((s.X.card + (r : ENNReal)) / cutoff)) := by
   calc
     (∫⁻ pending : Nat, (∫⁻ result, (result.2 : ENNReal) ∂
-      manuscriptCountThinWithCost s pending threshold) ∂poissonMeasure r) ≤
+      ttcPseudocode.secondLoopWithCost s pending threshold) ∂poissonMeasure r) ≤
       ∫⁻ pending : Nat,
         (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
-          (∫⁻ coins, (firstExitRound s pending threshold coins : ENNReal)
+          (∫⁻ coins, (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
             ∂fairCoinStreamLaw) ∂poissonMeasure r := by
       apply lintegral_mono
       intro pending
       exact le_of_eq (manuscriptCountThinWithCost_expected_eq s pending threshold)
     _ = (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
         (∫⁻ pending : Nat, (∫⁻ coins,
-          (firstExitRound s pending threshold coins : ENNReal)
+          (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
             ∂fairCoinStreamLaw) ∂poissonMeasure r) := by
       rw [lintegral_const_mul _ (measurable_of_countable _)]
     _ ≤ _ := mul_le_mul_of_nonneg_left
@@ -143,7 +143,7 @@ theorem poisson_averaged_firstExitRound_le_four {n : Nat} (s : TTCState n)
     (hpopulation : (s.X.card : ENNReal) + (r : ENNReal) ≤
       2 * (cutoff : ENNReal)) :
     ∫⁻ pending : Nat, (∫⁻ coins,
-        (firstExitRound s pending threshold coins : ENNReal)
+        (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) ∂poissonMeasure r ≤ 4 := by
   apply (poisson_averaged_firstExitRound_le s r cutoff threshold hcutoff
     hthreshold).trans
@@ -162,7 +162,7 @@ theorem poisson_averaged_firstExitRound_le_four_of_guard {n : Nat}
     (hsamples : (s.X.card : Real) ≤ threshold)
     (hrate : (r : Real) < threshold) :
     ∫⁻ pending : Nat, (∫⁻ coins,
-        (firstExitRound s pending threshold coins : ENNReal)
+        (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) ∂poissonMeasure r ≤ 4 := by
   have hpopulationReal : (s.X.card : Real) + (r : Real) ≤
       2 * (Nat.floor threshold + 1 : Real) := by
@@ -186,7 +186,7 @@ theorem poisson_averaged_countThinCost_le_four_of_guard {n : Nat}
     (hsamples : (s.X.card : Real) ≤ threshold)
     (hrate : (r : Real) < threshold) :
     ∫⁻ pending : Nat, (∫⁻ result, (result.2 : ENNReal) ∂
-      manuscriptCountThinWithCost s pending threshold) ∂poissonMeasure r ≤
+      ttcPseudocode.secondLoopWithCost s pending threshold) ∂poissonMeasure r ≤
       4 * TTCRuntime.countThinningRoundOperations s.X.card := by
   have hpopulationReal : (s.X.card : Real) + (r : Real) ≤
       2 * (Nat.floor threshold + 1 : Real) := by
@@ -224,11 +224,11 @@ theorem manuscriptPoissonCountThin_expected_cost_le {n : Nat}
     ∫⁻ result, (result.2 : ENNReal) ∂
       costedBind
         (costedCharge (poissonMeasure r) TTCRuntime.poissonDrawOperations)
-        (fun pending => manuscriptCountThinWithCost s pending threshold) ≤
+        (fun pending => ttcPseudocode.secondLoopWithCost s pending threshold) ≤
       TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations s.X.card := by
   have hmass (pending : Nat) :
-      (manuscriptCountThinWithCost s pending threshold) Set.univ ≤ 1 :=
+      (ttcPseudocode.secondLoopWithCost s pending threshold) Set.univ ≤ 1 :=
     manuscriptCountThinWithCost_mass_le_one s pending threshold
   apply (costedBind_lintegral_cost_le _ _ (measurable_of_countable _) hmass).trans
   have hpair : Measurable (fun pending : Nat =>

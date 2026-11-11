@@ -44,8 +44,8 @@ theorem community_manuscriptTTC_volume_accuracy_empty
     simp [Arlib.relErr]
   have hrun : ttc hn F hbounded p prep =
       Measure.dirac 0 := by
-    simp [ttc, ttcWith,
-      communityManuscriptOracles, hempty]
+    simp [ttc, ttcPseudocode,
+      ttcSubroutines, hempty]
   rw [hrun, hvolume]
   simp only [ENNReal.toReal_zero]
   rw [Measure.real, Measure.dirac_apply' 0 hset,
@@ -74,7 +74,7 @@ theorem community_manuscriptTTC_volume_accuracy_of_lattice_estimate
       1 - p.delta := by
   let D := prep.run F hbounded
   let b := (prep.choosePrecision D p).value
-  let O := communityManuscriptOracles hn prep
+  let O := ttcSubroutines hn prep
   have hcomparison := ttc_volume_accuracy_lattice_comparison
     (lt_of_lt_of_le (by norm_num) hn) D p b
     (prep.choosePrecision D p).adequate

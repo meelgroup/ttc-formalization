@@ -20,32 +20,32 @@ theorem communityManuscript_adaptive_tape_append_law
     (s : TTCState n) (pending : Nat) :
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
-    ((thinUntil s pending threshold).bind fun thinned =>
-      ((communityManuscriptOracles hn prep).GenerateSamples P thinned.2
+    ((ttcPseudocode.secondLoop s pending threshold).bind fun thinned =>
+      ((ttcSubroutines hn prep).GenerateSamples P thinned.2
         b eta delta).map fun batch => thinned.1.addBatch batch.2) =
     fairCoinStreamLaw.bind fun coins =>
       (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
-        (thinningResult s pending threshold coins).1.addBatch
-          (fun (i : Fin (thinningResult s pending threshold coins).2) =>
+        (ttcPseudocode.secondLoopResult s pending threshold coins).1.addBatch
+          (fun (i : Fin (ttcPseudocode.secondLoopResult s pending threshold coins).2) =>
             tape (s.nextLabel +
               (pendingSurvivorIndices coins
-                (firstExitRound s pending threshold coins)
+                (ttcPseudocode.secondLoopExitRound s pending threshold coins)
                 s.nextLabel pending).orderEmbOfFin
                 (pendingSurvivorIndices_card coins
-                  (firstExitRound s pending threshold coins)
+                  (ttcPseudocode.secondLoopExitRound s pending threshold coins)
                   s.nextLabel pending) i)) := by
   dsimp only
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun thinned =>
-    ((communityManuscriptOracles hn prep).GenerateSamples P thinned.2
+    ((ttcSubroutines hn prep).GenerateSamples P thinned.2
       b eta delta).map fun batch => thinned.1.addBatch batch.2
   have hK : Measurable K := by
     have hcost := community_manuscript_sample_append_kernel_measurable
       hn prep 1 P b eta delta
     have heq : K = fun thinned : TTCState n × Nat =>
         (costedBind
-          ((communityManuscriptCostedOracles hn prep 1).generateSamplesWithCost
+          ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
             P thinned.2 b eta delta)
           (fun batch => costedCharge
             (Measure.dirac (thinned.1.addBatch batch.2))
@@ -55,15 +55,15 @@ theorem communityManuscript_adaptive_tape_append_law
         thinned.2 b eta delta thinned.1).symm
     rw [heq]
     exact (Measure.measurable_map _ measurable_fst).comp hcost
-  change (thinUntil s pending threshold).bind K = _
-  rw [show thinUntil s pending threshold =
-    fairCoinStreamLaw.map (thinningResult s pending threshold) from rfl]
+  change (ttcPseudocode.secondLoop s pending threshold).bind K = _
+  rw [show ttcPseudocode.secondLoop s pending threshold =
+    fairCoinStreamLaw.map (ttcPseudocode.secondLoopResult s pending threshold) from rfl]
   rw [bind_mapped_measure fairCoinStreamLaw
-    (thinningResult s pending threshold)
+    (ttcPseudocode.secondLoopResult s pending threshold)
     (measurable_thinningResult s pending threshold) K hK]
   congr 1
   funext coins
-  let thinned := thinningResult s pending threshold coins
+  let thinned := ttcPseudocode.secondLoopResult s pending threshold coins
   have hbatch := communityManuscript_adaptive_batch_from_iid_tape hn prep
     P b eta delta threshold hroute s pending coins
   let f : SampleBatch n thinned.2 → TTCState n :=
@@ -74,10 +74,10 @@ theorem communityManuscript_adaptive_tape_append_law
       (true, fun (i : Fin thinned.2) =>
         tape (s.nextLabel +
           (pendingSurvivorIndices coins
-            (firstExitRound s pending threshold coins)
+            (ttcPseudocode.secondLoopExitRound s pending threshold coins)
             s.nextLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins
-              (firstExitRound s pending threshold coins)
+              (ttcPseudocode.secondLoopExitRound s pending threshold coins)
               s.nextLabel pending) i))) := by
     exact measurable_const.prodMk
       (Measurable.of_eval (fun i => measurable_pi_apply _))

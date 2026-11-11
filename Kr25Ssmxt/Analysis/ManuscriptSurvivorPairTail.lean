@@ -63,7 +63,7 @@ noncomputable def manuscriptSurvivorPairStop
     (preCoins : Nat × Nat → Bool) (preRounds basePending : Nat)
     (origin : Nat → Nat × Nat)
     (z : (Nat × (Nat × Nat) → Bool) × (Nat × Nat → Bool)) : Nat :=
-  firstExitRound s
+  ttcPseudocode.secondLoopExitRound s
     (pendingAfter preCoins preRounds s.nextLabel basePending) threshold
     (manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
       basePending origin z)
@@ -152,7 +152,7 @@ theorem manuscriptSurvivorPair_stoppedReadPrefix_tail_law
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
     let read := manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
       basePending origin
-    let stop := fun z => firstExitRound s pending threshold (read z)
+    let stop := fun z => ttcPseudocode.secondLoopExitRound s pending threshold (read z)
     ((Measure.infinitePi
       (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
       fairCoinStreamLaw).map
@@ -173,7 +173,7 @@ theorem manuscriptSurvivorPair_stoppedReadPrefix_tail_law
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
   let read := manuscriptSurvivorPairRead preCoins preRounds s.nextLabel
     basePending origin
-  let stop := fun z => firstExitRound s pending threshold (read z)
+  let stop := fun z => ttcPseudocode.secondLoopExitRound s pending threshold (read z)
   let obs : (Nat × (Nat × Nat) → Bool) × (Nat × Nat → Bool) →
       Nat × (Nat × Nat → Bool) :=
     fun z => (stop z, coinPrefix (stop z) (read z))
@@ -227,11 +227,11 @@ theorem manuscriptSurvivorPair_stoppedReadPrefix_tail_law
         rfl
     _ = fairCoinStreamLaw.map
         (fun coins =>
-          ((firstExitRound s pending threshold
+          ((ttcPseudocode.secondLoopExitRound s pending threshold
                 (manuscriptJointSurvivorRead preCoins preRounds
                   s.nextLabel basePending origin coins),
               coinPrefix
-                (firstExitRound s pending threshold
+                (ttcPseudocode.secondLoopExitRound s pending threshold
                   (manuscriptJointSurvivorRead preCoins preRounds
                     s.nextLabel basePending origin coins))
                 (manuscriptJointSurvivorRead preCoins preRounds
