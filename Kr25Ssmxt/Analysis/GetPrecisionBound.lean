@@ -1,6 +1,6 @@
 import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.PrecisionRequirements
-import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
+import Kr25Ssmxt.Analysis.RuntimeBounds
 
 /-! The precision chosen by `getprec` at `ε / 96` is bounded by input data
 alone, which removes `b` from the Theorem 3 runtime bound. -/

@@ -723,19 +723,19 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
         (TTCRuntime.theorem3Rho D) ^ 2 := by positivity
     exact mul_le_mul_of_nonneg_left henvelope hfactor))
 
-theorem TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision_le_geometric
+theorem TTCRuntime.expectedComponentBudgetLinearPrecision_le_geometric
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision hn p
+    TTCRuntime.expectedComponentBudgetLinearPrecision hn p
       D.componentCount b cv18NonQueryFactor (D.component i) ≤
-      TTCRuntime.manuscriptExpectedComponentBudgetGeometric hn D p b
+      TTCRuntime.expectedComponentBudgetGeometric hn D p b
         cv18NonQueryFactor i := by
   have hsteps := D.normalizedHitAndRunSteps_le_explicitEnvelope
     hn b p hprecision i
-  unfold TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision
-    TTCRuntime.manuscriptExpectedComponentBudgetGeometric
+  unfold TTCRuntime.expectedComponentBudgetLinearPrecision
+    TTCRuntime.expectedComponentBudgetGeometric
   dsimp only
   gcongr
   unfold TTCRuntime.samplingAttemptOperations

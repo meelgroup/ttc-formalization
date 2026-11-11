@@ -1,4 +1,4 @@
-# Manuscript theorem audit
+# Paper theorem audit
 
 `Kr25Ssmxt/Model/` is the statement and program audit surface; proofs live in
 `Kr25Ssmxt/Analysis/`. `#krModelClosureOfType` checks that each public statement
@@ -13,7 +13,7 @@ with no errors and no `sorry`. Both public theorems depend only on `propext`,
 `Classical.choice` and `Quot.sound`.
 
 **Public theorems** (`Model/Theorem.lean`), both about `ttc`,
-the manuscript's Algorithm 1 with the concrete oracles:
+the paper's Algorithm 1 with the concrete oracles:
 
 | Paper | Lean | Status |
 |---|---|---|
@@ -37,18 +37,18 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
 
 **Theorem 1 proof outline.**
 1. Strong Markov property of one refreshed component: every refreshed component
-   law is refresh-stationary (`manuscriptOriginRefreshedComponentLaw_bind_stationary`,
-   `ManuscriptRefreshStationaryStep.lean`, `ManuscriptRefreshStationaryKernel.lean`).
+   law is refresh-stationary (`originRefreshedComponentLaw_bind_stationary`,
+   `RefreshStationaryStep.lean`, `RefreshStationaryKernel.lean`).
 2. With the CV18 outcomes fixed, the ghost fold's point counts at every dyadic
    level are the certified fixed-level Poisson process
-   (`ManuscriptOriginGivenVolumesFold.lean`, `ManuscriptOriginStepsCertified.lean`).
+   (`OriginGivenVolumesFold.lean`, `OriginStepsCertified.lean`).
 3. Ending above the penultimate cutoff costs at most `δ/(6m)` per component,
-   i.e. `δ/6` (`ManuscriptOriginCrossing.lean`, `ManuscriptTheoremOneCrossing.lean`);
+   i.e. `δ/6` (`OriginCrossing.lean`, `TheoremOneCrossing.lean`);
    the remaining levels cost at most `δ/6` by the dyadic Chernoff sum
-   (`ManuscriptTheoremOneGivenOutcomes.lean`).
+   (`TheoremOneGivenOutcomes.lean`).
 4. Integrating over the CV18 outcome vector adds the `δ/4` CV18 failure budget,
    and the lattice comparison turns the `ε/2` lattice estimate into an `ε`
-   volume estimate (`ManuscriptTheoremOneFinal.lean`).
+   volume estimate (`TheoremOneFinal.lean`).
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
 `ttc`, and its *expected* operation count is at most
@@ -75,7 +75,7 @@ fields `p` and `X`. Steps without a paper name (the coin-flip realisation of "re
 element with probability 1/2", the charged run, the sampler's charts) keep descriptive
 names.
 
-**Fidelity to the manuscript** (`sections/algo.tex`, `sections/analysis.tex`).
+**Fidelity to the paper** (`sections/algo.tex`, `sections/analysis.tex`).
 - Matches Algorithm 1: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`,
   `t = Threshold·10^(bn)·VolED`, overlap deletion, the first loop
   `while p ≥ Threshold/t`, `N ~ Pois(tp)`, the second loop
@@ -118,11 +118,11 @@ names.
   `theorem3ParameterFactor` are polylogarithmic in the public parameters (needed
   only for the paper's `Õ` notation; the exact bound is proved).
 - Boolean abstraction and DNF conversion (Theorem 2).
-- Manuscript edits: state boundedness; state Theorem 3 in expectation with the
+- Paper edits: state boundedness; state Theorem 3 in expectation with the
   precision factor and the second-loop and `getprec`/decomposition costs; add
   `minᵢ γᵢ` (the smallest inradius) to the quantities whose polylogarithmic
   factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
-- Manuscript constant in `lem:nonconv`: `(1 + κ/γ)ⁿ ≤ (1 + η/(32mn))ⁿ` should read
+- Paper constant in `lem:nonconv`: `(1 + κ/γ)ⁿ ≤ (1 + η/(32mn))ⁿ` should read
   `η/(26mn)` (or bound the escape by `η/8`); the lemma holds either way.
 - Model surplus: `#krSurplusIn` reports only the two Chebyshev-LP theorems, kept in
   `Model/Run.lean` on purpose (they discharge `MaxInscribedBall` there), and the paper
@@ -140,7 +140,7 @@ hypothesis, the unnormalized sampler and older oracle bundle, the older runtime
 certificate (`ttc_total_runtime_theorem3`), and the arbitrary-oracle
 label-freshness and dyadic-rate lemmas were removed: none is used by either
 public theorem (checked by a dependency walk), and that program is not the
-manuscript's Algorithm 1. The cube-based cubulation proof of the lattice comparison
+paper's Algorithm 1. The cube-based cubulation proof of the lattice comparison
 (`Cubulation*`, `IntegerCubulation*`, `ScaledPolytopeInball`, `ScaledUnion*`,
 `HomothetyImageNullMeasurable`) was removed when the comparison moved to the paper's
 `ℓ₂` argument.
@@ -158,76 +158,76 @@ each part. They mention definitions and theorems that have since been removed
 
 ### Theorem 1 (`sections/analysis.tex`, `thm:volumettc`)
 
-`ttc_volume_accuracy` is a conditional accuracy theorem, not yet the manuscript's
+`ttc_volume_accuracy` is a conditional accuracy theorem, not yet the paper's
 unqualified claim. It assumes `Prior.streamingCoreAccuracy`, dimension at least 21,
 a bounded solution set, a certified preprocessor, and either an empty decomposition
 or the displayed high-intensity lattice-volume condition. `Prior` is an explicit
 hypothesis, not an axiom silently introduced by Lean. The remaining streaming
-result must be proved, and the input domain of the manuscript statement must be
+result must be proved, and the input domain of the paper statement must be
 made precise: an unbounded solution set can have infinite volume while TTC returns
 a finite `NNReal` estimate.
-`ManuscriptEmptyAccuracy.lean` proves the empty-decomposition branch for the
-current program, and `ManuscriptLatticeAccuracy.lean` proves the deterministic
+`EmptyAccuracy.lean` proves the empty-decomposition branch for the
+current program, and `LatticeAccuracy.lean` proves the deterministic
 step from a lattice-count guarantee to volume accuracy for any probability
-output law. `ManuscriptProbabilityMeasure.lean` now proves that the full
+output law. `TTCProbabilityMeasure.lean` now proves that the full
 `ttc` output law has total mass one without `Prior` or a
-streaming hypothesis. `ManuscriptPoissonMarking.lean` records the imported exact
+streaming hypothesis. `PoissonMarking.lean` records the imported exact
 Poisson marking and half-thinning identities, and
-`ManuscriptPointIntensity.lean` proves the per-point scaled intensity bounds.
-`ManuscriptVolumeGeometry.lean` proves that the manuscript's clipping interval
+`PointIntensity.lean` proves the per-point scaled intensity bounds.
+`VolumeGeometry.lean` proves that the paper's clipping interval
 contains each component's true volume and discharges the concrete clipped CV18
 volume contract; the normalized Hit-and-Run batch contract is proved in
 `HitAndRunSamplingOracle.lean`.
-`ManuscriptUnionLatticeNonempty.lean` proves the finite union has a positive
+`UnionLatticeNonempty.lean` proves the finite union has a positive
 lattice count when the decomposition is nonempty, and
-`ManuscriptDyadicCutoff.lean` proves the cutoff's adjacent-power inequalities.
-`ManuscriptLabelFreshness.lean` proves that stored and pending copy labels stay
+`DyadicCutoff.lean` proves the cutoff's adjacent-power inequalities.
+`LabelFreshness.lean` proves that stored and pending copy labels stay
 distinct through the program's state transitions.
-`ManuscriptCoinBlockLaw.lean` proves the fair coin stream supplies independent
+`CoinBlockLaw.lean` proves the fair coin stream supplies independent
 round streams to distinct labels, each fixed-round survival decision has
 probability `2^-rounds`, and the actual stored-plus-pending population at a
 fixed round is the count of these independent decisions.
-`ManuscriptReachableLabels.lean` proves label freshness holds almost surely
+`ReachableLabels.lean` proves label freshness holds almost surely
 through each complete randomized component transition and the sequential
 component fold, for arbitrary oracle laws.
-`ManuscriptBernoulliCount.lean` identifies the actual fixed-round
+`BernoulliCount.lean` identifies the actual fixed-round
 stored-plus-pending population as a binomial law with parameters
 `stored copies + pending count` and `2^-rounds`. It also proves that thinning
 the program's pending Poisson count yields a Poisson count with the scaled mean,
 and that an iid point batch drawn from that fixed-round count has independent
 Poisson counts at each lattice point.
-`ManuscriptPoissonVectorSum.lean` proves that pointwise addition of two
+`PoissonVectorSum.lean` proves that pointwise addition of two
 independent finite Poisson count vectors yields an independent Poisson vector
 whose point rates add. This is the union-prefix update needed after deleting
 overlap and introducing the next component's batch.
-`ManuscriptPoissonVectorRestriction.lean` proves that restricting an independent
+`PoissonVectorRestriction.lean` proves that restricting an independent
 Poisson vector to the points outside the incoming component preserves the
 product law, which gives the fixed-level deletion step.
-`ManuscriptPoissonVectorDeletion.lean` proves the fixed-level update in one
+`PoissonVectorDeletion.lean` proves the fixed-level update in one
 law: zeroing old counts on the incoming component and adding an independent
 new Poisson vector produces pointwise independent Poisson counts with the
 corresponding updated rates. It composes this with the program's Poisson pending
 draw, labelled fixed-round thinning, and iid point batch, giving a complete
 fixed-level component count-vector update.
-`ManuscriptFixedLevelPrefix.lean` iterates those updates and proves the
+`FixedLevelPrefix.lean` iterates those updates and proves the
 independent Poisson point-count invariant for every fixed-level prefix.
-`ManuscriptPoissonVectorTotal.lean` proves the prefix's total count is Poisson
+`PoissonVectorTotal.lean` proves the prefix's total count is Poisson
 with mean equal to the sum of its point rates and obtains an explicit
 two-sided Chernoff failure bound. Its imported Poisson event bridge and
 scalar tail proof were repaired to build with the current Lean library
 without importing the conflicting second Hit-and-Run hierarchy.
-The coupling of this fixed-level process to the actual adaptive manuscript
+The coupling of this fixed-level process to the actual adaptive paper
 run, and the resulting stopping-level concentration bound, remain open.
 
 ### Theorem 3 (`sections/analysis.tex`, `thm:runtime`)
 
 Current progress: `Model/Program.lean` now contains a costed version of the
-manuscript TTC control flow, and `Model/Run.lean` instantiates it with charged
+paper TTC control flow, and `Model/Run.lean` instantiates it with charged
 CV18 and normalized Hit-and-Run oracles. `CostedMeasureMonad.lean` proves the
 writer-law marginal and expected-cost composition inequalities, including an
 almost-sure continuation rule for adaptive state bounds;
-`ManuscriptCostedOracles.lean` proves the two concrete oracle marginals;
-`ManuscriptThinningCosts.lean` proves the first-loop deterministic expected
+`CostedOracles.lean` proves the two concrete oracle marginals;
+`ThinningCosts.lean` proves the first-loop deterministic expected
 charge and its logarithmic exit bound. `GeometricRetryExpectation.lean` proves
 that a rejection attempt with acceptance probability at least one half has
 at most two attempts in expectation, including the independent batch charge.
@@ -244,7 +244,7 @@ stored-population bound after appending the requested batch.
 normalized sampler's `1/2` acceptance lower bound from `PrecisionAdequate`,
 the integer-lattice comparison, KV97 inflation, and the TV deadline. They
 therefore prove the certified charged sample batch's expected retry cost.
-`ManuscriptComponentExpectation.lean` now composes these lemmas through each
+`ComponentExpectation.lean` now composes these lemmas through each
 adaptive component and the whole charged TTC run. The public
 `ttc_expected_runtime_explicit` theorem proves an expected-operation bound of
 `T_preprocessing + Σᵢ Bᵢ`, with each explicit `Bᵢ` defined in `Model/Run.lean`.
@@ -267,7 +267,7 @@ uses the resulting concrete sampler-step envelope. These are proved Lean
 inequalities. `CV18RoundnessBound.lean` also specializes the imported query cap
 to `45(64C+1)n³ρ²/eps_CV18²` times the exact six-factor scheduled logarithmic
 product.
-`ClippedVolumeRate.lean` proves `γ_i ≤ R_i`, bounds the manuscript volume clip
+`ClippedVolumeRate.lean` proves `γ_i ≤ R_i`, bounds the paper volume clip
 by `2(4R_i)^n`, and reduces the first-loop count to
 `4bn+2+n·clog₂(ceil(4R_max)+1)`. The public
 `ttc_expected_runtime_theorem3_expanded` theorem composes these reductions
@@ -298,19 +298,19 @@ Its statement passes model-closure checking and uses only Lean's standard
 right side is proved finite by `ttc_theorem3_headline_budget_finite`, so this is a nonvacuous explicit
 expected-operation bound with the requested geometric monomial.
 
-`ManuscriptRateKernelMeasurable.lean` proves joint measurability of both
+`RateKernelMeasurable.lean` proves joint measurability of both
 charged thinning-loop kernels.
-`ManuscriptSampleAppendMarginal.lean` proves the charged sampling-and-append
+`SampleAppendMarginal.lean` proves the charged sampling-and-append
 tail has the uncharged state law, proves the needed joint kernel measurability,
 and composes the marginal identity through count thinning, a jointly measurable
 varying-state Poisson kernel, rate thinning, deletion, the outer CV18
-volume bind, and the component sequence. `ManuscriptRunMarginal.lean` proves
+volume bind, and the component sequence. `RunMarginal.lean` proves
 that forgetting all operation counts, including after the final estimate,
 gives exactly `ttc`.
 
 `ttc_theorem3_corrected_expected_runtime` combines this output identity and
 the explicit expected-cost bound in one public statement. Still required for
-the manuscript's tilde-O notation: prove within Lean that the six imported
+the paper's tilde-O notation: prove within Lean that the six imported
 CV18 scheduled logarithms are polylogarithmic in the public parameters. The
 exact headline-scale inequality retains these six factors.
 The public `ttc_total_runtime_theorem3` remains a certificate inequality;
@@ -340,13 +340,13 @@ coins and one binomial draw, independent of the pending count's magnitude.
 The primitive charges and their whole-run expected-cost composition are
 settled; no additional operation prices are needed. The remaining obligations
 are the analytic polylogarithmic classification of the concrete CV18 scheduled
-factor and any manuscript claim about bit complexity.
-The updated manuscript still says the algorithm "runs in time" without saying
+factor and any paper claim about bit complexity.
+The updated paper still says the algorithm "runs in time" without saying
 "in expectation," even though its sampler analysis bounds the rejection loop
 only in expectation. Its displayed main-loop calculation also does not charge
 the second thinning loop or a concrete `getprec`/decomposition cost. Thus that
 printed runtime statement is stronger than both the Lean certificate and the
-argument currently provided in the manuscript.
+argument currently provided in the paper.
 
 Reading the complete `main-arxiv.pdf` reveals that the printed asymptotic
 statement also omits a necessary dependence on its *global* precision `b`.
@@ -362,7 +362,7 @@ fixed, so this family contradicts that bound even *in expectation*. The
 proposed explicit factor `1+b+log⁺R_max` repairs this scale mismatch.
 
 The second while loop and rejection sampler make a deterministic worst-case
-runtime bound impossible under the manuscript pseudocode: either can take
+runtime bound impossible under the paper pseudocode: either can take
 arbitrarily many random iterations. For the corrected expected-time claim,
 the omitted second-loop accounting has a short argument. At its entry,
 `|X| ≤ Threshold` and the first loop ensures the fresh Poisson mean is below
@@ -394,8 +394,8 @@ cutoff with preprocessing, the concrete geometric certificate, and an explicit
 extra-work budget. Its hypotheses still expose the marginal equality and
 final envelope, but the former is now proved separately.
 Its marginal-equality hypothesis now names `ttc` rather
-than the older `communityTTC` law. `ManuscriptThinningCosts.lean` constructs
-costed laws for both manuscript thinning loops and proves that forgetting
+than the older `communityTTC` law. `ThinningCosts.lean` constructs
+costed laws for both paper thinning loops and proves that forgetting
 their charges recovers exactly the corresponding uncharged loop laws. It also
 proves that an explicit dyadic exit level bounds the deterministic first-loop
 charge. The component costs have been composed into one costed TTC law. Its
@@ -404,7 +404,7 @@ global expected-cost bound and marginal equality are proved.
 ### Program fidelity to `sections/algo.tex`
 
 The diff from the last commit touching `lean/` (`eeea231`, 2026-09-11) to
-`HEAD` changes Algorithm 1 in several material ways. The current manuscript
+`HEAD` changes Algorithm 1 in several material ways. The current paper
 calls `getprec` with `ε/96`; scales each volume by
 `Threshold * 10^(b*n)` before the Poisson draw; clips CV18 volume estimates;
 performs a rate-controlled thinning loop **before** that draw; binomially thins
@@ -420,19 +420,19 @@ probability proof chain unfolds them. In particular, the public
 `ttc_volume_accuracy` theorem **still concerns the old program**, and no
 accuracy theorem has yet been proved for `ttc`.
 
-The older `ttc` core in `Model/Program.lean` is **not** the manuscript's TTC probability
-program. In the manuscript, line 24 sets
+The older `ttc` core in `Model/Program.lean` is **not** the paper's TTC probability
+program. In the paper, line 24 sets
 `t = Threshold * 10^(b*n) * VolED(P)`, line 32 performs a deterministic
 rate-based halving loop before drawing `N ~ Poisson(t*p)`, and line 46 returns
 `|X| / (p * Threshold * 10^(b*n))`. The current `processComponent` draws
 `Poisson(volumeOutcome * state.p)` before a single count-based thinning
 loop, while `TTCState.initial` sets `rate = 1` and `TTCState.estimate` returns
 `|X| / rate`. These laws differ: with positive probability the realized
-Poisson count is below `Threshold` even when the manuscript's first loop
-requires a halving. The manuscript's described clipping of `VolED` to the
+Poisson count is below `Threshold` even when the paper's first loop
+requires a halving. The paper's described clipping of `VolED` to the
 inner/outer-radius volume interval is absent from `communityCV18VolumeLaw`.
 `TTCPreprocessor.choosePrecision` is an abstract adequate choice, not the
-manuscript's `getprec` implementation.
+paper's `getprec` implementation.
 
 `Model/Run.lean` does import and connect CV18 and finite-step Hit-and-Run/KV97,
 but `communityTTC` is merely `ttc` with those oracles. The new
@@ -441,13 +441,13 @@ current accuracy theorem, its `Prior`
 hypothesis, and the probability/measurability chain are all about the current
 `processComponent` law. A faithful replacement requires new proofs of that
 chain and of the theorem's stochastic core; changing the two model files alone
-would leave the existing headline unsupported. The manuscript accuracy claim
+would leave the existing headline unsupported. The paper accuracy claim
 also remains conditional on `Prior` in this repository independently of the
 program mismatch.
 
 The model still has an abstract `choosePrecision` witness rather than the
 printed `getprec` computation at `ε/96`; its adequacy predicate currently uses
-`ε/8` for the lattice comparison. The manuscript sampler now runs its finite-facet
+`ε/8` for the lattice comparison. The paper sampler now runs its finite-facet
 walk in unit-inball coordinates and maps the result back before KV97 rounding.
 `NormalizedHitAndRunGeometry.lean` proves the map sends uniform measure on the
 normalized body to uniform measure on the inflated scaled body, proves the TV
@@ -456,7 +456,7 @@ times the small inflation factor. The model now also has a one-point retry
 trace: it draws a geometric number of failed proposals and charges each attempt
 for its finite walk, coordinate rounding and membership test. Forgetting this
 charge provably recovers the conditional accepted-point law. The corresponding
-independent batch sums these charges and has the manuscript batch law as its
+independent batch sums these charges and has the paper batch law as its
 first marginal. The main `ttc` consumes the uncharged
 marginal; the costed whole-run law is now proved to forget to that same law,
 and its expected-cost bound is proved. The revised appendix
@@ -465,7 +465,7 @@ expected at most `3/2` attempts. The Lean retry lemma gives the weaker bound
 two; `ScaledVolumeBridge.lean` now proves its acceptance premise for the
 certified concrete sampler.
 
-The manuscript's revised Theorem 1 proof uses a Poisson multiset invariant
+The paper's revised Theorem 1 proof uses a Poisson multiset invariant
 after the scaled intensity, a no-undue-halving argument that separates the
 first and second while loops, and union bounds for the volume and sampling
 events. The current `Prior.streamingCoreAccuracy` applies to the older core,
@@ -474,17 +474,17 @@ statement and proof changed only editorially in this diff; the existing
 `Decomposition.solution_ae` expresses the volume-relevant equality but does
 not implement Boolean abstraction or DNF conversion. The corrected
 expected-cost inequality and whole-run output marginal are proved for the
-charged manuscript run; the formal polylogarithmic simplification remains
+charged paper run; the formal polylogarithmic simplification remains
 unproved.
 
-`ManuscriptMarkingMeasure.lean` now proves the measure-level Poisson marking
+`MarkingMeasure.lean` now proves the measure-level Poisson marking
 identity for an iid batch supported on a finite subset of the countable
 lattice space. It identifies the count-vector law with a product of Poisson
 measures, derives each point's Poisson marginal, and instantiates the identity
-for the normalized Hit-and-Run batch used by the manuscript run. It also
+for the normalized Hit-and-Run batch used by the paper run. It also
 proves that summing the marked point counts recovers the original Poisson draw,
 and proves measure-level Poisson thinning through a binomial kernel. These lemmas
-have only Lean's standard axioms. `ManuscriptNoUndueFirstHalving.lean` also
+have only Lean's standard axioms. `NoUndueFirstHalving.lean` also
 combines successful component volume estimation, the certified lattice
 comparison, the component-to-union count bound and the dyadic cutoff to show
 that the first while-loop makes no further halving at the last admissible
@@ -498,7 +498,7 @@ delete-and-append prefix: distinct copy labels give independent thinning,
 Poisson marking gives independent point counts, and deleting overlap before
 adding a new batch updates their rates coordinatewise. The total prefix count
 is Poisson with mean equal to the sum of point rates. The rate-envelope lemma
-gives a two-sided Chernoff bound for the manuscript's count window. At the
+gives a two-sided Chernoff bound for the paper's count window. At the
 penultimate dyadic cutoff, the upper envelope and the union's lattice count
 give a total mean below two thirds of the threshold, yielding the explicit
 `exp(-Threshold/15)` upper-tail bound. These results concern an analysis
@@ -512,7 +512,7 @@ to one absolute-level thinning operation on stored copies. Under a successful
 volume estimate, the first loop cannot jump past the dyadic cutoff even when
 it makes several halvings; a second-loop jump past that cutoff implies that
 the fixed-level stored-plus-pending population exceeds the threshold.
-The manuscript threshold inequalities now give the explicit cutoff budget
+The paper threshold inequalities now give the explicit cutoff budget
 `δ/(6m)` per component and the geometric two-sided concentration budget
 `δ/6`. The count envelope is proved to imply an `ε/2` relative estimate of
 the scaled lattice count at a positive rate. The empty-decomposition case and
@@ -528,7 +528,7 @@ Poisson marking law under this projection. The certified fixed-level process
 now uses the concrete component geometry and normalized sampler point law. Its
 full component list covers the finite coded union, and every component has the
 proved two-sided point-rate envelope. For each admissible dyadic level, its
-total count has the manuscript's Chernoff bound; the geometric sum is at most
+total count has the paper's Chernoff bound; the geometric sum is at most
 `δ/6`. At the penultimate cutoff, every certified component prefix has the
 upper-tail budget `δ/(6m)`. The actual first- and second-loop thinning of
 stored points and pending count are represented jointly as a function of
@@ -538,7 +538,7 @@ Poisson marking law, both after overlap deletion and after a fixed number of
 pending-count thinning rounds. These are fixed-level laws. The
 independent product of the actual CV18 component outcome laws is proved
 to have all volume estimates tagged good and relatively accurate with probability at least
-`1 - δ/4`. The complete charged manuscript component trace records each CV18
+`1 - δ/4`. The complete charged paper component trace records each CV18
 outcome and has both the independent product CV18 law and the charged component
 fold as its exact marginals. The per-component CV18 success budget is proved on
 that same trace. The remaining central step is a common coupling across the adaptive halving and
@@ -636,7 +636,7 @@ fold. The fold's point counts are now identified with `fixedLevelFold` from
 the empty initial state. The incoming marked Poisson count vector has its
 fixed-level product law even when the first and second fresh coin streams
 are spliced at an arbitrary deterministic round. A ghost configuration now
-proves that one complete source-driven manuscript component transition
+proves that one complete source-driven paper component transition
 preserves fresh labels, unique origins, marks, surviving coins, valid tags,
 and reverse coverage. For any finite sequence of such transitions, the
 executable final state's point-count vector equals the source-driven
@@ -661,7 +661,7 @@ The one-component source law is now proved equal to a product of two finite
 independent fair-coin blocks, for allocated old labels and surviving new
 labels, with the same source-labelled sampler kernel. This finite-block law
 has been propagated through the Poisson draw and first-loop stream: the
-actual `communityManuscriptComponentGivenVolume` output law equals the new
+actual `communityComponentGivenVolume` output law equals the new
 finite-coin source kernel whenever the incoming state has its proved dyadic
 rate and label-freshness invariants.
 The allocated-label source product law is also lifted to an arbitrary
@@ -702,12 +702,12 @@ origin history, marks, survival, and reverse-completeness invariants. The
 refreshed source's old-copy coins have the exact independent fair product law
 on the state's allocated labels. This gives a lawful transition from a
 history-bearing ghost state to fresh coins for the next component.
-`ManuscriptSourceRefresh.lean` now proves the complete one-component state
+`SourceRefresh.lean` now proves the complete one-component state
 law: after an independent refresh of future old-copy coins, the ghost advance
 has the same state marginal as the executable component, first with a fixed
 CV18 outcome and then including the CV18 draw. It also proves refresh leaves
 every fixed-level source count at or before the current level unchanged.
-`ManuscriptOriginMeasurable.lean` gives the source and ghost configurations
+`OriginMeasurable.lean` gives the source and ghost configurations
 their product measurable structures and proves refresh and fixed-coin
 point-tape advances measurable. Refresh is also proved jointly measurable in
 the incoming ghost configuration and the independent future source, and forms
@@ -719,80 +719,80 @@ a random incoming ghost configuration. The source point-count functions are
 proved measurable. It constructs a normalized ghost tape law,
 proves that law has total mass one, and identifies its state marginal with
 the executable source-labelled sampler kernel.
-`ManuscriptOriginMarginalKernel.lean` now proves the state-level induction
+`OriginMarginalKernel.lean` now proves the state-level induction
 equation for an arbitrary incoming ghost law: the source-driven component
 state marginal is the executable component law applied to the incoming state
-marginal. `ManuscriptOriginSourceStepMeasurable.lean` proves the source update
+marginal. `OriginSourceStepMeasurable.lean` proves the source update
 is jointly measurable in the incoming ghost source and appended point tape,
 including the valid-label filter, marks, and coin splice. It permits random
 label and round parameters and proves the source projection of the actual ghost
 advance jointly measurable in the incoming configuration and sampler tape.
-`ManuscriptOriginAppendMeasurable.lean` proves joint measurability of the
+`OriginAppendMeasurable.lean` proves joint measurability of the
 origin-label append operation for random old origins, label parameters, and
 survivor indices.
-`ManuscriptSurvivorIndexMeasurable.lean` builds total measurable selectors for
+`SurvivorIndexMeasurable.lean` builds total measurable selectors for
 both thinning stages and proves their agreement with the finite survivor-label
-map on valid indices. `ManuscriptOriginOldCoinsMeasurable.lean` proves that the
+map on valid indices. `OriginOldCoinsMeasurable.lean` proves that the
 old-copy coin stream read from a random ghost configuration is measurable,
 along with the component's integer controls and extended pending-copy coin
-array. `ManuscriptOriginActiveRoundsMeasurable.lean` proves the actual
+array. `OriginActiveRoundsMeasurable.lean` proves the actual
 second-loop exit round and ghost level jointly measurable.
-`ManuscriptOriginAdvanceOriginMeasurable.lean` and
-`ManuscriptOriginAdvanceStateMeasurable.lean` prove the origin and executable
+`OriginAdvanceOriginMeasurable.lean` and
+`OriginAdvanceStateMeasurable.lean` prove the origin and executable
 state projections jointly measurable, including the varying survivor count
 and sampler tape. Thus the full deterministic ghost `advance` is jointly
 measurable in its incoming configuration and sampler tape.
-`ManuscriptOriginTapeKernelMeasurable.lean` lifts this to a Markov kernel for
+`OriginTapeKernelMeasurable.lean` lifts this to a Markov kernel for
 the independent Hit-and-Run point tape after the count and coin choices are
-fixed. `ManuscriptOriginCountTapeKernel.lean` also integrates the Poisson
+fixed. `OriginCountTapeKernel.lean` also integrates the Poisson
 pending-copy count into a Markov kernel with the coin arrays fixed. The
 random-coin work now proves the pending-copy extension, pending count, merged
 coin stream, and actual second-loop exit round jointly measurable in the
 incoming ghost configuration and both coin arrays.
-`ManuscriptOriginSourceCoinPairMeasurable.lean` proves the full source update
+`OriginSourceCoinPairMeasurable.lean` proves the full source update
 jointly measurable with both coin arrays random. The origin and state
 projections are also proved jointly measurable in
-`ManuscriptOriginAdvanceCoinPairMeasurable.lean` and
-`ManuscriptOriginAdvanceStateCoinPairMeasurable.lean`. Thus the complete ghost
+`OriginAdvanceCoinPairMeasurable.lean` and
+`OriginAdvanceStateCoinPairMeasurable.lean`. Thus the complete ghost
 advance is jointly measurable in the incoming configuration, both coin arrays,
-and point tape. `ManuscriptOriginRandomCoinKernel.lean` integrates the fair
+and point tape. `OriginRandomCoinKernel.lean` integrates the fair
 coin arrays, point tape, and Poisson count into a Markov kernel for fixed
-intensity. `ManuscriptOriginRefreshedKernel.lean` composes it with the source
+intensity. `OriginRefreshedKernel.lean` composes it with the source
 refresh kernel.
-`ManuscriptIndependentBindSwap.lean` and
-`ManuscriptOriginRefreshedStateMarginal.lean` reorder these independent draws
+`IndependentBindSwap.lean` and
+`OriginRefreshedStateMarginal.lean` reorder these independent draws
 to the same order as the executable component. The fixed-CV18-outcome state
-marginal is now proved exactly in `ManuscriptOriginOrderedMarginal.lean`:
+marginal is now proved exactly in `OriginOrderedMarginal.lean`:
 the refreshed ghost kernel projects to
-`communityManuscriptComponentGivenVolume`.
-`ManuscriptOriginIntensityMeasurable.lean` proves the entire deterministic
+`communityComponentGivenVolume`.
+`OriginIntensityMeasurable.lean` proves the entire deterministic
 ghost `advance` jointly measurable in the incoming configuration, varying
 intensity, both coin arrays, and the point tape. This includes the first-loop
 controls, pending count, second-loop exit, survivor count and labels, origin
 map, source update, executable state, and resulting level.
-`ManuscriptOriginVaryingIntensityKernel.lean` lifts this result through the
+`OriginVaryingIntensityKernel.lean` lifts this result through the
 independent point tape, both fair coin arrays, and the Poisson count, with
 the intensity varying jointly with the incoming configuration.
-`ManuscriptOriginVaryingRefreshKernel.lean` proves joint measurability of the
+`OriginVaryingRefreshKernel.lean` proves joint measurability of the
 source-refreshed component law at varying intensity by rewriting the refresh
 map as a bind over the fixed independent source measure.
-`ManuscriptOriginVolumeKernel.lean` integrates an arbitrary probability law
+`OriginVolumeKernel.lean` integrates an arbitrary probability law
 of CV18 outcomes into a measurable ghost component transition, proves it has
 total mass one, and proves that its executable-state marginal is exactly the
 current `ttcPseudocode.step` for the concrete clipped CV18 law.
-`ManuscriptOriginVolumeFold.lean` iterates the ghost transition through any
+`OriginVolumeFold.lean` iterates the ghost transition through any
 finite list of components equipped with the geometric route and normalized
 CV18 volume law. Its output remains a probability measure and its state
 marginal is exactly the executable `ttcPseudocode.loop` law.
-`ManuscriptOriginCertifiedRun.lean` supplies the geometric routes and clipped
+`OriginCertifiedRun.lean` supplies the geometric routes and clipped
 CV18 probability laws for the preprocessor's actual component list and proves
-that the resulting ghost run projects to the manuscript's executable
+that the resulting ghost run projects to the paper's executable
 multicomponent state law from its initial state. The remaining probabilistic
 step is to identify the ghost run's fixed-level source-count law, conditional
 on the clipped CV18 outcomes, with the independent Poisson product law already
 proved for prescribed component sources. Then the finite dyadic union bound
 can transfer fixed-level concentration to the adaptively selected final level.
-`ManuscriptAdaptiveSplicedSourceLaw.lean` proves that a fresh component's
+`AdaptiveSplicedSourceLaw.lean` proves that a fresh component's
 Poisson count, two spliced fair-coin streams, and iid point tape have exactly
 the canonical Poisson-tape law, even when the splice round is chosen from the
 incoming history. It also proves the new source is independent of that history
@@ -802,15 +802,15 @@ point-count vector is independent of an arbitrary incoming history even when
 the splice round and label offset depend on that history. The remaining
 coupling must account for the old source's refreshed future tails across the
 entire adaptive fold.
-`ManuscriptAdaptiveFixedLevelUpdate.lean` applies this to the ghost source
+`AdaptiveFixedLevelUpdate.lean` applies this to the ghost source
 state: for any incoming ghost law, adding one independent spliced source has
 the fixed-level delete-and-add Poisson kernel on its point-count vector.
 This isolates the old-source refresh as the remaining one-step distribution
 identity.
-`ManuscriptOriginSourceCountKernel.lean` proves that the actual randomized
+`OriginSourceCountKernel.lean` proves that the actual randomized
 ghost component, before refreshing old source tails, has precisely this
 fixed-level delete-and-add Poisson count law. The coin splice has disappeared
-from the resulting law. `ManuscriptOriginRefreshedCountKernel.lean` proves the
+from the resulting law. `OriginRefreshedCountKernel.lean` proves the
 corresponding statement for the actual refreshed ghost component: the old
 count vector is first drawn from the refreshed old source, then the independent
 Poisson vector is added after deleting the current component. These files
@@ -819,41 +819,41 @@ invariant identifying refreshed old source counts at a fixed future level
 with the required independent product source law across adaptive stopping
 levels. The existing past-count preservation lemma applies only when the
 observed level is at most the current level.
-The new `manuscriptOriginRefreshedComponentLaw_pastLevel_sourceCounts`
+The new `originRefreshedComponentLaw_pastLevel_sourceCounts`
 specializes the refreshed kernel to that observed-level case, eliminating the
 refresh term completely. The future-level case still needs a conditional
 source-tail law; it cannot follow from past-count preservation alone.
-`ManuscriptSourceRefresh.lean` now gives a pathwise formula for every future
+`SourceRefresh.lean` now gives a pathwise formula for every future
 level: an old source tag survives exactly when it survives the observed prefix
 and a fresh fair tail of the remaining length. It also identifies the
-future-level point-count vector. `ManuscriptOriginMeasurable.lean` lifts that
+future-level point-count vector. `OriginMeasurable.lean` lifts that
 identity through `refreshLaw` to an explicit pushforward of the global fair
 source. The remaining measure step is to calculate that finite fresh-tail
 count law jointly with the incoming observed-prefix distribution, then
 establish its preservation through the adaptive component fold.
-`ManuscriptFutureTagLaw.lean` calculates this conditional law for a fixed
+`FutureTagLaw.lean` calculates this conditional law for a fixed
 incoming ghost configuration: distinct valid component/copy tags receive
 independent Bernoulli survival decisions for the remaining rounds, and the
 future-level point-count vector is exactly the finite marked count of those
-decisions. `ManuscriptOriginRefreshedCountKernel.lean` combines it with the
+decisions. `OriginRefreshedCountKernel.lean` combines it with the
 new component's independent Poisson point vector, giving the full one-step
 future-level count kernel. The still open step is to integrate these
 conditional kernels against the adaptively generated prefix law and show the
 result is the certified fixed-level Poisson process at every component prefix.
-`ManuscriptSourceRefreshIdempotent.lean` proves that the source-tail refresh
+`SourceRefreshIdempotent.lean` proves that the source-tail refresh
 kernel is idempotent, both on a fixed incoming configuration and on an
 arbitrary ghost law. This makes refresh a measure-level projection. To turn
 that into the whole-run invariant, the component kernel must be shown to
 preserve the projected laws (or equivalently to commute with a final refresh
 on the observations needed by the fixed-level proof). That preservation is
 not yet proved.
-`ManuscriptStationaryFixedLevelKernel.lean` proves the exact one-component
+`StationaryFixedLevelKernel.lean` proves the exact one-component
 fixed-level Poisson delete-and-add law for any incoming ghost measure fixed by
 the refresh kernel. It removes the leading refresh by stationarity and uses
 the actual unrefreshed component's Poisson count law. To iterate this result,
 the missing preservation theorem must show that a refreshed component sends a
 refresh-stationary incoming law to another refresh-stationary law.
-`ManuscriptSourceFreshCriterion.lean` now gives an equivalent concrete
+`SourceFreshCriterion.lean` now gives an equivalent concrete
 independence formulation. A ghost configuration is reconstructed from its
 observed-prefix representative and unused relative-time source tail; the
 reconstruction is pathwise exact and measurable. Refreshing any ghost law
@@ -867,16 +867,16 @@ refreshed law: draw the observed representative from the incoming ghost law,
 draw an independent global fair tail, and reconstruct the full configuration.
 This representation is the input measure for the remaining stopped-prefix
 calculation at one component.
-`ManuscriptStoppedPrefixSource.lean` now states the second thinning loop's
+`StoppedPrefixSource.lean` now states the second thinning loop's
 strong Markov result directly for its complete stopped merged coin prefix
-and complete shifted merged fair stream. `ManuscriptStoppedPrefixContinuation.lean`
+and complete shifted merged fair stream. `StoppedPrefixContinuation.lean`
 lifts the equality through any measurable continuation, allowing the eventual
 component-source proof to carry its point tape, origin labels, and output
 configuration alongside the independent post-stop coin stream. The remaining
 work is to identify the ghost output's relative-time unused source tail with
 the appropriate coordinates of that post-stop stream, including old
 component tags not read by the executable loop.
-`ManuscriptOriginUnusedTailStep.lean` now calculates that output tail
+`OriginUnusedTailStep.lean` now calculates that output tail
 pathwise. At the appended component it is the fresh component stream shifted
 by the number of post-preprocessing thinning rounds; at every other
 component it is the global refreshed old source shifted by the full number
@@ -885,7 +885,7 @@ function is proved equal to the corresponding if-then-else combination.
 The remaining probabilistic step is to show this combined shifted family is
 jointly independent of the output observed representative under the actual
 Poisson/coin/tape draws.
-`ManuscriptCombinedTailLaw.lean` proves that for any fixed pair of shifts,
+`CombinedTailLaw.lean` proves that for any fixed pair of shifts,
 the if-then-else combination of an independent global old fair source and
 one new component fair stream has exactly the global fair source law. The
 index map used in this proof is injective across every component, including
@@ -899,14 +899,14 @@ reduces the adaptive-shift step to establishing the required conditional
 product law for the actual second thinning stop.
 The public accuracy theorem still retains `Prior` and covers the older
 `communityTTC` until that step is proved.
-`ManuscriptGenericStoppedPrefix.lean` proves the stopped-prefix product law
+`GenericStoppedPrefix.lean` proves the stopped-prefix product law
 for any measurable stopping round whose fibers are almost surely determined
 by the corresponding coin prefix. It also proves independence of the entire
 reindexed global component future source from that stopped prefix. The
 remaining application must encode the actual second-loop stop as such a
 prefix-adapted stop on the joint old-component and newly drawn coin source,
 then relate the resulting observed prefix to the output ghost configuration.
-`ManuscriptJointSourceEncoding.lean` now constructs that joint old/new source
+`JointSourceEncoding.lean` now constructs that joint old/new source
 from a single fair array using a time-preserving injective index map. It
 proves the pushforward law is the product of the global old-component source
 and an independent fresh-copy stream, and proves fixed-time prefix/shift
@@ -918,61 +918,61 @@ injectivity invariant, that merging old allocated labels with fresh new
 labels is itself a fair stream. Its first-exit event is prefix-adapted on the
 single joint source; consequently the stopped joint-source prefix is
 independent of the complete shifted old-component and fresh-copy sources.
-This is proved in `manuscriptJointMergedRead_stoppedPrefix_jointTail_law`.
+This is proved in `jointMergedRead_stoppedPrefix_jointTail_law`.
 The executable second loop first restricts fresh labels to survivors of the
 deterministic rate-thinning loop, so the next bridge must identify that
 restricted stop and its output representative with this joint-source law.
-`ManuscriptSurvivorRelabel.lean` now extends the actual finite survivor list
+`SurvivorRelabel.lean` now extends the actual finite survivor list
 to an injective relabeling of every fresh coin coordinate. It proves that
 the resulting merged old/new stream is fair, that the executable second-loop
 stopping round is pathwise equal to first exit on that merged stream, and
 that its stopped prefix is independent of both complete unused source
 families. Combining those tails yields a full fair global source independent
-of that prefix. `ManuscriptOriginJointSourceBridge.lean` connects the old
+of that prefix. `OriginJointSourceBridge.lean` connects the old
 source read after refresh and a deterministic shift to the indexed source
 used in this coupling. The remaining work is to include the deterministic
 first-loop prefix and point tape, prove the observed ghost output depends
 only on those prefixes plus the second-loop stopped prefix and round, and
 then transport the product law through the actual component kernel.
-`ManuscriptStoppedRoundPrefix.lean` strengthens the stopping theorem by
+`StoppedRoundPrefix.lean` strengthens the stopping theorem by
 retaining the stopping round together with the observed source prefix. It
 also reconstructs the measurable second-loop result from that pair.
-`ManuscriptSurvivorRelabel.lean` proves the executable finite second-loop
+`SurvivorRelabel.lean` proves the executable finite second-loop
 result equals this reconstruction for the survivor-filtered input.
-`ManuscriptStoppedSurvivorIndex.lean` proves that canonical surviving-copy
+`StoppedSurvivorIndex.lean` proves that canonical surviving-copy
 indices and their original Poisson labels depend only on the stopped
-prefix. `ManuscriptGlobalSourcePrefix.lean` proves that the old global fair
+prefix. `GlobalSourcePrefix.lean` proves that the old global fair
 source splits at the deterministic first-loop round into its observed
 prefix and an independent fair future source. The remaining whole-step
 argument must combine these two splits with the point tape and the source
 append to prove refresh stationarity for the actual output configuration.
-`ManuscriptSurvivorPairTail.lean` transports the survivor-filtered stopped
+`SurvivorPairTail.lean` transports the survivor-filtered stopped
 law from the single encoded fair array to the actual product of old global
 source and fresh-copy source. Conditional on a fixed pre-thinning coin tape,
 the pair consisting of the second-loop stopping round and the prefix of the
 stream actually read by that loop is independent of both complete remaining
 source families. This is an exact measure identity, with no `Prior` premise.
-`ManuscriptTwoStageSourceProduct.lean` composes the deterministic first-loop
+`TwoStageSourceProduct.lean` composes the deterministic first-loop
 prefix split with this adaptive second-loop stopped law. It proves that the
 joint first-loop prefix and second-loop stopped observation are independent
-of the complete remaining old/new source pair. `ManuscriptFirstLoopObservation.lean`
+of the complete remaining old/new source pair. `FirstLoopObservation.lean`
 shows the rate-thinning result depends only on its fixed-round coin prefix.
-`ManuscriptObservedRepresentativeExt.lean` reduces equality of observed ghost
+`ObservedRepresentativeExt.lean` reduces equality of observed ghost
 outputs to equality of their executable states, source data, origin, level,
 and source-coin prefix below the reached level. The remaining pathwise step
 must reconstruct these output fields from the two-loop observation and point
 tape. It must then transport the joint product law through the actual
 component kernel and iterate the fixed-level Poisson prefix invariant.
-`ManuscriptOutputSourcePrefix.lean` proves the appended source's observed
+`OutputSourcePrefix.lean` proves the appended source's observed
 prefix is fixed by the old source prefix and the new component's finite
 future-coin prefix. The ghost source retains all coordinates below the
 reached level, including coordinates the loop never read.
-`ManuscriptSurvivorFullPrefixTail.lean` therefore strengthens the joint
+`SurvivorFullPrefixTail.lean` therefore strengthens the joint
 product theorem: the first-loop prefix and both complete source prefixes
 through the adaptive second-loop stop are independent of the complete
 remaining old/new source pair. It also proves equal complete stopped
 observations give equal second-loop states and pending counts.
-`ManuscriptAdvanceObserved.lean` connects the refreshed global source's
+`AdvanceObserved.lean` connects the refreshed global source's
 first-loop prefix to the actual rate-thinning result. The next step must
 combine these pathwise lemmas for the actual `advance` output's observed
 representative, carry the point tape, and transport the product law through
@@ -992,7 +992,7 @@ step budget grows at least on the order of `10^(2b)` for large `b`. The abstract
 `TTCPreprocessor.choosePrecision` may choose any adequate precision, including
 arbitrarily large ones. This is a bound on the walk length selected by the
 older Lean implementation, not an inherent cost of sampling from the scaled
-polytope or a refutation of the manuscript's intended arithmetic bound.
+polytope or a refutation of the paper's intended arithmetic bound.
 `ttc` now uses the normalized walk and the runtime
 certificate charges its normalized deadline.
 Both radii scale by `10^b`, so their ratio is unchanged. A similarity-normalized

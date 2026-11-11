@@ -1,9 +1,9 @@
 import Kr25Ssmxt.Analysis.CommunityCV18VolumeProvider
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
-import Kr25Ssmxt.Analysis.ManuscriptRuntimeBounds
+import Kr25Ssmxt.Analysis.RuntimeBounds
 import Kr25Ssmxt.Analysis.GetPrecisionBound
-import Kr25Ssmxt.Analysis.ManuscriptRunMarginal
-import Kr25Ssmxt.Analysis.ManuscriptTheoremOneFinal
+import Kr25Ssmxt.Analysis.RunMarginal
+import Kr25Ssmxt.Analysis.TheoremOneFinal
 
 namespace Kr25Ssmxt
 
@@ -52,7 +52,7 @@ theorem ttc_theorem1_volume_accuracy
           Arlib.relErr params.epsilon
             (MeasureTheory.volume (solutionSet F)).toReal} ≥
       1 - params.delta := by
-  exact community_manuscriptTTC_volume_accuracy hn F hbounded params prep
+  exact community_ttc_volume_accuracy hn F hbounded params prep
 
 /-- Corrected Theorem 3: the charged execution has exactly the paper TTC
 output law and its expected arithmetic cost has the preprocessing term plus
@@ -79,7 +79,7 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
           ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
           (TTCRuntime.theorem3ParameterFactor hn D p + 1)) := by
   dsimp only
-  exact ⟨community_manuscript_costed_output_fst hn F hbounded p prep
+  exact ⟨community_costed_output_fst hn F hbounded p prep
     preprocessingOperations 1,
     ttc_expected_runtime_theorem3_input_scale hn F hbounded p prep
       preprocessingOperations⟩

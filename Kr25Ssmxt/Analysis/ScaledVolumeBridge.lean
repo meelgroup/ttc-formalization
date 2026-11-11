@@ -5,7 +5,7 @@ import Kr25Ssmxt.Analysis.PolytopeCarrierMeasurable
 import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 import Kr25Ssmxt.Analysis.IntegerLatticePolytopeComparison
 import Kr25Ssmxt.Analysis.GeometricOracleDischarge
-import Kr25Ssmxt.Analysis.ManuscriptCostedOracles
+import Kr25Ssmxt.Analysis.CostedOracles
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 
 /-! Volume and lattice-count representation bridges for acceptance. -/
@@ -88,7 +88,7 @@ theorem scaledBody_volume_le_lattice_count {n k : Nat} (hn : 0 < n)
   rw [hvolume, hcount]
   exact hcomp.2
 
-/-- The manuscript precision choice supplies the rejection probability
+/-- The paper precision choice supplies the rejection probability
 needed to bound independent retry costs, with no extra acceptance hypothesis. -/
 theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
@@ -153,7 +153,7 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
   have hsample1 : p.ε' ≤ 1 := by
     dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
-  exact communityManuscriptCosted_samples_expected_cost hn prep factor
+  exact communityCosted_samples_expected_cost hn prep factor
     (D.component i) count b p.ε' delta
     ⟨hunit, hsample0, hsample1, hset.1, hset.2⟩
     (certified_normalizedHitAndRun_acceptance_ge_half hn D p b hprecision i)
@@ -179,7 +179,7 @@ theorem certified_community_sampler_mass_le_one {n k : Nat}
   have hsample1 : p.ε' ≤ 1 := by
     dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
-  exact communityManuscriptCosted_samples_mass_le_one hn prep factor
+  exact communityCosted_samples_mass_le_one hn prep factor
     (D.component i) count b p.ε' delta
     ⟨hunit, hsample0, hsample1, hset.1, hset.2⟩
 

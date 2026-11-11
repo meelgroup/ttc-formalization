@@ -1,6 +1,6 @@
 import Kr25Ssmxt.Analysis.ClippedVolumeRate
 
-/-! An explicit parameter bound for the manuscript's sample threshold. -/
+/-! An explicit parameter bound for the paper's sample threshold. -/
 
 namespace Kr25Ssmxt
 

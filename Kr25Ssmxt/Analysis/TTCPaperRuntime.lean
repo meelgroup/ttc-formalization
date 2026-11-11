@@ -1,6 +1,6 @@
 import Kr25Ssmxt.Analysis.CommunityCV18VolumeProvider
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
-import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
+import Kr25Ssmxt.Analysis.ThinningCosts
 import Kr25Ssmxt.Model.Prelude
 
 /-!

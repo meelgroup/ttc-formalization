@@ -3,7 +3,7 @@ import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.NormalizedDiameterRuntime
 import Kr25Ssmxt.Analysis.RateLogBound
 
-/-! Bounding the manuscript volume clip used by the first thinning loop. -/
+/-! Bounding the paper volume clip used by the first thinning loop. -/
 
 namespace Kr25Ssmxt
 
@@ -60,7 +60,7 @@ theorem PolytopeData.inradius_le_outerRadius {n : Nat}
   change ‖toEuclidean y‖ ≤ P.outerRadius at hyR
   linarith
 
-theorem PolytopeData.manuscriptVolumeClip_le_outer_pow {n : Nat}
+theorem PolytopeData.volumeClip_le_outer_pow {n : Nat}
     (P : PolytopeData n) (hn : 21 ≤ n) {eta : Real}
     (heta0 : 0 < eta) (heta1 : eta ≤ 1) :
     max (P.volumeClipLower eta) (P.volumeClipUpper eta) ≤
@@ -120,7 +120,7 @@ theorem Decomposition.clippedVolume_clog_le_outerRadiusMax
   have heta1 : p.ε' ≤ 1 := by
     dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
-  have hv := P.manuscriptVolumeClip_le_outer_pow hn heta0 heta1
+  have hv := P.volumeClip_le_outer_pow hn heta0 heta1
   have hR := D.component_outerRadius_le_theorem3OuterRadiusMax i
   have hR0 : 0 ≤ TTCRuntime.theorem3OuterRadiusMax D := by
     unfold TTCRuntime.theorem3OuterRadiusMax
@@ -144,7 +144,7 @@ theorem Decomposition.clippedVolume_clog_le_outerRadiusMax
   exact hclog.trans (clog_two_ceil_two_pow_le
     (4 * TTCRuntime.theorem3OuterRadiusMax D) n (by positivity))
 
-theorem Decomposition.manuscriptRate_clog_le_precision_outerRadius
+theorem Decomposition.rate_clog_le_precision_outerRadius
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (i : Fin D.componentCount) :
@@ -157,24 +157,24 @@ theorem Decomposition.manuscriptRate_clog_le_precision_outerRadius
         (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1) := by
   let v := max ((D.component i).volumeClipLower p.ε')
     ((D.component i).volumeClipUpper p.ε')
-  have hfirst := manuscript_rate_clog_le_linear_precision b n
+  have hfirst := rate_clog_le_linear_precision b n
     (p.threshold_pos D.componentCount) v
   have hsecond := D.clippedVolume_clog_le_outerRadiusMax hn p i
   dsimp only [v] at hfirst hsecond ⊢
   omega
 
-theorem TTCRuntime.manuscriptExpectedComponentBudgetGeometric_le_clip
+theorem TTCRuntime.expectedComponentBudgetGeometric_le_clip
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) :
-    TTCRuntime.manuscriptExpectedComponentBudgetGeometric hn D p b
+    TTCRuntime.expectedComponentBudgetGeometric hn D p b
       cv18NonQueryFactor i ≤
-      TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip hn D p b
+      TTCRuntime.expectedComponentBudgetGeometricClip hn D p b
         cv18NonQueryFactor i := by
   have hrate := D.clippedVolume_clog_le_outerRadiusMax hn p i
   dsimp only at hrate
-  unfold TTCRuntime.manuscriptExpectedComponentBudgetGeometric
-    TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip
+  unfold TTCRuntime.expectedComponentBudgetGeometric
+    TTCRuntime.expectedComponentBudgetGeometricClip
   dsimp only
   gcongr
 

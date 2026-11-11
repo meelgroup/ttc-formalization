@@ -3,11 +3,11 @@ import Kr25Ssmxt.Analysis.MeasurableSetSurvives
 import Kr25Ssmxt.Analysis.MeasurableSurvivorCount
 import Kr25Ssmxt.Analysis.MeasurableFirstExitRound
 import Kr25Ssmxt.Analysis.NatTailExpectation
-import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
+import Kr25Ssmxt.Analysis.ThinningCosts
 import Mathlib.Analysis.SpecificLimits.Basic
 
 /-!
-# Survival probabilities in the manuscript thinning loop
+# Survival probabilities in the paper thinning loop
 
 Each labelled copy survives a fixed number of fair rounds with probability
 `2⁻ʳ`. This is the input to the second-loop expectation bound.
@@ -201,7 +201,7 @@ theorem firstExitRound_tail {n : Nat} (s : TTCState n)
     (thinning_population_tail s pending rounds cutoff hcutoff)
 
 /-- The cutoff in the exit-round tail can be selected directly from the
-real manuscript threshold. -/
+real paper threshold. -/
 theorem firstExitRound_tail_floor {n : Nat} (s : TTCState n)
     (pending rounds : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     fairCoinStreamLaw {coins | rounds < ttcPseudocode.secondLoopExitRound s pending threshold coins} ≤
@@ -262,7 +262,7 @@ theorem expected_firstExitRound_le_floor {n : Nat} (s : TTCState n)
   simpa only [Nat.cast_add, Nat.cast_one] using hbound
 
 /-- Exact mean charge of the count-thinning law. -/
-theorem manuscriptCountThinWithCost_expected_eq {n : Nat} (s : TTCState n)
+theorem countThinWithCost_expected_eq {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) :
     ∫⁻ result, (result.2 : ENNReal) ∂
         ttcPseudocode.secondLoopWithCost s pending threshold =
@@ -293,19 +293,19 @@ theorem manuscriptCountThinWithCost_expected_eq {n : Nat} (s : TTCState n)
     ∂fairCoinStreamLaw)]
 
 /-- The charged count-thinning law inherits the finite first-exit mean. -/
-theorem manuscriptCountThinWithCost_expected_le {n : Nat} (s : TTCState n)
+theorem countThinWithCost_expected_le {n : Nat} (s : TTCState n)
     (pending cutoff : Nat) (threshold : Real) (hcutoff : 0 < cutoff)
     (hthreshold : ∀ q : Nat, q < cutoff → (q : Real) ≤ threshold) :
     ∫⁻ result, (result.2 : ENNReal) ∂
         ttcPseudocode.secondLoopWithCost s pending threshold ≤
       (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
         (2 * ((s.X.card + pending : ENNReal) / cutoff)) := by
-  rw [manuscriptCountThinWithCost_expected_eq]
+  rw [countThinWithCost_expected_eq]
   exact mul_le_mul_of_nonneg_left
     (expected_firstExitRound_le s pending cutoff threshold hcutoff hthreshold)
     (by positivity)
 
-/-- Every finite thinning population exits the manuscript guard almost
+/-- Every finite thinning population exits the paper guard almost
 surely. This removes the `sInf ∅ = 0` totalization branch from analysis. -/
 theorem never_thinningExit_null {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
@@ -399,7 +399,7 @@ theorem thinUntil_population_le_ae {n : Nat} (s : TTCState n)
 
 /-- Forgetting the charged round count transports the same exit guard to the
 result law used by the runtime program. -/
-theorem manuscriptCountThinWithCost_population_le_ae {n : Nat} (s : TTCState n)
+theorem countThinWithCost_population_le_ae {n : Nat} (s : TTCState n)
     (pending : Nat) (threshold : Real) (hthreshold : 0 ≤ threshold) :
     ∀ᵐ result ∂ttcPseudocode.secondLoopWithCost s pending threshold,
       ((result.1.1.X.card + result.1.2 : Nat) : Real) ≤ threshold := by
@@ -419,7 +419,7 @@ theorem manuscriptCountThinWithCost_population_le_ae {n : Nat} (s : TTCState n)
     exact ((measurable_of_countable (fun q : Nat => (q : Real))).comp htotal)
       measurableSet_Iic
   have hbase := thinUntil_population_le_ae s pending threshold hthreshold
-  rw [← manuscriptCountThinWithCost_fst s pending threshold] at hbase
+  rw [← countThinWithCost_fst s pending threshold] at hbase
   exact (ae_map_iff measurable_fst.aemeasurable hset).mp hbase
 
 /-- Any batch requested after a successful second-loop guard leaves the
@@ -459,7 +459,7 @@ theorem deletionPassOperations_le {n : Nat} (s : TTCState n)
   simp only [Nat.mul_add, mul_one]
   omega
 
-theorem manuscriptRateThinningResult_card_le {n : Nat} (s : TTCState n)
+theorem rateThinningResult_card_le {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) (coins : Nat × Nat → Bool) :
     (ttcPseudocode.firstLoopResult s intensity threshold coins).X.card ≤
       s.X.card := by

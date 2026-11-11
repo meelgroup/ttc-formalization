@@ -2,7 +2,7 @@ import Kr25Ssmxt.Analysis.FairThinningExpectation
 import Kr25Ssmxt.Analysis.CostedMeasureMonad
 import Mathlib.Probability.Distributions.Poisson.Basic
 
-/-! The first moment of the Poisson count used by manuscript TTC. -/
+/-! The first moment of the Poisson count used by paper TTC. -/
 
 namespace Kr25Ssmxt
 
@@ -125,7 +125,7 @@ theorem poisson_averaged_countThinCost_le {n : Nat} (s : TTCState n)
             ∂fairCoinStreamLaw) ∂poissonMeasure r := by
       apply lintegral_mono
       intro pending
-      exact le_of_eq (manuscriptCountThinWithCost_expected_eq s pending threshold)
+      exact le_of_eq (countThinWithCost_expected_eq s pending threshold)
     _ = (TTCRuntime.countThinningRoundOperations s.X.card : ENNReal) *
         (∫⁻ pending : Nat, (∫⁻ coins,
           (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
@@ -179,7 +179,7 @@ theorem poisson_averaged_firstExitRound_le_four_of_guard {n : Nat}
   simpa only [Nat.cast_add, Nat.cast_one] using hpopulation
 
 /-- The charged count-thinning loop inherits the four-round expectation
-after the manuscript's first rate guard. -/
+after the paper's first rate guard. -/
 theorem poisson_averaged_countThinCost_le_four_of_guard {n : Nat}
     (s : TTCState n) (r : NNReal) (threshold : Real)
     (hthreshold : 0 ≤ threshold)
@@ -214,9 +214,9 @@ theorem poisson_averaged_countThinCost_le_four_of_guard {n : Nat}
         (2 * 2) := by gcongr
     _ = 4 * TTCRuntime.countThinningRoundOperations s.X.card := by ring
 
-/-- The actual charged Poisson draw followed by the second manuscript loop
+/-- The actual charged Poisson draw followed by the second paper loop
 has the requested constant expected overhead. -/
-theorem manuscriptPoissonCountThin_expected_cost_le {n : Nat}
+theorem poissonCountThin_expected_cost_le {n : Nat}
     (s : TTCState n) (r : NNReal) (threshold : Real)
     (hthreshold : 0 ≤ threshold)
     (hsamples : (s.X.card : Real) ≤ threshold)
@@ -229,7 +229,7 @@ theorem manuscriptPoissonCountThin_expected_cost_le {n : Nat}
         4 * TTCRuntime.countThinningRoundOperations s.X.card := by
   have hmass (pending : Nat) :
       (ttcPseudocode.secondLoopWithCost s pending threshold) Set.univ ≤ 1 :=
-    manuscriptCountThinWithCost_mass_le_one s pending threshold
+    countThinWithCost_mass_le_one s pending threshold
   apply (costedBind_lintegral_cost_le _ _ (measurable_of_countable _) hmass).trans
   have hpair : Measurable (fun pending : Nat =>
       (pending, TTCRuntime.poissonDrawOperations)) := by fun_prop

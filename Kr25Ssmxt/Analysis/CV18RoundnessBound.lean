@@ -348,26 +348,26 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
     positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
   exact mul_le_mul_of_nonneg_left hlog hcoeff
 
-theorem TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip_le_theorem3
+theorem TTCRuntime.expectedComponentBudgetGeometricClip_le_theorem3
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) :
-    TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip hn D p b
+    TTCRuntime.expectedComponentBudgetGeometricClip hn D p b
       cv18NonQueryFactor i ≤
-      TTCRuntime.manuscriptExpectedComponentBudgetTheorem3 hn D p b
+      TTCRuntime.expectedComponentBudgetTheorem3 hn D p b
         cv18NonQueryFactor i := by
   have hqueries := D.communityCV18_queryBudget_le_envelope hn p i
-  unfold TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip
-    TTCRuntime.manuscriptExpectedComponentBudgetTheorem3
+  unfold TTCRuntime.expectedComponentBudgetGeometricClip
+    TTCRuntime.expectedComponentBudgetTheorem3
   dsimp only
   unfold TTCRuntime.membershipQueryOperations
   gcongr
 
-theorem TTCRuntime.manuscriptExpectedComponentBudgetTheorem3_le_uniform
+theorem TTCRuntime.expectedComponentBudgetTheorem3_le_uniform
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) :
-    TTCRuntime.manuscriptExpectedComponentBudgetTheorem3 hn D p b
+    TTCRuntime.expectedComponentBudgetTheorem3 hn D p b
       cv18NonQueryFactor i ≤
       TTCRuntime.theorem3UniformComponentBudget hn D p b cv18NonQueryFactor := by
   have hqueries := D.communityCV18_queryEnvelope_le_max hn p i
@@ -376,7 +376,7 @@ theorem TTCRuntime.manuscriptExpectedComponentBudgetTheorem3_le_uniform
     unfold TTCRuntime.theorem3RMax
     exact Finset.le_sup (f := fun j : Fin D.componentCount =>
       (D.component j).presentation.facetCount) (Finset.mem_univ i)
-  unfold TTCRuntime.manuscriptExpectedComponentBudgetTheorem3
+  unfold TTCRuntime.expectedComponentBudgetTheorem3
     TTCRuntime.theorem3UniformComponentBudget
   dsimp only
   unfold TTCRuntime.membershipQueryOperations TTCRuntime.facetScanOperations

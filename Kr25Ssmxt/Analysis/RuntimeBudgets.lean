@@ -56,9 +56,9 @@ noncomputable def TTCRuntime.theorem3SamplerLogFactor
         (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal))
 
 /-- Explicit arithmetic-operation allowance for one component of the charged
-manuscript run. The finite sum of these allowances is proved to bound the
-whole run's expected cost in `Analysis/ManuscriptComponentExpectation`. -/
-noncomputable def TTCRuntime.manuscriptExpectedComponentBudget {n : Nat}
+paper run. The finite sum of these allowances is proved to bound the
+whole run's expected cost in `Analysis/ComponentExpectation`. -/
+noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.sampleCap p m
@@ -83,7 +83,7 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudget {n : Nat}
 
 /-- The same component allowance with decimal precision exposed linearly.
 The remaining volume logarithm is the clipped geometric volume bound. -/
-noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision {n : Nat}
+noncomputable def TTCRuntime.expectedComponentBudgetLinearPrecision {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.sampleCap p m
@@ -107,7 +107,7 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision {n
 
 /-- Component budget after replacing the concrete sampler walk length by the
 radius-ratio and precision envelope proved in `Analysis/NormalizedDiameterRuntime`. -/
-noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometric
+noncomputable def TTCRuntime.expectedComponentBudgetGeometric
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
@@ -138,7 +138,7 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometric
 
 /-- The same geometric allowance with the first-loop volume clip reduced to
 the global outer-radius logarithm. -/
-noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip
+noncomputable def TTCRuntime.expectedComponentBudgetGeometricClip
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
@@ -168,7 +168,7 @@ noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetGeometricClip
 
 /-- Fully substituted per-component allowance: CV18 queries and normalized
 Hit-and-Run steps use their proved polynomial-times-logarithmic envelopes. -/
-noncomputable def TTCRuntime.manuscriptExpectedComponentBudgetTheorem3
+noncomputable def TTCRuntime.expectedComponentBudgetTheorem3
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=

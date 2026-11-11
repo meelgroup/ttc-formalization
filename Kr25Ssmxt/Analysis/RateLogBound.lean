@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.RuntimeBudgets
-import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
+import Kr25Ssmxt.Analysis.ThinningCosts
 import Kr25Ssmxt.Model.Run
 
 /-! Elementary logarithmic bounds used to remove the decimal scale from
@@ -80,7 +80,7 @@ theorem clog_two_ceil_decimal_mul_le (k : Nat) (u : Real) :
     _ ≤ 4 * k + Nat.clog 2 (Nat.ceil u + 1) :=
       clog_two_decimal_scaled_le _ _
 
-theorem manuscript_intensity_div_threshold (b n : Nat)
+theorem intensity_div_threshold (b n : Nat)
     {threshold : Real} (hthreshold : 0 < threshold) (volume : NNReal) :
     ((ttcPseudocode.t b n threshold volume : NNReal) : Real) / threshold =
       (10 : Real) ^ (b * n) * (volume : Real) := by
@@ -89,13 +89,13 @@ theorem manuscript_intensity_div_threshold (b n : Nat)
   rw [Real.coe_toNNReal _ hthreshold.le]
   field_simp
 
-theorem manuscript_rate_clog_le_linear_precision (b n : Nat)
+theorem rate_clog_le_linear_precision (b n : Nat)
     {threshold : Real} (hthreshold : 0 < threshold) (volume : NNReal) :
     Nat.clog 2
         (Nat.ceil (((ttcPseudocode.t b n threshold volume : NNReal) : Real) /
           threshold) + 1) ≤
       4 * (b * n) + Nat.clog 2 (Nat.ceil (volume : Real) + 1) := by
-  rw [manuscript_intensity_div_threshold b n hthreshold volume]
+  rw [intensity_div_threshold b n hthreshold volume]
   exact clog_two_ceil_decimal_mul_le (b * n) (volume : Real)
 
 theorem clipped_component_rate_clog_le_linear_precision {n : Nat}
@@ -106,17 +106,17 @@ theorem clipped_component_rate_clog_le_linear_precision {n : Nat}
         (Nat.ceil (((ttcPseudocode.t b n (p.Thresh m) v : NNReal) : Real) /
           p.Thresh m) + 1) ≤
       4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) := by
-  exact manuscript_rate_clog_le_linear_precision b n
+  exact rate_clog_le_linear_precision b n
     (p.threshold_pos m) _
 
-theorem TTCRuntime.manuscriptExpectedComponentBudget_le_linearPrecision
+theorem TTCRuntime.expectedComponentBudget_le_linearPrecision
     {n : Nat} (hn : 21 ≤ n) (p : ApproxParams)
     (m b cv18NonQueryFactor : Nat) (P : PolytopeData n) :
-    TTCRuntime.manuscriptExpectedComponentBudget hn p m b cv18NonQueryFactor P ≤
-      TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision hn p m b
+    TTCRuntime.expectedComponentBudget hn p m b cv18NonQueryFactor P ≤
+      TTCRuntime.expectedComponentBudgetLinearPrecision hn p m b
         cv18NonQueryFactor P := by
-  unfold TTCRuntime.manuscriptExpectedComponentBudget
-    TTCRuntime.manuscriptExpectedComponentBudgetLinearPrecision
+  unfold TTCRuntime.expectedComponentBudget
+    TTCRuntime.expectedComponentBudgetLinearPrecision
   dsimp only
   gcongr
   exact_mod_cast clipped_component_rate_clog_le_linear_precision P p m b

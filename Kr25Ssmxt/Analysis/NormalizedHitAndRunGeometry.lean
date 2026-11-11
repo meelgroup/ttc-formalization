@@ -312,7 +312,7 @@ theorem PolytopeData.normalizedHitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ 
   simpa [mu, hitAndRunBody] using P.normalizedHitAndRun_tvLe hn b heta0
 
 /-- Forgetting the number of rejection attempts recovers the conditional
-rounded point law used by the manuscript sampler. -/
+rounded point law used by the paper sampler. -/
 theorem acceptedRoundedWithAttempts_fst {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) (P : PolytopeData n) (b : Nat) :
     (acceptedRoundedWithAttempts mu P b).map Prod.fst =
@@ -348,7 +348,7 @@ theorem normalizedHitAndRunPointWithCostLaw_fst {n : Nat}
   simpa only [Function.comp_def] using
     acceptedRoundedWithAttempts_fst (normalizedHitAndRunContinuousLaw P b eta) P b
 
-/-- Summing retry costs across independent requests preserves the manuscript
+/-- Summing retry costs across independent requests preserves the paper
 batch law after the cost coordinate is forgotten. -/
 theorem normalizedHitAndRunBatchWithCostLaw_fst {n : Nat}
     (P : PolytopeData n) (count b : Nat) (eta : Real)

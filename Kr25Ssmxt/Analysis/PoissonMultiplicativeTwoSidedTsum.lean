@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Analysis.ManuscriptPadeLog
+import Kr25Ssmxt.Analysis.PadeLog
 import Arlib.Probability.Poisson
 
 /-!
@@ -44,7 +44,7 @@ lemma poisson_multiplicative_two_sided_tsum (mu epsilon : Real)
   have hone : 1 < 1 + epsilon := by linarith
   have hlog : 0 < Real.log (1 + epsilon) := Real.log_pos hone
   have hden : 0 < 2 + epsilon := by linarith
-  have hpade := manuscript_pade_log_bound
+  have hpade := pade_log_bound
     (t := 1 + epsilon) (by linarith : 1 ≤ 1 + epsilon)
   have hlog_lower : 2 * epsilon / (2 + epsilon) ≤ Real.log (1 + epsilon) := by
     apply (div_le_iff₀ hden).2

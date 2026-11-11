@@ -163,7 +163,7 @@ theorem count_volume_budget_of_comparison
   apply (le_div_iff₀ hInflated).2
   nlinarith [hvolume]
 
-/-- The manuscript's sampler precision makes facet inflation small compared
+/-- The paper's sampler precision makes facet inflation small compared
 with the scaled inball. -/
 theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
     (P : PolytopeData n) {η γ : Real} (hη0 : 0 < η) (hη1 : η ≤ 1)
