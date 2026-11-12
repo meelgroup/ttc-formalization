@@ -1,4 +1,3 @@
-import Kr25Ssmxt.Model.Constants
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.PrecisionRequirements

@@ -1,4 +1,3 @@
-import Kr25Ssmxt.Model.Constants
 import Kr25Ssmxt.Analysis.ClippedVolumeRate
 
 /-! An explicit parameter bound for the paper's sample threshold. -/

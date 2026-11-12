@@ -1,4 +1,3 @@
-import Kr25Ssmxt.Model.Constants
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.EuclideanInball
 import Kr25Ssmxt.Analysis.PrecisionRequirements
