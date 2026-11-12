@@ -56,20 +56,23 @@ theorem ttc_theorem1_volume_accuracy
       1 - params.delta := by
   exact community_ttc_volume_accuracy hn F hbounded params prep
 
-/-- Corrected Theorem 3: the charged execution has exactly the paper TTC
-output law and its expected arithmetic cost has the preprocessing term plus
-the explicit `m n⁵ ρ² r_max (2 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ) + log⁺ R_max)`
-scale, where `γ` is the radius required by `getprec` at `ε / 96`.  The bound
-depends on the input only: the precision `b` chosen by `getprec` is bounded
-by `1 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ)`. -/
+/-- Corrected Theorem 3.
+
+* **Same algorithm.** For every measurable set `S` of outputs, the charged run's output lands in
+  `S` with the same probability as `ttc`'s. Equivalently, the output distribution of
+  `ttcWithCost`, with its cost discarded, is that of `ttc`, so the cost bound is about the
+  algorithm of Theorem 1.
+* **Expected cost.** The expected operation count is at most the preprocessing cost plus
+  `m · 30 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²`, which depends on the input
+  only. -/
 theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
     let D := prep.run F hbounded
-    (ttcWithCost hn F hbounded p prep
-      preprocessingOperations 1).map Prod.fst =
-        ttc hn F hbounded p prep ∧
+    (∀ S : Set NNReal, MeasurableSet S →
+      Pr[result ← ttcWithCost hn F hbounded p prep preprocessingOperations 1; result.1 ∈ S] =
+        Pr[estimate ← ttc hn F hbounded p prep; estimate ∈ S]) ∧
     Exp[result ← ttcWithCost hn F hbounded p prep preprocessingOperations 1;
       (result.2 : ENNReal)] ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
@@ -79,10 +82,11 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
           TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := by
   dsimp only
-  exact ⟨community_costed_output_fst hn F hbounded p prep
-    preprocessingOperations 1,
-    ttc_expected_runtime_theorem3_explicit hn F hbounded p prep
-      preprocessingOperations⟩
+  refine ⟨fun S hS => ?_, ttc_expected_runtime_theorem3_explicit hn F hbounded p prep
+    preprocessingOperations⟩
+  rw [← community_costed_output_fst hn F hbounded p prep preprocessingOperations 1,
+    measureReal_def, measureReal_def, Set.setOf_mem_eq, Measure.map_apply measurable_fst hS]
+  rfl
 
 #krModelClosureOfType ttc_theorem1_volume_accuracy
 #krModelClosureOfType ttc_theorem3_corrected_expected_runtime
