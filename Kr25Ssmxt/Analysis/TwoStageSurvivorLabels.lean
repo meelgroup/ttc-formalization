@@ -530,7 +530,7 @@ theorem community_twoStage_sampler_tape
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map (fun batch => second.1.addBatch batch.2) =
+      b eta delta).map (fun batch => second.1.addBatch batch) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape

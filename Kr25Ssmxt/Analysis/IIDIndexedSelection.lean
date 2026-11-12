@@ -96,7 +96,7 @@ theorem iid_tape_pending_survivors_batch
     [IsProbabilityMeasure pointLaw]
     (coins : Nat × Nat → Bool) (rounds firstLabel pending : Nat) :
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
-      (fun tape => (true, fun (i : Fin (pendingAfter coins rounds firstLabel pending)) =>
+      (fun tape => (fun (i : Fin (pendingAfter coins rounds firstLabel pending)) =>
         tape (firstLabel +
           (pendingSurvivorIndices coins rounds firstLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins rounds firstLabel pending) i))) =
@@ -110,13 +110,14 @@ theorem iid_tape_pending_survivors_batch
     exact Measurable.of_eval (fun i => measurable_pi_apply _)
   calc
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
-        (fun tape => (true, selected tape)) =
+        (fun tape => (selected tape)) =
       ((Measure.infinitePi (fun _ : Nat => pointLaw)).map selected).map
-        (fun samples => (true, samples)) := by
+        (fun samples => samples) := by
           rw [Measure.map_map (by fun_prop) hselected]
           rfl
     _ = iidSampleBatchLaw pointLaw := by
-      rw [iid_tape_pending_survivors pointLaw coins rounds firstLabel pending]
+      rw [iid_tape_pending_survivors pointLaw coins rounds firstLabel pending,
+        Measure.map_id']
       rfl
 
 /-- The post-stopping concrete sampler can be realized from an IID point tape
@@ -134,7 +135,7 @@ theorem community_adaptive_batch_from_iid_tape
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
-      (fun tape => (true, fun (i : Fin (ttcPseudocode.secondLoopResult s pending threshold coins).2) =>
+      (fun tape => (fun (i : Fin (ttcPseudocode.secondLoopResult s pending threshold coins).2) =>
         tape (s.nextLabel +
           (pendingSurvivorIndices coins rounds s.nextLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins rounds s.nextLabel pending) i))) =
@@ -147,7 +148,7 @@ theorem community_adaptive_batch_from_iid_tape
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2).1
   change (Measure.infinitePi (fun _ : Nat => pointLaw)).map
-      (fun tape => (true, fun (i : Fin
+      (fun tape => (fun (i : Fin
         (pendingAfter coins (ttcPseudocode.secondLoopExitRound s pending threshold coins)
           s.nextLabel pending)) =>
         tape (s.nextLabel +

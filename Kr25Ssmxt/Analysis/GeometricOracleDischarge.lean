@@ -38,11 +38,10 @@ def exactLatticePointLaw {n : Nat} (P : PolytopeData n) (b : Nat) :
     Measure (LatticePoint n) :=
   ProbabilityTheory.uniformOn (codedLatticePoints P b)
 
-/-- An independently generated batch, with an always-successful tag. -/
+/-- An independently generated batch. -/
 def exactSampleBatchLaw {n count : Nat} (P : PolytopeData n) (b : Nat) :
     Measure (SampleBatch n count) :=
-  (Measure.pi (fun _ : Fin count => exactLatticePointLaw P b)).map
-    (fun samples => (true, samples))
+  Measure.pi (fun _ : Fin count => exactLatticePointLaw P b)
 
 /-- Canonical accuracy-level geometric oracles attached to certified preprocessing. -/
 def exactSemanticOracles {n k : Nat} (prep : TTCPreprocessor n k) : TTCOracles n k where
@@ -161,6 +160,7 @@ lemma exact_sample_batch_isProbabilityMeasure {n count : Nat} (P : PolytopeData 
     (hprob : IsProbabilityMeasure (exactLatticePointLaw P b)) :
     IsProbabilityMeasure (exactSampleBatchLaw (count := count) P b) := by
   letI : IsProbabilityMeasure (exactLatticePointLaw P b) := hprob
-  exact Measure.isProbabilityMeasure_map (by fun_prop)
+  unfold exactSampleBatchLaw
+  infer_instance
 
 end Kr25Ssmxt

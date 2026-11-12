@@ -371,9 +371,7 @@ theorem normalizedHitAndRunBatchWithCostLaw_fst {n : Nat}
   unfold normalizedHitAndRunBatchWithCostLaw iidSampleBatchLaw
   rw [Measure.map_map measurable_fst (by fun_prop)]
   change (Measure.pi (fun _ : Fin count => μ)).map
-      (fun draws => (true, fun i => (draws i).1)) =
-    (Measure.pi (fun _ : Fin count => ν)).map (fun draws => (true, draws))
-  rw [← hpi, Measure.map_map (by fun_prop) (by fun_prop)]
-  rfl
+      (fun draws i => (draws i).1) = Measure.pi (fun _ : Fin count => ν)
+  exact hpi
 
 end Kr25Ssmxt

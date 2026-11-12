@@ -18,7 +18,7 @@ noncomputable def communityComponentGivenVolume
     (poissonMeasure (intensity * first.p)).bind fun pending =>
       (ttcPseudocode.secondLoop first pending threshold).bind fun second =>
         ((ttcSubroutines hn prep).GenerateSamples P second.2 b eta
-          delta).map fun batch => second.1.addBatch batch.2
+          delta).map fun batch => second.1.addBatch batch
 
 noncomputable def communityComponentPredrawTape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)

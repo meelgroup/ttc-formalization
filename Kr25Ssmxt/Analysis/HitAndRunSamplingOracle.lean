@@ -66,13 +66,8 @@ theorem PolytopeData.exists_hitAndRun_pointLaw {n : Nat} (hn : 21 ≤ n)
 
 lemma iidSampleBatchLaw_isProbabilityMeasure {n count : Nat}
     (pointLaw : Measure (LatticePoint n)) [IsProbabilityMeasure pointLaw] :
-    IsProbabilityMeasure (iidSampleBatchLaw (count := count) pointLaw) :=
-  Measure.isProbabilityMeasure_map (by fun_prop)
-
-lemma iidSampleBatchLaw_false {n count : Nat} (pointLaw : Measure (LatticePoint n))
-    [IsProbabilityMeasure pointLaw] :
-    (iidSampleBatchLaw (count := count) pointLaw) {o | o.1 = false} = 0 := by
-  rw [iidSampleBatchLaw, Measure.map_apply (by fun_prop) (by measurability)]
-  simp
+    IsProbabilityMeasure (iidSampleBatchLaw (count := count) pointLaw) := by
+  unfold iidSampleBatchLaw
+  infer_instance
 
 end Kr25Ssmxt

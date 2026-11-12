@@ -81,10 +81,10 @@ theorem sample_append_labelsFresh {n k : Nat} (O : TTCOracles n k)
     (P : PolytopeData n) (s : TTCState n) (count b : Nat)
     (ε' δ' : Real) (h : s.LabelsFresh) :
     ∀ᵐ result ∂(O.GenerateSamples P count b ε' δ').map
-      (fun batch => s.addBatch batch.2), result.LabelsFresh := by
-  have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch.2) :=
-    measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
+      (fun batch => s.addBatch batch), result.LabelsFresh := by
+  have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch) :=
+    measurable_addBatch.comp (measurable_const.prodMk measurable_id)
   rw [ae_map_iff hmap.aemeasurable measurableSet_labelsFresh]
-  exact Filter.Eventually.of_forall fun batch => s.labelsFresh_addBatch batch.2 h
+  exact Filter.Eventually.of_forall fun batch => s.labelsFresh_addBatch batch h
 
 end Kr25Ssmxt

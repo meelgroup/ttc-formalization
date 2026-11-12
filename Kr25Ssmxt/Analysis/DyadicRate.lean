@@ -90,10 +90,10 @@ theorem sample_append_isDyadicRate {n k : Nat}
     (s : TTCState n) (count b : Nat)
     (ε' δ' : Real) (h : s.IsDyadicRate) :
     ∀ᵐ result ∂(O.GenerateSamples P count b ε' δ').map
-      (fun batch => s.addBatch batch.2), result.IsDyadicRate := by
-  have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch.2) :=
-    measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
+      (fun batch => s.addBatch batch), result.IsDyadicRate := by
+  have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch) :=
+    measurable_addBatch.comp (measurable_const.prodMk measurable_id)
   rw [ae_map_iff hmap.aemeasurable measurableSet_isDyadicRate]
-  exact Filter.Eventually.of_forall fun batch => s.isDyadicRate_addBatch batch.2 h
+  exact Filter.Eventually.of_forall fun batch => s.isDyadicRate_addBatch batch h
 
 end Kr25Ssmxt

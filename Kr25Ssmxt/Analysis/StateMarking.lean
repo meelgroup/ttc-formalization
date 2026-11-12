@@ -18,7 +18,7 @@ theorem poisson_append_pointCounts_law
     (mean : NNReal) :
     ((poissonMeasure mean).bind fun count =>
       (iidSampleBatchLaw (count := count) pointLaw).map
-        (fun batch => (s.addBatch batch.2).pointCounts S)) =
+        (fun batch => (s.addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
         (fun fresh x => s.pointCounts S x + fresh x) := by
@@ -28,7 +28,7 @@ theorem poisson_append_pointCounts_law
     unfold shift
     fun_prop
   let counts : (count : Nat) → SampleBatch n count → (S → Nat) :=
-    fun _ batch x => colourCount batch.2 x.1
+    fun _ batch x => colourCount batch x.1
   have hcounts (count : Nat) : Measurable (counts count) := by
     exact Measurable.of_discrete
   have hstep : AEMeasurable
@@ -39,7 +39,7 @@ theorem poisson_append_pointCounts_law
   calc
     ((poissonMeasure mean).bind fun count =>
         (iidSampleBatchLaw (count := count) pointLaw).map
-          (fun batch => (s.addBatch batch.2).pointCounts S)) =
+          (fun batch => (s.addBatch batch).pointCounts S)) =
       (poissonMeasure mean).bind (fun count =>
         ((iidSampleBatchLaw (count := count) pointLaw).map
           (counts count)).map shift) := by
@@ -48,7 +48,7 @@ theorem poisson_append_pointCounts_law
             rw [Measure.map_map hshift (hcounts count)]
             congr 1
             funext batch
-            exact s.pointCounts_addBatch batch.2 S hs
+            exact s.pointCounts_addBatch batch S hs
     _ = ((poissonMeasure mean).bind fun count =>
         (iidSampleBatchLaw (count := count) pointLaw).map
           (counts count)).map shift := by
@@ -74,7 +74,7 @@ theorem poisson_delete_append_pointCounts_law
     (mean : NNReal) :
     ((poissonMeasure mean).bind fun count =>
       (iidSampleBatchLaw (count := count) pointLaw).map
-        (fun batch => ((s.removeComponent P).addBatch batch.2).pointCounts S)) =
+        (fun batch => ((s.removeComponent P).addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
         (fun fresh x =>

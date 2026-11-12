@@ -350,16 +350,16 @@ def normalizedHitAndRunBatchWithCostLaw {n : Nat} (P : PolytopeData n)
     (count b : Nat) (eta : Real) : Measure (SampleBatch n count × Nat) :=
   (Measure.pi (fun _ : Fin count => normalizedHitAndRunPointWithCostLaw P b eta)).map
     fun draws =>
-      ((true, fun i => (draws i).1), ∑ i : Fin count, (draws i).2)
+      ((fun i => (draws i).1), ∑ i : Fin count, (draws i).2)
 
-/-- Independent restarts from a point law, tagged as an unconditionally successful batch. -/
+/-- Independent restarts from a point law. -/
 def iidSampleBatchLaw {n count : Nat} (pointLaw : Measure (LatticePoint n)) :
     Measure (SampleBatch n count) :=
-  (Measure.pi (fun _ : Fin count => pointLaw)).map (fun samples => (true, samples))
+  Measure.pi (fun _ : Fin count => pointLaw)
 
 /-- A total fallback used only outside the certified preprocessing regime. -/
 def failedSampleBatchLaw {n count : Nat} : Measure (SampleBatch n count) :=
-  Measure.dirac (false, fun _ => default)
+  Measure.dirac (fun _ => default)
 
 /-! ## Algorithm `ttc` -/
 

@@ -33,15 +33,14 @@ theorem community_sample_append_fst {n k : Nat} (hn : 21 ≤ n)
     (costedBind
       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
         P count b eta delta)
-      (fun batch => costedCharge (Measure.dirac (state.addBatch batch.2))
+      (fun batch => costedCharge (Measure.dirac (state.addBatch batch))
         (count * TTCRuntime.appendCopyOperations))).map Prod.fst =
       ((ttcSubroutines hn prep).GenerateSamples
-        P count b eta delta).map (fun batch => state.addBatch batch.2) := by
-  let f : SampleBatch n count → TTCState n := fun batch => state.addBatch batch.2
+        P count b eta delta).map (fun batch => state.addBatch batch) := by
+  let f : SampleBatch n count → TTCState n := fun batch => state.addBatch batch
   have hf : Measurable f := by
     exact measurable_addBatch.comp
-      (measurable_const.prodMk (measurable_snd :
-        Measurable (fun batch : SampleBatch n count => batch.2)))
+      (measurable_const.prodMk measurable_id)
   let μ := (ttcCostedSubroutines hn prep factor).generateSamplesWithCost
     P count b eta delta
   have hbridge := costedBind_dirac_eq_map μ f
@@ -65,7 +64,7 @@ theorem community_sample_append_kernel_measurable
       costedBind
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
           P z.2 b eta delta)
-        (fun batch => costedCharge (Measure.dirac (z.1.addBatch batch.2))
+        (fun batch => costedCharge (Measure.dirac (z.1.addBatch batch))
           (z.2 * TTCRuntime.appendCopyOperations))) := by
   apply measurable_from_prod_countable_left
   intro count
@@ -76,14 +75,14 @@ theorem community_sample_append_kernel_measurable
       P count b eta delta
   letI : IsFiniteMeasure μ := ⟨lt_of_le_of_lt hmass (by norm_num)⟩
   let G : TTCState n × (SampleBatch n count × Nat) → TTCState n × Nat :=
-    fun z => (z.1.addBatch z.2.1.2,
+    fun z => (z.1.addBatch z.2.1,
       z.2.2 + count * TTCRuntime.appendCopyOperations)
   have hpoints : Measurable
-      (fun z : TTCState n × (SampleBatch n count × Nat) => z.2.1.2) :=
-    (measurable_snd.comp (measurable_fst.comp measurable_snd))
+      (fun z : TTCState n × (SampleBatch n count × Nat) => z.2.1) :=
+    (measurable_fst.comp measurable_snd)
   have hadded : Measurable
       (fun z : TTCState n × (SampleBatch n count × Nat) =>
-        z.1.addBatch z.2.1.2) :=
+        z.1.addBatch z.2.1) :=
     measurable_addBatch.comp (measurable_fst.prodMk hpoints)
   have hcost : Measurable
       (fun z : TTCState n × (SampleBatch n count × Nat) =>
@@ -95,12 +94,12 @@ theorem community_sample_append_kernel_measurable
   have hpair : Measurable (fun state : TTCState n => μ.map (Prod.mk state)) :=
     Measurable.map_prodMk_left
   have hmap : Measurable (fun state : TTCState n =>
-      μ.map fun result => (state.addBatch result.1.2,
+      μ.map fun result => (state.addBatch result.1,
         result.2 + count * TTCRuntime.appendCopyOperations)) := by
     have h := (Measure.measurable_map G hG).comp hpair
     convert h using 1
     funext state
-    change μ.map (fun result => (state.addBatch result.1.2,
+    change μ.map (fun result => (state.addBatch result.1,
         result.2 + count * TTCRuntime.appendCopyOperations)) =
       (μ.map (Prod.mk state)).map G
     rw [Measure.map_map hG measurable_prodMk_left]
@@ -108,11 +107,10 @@ theorem community_sample_append_kernel_measurable
   convert hmap using 1
   funext state
   exact costedBind_dirac_eq_map μ
-    (fun batch => state.addBatch batch.2)
+    (fun batch => state.addBatch batch)
     (fun _ => count * TTCRuntime.appendCopyOperations)
     (measurable_addBatch.comp
-      (measurable_const.prodMk (measurable_snd :
-        Measurable (fun batch : SampleBatch n count => batch.2)))) measurable_const
+      (measurable_const.prodMk measurable_id)) measurable_const
 
 theorem community_count_sample_append_fst
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -123,11 +121,11 @@ theorem community_count_sample_append_fst
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
           P second.2 b eta delta)
         (fun batch => costedCharge
-          (Measure.dirac (second.1.addBatch batch.2))
+          (Measure.dirac (second.1.addBatch batch))
           (second.2 * TTCRuntime.appendCopyOperations)))).map Prod.fst =
       (ttcPseudocode.secondLoop state pending threshold).bind fun second =>
         ((ttcSubroutines hn prep).GenerateSamples
-          P second.2 b eta delta).map (fun batch => second.1.addBatch batch.2) := by
+          P second.2 b eta delta).map (fun batch => second.1.addBatch batch) := by
   rw [costedBind_fst _ _
     (community_sample_append_kernel_measurable hn prep factor P b eta delta)]
   rw [countThinWithCost_fst]
@@ -146,7 +144,7 @@ theorem community_count_sample_append_kernel_measurable
           ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
             P second.2 b eta delta)
           (fun batch => costedCharge
-            (Measure.dirac (second.1.addBatch batch.2))
+            (Measure.dirac (second.1.addBatch batch))
             (second.2 * TTCRuntime.appendCopyOperations)))) := by
   exact costedBind_kernel_measurable
     (fun z : TTCState n × Nat => ttcPseudocode.secondLoopWithCost z.1 z.2 threshold)
@@ -154,7 +152,7 @@ theorem community_count_sample_append_kernel_measurable
       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
         P second.2 b eta delta)
       (fun batch => costedCharge
-        (Measure.dirac (second.1.addBatch batch.2))
+        (Measure.dirac (second.1.addBatch batch))
         (second.2 * TTCRuntime.appendCopyOperations)))
     (countThinWithCost_kernel_measurable threshold)
     (community_sample_append_kernel_measurable hn prep factor P b eta delta)
@@ -173,12 +171,12 @@ theorem community_poisson_count_sample_append_fst
           ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
             P second.2 b eta delta)
           (fun batch => costedCharge
-            (Measure.dirac (second.1.addBatch batch.2))
+            (Measure.dirac (second.1.addBatch batch))
             (second.2 * TTCRuntime.appendCopyOperations))))).map Prod.fst =
       (ProbabilityTheory.poissonMeasure (intensity * state.p)).bind fun pending =>
         (ttcPseudocode.secondLoop state pending threshold).bind fun second =>
           ((ttcSubroutines hn prep).GenerateSamples
-            P second.2 b eta delta).map (fun batch => second.1.addBatch batch.2) := by
+            P second.2 b eta delta).map (fun batch => second.1.addBatch batch) := by
   let μ := ProbabilityTheory.poissonMeasure (intensity * state.p)
   let next : Nat → Measure (TTCState n × Nat) := fun pending =>
     costedBind (ttcPseudocode.secondLoopWithCost state pending threshold)
@@ -186,7 +184,7 @@ theorem community_poisson_count_sample_append_fst
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
           P second.2 b eta delta)
         (fun batch => costedCharge
-          (Measure.dirac (second.1.addBatch batch.2))
+          (Measure.dirac (second.1.addBatch batch))
           (second.2 * TTCRuntime.appendCopyOperations)))
   have hnext : Measurable next := Measurable.of_discrete
   have hshift (pending : Nat) : Measurable
@@ -224,7 +222,7 @@ private noncomputable def communityCostedCountSampleAppend
       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
         P second.2 b eta delta)
       (fun batch => costedCharge
-        (Measure.dirac (second.1.addBatch batch.2))
+        (Measure.dirac (second.1.addBatch batch))
         (second.2 * TTCRuntime.appendCopyOperations)))
 
 private noncomputable def communityCostedPoissonCountSampleAppend
@@ -372,7 +370,7 @@ theorem community_rate_poisson_tail_fst
           (ttcPseudocode.secondLoop first pending threshold).bind fun second =>
             ((ttcSubroutines hn prep).GenerateSamples
               P second.2 b eta delta).map
-              (fun batch => second.1.addBatch batch.2) := by
+              (fun batch => second.1.addBatch batch) := by
   unfold communityCostedRateTail
   have hpair : Measurable (fun first : TTCState n => (first, intensity)) :=
     measurable_id.prodMk measurable_const
@@ -508,7 +506,7 @@ theorem community_deletion_tail_fst
               (ttcPseudocode.secondLoop first pending threshold).bind fun second =>
                 ((ttcSubroutines hn prep).GenerateSamples
                   P second.2 b eta delta).map
-                  (fun batch => second.1.addBatch batch.2) := by
+                  (fun batch => second.1.addBatch batch) := by
   let deleted := state.removeComponent P
   let deletionCost := TTCRuntime.deletionPassOperations n
     P.presentation.facetCount state.X.card
@@ -813,7 +811,7 @@ theorem community_sample_append_isProbabilityMeasure
       (costedBind
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
           P count b eta delta)
-        (fun batch => costedCharge (Measure.dirac (state.addBatch batch.2))
+        (fun batch => costedCharge (Measure.dirac (state.addBatch batch))
           (count * TTCRuntime.appendCopyOperations))) := by
   letI : IsProbabilityMeasure
       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
@@ -822,13 +820,13 @@ theorem community_sample_append_isProbabilityMeasure
       P count b eta delta
   apply costedBind_isProbabilityMeasure
   · have hstate : Measurable (fun batch : SampleBatch n count =>
-        state.addBatch batch.2) :=
-      measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
+        state.addBatch batch) :=
+      measurable_addBatch.comp (measurable_const.prodMk measurable_id)
     simp only [costedCharge, Measure.map_dirac]
     exact Measure.measurable_dirac.comp (hstate.prodMk measurable_const)
   · intro batch
     exact costedCharge_isProbabilityMeasure
-      (Measure.dirac (state.addBatch batch.2)) _
+      (Measure.dirac (state.addBatch batch)) _
 
 /-- Count thinning followed by sampling and append is normalized. -/
 theorem community_count_sample_append_isProbabilityMeasure

@@ -26,7 +26,7 @@ theorem community_poisson_append_pointCounts_law
     ((poissonMeasure mean).bind fun count =>
       ((ttcSubroutines hn prep).GenerateSamples
         P count b eta delta).map
-        (fun batch => (s.addBatch batch.2).pointCounts S)) =
+        (fun batch => (s.addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
         (fun fresh x => s.pointCounts S x + fresh x) := by
@@ -63,7 +63,7 @@ theorem community_poisson_delete_append_pointCounts_law
     ((poissonMeasure mean).bind fun count =>
       ((ttcSubroutines hn prep).GenerateSamples
         P count b eta delta).map
-        (fun batch => ((s.removeComponent P).addBatch batch.2).pointCounts S)) =
+        (fun batch => ((s.removeComponent P).addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
         (fun fresh x =>
@@ -95,7 +95,7 @@ theorem community_fixed_round_append_pointCounts_law
         pendingAfter coins rounds firstLabel pending)).bind fun count =>
         ((ttcSubroutines hn prep).GenerateSamples
           P count b eta delta).map
-          (fun batch => (s.addBatch batch.2).pointCounts S)) =
+          (fun batch => (s.addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability rounds) * mean : NNReal) : Real))))).map
@@ -107,7 +107,7 @@ theorem community_fixed_round_append_pointCounts_law
   let G : Nat → Measure (S → Nat) := fun count =>
     ((ttcSubroutines hn prep).GenerateSamples
       P count b eta delta).map
-      (fun batch => (s.addBatch batch.2).pointCounts S)
+      (fun batch => (s.addBatch batch).pointCounts S)
   change (poissonMeasure mean).bind (fun pending => (K pending).bind G) = _
   calc
     (poissonMeasure mean).bind (fun pending => (K pending).bind G) =
@@ -143,7 +143,7 @@ theorem community_fixed_round_delete_append_pointCounts_law
         pendingAfter coins rounds firstLabel pending)).bind fun count =>
         ((ttcSubroutines hn prep).GenerateSamples
           P count b eta delta).map
-          (fun batch => ((s.removeComponent P).addBatch batch.2).pointCounts S)) =
+          (fun batch => ((s.removeComponent P).addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability rounds) * mean : NNReal) : Real))))).map

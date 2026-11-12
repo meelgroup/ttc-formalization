@@ -29,13 +29,13 @@ theorem communityComponentGivenVolume_absolute_predraw
             (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
               activeCoins)).bind fun second =>
         ((ttcSubroutines hn prep).GenerateSamples P second.2
-          b eta delta).map fun batch => second.1.addBatch batch.2 := by
+          b eta delta).map fun batch => second.1.addBatch batch := by
   dsimp only
   let intensity := ttcPseudocode.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map fun batch => second.1.addBatch batch.2
+      b eta delta).map fun batch => second.1.addBatch batch
   have hK : Measurable K := by
     have hcost := community_sample_append_kernel_measurable
       hn prep 1 P b eta delta
@@ -44,7 +44,7 @@ theorem communityComponentGivenVolume_absolute_predraw
           ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
             P second.2 b eta delta)
           (fun batch => costedCharge
-            (Measure.dirac (second.1.addBatch batch.2))
+            (Measure.dirac (second.1.addBatch batch))
             (second.2 * TTCRuntime.appendCopyOperations))).map Prod.fst := by
       funext second
       exact (community_sample_append_fst hn prep 1 P

@@ -12,18 +12,18 @@ theorem measurable_community_sampleAppend_kernel
     (P : PolytopeData n) (b : Nat) (eta delta : Real) :
     Measurable (fun second : TTCState n × Nat =>
       ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map fun batch => second.1.addBatch batch.2) := by
+        b eta delta).map fun batch => second.1.addBatch batch) := by
   have hcost := community_sample_append_kernel_measurable
     hn prep 1 P b eta delta
   have heq : (fun second : TTCState n × Nat =>
       ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map fun batch => second.1.addBatch batch.2) =
+        b eta delta).map fun batch => second.1.addBatch batch) =
       (fun second =>
         (costedBind
           ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
             P second.2 b eta delta)
           (fun batch => costedCharge
-            (Measure.dirac (second.1.addBatch batch.2))
+            (Measure.dirac (second.1.addBatch batch))
             (second.2 * TTCRuntime.appendCopyOperations))).map Prod.fst) := by
     funext second
     exact (community_sample_append_fst hn prep 1 P
@@ -42,7 +42,7 @@ theorem community_sampleAppend_from_iidTape
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map (fun batch => second.1.addBatch batch.2) =
+      b eta delta).map (fun batch => second.1.addBatch batch) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape (second.1.nextLabel + i.val))) := by
@@ -62,30 +62,18 @@ theorem community_sampleAppend_from_iidTape
       (fun tape : Nat → LatticePoint n =>
         fun i : Fin second.2 => tape (labels i)) :=
     Measurable.of_eval (fun i => measurable_pi_apply (labels i))
-  have hctor : Measurable
-      (fun points : Fin second.2 → LatticePoint n =>
-        (true, points)) := by fun_prop
   let select : (Nat → LatticePoint n) → SampleBatch n second.2 :=
-    fun tape => (true, fun i => tape (labels i))
-  have hselect : Measurable select :=
-    measurable_const.prodMk
-      (Measurable.of_eval (fun i => measurable_pi_apply (labels i)))
+    fun tape i => tape (labels i)
+  have hselect : Measurable select := hpointsMeas
   have hsample : tapeLaw.map select =
       (ttcSubroutines hn prep).GenerateSamples P second.2
         b eta delta := by
-    calc
-      tapeLaw.map select =
-        (tapeLaw.map (fun tape i => tape (labels i))).map
-          (fun points => (true, points)) := by
-            rw [Measure.map_map hctor hpointsMeas]
-            rfl
-      _ = iidSampleBatchLaw pointLaw := by rw [hpoints]; rfl
-      _ = _ := (community_generateSamples_eq_iid hn prep P
-        second.2 b eta delta hroute).symm
+    rw [community_generateSamples_eq_iid hn prep P second.2 b eta delta hroute]
+    exact hpoints
   let f : SampleBatch n second.2 → TTCState n :=
-    fun batch => second.1.addBatch batch.2
+    fun batch => second.1.addBatch batch
   have hf : Measurable f :=
-    measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
+    measurable_addBatch.comp (measurable_const.prodMk measurable_id)
   calc
     ((ttcSubroutines hn prep).GenerateSamples P second.2
         b eta delta).map f =
@@ -109,7 +97,7 @@ theorem community_sampleAppend_from_iidTape_at_labels
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map (fun batch => second.1.addBatch batch.2) =
+      b eta delta).map (fun batch => second.1.addBatch batch) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape (labels i))) := by
@@ -125,29 +113,18 @@ theorem community_sampleAppend_from_iidTape_at_labels
       (fun tape : Nat → LatticePoint n =>
         fun i : Fin second.2 => tape (labels i)) :=
     Measurable.of_eval (fun i => measurable_pi_apply (labels i))
-  have hctor : Measurable
-      (fun points : Fin second.2 → LatticePoint n =>
-        (true, points)) := by fun_prop
   let select : (Nat → LatticePoint n) → SampleBatch n second.2 :=
-    fun tape => (true, fun i => tape (labels i))
-  have hselect : Measurable select :=
-    measurable_const.prodMk hpointsMeas
+    fun tape i => tape (labels i)
+  have hselect : Measurable select := hpointsMeas
   have hsample : tapeLaw.map select =
       (ttcSubroutines hn prep).GenerateSamples P second.2
         b eta delta := by
-    calc
-      tapeLaw.map select =
-        (tapeLaw.map (fun tape i => tape (labels i))).map
-          (fun points => (true, points)) := by
-            rw [Measure.map_map hctor hpointsMeas]
-            rfl
-      _ = iidSampleBatchLaw pointLaw := by rw [hpoints]; rfl
-      _ = _ := (community_generateSamples_eq_iid hn prep P
-        second.2 b eta delta hroute).symm
+    rw [community_generateSamples_eq_iid hn prep P second.2 b eta delta hroute]
+    exact hpoints
   let f : SampleBatch n second.2 → TTCState n :=
-    fun batch => second.1.addBatch batch.2
+    fun batch => second.1.addBatch batch
   have hf : Measurable f :=
-    measurable_addBatch.comp (measurable_const.prodMk measurable_snd)
+    measurable_addBatch.comp (measurable_const.prodMk measurable_id)
   calc
     ((ttcSubroutines hn prep).GenerateSamples P second.2
         b eta delta).map f =

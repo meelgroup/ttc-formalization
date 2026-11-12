@@ -51,9 +51,8 @@ def LatticePoint.toPoint {n : Nat} (x : LatticePoint n) : Point n :=
 def codedLatticePoints {n : Nat} (P : PolytopeData n) (b : Nat) : Set (LatticePoint n) :=
   {x | x.1 = b ∧ x.toPoint ∈ P.carrier}
 
-/-- A `GenerateSamples` batch; the tag keeps certified fallible implementations
-representable. -/
-abbrev SampleBatch (n count : Nat) := Bool × (Fin count → LatticePoint n)
+/-- A `GenerateSamples` batch: `count` lattice points. -/
+abbrev SampleBatch (n count : Nat) := Fin count → LatticePoint n
 
 /-- A labelled lattice copy; equal points may occur with different labels. -/
 abbrev SampleCopy (n : Nat) := Nat × LatticePoint n
@@ -244,7 +243,7 @@ def ttcPseudocode.step {n k : Nat} (O : TTCOracles n k) (b : Nat)
       (Poisson (t * firstThinned.p)).bind fun N =>
         (ttcPseudocode.secondLoop firstThinned N Thresh).bind fun secondThinned =>
           (O.GenerateSamples P secondThinned.2 b ε' δ').map fun S =>
-            secondThinned.1.addBatch S.2
+            secondThinned.1.addBatch S
 
 /-- The `for` loop over `P₁, …, Pₘ`. -/
 def ttcPseudocode.loop {n k : Nat} (O : TTCOracles n k) (b : Nat)
@@ -346,7 +345,7 @@ def ttcPseudocode.stepWithCost {n k : Nat} (O : CostedTTCOracles n k)
                     costedBind
                       (O.generateSamplesWithCost P secondThinned.2 b ε' δ')
                       fun S =>
-                        costedCharge (Measure.dirac (secondThinned.1.addBatch S.2))
+                        costedCharge (Measure.dirac (secondThinned.1.addBatch S))
                           (secondThinned.2 * TTCRuntime.appendCopyOperations)
 
 /-- The charged `for` loop, in the paper's component order. -/

@@ -29,7 +29,7 @@ theorem community_active_finite_origin_tape
         pending threshold (shiftCoins rounds pair.1) pair.2
     (coinLaw.map result).bind (fun second =>
       ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map fun batch => second.1.addBatch batch.2) =
+        b eta delta).map fun batch => second.1.addBatch batch) =
     coinLaw.bind fun pair =>
       let second := result pair
       let activeRounds := firstExitRoundSplit
@@ -52,7 +52,7 @@ theorem community_active_finite_origin_tape
       pending threshold (shiftCoins rounds pair.1) pair.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map fun batch => second.1.addBatch batch.2
+      b eta delta).map fun batch => second.1.addBatch batch
   have hresult : Measurable result :=
     measurable_active_finite_result s intensity threshold pending
       hfresh
@@ -113,7 +113,7 @@ theorem measurable_communityOriginTapeKernel
       (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1) pair.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map fun batch => second.1.addBatch batch.2
+      b eta delta).map fun batch => second.1.addBatch batch
   have hresult : Measurable result :=
     measurable_active_finite_result s intensity threshold pending
       hfresh
@@ -230,7 +230,7 @@ theorem communityComponentGivenVolume_eq_originSourceKernel
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map fun batch => second.1.addBatch batch.2
+      b eta delta).map fun batch => second.1.addBatch batch
   have hK : Measurable K :=
     measurable_community_sampleAppend_kernel hn prep P b eta delta
   let source : Measure (TTCState n × Nat) :=

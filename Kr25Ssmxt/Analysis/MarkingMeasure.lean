@@ -315,15 +315,11 @@ theorem iid_batch_poisson_count_law
     (mean : NNReal) :
     ((poissonMeasure mean).bind fun N =>
       (iidSampleBatchLaw (count := N) pointLaw).map
-        (fun batch (x : S) => colourCount batch.2 x.1)) =
+        (fun batch (x : S) => colourCount batch x.1)) =
       Measure.pi (fun x : S =>
         poissonMeasure (Real.toNNReal
           (pointLaw.real {(x : LatticePoint n)} * (mean : Real)))) := by
   rw [← poisson_marked_count_law_finiteSupport pointLaw S hsupport mean]
-  congr 1
-  funext N
-  unfold iidSampleBatchLaw
-  rw [Measure.map_map (by fun_prop) (by fun_prop)]
   rfl
 
 /-- The certified normalized Hit-and-Run batch, at any valid TTC call, gives
@@ -340,7 +336,7 @@ theorem normalized_batch_poisson_count_law
     let S := hfinite.toFinset
     ((poissonMeasure mean).bind fun N =>
       (iidSampleBatchLaw (count := N) pointLaw).map
-        (fun batch (x : S) => colourCount batch.2 x.1)) =
+        (fun batch (x : S) => colourCount batch x.1)) =
       Measure.pi (fun x : S =>
         poissonMeasure (Real.toNNReal
           (pointLaw.real {(x : LatticePoint n)} * (mean : Real)))) := by
