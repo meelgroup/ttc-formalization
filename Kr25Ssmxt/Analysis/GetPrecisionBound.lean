@@ -90,8 +90,8 @@ theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
   have hLog : 0 ≤ TTCRuntime.theorem3CV18LogMax hn D p := by
     unfold TTCRuntime.theorem3CV18LogMax
     positivity
-  have hrho : 1 ≤ TTCRuntime.theorem3Rho D := le_max_left _ _
-  have hlogrho : 0 ≤ Real.log (4 * TTCRuntime.theorem3Rho D + 1) :=
+  have hrho : 1 ≤ TTCRuntime.Rho D := le_max_left _ _
+  have hlogrho : 0 ≤ Real.log (4 * TTCRuntime.Rho D + 1) :=
     Real.log_nonneg (by linarith)
   have heps : 0 < p.ε' := by
     dsimp [ApproxParams.ε']
@@ -116,10 +116,10 @@ theorem ttc_expected_runtime_theorem3_input_scale {n k : Nat} (hn : 21 ≤ n)
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
-          (TTCRuntime.theorem3RMax D : Real) *
-          (TTCRuntime.theorem3Rho D) ^ 2 *
+          (TTCRuntime.RMax D : Real) *
+          (TTCRuntime.Rho D) ^ 2 *
           TTCRuntime.theorem3InputScale D p *
-          ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
           (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) := by
   dsimp only
   refine (ttc_expected_runtime_theorem3_headline_scale hn F hbounded p prep

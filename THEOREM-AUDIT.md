@@ -51,17 +51,19 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
    volume estimate (`TheoremOneFinal.lean`).
 
 **Theorem 3 constants.** Every constant in Theorem 3's bound is an explicit expression
-in Prelude terms. `TTCRuntime.theorem3ParameterFactor` uses
-`theorem3CV18LogBound n ρ ε' δ' = 14113440000 · (max 1 (log (20 n ρ² / (ε' δ'))))¹⁰` for
-CV18's six scheduled logarithmic factors. arlib-community's
+in Prelude terms: `TTCRuntime.RMax` (r_max), `TTCRuntime.Rho` (ρ),
+`TTCRuntime.ThresholdCap` (⌈Thresh⌉), and `TTCRuntime.polylogFactors`, which collects the
+precision scale, CV18's constant and logarithmic bound
+`theorem3CV18LogBound n ρ ε' δ' = 14113440000 · (max 1 (log (20 n ρ² / (ε' δ'))))¹⁰`, and
+the Hit-and-Run constant `2⁶⁸` with its logarithms. arlib-community's
 `figureOneScheduledLogEnvelope_le` (pinned at `4823189`) bounds them by
 `14113440000 · Λ¹⁰`, and `Analysis/Theorem3ExplicitBound.lean` specialises this to TTC's
 calls via the roundness bound `roundness ≤ 4ρ² + 1`.
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
 `ttc`, and its *expected* operation count is at most
-`T_preprocessing + m · 30 n⁵ r_max ρ² · S · (cap+1)(parameterFactor+1)` with the
-input-only scale `S = 2 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ) + log⁺R_max`
+`T_preprocessing + m · 30 n⁵ r_max ρ² (⌈Thresh⌉+1) / ε² · polylogFactors`, i.e.
+`Õ(m n⁵ r_max ρ² / ε⁴)`, where `polylogFactors` contains the input-only scale `S = 2 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ) + log⁺R_max`
 (`TTCRuntime.theorem3InputScale`), where `γ = 64mn/(ε/96)·√log(384r/ε)` is the
 radius `getprec` requires. The bound no longer mentions the precision `b`:
 `getPrecision_le_theorem3PrecisionBound` shows `getprec` returns

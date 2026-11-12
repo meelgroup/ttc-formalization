@@ -220,11 +220,11 @@ theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 21 ≤ n)
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
-          (TTCRuntime.theorem3RMax D : Real) *
-          (TTCRuntime.theorem3Rho D) ^ 2 *
+          (TTCRuntime.RMax D : Real) *
+          (TTCRuntime.Rho D) ^ 2 *
           TTCRuntime.theorem3PrecisionScale b
             (TTCRuntime.theorem3OuterRadiusMax D) *
-          ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
           (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) := by
   dsimp only
   let D := prep.run F hbounded
@@ -249,11 +249,11 @@ theorem ttc_theorem3_headline_budget_finite {n k : Nat} (hn : 21 ≤ n)
     let b := (prep.choosePrecision D p).value
     (preprocessingOperations : ENNReal) + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
-          (TTCRuntime.theorem3RMax D : Real) *
-          (TTCRuntime.theorem3Rho D) ^ 2 *
+          (TTCRuntime.RMax D : Real) *
+          (TTCRuntime.Rho D) ^ 2 *
           TTCRuntime.theorem3PrecisionScale b
             (TTCRuntime.theorem3OuterRadiusMax D) *
-          ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
           (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) ≠ ⊤ := by
   dsimp only
   exact ENNReal.add_ne_top.mpr ⟨by simp,

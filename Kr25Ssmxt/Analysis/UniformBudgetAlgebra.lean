@@ -39,12 +39,12 @@ theorem theorem3UniformComponentBudget_eq_uniformBudgetNat
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat) :
     theorem3UniformComponentBudget hn D p b 1 =
-      (uniformBudgetNat n (theorem3RMax D) (sampleCap p D.componentCount)
+      (uniformBudgetNat n (RMax D) (ThresholdCap p D.componentCount)
         (theorem3CV18QueryMax hn D p)
         (Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-          (theorem3Rho D) ^ 2 *
+          (Rho D) ^ 2 *
           theorem3SamplerLogEnvelope n b
-            (theorem3Rho D) (theorem3OuterRadiusMax D) p.ε'))
+            (Rho D) (theorem3OuterRadiusMax D) p.ε'))
         (4 * (b * n) + (2 + n * Nat.clog 2
           (Nat.ceil (4 * theorem3OuterRadiusMax D) + 1))) : ENNReal) := by
   unfold theorem3UniformComponentBudget uniformBudgetNat
@@ -55,12 +55,12 @@ theorem theorem3UniformComponentBudget_le_coarse_product
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hm : 0 < D.componentCount) :
     theorem3UniformComponentBudget hn D p b 1 ≤
-      ((30 * n * theorem3RMax D * (sampleCap p D.componentCount + 1) *
+      ((30 * n * RMax D * (ThresholdCap p D.componentCount + 1) *
         (theorem3CV18QueryMax hn D p +
           Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-            (theorem3Rho D) ^ 2 *
+            (Rho D) ^ 2 *
             theorem3SamplerLogEnvelope n b
-              (theorem3Rho D) (theorem3OuterRadiusMax D) p.ε') +
+              (Rho D) (theorem3OuterRadiusMax D) p.ε') +
           (4 * (b * n) + (2 + n * Nat.clog 2
             (Nat.ceil (4 * theorem3OuterRadiusMax D) + 1))) + 1) : Nat) : ENNReal) := by
   rw [theorem3UniformComponentBudget_eq_uniformBudgetNat hn D p b]
@@ -70,7 +70,7 @@ theorem theorem3UniformComponentBudget_le_coarse_product
 theorem theorem3UniformIndexSum_le_parameterFactor
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat) :
-    let rho := theorem3Rho D
+    let rho := Rho D
     let R := theorem3OuterRadiusMax D
     let H := theorem3PrecisionScale b R
     let M := (n : Real) ^ 4 * rho ^ 2 * H
@@ -80,7 +80,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
         (4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))) + 1 ≤
       Nat.ceil (M * theorem3ParameterFactorCV18 hn D p) := by
   dsimp only
-  let rho := theorem3Rho D
+  let rho := Rho D
   let R := theorem3OuterRadiusMax D
   let H := theorem3PrecisionScale b R
   let Lcv := theorem3CV18LogMax hn D p
@@ -92,7 +92,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
   let M := (n : Real) ^ 4 * rho ^ 2 * H
   have hn1 : (1 : Real) ≤ n := by exact_mod_cast (show 1 ≤ n by omega)
   have hrho : 1 ≤ rho := by
-    dsimp [rho, theorem3Rho]
+    dsimp [rho, Rho]
     exact le_max_left _ _
   have hH : 1 ≤ H := by
     dsimp [H, theorem3PrecisionScale]
@@ -224,14 +224,14 @@ theorem theorem3UniformComponentBudget_le_headline_scale
     (hm : 0 < D.componentCount) :
     theorem3UniformComponentBudget hn D p b 1 ≤
       ENNReal.ofReal (30 * (n : Real) ^ 5 *
-        (theorem3RMax D : Real) * (theorem3Rho D) ^ 2 *
+        (RMax D : Real) * (Rho D) ^ 2 *
         theorem3PrecisionScale b (theorem3OuterRadiusMax D) *
-        ((sampleCap p D.componentCount : Real) + 1) *
+        ((ThresholdCap p D.componentCount : Real) + 1) *
         (theorem3ParameterFactorCV18 hn D p + 1)) := by
-  let r := theorem3RMax D
-  let cap := sampleCap p D.componentCount
+  let r := RMax D
+  let cap := ThresholdCap p D.componentCount
   let Q := theorem3CV18QueryMax hn D p
-  let rho := theorem3Rho D
+  let rho := Rho D
   let R := theorem3OuterRadiusMax D
   let H := theorem3PrecisionScale b R
   let L := theorem3ParameterFactorCV18 hn D p
@@ -253,7 +253,7 @@ theorem theorem3UniformComponentBudget_le_headline_scale
       ((30 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) :=
     hbudget.trans (by exact_mod_cast hnat)
   have hrho : 1 ≤ rho := by
-    dsimp [rho, theorem3Rho]
+    dsimp [rho, Rho]
     exact le_max_left _ _
   have hH : 1 ≤ H := by
     dsimp [H, theorem3PrecisionScale]

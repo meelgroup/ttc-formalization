@@ -295,11 +295,11 @@ def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
     roundPointOperations dimension + rejectionTestOperations dimension facets
 
 /-- Maximum number of accepted samples charged per component. -/
-def sampleCap (p : ApproxParams) (componentCount : Nat) : Nat :=
+def ThresholdCap (p : ApproxParams) (componentCount : Nat) : Nat :=
   Nat.ceil (p.Thresh componentCount)
 
 /-- The largest facet count among TTC's normalized components. -/
-def theorem3RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
+def RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
   Finset.univ.sup fun i : Fin D.componentCount =>
     (D.component i).presentation.facetCount
 
@@ -333,7 +333,7 @@ noncomputable def theorem3InputScale {n k : Nat} {F : LRAFormula n k}
 /-- The paper's common radius ratio `ρ = maxᵢ Rᵢ / γᵢ`, protected below by one.
 The `NNReal` finite supremum gives the empty decomposition the canonical value zero before
 the outer maximum is applied. -/
-noncomputable def theorem3Rho {n k : Nat} {F : LRAFormula n k}
+noncomputable def Rho {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) : Real :=
   max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
     Real.toNNReal ((D.component i).outerRadius / (D.component i).inradius) : NNReal) : Real)
@@ -343,17 +343,21 @@ noncomputable def theorem3Rho {n k : Nat} {F : LRAFormula n k}
 noncomputable def theorem3CV18LogBound (n : Nat) (rho epsilonPrime deltaPrime : Real) : Real :=
   14113440000 * (max 1 (Real.log (20 * n * rho ^ 2 / (epsilonPrime * deltaPrime)))) ^ 10
 
-/-- The explicit factors suppressed in the corrected Theorem 3 headline: the CV18 query
-rate's constant `45 · (64 · 10³⁰ + 1)` and logarithmic bound, the Hit-and-Run constant
-`2⁶⁸` with its logarithms, and the thinning counter. -/
-noncomputable def theorem3ParameterFactor {n k : Nat} {F : LRAFormula n k}
+/-- The factors of Theorem 3's bound beyond `m · n⁵ · r_max · ρ² · ⌈Thresh⌉ / ε²`; they are
+polylogarithmic in `n`, `m`, `ρ`, `R_max`, `1/γ_min`, `1/ε` and `1/δ`:
+
+* `theorem3InputScale`, the precision scale `2 + log₁₀⁺ γ + log₁₀⁺ (1/γ_min) + log⁺ R_max`;
+* CV18's query rate: its constant `45 · (64 · 10³⁰ + 1)` (times `576`, from `ε' = ε/12`)
+  and its logarithmic factors `theorem3CV18LogBound`;
+* the Hit-and-Run constant `2⁶⁸` with its logarithms, and the thinning counter. -/
+noncomputable def polylogFactors {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) : Real :=
-  45 * (64 * 10 ^ 30 + 1) *
-      theorem3CV18LogBound n (theorem3Rho D) p.ε' (p.δ' D.componentCount) / (p.ε' / 2) ^ 2 +
-    (2 : Real) ^ 68 *
-      (Real.log 8 + Real.log (4 * theorem3Rho D + 1) +
-        2 * (Real.log 10 + Real.log 6 + 1 +
-          Real.log (1 + 8 / p.ε') + 2)) + 20
+  theorem3InputScale D p *
+    (576 * (45 * (64 * 10 ^ 30 + 1)) *
+        theorem3CV18LogBound n (Rho D) p.ε' (p.δ' D.componentCount) +
+      (2 : Real) ^ 68 *
+        (Real.log 8 + Real.log (4 * Rho D + 1) +
+          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2)) + 21)
 
 end TTCRuntime
 

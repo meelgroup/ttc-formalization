@@ -243,12 +243,12 @@ theorem Decomposition.communityCV18_roundness_le_rho {n k : Nat}
     {F : LRAFormula n k} (D : Decomposition F)
     (i : Fin D.componentCount) :
     CommunityCV18.roundness (D.component i) ≤
-      4 * (TTCRuntime.theorem3Rho D) ^ 2 + 1 := by
+      4 * (TTCRuntime.Rho D) ^ 2 + 1 := by
   let P := D.component i
   have hratio0 : 0 ≤ P.outerRadius / P.inradius :=
     div_nonneg P.outerRadius_nonneg P.inradius_pos.le
   have hsup : P.outerRadius / P.inradius ≤
-      TTCRuntime.theorem3Rho D := by
+      TTCRuntime.Rho D := by
     have hle : Real.toNNReal (P.outerRadius / P.inradius) ≤
         (Finset.univ.sup fun j : Fin D.componentCount =>
           Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius) :
@@ -266,13 +266,13 @@ theorem Decomposition.communityCV18_roundness_le_rho {n k : Nat}
         _ ≤ _ := by exact_mod_cast hle
     exact hleR.trans (le_max_right _ _)
   have hmax : max 1 (P.outerRadius / P.inradius) ≤
-      TTCRuntime.theorem3Rho D :=
+      TTCRuntime.Rho D :=
     max_le (le_max_left _ _) hsup
   have hbase := P.communityCV18_roundness_le_ratio
   have hnonneg : 0 ≤ max 1 (P.outerRadius / P.inradius) := by
     exact le_trans (by norm_num) (le_max_left _ _)
   nlinarith [sq_le_sq₀ hnonneg (by
-    unfold TTCRuntime.theorem3Rho
+    unfold TTCRuntime.Rho
     exact le_trans (by norm_num : (0 : Real) ≤ 1) (le_max_left _ _)) |>.2 hmax]
 
 theorem Decomposition.communityCV18_queryBudget_le_rho_polylog
@@ -283,17 +283,17 @@ theorem Decomposition.communityCV18_queryBudget_le_rho_polylog
       45 * (64 *
         ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
         + 1) *
-        (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (eta / 2) ^ 2 *
+        (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 / (eta / 2) ^ 2 *
         TTCRuntime.theorem3CV18LogEnvelope
           (CommunityCV18.params (by omega) (D.component i) eta delta h) := by
   let q := CommunityCV18.params (by omega) (D.component i) eta delta h
-  have hrho : 1 ≤ TTCRuntime.theorem3Rho D := by
-    unfold TTCRuntime.theorem3Rho
+  have hrho : 1 ≤ TTCRuntime.Rho D := by
+    unfold TTCRuntime.Rho
     exact le_max_left _ _
-  have hround : q.roundness ≤ 4 * (TTCRuntime.theorem3Rho D) ^ 2 + 1 :=
+  have hround : q.roundness ≤ 4 * (TTCRuntime.Rho D) ^ 2 + 1 :=
     D.communityCV18_roundness_le_rho i
   have hbound := CommunityCV18.queryBudget_cast_le_rho_polylog q
-    (TTCRuntime.theorem3Rho D) hrho hround
+    (TTCRuntime.Rho D) hrho hround
   simpa only [q, CommunityCV18.queryBudgetFor, dif_pos h,
     CommunityCV18.params] using hbound
 
@@ -345,7 +345,7 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
   have hcoeff : 0 ≤ 45 * (64 *
       ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
       + 1) *
-      (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 /
+      (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 /
       (p.ε' / 2) ^ 2 := by
     positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
   exact mul_le_mul_of_nonneg_left hlog hcoeff
@@ -374,8 +374,8 @@ theorem TTCRuntime.expectedComponentBudgetTheorem3_le_uniform
       TTCRuntime.theorem3UniformComponentBudget hn D p b cv18NonQueryFactor := by
   have hqueries := D.communityCV18_queryEnvelope_le_max hn p i
   have hfacets : (D.component i).presentation.facetCount ≤
-      TTCRuntime.theorem3RMax D := by
-    unfold TTCRuntime.theorem3RMax
+      TTCRuntime.RMax D := by
+    unfold TTCRuntime.RMax
     exact Finset.le_sup (f := fun j : Fin D.componentCount =>
       (D.component j).presentation.facetCount) (Finset.mem_univ i)
   unfold TTCRuntime.expectedComponentBudgetTheorem3

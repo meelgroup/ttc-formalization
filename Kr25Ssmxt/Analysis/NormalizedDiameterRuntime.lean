@@ -553,7 +553,7 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
     Metric.diam ((D.component i).normalizedHitAndRunBody b p.ε') ≤
-      4 * TTCRuntime.theorem3Rho D := by
+      4 * TTCRuntime.Rho D := by
   let P := D.component i
   have heta0 : 0 < p.ε' := by
     dsimp [ApproxParams.ε']
@@ -566,7 +566,7 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     simpa only [P, decimalScale] using
       (le_max_right _ _).trans (hprecision.split i)
   have hD := P.normalizedHitAndRun_diameter_le_four_ratio hn b heta0 heta1 hprec
-  have hratio : P.outerRadius / P.inradius ≤ TTCRuntime.theorem3Rho D := by
+  have hratio : P.outerRadius / P.inradius ≤ TTCRuntime.Rho D := by
     have hnonneg : 0 ≤ P.outerRadius / P.inradius :=
       div_nonneg P.outerRadius_nonneg P.inradius_pos.le
     have hle : Real.toNNReal (P.outerRadius / P.inradius) ≤
@@ -588,7 +588,7 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
   calc
     _ ≤ 4 * P.outerRadius / P.inradius := by simpa only [P] using hD
     _ = 4 * (P.outerRadius / P.inradius) := by ring
-    _ ≤ 4 * TTCRuntime.theorem3Rho D := by gcongr
+    _ ≤ 4 * TTCRuntime.Rho D := by gcongr
 
 theorem Decomposition.normalizedHitAndRun_warmness_le_rho_pow
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
@@ -597,10 +597,10 @@ theorem Decomposition.normalizedHitAndRun_warmness_le_rho_pow
     (i : Fin D.componentCount) :
     (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal ≤
-        (4 * TTCRuntime.theorem3Rho D + 1) ^ n := by
+        (4 * TTCRuntime.Rho D + 1) ^ n := by
   apply (D.component i).normalizedHitAndRun_warmness_le_diameter_pow
-    (by omega) b p.ε' (4 * TTCRuntime.theorem3Rho D)
-  · unfold TTCRuntime.theorem3Rho
+    (by omega) b p.ε' (4 * TTCRuntime.Rho D)
+  · unfold TTCRuntime.Rho
     positivity
   · exact D.normalizedHitAndRun_diameter_le_four_rho
       (by omega) b p hprecision i
@@ -612,7 +612,7 @@ theorem Decomposition.normalizedHitAndRun_log_warmness_le
     (i : Fin D.componentCount) :
     Real.log ((volume ((D.component i).normalizedHitAndRunBody b p.ε') /
       volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) ≤
-      (n : Real) * Real.log (4 * TTCRuntime.theorem3Rho D + 1) := by
+      (n : Real) * Real.log (4 * TTCRuntime.Rho D + 1) := by
   have hM0 := (D.component i).normalizedHitAndRun_warmness_ge_one b p.ε'
   have hM := D.normalizedHitAndRun_warmness_le_rho_pow hn b p hprecision i
   have hlog := Real.log_le_log (by linarith : 0 <
@@ -629,13 +629,13 @@ theorem Decomposition.normalizedHitAndRunSteps_le_rho_deadline
     (i : Fin D.componentCount) :
     normalizedHitAndRunSteps (D.component i) b p.ε' ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-        (TTCRuntime.theorem3Rho D) ^ 2 *
+        (TTCRuntime.Rho D) ^ 2 *
         Real.log (8 *
           (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
             volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
           (hitAndRunTolerance (D.component i) b p.ε') ^ 2)) := by
   let d := Metric.diam ((D.component i).normalizedHitAndRunBody b p.ε')
-  let rho := TTCRuntime.theorem3Rho D
+  let rho := TTCRuntime.Rho D
   let M := (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
     volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
   let nu := hitAndRunTolerance (D.component i) b p.ε'
@@ -647,7 +647,7 @@ theorem Decomposition.normalizedHitAndRunSteps_le_rho_deadline
     (by omega) b p hprecision i
   have hd0 : 0 ≤ d := by exact Metric.diam_nonneg
   have hrho : 0 ≤ rho := by
-    dsimp [rho, TTCRuntime.theorem3Rho]
+    dsimp [rho, TTCRuntime.Rho]
     exact le_trans (by norm_num : (0 : Real) ≤ 1) (le_max_left _ _)
   have hsq : d ^ 2 ≤ (4 * rho) ^ 2 :=
     (sq_le_sq₀ hd0 (by positivity)).2 hd
@@ -673,7 +673,7 @@ theorem Decomposition.normalizedHitAndRun_deadline_log_le
       (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
         volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
       (hitAndRunTolerance (D.component i) b p.ε') ^ 2) ≤
-      Real.log 8 + (n : Real) * Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
+      Real.log 8 + (n : Real) * Real.log (4 * TTCRuntime.Rho D + 1) +
         2 * Real.log (1 / hitAndRunTolerance (D.component i) b p.ε') := by
   let M := (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
     volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
@@ -702,9 +702,9 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     (i : Fin D.componentCount) :
     normalizedHitAndRunSteps (D.component i) b p.ε' ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-        (TTCRuntime.theorem3Rho D) ^ 2 *
+        (TTCRuntime.Rho D) ^ 2 *
         TTCRuntime.theorem3SamplerLogEnvelope n b
-          (TTCRuntime.theorem3Rho D)
+          (TTCRuntime.Rho D)
           (TTCRuntime.theorem3OuterRadiusMax D) p.ε') := by
   have hstep := D.normalizedHitAndRunSteps_le_rho_deadline hn b p hprecision i
   have hlog := D.normalizedHitAndRun_deadline_log_le hn b p hprecision i
@@ -714,13 +714,13 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
         (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
           volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
         (hitAndRunTolerance (D.component i) b p.ε') ^ 2) ≤
-      TTCRuntime.theorem3SamplerLogEnvelope n b (TTCRuntime.theorem3Rho D)
+      TTCRuntime.theorem3SamplerLogEnvelope n b (TTCRuntime.Rho D)
         (TTCRuntime.theorem3OuterRadiusMax D) p.ε' := by
     unfold TTCRuntime.theorem3SamplerLogEnvelope
     linarith
   exact hstep.trans (Nat.ceil_mono (by
     have hfactor : 0 ≤ (2 : Real) ^ 68 * (n : Real) ^ 2 *
-        (TTCRuntime.theorem3Rho D) ^ 2 := by positivity
+        (TTCRuntime.Rho D) ^ 2 := by positivity
     exact mul_le_mul_of_nonneg_left henvelope hfactor))
 
 theorem TTCRuntime.expectedComponentBudgetLinearPrecision_le_geometric
@@ -867,22 +867,22 @@ theorem Decomposition.normalizedHitAndRunSteps_le_theorem3_polylog
     (i : Fin D.componentCount) :
     normalizedHitAndRunSteps (D.component i) b p.ε' ≤
       Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 4 *
-        (TTCRuntime.theorem3Rho D) ^ 2 *
+        (TTCRuntime.Rho D) ^ 2 *
         TTCRuntime.theorem3PrecisionScale b
           (TTCRuntime.theorem3OuterRadiusMax D) *
-        (Real.log 8 + Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
+        (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
           2 * (Real.log 10 + Real.log 6 + 1 +
             Real.log (1 + 8 / p.ε') + 2))) := by
   have hstep := D.normalizedHitAndRunSteps_le_explicitEnvelope hn b p hprecision i
   have henv := theorem3_samplerLogEnvelope_le_dimension_precision_polylog
-    n b (by omega : 1 ≤ n) (TTCRuntime.theorem3Rho D)
+    n b (by omega : 1 ≤ n) (TTCRuntime.Rho D)
     (TTCRuntime.theorem3OuterRadiusMax D) p.ε'
-    (by unfold TTCRuntime.theorem3Rho; exact le_max_left _ _)
+    (by unfold TTCRuntime.Rho; exact le_max_left _ _)
     (by dsimp [ApproxParams.ε']; positivity [p.epsilon_pos])
   apply hstep.trans
   apply Nat.ceil_mono
   have hfactor : 0 ≤ (2 : Real) ^ 68 * (n : Real) ^ 2 *
-      (TTCRuntime.theorem3Rho D) ^ 2 := by positivity
+      (TTCRuntime.Rho D) ^ 2 := by positivity
   have hmul := mul_le_mul_of_nonneg_left henv hfactor
   nlinarith [sq_nonneg (n : Real)]
 

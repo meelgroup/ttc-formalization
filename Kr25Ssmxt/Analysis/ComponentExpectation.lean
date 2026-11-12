@@ -591,14 +591,14 @@ private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) 
         (P.volumeClipUpper p.ε'))) (p.Thresh m) +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations state.X.card +
-  (TTCRuntime.sampleCap p m : ENNReal) *
+  (TTCRuntime.ThresholdCap p m : ENNReal) *
     (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
       (normalizedHitAndRunSteps P b p.ε') +
       TTCRuntime.appendCopyOperations)
 
 private noncomputable def componentUniformBudget {n : Nat} (p : ApproxParams)
     (m b : Nat) (P : PolytopeData n) : ENNReal :=
-  let cap := TTCRuntime.sampleCap p m
+  let cap := TTCRuntime.ThresholdCap p m
   let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
     (max (P.volumeClipLower p.ε')
       (P.volumeClipUpper p.ε'))
@@ -767,7 +767,7 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
               (secondThinned.2 * TTCRuntime.appendCopyOperations))) ≤
       (∫⁻ result, (result.2 : ENNReal) ∂
         ttcPseudocode.secondLoopWithCost state pending (p.Thresh D.componentCount)) +
-      (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+      (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
         (2 * TTCRuntime.samplingAttemptOperations n
           (D.component i).presentation.facetCount
           (normalizedHitAndRunSteps (D.component i) b p.ε') +
@@ -820,19 +820,19 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
       ∫⁻ result, (result.1.2 : ENNReal) * stepCost ∂
         ttcPseudocode.secondLoopWithCost state pending threshold := by
       exact lintegral_mono (fun result => hnextCost result.1)
-    _ ≤ ∫⁻ _result, (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+    _ ≤ ∫⁻ _result, (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
         stepCost ∂ttcPseudocode.secondLoopWithCost state pending threshold := by
       apply lintegral_mono_ae
       filter_upwards [countThinWithCost_population_le_ae state pending
         threshold (p.threshold_pos D.componentCount).le] with result hguard
-      have hcount : result.1.2 ≤ TTCRuntime.sampleCap p D.componentCount := by
+      have hcount : result.1.2 ≤ TTCRuntime.ThresholdCap p D.componentCount := by
         have hreal : (result.1.2 : Real) ≤ threshold := by
           have hnonneg : (0 : Real) ≤ result.1.1.X.card := by positivity
           exact (le_add_of_nonneg_left hnonneg).trans
             (by simpa only [Nat.cast_add] using hguard)
         exact_mod_cast hreal.trans (Nat.le_ceil threshold)
       exact mul_le_mul_of_nonneg_right (Nat.cast_le.mpr hcount) (by positivity)
-    _ ≤ (TTCRuntime.sampleCap p D.componentCount : ENNReal) * stepCost := by
+    _ ≤ (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) * stepCost := by
       simp only [lintegral_const]
       exact mul_le_of_le_one_right (by positivity)
         (countThinWithCost_mass_le_one state pending threshold)
@@ -891,13 +891,13 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
                   (secondThinned.2 * TTCRuntime.appendCopyOperations)))) ≤
       TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations state.X.card +
-        (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+        (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
           (2 * TTCRuntime.samplingAttemptOperations n
             (D.component i).presentation.facetCount
             (normalizedHitAndRunSteps (D.component i) b p.ε') +
             TTCRuntime.appendCopyOperations) := by
   let threshold := p.Thresh D.componentCount
-  let sampleBudget : ENNReal := (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+  let sampleBudget : ENNReal := (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
     (2 * TTCRuntime.samplingAttemptOperations n
       (D.component i).presentation.facetCount
       (normalizedHitAndRunSteps (D.component i) b p.ε') +
@@ -979,13 +979,13 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
       ttcPseudocode.firstLoopCost state intensity (p.Thresh D.componentCount) +
         TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations state.X.card +
-        (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+        (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
           (2 * TTCRuntime.samplingAttemptOperations n
             (D.component i).presentation.facetCount
             (normalizedHitAndRunSteps (D.component i) b p.ε') +
             TTCRuntime.appendCopyOperations) := by
   let threshold := p.Thresh D.componentCount
-  let sampleBudget : ENNReal := (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+  let sampleBudget : ENNReal := (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
     (2 * TTCRuntime.samplingAttemptOperations n
       (D.component i).presentation.facetCount
       (normalizedHitAndRunSteps (D.component i) b p.ε') +
@@ -1141,7 +1141,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
         ttcPseudocode.firstLoopCost deleted intensity (p.Thresh D.componentCount) +
         TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations deleted.X.card +
-        (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+        (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
           (2 * TTCRuntime.samplingAttemptOperations n
             (D.component i).presentation.facetCount
             (normalizedHitAndRunSteps (D.component i) b p.ε') +
@@ -1193,7 +1193,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
           (p.Thresh D.componentCount) : ENNReal) +
           TTCRuntime.poissonDrawOperations +
           4 * TTCRuntime.countThinningRoundOperations deleted.X.card +
-          (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+          (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
             (2 * TTCRuntime.samplingAttemptOperations n
               (D.component i).presentation.facetCount
               (normalizedHitAndRunSteps (D.component i) b p.ε') +
@@ -1263,7 +1263,7 @@ theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
         ttcPseudocode.firstLoopCost deleted intensity (p.Thresh D.componentCount) +
         TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations deleted.X.card +
-        (TTCRuntime.sampleCap p D.componentCount : ENNReal) *
+        (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
           (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
             (normalizedHitAndRunSteps P b p.ε') +
             TTCRuntime.appendCopyOperations) := hbase
@@ -1279,7 +1279,7 @@ private theorem componentNonVolumeBudget_le_uniform {n : Nat}
     (hrate : state.p ≤ 1) :
     componentNonVolumeBudget p m b P state ≤
       componentUniformBudget p m b P := by
-  let cap := TTCRuntime.sampleCap p m
+  let cap := TTCRuntime.ThresholdCap p m
   let deleted := state.removeComponent P
   let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
     (max (P.volumeClipLower p.ε')

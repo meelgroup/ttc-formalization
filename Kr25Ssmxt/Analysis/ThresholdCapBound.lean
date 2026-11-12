@@ -58,15 +58,15 @@ theorem ApproxParams.threshold_le_explicit_parameter_envelope
 
 theorem TTCRuntime.sampleCap_le_explicit_parameter_envelope
     (p : ApproxParams) (m : Nat) (hm : 1 ≤ m) :
-    TTCRuntime.sampleCap p m ≤
+    TTCRuntime.ThresholdCap p m ≤
       Nat.ceil (27 * Real.log (24 / p.delta) / p.ε' ^ 2 +
         15 * (Real.log (6 / p.delta) + Real.log m)) := by
-  unfold TTCRuntime.sampleCap
+  unfold TTCRuntime.ThresholdCap
   exact Nat.ceil_mono (p.threshold_le_explicit_parameter_envelope m hm)
 
 theorem TTCRuntime.sampleCap_cast_le_explicit_parameter_envelope
     (p : ApproxParams) (m : Nat) (hm : 1 ≤ m) :
-    (TTCRuntime.sampleCap p m : Real) ≤
+    (TTCRuntime.ThresholdCap p m : Real) ≤
       1 + 27 * Real.log (24 / p.delta) / p.ε' ^ 2 +
         15 * (Real.log (6 / p.delta) + Real.log m) := by
   have hcap := TTCRuntime.sampleCap_le_explicit_parameter_envelope p m hm
@@ -86,7 +86,7 @@ theorem TTCRuntime.sampleCap_cast_le_explicit_parameter_envelope
   have harg : 0 ≤
       27 * Real.log (24 / p.delta) / p.ε' ^ 2 +
         15 * (Real.log (6 / p.delta) + Real.log m) := by positivity
-  have hcapR : (TTCRuntime.sampleCap p m : Real) ≤
+  have hcapR : (TTCRuntime.ThresholdCap p m : Real) ≤
       (Nat.ceil (27 * Real.log (24 / p.delta) / p.ε' ^ 2 +
         15 * (Real.log (6 / p.delta) + Real.log m)) : Real) := by
     exact_mod_cast hcap

@@ -50,7 +50,7 @@ noncomputable def TTCRuntime.theorem3ParameterFactorCV18
       ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant + 1) *
       TTCRuntime.theorem3CV18LogMax hn D p / (p.ε' / 2) ^ 2 +
     (2 : Real) ^ 68 *
-      (Real.log 8 + Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
+      (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
         2 * (Real.log 10 + Real.log 6 + 1 +
           Real.log (1 + 8 / p.ε') + 2)) + 20
 
@@ -64,7 +64,7 @@ noncomputable def TTCRuntime.theorem3CV18QueryEnvelope
   Nat.ceil (45 * (64 *
     ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
     + 1) *
-    (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
+    (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogEnvelope q)
 
 /-- Uniform CV18 query cap after maximizing only its logarithmic product
@@ -75,7 +75,7 @@ noncomputable def TTCRuntime.theorem3CV18QueryMax
   Nat.ceil (45 * (64 *
     ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
     + 1) *
-    (n : Real) ^ 3 * (TTCRuntime.theorem3Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
+    (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogMax hn D p)
 
 /-- Explicit logarithmic envelope for the normalized TTC sampler deadline.
@@ -103,7 +103,7 @@ whole run's expected cost in `Analysis/ComponentExpectation`. -/
 noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
-  let cap := TTCRuntime.sampleCap p m
+  let cap := TTCRuntime.ThresholdCap p m
   let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
     (max (P.volumeClipLower p.ε')
       (P.volumeClipUpper p.ε'))
@@ -128,7 +128,7 @@ The remaining volume logarithm is the clipped geometric volume bound. -/
 noncomputable def TTCRuntime.expectedComponentBudgetLinearPrecision {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
-  let cap := TTCRuntime.sampleCap p m
+  let cap := TTCRuntime.ThresholdCap p m
   let v := max (P.volumeClipLower p.ε')
     (P.volumeClipUpper p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
@@ -154,13 +154,13 @@ noncomputable def TTCRuntime.expectedComponentBudgetGeometric
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
-  let cap := TTCRuntime.sampleCap p D.componentCount
+  let cap := TTCRuntime.ThresholdCap p D.componentCount
   let v := max (P.volumeClipLower p.ε')
     (P.volumeClipUpper p.ε')
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-    (TTCRuntime.theorem3Rho D) ^ 2 *
+    (TTCRuntime.Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
-      (TTCRuntime.theorem3Rho D)
+      (TTCRuntime.Rho D)
       (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε'
@@ -185,11 +185,11 @@ noncomputable def TTCRuntime.expectedComponentBudgetGeometricClip
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
-  let cap := TTCRuntime.sampleCap p D.componentCount
+  let cap := TTCRuntime.ThresholdCap p D.componentCount
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-    (TTCRuntime.theorem3Rho D) ^ 2 *
+    (TTCRuntime.Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
-      (TTCRuntime.theorem3Rho D)
+      (TTCRuntime.Rho D)
       (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε'
@@ -215,12 +215,12 @@ noncomputable def TTCRuntime.expectedComponentBudgetTheorem3
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
-  let cap := TTCRuntime.sampleCap p D.componentCount
+  let cap := TTCRuntime.ThresholdCap p D.componentCount
   let queries := TTCRuntime.theorem3CV18QueryEnvelope hn D p i
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-    (TTCRuntime.theorem3Rho D) ^ 2 *
+    (TTCRuntime.Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
-      (TTCRuntime.theorem3Rho D)
+      (TTCRuntime.Rho D)
       (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount queries +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
@@ -241,13 +241,13 @@ noncomputable def TTCRuntime.theorem3UniformComponentBudget
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat) :
     ENNReal :=
-  let r := TTCRuntime.theorem3RMax D
-  let cap := TTCRuntime.sampleCap p D.componentCount
+  let r := TTCRuntime.RMax D
+  let cap := TTCRuntime.ThresholdCap p D.componentCount
   let queries := TTCRuntime.theorem3CV18QueryMax hn D p
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-    (TTCRuntime.theorem3Rho D) ^ 2 *
+    (TTCRuntime.Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
-      (TTCRuntime.theorem3Rho D)
+      (TTCRuntime.Rho D)
       (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
   (TTCRuntime.membershipQueryOperations n r queries +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n r (queries + 1) :

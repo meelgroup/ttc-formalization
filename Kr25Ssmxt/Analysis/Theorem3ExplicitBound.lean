@@ -15,6 +15,18 @@ namespace Kr25Ssmxt
 
 open MeasureTheory
 
+/-- The explicit factors suppressed in the corrected Theorem 3 headline: the CV18 query
+rate's constant `45 · (64 · 10³⁰ + 1)` and logarithmic bound, the Hit-and-Run constant
+`2⁶⁸` with its logarithms, and the thinning counter. -/
+noncomputable def TTCRuntime.theorem3ParameterFactor {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  45 * (64 * 10 ^ 30 + 1) *
+      TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε' (p.δ' D.componentCount) / (p.ε' / 2) ^ 2 +
+    (2 : Real) ^ 68 *
+      (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
+        2 * (Real.log 10 + Real.log 6 + 1 +
+          Real.log (1 + 8 / p.ε') + 2)) + 20
+
 /-- TTC's name for CV18's scheduled logarithmic product is arlib-community's. -/
 theorem TTCRuntime.theorem3CV18LogEnvelope_eq
     (q : ArlibCommunity.Algorithms.CV18.VolumeParams) :
@@ -35,10 +47,10 @@ theorem TTCRuntime.theorem3CV18LogEnvelope_params_le {n k : Nat} (hn : 21 ≤ n)
     (h : CommunityCV18.AdmissibleCV18Request p.ε' (p.δ' D.componentCount)) :
     TTCRuntime.theorem3CV18LogEnvelope
         (CommunityCV18.params (by omega) (D.component i) p.ε' (p.δ' D.componentCount) h) ≤
-      TTCRuntime.theorem3CV18LogBound n (TTCRuntime.theorem3Rho D) p.ε'
+      TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε'
         (p.δ' D.componentCount) := by
   set q := CommunityCV18.params (by omega) (D.component i) p.ε' (p.δ' D.componentCount) h
-  set rho := TTCRuntime.theorem3Rho D
+  set rho := TTCRuntime.Rho D
   have hrho : 1 ≤ rho := le_max_left _ _
   have he : 0 < p.ε' := h.1
   have hd : 0 < p.δ' D.componentCount := h.2.2.1
@@ -78,9 +90,9 @@ bound. -/
 theorem TTCRuntime.theorem3CV18LogMax_le {n k : Nat} (hn : 21 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams) :
     TTCRuntime.theorem3CV18LogMax hn D p ≤
-      TTCRuntime.theorem3CV18LogBound n (TTCRuntime.theorem3Rho D) p.ε'
+      TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε'
         (p.δ' D.componentCount) := by
-  have hB := TTCRuntime.theorem3CV18LogBound_nonneg n (TTCRuntime.theorem3Rho D) p.ε'
+  have hB := TTCRuntime.theorem3CV18LogBound_nonneg n (TTCRuntime.Rho D) p.ε'
     (p.δ' D.componentCount)
   unfold TTCRuntime.theorem3CV18LogMax
   rw [← Real.coe_toNNReal _ hB]
@@ -109,6 +121,52 @@ theorem TTCRuntime.theorem3InputScale_nonneg {n k : Nat} {F : LRAFormula n k}
   have h3 := le_max_left 0 (Real.log (TTCRuntime.theorem3OuterRadiusMax D))
   linarith
 
+/-- The explicit factor, after pulling out `ε⁻²`, is `polylogFactors`. -/
+theorem TTCRuntime.inputScale_mul_factor_le {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) :
+    TTCRuntime.theorem3InputScale D p * (TTCRuntime.theorem3ParameterFactor D p + 1) ≤
+      TTCRuntime.polylogFactors D p / p.epsilon ^ 2 := by
+  set L := TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε' (p.δ' D.componentCount)
+  set H := (2 : Real) ^ 68 *
+    (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
+      2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2))
+  set A : Real := 45 * (64 * 10 ^ 30 + 1)
+  have hS := TTCRuntime.theorem3InputScale_nonneg D p
+  have hL : 0 ≤ L := TTCRuntime.theorem3CV18LogBound_nonneg _ _ _ _
+  have he := p.epsilon_pos
+  have he1 := p.epsilon_le_one
+  have hrho : 1 ≤ TTCRuntime.Rho D := le_max_left _ _
+  have hε' : 0 < p.ε' := by unfold ApproxParams.ε'; positivity
+  have hH : 0 ≤ H := by
+    have h8 : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
+    have hr : 0 ≤ Real.log (4 * TTCRuntime.Rho D + 1) := Real.log_nonneg (by linarith)
+    have h10 : 0 ≤ Real.log 10 := Real.log_nonneg (by norm_num)
+    have h6 : 0 ≤ Real.log 6 := Real.log_nonneg (by norm_num)
+    have hε : 0 ≤ Real.log (1 + 8 / p.ε') := Real.log_nonneg (by
+      have : 0 ≤ 8 / p.ε' := by positivity
+      linarith)
+    positivity
+  have hA : 0 ≤ A := by positivity
+  have he2 : 0 < p.epsilon ^ 2 := by positivity
+  have he21 : p.epsilon ^ 2 ≤ 1 := pow_le_one₀ he.le he1
+  have hfac : TTCRuntime.theorem3ParameterFactor D p + 1 ≤
+      (576 * A * L + H + 21) / p.epsilon ^ 2 := by
+    have hdef : TTCRuntime.theorem3ParameterFactor D p = A * L / (p.ε' / 2) ^ 2 + H + 20 := rfl
+    have hq : (p.ε' / 2) ^ 2 = p.epsilon ^ 2 / 576 := by unfold ApproxParams.ε'; ring
+    rw [hdef, hq, le_div_iff₀ he2]
+    have : A * L / (p.epsilon ^ 2 / 576) * p.epsilon ^ 2 = 576 * A * L := by
+      field_simp
+    have hHe : (H + 21) * p.epsilon ^ 2 ≤ H + 21 := by
+      have := mul_le_mul_of_nonneg_left he21 (by linarith : (0 : Real) ≤ H + 21)
+      linarith
+    nlinarith
+  calc TTCRuntime.theorem3InputScale D p * (TTCRuntime.theorem3ParameterFactor D p + 1)
+      ≤ TTCRuntime.theorem3InputScale D p * ((576 * A * L + H + 21) / p.epsilon ^ 2) :=
+        mul_le_mul_of_nonneg_left hfac hS
+    _ = TTCRuntime.polylogFactors D p / p.epsilon ^ 2 := by
+        unfold TTCRuntime.polylogFactors
+        ring
+
 /-- Theorem 3 with every constant explicit in Prelude terms. -/
 theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
@@ -119,17 +177,37 @@ theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
       ttcWithCost hn F hbounded p prep preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
-          (TTCRuntime.theorem3RMax D : Real) *
-          (TTCRuntime.theorem3Rho D) ^ 2 *
-          TTCRuntime.theorem3InputScale D p *
-          ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
-          (TTCRuntime.theorem3ParameterFactor D p + 1)) := by
+          (TTCRuntime.RMax D : Real) *
+          (TTCRuntime.Rho D) ^ 2 *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) / p.epsilon ^ 2 *
+          TTCRuntime.polylogFactors D p) := by
   dsimp only
   refine (ttc_expected_runtime_theorem3_input_scale hn F hbounded p prep
     preprocessingOperations).trans ?_
-  have hpf := TTCRuntime.theorem3ParameterFactorCV18_le hn (prep.run F hbounded) p
-  have hscale := TTCRuntime.theorem3InputScale_nonneg (prep.run F hbounded) p
-  have hparam := theorem3ParameterFactor_add_one_nonneg hn (prep.run F hbounded) p
-  gcongr
+  set D := prep.run F hbounded
+  have hpf := TTCRuntime.theorem3ParameterFactorCV18_le hn D p
+  have hS := TTCRuntime.theorem3InputScale_nonneg D p
+  have hkey : TTCRuntime.theorem3InputScale D p *
+      (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1) ≤
+      TTCRuntime.polylogFactors D p / p.epsilon ^ 2 :=
+    (mul_le_mul_of_nonneg_left (by linarith) hS).trans
+      (TTCRuntime.inputScale_mul_factor_le D p)
+  have hC : 0 ≤ 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+      ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) := by positivity
+  refine add_le_add le_rfl (mul_le_mul' le_rfl (ENNReal.ofReal_le_ofReal ?_))
+  calc 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+        TTCRuntime.theorem3InputScale D p *
+        ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
+        (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)
+      = (30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1)) *
+        (TTCRuntime.theorem3InputScale D p *
+          (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) := by ring
+    _ ≤ (30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1)) *
+        (TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := mul_le_mul_of_nonneg_left hkey hC
+    _ = 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) / p.epsilon ^ 2 *
+          TTCRuntime.polylogFactors D p := by ring
 
 end Kr25Ssmxt

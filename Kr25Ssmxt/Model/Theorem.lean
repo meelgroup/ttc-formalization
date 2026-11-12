@@ -76,11 +76,10 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
         preprocessingOperations 1) ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
-          (TTCRuntime.theorem3RMax D : Real) *
-          (TTCRuntime.theorem3Rho D) ^ 2 *
-          TTCRuntime.theorem3InputScale D p *
-          ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
-          (TTCRuntime.theorem3ParameterFactor D p + 1)) := by
+          (TTCRuntime.RMax D : Real) *
+          (TTCRuntime.Rho D) ^ 2 *
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) / p.epsilon ^ 2 *
+          TTCRuntime.polylogFactors D p) := by
   dsimp only
   exact ⟨community_costed_output_fst hn F hbounded p prep
     preprocessingOperations 1,

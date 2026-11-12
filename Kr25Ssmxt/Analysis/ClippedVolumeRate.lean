@@ -9,12 +9,12 @@ namespace Kr25Ssmxt
 
 theorem Decomposition.theorem3RMax_pos {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (hm : 0 < D.componentCount) :
-    0 < TTCRuntime.theorem3RMax D := by
+    0 < TTCRuntime.RMax D := by
   let i : Fin D.componentCount := ⟨0, hm⟩
   have hfacets := (D.component i).facets_pos
   have hle : (D.component i).presentation.facetCount ≤
-      TTCRuntime.theorem3RMax D := by
-    unfold TTCRuntime.theorem3RMax
+      TTCRuntime.RMax D := by
+    unfold TTCRuntime.RMax
     exact Finset.le_sup (f := fun j : Fin D.componentCount =>
       (D.component j).presentation.facetCount) (Finset.mem_univ i)
   omega
