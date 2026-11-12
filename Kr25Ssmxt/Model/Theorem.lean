@@ -2,6 +2,7 @@ import Kr25Ssmxt.Analysis.CommunityCV18VolumeProvider
 import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
 import Kr25Ssmxt.Analysis.RuntimeBounds
 import Kr25Ssmxt.Analysis.GetPrecisionBound
+import Kr25Ssmxt.Analysis.Theorem3ExplicitBound
 import Kr25Ssmxt.Analysis.RunMarginal
 import Kr25Ssmxt.Analysis.TheoremOneFinal
 
@@ -29,7 +30,9 @@ Where the definitions are:
 * Theorem 3 (corrected): the charged execution has exactly the same output law, and its
   expected operation count has the explicit input-only scale
   `m n⁵ ρ² r_max (2 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ) + log⁺ R_max)`.
-  A Lean polylogarithmic estimate for the imported CV18 scheduled factors remains open.
+  Every constant is explicit in `n`, `m`, `ρ`, `r_max`, `R_max`, `ε` and `δ`
+  (`Model/Prelude.lean`); CV18's scheduled logarithmic factors enter through arlib-community's
+  bound `figureOneScheduledLogEnvelope_le`.
 -/
 
 /-- Theorem 1 for the current paper TTC program: with the concrete
@@ -77,11 +80,11 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
           (TTCRuntime.theorem3Rho D) ^ 2 *
           TTCRuntime.theorem3InputScale D p *
           ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
-          (TTCRuntime.theorem3ParameterFactor hn D p + 1)) := by
+          (TTCRuntime.theorem3ParameterFactor D p + 1)) := by
   dsimp only
   exact ⟨community_costed_output_fst hn F hbounded p prep
     preprocessingOperations 1,
-    ttc_expected_runtime_theorem3_input_scale hn F hbounded p prep
+    ttc_expected_runtime_theorem3_explicit hn F hbounded p prep
       preprocessingOperations⟩
 
 #krModelClosureOfType ttc_theorem1_volume_accuracy

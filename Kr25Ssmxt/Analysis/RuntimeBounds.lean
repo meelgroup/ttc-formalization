@@ -225,7 +225,7 @@ theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 21 ≤ n)
           TTCRuntime.theorem3PrecisionScale b
             (TTCRuntime.theorem3OuterRadiusMax D) *
           ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
-          (TTCRuntime.theorem3ParameterFactor hn D p + 1)) := by
+          (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) := by
   dsimp only
   let D := prep.run F hbounded
   let b := (prep.choosePrecision D p).value
@@ -254,7 +254,7 @@ theorem ttc_theorem3_headline_budget_finite {n k : Nat} (hn : 21 ≤ n)
           TTCRuntime.theorem3PrecisionScale b
             (TTCRuntime.theorem3OuterRadiusMax D) *
           ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
-          (TTCRuntime.theorem3ParameterFactor hn D p + 1)) ≠ ⊤ := by
+          (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) ≠ ⊤ := by
   dsimp only
   exact ENNReal.add_ne_top.mpr ⟨by simp,
     ENNReal.mul_ne_top (by simp) ENNReal.ofReal_ne_top⟩

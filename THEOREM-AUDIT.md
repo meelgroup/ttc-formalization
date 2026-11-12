@@ -7,7 +7,7 @@ contains nothing the public statements do not use.
 
 ## Current status (2026-11-07, revised)
 
-**Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `db1f401`
+**Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `4823189`
 (`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
 with no errors and no `sorry`. Both public theorems depend only on `propext`,
 `Classical.choice` and `Quot.sound`.
@@ -49,6 +49,14 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
 4. Integrating over the CV18 outcome vector adds the `δ/4` CV18 failure budget,
    and the lattice comparison turns the `ε/2` lattice estimate into an `ε`
    volume estimate (`TheoremOneFinal.lean`).
+
+**Theorem 3 constants.** Every constant in Theorem 3's bound is an explicit expression
+in Prelude terms. `TTCRuntime.theorem3ParameterFactor` uses
+`theorem3CV18LogBound n ρ ε' δ' = 14113440000 · (max 1 (log (20 n ρ² / (ε' δ'))))¹⁰` for
+CV18's six scheduled logarithmic factors. arlib-community's
+`figureOneScheduledLogEnvelope_le` (pinned at `4823189`) bounds them by
+`14113440000 · Λ¹⁰`, and `Analysis/Theorem3ExplicitBound.lean` specialises this to TTC's
+calls via the roundness bound `roundness ≤ 4ρ² + 1`.
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
 `ttc`, and its *expected* operation count is at most
@@ -122,9 +130,6 @@ names.
   are dropped.
 
 **Open items.**
-- A Lean proof that the six scheduled CV18 logarithmic factors in
-  `theorem3ParameterFactor` are polylogarithmic in the public parameters (needed
-  only for the paper's `Õ` notation; the exact bound is proved).
 - Boolean abstraction and DNF conversion (Theorem 2).
 - Paper edits: state boundedness; state Theorem 3 in expectation with the
   precision factor and the second-loop and `getprec`/decomposition costs; add

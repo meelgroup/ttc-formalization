@@ -78,7 +78,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
         Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
           theorem3SamplerLogEnvelope n b rho R p.ε') +
         (4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))) + 1 ≤
-      Nat.ceil (M * theorem3ParameterFactor hn D p) := by
+      Nat.ceil (M * theorem3ParameterFactorCV18 hn D p) := by
   dsimp only
   let rho := theorem3Rho D
   let R := theorem3OuterRadiusMax D
@@ -195,7 +195,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
         Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
           theorem3SamplerLogEnvelope n b rho R p.ε') +
         (4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))) + 1 : Nat) : Real) ≤
-        M * theorem3ParameterFactor hn D p := by
+        M * theorem3ParameterFactorCV18 hn D p := by
     change ((theorem3CV18QueryMax hn D p +
         Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
           theorem3SamplerLogEnvelope n b rho R p.ε') +
@@ -214,7 +214,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
     have hsum1 := add_le_add (add_le_add (add_le_add hQ' hS) hK')
       (le_refl (1 : Real))
     nlinarith [hM]
-  have hfinal := hsum.trans (Nat.le_ceil (M * theorem3ParameterFactor hn D p))
+  have hfinal := hsum.trans (Nat.le_ceil (M * theorem3ParameterFactorCV18 hn D p))
   dsimp [rho, R, H, M] at hfinal ⊢
   exact_mod_cast hfinal
 
@@ -227,14 +227,14 @@ theorem theorem3UniformComponentBudget_le_headline_scale
         (theorem3RMax D : Real) * (theorem3Rho D) ^ 2 *
         theorem3PrecisionScale b (theorem3OuterRadiusMax D) *
         ((sampleCap p D.componentCount : Real) + 1) *
-        (theorem3ParameterFactor hn D p + 1)) := by
+        (theorem3ParameterFactorCV18 hn D p + 1)) := by
   let r := theorem3RMax D
   let cap := sampleCap p D.componentCount
   let Q := theorem3CV18QueryMax hn D p
   let rho := theorem3Rho D
   let R := theorem3OuterRadiusMax D
   let H := theorem3PrecisionScale b R
-  let L := theorem3ParameterFactor hn D p
+  let L := theorem3ParameterFactorCV18 hn D p
   let M := (n : Real) ^ 4 * rho ^ 2 * H
   let S := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
     theorem3SamplerLogEnvelope n b rho R p.ε')
@@ -269,7 +269,7 @@ theorem theorem3UniformComponentBudget_le_headline_scale
     unfold theorem3CV18LogMax
     positivity
   have hL : 0 ≤ L := by
-    dsimp [L, theorem3ParameterFactor]
+    dsimp [L, theorem3ParameterFactorCV18]
     have hlogrho : 0 ≤ Real.log (4 * rho + 1) :=
       Real.log_nonneg (by linarith)
     have heps : 0 < p.ε' := by

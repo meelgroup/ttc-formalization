@@ -338,6 +338,23 @@ noncomputable def theorem3Rho {n k : Nat} {F : LRAFormula n k}
   max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
     Real.toNNReal ((D.component i).outerRadius / (D.component i).inradius) : NNReal) : Real)
 
+/-- The explicit bound on CV18's scheduled logarithmic factors at TTC's calls, in terms of
+`n`, `ρ`, `ε'` and `δ'`: `14113440000 · (max 1 (log (20 n ρ² / (ε' δ'))))¹⁰`. -/
+noncomputable def theorem3CV18LogBound (n : Nat) (rho epsilonPrime deltaPrime : Real) : Real :=
+  14113440000 * (max 1 (Real.log (20 * n * rho ^ 2 / (epsilonPrime * deltaPrime)))) ^ 10
+
+/-- The explicit factors suppressed in the corrected Theorem 3 headline: the CV18 query
+rate's constant `45 · (64 · 10³⁰ + 1)` and logarithmic bound, the Hit-and-Run constant
+`2⁶⁸` with its logarithms, and the thinning counter. -/
+noncomputable def theorem3ParameterFactor {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  45 * (64 * 10 ^ 30 + 1) *
+      theorem3CV18LogBound n (theorem3Rho D) p.ε' (p.δ' D.componentCount) / (p.ε' / 2) ^ 2 +
+    (2 : Real) ^ 68 *
+      (Real.log 8 + Real.log (4 * theorem3Rho D + 1) +
+        2 * (Real.log 10 + Real.log 6 + 1 +
+          Real.log (1 + 8 / p.ε') + 2)) + 20
+
 end TTCRuntime
 
 end Kr25Ssmxt

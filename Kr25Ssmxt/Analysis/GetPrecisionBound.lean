@@ -86,7 +86,7 @@ theorem theorem3PrecisionScale_le_inputScale {n k : Nat}
 
 theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams) :
-    0 ≤ TTCRuntime.theorem3ParameterFactor hn D p + 1 := by
+    0 ≤ TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1 := by
   have hLog : 0 ≤ TTCRuntime.theorem3CV18LogMax hn D p := by
     unfold TTCRuntime.theorem3CV18LogMax
     positivity
@@ -100,8 +100,8 @@ theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
     apply Real.log_nonneg
     have : 0 ≤ 8 / p.ε' := div_nonneg (by norm_num) heps.le
     linarith
-  have hL : 0 ≤ TTCRuntime.theorem3ParameterFactor hn D p := by
-    unfold TTCRuntime.theorem3ParameterFactor
+  have hL : 0 ≤ TTCRuntime.theorem3ParameterFactorCV18 hn D p := by
+    unfold TTCRuntime.theorem3ParameterFactorCV18
     positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
   linarith
 
@@ -120,7 +120,7 @@ theorem ttc_expected_runtime_theorem3_input_scale {n k : Nat} (hn : 21 ≤ n)
           (TTCRuntime.theorem3Rho D) ^ 2 *
           TTCRuntime.theorem3InputScale D p *
           ((TTCRuntime.sampleCap p D.componentCount : Real) + 1) *
-          (TTCRuntime.theorem3ParameterFactor hn D p + 1)) := by
+          (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) := by
   dsimp only
   refine (ttc_expected_runtime_theorem3_headline_scale hn F hbounded p prep
     preprocessingOperations).trans ?_

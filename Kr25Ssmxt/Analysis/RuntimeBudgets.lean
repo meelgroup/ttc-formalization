@@ -13,6 +13,47 @@ open scoped ENNReal NNReal ProbabilityTheory InnerProductSpace
 
 namespace Kr25Ssmxt
 
+/-! ## The CV18 factors before the polylogarithmic bound -/
+
+/-- The six logarithmic factors in the scheduled amplified CV18 query rate.
+The exact terminal scale and block mixing error are retained. -/
+noncomputable def TTCRuntime.theorem3CV18LogEnvelope
+    (q : ArlibCommunity.Algorithms.CV18.VolumeParams) : Real :=
+  ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.p) *
+  ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.eps) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.protectedLog ((q.n : Real) / q.eps) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.protectedLog
+    (ArlibCommunity.Algorithms.CV18.volumeTerminalScale q) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.figureOneScheduledAccuracyLog q *
+  ArlibCommunity.Algorithms.CV18.protectedLog
+    (1 / ArlibCommunity.Algorithms.CV18.figureOneCorrectedBlockMixingError q
+      (ArlibCommunity.Algorithms.CV18.figureOneSafeRetryCount q - 1)) ^ 2
+
+open Classical in
+/-- Largest of the explicit scheduled CV18 logarithmic products across TTC's
+normalized components. The empty family's value is zero. -/
+noncomputable def TTCRuntime.theorem3CV18LogMax
+    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  ((Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal (if h : CommunityCV18.AdmissibleCV18Request p.ε' (p.δ' D.componentCount)
+      then TTCRuntime.theorem3CV18LogEnvelope
+        (CommunityCV18.params (by omega) (D.component i) p.ε' (p.δ' D.componentCount) h)
+      else 0) : NNReal) : Real)
+
+/-- The parameter factor with CV18's scheduled logarithmic product as defined; the
+statement of Theorem 3 uses its explicit upper bound `TTCRuntime.theorem3ParameterFactor`. -/
+noncomputable def TTCRuntime.theorem3ParameterFactorCV18
+    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    (D : Decomposition F) (p : ApproxParams) : Real :=
+  45 * (64 *
+      ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant + 1) *
+      TTCRuntime.theorem3CV18LogMax hn D p / (p.ε' / 2) ^ 2 +
+    (2 : Real) ^ 68 *
+      (Real.log 8 + Real.log (4 * TTCRuntime.theorem3Rho D + 1) +
+        2 * (Real.log 10 + Real.log 6 + 1 +
+          Real.log (1 + 8 / p.ε') + 2)) + 20
+
 /-- Explicit TTC CV18 query envelope obtained by inserting `ρ` into the
 imported scheduled complexity rate. -/
 noncomputable def TTCRuntime.theorem3CV18QueryEnvelope

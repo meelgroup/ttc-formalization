@@ -26,7 +26,7 @@ rev = "8d08f89a6d05c5e8368e91659bd6e117fbb74c4e"
 [[require]]
 name = "arlib-community"
 git = "https://github.com/uddaloksarkar/arlib-community.git"
-rev = "db1f4018dfbd48b615435c5a869905fbd2874bd4"
+rev = "48231897cf00eff8b228b1a314d54da68496708c"
 
 [[lean_lib]]
 name = "Kr25Ssmxt"
