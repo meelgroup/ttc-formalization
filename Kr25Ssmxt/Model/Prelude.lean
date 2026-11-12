@@ -282,10 +282,16 @@ def countThinningRoundOperations (stored : Nat) : Nat :=
   stored * fairCoinOperations + binomialDrawOperations +
     2 * scalarOperationCost
 
+/-- Drawing the walk's start uniformly from the inscribed ball: `n` Gaussian draws, their
+norm, a uniform draw raised to the power `1/n`, the radial scaling, and the affine map onto
+the ball. -/
+def ballStartOperations (dimension : Nat) : Nat := 4 * dimension + 2
+
 /-- Per rejected or accepted sampler attempt, before multiplying by its
-random number of attempts. -/
+random number of attempts: a fresh start in the inscribed ball, the walk, rounding, and
+the final membership test. -/
 def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
-  steps * facetScanOperations dimension facets +
+  ballStartOperations dimension + steps * facetScanOperations dimension facets +
     roundPointOperations dimension + rejectionTestOperations dimension facets
 
 end TTCRuntime

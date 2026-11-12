@@ -30,7 +30,7 @@ theorem uniformBudgetNat_le_coarse_product
   unfold uniformBudgetNat membershipQueryOperations facetScanOperations
     rateThinningRoundOperations countThinningRoundOperations
     poissonDrawOperations fairCoinOperations binomialDrawOperations
-    scalarOperationCost samplingAttemptOperations roundPointOperations
+    scalarOperationCost samplingAttemptOperations ballStartOperations roundPointOperations
     rejectionTestOperations appendCopyOperations
   dsimp [facetScanOperations]
   ring_nf

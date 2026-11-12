@@ -111,6 +111,12 @@ names.
   (`log(8r/η)/log(4r/η)` can reach `3/2`); the one-sided escape bound `η/8` (the paper
   uses `η/4`) absorbs the difference. `L2LatticeBridge.lean` transfers it to TTC's
   components; it replaces the earlier cube-based cubulation argument.
+- Hit-and-Run starts from a uniform point of the inscribed ball (a warm start, as
+  arlib-community's `hitAndRun_mixes` requires), not from the inner-ball centre as
+  `proof-appendix.tex` says (citing [LV04, Cor. 1.2]). Each sampler attempt draws a fresh
+  start and is charged `ballStartOperations n = 4n + 2` for it; the step count
+  `⌈2⁶⁴ n² D² log(8M/ν²)⌉` has the paper's order. A manuscript edit should describe the
+  warm start.
 - Preprocessing returns full-dimensional components whose union agrees with the
   solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
   are dropped.
