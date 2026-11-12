@@ -24,6 +24,20 @@ open MeasureTheory
 
 namespace Kr25Ssmxt
 
+/-- `Exp[r ← μ; f]`: the expected value of the nonnegative quantity `f` when `r` is drawn
+from the distribution `μ`. It unfolds to the lower Lebesgue integral `∫⁻ r, f ∂μ`. -/
+syntax "Exp[" ident " ← " term "; " term "]" : term
+
+macro_rules
+  | `(Exp[$r ← $μ; $f]) => `(∫⁻ $r:ident, $f ∂$μ)
+
+/-- `Pr[r ← μ; P]`: the probability that `P` holds when `r` is drawn from the distribution
+`μ`. It unfolds to `μ.real {r | P}`. -/
+syntax "Pr[" ident " ← " term "; " term "]" : term
+
+macro_rules
+  | `(Pr[$r ← $μ; $P]) => `(MeasureTheory.Measure.real $μ {$r:ident | $P})
+
 /-! ## Vocabulary -/
 
 /-- Points in the positive-dimensional real ambient space used by the paper. -/

@@ -50,10 +50,9 @@ theorem ttc_theorem1_volume_accuracy
     (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams)
     (prep : TTCPreprocessor n k) :
-    (ttc hn F hbounded params prep).real
-        {estimate | (estimate : Real) ∈
-          Arlib.relErr params.epsilon
-            (MeasureTheory.volume (solutionSet F)).toReal} ≥
+    Pr[estimate ← ttc hn F hbounded params prep;
+      (estimate : Real) ∈
+        Arlib.relErr params.epsilon (MeasureTheory.volume (solutionSet F)).toReal] ≥
       1 - params.delta := by
   exact community_ttc_volume_accuracy hn F hbounded params prep
 
@@ -71,9 +70,8 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     (ttcWithCost hn F hbounded p prep
       preprocessingOperations 1).map Prod.fst =
         ttc hn F hbounded p prep ∧
-    (∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
-        preprocessingOperations 1) ≤
+    Exp[result ← ttcWithCost hn F hbounded p prep preprocessingOperations 1;
+      (result.2 : ENNReal)] ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
