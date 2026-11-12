@@ -132,8 +132,7 @@ names.
   adequacy (`PrecisionChoice.lean`, together with `PrecisionChoice` itself), the CV18
   parameter range (`CV18Admissible.lean`), and the KV97 rounding kernel with its
   measurability (`IntegerRoundingBridge.lean`). `#krSurplusIn` reports only the paper
-  vocabulary `decimalLattice`, `Decomposition.latticePoints`, `Decomposition.union` and the
-  reader alias `ttc.t`. Proof-only definitions also live under `Analysis/`: the runtime
+  vocabulary `decimalLattice`, `Decomposition.latticePoints`, `Decomposition.union`. Proof-only definitions also live under `Analysis/`: the runtime
   allowances (`RuntimeBudgets.lean`), the oracle contracts `AlmostUniformPointwise` and
   `ComputeVolumeContract` (`OracleContracts.lean`), `PrecisionAdequate`,
   `samplerRadiusRequirement`, `ApproxParams.latticeEta` and

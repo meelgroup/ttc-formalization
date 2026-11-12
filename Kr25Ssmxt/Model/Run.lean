@@ -387,11 +387,6 @@ def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
     (prep : TTCPreprocessor n k) : Measure NNReal :=
   ttcPseudocode F hbounded params (ttcSubroutines hn prep)
 
-/-- `t = Thresh · 10^{bn} · ComputeVolume(Pᵢ)` (line `line:volume`) of `ttc`; the same
-quantity as `ttcPseudocode.t`. -/
-abbrev ttc.t (b n : Nat) (Thresh : Real) (volumeEstimate : NNReal) : NNReal :=
-  ttcPseudocode.t b n Thresh volumeEstimate
-
 /-! ## The charged run (Theorem 3) -/
 
 /-- Charged implementations of the paper's two geometric calls. The
