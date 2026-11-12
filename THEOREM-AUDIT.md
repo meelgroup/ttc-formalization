@@ -66,7 +66,7 @@ printed bound fixed). In particular the bound grows like `log(1/minᵢ γᵢ)`: 
 very small component forces a fine lattice, and neither `ρ` nor `maxᵢ Rᵢ`
 captures this.
 
-**Names and layout.** `Model/Program.lean` and `Model/Run.lean` follow Algorithm `ttc`
+**Names and layout.** `Model/Constants.lean` holds the quantities Theorem 3's bound is written in (`theorem3RMax`, `theorem3Rho`, `theorem3InputScale`, `sampleCap`, the CV18 logarithmic product and `theorem3ParameterFactor`); the algorithm uses none of them. `Model/Program.lean` and `Model/Run.lean` follow Algorithm `ttc`
 line by line, with section headers quoting the paper's line labels, and use the paper's
 names: `ttc` (the algorithm of the theorems), `ttcPseudocode` (the same algorithm with its
 subroutines as slots), `GetPrecision`, `MaxInscribedBall`, `ComputeVolume`,

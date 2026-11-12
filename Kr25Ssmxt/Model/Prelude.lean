@@ -288,50 +288,6 @@ def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
   steps * facetScanOperations dimension facets +
     roundPointOperations dimension + rejectionTestOperations dimension facets
 
-/-- Maximum number of accepted samples charged per component. -/
-def sampleCap (p : ApproxParams) (componentCount : Nat) : Nat :=
-  Nat.ceil (p.Thresh componentCount)
-
-/-- The largest facet count among TTC's normalized components. -/
-def theorem3RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
-  Finset.univ.sup fun i : Fin D.componentCount =>
-    (D.component i).presentation.facetCount
-
-/-- The largest outer-radius certificate used by the corrected TTC runtime
-statement. The empty family has radius zero. -/
-noncomputable def theorem3OuterRadiusMax {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Real :=
-  ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (D.component i).outerRadius : NNReal) : Real)
-
-/-- The reciprocal `1 / minᵢ γᵢ` of the smallest certified inradius; zero for the
-empty family. -/
-noncomputable def theorem3InverseInradiusMax {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Real :=
-  ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (1 / (D.component i).inradius) : NNReal) : Real)
-
-/-- An input-only bound on the precision `b` chosen by `getprec` at `ε / 96`:
-`1 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ)`, with `γ` the required radius. -/
-noncomputable def theorem3PrecisionBound {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) : Real :=
-  1 + max 0 (Real.logb 10 (latticeRadiusRequirement D p.precisionEta)) +
-    max 0 (Real.logb 10 (theorem3InverseInradiusMax D))
-
-/-- The precision scale `1 + b + log⁺ R_max` with `b` replaced by its input-only
-bound. -/
-noncomputable def theorem3InputScale {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (p : ApproxParams) : Real :=
-  1 + theorem3PrecisionBound D p + max 0 (Real.log (theorem3OuterRadiusMax D))
-
-/-- The paper's common radius ratio `ρ = maxᵢ Rᵢ / γᵢ`, protected below by one.
-The `NNReal` finite supremum gives the empty decomposition the canonical value zero before
-the outer maximum is applied. -/
-noncomputable def theorem3Rho {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Real :=
-  max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal ((D.component i).outerRadius / (D.component i).inradius) : NNReal) : Real)
-
 end TTCRuntime
 
 end Kr25Ssmxt
