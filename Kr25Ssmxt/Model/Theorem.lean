@@ -65,7 +65,7 @@ theorem ttc_theorem1_volume_accuracy
 * **Expected cost.** The expected operation count is at most the preprocessing cost plus
   `m · 30 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²`, which depends on the input
   only. -/
-theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
@@ -89,9 +89,9 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
   rfl
 
 #krModelClosureOfType ttc_theorem1_volume_accuracy
-#krModelClosureOfType ttc_theorem3_corrected_expected_runtime
+#krModelClosureOfType ttc_theorem3_expected_runtime
 #krSurplusIn Kr25Ssmxt.Model from ttc_theorem1_volume_accuracy
-  ttc_theorem3_corrected_expected_runtime
+  ttc_theorem3_expected_runtime
   ttc
   TTCRuntime.deletionPassOperations TTCRuntime.rateThinningRoundOperations
   TTCRuntime.countThinningRoundOperations TTCRuntime.samplingAttemptOperations
@@ -105,6 +105,6 @@ statements.
 -/
 
 #print axioms ttc_theorem1_volume_accuracy
-#print axioms ttc_theorem3_corrected_expected_runtime
+#print axioms ttc_theorem3_expected_runtime
 
 end Kr25Ssmxt

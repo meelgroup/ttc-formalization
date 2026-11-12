@@ -18,7 +18,7 @@ the paper's Algorithm 1 with the concrete oracles:
 | Paper | Lean | Status |
 |---|---|---|
 | Theorem 1 (`thm:volumettc`, accuracy) | `ttc_theorem1_volume_accuracy` | Proved. No prior-work hypothesis, no regime premise. |
-| Theorem 3 (`thm:runtime`, runtime) | `ttc_theorem3_corrected_expected_runtime` | Proved in a corrected form (see below). |
+| Theorem 3 (`thm:runtime`, runtime) | `ttc_theorem3_expected_runtime` | Proved in a corrected form (see below). |
 | Theorem 2 (decomposition) | — | Not formalized beyond the volume equality `Decomposition.solution_ae`. |
 
 Shared hypotheses: `n ≥ 21` and a bounded solution set.
@@ -327,7 +327,7 @@ volume bind, and the component sequence. `RunMarginal.lean` proves
 that forgetting all operation counts, including after the final estimate,
 gives exactly `ttc`.
 
-`ttc_theorem3_corrected_expected_runtime` combines this output identity and
+`ttc_theorem3_expected_runtime` combines this output identity and
 the explicit expected-cost bound in one public statement. Still required for
 the paper's tilde-O notation: prove within Lean that the six imported
 CV18 scheduled logarithms are polylogarithmic in the public parameters. The
