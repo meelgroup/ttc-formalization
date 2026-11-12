@@ -62,7 +62,7 @@ calls via the roundness bound `roundness ≤ 4ρ² + 1`.
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
 `ttc`, and its *expected* operation count is at most
-`T_preprocessing + m · 30 n⁵ r_max ρ² (⌈Thresh⌉+1) / ε² · polylogFactors`, i.e.
+`T_preprocessing + m · 30 n⁵ r_max ρ² (⌈Thresh⌉+1) · polylogFactors / ε²`, i.e.
 `Õ(m n⁵ r_max ρ² / ε⁴)`, where `polylogFactors` contains the input-only scale `S = 2 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ) + log⁺R_max`
 (`TTCRuntime.theorem3InputScale`), where `γ = 64mn/(ε/96)·√log(384r/ε)` is the
 radius `getprec` requires. The bound no longer mentions the precision `b`:

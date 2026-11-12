@@ -78,8 +78,8 @@ theorem ttc_theorem3_corrected_expected_runtime {n k : Nat} (hn : 21 ≤ n)
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
-          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) / p.epsilon ^ 2 *
-          TTCRuntime.polylogFactors D p) := by
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
+          TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := by
   dsimp only
   exact ⟨community_costed_output_fst hn F hbounded p prep
     preprocessingOperations 1,

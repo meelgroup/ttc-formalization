@@ -179,8 +179,8 @@ theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
-          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) / p.epsilon ^ 2 *
-          TTCRuntime.polylogFactors D p) := by
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
+          TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := by
   dsimp only
   refine (ttc_expected_runtime_theorem3_input_scale hn F hbounded p prep
     preprocessingOperations).trans ?_
@@ -207,7 +207,7 @@ theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1)) *
         (TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := mul_le_mul_of_nonneg_left hkey hC
     _ = 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
-          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) / p.epsilon ^ 2 *
-          TTCRuntime.polylogFactors D p := by ring
+          ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
+          TTCRuntime.polylogFactors D p / p.epsilon ^ 2 := by ring
 
 end Kr25Ssmxt
