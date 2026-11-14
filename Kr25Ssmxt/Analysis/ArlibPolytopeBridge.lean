@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Model.Run
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Convexity.Polytope
+import ArlibCommunity.Foundations.Convex.Basic.Polytope
 
 /-!
 # The TTC/Arlib polytope representation bridge
@@ -35,7 +35,7 @@ def fromEuclidean {n : Nat} (x : EuclideanSpace Real (Fin n)) : Point n :=
 /-- TTC's halfspace carrier is exactly Arlib's polytope body. -/
 theorem PolytopeData.image_toEuclidean_carrier {n : Nat} (P : PolytopeData n) :
     toEuclidean '' P.carrier =
-      Arlib.Polytope.body P.arlibNormal P.presentation.offset := by
+      ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset := by
   ext y
   constructor
   · rintro ⟨x, hx, rfl⟩
@@ -52,11 +52,11 @@ theorem PolytopeData.image_toEuclidean_carrier {n : Nat} (P : PolytopeData n) :
 
 /-- The coordinate identification used by Arlib preserves the component's Lebesgue volume. -/
 theorem PolytopeData.volume_arlib_body_eq_carrier {n : Nat} (P : PolytopeData n) :
-    MeasureTheory.volume (Arlib.Polytope.body P.arlibNormal P.presentation.offset) =
+    MeasureTheory.volume (ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset) =
       MeasureTheory.volume P.carrier := by
   have hpre :
       (toEuclidean : Point n → EuclideanSpace Real (Fin n)) ⁻¹'
-          Arlib.Polytope.body P.arlibNormal P.presentation.offset = P.carrier := by
+          ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset = P.carrier := by
     ext x
     constructor
     · intro hx
@@ -70,10 +70,10 @@ theorem PolytopeData.volume_arlib_body_eq_carrier {n : Nat} (P : PolytopeData n)
       rw [← P.image_toEuclidean_carrier]
       exact ⟨x, hx, rfl⟩
   rw [← (PiLp.volume_preserving_toLp (Fin n)).measure_preimage
-    (Arlib.Polytope.measurableSet_body P.arlibNormal P.presentation.offset).nullMeasurableSet]
+    (ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body P.arlibNormal P.presentation.offset).nullMeasurableSet]
   change MeasureTheory.volume
       ((toEuclidean : Point n → EuclideanSpace Real (Fin n)) ⁻¹'
-        Arlib.Polytope.body P.arlibNormal P.presentation.offset) =
+        ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset) =
     MeasureTheory.volume P.carrier
   rw [hpre]
 

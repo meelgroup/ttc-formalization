@@ -110,7 +110,7 @@ theorem TTCRuntime.theorem3ParameterFactorCV18_le {n k : Nat} (hn : 21 ≤ n)
     TTCRuntime.theorem3ParameterFactorCV18 hn D p ≤ TTCRuntime.theorem3ParameterFactor D p := by
   have hmax := TTCRuntime.theorem3CV18LogMax_le hn D p
   unfold TTCRuntime.theorem3ParameterFactorCV18 TTCRuntime.theorem3ParameterFactor
-  simp only [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant]
+  simp only [ArlibCommunity.Algorithms.CV18.runCostConstant]
   gcongr
 
 theorem TTCRuntime.theorem3InputScale_nonneg {n k : Nat} {F : LRAFormula n k}

@@ -2,10 +2,10 @@ import Kr25Ssmxt.Model.Program
 import Mathlib.Probability.Distributions.Geometric
 import ArlibCommunity.Algorithms.CV18
 import ArlibCommunity.Algorithms.HitAndRun.Model.Theorem
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.KV97.Inflate
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.Rounding.RoundLaw
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.MarkovChains.Continuous.PointwiseRoute
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Probability.Rejection
+import ArlibCommunity.Algorithms.KV97.Analysis.Inflate
+import ArlibCommunity.Algorithms.KV97.Analysis.RoundLaw
+import ArlibCommunity.Foundations.MarkovChainTheory.PointwiseMixing.Analysis.PointwiseRoute
+import ArlibCommunity.Foundations.Convex.Basic.Rejection
 
 /-!
 # Algorithm `ttc` with its concrete subroutines
@@ -54,7 +54,7 @@ def PolytopeData.scaledOffset {n : Nat} (P : PolytopeData n) (b : Nat) :
 /-- The arlib body obtained by scaling every point of `P` by `10^b`. -/
 def PolytopeData.scaledBody {n : Nat} (P : PolytopeData n) (b : Nat) :
     Set (EuclideanSpace Real (Fin n)) :=
-  Arlib.Polytope.body P.arlibNormal (P.scaledOffset b)
+  ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal (P.scaledOffset b)
 
 /-! ## Line `line:prec:getmaxball`: `MaxInscribedBall` by the Chebyshev-centre LP
 
@@ -98,7 +98,7 @@ def GetPrecision {n k : Nat} {F : LRAFormula n k}
 def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
     Set (EuclideanSpace Real (Fin n)) :=
   (fun y => P.inradius • y + toEuclidean P.incenter) ⁻¹'
-    Arlib.Polytope.body P.arlibNormal P.presentation.offset
+    ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset
 
 
 
@@ -126,8 +126,8 @@ def params {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   roundness := roundness P
   roundness_pos := by unfold roundness; positivity
 
-/-- The current scheduled, capped, amplified CV18 membership-oracle program:
-arlib-community's `cv18Program`, the subject of `cv18TheoremOneOne_program`. -/
+/-- arlib-community's CV18 membership-oracle program `cv18Program`
+(`CV18/Model/Pseudocode.lean`), the subject of `cv18TheoremOneOne`. -/
 def algorithm : VolumeAlgorithm :=
   cv18Program
 
@@ -135,7 +135,7 @@ def algorithm : VolumeAlgorithm :=
 CV18 program.  The two factors are, respectively, the number of confidence repetitions
 and the query cap of one scheduled execution. -/
 def queryBudget (q : VolumeParams) : Nat :=
-  confidenceRepetitions q * figureOneFinalScheduledQueryBudget q
+  confidenceRepetitions q * ArlibCommunity.Algorithms.CV18.queryBudget q
 
 /-- The concrete CV18 query budget for a TTC request.  The zero branch agrees with the
 total fallback branch of `communityCV18VolumeLaw`. -/
@@ -216,7 +216,7 @@ def PolytopeData.clipVolume {n : Nat} (P : PolytopeData n)
 
 /-! ## Line `line:sample`: `GenerateSamples` is Hit-and-Run, KV97 rounding and rejection -/
 
-open Arlib.Lattice.Rounding
+open ArlibCommunity.Algorithms.KV97
 
 /-- The integer lattice embedded in arlib's Euclidean state space. -/
 def kv97LatEmb (n : Nat) (z : Fin n → Int) : EuclideanSpace Real (Fin n) :=
@@ -238,7 +238,7 @@ def acceptedIntegers {n : Nat} (P : PolytopeData n) (b : Nat) : Set (Fin n → I
 def acceptedRoundedLatticeLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) (P : PolytopeData n) (b : Nat) :
     Measure (LatticePoint n) :=
-  (Arlib.condOn (kv97RoundedMeasureLaw mu) (acceptedIntegers P b)).map
+  (ArlibCommunity.Foundations.Convex.condOn (kv97RoundedMeasureLaw mu) (acceptedIntegers P b)).map
     (encodeInteger b)
 
 /-- The success probability of a rounded proposal, clamped into the unit
@@ -260,14 +260,14 @@ def acceptedRoundedWithAttempts {n : Nat}
 /-- The inflated KV97 body sampled by TTC. -/
 def hitAndRunBody {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
     Set (EuclideanSpace Real (Fin n)) :=
-  Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-    (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real)
+  ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+    (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)
 
 /-- The explicitly inflated offsets scanned by the finite-facet implementation. -/
 def hitAndRunOffset {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
     Fin P.presentation.facetCount → Real :=
   fun i => P.scaledOffset b i +
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real) *
+    ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real) *
       ‖P.arlibNormal i‖
 
 /-! ## Similarity-normalized finite-facet walk
@@ -300,7 +300,7 @@ def PolytopeData.normalizedHitAndRunOffset {n : Nat} (P : PolytopeData n)
 /-- The body on which the finite-facet walk should run for a ratio-based deadline. -/
 def PolytopeData.normalizedHitAndRunBody {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Set (EuclideanSpace Real (Fin n)) :=
-  Arlib.Polytope.body P.arlibNormal (P.normalizedHitAndRunOffset b eta)
+  ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal (P.normalizedHitAndRunOffset b eta)
 
 def hitAndRunTolerance {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Real :=
   min 1 ((eta / 8) / (volume (hitAndRunBody P b eta)).toReal)
@@ -319,11 +319,11 @@ def normalizedHitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat)
 decimal-scaled body before KV97 rounding. -/
 def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Measure (EuclideanSpace Real (Fin n)) :=
-  (Arlib.MarkovChains.iterate
-    (Arlib.MarkovChains.lazy
+  (ArlibCommunity.Foundations.MarkovChainTheory.iterate
+    (ArlibCommunity.Foundations.MarkovChainTheory.lazy
       (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
         P.arlibNormal (P.normalizedHitAndRunOffset b eta)))
-    (Arlib.uniformOn volume
+    (ArlibCommunity.Foundations.Convex.uniformOn volume
       (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
     (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b)
 

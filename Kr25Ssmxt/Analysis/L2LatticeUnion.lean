@@ -1,7 +1,7 @@
 import Kr25Ssmxt.Analysis.L2LatticeDeflate
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.KV97.Escape
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.Rounding.ContTent
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.Rounding.KernelIntegral
+import ArlibCommunity.Algorithms.KV97.Analysis.Escape
+import ArlibCommunity.Algorithms.KV97.Analysis.ContTent
+import ArlibCommunity.Algorithms.KV97.Analysis.KernelIntegral
 
 /-! # Lemma `lem:nonconv`: lattice points versus volume for a union of polytopes
 
@@ -28,7 +28,7 @@ here is `η/8` rather than the paper's `η/4`, so the conclusion is unchanged.) 
 
 namespace Kr25Ssmxt
 
-open MeasureTheory Set Arlib.Lattice.Rounding
+open MeasureTheory Set ArlibCommunity.Algorithms.KV97
 open scoped InnerProductSpace
 
 variable {n : ℕ}
@@ -63,7 +63,7 @@ theorem sum_prodTent_le_one (T : Finset (Fin n → ℤ)) (p : EuclideanSpace ℝ
 theorem kappa_div_le {m : ℕ} {η r γ : ℝ} (hm : 0 < m) (hn : 0 < n)
     (hη0 : 0 < η) (hη1 : η ≤ 1) (hr : 1 ≤ r)
     (hγ : (64 * m * n / η) * Real.sqrt (Real.log (4 * r / η)) ≤ γ) :
-    Arlib.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r / γ ≤
+    ArlibCommunity.Algorithms.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r / γ ≤
       η / (26 * m * n) := by
   set L := Real.log (4 * r / η) with hL
   have h4 : (4 : ℝ) ≤ 4 * r / η := by
@@ -86,7 +86,7 @@ theorem kappa_div_le {m : ℕ} {η r γ : ℝ} (hm : 0 < m) (hn : 0 < n)
   have hc2 : c ^ 2 = 2 * Real.log r := Real.sq_sqrt (by linarith)
   have ha0 : 0 ≤ a := Real.sqrt_nonneg _
   have hc0 : 0 ≤ c := Real.sqrt_nonneg _
-  have hκ : Arlib.KV97.kappaOf a r = a + c := rfl
+  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf a r = a + c := rfl
   have hκsq : (a + c) ^ 2 ≤ 6 * L := by
     nlinarith [sq_nonneg (a - c)]
   set s := Real.sqrt L
@@ -122,70 +122,70 @@ variable {m : ℕ} {f : Fin m → ℕ}
 inside the union of the inflations. -/
 theorem claim_inflate_mass {η r : ℝ} (hη0 : 0 < η) (hη1 : η ≤ 1) (hr1 : 1 ≤ r)
     (hf : ∀ i, (f i : ℝ) ≤ r) {z : Fin n → ℤ}
-    (hz : intPoint z ∈ ⋃ i, Arlib.Polytope.body (A i) (b i)) :
-    1 - η / 8 ≤ ∫ p in ⋃ i, Arlib.Polytope.inflate (A i) (b i)
-        (Arlib.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r),
+    (hz : intPoint z ∈ ⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)) :
+    1 - η / 8 ≤ ∫ p in ⋃ i, ArlibCommunity.Foundations.Convex.Polytope.inflate (A i) (b i)
+        (ArlibCommunity.Algorithms.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r),
       prodTent (intPoint z) p := by
   obtain ⟨i, hi⟩ := mem_iUnion.mp hz
-  set κ := Arlib.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r
+  set κ := ArlibCommunity.Algorithms.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r
   have hesc := setIntegral_prodTent_compl_inflate_le_exp (A i) (b i) hi
     (c := Real.sqrt (2 * Real.log (8 / η))) (Real.sqrt_nonneg _) hr1 (by simpa using hf i)
   rw [exp_escape_eq hη0 hη1] at hesc
-  have hmeas : MeasurableSet (Arlib.Polytope.inflate (A i) (b i) κ) :=
-    Arlib.Polytope.measurableSet_inflate _ _ _
-  have hlow : 1 - η / 8 ≤ ∫ p in Arlib.Polytope.inflate (A i) (b i) κ,
+  have hmeas : MeasurableSet (ArlibCommunity.Foundations.Convex.Polytope.inflate (A i) (b i) κ) :=
+    ArlibCommunity.Foundations.Convex.Polytope.measurableSet_inflate _ _ _
+  have hlow : 1 - η / 8 ≤ ∫ p in ArlibCommunity.Foundations.Convex.Polytope.inflate (A i) (b i) κ,
       prodTent (intPoint z) p := by
     rw [setIntegral_prodTent_compl _ hmeas]; linarith
   exact hlow.trans (setIntegral_prodTent_mono _ (subset_iUnion
-    (fun j => Arlib.Polytope.inflate (A j) (b j) κ) i) hmeas
-    (MeasurableSet.iUnion fun j => Arlib.Polytope.measurableSet_inflate _ _ _))
+    (fun j => ArlibCommunity.Foundations.Convex.Polytope.inflate (A j) (b j) κ) i) hmeas
+    (MeasurableSet.iUnion fun j => ArlibCommunity.Foundations.Convex.Polytope.measurableSet_inflate _ _ _))
 
 /-- **Claim (b).** A point of the union of the deflations rounds into `Q` with
 probability at least `1 - η/8`. -/
 theorem claim_deflate_mass {η r : ℝ} (hη0 : 0 < η) (hη1 : η ≤ 1) (hr1 : 1 ≤ r)
     (hf : ∀ i, (f i : ℝ) ≤ r) {p : EuclideanSpace ℝ (Fin n)}
-    (hp : p ∈ ⋃ i, Arlib.Polytope.inflate (A i) (b i)
-      (-Arlib.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r))
+    (hp : p ∈ ⋃ i, ArlibCommunity.Foundations.Convex.Polytope.inflate (A i) (b i)
+      (-ArlibCommunity.Algorithms.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r))
     (T : Finset (Fin n → ℤ))
-    (hT : ∀ z, intPoint z ∈ ⋃ i, Arlib.Polytope.body (A i) (b i) → z ∈ T) :
+    (hT : ∀ z, intPoint z ∈ ⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i) → z ∈ T) :
     1 - η / 8 ≤ ∑ z ∈ T, prodTent (intPoint z) p := by
   obtain ⟨i, hi⟩ := mem_iUnion.mp hp
-  set κ := Arlib.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r
+  set κ := ArlibCommunity.Algorithms.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r
   set μ := roundLaw (WithLp.ofLp p)
   let A' : Fin (f i) → EuclideanSpace ℝ (Fin n) := fun j => -A i j
   let b' : Fin (f i) → ℝ := fun j => b i j - ⟪A i j, p⟫_ℝ - κ * ‖A i j‖
-  have h0 : (0 : EuclideanSpace ℝ (Fin n)) ∈ Arlib.Polytope.body A' b' := by
+  have h0 : (0 : EuclideanSpace ℝ (Fin n)) ∈ ArlibCommunity.Foundations.Convex.Polytope.body A' b' := by
     intro j
     have := hi j
     simp only [A', b', inner_zero_right]
     linarith
-  have hesc := Arlib.KV97.roundLaw_escape_prob_le_exp A' b' (WithLp.ofLp p) h0
+  have hesc := ArlibCommunity.Algorithms.KV97.roundLaw_escape_prob_le_exp A' b' (WithLp.ofLp p) h0
     (c := Real.sqrt (2 * Real.log (8 / η))) (Real.sqrt_nonneg _) hr1 (by simpa using hf i)
   rw [exp_escape_eq hη0 hη1] at hesc
-  have hdisp : ∀ z, Arlib.KV97.latDispVec (WithLp.ofLp p) z = p - intPoint z := by
-    intro z; ext k; simp [Arlib.KV97.latDispVec, intPoint]
-  have hsub : {z : Fin n → ℤ | intPoint z ∉ Arlib.Polytope.body (A i) (b i)} ⊆
-      {z | 0 + Arlib.KV97.latDispVec (WithLp.ofLp p) z ∉
-        Arlib.Polytope.inflate A' b' κ} := by
+  have hdisp : ∀ z, ArlibCommunity.Algorithms.KV97.latDispVec (WithLp.ofLp p) z = p - intPoint z := by
+    intro z; ext k; simp [ArlibCommunity.Algorithms.KV97.latDispVec, intPoint]
+  have hsub : {z : Fin n → ℤ | intPoint z ∉ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)} ⊆
+      {z | 0 + ArlibCommunity.Algorithms.KV97.latDispVec (WithLp.ofLp p) z ∉
+        ArlibCommunity.Foundations.Convex.Polytope.inflate A' b' κ} := by
     intro z hz hin
     apply hz
     intro j
     have := hin j
     simp only [zero_add, hdisp, A', b', inner_neg_left, inner_sub_right, norm_neg] at this
     linarith
-  have hcompl : μ.real {z : Fin n → ℤ | intPoint z ∉ Arlib.Polytope.body (A i) (b i)}
+  have hcompl : μ.real {z : Fin n → ℤ | intPoint z ∉ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)}
       ≤ η / 8 := (measureReal_mono hsub).trans hesc
-  have hmeasS : MeasurableSet {z : Fin n → ℤ | intPoint z ∈ Arlib.Polytope.body (A i) (b i)} :=
+  have hmeasS : MeasurableSet {z : Fin n → ℤ | intPoint z ∈ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)} :=
     (Set.to_countable _).measurableSet
   have hsum := measureReal_add_measureReal_compl (μ := μ) hmeasS
   rw [probReal_univ] at hsum
-  have hTsub : {z : Fin n → ℤ | intPoint z ∈ Arlib.Polytope.body (A i) (b i)} ⊆ (T : Set _) :=
+  have hTsub : {z : Fin n → ℤ | intPoint z ∈ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)} ⊆ (T : Set _) :=
     fun z hz => hT z (mem_iUnion.mpr ⟨i, hz⟩)
   have hmono := measureReal_mono (μ := μ) hTsub
   rw [sum_prodTent_eq]
   change 1 - η / 8 ≤ μ.real T
-  have : {z : Fin n → ℤ | intPoint z ∈ Arlib.Polytope.body (A i) (b i)}ᶜ =
-      {z : Fin n → ℤ | intPoint z ∉ Arlib.Polytope.body (A i) (b i)} := rfl
+  have : {z : Fin n → ℤ | intPoint z ∈ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)}ᶜ =
+      {z : Fin n → ℤ | intPoint z ∉ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)} := rfl
   rw [this] at hsum
   linarith
 
@@ -225,17 +225,17 @@ theorem l2_union_lattice_comparison {η r γ : ℝ} (hm : 0 < m) (hn : 0 < n)
     (hη0 : 0 < η) (hη1 : η ≤ 1) (hr1 : 1 ≤ r) (hf : ∀ i, (f i : ℝ) ≤ r)
     (hγ : (64 * m * n / η) * Real.sqrt (Real.log (4 * r / η)) ≤ γ)
     (cen : Fin m → EuclideanSpace ℝ (Fin n))
-    (hball : ∀ i, Metric.ball (cen i) γ ⊆ Arlib.Polytope.body (A i) (b i))
-    (hbdd : ∀ i, Bornology.IsBounded (Arlib.Polytope.body (A i) (b i))) :
-    (1 - η) * ({z : Fin n → ℤ | intPoint z ∈ ⋃ i, Arlib.Polytope.body (A i) (b i)}.ncard : ℝ)
-        ≤ volume.real (⋃ i, Arlib.Polytope.body (A i) (b i)) ∧
-      volume.real (⋃ i, Arlib.Polytope.body (A i) (b i)) ≤
-        (1 + η) * ({z : Fin n → ℤ | intPoint z ∈ ⋃ i, Arlib.Polytope.body (A i) (b i)}.ncard : ℝ) := by
+    (hball : ∀ i, Metric.ball (cen i) γ ⊆ ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i))
+    (hbdd : ∀ i, Bornology.IsBounded (ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i))) :
+    (1 - η) * ({z : Fin n → ℤ | intPoint z ∈ ⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)}.ncard : ℝ)
+        ≤ volume.real (⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)) ∧
+      volume.real (⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)) ≤
+        (1 + η) * ({z : Fin n → ℤ | intPoint z ∈ ⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i)}.ncard : ℝ) := by
   classical
-  set κ := Arlib.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r with hκdef
-  set P := fun i => Arlib.Polytope.body (A i) (b i) with hPdef
-  set P' := fun i => Arlib.Polytope.inflate (A i) (b i) κ with hP'def
-  set P'' := fun i => Arlib.Polytope.inflate (A i) (b i) (-κ) with hP''def
+  set κ := ArlibCommunity.Algorithms.KV97.kappaOf (Real.sqrt (2 * Real.log (8 / η))) r with hκdef
+  set P := fun i => ArlibCommunity.Foundations.Convex.Polytope.body (A i) (b i) with hPdef
+  set P' := fun i => ArlibCommunity.Foundations.Convex.Polytope.inflate (A i) (b i) κ with hP'def
+  set P'' := fun i => ArlibCommunity.Foundations.Convex.Polytope.inflate (A i) (b i) (-κ) with hP''def
   set Q := ⋃ i, P i with hQdef
   set Q' := ⋃ i, P' i with hQ'def
   set Q'' := ⋃ i, P'' i with hQ''def
@@ -245,7 +245,7 @@ theorem l2_union_lattice_comparison {η r γ : ℝ} (hm : 0 < m) (hn : 0 < n)
   have hL : 0 < Real.log (4 * r / η) := Real.log_pos (by
     rw [lt_div_iff₀ hη0]; nlinarith)
   have hγpos : 0 < γ := lt_of_lt_of_le (by positivity) hγ
-  have hκ0 : 0 ≤ κ := Arlib.KV97.kappaOf_nonneg (Real.sqrt_nonneg _)
+  have hκ0 : 0 ≤ κ := ArlibCommunity.Algorithms.KV97.kappaOf_nonneg (Real.sqrt_nonneg _)
   set t := κ / γ with htdef
   have ht0 : 0 ≤ t := div_nonneg hκ0 hγpos.le
   have ht : t ≤ η / (26 * m * n) := kappa_div_le hm hn hη0 hη1 hr1 hγ
@@ -266,14 +266,14 @@ theorem l2_union_lattice_comparison {η r γ : ℝ} (hm : 0 < m) (hn : 0 < n)
       linarith
     rwa [htdef, div_le_one hγpos] at h1
   -- measurability and finiteness
-  have hPm : ∀ i, MeasurableSet (P i) := fun i => Arlib.Polytope.measurableSet_body _ _
-  have hP'm : ∀ i, MeasurableSet (P' i) := fun i => Arlib.Polytope.measurableSet_inflate _ _ _
-  have hP''m : ∀ i, MeasurableSet (P'' i) := fun i => Arlib.Polytope.measurableSet_inflate _ _ _
+  have hPm : ∀ i, MeasurableSet (P i) := fun i => ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body _ _
+  have hP'm : ∀ i, MeasurableSet (P' i) := fun i => ArlibCommunity.Foundations.Convex.Polytope.measurableSet_inflate _ _ _
+  have hP''m : ∀ i, MeasurableSet (P'' i) := fun i => ArlibCommunity.Foundations.Convex.Polytope.measurableSet_inflate _ _ _
   have hQ'm : MeasurableSet Q' := MeasurableSet.iUnion hP'm
   have hQ''m : MeasurableSet Q'' := MeasurableSet.iUnion hP''m
   have hPfin : ∀ i, volume (P i) ≠ ⊤ := fun i => (hbdd i).measure_lt_top.ne
   have hP'le : ∀ i, volume (P' i) ≤ ENNReal.ofReal ((1 + t) ^ n) * volume (P i) :=
-    fun i => Arlib.Polytope.volume_inflate_le hγpos hκ0 (hball i)
+    fun i => ArlibCommunity.Foundations.Convex.Polytope.volume_inflate_le hγpos hκ0 (hball i)
   have hP'fin : ∀ i, volume (P' i) ≠ ⊤ := fun i =>
     ne_top_of_le_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (hPfin i)) (hP'le i)
   have hQb : Bornology.IsBounded Q := Bornology.isBounded_iUnion.mpr hbdd
@@ -282,10 +282,10 @@ theorem l2_union_lattice_comparison {η r γ : ℝ} (hm : 0 < m) (hn : 0 < n)
     refine ne_top_of_le_ne_top ?_ (measure_iUnion_fintype_le volume P')
     exact ENNReal.sum_ne_top.mpr fun i _ => hP'fin i
   have hPP' : ∀ i, P i ⊆ P' i := fun i =>
-    Arlib.Polytope.body_subset_inflate (A i) (b i) hκ0
+    ArlibCommunity.Foundations.Convex.Polytope.body_subset_inflate (A i) (b i) hκ0
   have hP''P : ∀ i, P'' i ⊆ P i := fun i => by
-    have := Arlib.Polytope.inflate_mono (A i) (b i) (neg_nonpos.mpr hκ0)
-    rwa [Arlib.Polytope.inflate_zero] at this
+    have := ArlibCommunity.Foundations.Convex.Polytope.inflate_mono (A i) (b i) (neg_nonpos.mpr hκ0)
+    rwa [ArlibCommunity.Foundations.Convex.Polytope.inflate_zero] at this
   have hQ''Q : Q'' ⊆ Q := iUnion_mono hP''P
   -- the finite set of lattice points
   have hS := finite_intPoints hQb

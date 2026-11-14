@@ -2,8 +2,10 @@ import Kr25Ssmxt.Analysis.OracleContracts
 import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ArlibPolytopeBridge
 import Kr25Ssmxt.Model.Program
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Lattice.Rounding.RoundLaw
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.MarkovChains.Continuous.PointwiseRoute
+import ArlibCommunity.Algorithms.KV97.Analysis.RoundLaw
+import ArlibCommunity.Algorithms.KV97.Analysis.ProdKernel
+import ArlibCommunity.Algorithms.KV97.Analysis.SamplerRoutes
+import ArlibCommunity.Foundations.MarkovChainTheory.PointwiseMixing.Analysis.PointwiseRoute
 
 /-!
 # Integer randomized-rounding output and TTC coded lattice points
@@ -18,7 +20,7 @@ noncomputable section
 namespace Kr25Ssmxt
 
 open MeasureTheory ProbabilityTheory
-open Arlib.Lattice.Rounding
+open ArlibCommunity.Algorithms.KV97
 
 /-- The current community randomized-rounding law as a Markov kernel. -/
 def kv97RoundingKernel (n : Nat) :
@@ -57,8 +59,10 @@ end Kr25Ssmxt
 
 namespace Arlib.KV97
 
+open ArlibCommunity.Algorithms.KV97
+
 open MeasureTheory ProbabilityTheory
-open Arlib.Lattice.Rounding
+open ArlibCommunity.Algorithms.KV97
 
 theorem isProbabilityMeasure_roundedMeasureLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure mu] :
@@ -84,8 +88,8 @@ theorem roundedMeasureLaw_singleton_real {n : Nat}
     (Kr25Ssmxt.kv97RoundedMeasureLaw mu).real {z} =
       ∫ p, prodTent (Kr25Ssmxt.kv97LatEmb n z) p ∂mu := by
   have hint : Integrable (prodTent (Kr25Ssmxt.kv97LatEmb n z)) mu :=
-    Arlib.integrable_of_forall_mem_Icc (measurable_prodTent _)
-      (fun p => prodTent_nonneg _ p) (fun p => Arlib.PointwiseRoute.prodTent_le_one _ p)
+    ArlibCommunity.Foundations.Convex.integrable_of_forall_mem_Icc (measurable_prodTent _)
+      (fun p => prodTent_nonneg _ p) (fun p => ArlibCommunity.Algorithms.KV97.prodTent_le_one _ p)
   have hnn : 0 ≤ᵐ[mu] prodTent (Kr25Ssmxt.kv97LatEmb n z) :=
     Filter.Eventually.of_forall fun p => prodTent_nonneg _ p
   rw [Measure.real, roundedMeasureLaw_singleton,
@@ -185,9 +189,9 @@ theorem acceptedRoundedLatticeLaw_almostUniform_of_ratio {n : Nat}
     Arlib.KV97.isProbabilityMeasure_roundedMeasureLaw mu
   letI : IsProbabilityMeasure mur := hmur
   have hacceptTop : mur (acceptedIntegers P b) ≠ ⊤ := measure_ne_top _ _
-  have hcond : IsProbabilityMeasure (Arlib.condOn mur (acceptedIntegers P b)) :=
-    Arlib.isProbabilityMeasure_condOn mur haccept hacceptTop
-  letI : IsProbabilityMeasure (Arlib.condOn mur (acceptedIntegers P b)) := hcond
+  have hcond : IsProbabilityMeasure (ArlibCommunity.Foundations.Convex.condOn mur (acceptedIntegers P b)) :=
+    ArlibCommunity.Foundations.Convex.isProbabilityMeasure_condOn mur haccept hacceptTop
+  letI : IsProbabilityMeasure (ArlibCommunity.Foundations.Convex.condOn mur (acceptedIntegers P b)) := hcond
   refine ⟨?_, hfinite, hnonempty, ?_, ?_⟩
   · exact Measure.isProbabilityMeasure_map (by fun_prop)
   · rw [acceptedRoundedLatticeLaw, Measure.map_apply (by fun_prop) (by measurability)]
@@ -196,7 +200,7 @@ theorem acceptedRoundedLatticeLaw_almostUniform_of_ratio {n : Nat}
       intro z hz hza
       exact hz ((encodeInteger_mem_coded_iff P b z).2 hza)
     exact measure_mono_null hpre
-      (Arlib.condOn_compl_eq_zero mur (by measurability))
+      (ArlibCommunity.Foundations.Convex.condOn_compl_eq_zero mur (by measurability))
   · intro x hx
     have hxb : x.1 = b := hx.1
     have hxe : encodeInteger b x.2 = x := Prod.ext hxb.symm rfl
@@ -212,7 +216,7 @@ theorem acceptedRoundedLatticeLaw_almostUniform_of_ratio {n : Nat}
       · intro hz
         simpa [hz] using hxe
     rw [acceptedRoundedLatticeLaw, Measure.real, Measure.map_apply (by fun_prop) (by measurability),
-      hpre, Arlib.condOn_apply mur (by measurability) (by measurability),
+      hpre, ArlibCommunity.Foundations.Convex.condOn_apply mur (by measurability) (by measurability),
       Set.inter_eq_left.2 (Set.singleton_subset_iff.2 hxacc), ENNReal.toReal_div]
     simpa [mur, Measure.real] using hratio x.2 hxacc
 

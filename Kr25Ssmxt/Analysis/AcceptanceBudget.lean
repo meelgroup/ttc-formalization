@@ -8,7 +8,7 @@ import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
 namespace Kr25Ssmxt
 
 open MeasureTheory ProbabilityTheory Metric Set
-open Arlib.Lattice.Rounding
+open ArlibCommunity.Algorithms.KV97
 open scoped ENNReal
 
 theorem finite_acceptance_mass_lower {n : Nat}
@@ -64,8 +64,8 @@ accepted rounded integer, before conditioning on acceptance. -/
 theorem kv97_raw_point_lower_of_tvLe {n : Nat} (P : PolytopeData n)
     (b : Nat) {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (μ : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure μ]
-    (htv : Arlib.TVLe μ
-      (Arlib.uniformOn volume (hitAndRunBody P b eta))
+    (htv : ArlibCommunity.Foundations.Convex.TVLe μ
+      (ArlibCommunity.Foundations.Convex.uniformOn volume (hitAndRunBody P b eta))
       (ENNReal.ofReal ((eta / 8) /
         (volume (hitAndRunBody P b eta)).toReal)))
     (z : Fin n → Int) (hz : z ∈ acceptedIntegers P b) :
@@ -80,38 +80,38 @@ theorem kv97_raw_point_lower_of_tvLe {n : Nat} (P : PolytopeData n)
   have hfin : volume (P.scaledBody b) ≠ ⊤ :=
     (P.scaledBody_bounded b).measure_lt_top.ne
   have hS0 : volume S ≠ 0 :=
-    Arlib.KV97.volume_inflated_ne_zero hgamma Arlib.KV97.cOf_nonneg hbaseball
+    ArlibCommunity.Algorithms.KV97.volume_inflated_ne_zero hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball
   have hStop : volume S ≠ ⊤ :=
-    Arlib.KV97.volume_inflated_ne_top hgamma Arlib.KV97.cOf_nonneg hbaseball hfin
+    ArlibCommunity.Algorithms.KV97.volume_inflated_ne_top hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball hfin
   have hV : 0 < V := ENNReal.toReal_pos hS0 hStop
-  letI : IsProbabilityMeasure (Arlib.uniformOn volume S) :=
-    Arlib.isProbabilityMeasure_uniformOn volume hS0 hStop
+  letI : IsProbabilityMeasure (ArlibCommunity.Foundations.Convex.uniformOn volume S) :=
+    ArlibCommunity.Foundations.Convex.isProbabilityMeasure_uniformOn volume hS0 hStop
   have hfacet1 : (1 : Real) ≤ P.presentation.facetCount := by
     exact_mod_cast P.facets_pos
   have hesc : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 := by
     have he := setIntegral_prodTent_compl_inflate_le_exp
-      (c := Arlib.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
-      P.arlibNormal (P.scaledOffset b) hz Arlib.KV97.cOf_nonneg hfacet1 (by simp)
-    simpa [S, hitAndRunBody, Arlib.KV97.inflated,
-      Arlib.KV97.exp_cOf heta0 heta1] using he
+      (c := ArlibCommunity.Algorithms.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
+      P.arlibNormal (P.scaledOffset b) hz ArlibCommunity.Algorithms.KV97.cOf_nonneg hfacet1 (by simp)
+    simpa [S, hitAndRunBody, ArlibCommunity.Algorithms.KV97.inflated,
+      ArlibCommunity.Algorithms.KV97.exp_cOf heta0 heta1] using he
   have href : (1 - eta / 4) / V ≤
-      ∫ p, prodTent (kv97LatEmb n z) p ∂(Arlib.uniformOn volume S) :=
-    (Arlib.PointwiseRoute.uniformOn_window
+      ∫ p, prodTent (kv97LatEmb n z) p ∂(ArlibCommunity.Foundations.Convex.uniformOn volume S) :=
+    (ArlibCommunity.Algorithms.KV97.uniformOn_window
       (S := S) (V := V) (E := eta / 4) (x := kv97LatEmb n z)
-      (Arlib.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc).1
-  have hhi : ∫ p, prodTent (kv97LatEmb n z) p ∂(Arlib.uniformOn volume S) ≤
+      (ArlibCommunity.Algorithms.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc).1
+  have hhi : ∫ p, prodTent (kv97LatEmb n z) p ∂(ArlibCommunity.Foundations.Convex.uniformOn volume S) ≤
       (1 + 0) / V :=
-    (Arlib.PointwiseRoute.uniformOn_window
+    (ArlibCommunity.Algorithms.KV97.uniformOn_window
       (S := S) (V := V) (E := eta / 4) (x := kv97LatEmb n z)
-      (Arlib.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc).2
+      (ArlibCommunity.Algorithms.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc).2
   have hepsV :
       (ENNReal.ofReal ((eta / 8) / V)).toReal * V ≤ eta / 8 := by
     rw [ENNReal.toReal_ofReal (by positivity), div_mul_cancel₀ _ hV.ne']
-  have hraw := (Arlib.PointwiseRoute.window_of_tvLe
+  have hraw := (ArlibCommunity.Foundations.MarkovChainTheory.PointwiseRoute.window_of_tvLe
     (by simpa [S, V] using htv) ENNReal.ofReal_ne_top
     (measurable_prodTent (kv97LatEmb n z))
     (prodTent_nonneg (kv97LatEmb n z))
-    (Arlib.PointwiseRoute.prodTent_le_one (kv97LatEmb n z))
+    (ArlibCommunity.Algorithms.KV97.prodTent_le_one (kv97LatEmb n z))
     hV hepsV href hhi).1
   rw [Arlib.KV97.roundedMeasureLaw_singleton_real]
   convert hraw using 1 <;> ring
@@ -168,7 +168,7 @@ with the scaled inball. -/
 theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
     (P : PolytopeData n) {η γ : Real} (hη0 : 0 < η) (hη1 : η ≤ 1)
     (hγ : 0 < γ) (hprecision : samplerRadiusRequirement P η ≤ γ) :
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf η)
+    ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf η)
       (P.presentation.facetCount : Real) / γ ≤ η / (128 * n) := by
   let r : Real := P.presentation.facetCount
   let L : Real := Real.log (32 * r / η)
@@ -189,10 +189,10 @@ theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
     apply Real.log_le_log (by linarith)
     apply (le_div_iff₀ hη0).2
     nlinarith
-  have hc : Arlib.KV97.cOf η ≤ 2 * Real.sqrt L := by
-    have hsquare := Arlib.KV97.cOf_sq hη0 hη1
+  have hc : ArlibCommunity.Algorithms.KV97.cOf η ≤ 2 * Real.sqrt L := by
+    have hsquare := ArlibCommunity.Algorithms.KV97.cOf_sq hη0 hη1
     have hrootSquare : (Real.sqrt L) ^ 2 = L := Real.sq_sqrt hL.le
-    have hc0 := Arlib.KV97.cOf_nonneg (ε := η)
+    have hc0 := ArlibCommunity.Algorithms.KV97.cOf_nonneg (ε := η)
     nlinarith
   have hfacet : Real.sqrt (2 * Real.log r) ≤ 2 * Real.sqrt L := by
     have hrootSquare : (Real.sqrt L) ^ 2 = L := Real.sq_sqrt hL.le
@@ -201,13 +201,13 @@ theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
         2 * Real.log r := Real.sq_sqrt (by positivity)
     have hnonneg := Real.sqrt_nonneg (2 * Real.log r)
     nlinarith
-  have hkappa : Arlib.KV97.kappaOf (Arlib.KV97.cOf η) r ≤
+  have hkappa : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf η) r ≤
       4 * Real.sqrt L := by
-    unfold Arlib.KV97.kappaOf
+    unfold ArlibCommunity.Algorithms.KV97.kappaOf
     linarith
   have hreq : (512 * n / η) * Real.sqrt L ≤ γ := by
     simpa [samplerRadiusRequirement, r, L] using hprecision
-  have hmain : Arlib.KV97.kappaOf (Arlib.KV97.cOf η) r ≤
+  have hmain : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf η) r ≤
       (η / (128 * n)) * γ := by
     have hnreal : (0 : Real) < n := by exact_mod_cast hn
     have hcoef : 0 < η / (128 * n) := by positivity
@@ -263,7 +263,7 @@ theorem normalizedHitAndRun_acceptance_ge_half_of_base_comparison {n : Nat}
     (1 / 2 : Real) ≤
       (roundedAcceptanceProbability (normalizedHitAndRunContinuousLaw P b eta) P b : Real) := by
   let gamma : Real := decimalScale b * P.inradius
-  let inflation : Real := (1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  let inflation : Real := (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
     (P.presentation.facetCount : Real) / gamma) ^ n
   have hgamma : 0 < gamma := mul_pos (decimalScale_pos b) P.inradius_pos
   have hbaseball : Metric.ball (decimalScale b • toEuclidean P.incenter) gamma ⊆
@@ -272,16 +272,16 @@ theorem normalizedHitAndRun_acceptance_ge_half_of_base_comparison {n : Nat}
     (P.scaledBody_bounded b).measure_lt_top.ne
   have hV : 0 < (volume (hitAndRunBody P b eta)).toReal := by
     simpa [hitAndRunBody, gamma] using
-      (Arlib.KV97.toReal_volume_inflated_pos hgamma Arlib.KV97.cOf_nonneg
+      (ArlibCommunity.Algorithms.KV97.toReal_volume_inflated_pos hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg
         hbaseball hfin)
   have hinflate : (volume (hitAndRunBody P b eta)).toReal ≤
       inflation * (volume (P.scaledBody b)).toReal := by
     simpa [hitAndRunBody, inflation, gamma, PolytopeData.scaledBody] using
-      (Arlib.KV97.toReal_volume_inflated_le hgamma Arlib.KV97.cOf_nonneg
+      (ArlibCommunity.Algorithms.KV97.toReal_volume_inflated_le hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg
         hbaseball hfin)
-  have hkappa0 : 0 ≤ Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  have hkappa0 : 0 ≤ ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
       (P.presentation.facetCount : Real) :=
-    Arlib.KV97.kappaOf_nonneg Arlib.KV97.cOf_nonneg
+    ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
   have hinflation : 0 ≤ inflation := by
     unfold inflation
     positivity

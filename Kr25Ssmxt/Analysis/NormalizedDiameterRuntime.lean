@@ -119,7 +119,7 @@ theorem PolytopeData.hitAndRunTolerance_pos {n : Nat}
     (P.scaledBody_bounded b).measure_lt_top.ne
   have hV : 0 < (volume (hitAndRunBody P b eta)).toReal := by
     simpa [hitAndRunBody, PolytopeData.scaledIncenter, PolytopeData.scaledInradius]
-      using (Arlib.KV97.toReal_volume_inflated_pos hG Arlib.KV97.cOf_nonneg
+      using (ArlibCommunity.Algorithms.KV97.toReal_volume_inflated_pos hG ArlibCommunity.Algorithms.KV97.cOf_nonneg
         hbaseball hfin)
   unfold hitAndRunTolerance
   exact lt_min one_pos (div_pos (by positivity) hV)
@@ -198,7 +198,7 @@ theorem PolytopeData.normalizedHitAndRun_warmness_le_diameter_pow
 theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
     (P : PolytopeData n) (hn : 0 < n) {eta : Real}
     (heta0 : 0 < eta) (heta1 : eta ≤ 1) :
-    Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+    ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
         (P.presentation.facetCount : Real) ≤
       samplerRadiusRequirement P eta := by
   let r : Real := P.presentation.facetCount
@@ -224,8 +224,8 @@ theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
   have hL : 0 ≤ L := by
     dsimp [L]
     exact Real.log_nonneg (le_trans hr hrx)
-  have hc : Arlib.KV97.cOf eta ≤ Real.sqrt (2 * L) := by
-    unfold Arlib.KV97.cOf
+  have hc : ArlibCommunity.Algorithms.KV97.cOf eta ≤ Real.sqrt (2 * L) := by
+    unfold ArlibCommunity.Algorithms.KV97.cOf
     apply Real.sqrt_le_sqrt
     gcongr
     exact Real.log_le_log (by positivity) hfour
@@ -242,10 +242,10 @@ theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
   have hfactor : 4 ≤ 512 * (n : Real) / eta := by
     apply (le_div_iff₀ heta0).2
     nlinarith
-  unfold Arlib.KV97.kappaOf samplerRadiusRequirement
-  change Arlib.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤
+  unfold ArlibCommunity.Algorithms.KV97.kappaOf samplerRadiusRequirement
+  change ArlibCommunity.Algorithms.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤
     (512 * (n : Real) / eta) * Real.sqrt L
-  have hκ : Arlib.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤
+  have hκ : ArlibCommunity.Algorithms.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤
       4 * Real.sqrt L := by linarith
   exact hκ.trans (mul_le_mul_of_nonneg_right hfactor (Real.sqrt_nonneg L))
 
@@ -256,20 +256,20 @@ theorem PolytopeData.normalizedHitAndRun_diameter_le_four_ratio
       decimalScale b * P.inradius) :
     Metric.diam (P.normalizedHitAndRunBody b eta) ≤
       4 * P.outerRadius / P.inradius := by
-  have hκ : Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
       (P.presentation.facetCount : Real) ≤ P.scaledInradius b := by
     exact (P.kv97_kappa_le_samplerRadiusRequirement hn heta0 heta1).trans
       (by simpa only [PolytopeData.scaledInradius] using hprecision)
   have hγ : 0 < P.scaledInradius b :=
     mul_pos (decimalScale_pos b) P.inradius_pos
-  have hκratio : Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
       (P.presentation.facetCount : Real) / P.scaledInradius b ≤ 1 :=
     (div_le_iff₀ hγ).2 (by simpa using hκ)
   have hR : 0 ≤ P.outerRadius / P.inradius :=
     div_nonneg P.outerRadius_nonneg P.inradius_pos.le
   calc
     Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-        (1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+        (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
           (P.presentation.facetCount : Real) / P.scaledInradius b) *
           (2 * P.outerRadius / P.inradius) :=
       P.normalizedHitAndRun_diameter_le b eta
@@ -288,13 +288,13 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
       decimalScale b * P.inradius) :
     ∀ x ∈ hitAndRunBody P b eta,
       ‖x‖ ≤ 5 * decimalScale b * P.outerRadius := by
-  have hκ : Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
       (P.presentation.facetCount : Real) ≤ P.scaledInradius b :=
     (P.kv97_kappa_le_samplerRadiusRequirement hn heta0 heta1).trans
       (by simpa only [PolytopeData.scaledInradius] using hprecision)
   have hγ : 0 < P.scaledInradius b :=
     mul_pos (decimalScale_pos b) P.inradius_pos
-  have hκratio : Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
       (P.presentation.facetCount : Real) / P.scaledInradius b ≤ 1 :=
     (div_le_iff₀ hγ).2 (by simpa using hκ)
   have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
@@ -304,8 +304,8 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
       simp [PolytopeData.scaledIncenter, PolytopeData.scaledInradius,
         Metric.mem_closedBall, mul_nonneg (decimalScale_pos b).le P.inradius_pos.le])
   have hcenterInflated : P.scaledIncenter b ∈ hitAndRunBody P b eta := by
-    exact Arlib.KV97.body_subset_inflated P.arlibNormal (P.scaledOffset b)
-      (P.presentation.facetCount : Real) Arlib.KV97.cOf_nonneg hcenterBody
+    exact ArlibCommunity.Algorithms.KV97.body_subset_inflated P.arlibNormal (P.scaledOffset b)
+      (P.presentation.facetCount : Real) ArlibCommunity.Algorithms.KV97.cOf_nonneg hcenterBody
   have hcenterNorm : ‖P.scaledIncenter b‖ ≤
       decimalScale b * P.outerRadius := by
     have hmem : P.incenter ∈ P.carrier := P.incenter_mem_carrier
@@ -316,7 +316,7 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
       abs_of_pos (decimalScale_pos b)] using
       mul_le_mul_of_nonneg_left hnorm (decimalScale_pos b).le
   intro x hx
-  have hdist := dist_le_of_mem_inflated hγ Arlib.KV97.cOf_nonneg
+  have hdist := dist_le_of_mem_inflated hγ ArlibCommunity.Algorithms.KV97.cOf_nonneg
     hbaseball (P.scaledBody_dist_le_outerRadius b) x hx
     (P.scaledIncenter b) hcenterInflated
   have hbound : dist x (P.scaledIncenter b) ≤
@@ -324,7 +324,7 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
     have hR : 0 ≤ decimalScale b * P.outerRadius :=
       mul_nonneg (decimalScale_pos b).le P.outerRadius_nonneg
     calc
-      _ ≤ (1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+      _ ≤ (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
         (P.presentation.facetCount : Real) / P.scaledInradius b) *
         (2 * decimalScale b * P.outerRadius) := hdist
       _ ≤ 2 * (2 * decimalScale b * P.outerRadius) := by

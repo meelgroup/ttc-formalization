@@ -45,7 +45,7 @@ private lemma preimage_cv18Chart_ball {n : Nat} {gamma : Real} (hgamma : 0 < gam
 /-- The Arlib presentation of the unscaled TTC component. -/
 def PolytopeData.arlibBody {n : Nat} (P : PolytopeData n) :
     Set (EuclideanSpace Real (Fin n)) :=
-  Arlib.Polytope.body P.arlibNormal P.presentation.offset
+  ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset
 
 /-- Facet normals after translating by the certified incenter and scaling the inball to
 unit radius. -/
@@ -62,10 +62,10 @@ def PolytopeData.cv18Offset {n : Nat} (P : PolytopeData n) :
 /-- The affine-preimage definition of the CV18 body is definitionally represented by the
 finite normalized halfspace family.  This exposes the executable chord scan to Arlib. -/
 lemma PolytopeData.cv18Body_eq_polytopeBody {n : Nat} (P : PolytopeData n) :
-    P.cv18Body = Arlib.Polytope.body P.cv18Normal P.cv18Offset := by
+    P.cv18Body = ArlibCommunity.Foundations.Convex.Polytope.body P.cv18Normal P.cv18Offset := by
   ext y
   simp only [PolytopeData.cv18Body, PolytopeData.arlibBody,
-    Arlib.Polytope.mem_body, Set.mem_preimage]
+    ArlibCommunity.Foundations.Convex.Polytope.mem_body, Set.mem_preimage]
   constructor <;> intro h i
   · have hi := h i
     simp only [PolytopeData.cv18Normal, PolytopeData.cv18Offset,
@@ -90,24 +90,24 @@ lemma PolytopeData.arlibBody_inball {n : Nat} (P : PolytopeData n) :
 
 lemma PolytopeData.cv18Body_measurable {n : Nat} (P : PolytopeData n) :
     MeasurableSet P.cv18Body :=
-  (Arlib.Polytope.measurableSet_body P.arlibNormal P.presentation.offset).preimage
+  (ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body P.arlibNormal P.presentation.offset).preimage
     (measurable_cv18Chart P.inradius (toEuclidean P.incenter))
 
 lemma PolytopeData.cv18Body_closed {n : Nat} (P : PolytopeData n) :
     IsClosed P.cv18Body := by
-  exact (Arlib.Polytope.isClosed_body P.arlibNormal P.presentation.offset).preimage
+  exact (ArlibCommunity.Foundations.Convex.Polytope.isClosed_body P.arlibNormal P.presentation.offset).preimage
     (by fun_prop)
 
 lemma PolytopeData.cv18Body_convex {n : Nat} (P : PolytopeData n) :
     Convex Real P.cv18Body := by
   intro x hx y hy a b ha hb hab
   change P.inradius • x + toEuclidean P.incenter ∈
-    Arlib.Polytope.body P.arlibNormal P.presentation.offset at hx
+    ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset at hx
   change P.inradius • y + toEuclidean P.incenter ∈
-    Arlib.Polytope.body P.arlibNormal P.presentation.offset at hy
+    ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset at hy
   change P.inradius • (a • x + b • y) + toEuclidean P.incenter ∈
-    Arlib.Polytope.body P.arlibNormal P.presentation.offset
-  have h := (Arlib.Polytope.convex_body P.arlibNormal P.presentation.offset)
+    ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal P.presentation.offset
+  have h := (ArlibCommunity.Foundations.Convex.Polytope.convex_body P.arlibNormal P.presentation.offset)
     hx hy ha hb hab
   have heq : P.inradius • (a • x + b • y) + toEuclidean P.incenter =
       a • (P.inradius • x + toEuclidean P.incenter) +

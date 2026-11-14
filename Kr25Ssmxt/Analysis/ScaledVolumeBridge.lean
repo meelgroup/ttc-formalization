@@ -38,7 +38,7 @@ theorem scaledBody_volume_eq_point_image {n : Nat} (P : PolytopeData n)
       volume (((fun x : Point n => decimalScale b • x) '' P.carrier)) := by
   have hmeas : MeasurableSet (P.scaledBody b) := by
     unfold PolytopeData.scaledBody
-    exact Arlib.Polytope.measurableSet_body _ _
+    exact ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body _ _
   have hmeasure := (PiLp.volume_preserving_toLp (Fin n)).measure_preimage
     hmeas.nullMeasurableSet
   change volume (toEuclidean ⁻¹' P.scaledBody b) = volume (P.scaledBody b) at hmeasure
