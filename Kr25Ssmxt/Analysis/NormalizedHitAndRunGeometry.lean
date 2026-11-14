@@ -32,12 +32,12 @@ private theorem map_uniformOn_samplerChart {n : Nat} {γ : Real} (hγ : 0 < γ)
     (cen : EuclideanSpace Real (Fin n))
     {A : Set (EuclideanSpace Real (Fin n))} (hA : MeasurableSet A) :
     Measure.map (fun z : EuclideanSpace Real (Fin n) => γ • z + cen)
-      (Arlib.uniformOn volume ((fun z : EuclideanSpace Real (Fin n) => γ • z + cen) ⁻¹' A)) =
-        Arlib.uniformOn volume A := by
+      (ArlibCommunity.Foundations.Convex.uniformOn volume ((fun z : EuclideanSpace Real (Fin n) => γ • z + cen) ⁻¹' A)) =
+        ArlibCommunity.Foundations.Convex.uniformOn volume A := by
   have hS : Measurable (fun z : EuclideanSpace Real (Fin n) => γ • z + cen) := by fun_prop
   ext t ht
-  rw [Measure.map_apply hS ht, Arlib.uniformOn_apply volume (hA.preimage hS)
-    (ht.preimage hS), Arlib.uniformOn_apply volume hA ht, ← Set.preimage_inter,
+  rw [Measure.map_apply hS ht, ArlibCommunity.Foundations.Convex.uniformOn_apply volume (hA.preimage hS)
+    (ht.preimage hS), ArlibCommunity.Foundations.Convex.uniformOn_apply volume hA ht, ← Set.preimage_inter,
     volume_preimage_samplerChart hγ, volume_preimage_samplerChart hγ]
   exact ENNReal.mul_div_mul_left _ _
     ((ENNReal.ofReal_pos.2 (by positivity : 0 < (γ ^ n)⁻¹)).ne') ENNReal.ofReal_ne_top
@@ -84,8 +84,8 @@ theorem PolytopeData.normalizedHitAndRun_unitBall {n : Nat}
   have hscaled : P.samplerChart b y ∈ P.scaledBody b := by
     apply P.scaledBody_inball b
     exact Metric.mem_closedBall.mpr hdist
-  exact Arlib.KV97.body_subset_inflated P.arlibNormal (P.scaledOffset b)
-    (P.presentation.facetCount : Real) Arlib.KV97.cOf_nonneg hscaled
+  exact ArlibCommunity.Algorithms.KV97.body_subset_inflated P.arlibNormal (P.scaledOffset b)
+    (P.presentation.facetCount : Real) ArlibCommunity.Algorithms.KV97.cOf_nonneg hscaled
 
 theorem PolytopeData.normalizedHitAndRun_bounded {n : Nat}
     (P : PolytopeData n) (b : Nat) (eta : Real) :
@@ -139,17 +139,17 @@ theorem PolytopeData.scaledBody_dist_le_outerRadius {n : Nat}
 theorem PolytopeData.normalizedHitAndRun_diameter_le {n : Nat}
     (P : PolytopeData n) (b : Nat) (eta : Real) :
     Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-      (1 + Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+      (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
         (P.presentation.facetCount : Real) / P.scaledInradius b) *
         (2 * P.outerRadius / P.inradius) := by
   have hG : 0 < P.scaledInradius b :=
     mul_pos (decimalScale_pos b) P.inradius_pos
   have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
       P.scaledBody b := Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
-  let κ := Arlib.KV97.kappaOf (Arlib.KV97.cOf eta)
+  let κ := ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
     (P.presentation.facetCount : Real)
   let C := (1 + κ / P.scaledInradius b) * (2 * P.outerRadius / P.inradius)
-  have hκ : 0 ≤ κ := Arlib.KV97.kappaOf_nonneg Arlib.KV97.cOf_nonneg
+  have hκ : 0 ≤ κ := ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
   have hdist : ∀ x ∈ P.normalizedHitAndRunBody b eta,
       ∀ y ∈ P.normalizedHitAndRunBody b eta, dist x y ≤ C := by
     intro x hx y hy
@@ -157,7 +157,7 @@ theorem PolytopeData.normalizedHitAndRun_diameter_le {n : Nat}
       rwa [P.normalizedHitAndRunBody_eq_preimage b eta] at hx
     have hy' : P.samplerChart b y ∈ hitAndRunBody P b eta := by
       rwa [P.normalizedHitAndRunBody_eq_preimage b eta] at hy
-    have hbound := dist_le_of_mem_inflated hG Arlib.KV97.cOf_nonneg hbaseball
+    have hbound := dist_le_of_mem_inflated hG ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball
       (P.scaledBody_dist_le_outerRadius b)
       (P.samplerChart b x) hx' (P.samplerChart b y) hy'
     have heq : dist (P.samplerChart b x) (P.samplerChart b y) =
@@ -184,8 +184,8 @@ theorem PolytopeData.normalizedHitAndRun_diameter_le {n : Nat}
 total-variation accuracy required by KV97 after mapping back to the scaled body. -/
 theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 21 ≤ n)
     (P : PolytopeData n) (b : Nat) {eta : Real} (heta0 : 0 < eta) :
-    Arlib.TVLe (normalizedHitAndRunContinuousLaw P b eta)
-      (Arlib.uniformOn volume (hitAndRunBody P b eta))
+    ArlibCommunity.Foundations.Convex.TVLe (normalizedHitAndRunContinuousLaw P b eta)
+      (ArlibCommunity.Foundations.Convex.uniformOn volume (hitAndRunBody P b eta))
       (ENNReal.ofReal ((eta / 8) /
         (volume (hitAndRunBody P b eta)).toReal)) := by
   letI : NeZero n := ⟨by omega⟩
@@ -199,21 +199,21 @@ theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 21 ≤ n)
     have hfin : volume (P.scaledBody b) ≠ ⊤ :=
       (P.scaledBody_bounded b).measure_lt_top.ne
     simpa [hitAndRunBody, PolytopeData.scaledIncenter, PolytopeData.scaledInradius]
-      using (Arlib.KV97.toReal_volume_inflated_pos hG Arlib.KV97.cOf_nonneg
+      using (ArlibCommunity.Algorithms.KV97.toReal_volume_inflated_pos hG ArlibCommunity.Algorithms.KV97.cOf_nonneg
         hbaseball hfin)
   let eps : Real := min 1 ((eta / 8) / (volume (hitAndRunBody P b eta)).toReal)
   have heps0 : 0 < eps := (lt_min_iff).2 ⟨one_pos, div_pos (by positivity) hV⟩
   have heps1 : eps ≤ 1 := min_le_left _ _
-  have hmix : Arlib.TVLe
-      (Arlib.MarkovChains.iterate
-        (Arlib.MarkovChains.lazy (Arlib.MarkovChains.hitAndRun K))
-        (Arlib.uniformOn volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
+  have hmix : ArlibCommunity.Foundations.Convex.TVLe
+      (ArlibCommunity.Foundations.MarkovChainTheory.iterate
+        (ArlibCommunity.Foundations.MarkovChainTheory.lazy (ArlibCommunity.Foundations.MarkovChainTheory.hitAndRun K))
+        (ArlibCommunity.Foundations.Convex.uniformOn volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
         (normalizedHitAndRunSteps P b eta))
-      (Arlib.uniformOn volume K) (ENNReal.ofReal eps) := by
+      (ArlibCommunity.Foundations.Convex.uniformOn volume K) (ENNReal.ofReal eps) := by
     apply tvLe_iterate_lazy_hitAndRun_from_unit_inball hn
-      (Arlib.Polytope.convex_body P.arlibNormal (P.normalizedHitAndRunOffset b eta))
-      (Arlib.Polytope.isClosed_body P.arlibNormal (P.normalizedHitAndRunOffset b eta))
-      (Arlib.Polytope.measurableSet_body P.arlibNormal
+      (ArlibCommunity.Foundations.Convex.Polytope.convex_body P.arlibNormal (P.normalizedHitAndRunOffset b eta))
+      (ArlibCommunity.Foundations.Convex.Polytope.isClosed_body P.arlibNormal (P.normalizedHitAndRunOffset b eta))
+      (ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body P.arlibNormal
         (P.normalizedHitAndRunOffset b eta))
       hbounded (P.normalizedHitAndRun_unitBall b eta)
       (fun _ hx _ hy => Metric.dist_le_diam_of_mem hbounded hx hy)
@@ -231,14 +231,14 @@ theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 21 ≤ n)
   have hmapped := hmix.map (show Measurable (P.samplerChart b) by
     unfold PolytopeData.samplerChart
     fun_prop)
-  have htarget : (Arlib.uniformOn volume K).map (P.samplerChart b) =
-      Arlib.uniformOn volume (hitAndRunBody P b eta) := by
-    change (Arlib.uniformOn volume (P.normalizedHitAndRunBody b eta)).map
-      (P.samplerChart b) = Arlib.uniformOn volume (hitAndRunBody P b eta)
+  have htarget : (ArlibCommunity.Foundations.Convex.uniformOn volume K).map (P.samplerChart b) =
+      ArlibCommunity.Foundations.Convex.uniformOn volume (hitAndRunBody P b eta) := by
+    change (ArlibCommunity.Foundations.Convex.uniformOn volume (P.normalizedHitAndRunBody b eta)).map
+      (P.samplerChart b) = ArlibCommunity.Foundations.Convex.uniformOn volume (hitAndRunBody P b eta)
     rw [P.normalizedHitAndRunBody_eq_preimage b eta]
     exact map_uniformOn_samplerChart hG (P.scaledIncenter b)
-      (Arlib.KV97.measurableSet_inflated P.arlibNormal (P.scaledOffset b)
-        (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))
+      (ArlibCommunity.Algorithms.KV97.measurableSet_inflated P.arlibNormal (P.scaledOffset b)
+        (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))
   have hmix' := hmapped.mono (ENNReal.ofReal_mono (min_le_right _ _))
   rw [htarget] at hmix'
   unfold normalizedHitAndRunContinuousLaw
@@ -252,13 +252,13 @@ theorem normalizedHitAndRunContinuousLaw_isProbabilityMeasure {n : Nat}
     IsProbabilityMeasure (normalizedHitAndRunContinuousLaw P b eta) := by
   letI : NeZero n := ⟨by omega⟩
   let mu0 : Measure (EuclideanSpace Real (Fin n)) :=
-    Arlib.uniformOn volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)
+    ArlibCommunity.Foundations.Convex.uniformOn volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)
   have hball0 : volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1) ≠ 0 :=
     (Metric.measure_ball_pos volume _ one_pos).ne'
   have hballtop : volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1) ≠ ⊤ :=
     measure_ball_lt_top.ne
   letI : IsProbabilityMeasure mu0 :=
-    Arlib.isProbabilityMeasure_uniformOn volume hball0 hballtop
+    ArlibCommunity.Foundations.Convex.isProbabilityMeasure_uniformOn volume hball0 hballtop
   letI : IsMarkovKernel
       (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
         P.arlibNormal (P.normalizedHitAndRunOffset b eta)) := by
@@ -285,13 +285,13 @@ theorem PolytopeData.normalizedHitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ 
   letI : NeZero n := ⟨by omega⟩
   let mu := normalizedHitAndRunContinuousLaw P b eta
   let mu0 : Measure (EuclideanSpace Real (Fin n)) :=
-    Arlib.uniformOn volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)
+    ArlibCommunity.Foundations.Convex.uniformOn volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)
   have hball0 : volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1) ≠ 0 :=
     (Metric.measure_ball_pos volume _ one_pos).ne'
   have hballtop : volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1) ≠ ⊤ :=
     measure_ball_lt_top.ne
   letI : IsProbabilityMeasure mu0 :=
-    Arlib.isProbabilityMeasure_uniformOn volume hball0 hballtop
+    ArlibCommunity.Foundations.Convex.isProbabilityMeasure_uniformOn volume hball0 hballtop
   letI : IsMarkovKernel
       (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
         P.arlibNormal (P.normalizedHitAndRunOffset b eta)) := by

@@ -23,11 +23,11 @@ noncomputable def TTCRuntime.theorem3CV18LogEnvelope
   ArlibCommunity.Algorithms.CV18.protectedLog (1 / q.eps) ^ 2 *
   ArlibCommunity.Algorithms.CV18.protectedLog ((q.n : Real) / q.eps) ^ 2 *
   ArlibCommunity.Algorithms.CV18.protectedLog
-    (ArlibCommunity.Algorithms.CV18.volumeTerminalScale q) ^ 2 *
-  ArlibCommunity.Algorithms.CV18.figureOneScheduledAccuracyLog q *
+    (ArlibCommunity.Algorithms.CV18.terminalScale q) ^ 2 *
+  ArlibCommunity.Algorithms.CV18.accuracyLog q *
   ArlibCommunity.Algorithms.CV18.protectedLog
-    (1 / ArlibCommunity.Algorithms.CV18.figureOneCorrectedBlockMixingError q
-      (ArlibCommunity.Algorithms.CV18.figureOneSafeRetryCount q - 1)) ^ 2
+    (1 / ArlibCommunity.Algorithms.CV18.blockMixingError q
+      (ArlibCommunity.Algorithms.CV18.maxRetries q - 1)) ^ 2
 
 open Classical in
 /-- Largest of the explicit scheduled CV18 logarithmic products across TTC's
@@ -47,7 +47,7 @@ noncomputable def TTCRuntime.theorem3ParameterFactorCV18
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) : Real :=
   45 * (64 *
-      ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant + 1) *
+      ArlibCommunity.Algorithms.CV18.runCostConstant + 1) *
       TTCRuntime.theorem3CV18LogMax hn D p / (p.ε' / 2) ^ 2 +
     (2 : Real) ^ 68 *
       (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
@@ -62,7 +62,7 @@ noncomputable def TTCRuntime.theorem3CV18QueryEnvelope
   let q := CommunityCV18.params (by omega) (D.component i) p.ε'
     (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
   Nat.ceil (45 * (64 *
-    ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
+    ArlibCommunity.Algorithms.CV18.runCostConstant
     + 1) *
     (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogEnvelope q)
@@ -73,7 +73,7 @@ noncomputable def TTCRuntime.theorem3CV18QueryMax
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) : Nat :=
   Nat.ceil (45 * (64 *
-    ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant
+    ArlibCommunity.Algorithms.CV18.runCostConstant
     + 1) *
     (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogMax hn D p)

@@ -56,11 +56,11 @@ theorem PolytopeData.exists_hitAndRun_pointLaw {n : Nat} (hn : 21 ≤ n)
   obtain ⟨D, m, _hD, _hdeadline, _hmceil, hpoint⟩ :=
     P.exists_hitAndRun_latticePointLaw hn b hunit heta0 heta1 hfinite hnonempty
   exact ⟨acceptedRoundedLatticeLaw
-    (Arlib.MarkovChains.iterate
-      (Arlib.MarkovChains.lazy (Arlib.MarkovChains.hitAndRun
-        (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))))
-      (Arlib.uniformOn volume
+    (ArlibCommunity.Foundations.MarkovChainTheory.iterate
+      (ArlibCommunity.Foundations.MarkovChainTheory.lazy (ArlibCommunity.Foundations.MarkovChainTheory.hitAndRun
+        (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))))
+      (ArlibCommunity.Foundations.Convex.uniformOn volume
         (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)) m)
     P b, hpoint⟩
 

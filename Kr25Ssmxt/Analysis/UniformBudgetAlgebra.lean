@@ -88,7 +88,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
     2 * (Real.log 10 + Real.log 6 + 1 +
       Real.log (1 + 8 / p.ε') + 2)
   let A := 45 * (64 *
-    ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant + 1)
+    ArlibCommunity.Algorithms.CV18.runCostConstant + 1)
   let M := (n : Real) ^ 4 * rho ^ 2 * H
   have hn1 : (1 : Real) ≤ n := by exact_mod_cast (show 1 ≤ n by omega)
   have hrho : 1 ≤ rho := by
@@ -110,7 +110,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
     exact NNReal.coe_nonneg _
   have hA : 0 ≤ A := by
     dsimp [A]
-    positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
+    positivity [ArlibCommunity.Algorithms.CV18.runCostConstant_pos]
   have heps : 0 < p.ε' := by
     dsimp [ApproxParams.ε']
     positivity [p.epsilon_pos]
@@ -279,7 +279,7 @@ theorem theorem3UniformComponentBudget_le_headline_scale
       apply Real.log_nonneg
       have : 0 ≤ 8 / p.ε' := div_nonneg (by norm_num) heps.le
       linarith
-    positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
+    positivity [ArlibCommunity.Algorithms.CV18.runCostConstant_pos]
   have hML : 0 ≤ M * L := mul_nonneg (by linarith) hL
   have hceil : (Nat.ceil (M * L) : Real) ≤ M * L + 1 :=
     (Nat.ceil_lt_add_one hML).le

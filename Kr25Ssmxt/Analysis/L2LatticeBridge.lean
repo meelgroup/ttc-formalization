@@ -52,7 +52,7 @@ theorem scaled_family_lattice_comparison {n m : ℕ} (hn : 0 < n) (hm : 0 < m)
       simpa [decimalScale] using hγ i)
     (fun i => (P i).scaledBody_bounded b)
   -- the Euclidean union is the image of `S`
-  have hQ : (⋃ i, Arlib.Polytope.body ((fun i => (P i).arlibNormal) i)
+  have hQ : (⋃ i, ArlibCommunity.Foundations.Convex.Polytope.body ((fun i => (P i).arlibNormal) i)
       ((fun i => (P i).scaledOffset b) i)) = fromEuclidean ⁻¹' S := by
     ext y
     simp only [mem_iUnion, mem_preimage, hSdef, mem_image]
@@ -82,7 +82,7 @@ theorem scaled_family_lattice_comparison {n m : ℕ} (hn : 0 < n) (hm : 0 < m)
     have hSm : NullMeasurableSet (fromEuclidean ⁻¹' S) volume := by
       rw [← hQ]
       exact (MeasurableSet.iUnion fun i =>
-        Arlib.Polytope.measurableSet_body _ _).nullMeasurableSet
+        ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body _ _).nullMeasurableSet
     rw [← hmp.measure_preimage hSm, hpre]
   have hcount : ((S ∩ {x : Point n | ∀ j, ∃ z : Int, x j = (z : Real)}).ncard : ℝ) =
       ({z : Fin n → ℤ | intPoint z ∈ fromEuclidean ⁻¹' S}.ncard : ℝ) := by

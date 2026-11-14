@@ -1,11 +1,11 @@
-import ArlibCommunity.Algorithms.HitAndRun.Analysis.Background.Arlib.Convexity.Polytope
+import ArlibCommunity.Foundations.Convex.Basic.Polytope
 
 /-! # Deflating a polytope with an inscribed `ℓ₂` ball
 
 The `κ`-deflation `P'' = {x | ⟪A i, x⟫ ≤ b i - κ ‖A i‖}` of a polytope containing
 an `ℓ₂` ball of radius `γ ≥ κ` about `c` contains the `(1 - κ/γ)`-homothety of the
 polytope about `c` (the second half of the paper's Claim `cl:recenter`), so
-`vol P'' ≥ (1 - κ/γ)ⁿ vol P`.  This mirrors `Arlib.Polytope.volume_inflate_le`.
+`vol P'' ≥ (1 - κ/γ)ⁿ vol P`.  This mirrors `ArlibCommunity.Foundations.Convex.Polytope.volume_inflate_le`.
 
 The file also collects two elementary power bounds used by the union lemma. -/
 
@@ -20,12 +20,12 @@ variable {n : ℕ} {ι : Type*}
 of an inscribed ball of radius `γ ≥ κ`. -/
 theorem homothety_subset_deflate {A : ι → EuclideanSpace ℝ (Fin n)} {b : ι → ℝ}
     {c : EuclideanSpace ℝ (Fin n)} {γ κ : ℝ} (hγ : 0 < γ) (hκ0 : 0 ≤ κ)
-    (hκγ : κ ≤ γ) (hball : Metric.ball c γ ⊆ Arlib.Polytope.body A b) :
-    AffineMap.homothety c (1 - κ / γ) '' Arlib.Polytope.body A b ⊆
-      Arlib.Polytope.inflate A b (-κ) := by
+    (hκγ : κ ≤ γ) (hball : Metric.ball c γ ⊆ ArlibCommunity.Foundations.Convex.Polytope.body A b) :
+    AffineMap.homothety c (1 - κ / γ) '' ArlibCommunity.Foundations.Convex.Polytope.body A b ⊆
+      ArlibCommunity.Foundations.Convex.Polytope.inflate A b (-κ) := by
   rintro _ ⟨x, hx, rfl⟩
   intro i
-  have hcen := Arlib.Polytope.inner_center_le_of_ball_subset hγ hball i
+  have hcen := ArlibCommunity.Foundations.Convex.Polytope.inner_center_le_of_ball_subset hγ hball i
   have hxi : ⟪A i, x⟫_ℝ ≤ b i := hx i
   set s : ℝ := 1 - κ / γ with hs
   have hs0 : 0 ≤ s := by
@@ -47,9 +47,9 @@ theorem homothety_subset_deflate {A : ι → EuclideanSpace ℝ (Fin n)} {b : ι
 contains an `ℓ₂` ball of radius `γ ≥ κ ≥ 0`. -/
 theorem volume_deflate_ge {A : ι → EuclideanSpace ℝ (Fin n)} {b : ι → ℝ}
     {c : EuclideanSpace ℝ (Fin n)} {γ κ : ℝ} (hγ : 0 < γ) (hκ0 : 0 ≤ κ)
-    (hκγ : κ ≤ γ) (hball : Metric.ball c γ ⊆ Arlib.Polytope.body A b) :
-    ENNReal.ofReal ((1 - κ / γ) ^ n) * volume (Arlib.Polytope.body A b) ≤
-      volume (Arlib.Polytope.inflate A b (-κ)) := by
+    (hκγ : κ ≤ γ) (hball : Metric.ball c γ ⊆ ArlibCommunity.Foundations.Convex.Polytope.body A b) :
+    ENNReal.ofReal ((1 - κ / γ) ^ n) * volume (ArlibCommunity.Foundations.Convex.Polytope.body A b) ≤
+      volume (ArlibCommunity.Foundations.Convex.Polytope.inflate A b (-κ)) := by
   have hs0 : 0 ≤ 1 - κ / γ := by
     rw [sub_nonneg, div_le_one hγ]; exact hκγ
   have hmono := measure_mono (μ := (volume : Measure (EuclideanSpace ℝ (Fin n))))

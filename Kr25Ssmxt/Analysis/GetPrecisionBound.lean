@@ -102,7 +102,7 @@ theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
     linarith
   have hL : 0 ≤ TTCRuntime.theorem3ParameterFactorCV18 hn D p := by
     unfold TTCRuntime.theorem3ParameterFactorCV18
-    positivity [ArlibCommunity.Algorithms.CV18.figureOneFinalScheduledExpectedCostConstant_pos]
+    positivity [ArlibCommunity.Algorithms.CV18.runCostConstant_pos]
   linarith
 
 /-- Theorem 3 with the precision `b` replaced by its input-only bound. -/

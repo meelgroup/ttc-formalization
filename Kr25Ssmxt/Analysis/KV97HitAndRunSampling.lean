@@ -15,7 +15,7 @@ noncomputable section
 namespace Kr25Ssmxt
 
 open MeasureTheory ProbabilityTheory Metric Set
-open Arlib.Lattice.Rounding
+open ArlibCommunity.Algorithms.KV97
 open scoped ENNReal
 
 private lemma kv97_ratio_window_mem_relErr {eta N p : Real}
@@ -71,17 +71,17 @@ theorem almostUniform_acceptedRoundedLatticeLaw_of_tvLe {n : Nat}
     (hfinite : (codedLatticePoints P b).Finite)
     (hnonempty : (codedLatticePoints P b).Nonempty)
     (mu : Measure (EuclideanSpace Real (Fin n))) [IsProbabilityMeasure mu]
-    (htv : Arlib.TVLe mu
-      (Arlib.uniformOn volume
-        (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real)))
+    (htv : ArlibCommunity.Foundations.Convex.TVLe mu
+      (ArlibCommunity.Foundations.Convex.uniformOn volume
+        (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)))
       (ENNReal.ofReal ((eta / 8) /
-        (volume (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))).toReal))) :
+        (volume (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))).toReal))) :
     AlmostUniformPointwise (acceptedRoundedLatticeLaw mu P b)
       (codedLatticePoints P b) eta := by
-  let S := Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-    (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real)
+  let S := ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+    (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)
   let V := (volume S).toReal
   let T := acceptedIntegers P b
   have hTfin : T.Finite := acceptedIntegers_finite P b hfinite
@@ -96,28 +96,28 @@ theorem almostUniform_acceptedRoundedLatticeLaw_of_tvLe {n : Nat}
   have hfin : volume (P.scaledBody b) ≠ ⊤ :=
     (P.scaledBody_bounded b).measure_lt_top.ne
   have hS0 : volume S ≠ 0 :=
-    Arlib.KV97.volume_inflated_ne_zero hgamma Arlib.KV97.cOf_nonneg hbaseball
+    ArlibCommunity.Algorithms.KV97.volume_inflated_ne_zero hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball
   have hStop : volume S ≠ ⊤ :=
-    Arlib.KV97.volume_inflated_ne_top hgamma Arlib.KV97.cOf_nonneg hbaseball hfin
+    ArlibCommunity.Algorithms.KV97.volume_inflated_ne_top hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball hfin
   have hV : 0 < V := ENNReal.toReal_pos hS0 hStop
-  letI : IsProbabilityMeasure (Arlib.uniformOn volume S) :=
-    Arlib.isProbabilityMeasure_uniformOn volume hS0 hStop
+  letI : IsProbabilityMeasure (ArlibCommunity.Foundations.Convex.uniformOn volume S) :=
+    ArlibCommunity.Foundations.Convex.isProbabilityMeasure_uniformOn volume hS0 hStop
   have hfacet1 : (1 : Real) ≤ P.presentation.facetCount := by
     exact_mod_cast P.facets_pos
   have href : ∀ z ∈ T,
       (1 - eta / 4) / V ≤
-          ∫ p, prodTent (kv97LatEmb n z) p ∂(Arlib.uniformOn volume S) ∧
-        ∫ p, prodTent (kv97LatEmb n z) p ∂(Arlib.uniformOn volume S) ≤
+          ∫ p, prodTent (kv97LatEmb n z) p ∂(ArlibCommunity.Foundations.Convex.uniformOn volume S) ∧
+        ∫ p, prodTent (kv97LatEmb n z) p ∂(ArlibCommunity.Foundations.Convex.uniformOn volume S) ≤
           (1 + 0) / V := by
     intro z hz
     have hesc : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 := by
       have he := setIntegral_prodTent_compl_inflate_le_exp
-        (c := Arlib.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
-        P.arlibNormal (P.scaledOffset b) hz Arlib.KV97.cOf_nonneg hfacet1 (by simp)
-      simpa [S, Arlib.KV97.inflated, Arlib.KV97.exp_cOf heta0 heta1] using he
-    exact Arlib.PointwiseRoute.uniformOn_window
+        (c := ArlibCommunity.Algorithms.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
+        P.arlibNormal (P.scaledOffset b) hz ArlibCommunity.Algorithms.KV97.cOf_nonneg hfacet1 (by simp)
+      simpa [S, ArlibCommunity.Algorithms.KV97.inflated, ArlibCommunity.Algorithms.KV97.exp_cOf heta0 heta1] using he
+    exact ArlibCommunity.Algorithms.KV97.uniformOn_window
       (S := S) (V := V) (E := eta / 4) (x := kv97LatEmb n z)
-      (Arlib.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc
+      (ArlibCommunity.Algorithms.KV97.measurableSet_inflated _ _ _ _) rfl hV hesc
   have hepsV :
       (ENNReal.ofReal ((eta / 8) / V)).toReal * V ≤ eta / 8 := by
     rw [ENNReal.toReal_ofReal (by positivity), div_mul_cancel₀ _ hV.ne']
@@ -131,13 +131,13 @@ theorem almostUniform_acceptedRoundedLatticeLaw_of_tvLe {n : Nat}
             (kv97RoundedMeasureLaw mu).real T ≤
           (1 + eta / 8) / ((1 - 3 * eta / 8) * (T.ncard : Real)) := by
     intro z hz
-    have h := Arlib.PointwiseRoute.ratio_bounds_of_tvLe
+    have h := ArlibCommunity.Foundations.MarkovChainTheory.PointwiseRoute.ratio_bounds_of_tvLe
       (i := (⟨z, hz⟩ : T)) (V := V) (a := eta / 4) (b := 0) (θ := eta / 8)
       (g := fun w : T => fun p => prodTent (kv97LatEmb n w.1) p)
       (by simpa [S, V] using htv) ENNReal.ofReal_ne_top
       (fun w => measurable_prodTent (kv97LatEmb n w.1))
       (fun w p => prodTent_nonneg (kv97LatEmb n w.1) p)
-      (fun w p => Arlib.PointwiseRoute.prodTent_le_one (kv97LatEmb n w.1) p)
+      (fun w p => ArlibCommunity.Algorithms.KV97.prodTent_le_one (kv97LatEmb n w.1) p)
       hV hepsV (fun w => (href w.1 w.2).1) (fun w => (href w.1 w.2).2)
       (by linarith)
     rw [Arlib.KV97.roundedMeasureLaw_singleton_real,
@@ -173,51 +173,51 @@ theorem PolytopeData.exists_hitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ n)
     (hfinite : (codedLatticePoints P b).Finite)
     (hnonempty : (codedLatticePoints P b).Nonempty) :
     ∃ (D : Real) (m : Nat),
-      (∀ x ∈ Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real),
-        ∀ y ∈ Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real), dist x y ≤ D) ∧
-      Arlib.MarkovChains.hrDeadlineUncond n D
-          (volume (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-              (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real)) /
+      (∀ x ∈ ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real),
+        ∀ y ∈ ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real), dist x y ≤ D) ∧
+      ArlibCommunity.Foundations.MarkovChainTheory.hrDeadlineUncond n D
+          (volume (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+              (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)) /
             volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)).toReal
           (min 1 ((eta / 8) /
-            (volume (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-              (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))).toReal)) ≤
+            (volume (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+              (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))).toReal)) ≤
         (m : Real) ∧
-      m = Nat.ceil (Arlib.MarkovChains.hrDeadlineUncond n D
-          (volume (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-              (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real)) /
+      m = Nat.ceil (ArlibCommunity.Foundations.MarkovChainTheory.hrDeadlineUncond n D
+          (volume (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+              (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)) /
             volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)).toReal
           (min 1 ((eta / 8) /
-            (volume (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-              (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))).toReal))) ∧
+            (volume (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+              (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))).toReal))) ∧
       AlmostUniformPointwise
         (acceptedRoundedLatticeLaw
-          (Arlib.MarkovChains.iterate
-            (Arlib.MarkovChains.lazy (Arlib.MarkovChains.hitAndRun
-              (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-                (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real))))
-            (Arlib.uniformOn volume
+          (ArlibCommunity.Foundations.MarkovChainTheory.iterate
+            (ArlibCommunity.Foundations.MarkovChainTheory.lazy (ArlibCommunity.Foundations.MarkovChainTheory.hitAndRun
+              (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+                (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))))
+            (ArlibCommunity.Foundations.Convex.uniformOn volume
               (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)) m)
           P b)
         (codedLatticePoints P b) eta := by
   obtain ⟨D, m, hD, hdeadline, hmceil, htv⟩ := P.exists_hitAndRun_inflated_tvLe_inv_volume hn b hunit
-    (cp := Arlib.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
-    Arlib.KV97.cOf_nonneg (by positivity : 0 < eta / 8)
+    (cp := ArlibCommunity.Algorithms.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
+    ArlibCommunity.Algorithms.KV97.cOf_nonneg (by positivity : 0 < eta / 8)
   let mu0 : Measure (EuclideanSpace Real (Fin n)) :=
-    Arlib.uniformOn volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)
+    ArlibCommunity.Foundations.Convex.uniformOn volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)
   have hball0 : volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1) ≠ 0 :=
     (Metric.measure_ball_pos volume _ one_pos).ne'
   have hballtop : volume (Metric.ball (decimalScale b • toEuclidean P.incenter) 1) ≠ ⊤ :=
     measure_ball_lt_top.ne
   letI : IsProbabilityMeasure mu0 :=
-    Arlib.isProbabilityMeasure_uniformOn volume hball0 hballtop
+    ArlibCommunity.Foundations.Convex.isProbabilityMeasure_uniformOn volume hball0 hballtop
   let mu : Measure (EuclideanSpace Real (Fin n)) :=
-    Arlib.MarkovChains.iterate
-      (Arlib.MarkovChains.lazy (Arlib.MarkovChains.hitAndRun
-        (Arlib.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (Arlib.KV97.cOf eta) (P.presentation.facetCount : Real)))) mu0 m
+    ArlibCommunity.Foundations.MarkovChainTheory.iterate
+      (ArlibCommunity.Foundations.MarkovChainTheory.lazy (ArlibCommunity.Foundations.MarkovChainTheory.hitAndRun
+        (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)))) mu0 m
   letI : IsProbabilityMeasure mu := by
     dsimp only [mu]
     infer_instance

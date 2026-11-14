@@ -7,7 +7,7 @@ contains nothing the public statements do not use.
 
 ## Current status (2026-11-07, revised)
 
-**Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `4823189`
+**Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `41a5467`
 (`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
 with no errors and no `sorry`. Both public theorems depend only on `propext`,
 `Classical.choice` and `Quot.sound`.
@@ -25,9 +25,11 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
 
 **Oracles, discharged to arlib-community public headlines.**
 - *Volume:* the program run is arlib-community's `CV18.cv18Program`
-  (`CommunityCV18.algorithm` in `Model/Run.lean`) on an exact facet-membership
-  query, rescaled and clipped as in the paper. Its guarantee is
-  `CV18.cv18TheoremOneOne_program`.
+  (`CV18/Model/Pseudocode.lean`; `CommunityCV18.algorithm` in `Model/Run.lean`)
+  on an exact facet-membership query, rescaled and clipped as in the paper. Its
+  guarantee is `CV18.cv18TheoremOneOne` (`CV18/Model/Theorem.lean`): accuracy
+  with probability `1 - p`, and `queryCost ≤ ⌈queryRate q⌉`
+  (`CommunityCV18.queryCostBound`).
 - *Sampling:* arlib-community's `HitAndRun.finiteFacetStep` walk in unit-inball
   coordinates, mapped back and KV97-rounded with rejection
   (`normalizedHitAndRunPointLaw`). Its mixing bound is `HitAndRun.hitAndRun_mixes`.
