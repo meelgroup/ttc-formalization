@@ -164,11 +164,31 @@ def HalfspacePresentation.carrier {n : Nat} (H : HalfspacePresentation n) : Set 
 def euclideanBall {n : Nat} (c : Point n) (r : Real) : Set (Point n) :=
   {x | ‖(WithLp.toLp 2 (x - c) : EuclideanSpace Real (Fin n))‖ ≤ r}
 
-/-- A surviving normalized component, with the geometric read-offs used by the paper.
+/-- The coordinate identity from TTC's product space to arlib's Euclidean space. -/
+def toEuclidean {n : Nat} (x : Point n) : EuclideanSpace Real (Fin n) :=
+  WithLp.toLp 2 x
 
-`inradius` is the paper's `MaxInscribedBall` radius: `inball` says the `ℓ₂` ball of
-that radius about `incenter` lies in the component, and `inradius_max` says no larger
-`ℓ₂` ball does. `getprec` recomputes it by the Chebyshev-centre LP (`Model/Run.lean`).
+/-- The constraints of the Chebyshev-centre LP `maximize t s.t. aⱼ · c + t ‖aⱼ‖₂ ≤ bⱼ`
+at the point `(c, t)`. -/
+def HalfspacePresentation.chebyshevFeasible {n : Nat} (H : HalfspacePresentation n)
+    (c : Point n) (t : Real) : Prop :=
+  ∀ j, dotProduct (H.normal j) c + t * ‖toEuclidean (H.normal j)‖ ≤ H.offset j
+
+/-- `MaxInscribedBall`: the optimum value of the Chebyshev-centre LP. -/
+def HalfspacePresentation.MaxInscribedBall {n : Nat} (H : HalfspacePresentation n) : Real :=
+  sSup {t | ∃ c, H.chebyshevFeasible c t}
+
+/-- The centre returned with `MaxInscribedBall`: an optimal point `c` of the Chebyshev-centre
+LP. Optimal centres need not be unique; this is one of them. -/
+def HalfspacePresentation.ChebyshevCenter {n : Nat} (H : HalfspacePresentation n) : Point n :=
+  Classical.epsilon fun c => H.chebyshevFeasible c H.MaxInscribedBall
+
+/-- A surviving normalized component: a bounded, full-dimensional polytope in `ℝⁿ`, `n ≥ 1`.
+
+Its inscribed ball is computed, not supplied: `inradius` `γ` and `incenter` `z` are the
+optimum value and an optimal centre of the Chebyshev-centre LP (`MaxInscribedBall`).
+`Analysis/ChebyshevCenter.lean` proves `γ > 0`, `B₂(z, γ) ⊆ P`, and that no larger `ℓ₂`
+ball fits.
 
 `outerRadius` is the paper's `R`: the radius of a ball about the origin enclosing the
 component. The algorithm never reads it. Its sampler uses the computed
@@ -177,17 +197,22 @@ enters only Theorem 3's statement, through `ρ = maxᵢ Rᵢ/γᵢ` and `R_max`.
 structure PolytopeData (n : Nat) where
   presentation : HalfspacePresentation n
   facets_pos : 0 < presentation.facetCount
-  incenter : Point n
-  inradius : Real
-  inradius_pos : 0 < inradius
-  inball : euclideanBall incenter inradius ⊆ presentation.carrier
-  inradius_max : ∀ (c : Point n) (r : Real),
-    euclideanBall c r ⊆ presentation.carrier → r ≤ inradius
+  dim_pos : 0 < n
+  fullDimensional : ∃ (c : Point n) (r : Real), 0 < r ∧
+    euclideanBall c r ⊆ presentation.carrier
   bounded : Bornology.IsBounded presentation.carrier
   outerRadius : Real
   outerRadius_nonneg : 0 ≤ outerRadius
   outer_bound : ∀ x ∈ presentation.carrier,
     ‖(WithLp.toLp 2 x : EuclideanSpace Real (Fin n))‖ ≤ outerRadius
+
+/-- `γ = MaxInscribedBall(P)`, the radius of a largest inscribed `ℓ₂` ball. -/
+def PolytopeData.inradius {n : Nat} (P : PolytopeData n) : Real :=
+  P.presentation.MaxInscribedBall
+
+/-- `z`, the centre of that ball, as returned with `MaxInscribedBall`. -/
+def PolytopeData.incenter {n : Nat} (P : PolytopeData n) : Point n :=
+  P.presentation.ChebyshevCenter
 
 /-- The geometric carrier of a normalized component. -/
 abbrev PolytopeData.carrier {n : Nat} (P : PolytopeData n) : Set (Point n) :=

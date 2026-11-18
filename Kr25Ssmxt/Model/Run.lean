@@ -33,10 +33,6 @@ namespace Kr25Ssmxt
 
 /-! ## Executable polytope bridges -/
 
-/-- The coordinate identity from TTC's product space to arlib's Euclidean space. -/
-def toEuclidean {n : Nat} (x : Point n) : EuclideanSpace Real (Fin n) :=
-  WithLp.toLp 2 x
-
 /-- A TTC facet normal in arlib's Euclidean representation. -/
 def PolytopeData.arlibNormal {n : Nat} (P : PolytopeData n) :
     Fin P.presentation.facetCount → EuclideanSpace Real (Fin n) :=
@@ -63,19 +59,11 @@ linear program
 
   `maximize t  subject to  aⱼ · c + t ‖aⱼ‖₂ ≤ bⱼ  for every facet j`
 
-in the variables `(c, t)`. `MaxInscribedBall` is its optimum value. The LP's feasible pairs
-are exactly the `ℓ₂` balls inside the component (`euclideanBall_subset_iff_chebyshevFeasible`),
-so its optimum is the maximal inscribed radius, i.e. the component's `inradius`
-(`PolytopeData.MaxInscribedBall_eq_inradius`). -/
-
-/-- The constraints of the Chebyshev-centre LP at the point `(c, t)`. -/
-def HalfspacePresentation.chebyshevFeasible {n : Nat} (H : HalfspacePresentation n)
-    (c : Point n) (t : Real) : Prop :=
-  ∀ j, dotProduct (H.normal j) c + t * ‖toEuclidean (H.normal j)‖ ≤ H.offset j
-
-/-- The optimum value of the Chebyshev-centre LP. -/
-def HalfspacePresentation.MaxInscribedBall {n : Nat} (H : HalfspacePresentation n) : Real :=
-  sSup {t | ∃ c, H.chebyshevFeasible c t}
+in the variables `(c, t)`. `MaxInscribedBall` is its optimum value and `ChebyshevCenter` an
+optimal `c` (`Model/Prelude.lean`); they are a component's `inradius` `γ` and `incenter` `z`.
+The LP's feasible pairs are exactly the `ℓ₂` balls inside the component
+(`euclideanBall_subset_iff_chebyshevFeasible`), and `Analysis/ChebyshevCenter.lean` proves
+the optimum is attained, so `B₂(z, γ)` is a largest ball inside the component. -/
 
 /-! ## Line `line:inradius`: `BoundingRadius` by `2n` coordinate LPs
 
@@ -208,7 +196,7 @@ end CommunityCV18
 
 /-- The positive determinant of TTC's inverse normalization chart. -/
 def PolytopeData.cv18VolumeScale {n : Nat} (P : PolytopeData n) : NNReal :=
-  ⟨P.inradius ^ n, pow_nonneg P.inradius_pos.le n⟩
+  Real.toNNReal (P.inradius ^ n)
 
 /-- Preserve the success tag and rescale a normalized-body estimate. -/
 def PolytopeData.rescaleCV18Outcome {n : Nat} (P : PolytopeData n)

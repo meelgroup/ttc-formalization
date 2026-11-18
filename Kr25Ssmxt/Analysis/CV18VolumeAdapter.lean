@@ -120,8 +120,10 @@ theorem PolytopeData.rescaleCV18Law_spec {n : Nat} (P : PolytopeData n)
     have ho' := ho htag
     have hc : 0 ≤ P.inradius ^ n := pow_nonneg P.inradius_pos.le n
     have htarget := P.inradiusPow_mul_volume_cv18Body_toReal
-    change P.inradius ^ n * (o.2 : Real) ∈
-      Arlib.relErr eta (volume P.carrier).toReal
+    have hscale : ((P.rescaleCV18Outcome o).2 : Real) = P.inradius ^ n * (o.2 : Real) := by
+      simp [PolytopeData.rescaleCV18Outcome, PolytopeData.cv18VolumeScale,
+        Real.coe_toNNReal _ hc]
+    rw [hscale]
     rw [← htarget, Arlib.mem_relErr] at ⊢
     rw [Arlib.mem_relErr] at ho'
     constructor

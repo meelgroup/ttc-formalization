@@ -1,4 +1,5 @@
 import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ChebyshevCenter
 
 /-!
 # The reference parametrisation of `ttc`

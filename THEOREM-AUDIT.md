@@ -130,9 +130,12 @@ names.
   `ℓⱼ = min xⱼ`, `uⱼ = max xⱼ` over `Ax ≤ b` as optimum values, and
   `R₀ = (Σⱼ max(|ℓⱼ−zⱼ|, |uⱼ−zⱼ|)²)^{1/2}` about the inscribed ball's centre `z`. The
   analysis proves `P ⊆ B₂(z, R₀)` (`norm_sub_incenter_le_boundingRadius`), `γ ≤ R₀` and
-  Proposition `prop:bounding-radius`, `R₀ ≤ 2√n R` (`boundingRadius_le`). `γᵢ` and `z` are
-  still fields of `PolytopeData`, matched to the Chebyshev LP by
-  `MaxInscribedBall_eq_inradius`. `outerRadius` is the paper's `R`; the algorithm never
+  Proposition `prop:bounding-radius`, `R₀ ≤ 2√n R` (`boundingRadius_le`). `MaxInscribedBall` is
+  computed too: `γᵢ = PolytopeData.inradius` is the Chebyshev LP's optimum value and
+  `zᵢ = PolytopeData.incenter` an optimal centre (`ChebyshevCenter`, chosen with
+  `Classical.epsilon`). `PolytopeData` itself carries only the presentation,
+  boundedness, full-dimensionality (some ball of positive radius fits), `n ≥ 1`, and
+  `outerRadius`. `outerRadius` is the paper's `R`; the algorithm never
   reads it, and it appears only in Theorem 3's `ρ` and `R_max`.
 - Hypotheses not in the printed statements: a bounded solution set (needed for
   finite volume and the outer radii) and `n ≥ 21` (inherited from the
@@ -143,13 +146,15 @@ names.
   `GetPrecision` returns `⌈log₁₀ maxratio⌉` with `maxratio = max(1, maxᵢ γ/γ̂ᵢ)` at
   `η = ε/96`. `γ̂ᵢ = MaxInscribedBall(Pᵢ)` is computed by the Chebyshev-centre LP
   `maximize t s.t. aⱼ·c + t‖aⱼ‖₂ ≤ bⱼ` (`HalfspacePresentation.MaxInscribedBall`, its
-  optimum value). In `Analysis/PrecisionChoice.lean`,
-  `euclideanBall_subset_iff_chebyshevFeasible` shows the LP's feasible pairs are exactly
-  the inscribed `ℓ₂` balls, `MaxInscribedBall_eq_inradius` that its optimum is the
-  component's `inradius`, and `getPrecisionChoice` that `GetPrecision`'s output is
-  adequate.
-- `PolytopeData.inradius` is the paper's maximal inscribed **`ℓ₂`** radius: `inball`
-  is an `ℓ₂` ball (`euclideanBall`) and `inradius_max` says no larger `ℓ₂` ball fits.
+  optimum value), which is by definition the component's `inradius`.
+  `Analysis/ChebyshevCenter.lean` shows the LP's feasible pairs are exactly the inscribed
+  `ℓ₂` balls (`euclideanBall_subset_iff_chebyshevFeasible`) and that the optimum is
+  attained (`exists_chebyshev_optimum`: the nonnegative feasible pairs are compact, since
+  `c` lies in the bounded component and `t ≤ R`). `getPrecisionChoice` shows
+  `GetPrecision`'s output is adequate.
+- `PolytopeData.inradius` is the paper's maximal inscribed **`ℓ₂`** radius: the theorems
+  `inradius_pos`, `inball` (an `ℓ₂` ball, `euclideanBall`) and `inradius_max` (no larger
+  `ℓ₂` ball fits) are proved from the LP.
   So `γᵢ`, `ρ = maxᵢ Rᵢ/γᵢ` and `getprec`'s `b` are the paper's quantities.
 - `PrecisionAdequate` is exactly the printed condition `γ ≤ 10ᵇ γ̂ᵢ` at `η = ε/96`.
   `PrecisionAdequate.split` derives the two uses in the analysis: the union lattice
