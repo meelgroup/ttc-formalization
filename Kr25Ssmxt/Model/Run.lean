@@ -77,6 +77,30 @@ def HalfspacePresentation.chebyshevFeasible {n : Nat} (H : HalfspacePresentation
 def HalfspacePresentation.MaxInscribedBall {n : Nat} (H : HalfspacePresentation n) : Real :=
   sSup {t | ∃ c, H.chebyshevFeasible c t}
 
+/-! ## Line `line:inradius`: `BoundingRadius` by `2n` coordinate LPs
+
+The appendix's `BoundingRadius` solves `ℓⱼ = min_{Ax ≤ b} xⱼ` and `uⱼ = max_{Ax ≤ b} xⱼ`
+for every coordinate `j` and returns `R₀ = (Σⱼ max(|ℓⱼ − zⱼ|, |uⱼ − zⱼ|)²)^{1/2}` about the
+centre `z` of `MaxInscribedBall`. As for `MaxInscribedBall`, each LP is its optimum value.
+`Analysis/NormalizedHitAndRunGeometry.lean` proves `P ⊆ B₂(z, R₀)` and `R₀ ≤ 2√n R`. -/
+
+/-- The coordinate LP `ℓⱼ = min_{Ax ≤ b} xⱼ`. -/
+def HalfspacePresentation.coordinateMin {n : Nat} (H : HalfspacePresentation n)
+    (j : Fin n) : Real :=
+  sInf ((fun x : Point n => x j) '' H.carrier)
+
+/-- The coordinate LP `uⱼ = max_{Ax ≤ b} xⱼ`. -/
+def HalfspacePresentation.coordinateMax {n : Nat} (H : HalfspacePresentation n)
+    (j : Fin n) : Real :=
+  sSup ((fun x : Point n => x j) '' H.carrier)
+
+/-- `BoundingRadius(P) = (Σⱼ max(|ℓⱼ − zⱼ|, |uⱼ − zⱼ|)²)^{1/2}` about the inscribed ball's
+centre `z`. -/
+def PolytopeData.BoundingRadius {n : Nat} (P : PolytopeData n) : Real :=
+  Real.sqrt (∑ j : Fin n,
+    (max |P.presentation.coordinateMin j - P.incenter j|
+      |P.presentation.coordinateMax j - P.incenter j|) ^ 2)
+
 /-! ## Line `line:getprec`: `GetPrecision` (Algorithm `getprec`) -/
 
 /-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
@@ -241,11 +265,15 @@ def acceptedRoundedWithAttempts {n : Nat}
   ((ProbabilityTheory.geometricMeasure (roundedAcceptanceProbability mu P b)).prod
     (acceptedRoundedLatticeLaw mu P b)).map fun pair => (pair.2, pair.1 + 1)
 
+/-- The KV97 margin `c = √(2 log (16/ε))` of `eq:sampler-body`: arlib-community's `cOf` at
+accuracy `ε/4`. -/
+abbrev samplerC (eta : Real) : Real := ArlibCommunity.Algorithms.KV97.cOf (eta / 4)
+
 /-- The explicitly inflated offsets scanned by the finite-facet implementation. -/
 def hitAndRunOffset {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
     Fin P.presentation.facetCount → Real :=
   fun i => P.scaledOffset b i +
-    ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real) *
+    ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta) (P.presentation.facetCount : Real) *
       ‖P.arlibNormal i‖
 
 /-! ## `GenerateSamples` (Algorithm `alg:generatesamples`)
@@ -278,25 +306,26 @@ def PolytopeData.normalizedHitAndRunOffset {n : Nat} (P : PolytopeData n)
 /-! ### Line `alg:generatesamples`: the walk length `T` and accuracy `ν`
 
 In lattice units (`h = 1` after the decimal dilation) the inscribed ball has radius
-`γ / h = scaledInradius`, the enclosing radius is `R₀ / h = 10^b · outerRadius`, and the
-inflation is `κ = cOf ε + √(2 log r)`. The inflated body `P'` has radius
-`R'₀ / h = (1 + hκ/γ) R₀ / h`, and the walk length of `eq:sampler-parameters` is
+`γ / h = scaledInradius`, the enclosing radius is `R₀ / h = 10^b · BoundingRadius`, and the
+inflation is `κ = c + √(2 log r)` with `c = √(2 log (16/ε))` (`eq:sampler-body`). The
+inflated body `P'` has radius `R'₀ / h = (1 + hκ/γ) R₀ / h`, and the walk length of
+`eq:sampler-parameters` is
 
   `T = ⌈C n³ (R'₀/γ)² log (2R'₀/h)⌉`,
 
-arithmetic in `γ`, `outerRadius`, `b`, `ε`, `n` and the facet count. The accuracy
+arithmetic in `γ`, `BoundingRadius`, `b`, `ε`, `n` and the facet count. The accuracy
 `ν = ε hⁿ / (16 (2R'₀)ⁿ)` is not computed by the algorithm; it is defined with the
 analysis (`hitAndRunTolerance`, `Analysis/HitAndRunScaledPolytope.lean`). -/
 
 /-- The KV97 inflation `κ` of the sampler body, in lattice units. -/
 def PolytopeData.samplerKappa {n : Nat} (P : PolytopeData n) (eta : Real) : Real :=
-  ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
     (P.presentation.facetCount : Real)
 
 /-- `R'₀ / h = (1 + hκ/γ) · R₀ / h`: the enclosing radius of the inflated body `P'`. -/
 def PolytopeData.samplerOuterRadius {n : Nat} (P : PolytopeData n) (b : Nat)
     (eta : Real) : Real :=
-  (1 + P.samplerKappa eta / P.scaledInradius b) * (decimalScale b * P.outerRadius)
+  (1 + P.samplerKappa eta / P.scaledInradius b) * (decimalScale b * P.BoundingRadius)
 
 /-- The constant `C` of the walk length `T`. -/
 def hitAndRunWalkConstant : Real := 2 ^ 68

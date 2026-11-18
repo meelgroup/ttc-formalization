@@ -22,7 +22,7 @@ chart `PolytopeData.normalizedHitAndRunBody`. -/
 def hitAndRunBody {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
     Set (EuclideanSpace Real (Fin n)) :=
   ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
-    (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)
+    (samplerC eta) (P.presentation.facetCount : Real)
 
 /-- `P'` in the unit-inball chart: the body on which the walk runs. -/
 def PolytopeData.normalizedHitAndRunBody {n : Nat} (P : PolytopeData n)
@@ -310,7 +310,7 @@ theorem PolytopeData.hitAndRunBody_bounded {n : Nat} (P : PolytopeData n)
     Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
   obtain ⟨D₀, hD₀⟩ := Metric.isBounded_iff.mp (P.scaledBody_bounded b)
   let D : Real :=
-    (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+    (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
       (P.presentation.facetCount : Real) / gamma) * D₀
   apply Metric.isBounded_iff.mpr
   refine ⟨D, ?_⟩

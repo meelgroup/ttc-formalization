@@ -23,9 +23,9 @@ noncomputable def TTCRuntime.theorem3ParameterFactor {n k : Nat} {F : LRAFormula
   45 * (64 * 10 ^ 30 + 1) *
       TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε' (p.δ' D.componentCount) / (p.ε' / 2) ^ 2 +
     (2 : Real) ^ 68 *
-      (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
+      (5 * (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
         2 * (Real.log 10 + Real.log 6 + 1 +
-          Real.log (1 + 8 / p.ε') + 2)) + 20
+          Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 20
 
 /-- TTC's name for CV18's scheduled logarithmic product is arlib-community's. -/
 theorem TTCRuntime.theorem3CV18LogEnvelope_eq
@@ -128,8 +128,8 @@ theorem TTCRuntime.inputScale_mul_factor_le {n k : Nat} {F : LRAFormula n k}
       TTCRuntime.polylogFactors D p / p.epsilon ^ 2 := by
   set L := TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε' (p.δ' D.componentCount)
   set H := (2 : Real) ^ 68 *
-    (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
-      2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2))
+    (5 * (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
+      2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2) + Real.log n))
   set A : Real := 45 * (64 * 10 ^ 30 + 1)
   have hS := TTCRuntime.theorem3InputScale_nonneg D p
   have hL : 0 ≤ L := TTCRuntime.theorem3CV18LogBound_nonneg _ _ _ _
@@ -138,6 +138,7 @@ theorem TTCRuntime.inputScale_mul_factor_le {n k : Nat} {F : LRAFormula n k}
   have hrho : 1 ≤ TTCRuntime.Rho D := le_max_left _ _
   have hε' : 0 < p.ε' := by unfold ApproxParams.ε'; positivity
   have hH : 0 ≤ H := by
+    have hlogn := Real.log_natCast_nonneg n
     have h8 : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
     have hr : 0 ≤ Real.log (4 * TTCRuntime.Rho D + 1) := Real.log_nonneg (by linarith)
     have h10 : 0 ≤ Real.log 10 := Real.log_nonneg (by norm_num)

@@ -90,10 +90,13 @@ theorem kv97_raw_point_lower_of_tvLe {n : Nat} (P : PolytopeData n)
     exact_mod_cast P.facets_pos
   have hesc : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 := by
     have he := setIntegral_prodTent_compl_inflate_le_exp
-      (c := ArlibCommunity.Algorithms.KV97.cOf eta) (r := (P.presentation.facetCount : Real))
+      (c := samplerC eta) (r := (P.presentation.facetCount : Real))
       P.arlibNormal (P.scaledOffset b) hz ArlibCommunity.Algorithms.KV97.cOf_nonneg hfacet1 (by simp)
-    simpa [S, hitAndRunBody, ArlibCommunity.Algorithms.KV97.inflated,
-      ArlibCommunity.Algorithms.KV97.exp_cOf heta0 heta1] using he
+    have hexp := ArlibCommunity.Algorithms.KV97.exp_cOf (ε := eta / 4) (by positivity)
+      (by linarith)
+    have h16 : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 / 4 := by
+      simpa [S, hitAndRunBody, ArlibCommunity.Algorithms.KV97.inflated, samplerC, hexp] using he
+    linarith
   have href : (1 - eta / 4) / V ≤
       ∫ p, prodTent (kv97LatEmb n z) p ∂(ArlibCommunity.Foundations.Convex.uniformOn volume S) :=
     (ArlibCommunity.Algorithms.KV97.uniformOn_window
@@ -169,7 +172,7 @@ with the scaled inball. -/
 theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
     (P : PolytopeData n) {η γ : Real} (hη0 : 0 < η) (hη1 : η ≤ 1)
     (hγ : 0 < γ) (hprecision : samplerRadiusRequirement P η ≤ γ) :
-    ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf η)
+    ArlibCommunity.Algorithms.KV97.kappaOf (samplerC η)
       (P.presentation.facetCount : Real) / γ ≤ η / (128 * n) := by
   let r : Real := P.presentation.facetCount
   let L : Real := Real.log (32 * r / η)
@@ -182,18 +185,21 @@ theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
     nlinarith
   have hL : 0 < L := Real.log_pos harg
   have hroot : 0 < Real.sqrt L := Real.sqrt_pos.2 hL
-  have hlog1 : Real.log (4 / η) ≤ L := by
+  have hlog1 : Real.log (4 / (η / 4)) ≤ L := by
     apply Real.log_le_log (by positivity)
+    rw [show 4 / (η / 4) = 16 / η by field_simp; ring]
     apply (div_le_div_of_nonneg_right ?_ hη0.le)
     nlinarith
   have hlog2 : Real.log r ≤ L := by
     apply Real.log_le_log (by linarith)
     apply (le_div_iff₀ hη0).2
     nlinarith
-  have hc : ArlibCommunity.Algorithms.KV97.cOf η ≤ 2 * Real.sqrt L := by
-    have hsquare := ArlibCommunity.Algorithms.KV97.cOf_sq hη0 hη1
+  have hc : samplerC η ≤ 2 * Real.sqrt L := by
+    have hsquare := ArlibCommunity.Algorithms.KV97.cOf_sq (ε := η / 4) (by positivity)
+      (by linarith)
     have hrootSquare : (Real.sqrt L) ^ 2 = L := Real.sq_sqrt hL.le
-    have hc0 := ArlibCommunity.Algorithms.KV97.cOf_nonneg (ε := η)
+    have hc0 := ArlibCommunity.Algorithms.KV97.cOf_nonneg (ε := η / 4)
+    show ArlibCommunity.Algorithms.KV97.cOf (η / 4) ≤ _
     nlinarith
   have hfacet : Real.sqrt (2 * Real.log r) ≤ 2 * Real.sqrt L := by
     have hrootSquare : (Real.sqrt L) ^ 2 = L := Real.sq_sqrt hL.le
@@ -202,13 +208,13 @@ theorem sampler_kappa_over_radius_le {n : Nat} (hn : 0 < n)
         2 * Real.log r := Real.sq_sqrt (by positivity)
     have hnonneg := Real.sqrt_nonneg (2 * Real.log r)
     nlinarith
-  have hkappa : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf η) r ≤
+  have hkappa : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC η) r ≤
       4 * Real.sqrt L := by
     unfold ArlibCommunity.Algorithms.KV97.kappaOf
     linarith
   have hreq : (512 * n / η) * Real.sqrt L ≤ γ := by
     simpa [samplerRadiusRequirement, r, L] using hprecision
-  have hmain : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf η) r ≤
+  have hmain : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC η) r ≤
       (η / (128 * n)) * γ := by
     have hnreal : (0 : Real) < n := by exact_mod_cast hn
     have hcoef : 0 < η / (128 * n) := by positivity
@@ -264,7 +270,7 @@ theorem normalizedHitAndRun_acceptance_ge_half_of_base_comparison {n : Nat}
     (1 / 2 : Real) ≤
       (roundedAcceptanceProbability (normalizedHitAndRunContinuousLaw P b eta) P b : Real) := by
   let gamma : Real := decimalScale b * P.inradius
-  let inflation : Real := (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  let inflation : Real := (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
     (P.presentation.facetCount : Real) / gamma) ^ n
   have hgamma : 0 < gamma := mul_pos (decimalScale_pos b) P.inradius_pos
   have hbaseball : Metric.ball (decimalScale b • toEuclidean P.incenter) gamma ⊆
@@ -280,7 +286,7 @@ theorem normalizedHitAndRun_acceptance_ge_half_of_base_comparison {n : Nat}
     simpa [hitAndRunBody, inflation, gamma, PolytopeData.scaledBody] using
       (ArlibCommunity.Algorithms.KV97.toReal_volume_inflated_le hgamma ArlibCommunity.Algorithms.KV97.cOf_nonneg
         hbaseball hfin)
-  have hkappa0 : 0 ≤ ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  have hkappa0 : 0 ≤ ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
       (P.presentation.facetCount : Real) :=
     ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
   have hinflation : 0 ≤ inflation := by

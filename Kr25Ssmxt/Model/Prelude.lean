@@ -170,9 +170,10 @@ def euclideanBall {n : Nat} (c : Point n) (r : Real) : Set (Point n) :=
 that radius about `incenter` lies in the component, and `inradius_max` says no larger
 `ℓ₂` ball does. `getprec` recomputes it by the Chebyshev-centre LP (`Model/Run.lean`).
 
-`outerRadius` is an explicit preprocessing certificate, rather than merely a consequence
-of `bounded`.  CV18's cooling schedule and running-time bound depend quantitatively on this
-number, so hiding it behind classical choice would not describe an executable algorithm. -/
+`outerRadius` is the paper's `R`: the radius of a ball about the origin enclosing the
+component. The algorithm never reads it. Its sampler uses the computed
+`PolytopeData.BoundingRadius` (`Model/Run.lean`), which is at most `2√n R`. `outerRadius`
+enters only Theorem 3's statement, through `ρ = maxᵢ Rᵢ/γᵢ` and `R_max`. -/
 structure PolytopeData (n : Nat) where
   presentation : HalfspacePresentation n
   facets_pos : 0 < presentation.facetCount
@@ -369,15 +370,17 @@ polylogarithmic in `n`, `m`, `ρ`, `R_max`, `1/γ_min`, `1/ε` and `1/δ`:
 * `theorem3InputScale`, the precision scale `2 + log₁₀⁺ γ + log₁₀⁺ (1/γ_min) + log⁺ R_max`;
 * CV18's query rate: its constant `45 · (64 · 10³⁰ + 1)` (times `576`, from `ε' = ε/12`)
   and its logarithmic factors `theorem3CV18LogBound`;
-* the Hit-and-Run constant `2⁶⁸` with its logarithms, and the thinning counter. -/
+* the Hit-and-Run walk length: its constant `C = 2⁶⁸`, a factor `5` (from
+  `(R'₀/γ)² ≤ 5n ρ²`, as `BoundingRadius ≤ 2√n R`), and its logarithms, including
+  `log n`; and the thinning counter. -/
 noncomputable def polylogFactors {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) : Real :=
   theorem3InputScale D p *
     (576 * (45 * (64 * 10 ^ 30 + 1)) *
         theorem3CV18LogBound n (Rho D) p.ε' (p.δ' D.componentCount) +
       (2 : Real) ^ 68 *
-        (Real.log 8 + Real.log (4 * Rho D + 1) +
-          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2)) + 21)
+        (5 * (Real.log 8 + Real.log (4 * Rho D + 1) +
+          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 21)
 
 end TTCRuntime
 

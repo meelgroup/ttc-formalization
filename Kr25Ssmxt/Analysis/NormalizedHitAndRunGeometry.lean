@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.EuclideanInball
 import Kr25Ssmxt.Analysis.OracleContracts
 import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.KV97HitAndRunSampling
@@ -139,14 +140,14 @@ theorem PolytopeData.scaledBody_dist_le_outerRadius {n : Nat}
 theorem PolytopeData.normalizedHitAndRun_diameter_le {n : Nat}
     (P : PolytopeData n) (b : Nat) (eta : Real) :
     Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-      (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+      (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
         (P.presentation.facetCount : Real) / P.scaledInradius b) *
         (2 * P.outerRadius / P.inradius) := by
   have hG : 0 < P.scaledInradius b :=
     mul_pos (decimalScale_pos b) P.inradius_pos
   have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
       P.scaledBody b := Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
-  let κ := ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  let κ := ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
     (P.presentation.facetCount : Real)
   let C := (1 + κ / P.scaledInradius b) * (2 * P.outerRadius / P.inradius)
   have hκ : 0 ≤ κ := ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
@@ -229,6 +230,158 @@ theorem PolytopeData.inradius_le_outerRadius {n : Nat}
   change ‖toEuclidean y‖ ≤ P.outerRadius at hyR
   linarith
 
+/-! ### `BoundingRadius` -/
+
+theorem PolytopeData.coordinate_abs_le_outerRadius {n : Nat} (P : PolytopeData n)
+    {x : Point n} (hx : x ∈ P.carrier) (j : Fin n) : |x j| ≤ P.outerRadius := by
+  have h := PiLp.norm_apply_le (WithLp.toLp 2 x : EuclideanSpace Real (Fin n)) j
+  have hR := P.outer_bound x hx
+  simpa [Real.norm_eq_abs] using h.trans hR
+
+private theorem PolytopeData.coordinate_bddBelow {n : Nat} (P : PolytopeData n) (j : Fin n) :
+    BddBelow ((fun x : Point n => x j) '' P.presentation.carrier) := by
+  refine ⟨-P.outerRadius, ?_⟩
+  rintro _ ⟨y, hy, rfl⟩
+  exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).1
+
+private theorem PolytopeData.coordinate_bddAbove {n : Nat} (P : PolytopeData n) (j : Fin n) :
+    BddAbove ((fun x : Point n => x j) '' P.presentation.carrier) := by
+  refine ⟨P.outerRadius, ?_⟩
+  rintro _ ⟨y, hy, rfl⟩
+  exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).2
+
+/-- Every point of the component lies between the coordinate LP optima. -/
+theorem PolytopeData.coordinate_bounds {n : Nat} (P : PolytopeData n)
+    {x : Point n} (hx : x ∈ P.carrier) (j : Fin n) :
+    P.presentation.coordinateMin j ≤ x j ∧ x j ≤ P.presentation.coordinateMax j :=
+  ⟨csInf_le (P.coordinate_bddBelow j) ⟨x, hx, rfl⟩,
+    le_csSup (P.coordinate_bddAbove j) ⟨x, hx, rfl⟩⟩
+
+/-- The coordinate LP optima lie within the outer radius. -/
+theorem PolytopeData.coordinate_optima_abs_le {n : Nat} (P : PolytopeData n) (j : Fin n) :
+    |P.presentation.coordinateMin j| ≤ P.outerRadius ∧
+      |P.presentation.coordinateMax j| ≤ P.outerRadius := by
+  have hne : ((fun x : Point n => x j) '' P.presentation.carrier).Nonempty :=
+    ⟨_, P.incenter, P.incenter_mem_carrier, rfl⟩
+  have hlow : -P.outerRadius ≤ P.presentation.coordinateMin j :=
+    le_csInf hne (by
+      rintro _ ⟨y, hy, rfl⟩
+      exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).1)
+  have hup : P.presentation.coordinateMax j ≤ P.outerRadius :=
+    csSup_le hne (by
+      rintro _ ⟨y, hy, rfl⟩
+      exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).2)
+  obtain ⟨hl, hu⟩ := P.coordinate_bounds P.incenter_mem_carrier j
+  have hz := abs_le.mp (P.coordinate_abs_le_outerRadius P.incenter_mem_carrier j)
+  exact ⟨abs_le.mpr ⟨hlow, by linarith⟩, abs_le.mpr ⟨by linarith, hup⟩⟩
+
+/-- `P ⊆ B₂(z, BoundingRadius P)`. -/
+theorem PolytopeData.norm_sub_incenter_le_boundingRadius {n : Nat} (P : PolytopeData n)
+    {x : Point n} (hx : x ∈ P.carrier) :
+    ‖toEuclidean (x - P.incenter)‖ ≤ P.BoundingRadius := by
+  rw [EuclideanSpace.norm_eq]
+  unfold PolytopeData.BoundingRadius
+  apply Real.sqrt_le_sqrt
+  apply Finset.sum_le_sum
+  intro j _
+  obtain ⟨hl, hu⟩ := P.coordinate_bounds hx j
+  have hmax : |x j - P.incenter j| ≤
+      max |P.presentation.coordinateMin j - P.incenter j|
+        |P.presentation.coordinateMax j - P.incenter j| := by
+    apply abs_le.mpr
+    constructor
+    · have h1 := neg_abs_le (P.presentation.coordinateMin j - P.incenter j)
+      have h2 := le_max_left |P.presentation.coordinateMin j - P.incenter j|
+        |P.presentation.coordinateMax j - P.incenter j|
+      linarith
+    · have h1 := le_abs_self (P.presentation.coordinateMax j - P.incenter j)
+      have h2 := le_max_right |P.presentation.coordinateMin j - P.incenter j|
+        |P.presentation.coordinateMax j - P.incenter j|
+      linarith
+  calc ‖(toEuclidean (x - P.incenter)) j‖ ^ 2 = |x j - P.incenter j| ^ 2 := by
+        simp [toEuclidean, Real.norm_eq_abs]
+    _ ≤ _ := pow_le_pow_left₀ (abs_nonneg _) hmax 2
+
+theorem PolytopeData.boundingRadius_nonneg {n : Nat} (P : PolytopeData n) :
+    0 ≤ P.BoundingRadius := Real.sqrt_nonneg _
+
+/-- `γ ≤ R₀`: the inscribed ball lies in `B₂(z, R₀)`. -/
+theorem PolytopeData.inradius_le_boundingRadius {n : Nat}
+    (P : PolytopeData n) (hn : 0 < n) : P.inradius ≤ P.BoundingRadius := by
+  let e : Point n := Pi.single ⟨0, hn⟩ (1 : Real)
+  have heE : ‖toEuclidean e‖ = 1 := by
+    simp [toEuclidean, e]
+  let x : Point n := P.incenter + P.inradius • e
+  have hxc : x - P.incenter = P.inradius • e := by simp [x]
+  have hnorm : ‖toEuclidean (x - P.incenter)‖ = P.inradius := by
+    rw [hxc]
+    change ‖(WithLp.toLp 2 (P.inradius • e) : EuclideanSpace Real (Fin n))‖ = _
+    rw [WithLp.toLp_smul, norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos]
+    change P.inradius * ‖toEuclidean e‖ = _
+    rw [heE, mul_one]
+  have hx : x ∈ P.carrier := by
+    apply P.inball
+    change ‖toEuclidean (x - P.incenter)‖ ≤ P.inradius
+    rw [hnorm]
+  have h := P.norm_sub_incenter_le_boundingRadius hx
+  rwa [hnorm] at h
+
+/-- Proposition `prop:bounding-radius`: `R₀ ≤ 2√n R` for any enclosing radius `R`. -/
+theorem PolytopeData.boundingRadius_le {n : Nat} (P : PolytopeData n) :
+    P.BoundingRadius ≤ 2 * Real.sqrt n * P.outerRadius := by
+  have hR := P.outerRadius_nonneg
+  have hterm : ∀ j : Fin n,
+      (max |P.presentation.coordinateMin j - P.incenter j|
+        |P.presentation.coordinateMax j - P.incenter j|) ^ 2 ≤ (2 * P.outerRadius) ^ 2 := by
+    intro j
+    obtain ⟨hl, hu⟩ := P.coordinate_optima_abs_le j
+    have hz := P.coordinate_abs_le_outerRadius P.incenter_mem_carrier j
+    have h1 : |P.presentation.coordinateMin j - P.incenter j| ≤ 2 * P.outerRadius :=
+      (abs_sub _ _).trans (by linarith)
+    have h2 : |P.presentation.coordinateMax j - P.incenter j| ≤ 2 * P.outerRadius :=
+      (abs_sub _ _).trans (by linarith)
+    exact pow_le_pow_left₀ (le_max_of_le_left (abs_nonneg _)) (max_le h1 h2) 2
+  unfold PolytopeData.BoundingRadius
+  calc Real.sqrt (∑ j : Fin n, _) ≤ Real.sqrt (∑ _j : Fin n, (2 * P.outerRadius) ^ 2) :=
+        Real.sqrt_le_sqrt (Finset.sum_le_sum fun j _ => hterm j)
+    _ = 2 * Real.sqrt n * P.outerRadius := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
+          Real.sqrt_mul (by positivity), Real.sqrt_sq (by positivity)]
+        ring
+
+/-- The decimal-scaled component has diameter at most `2 · 10^b · R₀`. -/
+theorem PolytopeData.scaledBody_dist_le_boundingRadius {n : Nat}
+    (P : PolytopeData n) (b : Nat) :
+    ∀ x ∈ P.scaledBody b, ∀ y ∈ P.scaledBody b,
+      dist x y ≤ 2 * decimalScale b * P.BoundingRadius := by
+  intro x hx y hy
+  rw [← P.image_decimalScale_eq_scaledBody b] at hx hy
+  obtain ⟨x₀, hx₀, rfl⟩ := hx
+  obtain ⟨y₀, hy₀, rfl⟩ := hy
+  have hs : 0 ≤ decimalScale b := (decimalScale_pos b).le
+  have hx' := P.norm_sub_incenter_le_boundingRadius hx₀
+  have hy' := P.norm_sub_incenter_le_boundingRadius hy₀
+  have heq : decimalScale b • toEuclidean x₀ - decimalScale b • toEuclidean y₀ =
+      decimalScale b • (toEuclidean (x₀ - P.incenter) - toEuclidean (y₀ - P.incenter)) := by
+    simp only [toEuclidean, WithLp.toLp_sub]
+    module
+  rw [dist_eq_norm, heq, norm_smul, Real.norm_eq_abs, abs_of_nonneg hs]
+  have htri := norm_sub_le (toEuclidean (x₀ - P.incenter)) (toEuclidean (y₀ - P.incenter))
+  have : ‖toEuclidean (x₀ - P.incenter) - toEuclidean (y₀ - P.incenter)‖ ≤
+      2 * P.BoundingRadius := by linarith
+  nlinarith
+
+theorem PolytopeData.samplerOuterRadius_nonneg {n : Nat} (P : PolytopeData n) (b : Nat)
+    (eta : Real) : 0 ≤ P.samplerOuterRadius b eta := by
+  have hκ0 : 0 ≤ P.samplerKappa eta :=
+    ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
+  have hγ : 0 < P.scaledInradius b := mul_pos (decimalScale_pos b) P.inradius_pos
+  unfold PolytopeData.samplerOuterRadius
+  have := P.boundingRadius_nonneg
+  have := decimalScale_pos b
+  have : 0 ≤ P.samplerKappa eta / P.scaledInradius b := div_nonneg hκ0 hγ.le
+  positivity
+
 /-- The precision requirement dominates both `16 / ε` and `128 κ`. -/
 theorem samplerRadiusRequirement_ge {n : Nat} (P : PolytopeData n) (hn : 0 < n)
     {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1) :
@@ -243,8 +396,9 @@ theorem samplerRadiusRequirement_ge {n : Nat} (P : PolytopeData n) (hn : 0 < n)
     change (1 : Real) ≤ (P.presentation.facetCount : Real)
     exact_mod_cast hfac
   have hn1 : (1 : Real) ≤ n := by exact_mod_cast hn
-  have hfour : 4 / eta ≤ 32 * r / eta :=
-    div_le_div_of_nonneg_right (by nlinarith) heta0.le
+  have hfour : 4 / (eta / 4) ≤ 32 * r / eta := by
+    rw [show 4 / (eta / 4) = 16 / eta by field_simp; ring]
+    exact div_le_div_of_nonneg_right (by nlinarith) heta0.le
   have hrx : r ≤ 32 * r / eta := by
     apply (le_div_iff₀ heta0).2
     nlinarith [mul_nonneg (by linarith : 0 ≤ r) (sub_nonneg.mpr heta1)]
@@ -262,8 +416,8 @@ theorem samplerRadiusRequirement_ge {n : Nat} (P : PolytopeData n) (hn : 0 < n)
   have hsqrtL : 1 ≤ Real.sqrt L := by
     rw [show (1 : Real) = Real.sqrt 1 by simp]
     exact Real.sqrt_le_sqrt hL1
-  have hc : ArlibCommunity.Algorithms.KV97.cOf eta ≤ Real.sqrt (2 * L) := by
-    unfold ArlibCommunity.Algorithms.KV97.cOf
+  have hc : samplerC eta ≤ Real.sqrt (2 * L) := by
+    unfold samplerC ArlibCommunity.Algorithms.KV97.cOf
     apply Real.sqrt_le_sqrt
     gcongr
     exact Real.log_le_log (by positivity) hfour
@@ -279,7 +433,7 @@ theorem samplerRadiusRequirement_ge {n : Nat} (P : PolytopeData n) (hn : 0 < n)
     nlinarith
   have hκ : P.samplerKappa eta ≤ 4 * Real.sqrt L := by
     unfold PolytopeData.samplerKappa ArlibCommunity.Algorithms.KV97.kappaOf
-    change ArlibCommunity.Algorithms.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤ _
+    change samplerC eta + Real.sqrt (2 * Real.log r) ≤ _
     linarith
   have hreq : samplerRadiusRequirement P eta = (512 * (n : Real) / eta) * Real.sqrt L := rfl
   have h512 : 512 ≤ 512 * (n : Real) / eta := (le_div_iff₀ heta0).2 (by nlinarith)
@@ -294,14 +448,14 @@ theorem samplerRadiusRequirement_ge {n : Nat} (P : PolytopeData n) (hn : 0 < n)
     nlinarith
 
 /-- The sampler's radii under the precision hypothesis: `16/ε ≤ γ/h`, `128 κ ≤ γ/h`,
-`γ/h ≤ R₀/h ≤ R'₀/h`. -/
+`γ/h ≤ R₀/h ≤ R'₀/h` with `R₀ = BoundingRadius`. -/
 theorem PolytopeData.samplerRadii {n : Nat} (hn : 0 < n) (P : PolytopeData n) (b : Nat)
     {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius) :
     16 / eta ≤ P.scaledInradius b ∧
       128 * P.samplerKappa eta ≤ P.scaledInradius b ∧
-      P.scaledInradius b ≤ decimalScale b * P.outerRadius ∧
-      decimalScale b * P.outerRadius ≤ P.samplerOuterRadius b eta := by
+      P.scaledInradius b ≤ decimalScale b * P.BoundingRadius ∧
+      decimalScale b * P.BoundingRadius ≤ P.samplerOuterRadius b eta := by
   obtain ⟨h16, h128⟩ := samplerRadiusRequirement_ge P hn heta0 heta1
   have hγ : P.scaledInradius b = decimalScale b * P.inradius := rfl
   have hκ0 : 0 ≤ P.samplerKappa eta :=
@@ -309,11 +463,11 @@ theorem PolytopeData.samplerRadii {n : Nat} (hn : 0 < n) (P : PolytopeData n) (b
   have hpos : 0 < P.scaledInradius b := mul_pos (decimalScale_pos b) P.inradius_pos
   refine ⟨by rw [hγ]; exact h16.trans hprec, by rw [hγ]; exact h128.trans hprec, ?_, ?_⟩
   · rw [hγ]
-    exact mul_le_mul_of_nonneg_left (P.inradius_le_outerRadius hn) (decimalScale_pos b).le
+    exact mul_le_mul_of_nonneg_left (P.inradius_le_boundingRadius hn) (decimalScale_pos b).le
   · unfold PolytopeData.samplerOuterRadius
     have : 0 ≤ P.samplerKappa eta / P.scaledInradius b := div_nonneg hκ0 hpos.le
-    have hR : 0 ≤ decimalScale b * P.outerRadius :=
-      mul_nonneg (decimalScale_pos b).le P.outerRadius_nonneg
+    have hR : 0 ≤ decimalScale b * P.BoundingRadius :=
+      mul_nonneg (decimalScale_pos b).le P.boundingRadius_nonneg
     nlinarith
 
 /-- The inflated body `P'` has diameter at most `2 R'₀ / h`. -/
@@ -326,7 +480,7 @@ theorem PolytopeData.hitAndRunBody_dist_le_samplerOuterRadius {n : Nat}
       P.scaledBody b := Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
   intro x hx y hy
   have h := dist_le_of_mem_inflated hG ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball
-    (P.scaledBody_dist_le_outerRadius b) x hx y hy
+    (P.scaledBody_dist_le_boundingRadius b) x hx y hy
   unfold PolytopeData.samplerOuterRadius PolytopeData.samplerKappa
   calc dist x y ≤ _ := h
     _ = _ := by ring
@@ -410,6 +564,28 @@ theorem PolytopeData.normalizedHitAndRun_warmness_le_diameter_pow
     norm_num
   rw [ENNReal.toReal_div]
   exact (div_le_iff₀ hBreal).2 (by rw [hball] at hvol; linarith)
+
+/-- The walk's body (`P'` in the unit-inball chart) has diameter at most `2R'₀/γ`. -/
+theorem PolytopeData.normalizedHitAndRun_diameter_le_samplerRadius {n : Nat}
+    (P : PolytopeData n) (b : Nat) (eta : Real) :
+    Metric.diam (P.normalizedHitAndRunBody b eta) ≤
+      2 * (P.samplerOuterRadius b eta / P.scaledInradius b) := by
+  have hG : 0 < P.scaledInradius b := mul_pos (decimalScale_pos b) P.inradius_pos
+  have hS0 := P.samplerOuterRadius_nonneg b eta
+  apply Metric.diam_le_of_forall_dist_le (by positivity)
+  intro x hx y hy
+  have hx' : P.samplerChart b x ∈ hitAndRunBody P b eta := by
+    rwa [P.normalizedHitAndRunBody_eq_preimage b eta] at hx
+  have hy' : P.samplerChart b y ∈ hitAndRunBody P b eta := by
+    rwa [P.normalizedHitAndRunBody_eq_preimage b eta] at hy
+  have h := P.hitAndRunBody_dist_le_samplerOuterRadius b eta _ hx' _ hy'
+  have heq : dist (P.samplerChart b x) (P.samplerChart b y) =
+      P.scaledInradius b * dist x y := by
+    simp [PolytopeData.samplerChart, dist_add_right, dist_smul₀,
+      Real.norm_eq_abs, abs_of_pos hG]
+  rw [heq] at h
+  rw [← mul_div_assoc, le_div_iff₀ hG]
+  linarith
 
 /-- The arithmetic of `log (M/ν) ≤ 3n log (2R'₀/h)` (proof of Corollary `cor:linf`),
 with arlib-community's `2^64 n² D² log (8M/ν²)` deadline in place of `[LV04]`'s. -/
@@ -506,15 +682,7 @@ theorem PolytopeData.hitAndRun_deadline_le_steps {n : Nat} (hn : 21 ≤ n)
   have hS : 32 / eta ≤ 2 * P.samplerOuterRadius b eta := by
     have : 32 / eta = 2 * (16 / eta) := by ring
     linarith
-  have hD := P.normalizedHitAndRun_diameter_le b eta
-  have hDa : Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-      2 * (P.samplerOuterRadius b eta / P.scaledInradius b) := by
-    refine hD.trans (le_of_eq ?_)
-    have hd := decimalScale_pos b
-    have hi := P.inradius_pos
-    unfold PolytopeData.samplerOuterRadius PolytopeData.samplerKappa
-    simp only [PolytopeData.scaledInradius]
-    field_simp
+  have hDa := P.normalizedHitAndRun_diameter_le_samplerRadius b eta
   have hD0 : 0 ≤ Metric.diam (P.normalizedHitAndRunBody b eta) := Metric.diam_nonneg
   have hM := P.normalizedHitAndRun_warmness_le_diameter_pow (by omega) b eta _
     (by positivity : (0 : Real) ≤
@@ -596,7 +764,7 @@ theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 21 ≤ n)
     rw [P.normalizedHitAndRunBody_eq_preimage b eta]
     exact map_uniformOn_samplerChart hG (P.scaledIncenter b)
       (ArlibCommunity.Algorithms.KV97.measurableSet_inflated P.arlibNormal (P.scaledOffset b)
-        (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))
+        (samplerC eta) (P.presentation.facetCount : Real))
   have hmix' := hmapped.mono (ENNReal.ofReal_mono hepsle)
   rw [htarget] at hmix'
   unfold normalizedHitAndRunContinuousLaw

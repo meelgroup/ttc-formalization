@@ -68,7 +68,7 @@ theorem euclidean_unitBall_log_volume_le_two_dim (n : Nat) (hn : 1 ≤ n) :
 theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
     (P : PolytopeData n) (hn : 0 < n) {eta : Real}
     (heta0 : 0 < eta) (heta1 : eta ≤ 1) :
-    ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+    ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
         (P.presentation.facetCount : Real) ≤
       samplerRadiusRequirement P eta := by
   let r : Real := P.presentation.facetCount
@@ -81,7 +81,8 @@ theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
     exact_mod_cast hfac
   have hn1 : (1 : Real) ≤ n := by exact_mod_cast hn
   have hx0 : 0 < 32 * r / eta := by positivity
-  have hfour : 4 / eta ≤ 32 * r / eta := by
+  have hfour : 4 / (eta / 4) ≤ 32 * r / eta := by
+    rw [show 4 / (eta / 4) = 16 / eta by field_simp; ring]
     exact div_le_div_of_nonneg_right (by nlinarith) heta0.le
   have hrx : r ≤ 32 * r / eta := by
     apply (le_div_iff₀ heta0).2
@@ -94,8 +95,8 @@ theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
   have hL : 0 ≤ L := by
     dsimp [L]
     exact Real.log_nonneg (le_trans hr hrx)
-  have hc : ArlibCommunity.Algorithms.KV97.cOf eta ≤ Real.sqrt (2 * L) := by
-    unfold ArlibCommunity.Algorithms.KV97.cOf
+  have hc : samplerC eta ≤ Real.sqrt (2 * L) := by
+    unfold samplerC ArlibCommunity.Algorithms.KV97.cOf
     apply Real.sqrt_le_sqrt
     gcongr
     exact Real.log_le_log (by positivity) hfour
@@ -113,9 +114,9 @@ theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
     apply (le_div_iff₀ heta0).2
     nlinarith
   unfold ArlibCommunity.Algorithms.KV97.kappaOf samplerRadiusRequirement
-  change ArlibCommunity.Algorithms.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤
+  change samplerC eta + Real.sqrt (2 * Real.log r) ≤
     (512 * (n : Real) / eta) * Real.sqrt L
-  have hκ : ArlibCommunity.Algorithms.KV97.cOf eta + Real.sqrt (2 * Real.log r) ≤
+  have hκ : samplerC eta + Real.sqrt (2 * Real.log r) ≤
       4 * Real.sqrt L := by linarith
   exact hκ.trans (mul_le_mul_of_nonneg_right hfactor (Real.sqrt_nonneg L))
 
@@ -126,20 +127,20 @@ theorem PolytopeData.normalizedHitAndRun_diameter_le_four_ratio
       decimalScale b * P.inradius) :
     Metric.diam (P.normalizedHitAndRunBody b eta) ≤
       4 * P.outerRadius / P.inradius := by
-  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
       (P.presentation.facetCount : Real) ≤ P.scaledInradius b := by
     exact (P.kv97_kappa_le_samplerRadiusRequirement hn heta0 heta1).trans
       (by simpa only [PolytopeData.scaledInradius] using hprecision)
   have hγ : 0 < P.scaledInradius b :=
     mul_pos (decimalScale_pos b) P.inradius_pos
-  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
       (P.presentation.facetCount : Real) / P.scaledInradius b ≤ 1 :=
     (div_le_iff₀ hγ).2 (by simpa using hκ)
   have hR : 0 ≤ P.outerRadius / P.inradius :=
     div_nonneg P.outerRadius_nonneg P.inradius_pos.le
   calc
     Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-        (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+        (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
           (P.presentation.facetCount : Real) / P.scaledInradius b) *
           (2 * P.outerRadius / P.inradius) :=
       P.normalizedHitAndRun_diameter_le b eta
@@ -158,13 +159,13 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
       decimalScale b * P.inradius) :
     ∀ x ∈ hitAndRunBody P b eta,
       ‖x‖ ≤ 5 * decimalScale b * P.outerRadius := by
-  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
       (P.presentation.facetCount : Real) ≤ P.scaledInradius b :=
     (P.kv97_kappa_le_samplerRadiusRequirement hn heta0 heta1).trans
       (by simpa only [PolytopeData.scaledInradius] using hprecision)
   have hγ : 0 < P.scaledInradius b :=
     mul_pos (decimalScale_pos b) P.inradius_pos
-  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
       (P.presentation.facetCount : Real) / P.scaledInradius b ≤ 1 :=
     (div_le_iff₀ hγ).2 (by simpa using hκ)
   have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
@@ -194,7 +195,7 @@ theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
     have hR : 0 ≤ decimalScale b * P.outerRadius :=
       mul_nonneg (decimalScale_pos b).le P.outerRadius_nonneg
     calc
-      _ ≤ (1 + ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+      _ ≤ (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
         (P.presentation.facetCount : Real) / P.scaledInradius b) *
         (2 * decimalScale b * P.outerRadius) := hdist
       _ ≤ 2 * (2 * decimalScale b * P.outerRadius) := by
@@ -391,7 +392,8 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     _ ≤ 4 * TTCRuntime.Rho D := by gcongr
 
 /-- The paper's walk length `T = ⌈C n³ (R'₀/γ)² log (2R'₀/h)⌉` within the per-component
-sampler allowance: `R'₀/γ ≤ (1 + 1/128) ρ` and `log (2R'₀/h) ≤ b log 10 + log 6 + log⁺ R_max`. -/
+sampler allowance. `R₀ = BoundingRadius ≤ 2√n R` gives `(R'₀/γ)² ≤ 5n ρ²`, and
+`log (2R'₀/h) ≤ b log 10 + log 6 + log n + log⁺ R_max`. -/
 theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
@@ -421,6 +423,11 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     rw [div_le_div_iff₀ hγ (by norm_num)]
     linarith
   have hκ' : 0 ≤ P.samplerKappa p.ε' / P.scaledInradius b := div_nonneg hκ0 hγ.le
+  have hn1 : (1 : Real) ≤ n := by exact_mod_cast (show 1 ≤ n by omega)
+  have hsqrt1 : 1 ≤ Real.sqrt n := by
+    rw [show (1 : Real) = Real.sqrt 1 by simp]
+    exact Real.sqrt_le_sqrt hn1
+  have hsqrtsq : Real.sqrt n ^ 2 = n := Real.sq_sqrt (by positivity)
   have hratio0 : 0 ≤ P.outerRadius / P.inradius :=
     div_nonneg P.outerRadius_nonneg P.inradius_pos.le
   have hratio : P.outerRadius / P.inradius ≤ TTCRuntime.Rho D := by
@@ -440,80 +447,84 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
           (Real.coe_toNNReal _ hratio0).symm
         _ ≤ _ := by exact_mod_cast hle
     exact hleR.trans (le_max_right _ _)
+  have hR0 := P.boundingRadius_le
+  have hR00 := P.boundingRadius_nonneg
+  have hRγ : P.BoundingRadius / P.inradius ≤ 2 * Real.sqrt n * TTCRuntime.Rho D := by
+    rw [div_le_iff₀ P.inradius_pos]
+    have h1 : P.outerRadius ≤ TTCRuntime.Rho D * P.inradius := by
+      rwa [div_le_iff₀ P.inradius_pos] at hratio
+    have h2 : 0 ≤ 2 * Real.sqrt n := by positivity
+    nlinarith
   have ha : P.samplerOuterRadius b p.ε' / P.scaledInradius b =
-      (1 + P.samplerKappa p.ε' / P.scaledInradius b) * (P.outerRadius / P.inradius) := by
+      (1 + P.samplerKappa p.ε' / P.scaledInradius b) * (P.BoundingRadius / P.inradius) := by
     have hi := P.inradius_pos
     unfold PolytopeData.samplerOuterRadius
     rw [show P.scaledInradius b = decimalScale b * P.inradius from rfl]
     field_simp
   have ha2 : (P.samplerOuterRadius b p.ε' / P.scaledInradius b) ^ 2 ≤
-      2 * (TTCRuntime.Rho D) ^ 2 := by
+      5 * (n : Real) * (TTCRuntime.Rho D) ^ 2 := by
     rw [ha]
+    have hc0 : 0 ≤ P.BoundingRadius / P.inradius := div_nonneg hR00 P.inradius_pos.le
     have h1 : (1 + P.samplerKappa p.ε' / P.scaledInradius b) *
-        (P.outerRadius / P.inradius) ≤ (129 / 128) * TTCRuntime.Rho D := by
-      calc _ ≤ (129 / 128) * (P.outerRadius / P.inradius) := by
-            apply mul_le_mul_of_nonneg_right _ hratio0
+        (P.BoundingRadius / P.inradius) ≤
+        (129 / 128) * (2 * Real.sqrt n * TTCRuntime.Rho D) := by
+      calc _ ≤ (129 / 128) * (P.BoundingRadius / P.inradius) := by
+            apply mul_le_mul_of_nonneg_right _ hc0
             linarith
         _ ≤ _ := by gcongr
     have h0 : 0 ≤ (1 + P.samplerKappa p.ε' / P.scaledInradius b) *
-        (P.outerRadius / P.inradius) := by positivity
-    nlinarith
+        (P.BoundingRadius / P.inradius) := by positivity
+    have hsq := pow_le_pow_left₀ h0 h1 2
+    have hrho0 : 0 ≤ TTCRuntime.Rho D := le_trans zero_le_one (le_max_left _ _)
+    calc _ ≤ ((129 / 128) * (2 * Real.sqrt n * TTCRuntime.Rho D)) ^ 2 := hsq
+      _ = (129 / 128) ^ 2 * 4 * (Real.sqrt n ^ 2) * (TTCRuntime.Rho D) ^ 2 := by ring
+      _ ≤ 5 * (n : Real) * (TTCRuntime.Rho D) ^ 2 := by
+          rw [hsqrtsq]
+          have : (0 : Real) ≤ n * (TTCRuntime.Rho D) ^ 2 := by positivity
+          nlinarith
   let Rmax := TTCRuntime.theorem3OuterRadiusMax D
   have hRmax : P.outerRadius ≤ Rmax := D.component_outerRadius_le_theorem3OuterRadiusMax i
   have hRmax0 : 0 ≤ Rmax := P.outerRadius_nonneg.trans hRmax
   have hS1 : 1 ≤ 2 * P.samplerOuterRadius b p.ε' := by
     have : (1 : Real) ≤ 16 / p.ε' := (le_div_iff₀ heta0).2 (by linarith)
     linarith
-  have h2S : 2 * P.samplerOuterRadius b p.ε' ≤ decimalScale b * (6 * max 1 Rmax) := by
+  have h2S : 2 * P.samplerOuterRadius b p.ε' ≤
+      decimalScale b * ((n : Real) * (6 * max 1 Rmax)) := by
     have hR1 : P.outerRadius ≤ max 1 Rmax := hRmax.trans (le_max_right _ _)
-    have hR0 := P.outerRadius_nonneg
-    have hmul : decimalScale b * P.outerRadius ≤ decimalScale b * max 1 Rmax :=
-      mul_le_mul_of_nonneg_left hR1 hd.le
-    have hdR : 0 ≤ decimalScale b * P.outerRadius := mul_nonneg hd.le hR0
+    have hsn : Real.sqrt n ≤ n := by nlinarith
+    have hB : P.BoundingRadius ≤ 2 * (n : Real) * max 1 Rmax := by
+      have h1 : 2 * Real.sqrt n * P.outerRadius ≤ 2 * (n : Real) * P.outerRadius :=
+        mul_le_mul_of_nonneg_right (by linarith) P.outerRadius_nonneg
+      have h2 : 2 * (n : Real) * P.outerRadius ≤ 2 * (n : Real) * max 1 Rmax :=
+        mul_le_mul_of_nonneg_left hR1 (by positivity)
+      linarith
+    have hdB : decimalScale b * P.BoundingRadius ≤ decimalScale b * (2 * (n : Real) * max 1 Rmax) :=
+      mul_le_mul_of_nonneg_left hB hd.le
+    have hdB0 : 0 ≤ decimalScale b * P.BoundingRadius := mul_nonneg hd.le hR00
     unfold PolytopeData.samplerOuterRadius
     nlinarith
   have hL : Real.log (2 * P.samplerOuterRadius b p.ε') ≤
-      (b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax) := by
+      (b : Real) * Real.log 10 + Real.log 6 + Real.log n + max 0 (Real.log Rmax) := by
     refine (Real.log_le_log (by linarith) h2S).trans_eq ?_
     have h6 : (0 : Real) < 6 * max 1 Rmax := by
       have := le_max_left (1 : Real) Rmax
       positivity
-    rw [Real.log_mul hd.ne' h6.ne', log_six_max_one _ hRmax0]
+    rw [Real.log_mul hd.ne' (by positivity), Real.log_mul (by positivity) h6.ne',
+      log_six_max_one _ hRmax0]
     simp [decimalScale, Real.log_pow]
     ring
   have hL0 : 0 ≤ Real.log (2 * P.samplerOuterRadius b p.ε') := Real.log_nonneg hS1
-  have hrho : 1 ≤ TTCRuntime.Rho D := by unfold TTCRuntime.Rho; exact le_max_left _ _
-  have hEnv : 2 * (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax)) ≤
-      TTCRuntime.theorem3SamplerLogEnvelope n b (TTCRuntime.Rho D) Rmax p.ε' := by
-    unfold TTCRuntime.theorem3SamplerLogEnvelope
-    have h8 : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
-    have hρ : 0 ≤ (n : Real) * Real.log (4 * TTCRuntime.Rho D + 1) :=
-      mul_nonneg (by positivity) (Real.log_nonneg (by linarith))
-    have hE : 0 ≤ Real.log (1 + 8 / p.ε') := by
-      apply Real.log_nonneg
-      have : 0 ≤ 8 / p.ε' := div_nonneg (by norm_num) heta0.le
-      linarith
-    have hG : 0 ≤ Real.log (1 +
-        (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) := by
-      apply Real.log_nonneg
-      have : 0 ≤ (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal :=
-        ENNReal.toReal_nonneg
-      linarith
-    linarith
-  have hX0 : 0 ≤ (b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax) := by
-    linarith
-  unfold normalizedHitAndRunSteps hitAndRunWalkConstant
+  have hX0 : 0 ≤ (b : Real) * Real.log 10 + Real.log 6 + Real.log n +
+      max 0 (Real.log Rmax) := by linarith
+  unfold normalizedHitAndRunSteps hitAndRunWalkConstant TTCRuntime.theorem3SamplerLogEnvelope
   apply Nat.ceil_mono
   calc (2 : Real) ^ 68 * (n : Real) ^ 3 *
         (P.samplerOuterRadius b p.ε' / P.scaledInradius b) ^ 2 *
         Real.log (2 * P.samplerOuterRadius b p.ε') ≤
-      (2 : Real) ^ 68 * (n : Real) ^ 3 * (2 * (TTCRuntime.Rho D) ^ 2) *
-        ((b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax)) := by
+      (2 : Real) ^ 68 * (n : Real) ^ 3 * (5 * (n : Real) * (TTCRuntime.Rho D) ^ 2) *
+        ((b : Real) * Real.log 10 + Real.log 6 + Real.log n + max 0 (Real.log Rmax)) := by
         gcongr
-    _ = (2 : Real) ^ 68 * (n : Real) ^ 2 * (TTCRuntime.Rho D) ^ 2 *
-        (2 * (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 +
-          max 0 (Real.log Rmax))) := by ring
-    _ ≤ _ := by gcongr
+    _ = _ := by ring
 
 theorem TTCRuntime.expectedComponentBudgetLinearPrecision_le_geometric
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
@@ -533,124 +544,49 @@ theorem TTCRuntime.expectedComponentBudgetLinearPrecision_le_geometric
   unfold TTCRuntime.samplingAttemptOperations
   gcongr
 
-theorem theorem3_samplerLogEnvelope_le_factor
-    (n b : Nat) (hn : 1 ≤ n) (rho R eta : Real)
-    (hrho : 1 ≤ rho) (heta : 0 < eta) :
-    TTCRuntime.theorem3SamplerLogEnvelope n b rho R eta ≤
-      (n : Real) * TTCRuntime.theorem3PrecisionScale b R *
-        TTCRuntime.theorem3SamplerLogFactor n rho eta := by
-  let H := TTCRuntime.theorem3PrecisionScale b R
-  let T := (n : Real) * H
-  let A := Real.log 8
-  let B := Real.log (4 * rho + 1)
-  let C := Real.log 10
-  let D := Real.log 6
-  let E := Real.log (1 + 8 / eta)
-  let G := Real.log (1 +
-    (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal)
-  have hH : 1 ≤ H := by
-    dsimp [H, TTCRuntime.theorem3PrecisionScale]
-    have hb : 0 ≤ (b : Real) := by positivity
-    have hR : 0 ≤ max 0 (Real.log R) := le_max_left _ _
-    linarith
-  have hbH : (b : Real) ≤ H := by
-    dsimp [H, TTCRuntime.theorem3PrecisionScale]
-    have hR : 0 ≤ max 0 (Real.log R) := le_max_left _ _
-    linarith
-  have hRH : max 0 (Real.log R) ≤ H := by
-    dsimp [H, TTCRuntime.theorem3PrecisionScale]
-    have hb : 0 ≤ (b : Real) := by positivity
-    linarith
-  have hnR : (1 : Real) ≤ n := by exact_mod_cast hn
-  have hT1 : 1 ≤ T := by
-    dsimp [T]
-    nlinarith [mul_nonneg (sub_nonneg.mpr hnR) (sub_nonneg.mpr hH)]
-  have hnT : (n : Real) ≤ T := by
-    dsimp [T]
-    nlinarith
-  have hbnT : (n : Real) * b ≤ T := by
-    dsimp [T]
-    exact mul_le_mul_of_nonneg_left hbH (by linarith)
-  have hRnT : (n : Real) * max 0 (Real.log R) ≤ T := by
-    dsimp [T]
-    exact mul_le_mul_of_nonneg_left hRH (by linarith)
-  have hA : 0 ≤ A := by dsimp [A]; exact Real.log_nonneg (by norm_num)
-  have hB : 0 ≤ B := by
-    dsimp [B]
-    apply Real.log_nonneg
-    linarith
-  have hC : 0 ≤ C := by dsimp [C]; exact Real.log_nonneg (by norm_num)
-  have hD : 0 ≤ D := by dsimp [D]; exact Real.log_nonneg (by norm_num)
-  have hE : 0 ≤ E := by
-    dsimp [E]
-    apply Real.log_nonneg
-    have : 0 ≤ 8 / eta := div_nonneg (by norm_num) heta.le
-    linarith
-  have hG : 0 ≤ G := by
-    dsimp [G]
-    apply Real.log_nonneg
-    have : 0 ≤ (volume
-      (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal :=
-      ENNReal.toReal_nonneg
-    linarith
-  have hA' := mul_le_mul_of_nonneg_right hT1 hA
-  have hB' := mul_le_mul_of_nonneg_right hnT hB
-  have hC' := mul_le_mul_of_nonneg_right hbnT hC
-  have hD' := mul_le_mul_of_nonneg_right hnT hD
-  have hR' := mul_le_mul_of_nonneg_right hRnT (by norm_num : (0 : Real) ≤ 1)
-  have hE' := mul_le_mul_of_nonneg_right hT1 hE
-  have hG' := mul_le_mul_of_nonneg_right hT1 hG
-  unfold TTCRuntime.theorem3SamplerLogEnvelope
-    TTCRuntime.theorem3SamplerLogFactor
-  dsimp only [T, H, A, B, C, D, E, G] at *
-  nlinarith
-
-theorem theorem3_samplerLogFactor_le_dimension_polylog
-    (n : Nat) (hn : 1 ≤ n) (rho eta : Real)
-    (hrho : 1 ≤ rho) (heta : 0 < eta) :
-    TTCRuntime.theorem3SamplerLogFactor n rho eta ≤
-      (n : Real) * (Real.log 8 + Real.log (4 * rho + 1) +
-        2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) + 2)) := by
-  have hG := euclidean_unitBall_log_volume_le_two_dim n hn
-  have hnR : (1 : Real) ≤ n := by exact_mod_cast hn
-  have hA : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
-  have hB : 0 ≤ Real.log (4 * rho + 1) :=
-    Real.log_nonneg (by linarith)
-  have hC : 0 ≤ Real.log 10 := Real.log_nonneg (by norm_num)
-  have hD : 0 ≤ Real.log 6 := Real.log_nonneg (by norm_num)
-  have hE : 0 ≤ Real.log (1 + 8 / eta) := by
-    apply Real.log_nonneg
-    have : 0 ≤ 8 / eta := div_nonneg (by norm_num) heta.le
-    linarith
-  unfold TTCRuntime.theorem3SamplerLogFactor
-  nlinarith [mul_nonneg (sub_nonneg.mpr hnR)
-    (add_nonneg (add_nonneg hA hB) (by positivity :
-      0 ≤ 2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) + 2)))]
-
+/-- The sampler envelope is at most `n² · (1 + b + log⁺ R_max)` times the sampler log
+factor of `polylogFactors`. -/
 theorem theorem3_samplerLogEnvelope_le_dimension_precision_polylog
     (n b : Nat) (hn : 1 ≤ n) (rho R eta : Real)
     (hrho : 1 ≤ rho) (heta : 0 < eta) :
     TTCRuntime.theorem3SamplerLogEnvelope n b rho R eta ≤
       (n : Real) ^ 2 * TTCRuntime.theorem3PrecisionScale b R *
-        (Real.log 8 + Real.log (4 * rho + 1) +
-          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) + 2)) := by
-  have hH : 0 ≤ TTCRuntime.theorem3PrecisionScale b R := by
-    unfold TTCRuntime.theorem3PrecisionScale
-    have hb : 0 ≤ (b : Real) := by positivity
-    have hR : 0 ≤ max 0 (Real.log R) := le_max_left _ _
+        (5 * (Real.log 8 + Real.log (4 * rho + 1) +
+          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) + 2) +
+          Real.log n)) := by
+  let F := Real.log 8 + Real.log (4 * rho + 1) +
+    2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) + 2)
+  let Lp := max 0 (Real.log R)
+  have hb : 0 ≤ (b : Real) := by positivity
+  have hLp : 0 ≤ Lp := le_max_left _ _
+  have hn1 : (1 : Real) ≤ n := by exact_mod_cast hn
+  have hln : 0 ≤ Real.log n := Real.log_nonneg hn1
+  have h8 : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
+  have hr : 0 ≤ Real.log (4 * rho + 1) := Real.log_nonneg (by linarith)
+  have h10 : 0 ≤ Real.log 10 := Real.log_nonneg (by norm_num)
+  have h6 : 0 ≤ Real.log 6 := Real.log_nonneg (by norm_num)
+  have he : 0 ≤ Real.log (1 + 8 / eta) := by
+    apply Real.log_nonneg
+    have : 0 ≤ 8 / eta := div_nonneg (by norm_num) heta.le
     linarith
-  calc
-    _ ≤ (n : Real) * TTCRuntime.theorem3PrecisionScale b R *
-        TTCRuntime.theorem3SamplerLogFactor n rho eta :=
-      theorem3_samplerLogEnvelope_le_factor n b hn rho R eta hrho heta
-    _ ≤ (n : Real) ^ 2 * TTCRuntime.theorem3PrecisionScale b R *
-        (Real.log 8 + Real.log (4 * rho + 1) +
-          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) + 2)) := by
-      have h := theorem3_samplerLogFactor_le_dimension_polylog n hn rho eta hrho heta
-      have hn0 : (0 : Real) ≤ n := by positivity
-      have hmul := mul_le_mul_of_nonneg_left h
-        (mul_nonneg hn0 hH)
-      nlinarith
+  have hF10 : Real.log 10 ≤ F := by dsimp [F]; linarith
+  have hF6 : Real.log 6 ≤ F := by dsimp [F]; linarith
+  have hF1 : 1 ≤ F := by dsimp [F]; linarith
+  have hkey : (b : Real) * Real.log 10 + Real.log 6 + Real.log n + Lp ≤
+      (1 + b + Lp) * (F + Real.log n) := by
+    have e1 : (b : Real) * Real.log 10 ≤ b * F := mul_le_mul_of_nonneg_left hF10 hb
+    have e2 : Lp ≤ Lp * F := le_mul_of_one_le_right hLp hF1
+    have e3 : 0 ≤ ((b : Real) + Lp) * Real.log n := by positivity
+    have hexp : (1 + b + Lp) * (F + Real.log n) =
+        F + Real.log n + b * F + Lp * F + ((b : Real) + Lp) * Real.log n := by ring
+    rw [hexp]
+    linarith
+  unfold TTCRuntime.theorem3SamplerLogEnvelope TTCRuntime.theorem3PrecisionScale
+  change 5 * (n : Real) ^ 2 * ((b : Real) * Real.log 10 + Real.log 6 + Real.log n + Lp) ≤
+    (n : Real) ^ 2 * (1 + b + Lp) * (5 * (F + Real.log n))
+  have hn2 : (0 : Real) ≤ 5 * (n : Real) ^ 2 := by positivity
+  have := mul_le_mul_of_nonneg_left hkey hn2
+  linarith
 
 theorem Decomposition.normalizedHitAndRunSteps_le_theorem3_polylog
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
@@ -662,9 +598,9 @@ theorem Decomposition.normalizedHitAndRunSteps_le_theorem3_polylog
         (TTCRuntime.Rho D) ^ 2 *
         TTCRuntime.theorem3PrecisionScale b
           (TTCRuntime.theorem3OuterRadiusMax D) *
-        (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
+        (5 * (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
           2 * (Real.log 10 + Real.log 6 + 1 +
-            Real.log (1 + 8 / p.ε') + 2))) := by
+            Real.log (1 + 8 / p.ε') + 2) + Real.log n))) := by
   have hstep := D.normalizedHitAndRunSteps_le_explicitEnvelope hn b p hprecision i
   have henv := theorem3_samplerLogEnvelope_le_dimension_precision_polylog
     n b (by omega : 1 ≤ n) (TTCRuntime.Rho D)

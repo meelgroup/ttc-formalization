@@ -44,26 +44,6 @@ lemma one_le_samplerRadiusRequirement {n : Nat} (hn : 0 < n) (P : PolytopeData n
   rw [samplerRadiusRequirement]
   exact hbase.trans (le_mul_of_one_le_right (by positivity) hsqrt)
 
-/-- A convenient existential form of the single-point capstone theorem. -/
-theorem PolytopeData.exists_hitAndRun_pointLaw {n : Nat} (hn : 21 ≤ n)
-    (P : PolytopeData n) (b : Nat)
-    (hunit : 1 ≤ decimalScale b * P.inradius)
-    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hfinite : (codedLatticePoints P b).Finite)
-    (hnonempty : (codedLatticePoints P b).Nonempty) :
-    ∃ pointLaw : Measure (LatticePoint n),
-      AlmostUniformPointwise pointLaw (codedLatticePoints P b) eta := by
-  obtain ⟨D, m, _hD, _hdeadline, _hmceil, hpoint⟩ :=
-    P.exists_hitAndRun_latticePointLaw hn b hunit heta0 heta1 hfinite hnonempty
-  exact ⟨acceptedRoundedLatticeLaw
-    (ArlibCommunity.Foundations.MarkovChainTheory.iterate
-      (ArlibCommunity.Foundations.MarkovChainTheory.lazy (ArlibCommunity.Foundations.MarkovChainTheory.hitAndRun
-        (ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
-          (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real))))
-      (ArlibCommunity.Foundations.Convex.uniformOn volume
-        (Metric.ball (decimalScale b • toEuclidean P.incenter) 1)) m)
-    P b, hpoint⟩
-
 lemma iidSampleBatchLaw_isProbabilityMeasure {n count : Nat}
     (pointLaw : Measure (LatticePoint n)) [IsProbabilityMeasure pointLaw] :
     IsProbabilityMeasure (iidSampleBatchLaw (count := count) pointLaw) := by

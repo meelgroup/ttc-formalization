@@ -84,9 +84,9 @@ theorem theorem3UniformIndexSum_le_parameterFactor
   let R := theorem3OuterRadiusMax D
   let H := theorem3PrecisionScale b R
   let Lcv := theorem3CV18LogMax hn D p
-  let Lhr := Real.log 8 + Real.log (4 * rho + 1) +
+  let Lhr := 5 * (Real.log 8 + Real.log (4 * rho + 1) +
     2 * (Real.log 10 + Real.log 6 + 1 +
-      Real.log (1 + 8 / p.ε') + 2)
+      Real.log (1 + 8 / p.ε') + 2) + Real.log n)
   let A := 45 * (64 *
     ArlibCommunity.Algorithms.CV18.runCostConstant + 1)
   let M := (n : Real) ^ 4 * rho ^ 2 * H
@@ -116,6 +116,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
     positivity [p.epsilon_pos]
   have hLhr : 0 ≤ Lhr := by
     dsimp [Lhr]
+    have hlogn := Real.log_natCast_nonneg n
     have hlogrho : 0 ≤ Real.log (4 * rho + 1) :=
       Real.log_nonneg (by linarith)
     have hlogeta : 0 ≤ Real.log (1 + 8 / p.ε') := by

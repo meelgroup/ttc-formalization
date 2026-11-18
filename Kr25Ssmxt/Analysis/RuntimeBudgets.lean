@@ -50,9 +50,9 @@ noncomputable def TTCRuntime.theorem3ParameterFactorCV18
       ArlibCommunity.Algorithms.CV18.runCostConstant + 1) *
       TTCRuntime.theorem3CV18LogMax hn D p / (p.ε' / 2) ^ 2 +
     (2 : Real) ^ 68 *
-      (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
+      (5 * (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
         2 * (Real.log 10 + Real.log 6 + 1 +
-          Real.log (1 + 8 / p.ε') + 2)) + 20
+          Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 20
 
 /-- Explicit TTC CV18 query envelope obtained by inserting `ρ` into the
 imported scheduled complexity rate. -/
@@ -78,24 +78,13 @@ noncomputable def TTCRuntime.theorem3CV18QueryMax
     (n : Real) ^ 3 * (TTCRuntime.Rho D) ^ 2 / (p.ε' / 2) ^ 2 *
     TTCRuntime.theorem3CV18LogMax hn D p)
 
-/-- Explicit logarithmic envelope for the normalized TTC sampler deadline.
-The unit-ball term depends only on the dimension. -/
+/-- Logarithmic envelope for the sampler's walk length:
+`T ≤ ⌈2⁶⁸ n² ρ² · 5n² (b log 10 + log 6 + log n + log⁺ R_max)⌉`. The `5n` absorbs
+`(R'₀/γ)² ≤ 5n ρ²` from `BoundingRadius ≤ 2√n R`, and `log n` its `log √n`. -/
 noncomputable def TTCRuntime.theorem3SamplerLogEnvelope
-    (n b : Nat) (rho outerRadiusMax eta : Real) : Real :=
-  Real.log 8 + (n : Real) * Real.log (4 * rho + 1) +
-    2 * ((n : Real) * ((b : Real) * Real.log 10 + Real.log 6 +
-      max 0 (Real.log outerRadiusMax)) +
-      Real.log (1 + 8 / eta) +
-      Real.log (1 +
-        (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal))
-
-/-- A logarithmic factor independent of decimal precision and outer radius. -/
-noncomputable def TTCRuntime.theorem3SamplerLogFactor
-    (n : Nat) (rho eta : Real) : Real :=
-  Real.log 8 + Real.log (4 * rho + 1) +
-    2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / eta) +
-      Real.log (1 +
-        (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal))
+    (n b : Nat) (_rho outerRadiusMax _eta : Real) : Real :=
+  5 * (n : Real) ^ 2 * ((b : Real) * Real.log 10 + Real.log 6 + Real.log n +
+    max 0 (Real.log outerRadiusMax))
 
 /-- Explicit arithmetic-operation allowance for one component of the charged
 paper run. The finite sum of these allowances is proved to bound the

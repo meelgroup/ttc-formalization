@@ -125,9 +125,15 @@ names.
   binomial thinning (realised by labelled fair coins), sampling, append, and the output
   `|X|/(p·10^(bn))`. VolED is not clipped. The error budget `δ/6 + δ/6 + δ/4` is the paper's.
 - Line `line:inradius` (`R₀ᵢ ← BoundingRadius(Kᵢ)`, `γᵢ ← MaxInscribedBall(Kᵢ)`, still
-  marked TODO in the paper) is not a separate step: `γᵢ`, the incentre and an outer radius
-  are fields of `PolytopeData`, and `BoundingRadius`'s LP is not modelled (see Open
-  items). The sampler's `T` is computed from these fields.
+  marked TODO in the paper). `BoundingRadius` is modelled as in the appendix
+  (`PolytopeData.BoundingRadius`, `Model/Run.lean`): the `2n` coordinate LPs
+  `ℓⱼ = min xⱼ`, `uⱼ = max xⱼ` over `Ax ≤ b` as optimum values, and
+  `R₀ = (Σⱼ max(|ℓⱼ−zⱼ|, |uⱼ−zⱼ|)²)^{1/2}` about the inscribed ball's centre `z`. The
+  analysis proves `P ⊆ B₂(z, R₀)` (`norm_sub_incenter_le_boundingRadius`), `γ ≤ R₀` and
+  Proposition `prop:bounding-radius`, `R₀ ≤ 2√n R` (`boundingRadius_le`). `γᵢ` and `z` are
+  still fields of `PolytopeData`, matched to the Chebyshev LP by
+  `MaxInscribedBall_eq_inradius`. `outerRadius` is the paper's `R`; the algorithm never
+  reads it, and it appears only in Theorem 3's `ρ` and `R_max`.
 - Hypotheses not in the printed statements: a bounded solution set (needed for
   finite volume and the outer radii) and `n ≥ 21` (inherited from the
   formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
@@ -163,7 +169,7 @@ names.
   are the paper's (`eq:sampler-parameters`), in lattice units `h = 1`:
   `T = ⌈C n³ (R₀'/γ)² log(2R₀'/h)⌉` and `ν = ε hⁿ/(16(2R₀')ⁿ)` with
   `R₀' = (1 + hκ/γ)R₀` (`normalizedHitAndRunSteps`, `PolytopeData.samplerOuterRadius`,
-  `hitAndRunTolerance`), computed from `γ`, the outer radius, `b`, `ε`, `n` and `r` only.
+  `hitAndRunTolerance`), computed from `γ`, `R₀ = BoundingRadius`, `b`, `ε`, `n` and `r` only.
   `C = 2⁶⁸` (`hitAndRunWalkConstant`). The sampler runs under Corollary `cor:linf`'s
   hypothesis `γ/h ≥ (512n/ε)√log(32r/ε)` (`samplerRadiusRequirement`), which every
   certified call satisfies. Under it, `PolytopeData.hitAndRun_deadline_le_steps` shows that
@@ -172,18 +178,15 @@ names.
   paper's `log(M/ν) ≤ 3n log(2R₀'/h)`, with the `2⁶⁴ n²` deadline (not `[LV04]`'s
   `10¹⁰ n² (R/γ)²`) fixing `C`. Also, `vol P' ≤ (2R₀'/h)ⁿ` (`P'` has diameter `2R₀'/h`, so it
   lies in a box of that side), which gives `ν ≤ (ε/8)/vol P'`, the accuracy KV97 rounding
-  needs. Two differences from the paper: Lean's `R₀` is a radius about the origin rather than
-  the incentre, which changes only the constant in `P' ⊆ B(·, R₀')` and is all the diameter
-  bound uses; and Lean's `κ` uses arlib-community's `cOf ε = √(2 log(4/ε))`.
+  needs. The inflation is the paper's `κ = c + √(2 log r)` with `c = √(2 log(16/ε))`
+  (`samplerC ε = cOf(ε/4)`); arlib-community's rounding escape mass is then `ε/16`, below
+  the `ε/4` the proofs use.
 - Preprocessing returns full-dimensional components whose union agrees with the
   solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
   are dropped.
 
 **Open items.**
 - Boolean abstraction and DNF conversion (Theorem 2).
-- `BoundingRadius`: `outerRadius` is still a field of `PolytopeData`, not the output of
-  the appendix's coordinate LPs (`R₀ ≤ 2√n R`). Everything downstream already uses only
-  the enclosing-radius property, so this is a Model-only change.
 - Paper edits: state boundedness; finish line `line:inradius` (its TODO); fix the walk
   constant `C` (Lean proves `C = 2⁶⁸` suffices with arlib-community's deadline); include the
   `getprec`/decomposition cost (its TODO in `thm:runtime`). Theorem 3 is now stated in
@@ -328,10 +331,13 @@ is bounded by `4bn + clog₂(ceil(clipped-volume-bound)+1)`. The public
 `ttc_expected_runtime_linear_precision` theorem replaces that term in the
 whole-run expected allowance, exposing linear decimal-precision dependence.
 `NormalizedDiameterRuntime.lean` uses the precision certificate to show
-`128 κ ≤ γ/h`, so `R₀'/γ ≤ (129/128)ρ` and `2R₀'/h ≤ 6·10^b·max(1, R_max)`. The paper's
-walk length `T = ⌈2⁶⁸ n³ (R₀'/γ)² log(2R₀'/h)⌉` is therefore at most
-`⌈2⁶⁸ n² ρ² · 2n(b log 10 + log 6 + log⁺ R_max)⌉`, inside the per-component sampler
-envelope (`normalizedHitAndRunSteps_le_explicitEnvelope`). The public
+`128 κ ≤ γ/h`. With `R₀ ≤ 2√n R` this gives `(R₀'/γ)² ≤ 5n ρ²` and
+`2R₀'/h ≤ 6n·10^b·max(1, R_max)`. The paper's walk length
+`T = ⌈2⁶⁸ n³ (R₀'/γ)² log(2R₀'/h)⌉` is therefore at most
+`⌈2⁶⁸ n² ρ² · 5n²(b log 10 + log 6 + log n + log⁺ R_max)⌉`
+(`normalizedHitAndRunSteps_le_explicitEnvelope`). That is `n⁴ρ²` steps, as in the paper's
+Corollary `cor:linf`, and with `O(nr)` per step the `n⁵` of Theorem 3. `polylogFactors`'
+sampler factor is `5·(…+ log n)`. The public
 `ttc_expected_runtime_geometric` theorem uses the resulting concrete sampler-step envelope. These are proved Lean
 inequalities. `CV18RoundnessBound.lean` also specializes the imported query cap
 to `45(64C+1)n³ρ²/eps_CV18²` times the exact six-factor scheduled logarithmic
