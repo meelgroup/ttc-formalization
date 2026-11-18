@@ -11,23 +11,30 @@ noncomputable section
 
 namespace Kr25Ssmxt
 
+/-- Each coordinate of the component lies within `R` of the enclosing ball's centre. -/
 theorem PolytopeData.coordinate_abs_le_outerRadius {n : Nat} (P : PolytopeData n)
-    {x : Point n} (hx : x ∈ P.carrier) (j : Fin n) : |x j| ≤ P.outerRadius := by
-  have h := PiLp.norm_apply_le (WithLp.toLp 2 x : EuclideanSpace Real (Fin n)) j
+    {x : Point n} (hx : x ∈ P.carrier) (j : Fin n) :
+    |x j - P.outerCenter j| ≤ P.outerRadius := by
+  have h := PiLp.norm_apply_le
+    (WithLp.toLp 2 (x - P.outerCenter) : EuclideanSpace Real (Fin n)) j
   have hR := P.outer_bound x hx
   simpa [Real.norm_eq_abs] using h.trans hR
 
 theorem PolytopeData.coordinate_bddBelow {n : Nat} (P : PolytopeData n) (j : Fin n) :
     BddBelow ((fun x : Point n => x j) '' P.presentation.carrier) := by
-  refine ⟨-P.outerRadius, ?_⟩
+  refine ⟨P.outerCenter j - P.outerRadius, ?_⟩
   rintro _ ⟨y, hy, rfl⟩
-  exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).1
+  have := (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).1
+  change P.outerCenter j - P.outerRadius ≤ y j
+  linarith
 
 theorem PolytopeData.coordinate_bddAbove {n : Nat} (P : PolytopeData n) (j : Fin n) :
     BddAbove ((fun x : Point n => x j) '' P.presentation.carrier) := by
-  refine ⟨P.outerRadius, ?_⟩
+  refine ⟨P.outerCenter j + P.outerRadius, ?_⟩
   rintro _ ⟨y, hy, rfl⟩
-  exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).2
+  have := (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).2
+  change y j ≤ P.outerCenter j + P.outerRadius
+  linarith
 
 /-- Every point of the component lies between the coordinate LP optima. -/
 theorem PolytopeData.coordinate_bounds {n : Nat} (P : PolytopeData n)
@@ -87,25 +94,30 @@ theorem PolytopeData.inradius_le_boundingRadius {n : Nat}
   have h := P.norm_sub_incenter_le_boundingRadius hx
   rwa [hnorm] at h
 
-/-- The coordinate LP optima lie within the outer radius. -/
+/-- The coordinate LP optima lie within `R` of the enclosing ball's centre. -/
 theorem PolytopeData.coordinate_optima_abs_le {n : Nat} (P : PolytopeData n) (j : Fin n) :
-    |P.presentation.coordinateMin j| ≤ P.outerRadius ∧
-      |P.presentation.coordinateMax j| ≤ P.outerRadius := by
+    |P.presentation.coordinateMin j - P.outerCenter j| ≤ P.outerRadius ∧
+      |P.presentation.coordinateMax j - P.outerCenter j| ≤ P.outerRadius := by
   have hne : ((fun x : Point n => x j) '' P.presentation.carrier).Nonempty :=
     ⟨_, P.incenter, P.incenter_mem_carrier, rfl⟩
-  have hlow : -P.outerRadius ≤ P.presentation.coordinateMin j :=
+  have hlow : P.outerCenter j - P.outerRadius ≤ P.presentation.coordinateMin j :=
     le_csInf hne (by
       rintro _ ⟨y, hy, rfl⟩
-      exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).1)
-  have hup : P.presentation.coordinateMax j ≤ P.outerRadius :=
+      have := (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).1
+      change P.outerCenter j - P.outerRadius ≤ y j
+      linarith)
+  have hup : P.presentation.coordinateMax j ≤ P.outerCenter j + P.outerRadius :=
     csSup_le hne (by
       rintro _ ⟨y, hy, rfl⟩
-      exact (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).2)
+      have := (abs_le.mp (P.coordinate_abs_le_outerRadius hy j)).2
+      change y j ≤ P.outerCenter j + P.outerRadius
+      linarith)
   obtain ⟨hl, hu⟩ := P.coordinate_bounds P.incenter_mem_carrier j
   have hz := abs_le.mp (P.coordinate_abs_le_outerRadius P.incenter_mem_carrier j)
-  exact ⟨abs_le.mpr ⟨hlow, by linarith⟩, abs_le.mpr ⟨by linarith, hup⟩⟩
+  exact ⟨abs_le.mpr ⟨by linarith, by linarith⟩, abs_le.mpr ⟨by linarith, by linarith⟩⟩
 
-/-- Proposition `prop:bounding-radius`: `R₀ ≤ 2√n R` for any enclosing radius `R`. -/
+/-- Proposition `prop:bounding-radius`: `R₀ ≤ 2√n R` for an enclosing ball of radius `R`
+about any centre. -/
 theorem PolytopeData.boundingRadius_le {n : Nat} (P : PolytopeData n) :
     P.BoundingRadius ≤ 2 * Real.sqrt n * P.outerRadius := by
   have hR := P.outerRadius_nonneg
@@ -115,10 +127,11 @@ theorem PolytopeData.boundingRadius_le {n : Nat} (P : PolytopeData n) :
     intro j
     obtain ⟨hl, hu⟩ := P.coordinate_optima_abs_le j
     have hz := P.coordinate_abs_le_outerRadius P.incenter_mem_carrier j
+    rw [abs_sub_comm] at hz
     have h1 : |P.presentation.coordinateMin j - P.incenter j| ≤ 2 * P.outerRadius :=
-      (abs_sub _ _).trans (by linarith)
+      (abs_sub_le _ (P.outerCenter j) _).trans (by linarith)
     have h2 : |P.presentation.coordinateMax j - P.incenter j| ≤ 2 * P.outerRadius :=
-      (abs_sub _ _).trans (by linarith)
+      (abs_sub_le _ (P.outerCenter j) _).trans (by linarith)
     exact pow_le_pow_left₀ (le_max_of_le_left (abs_nonneg _)) (max_le h1 h2) 2
   unfold PolytopeData.BoundingRadius
   calc Real.sqrt (∑ j : Fin n, _) ≤ Real.sqrt (∑ _j : Fin n, (2 * P.outerRadius) ^ 2) :=

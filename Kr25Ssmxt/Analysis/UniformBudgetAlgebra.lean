@@ -2,10 +2,23 @@ import Kr25Ssmxt.Analysis.CV18Admissible
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.ThresholdCapBound
+import Kr25Ssmxt.Analysis.NormalizedDiameterRuntime
 
 /-! Elementary arithmetic behind the uniform per-component cost envelope. -/
 
 namespace Kr25Ssmxt
+
+theorem Decomposition.theorem3RMax_pos {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (hm : 0 < D.componentCount) :
+    0 < TTCRuntime.RMax D := by
+  let i : Fin D.componentCount := ⟨0, hm⟩
+  have hfacets := (D.component i).facets_pos
+  have hle : (D.component i).presentation.facetCount ≤
+      TTCRuntime.RMax D := by
+    unfold TTCRuntime.RMax
+    exact Finset.le_sup (f := fun j : Fin D.componentCount =>
+      (D.component j).presentation.facetCount) (Finset.mem_univ i)
+  omega
 
 namespace TTCRuntime
 
@@ -45,8 +58,7 @@ theorem theorem3UniformComponentBudget_eq_uniformBudgetNat
           (Rho D) ^ 2 *
           theorem3SamplerLogEnvelope n b
             (Rho D) (theorem3OuterRadiusMax D) p.ε'))
-        (4 * (b * n) + (2 + n * Nat.clog 2
-          (Nat.ceil (4 * theorem3OuterRadiusMax D) + 1))) : ENNReal) := by
+        1 : ENNReal) := by
   unfold theorem3UniformComponentBudget uniformBudgetNat
   simp [Nat.cast_add, Nat.cast_mul]
 
@@ -61,8 +73,7 @@ theorem theorem3UniformComponentBudget_le_coarse_product
             (Rho D) ^ 2 *
             theorem3SamplerLogEnvelope n b
               (Rho D) (theorem3OuterRadiusMax D) p.ε') +
-          (4 * (b * n) + (2 + n * Nat.clog 2
-            (Nat.ceil (4 * theorem3OuterRadiusMax D) + 1))) + 1) : Nat) : ENNReal) := by
+          1 + 1) : Nat) : ENNReal) := by
   rw [theorem3UniformComponentBudget_eq_uniformBudgetNat hn D p b]
   exact_mod_cast uniformBudgetNat_le_coarse_product _ _ _ _ _ _
     (by omega : 1 ≤ n) (D.theorem3RMax_pos hm)
@@ -77,7 +88,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
     theorem3CV18QueryMax hn D p +
         Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
           theorem3SamplerLogEnvelope n b rho R p.ε') +
-        (4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))) + 1 ≤
+        1 + 1 ≤
       Nat.ceil (M * theorem3ParameterFactorCV18 hn D p) := by
   dsimp only
   let rho := Rho D
@@ -158,11 +169,6 @@ theorem theorem3UniformIndexSum_le_parameterFactor
       exact_mod_cast hceil
     have hupper := (Nat.ceil_lt_add_one hS0).le
     nlinarith [hceilR]
-  have hK := theorem3_first_loop_rounds_le_precisionScale n b
-    (by omega : 1 ≤ n) R
-  change ((4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1)) : Nat) : Real) ≤
-    14 * (n : Real) * H at hK
-  push_cast at hK
   have hQscale : A * (n : Real) ^ 3 * rho ^ 2 /
       (p.ε' / 2) ^ 2 * Lcv ≤
       M * (A * Lcv / (p.ε' / 2) ^ 2) := by
@@ -179,42 +185,35 @@ theorem theorem3UniformIndexSum_le_parameterFactor
           (A * rho ^ 2 * Lcv / (p.ε' / 2) ^ 2) :=
         mul_le_mul_of_nonneg_right this hcoeff
       _ = _ := by ring
-  have hKscale : 14 * (n : Real) * H ≤ 14 * M := by
-    dsimp [M]
-    have hpow : (n : Real) ≤ (n : Real) ^ 4 := by
-      nlinarith [mul_nonneg (sub_nonneg.mpr hn1)
-        (by positivity : 0 ≤ (n : Real) ^ 3),
-        mul_nonneg (sub_nonneg.mpr hn1)
-        (by positivity : 0 ≤ (n : Real) ^ 2),
-        mul_nonneg (sub_nonneg.mpr hn1)
-        (by positivity : 0 ≤ (n : Real))]
-    have hrho2 : (1 : Real) ≤ rho ^ 2 := one_le_pow₀ hrho
-    nlinarith [mul_nonneg (sub_nonneg.mpr hpow) (show 0 ≤ H by linarith),
-      mul_nonneg (sub_nonneg.mpr hrho2) (show 0 ≤ H by linarith)]
   have hsum :
       ((theorem3CV18QueryMax hn D p +
         Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
           theorem3SamplerLogEnvelope n b rho R p.ε') +
-        (4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))) + 1 : Nat) : Real) ≤
+        1 + 1 : Nat) : Real) ≤
         M * theorem3ParameterFactorCV18 hn D p := by
     change ((theorem3CV18QueryMax hn D p +
         Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
           theorem3SamplerLogEnvelope n b rho R p.ε') +
-        (4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))) + 1 : Nat) : Real) ≤
+        1 + 1 : Nat) : Real) ≤
       M * (A * Lcv / (p.ε' / 2) ^ 2 +
-        (2 : Real) ^ 68 * Lhr + 20)
+        (2 : Real) ^ 68 * Lhr + 4)
     push_cast
     have hSscale : (2 : Real) ^ 68 * (n : Real) ^ 4 * rho ^ 2 * H * Lhr =
         M * ((2 : Real) ^ 68 * Lhr) := by dsimp [M]; ring
     rw [hSscale] at hS
     have hQ' : (theorem3CV18QueryMax hn D p : Real) ≤
         M * (A * Lcv / (p.ε' / 2) ^ 2) + 1 := by linarith
-    have hK' : 4 * ((b : Real) * n) +
-        (2 + (n : Real) * Nat.clog 2 (Nat.ceil (4 * R) + 1)) ≤
-        14 * M := by linarith
-    have hsum1 := add_le_add (add_le_add (add_le_add hQ' hS) hK')
-      (le_refl (1 : Real))
-    nlinarith [hM]
+    have hexp : M * (A * Lcv / (p.ε' / 2) ^ 2 + (2 : Real) ^ 68 * Lhr + 4) =
+        M * (A * Lcv / (p.ε' / 2) ^ 2) + M * ((2 : Real) ^ 68 * Lhr) + 4 * M := by ring
+    rw [hexp]
+    have h1 := add_le_add hQ' hS
+    have h4 : (4 : Real) ≤ 4 * M := by linarith
+    have h2 : ((theorem3CV18QueryMax hn D p : Real) +
+        (Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
+          theorem3SamplerLogEnvelope n b rho R p.ε') : Real)) + 1 + 1 ≤
+        M * (A * Lcv / (p.ε' / 2) ^ 2) + M * ((2 : Real) ^ 68 * Lhr) + 4 * M := by
+      linarith
+    exact h2
   have hfinal := hsum.trans (Nat.le_ceil (M * theorem3ParameterFactorCV18 hn D p))
   dsimp [rho, R, H, M] at hfinal ⊢
   exact_mod_cast hfinal
@@ -239,7 +238,7 @@ theorem theorem3UniformComponentBudget_le_headline_scale
   let M := (n : Real) ^ 4 * rho ^ 2 * H
   let S := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 * rho ^ 2 *
     theorem3SamplerLogEnvelope n b rho R p.ε')
-  let K := 4 * (b * n) + (2 + n * Nat.clog 2 (Nat.ceil (4 * R) + 1))
+  let K := 1
   have hindex : Q + S + K + 1 ≤ Nat.ceil (M * L) := by
     simpa only [Q, S, K, M, L, rho, R, H] using
       theorem3UniformIndexSum_le_parameterFactor hn D p b

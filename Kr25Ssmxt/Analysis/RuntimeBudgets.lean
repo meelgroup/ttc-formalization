@@ -52,7 +52,7 @@ noncomputable def TTCRuntime.theorem3ParameterFactorCV18
     (2 : Real) ^ 68 *
       (5 * (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
         2 * (Real.log 10 + Real.log 6 + 1 +
-          Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 20
+          Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 4
 
 /-- Explicit TTC CV18 query envelope obtained by inserting `ρ` into the
 imported scheduled complexity rate. -/
@@ -93,9 +93,6 @@ noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.ThresholdCap p m
-  let upperIntensity := ttcReference.t b n (p.Thresh m)
-    (max (P.volumeClipLower p.ε')
-      (P.volumeClipUpper p.ε'))
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
@@ -103,32 +100,7 @@ noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
       (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m) + 1) :
       ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  (Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
-  TTCRuntime.poissonDrawOperations +
-  4 * TTCRuntime.countThinningRoundOperations cap +
-  (cap : ENNReal) *
-    (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-      (normalizedHitAndRunSteps P b p.ε') +
-      TTCRuntime.appendCopyOperations)
-
-/-- The same component allowance with decimal precision exposed linearly.
-The remaining volume logarithm is the geometric volume envelope. -/
-noncomputable def TTCRuntime.expectedComponentBudgetLinearPrecision {n : Nat}
-    (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
-    (P : PolytopeData n) : ENNReal :=
-  let cap := TTCRuntime.ThresholdCap p m
-  let v := max (P.volumeClipLower p.ε')
-    (P.volumeClipUpper p.ε')
-  (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
-    cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
-      P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m) + 1) :
-      ENNReal) +
-  cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  ((4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) : Nat) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
+  TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *
@@ -144,8 +116,6 @@ noncomputable def TTCRuntime.expectedComponentBudgetGeometric
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
   let cap := TTCRuntime.ThresholdCap p D.componentCount
-  let v := max (P.volumeClipLower p.ε')
-    (P.volumeClipUpper p.ε')
   let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
     (TTCRuntime.Rho D) ^ 2 *
     TTCRuntime.theorem3SamplerLogEnvelope n b
@@ -159,38 +129,7 @@ noncomputable def TTCRuntime.expectedComponentBudgetGeometric
       (CommunityCV18.queryBudgetFor (by omega) P p.ε'
         (p.δ' D.componentCount) + 1) : ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  ((4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) : Nat) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
-  TTCRuntime.poissonDrawOperations +
-  4 * TTCRuntime.countThinningRoundOperations cap +
-  (cap : ENNReal) *
-    (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-      samplerSteps + TTCRuntime.appendCopyOperations)
-
-/-- The same geometric allowance with the first-loop volume clip reduced to
-the global outer-radius logarithm. -/
-noncomputable def TTCRuntime.expectedComponentBudgetGeometricClip
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
-    (i : Fin D.componentCount) : ENNReal :=
-  let P := D.component i
-  let cap := TTCRuntime.ThresholdCap p D.componentCount
-  let samplerSteps := Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-    (TTCRuntime.Rho D) ^ 2 *
-    TTCRuntime.theorem3SamplerLogEnvelope n b
-      (TTCRuntime.Rho D)
-      (TTCRuntime.theorem3OuterRadiusMax D) p.ε')
-  (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.ε'
-        (p.δ' D.componentCount)) +
-    cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
-      P.presentation.facetCount
-      (CommunityCV18.queryBudgetFor (by omega) P p.ε'
-        (p.δ' D.componentCount) + 1) : ENNReal) +
-  cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  ((4 * (b * n) + (2 + n * Nat.clog 2
-      (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1)) : Nat) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
+  TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *
@@ -215,9 +154,7 @@ noncomputable def TTCRuntime.expectedComponentBudgetTheorem3
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount (queries + 1) : ENNReal) +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  ((4 * (b * n) + (2 + n * Nat.clog 2
-      (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1)) : Nat) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
+  TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *
@@ -242,9 +179,7 @@ noncomputable def TTCRuntime.theorem3UniformComponentBudget
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n r (queries + 1) :
       ENNReal) +
   cap * (TTCRuntime.facetScanOperations n r + 1) +
-  ((4 * (b * n) + (2 + n * Nat.clog 2
-      (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1)) : Nat) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
+  TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *

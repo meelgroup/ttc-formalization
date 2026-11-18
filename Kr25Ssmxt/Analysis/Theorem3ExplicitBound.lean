@@ -25,7 +25,7 @@ noncomputable def TTCRuntime.theorem3ParameterFactor {n k : Nat} {F : LRAFormula
     (2 : Real) ^ 68 *
       (5 * (Real.log 8 + Real.log (4 * TTCRuntime.Rho D + 1) +
         2 * (Real.log 10 + Real.log 6 + 1 +
-          Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 20
+          Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 4
 
 /-- TTC's name for CV18's scheduled logarithmic product is arlib-community's. -/
 theorem TTCRuntime.theorem3CV18LogEnvelope_eq
@@ -151,18 +151,18 @@ theorem TTCRuntime.inputScale_mul_factor_le {n k : Nat} {F : LRAFormula n k}
   have he2 : 0 < p.epsilon ^ 2 := by positivity
   have he21 : p.epsilon ^ 2 ≤ 1 := pow_le_one₀ he.le he1
   have hfac : TTCRuntime.theorem3ParameterFactor D p + 1 ≤
-      (576 * A * L + H + 21) / p.epsilon ^ 2 := by
-    have hdef : TTCRuntime.theorem3ParameterFactor D p = A * L / (p.ε' / 2) ^ 2 + H + 20 := rfl
+      (576 * A * L + H + 5) / p.epsilon ^ 2 := by
+    have hdef : TTCRuntime.theorem3ParameterFactor D p = A * L / (p.ε' / 2) ^ 2 + H + 4 := rfl
     have hq : (p.ε' / 2) ^ 2 = p.epsilon ^ 2 / 576 := by unfold ApproxParams.ε'; ring
     rw [hdef, hq, le_div_iff₀ he2]
     have : A * L / (p.epsilon ^ 2 / 576) * p.epsilon ^ 2 = 576 * A * L := by
       field_simp
-    have hHe : (H + 21) * p.epsilon ^ 2 ≤ H + 21 := by
-      have := mul_le_mul_of_nonneg_left he21 (by linarith : (0 : Real) ≤ H + 21)
+    have hHe : (H + 5) * p.epsilon ^ 2 ≤ H + 5 := by
+      have := mul_le_mul_of_nonneg_left he21 (by linarith : (0 : Real) ≤ H + 5)
       linarith
     nlinarith
   calc TTCRuntime.theorem3InputScale D p * (TTCRuntime.theorem3ParameterFactor D p + 1)
-      ≤ TTCRuntime.theorem3InputScale D p * ((576 * A * L + H + 21) / p.epsilon ^ 2) :=
+      ≤ TTCRuntime.theorem3InputScale D p * ((576 * A * L + H + 5) / p.epsilon ^ 2) :=
         mul_le_mul_of_nonneg_left hfac hS
     _ = TTCRuntime.polylogFactors D p / p.epsilon ^ 2 := by
         unfold TTCRuntime.polylogFactors

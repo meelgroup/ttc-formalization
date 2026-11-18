@@ -173,54 +173,6 @@ lemma PolytopeData.arlibBody_bounded {n : Nat} (P : PolytopeData n) :
   rw [P.arlibBody_eq_scaledBody_zero]
   exact P.scaledBody_bounded 0
 
-/-- The explicit outer-radius certificate transported to Arlib's Euclidean presentation. -/
-lemma PolytopeData.arlibBody_subset_inputOuterBall {n : Nat} (P : PolytopeData n) :
-    P.arlibBody ⊆ closedBall (0 : EuclideanSpace Real (Fin n)) P.outerRadius := by
-  intro y hy
-  unfold PolytopeData.arlibBody at hy
-  rw [← P.image_toEuclidean_carrier] at hy
-  obtain ⟨x, hx, rfl⟩ := hy
-  rw [mem_closedBall, dist_zero_right]
-  exact P.outer_bound x hx
-
-/-- The radius used by CV18 after translating by the certified incenter and scaling the
-certified inball to unit radius.  The `max 1` records the unit ball already inside the body. -/
-def PolytopeData.cv18OuterRadius {n : Nat} (P : PolytopeData n) : Real :=
-  max 1 ((P.outerRadius + ‖toEuclidean P.incenter‖) / P.inradius)
-
-lemma PolytopeData.cv18OuterRadius_nonneg {n : Nat} (P : PolytopeData n) :
-    0 <= P.cv18OuterRadius := by
-  exact le_trans zero_le_one (le_max_left _ _)
-
-lemma PolytopeData.one_le_cv18OuterRadius {n : Nat} (P : PolytopeData n)
-    (_hn : 1 <= n) :
-    1 <= P.cv18OuterRadius := by
-  exact le_max_left _ _
-
-/-- The explicit normalized radius really contains the CV18 body. -/
-lemma PolytopeData.cv18Body_subset_outerBall {n : Nat} (P : PolytopeData n) :
-    P.cv18Body ⊆ closedBall (0 : EuclideanSpace Real (Fin n)) P.cv18OuterRadius := by
-  intro x hx
-  have hchart :
-      ‖P.inradius • x + toEuclidean P.incenter‖ ≤ P.outerRadius := by
-    have hmem := P.arlibBody_subset_inputOuterBall hx
-    simpa [mem_closedBall, dist_zero_right] using hmem
-  have hscaled : P.inradius * ‖x‖ ≤
-      P.outerRadius + ‖toEuclidean P.incenter‖ := by
-    calc
-      P.inradius * ‖x‖ = ‖P.inradius • x‖ := by
-        rw [norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos]
-      _ = ‖(P.inradius • x + toEuclidean P.incenter) -
-          toEuclidean P.incenter‖ := by congr 1 <;> module
-      _ ≤ ‖P.inradius • x + toEuclidean P.incenter‖ +
-          ‖toEuclidean P.incenter‖ := norm_sub_le _ _
-      _ ≤ P.outerRadius + ‖toEuclidean P.incenter‖ :=
-        add_le_add hchart le_rfl
-  rw [mem_closedBall, dist_zero_right]
-  apply le_trans ?_ (le_max_right _ _)
-  rw [le_div_iff₀ P.inradius_pos]
-  simpa [mul_comm] using hscaled
-
 /-- Corollary `cor:vol`'s ball: `P* = (P − z)/γ ⊆ B₂(0, R₀/γ)`. -/
 lemma PolytopeData.cv18Body_subset_boundingBall {n : Nat} (P : PolytopeData n) :
     P.cv18Body ⊆ closedBall (0 : EuclideanSpace Real (Fin n))
@@ -239,6 +191,24 @@ lemma PolytopeData.cv18Body_subset_boundingBall {n : Nat} (P : PolytopeData n) :
   rw [heq, norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos] at hnorm
   rw [mem_closedBall, dist_zero_right, le_div_iff₀ P.inradius_pos]
   linarith
+
+/-- The radius used by CV18 after translating by the incenter and scaling the inball to unit
+radius: `max 1 (R₀/γ)`. The `max 1` records the unit ball already inside the body. -/
+def PolytopeData.cv18OuterRadius {n : Nat} (P : PolytopeData n) : Real :=
+  max 1 (P.BoundingRadius / P.inradius)
+
+lemma PolytopeData.cv18OuterRadius_nonneg {n : Nat} (P : PolytopeData n) :
+    0 <= P.cv18OuterRadius := by
+  exact le_trans zero_le_one (le_max_left _ _)
+
+lemma PolytopeData.one_le_cv18OuterRadius {n : Nat} (P : PolytopeData n)
+    (_hn : 1 <= n) :
+    1 <= P.cv18OuterRadius := by
+  exact le_max_left _ _
+
+lemma PolytopeData.cv18Body_subset_outerBall {n : Nat} (P : PolytopeData n) :
+    P.cv18Body ⊆ closedBall (0 : EuclideanSpace Real (Fin n)) P.cv18OuterRadius :=
+  P.cv18Body_subset_boundingBall.trans (Metric.closedBall_subset_closedBall (le_max_right _ _))
 
 /-- The normalized body has a finite, explicit outer-radius certificate, as required by
 the Gaussian-cooling schedule. -/

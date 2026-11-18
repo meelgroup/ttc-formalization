@@ -110,78 +110,6 @@ theorem PolytopeData.normalizedHitAndRun_bounded {n : Nat}
   rw [heq] at hdist
   exact (le_div_iff₀ hG).2 (by nlinarith)
 
-/-- The scaled body has the diameter certified by the preprocessing outer radius. -/
-theorem PolytopeData.scaledBody_dist_le_outerRadius {n : Nat}
-    (P : PolytopeData n) (b : Nat) :
-    ∀ x ∈ P.scaledBody b, ∀ y ∈ P.scaledBody b,
-      dist x y ≤ 2 * decimalScale b * P.outerRadius := by
-  intro x hx y hy
-  rw [← P.image_decimalScale_eq_scaledBody b] at hx hy
-  obtain ⟨x₀, hx₀, rfl⟩ := hx
-  obtain ⟨y₀, hy₀, rfl⟩ := hy
-  have hs : 0 ≤ decimalScale b := (decimalScale_pos b).le
-  have hxn : ‖decimalScale b • toEuclidean x₀‖ ≤
-      decimalScale b * P.outerRadius := by
-    simpa only [toEuclidean, norm_smul, Real.norm_eq_abs, abs_of_nonneg hs] using
-      mul_le_mul_of_nonneg_left (P.outer_bound x₀ hx₀) hs
-  have hyn : ‖decimalScale b • toEuclidean y₀‖ ≤
-      decimalScale b * P.outerRadius := by
-    simpa only [toEuclidean, norm_smul, Real.norm_eq_abs, abs_of_nonneg hs] using
-      mul_le_mul_of_nonneg_left (P.outer_bound y₀ hy₀) hs
-  have htriangle : dist (decimalScale b • toEuclidean x₀)
-      (decimalScale b • toEuclidean y₀) ≤
-      ‖decimalScale b • toEuclidean x₀‖ +
-        ‖decimalScale b • toEuclidean y₀‖ := by
-    simpa [dist_eq_norm] using
-      (norm_sub_le (decimalScale b • toEuclidean x₀)
-        (decimalScale b • toEuclidean y₀))
-  linarith
-
-/-- Inflation and normalization leave only the radius ratio in the diameter. -/
-theorem PolytopeData.normalizedHitAndRun_diameter_le {n : Nat}
-    (P : PolytopeData n) (b : Nat) (eta : Real) :
-    Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-      (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-        (P.presentation.facetCount : Real) / P.scaledInradius b) *
-        (2 * P.outerRadius / P.inradius) := by
-  have hG : 0 < P.scaledInradius b :=
-    mul_pos (decimalScale_pos b) P.inradius_pos
-  have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
-      P.scaledBody b := Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
-  let κ := ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-    (P.presentation.facetCount : Real)
-  let C := (1 + κ / P.scaledInradius b) * (2 * P.outerRadius / P.inradius)
-  have hκ : 0 ≤ κ := ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
-  have hdist : ∀ x ∈ P.normalizedHitAndRunBody b eta,
-      ∀ y ∈ P.normalizedHitAndRunBody b eta, dist x y ≤ C := by
-    intro x hx y hy
-    have hx' : P.samplerChart b x ∈ hitAndRunBody P b eta := by
-      rwa [P.normalizedHitAndRunBody_eq_preimage b eta] at hx
-    have hy' : P.samplerChart b y ∈ hitAndRunBody P b eta := by
-      rwa [P.normalizedHitAndRunBody_eq_preimage b eta] at hy
-    have hbound := dist_le_of_mem_inflated hG ArlibCommunity.Algorithms.KV97.cOf_nonneg hbaseball
-      (P.scaledBody_dist_le_outerRadius b)
-      (P.samplerChart b x) hx' (P.samplerChart b y) hy'
-    have heq : dist (P.samplerChart b x) (P.samplerChart b y) =
-        P.scaledInradius b * dist x y := by
-      simp [PolytopeData.samplerChart, dist_add_right, dist_smul₀,
-        Real.norm_eq_abs, abs_of_pos hG]
-    rw [heq] at hbound
-    have hscale : 0 < decimalScale b := decimalScale_pos b
-    calc
-      dist x y ≤ ((1 + κ / P.scaledInradius b) *
-          (2 * decimalScale b * P.outerRadius)) / P.scaledInradius b :=
-        (le_div_iff₀ hG).2 (by simpa only [mul_comm] using hbound)
-      _ = C := by
-        simp only [C, PolytopeData.scaledInradius]
-        field_simp
-        <;> ring
-  have hC : 0 ≤ C := by
-    dsimp only [C]
-    exact mul_nonneg (add_nonneg zero_le_one (div_nonneg hκ hG.le))
-      (div_nonneg (mul_nonneg (by norm_num) P.outerRadius_nonneg) P.inradius_pos.le)
-  exact Metric.diam_le_of_forall_dist_le hC hdist
-
 /-! ## The paper's walk length `T` and accuracy `ν`
 
 `normalizedHitAndRunSteps` and `hitAndRunTolerance` are the paper's parameters
@@ -189,47 +117,6 @@ theorem PolytopeData.normalizedHitAndRun_diameter_le {n : Nat}
 facet count only. Under the precision hypothesis of Corollary `cor:linf` this `T` is at least
 arlib-community's proved mixing deadline at the true diameter and warmness of the walk's
 body, and this `ν` is at most the inverse-volume accuracy KV97 rounding needs. -/
-
-theorem PolytopeData.inradius_le_outerRadius {n : Nat}
-    (P : PolytopeData n) (hn : 0 < n) : P.inradius ≤ P.outerRadius := by
-  let e : Point n := Pi.single ⟨0, hn⟩ (1 : Real)
-  have he : ‖e‖ = 1 := by simp [e, Pi.norm_single]
-  have heE : ‖toEuclidean e‖ = 1 := by
-    simp [toEuclidean, e]
-  let x : Point n := P.incenter + P.inradius • e
-  let y : Point n := P.incenter - P.inradius • e
-  have hx : x ∈ P.carrier := by
-    apply P.inball
-    change ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
-    have hxc : x - P.incenter = P.inradius • e := by simp [x]
-    rw [hxc, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos]
-    change P.inradius * ‖toEuclidean e‖ ≤ _
-    rw [heE, mul_one]
-  have hy : y ∈ P.carrier := by
-    apply P.inball
-    change ‖(WithLp.toLp 2 (y - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
-    have hyc : y - P.incenter = -(P.inradius • e) := by simp [y]
-    rw [hyc, WithLp.toLp_neg, norm_neg, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs,
-      abs_of_pos P.inradius_pos]
-    change P.inradius * ‖toEuclidean e‖ ≤ _
-    rw [heE, mul_one]
-  have hxR := P.outer_bound x hx
-  have hyR := P.outer_bound y hy
-  have hxy : dist (toEuclidean x) (toEuclidean y) = 2 * P.inradius := by
-    have heq : toEuclidean x - toEuclidean y =
-        (2 * P.inradius) • toEuclidean e := by
-      ext i
-      simp [x, y, toEuclidean, PiLp.smul_apply, PiLp.add_apply]
-      ring
-    rw [dist_eq_norm, heq, norm_smul, Real.norm_eq_abs,
-      abs_of_pos (by nlinarith [P.inradius_pos] : 0 < 2 * P.inradius), heE]
-    ring
-  have htri : dist (toEuclidean x) (toEuclidean y) ≤
-      ‖toEuclidean x‖ + ‖toEuclidean y‖ := by
-    simpa [dist_eq_norm] using norm_sub_le (toEuclidean x) (toEuclidean y)
-  change ‖toEuclidean x‖ ≤ P.outerRadius at hxR
-  change ‖toEuclidean y‖ ≤ P.outerRadius at hyR
-  linarith
 
 /-- The decimal-scaled component has diameter at most `2 · 10^b · R₀`. -/
 theorem PolytopeData.scaledBody_dist_le_boundingRadius {n : Nat}

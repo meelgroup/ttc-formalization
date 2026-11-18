@@ -190,8 +190,9 @@ optimum value and an optimal centre of the Chebyshev-centre LP (`MaxInscribedBal
 `Analysis/ChebyshevCenter.lean` proves `γ > 0`, `B₂(z, γ) ⊆ P`, and that no larger `ℓ₂`
 ball fits.
 
-`outerRadius` is the paper's `R`: the radius of a ball about the origin enclosing the
-component. The algorithm never reads it. Its sampler uses the computed
+`outerRadius` is the paper's `R`: the radius of a ball, about any centre `outerCenter`,
+enclosing the component. Taking the smallest such ball gives the paper's minimum enclosing
+radius; Theorem 3 holds for every enclosing ball. The algorithm never reads it. Its sampler uses the computed
 `PolytopeData.BoundingRadius` (`Model/Run.lean`), which is at most `2√n R`. `outerRadius`
 enters only Theorem 3's statement, through `ρ = maxᵢ Rᵢ/γᵢ` and `R_max`. -/
 structure PolytopeData (n : Nat) where
@@ -201,10 +202,11 @@ structure PolytopeData (n : Nat) where
   fullDimensional : ∃ (c : Point n) (r : Real), 0 < r ∧
     euclideanBall c r ⊆ presentation.carrier
   bounded : Bornology.IsBounded presentation.carrier
+  outerCenter : Point n
   outerRadius : Real
   outerRadius_nonneg : 0 ≤ outerRadius
   outer_bound : ∀ x ∈ presentation.carrier,
-    ‖(WithLp.toLp 2 x : EuclideanSpace Real (Fin n))‖ ≤ outerRadius
+    ‖(WithLp.toLp 2 (x - outerCenter) : EuclideanSpace Real (Fin n))‖ ≤ outerRadius
 
 /-- `γ = MaxInscribedBall(P)`, the radius of a largest inscribed `ℓ₂` ball. -/
 def PolytopeData.inradius {n : Nat} (P : PolytopeData n) : Real :=
@@ -397,7 +399,7 @@ polylogarithmic in `n`, `m`, `ρ`, `R_max`, `1/γ_min`, `1/ε` and `1/δ`:
   and its logarithmic factors `theorem3CV18LogBound`;
 * the Hit-and-Run walk length: its constant `C = 2⁶⁸`, a factor `5` (from
   `(R'₀/γ)² ≤ 5n ρ²`, as `BoundingRadius ≤ 2√n R`), and its logarithms, including
-  `log n`; and the thinning counter. -/
+  `log n`; and a constant for the per-component counters. -/
 noncomputable def polylogFactors {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) : Real :=
   theorem3InputScale D p *
@@ -405,7 +407,7 @@ noncomputable def polylogFactors {n k : Nat} {F : LRAFormula n k}
         theorem3CV18LogBound n (Rho D) p.ε' (p.δ' D.componentCount) +
       (2 : Real) ^ 68 *
         (5 * (Real.log 8 + Real.log (4 * Rho D + 1) +
-          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 21)
+          2 * (Real.log 10 + Real.log 6 + 1 + Real.log (1 + 8 / p.ε') + 2) + Real.log n)) + 5)
 
 end TTCRuntime
 

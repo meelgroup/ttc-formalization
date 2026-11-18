@@ -180,19 +180,4 @@ def ttcRefWithCost {n k : Nat} (hn : 21 ≤ n)
     (ttcCostedSubroutines hn prep cv18NonQueryFactor)
     preprocessingOperations
 
-/-! ## Geometric volume envelope
-
-`ComputeVolume` returns CV18's estimate unclipped. The runtime bounds still use the
-geometric envelope `(1 ± ε') ⋯` of a component's volume as a reference scale. -/
-
-/-- Lower geometric volume envelope of a component. -/
-def PolytopeData.volumeClipLower {n : Nat} (P : PolytopeData n)
-    (eta : Real) : NNReal :=
-  Real.toNNReal ((1 - eta) * (2 * P.inradius / Real.sqrt n) ^ n)
-
-/-- Upper geometric volume envelope of a component. -/
-def PolytopeData.volumeClipUpper {n : Nat} (P : PolytopeData n)
-    (eta : Real) : NNReal :=
-  Real.toNNReal ((1 + eta) * (2 * P.outerRadius) ^ n)
-
 end Kr25Ssmxt

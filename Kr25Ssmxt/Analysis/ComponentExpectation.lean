@@ -573,12 +573,8 @@ private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) 
 private noncomputable def componentUniformBudget {n : Nat} (p : ApproxParams)
     (m b : Nat) (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.ThresholdCap p m
-  let upperIntensity := ttcReference.t b n (p.Thresh m)
-    (max (P.volumeClipLower p.ε')
-      (P.volumeClipUpper p.ε'))
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  (Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) : ENNReal) *
-    TTCRuntime.rateThinningRoundOperations cap +
+  TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations cap +
   (cap : ENNReal) *
@@ -1244,50 +1240,15 @@ private theorem componentNonVolumeBudget_le_uniform {n : Nat}
       componentUniformBudget p m b P := by
   let cap := TTCRuntime.ThresholdCap p m
   let deleted := state.removeComponent P
-  let upperIntensity := ttcReference.t b n (p.Thresh m)
-    (max (P.volumeClipLower p.ε')
-      (P.volumeClipUpper p.ε'))
   have hcap : state.X.card ≤ cap := by
     exact_mod_cast hcard.trans (Nat.le_ceil (p.Thresh m))
   have hdeleted : deleted.X.card ≤ cap :=
     (TTCState.removeComponent_card_le state P).trans hcap
-  have hlowerPos : 0 < (P.volumeClipLower p.ε' : Real) := by
-    have heps : p.ε' < 1 := by
-      unfold ApproxParams.ε'
-      linarith [p.epsilon_le_one]
-    have hbase : 0 < (2 * P.inradius / Real.sqrt n) ^ n := by
-      rcases Nat.eq_zero_or_pos n with hn0 | hnpos
-      · subst hn0
-        simp
-      · have hsqrt : 0 < Real.sqrt n := Real.sqrt_pos.mpr (by exact_mod_cast hnpos)
-        exact pow_pos (div_pos (by linarith [P.inradius_pos]) hsqrt) n
-    unfold PolytopeData.volumeClipLower
-    rw [Real.coe_toNNReal _ (by nlinarith)]
-    nlinarith
-  have hupperPos : 0 < (upperIntensity : Real) := by
-    have hT := p.threshold_pos m
-    have hmax : (0 : NNReal) < max (P.volumeClipLower p.ε') (P.volumeClipUpper p.ε') :=
-      lt_max_of_lt_left (by exact_mod_cast hlowerPos)
-    have hpos : (0 : NNReal) < upperIntensity := by
-      dsimp only [upperIntensity, ttcReference.t]
-      exact mul_pos (mul_pos (Real.toNNReal_pos.mpr hT) (by positivity)) hmax
-    exact_mod_cast hpos
-  have hlogPos : 1 ≤ Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) := by
-    have hceil : 0 < Nat.ceil ((upperIntensity : Real) / p.Thresh m) :=
-      Nat.ceil_pos.mpr (div_pos hupperPos (p.threshold_pos m))
-    exact Nat.clog_pos (by norm_num) (by omega)
   have hrateCost : TTCRuntime.rateThinningRoundOperations deleted.X.card ≤
-      Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) *
-        TTCRuntime.rateThinningRoundOperations cap := by
-    have hround : TTCRuntime.rateThinningRoundOperations deleted.X.card ≤
-        TTCRuntime.rateThinningRoundOperations cap := by
-      unfold TTCRuntime.rateThinningRoundOperations TTCRuntime.fairCoinOperations
-        TTCRuntime.scalarOperationCost
-      omega
-    calc
-      _ ≤ TTCRuntime.rateThinningRoundOperations cap := hround
-      _ = 1 * TTCRuntime.rateThinningRoundOperations cap := (one_mul _).symm
-      _ ≤ _ := Nat.mul_le_mul_right _ hlogPos
+      TTCRuntime.rateThinningRoundOperations cap := by
+    unfold TTCRuntime.rateThinningRoundOperations TTCRuntime.fairCoinOperations
+      TTCRuntime.scalarOperationCost
+    omega
   have hdelete : state.X.card *
       (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) ≤
       cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) :=
@@ -1300,7 +1261,6 @@ private theorem componentNonVolumeBudget_le_uniform {n : Nat}
   unfold componentNonVolumeBudget componentUniformBudget
   dsimp only
   gcongr
-  · exact_mod_cast hrateCost
 
 theorem certified_component_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)

@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Analysis.ClippedVolumeRate
+import Kr25Ssmxt.Analysis.RuntimeBudgets
 
 /-! An explicit parameter bound for the paper's sample threshold. -/
 

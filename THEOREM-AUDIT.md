@@ -105,8 +105,10 @@ radius `getprec` requires. The bound no longer mentions the precision `b`:
 The revised paper states Theorem 3 in expectation and lets `Õ` suppress
 polylogarithmic factors of `R_max` and `1/γ_min`, which is how the Lean bound depends on
 the precision: through the sampler's `log(2·10^b R)` and `b ≤ 1 + log₁₀⁺γ +
-log₁₀⁺(1/minᵢ γᵢ)`. The Lean statement also keeps the old first-loop term
-`⌈log₂(…)⌉·(⌈Thresh⌉+2)`, which bounds the new one-pass rate check.
+log₁₀⁺(1/minᵢ γᵢ)`. The rate check is charged as the single pass over `X` it is; the
+old first loop's `⌈log₂(…)⌉` pass count is gone, so `polylogFactors` carries `+ 5` for the
+per-component counters. `R` (`outerRadius`) is the radius of an enclosing ball about any
+centre (`outerCenter`), so `ρ` and `R_max` do not depend on where the polytope sits.
 
 **Names and layout.** `Model/Program.lean` and `Model/Run.lean` follow Algorithm `ttc`
 line by line, with section headers quoting the paper's line labels, and use the paper's
@@ -255,9 +257,7 @@ output law. `TTCProbabilityMeasure.lean` now proves that the full
 streaming hypothesis. `PoissonMarking.lean` records the imported exact
 Poisson marking and half-thinning identities, and
 `PointIntensity.lean` proves the per-point scaled intensity bounds.
-`VolumeGeometry.lean` proves that the paper's clipping interval
-contains each component's true volume and discharges the concrete clipped CV18
-volume contract; the normalized Hit-and-Run batch contract is proved in
+`VolumeGeometry.lean` discharges the concrete CV18 volume contract; the normalized Hit-and-Run batch contract is proved in
 `HitAndRunSamplingOracle.lean`.
 `UnionLatticeNonempty.lean` proves the finite union has a positive
 lattice count when the decomposition is nonempty, and
@@ -334,10 +334,8 @@ normalisation `E‖X‖² ≤ roundness · n`, i.e. `(max 1 (R₀/γ))²/n` (`Co
 the `max 1` is a no-op since `γ ≤ R₀`). `CommunityCV18.wellRounded` proves CV18's
 well-roundedness promise from `P* ⊆ B₂(0, R₀/γ)`, and `CV18RoundnessBound.lean` uses
 `R₀ ≤ 2√n R` to bound the parameter by `4ρ² ≤ 4ρ²+1`. It also restates the amplified CV18 program's exact cap in terms of its
-proved scheduled complexity rate. `RateLogBound.lean` proves that the first-loop logarithmic counter
-is bounded by `4bn + clog₂(ceil(clipped-volume-bound)+1)`. The public
-`ttc_expected_runtime_linear_precision` theorem replaces that term in the
-whole-run expected allowance, exposing linear decimal-precision dependence.
+proved scheduled complexity rate. The rate check costs one pass over `X`
+(at most `⌈Thresh⌉` copies), charged once per component.
 `NormalizedDiameterRuntime.lean` uses the precision certificate to show
 `128 κ ≤ γ/h`. With `R₀ ≤ 2√n R` this gives `(R₀'/γ)² ≤ 5n ρ²` and
 `2R₀'/h ≤ 6n·10^b·max(1, R_max)`. The paper's walk length
@@ -350,22 +348,17 @@ sampler factor is `5·(…+ log n)`. The public
 inequalities. `CV18RoundnessBound.lean` also specializes the imported query cap
 to `45(64C+1)n³ρ²/eps_CV18²` times the exact six-factor scheduled logarithmic
 product.
-`ClippedVolumeRate.lean` proves `γ_i ≤ R_i`, bounds the paper volume clip
-by `2(4R_i)^n`, and reduces the first-loop count to
-`4bn+2+n·clog₂(ceil(4R_max)+1)`. The public
+The public
 `ttc_expected_runtime_theorem3_expanded` theorem composes these reductions
 into a whole-run expected-operation bound. Its fixed-charge corollary sets
 the CV18 non-query allowance to one membership-equivalent unit per call.
 The public `ttc_expected_runtime_uniform_budget` theorem further bounds the
 whole expected cost by `T_preprocessing + m · B_uniform`, where `B_uniform`
 uses the maximum facet count, the imported CV18 query envelope, the imported
-Hit-and-Run deadline envelope, the sample cap, and the clipped first-loop
-counter. The only axioms in this result are Lean's standard `propext`,
-`Classical.choice`, and `Quot.sound`. `NormalizedDiameterRuntime.lean` now
-also proves the dimension's unit-ball volume is at most `2^n`, hence its
-logarithmic contribution is at most `2n`, and derives an explicit selected
-sampler-step bound with `2^68 n^4 ρ² (1+b+log⁺R_max)` outside a factor
-depending logarithmically on `ρ` and `1/ε'`.
+Hit-and-Run walk-length envelope, and the sample cap. The only axioms in this
+result are Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
+`NormalizedDiameterRuntime.lean` derives the sampler-step bound
+`2^68 n^4 ρ² (1+b+log⁺R_max)` times a factor logarithmic in `ρ`, `n` and `1/ε'`.
 
 `ThresholdCapBound.lean` proves the sample cap is at most the ceiling of
 `27 log(24/δ)/epsilonPrime² + 15(log(6/δ)+log m)` for nonempty decompositions.

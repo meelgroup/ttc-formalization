@@ -107,11 +107,16 @@ theorem PolytopeData.le_outerRadius_of_ball {n : Nat} (P : PolytopeData n)
     rw [dist_eq_norm, heq, norm_smul, Real.norm_eq_abs,
       abs_of_pos (by linarith : 0 < 2 * r), heE]
     ring
+  have hsplit : toEuclidean x - toEuclidean y =
+      toEuclidean (x - P.outerCenter) - toEuclidean (y - P.outerCenter) := by
+    simp only [toEuclidean, WithLp.toLp_sub]
+    abel
   have htri : dist (toEuclidean x) (toEuclidean y) ≤
-      ‖toEuclidean x‖ + ‖toEuclidean y‖ := by
-    simpa [dist_eq_norm] using norm_sub_le (toEuclidean x) (toEuclidean y)
-  change ‖toEuclidean x‖ ≤ P.outerRadius at hxR
-  change ‖toEuclidean y‖ ≤ P.outerRadius at hyR
+      ‖toEuclidean (x - P.outerCenter)‖ + ‖toEuclidean (y - P.outerCenter)‖ := by
+    rw [dist_eq_norm, hsplit]
+    exact norm_sub_le _ _
+  change ‖toEuclidean (x - P.outerCenter)‖ ≤ P.outerRadius at hxR
+  change ‖toEuclidean (y - P.outerCenter)‖ ≤ P.outerRadius at hyR
   linarith
 
 /-- The LP's nonnegative feasible pairs. -/

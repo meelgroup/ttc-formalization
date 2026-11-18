@@ -120,167 +120,6 @@ theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
       4 * Real.sqrt L := by linarith
   exact hκ.trans (mul_le_mul_of_nonneg_right hfactor (Real.sqrt_nonneg L))
 
-theorem PolytopeData.normalizedHitAndRun_diameter_le_four_ratio
-    {n : Nat} (P : PolytopeData n) (hn : 0 < n) (b : Nat)
-    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hprecision : samplerRadiusRequirement P eta ≤
-      decimalScale b * P.inradius) :
-    Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-      4 * P.outerRadius / P.inradius := by
-  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-      (P.presentation.facetCount : Real) ≤ P.scaledInradius b := by
-    exact (P.kv97_kappa_le_samplerRadiusRequirement hn heta0 heta1).trans
-      (by simpa only [PolytopeData.scaledInradius] using hprecision)
-  have hγ : 0 < P.scaledInradius b :=
-    mul_pos (decimalScale_pos b) P.inradius_pos
-  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-      (P.presentation.facetCount : Real) / P.scaledInradius b ≤ 1 :=
-    (div_le_iff₀ hγ).2 (by simpa using hκ)
-  have hR : 0 ≤ P.outerRadius / P.inradius :=
-    div_nonneg P.outerRadius_nonneg P.inradius_pos.le
-  calc
-    Metric.diam (P.normalizedHitAndRunBody b eta) ≤
-        (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-          (P.presentation.facetCount : Real) / P.scaledInradius b) *
-          (2 * P.outerRadius / P.inradius) :=
-      P.normalizedHitAndRun_diameter_le b eta
-    _ ≤ 4 * P.outerRadius / P.inradius := by
-      calc
-        _ ≤ 2 * (2 * P.outerRadius / P.inradius) :=
-          mul_le_mul_of_nonneg_right (by linarith)
-            (div_nonneg (mul_nonneg (by norm_num) P.outerRadius_nonneg)
-              P.inradius_pos.le)
-        _ = 4 * P.outerRadius / P.inradius := by ring
-
-theorem PolytopeData.hitAndRunBody_norm_le_five_scaled_outer
-    {n : Nat} (P : PolytopeData n) (hn : 0 < n) (b : Nat)
-    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hprecision : samplerRadiusRequirement P eta ≤
-      decimalScale b * P.inradius) :
-    ∀ x ∈ hitAndRunBody P b eta,
-      ‖x‖ ≤ 5 * decimalScale b * P.outerRadius := by
-  have hκ : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-      (P.presentation.facetCount : Real) ≤ P.scaledInradius b :=
-    (P.kv97_kappa_le_samplerRadiusRequirement hn heta0 heta1).trans
-      (by simpa only [PolytopeData.scaledInradius] using hprecision)
-  have hγ : 0 < P.scaledInradius b :=
-    mul_pos (decimalScale_pos b) P.inradius_pos
-  have hκratio : ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-      (P.presentation.facetCount : Real) / P.scaledInradius b ≤ 1 :=
-    (div_le_iff₀ hγ).2 (by simpa using hκ)
-  have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
-      P.scaledBody b := Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
-  have hcenterBody : P.scaledIncenter b ∈ P.scaledBody b :=
-    P.scaledBody_inball b (by
-      simp [PolytopeData.scaledIncenter, PolytopeData.scaledInradius,
-        Metric.mem_closedBall, mul_nonneg (decimalScale_pos b).le P.inradius_pos.le])
-  have hcenterInflated : P.scaledIncenter b ∈ hitAndRunBody P b eta := by
-    exact ArlibCommunity.Algorithms.KV97.body_subset_inflated P.arlibNormal (P.scaledOffset b)
-      (P.presentation.facetCount : Real) ArlibCommunity.Algorithms.KV97.cOf_nonneg hcenterBody
-  have hcenterNorm : ‖P.scaledIncenter b‖ ≤
-      decimalScale b * P.outerRadius := by
-    have hmem : P.incenter ∈ P.carrier := P.incenter_mem_carrier
-    have hnorm : ‖toEuclidean P.incenter‖ ≤ P.outerRadius :=
-      P.outer_bound P.incenter hmem
-    dsimp [PolytopeData.scaledIncenter]
-    simpa only [norm_smul, Real.norm_eq_abs,
-      abs_of_pos (decimalScale_pos b)] using
-      mul_le_mul_of_nonneg_left hnorm (decimalScale_pos b).le
-  intro x hx
-  have hdist := dist_le_of_mem_inflated hγ ArlibCommunity.Algorithms.KV97.cOf_nonneg
-    hbaseball (P.scaledBody_dist_le_outerRadius b) x hx
-    (P.scaledIncenter b) hcenterInflated
-  have hbound : dist x (P.scaledIncenter b) ≤
-      4 * decimalScale b * P.outerRadius := by
-    have hR : 0 ≤ decimalScale b * P.outerRadius :=
-      mul_nonneg (decimalScale_pos b).le P.outerRadius_nonneg
-    calc
-      _ ≤ (1 + ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta)
-        (P.presentation.facetCount : Real) / P.scaledInradius b) *
-        (2 * decimalScale b * P.outerRadius) := hdist
-      _ ≤ 2 * (2 * decimalScale b * P.outerRadius) := by
-        apply mul_le_mul_of_nonneg_right (by linarith)
-        nlinarith
-      _ = _ := by ring
-  have htriangle : ‖x‖ ≤ dist x (P.scaledIncenter b) +
-      ‖P.scaledIncenter b‖ := by
-    simpa [dist_eq_norm] using (norm_add_le (x - P.scaledIncenter b)
-      (P.scaledIncenter b))
-  linarith
-
-theorem PolytopeData.hitAndRunBody_volume_le_scaled_outer_ball
-    {n : Nat} (P : PolytopeData n) (hn : 0 < n) (b : Nat)
-    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hprecision : samplerRadiusRequirement P eta ≤
-      decimalScale b * P.inradius) :
-    volume (hitAndRunBody P b eta) ≤
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n))
-        (5 * decimalScale b * P.outerRadius + 1)) := by
-  apply measure_mono
-  intro x hx
-  have hnorm := P.hitAndRunBody_norm_le_five_scaled_outer hn b heta0 heta1
-    hprecision x hx
-  have hlt : ‖x‖ < 5 * decimalScale b * P.outerRadius + 1 := by linarith
-  simpa [Metric.mem_ball, dist_zero_right] using hlt
-
-theorem PolytopeData.hitAndRunBody_volume_toReal_le_scaled_outer_pow
-    {n : Nat} (P : PolytopeData n) (hn : 0 < n) (b : Nat)
-    {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
-    (hprecision : samplerRadiusRequirement P eta ≤
-      decimalScale b * P.inradius) :
-    (volume (hitAndRunBody P b eta)).toReal ≤
-      (5 * decimalScale b * P.outerRadius + 1) ^ n *
-        (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal := by
-  letI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
-  let R : Real := 5 * decimalScale b * P.outerRadius + 1
-  have hR : 0 ≤ R := by
-    dsimp [R]
-    have hmul : 0 ≤ decimalScale b * P.outerRadius :=
-      mul_nonneg (decimalScale_pos b).le P.outerRadius_nonneg
-    linarith
-  have hV := P.hitAndRunBody_volume_le_scaled_outer_ball hn b heta0 heta1
-    hprecision
-  have hballtop : volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) R) ≠ ⊤ :=
-    measure_ball_lt_top.ne
-  have hreal := ENNReal.toReal_mono hballtop hV
-  have hball :
-      (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) R)).toReal =
-        R ^ n * (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal := by
-    rw [EuclideanSpace.volume_ball, EuclideanSpace.volume_ball]
-    simp only [ENNReal.toReal_mul, ENNReal.toReal_pow]
-    rw [ENNReal.toReal_ofReal hR]
-    norm_num
-  simpa only [R] using hreal.trans_eq hball
-
-theorem PolytopeData.log_scaled_outer_ball_radius_le
-    {n : Nat} (P : PolytopeData n) (b : Nat) :
-    Real.log (5 * decimalScale b * P.outerRadius + 1) ≤
-      (b : Real) * Real.log 10 + Real.log (6 * max 1 P.outerRadius) := by
-  have hscale : 1 ≤ decimalScale b := by
-    unfold decimalScale
-    exact one_le_pow₀ (by norm_num)
-  have hR : 1 ≤ max 1 P.outerRadius := le_max_left _ _
-  have hRle : P.outerRadius ≤ max 1 P.outerRadius := le_max_right _ _
-  have hrad : 0 < 5 * decimalScale b * P.outerRadius + 1 := by
-    have := P.outerRadius_nonneg
-    positivity
-  have hupper : 5 * decimalScale b * P.outerRadius + 1 ≤
-      decimalScale b * (6 * max 1 P.outerRadius) := by
-    have hmul : decimalScale b * P.outerRadius ≤
-        decimalScale b * max 1 P.outerRadius :=
-      mul_le_mul_of_nonneg_left hRle (decimalScale_pos b).le
-    have hone : 1 ≤ decimalScale b * max 1 P.outerRadius := by
-      nlinarith [mul_nonneg (sub_nonneg.mpr hscale)
-        (sub_nonneg.mpr hR)]
-    nlinarith
-  have hlog := Real.log_le_log hrad hupper
-  have hright : Real.log (decimalScale b * (6 * max 1 P.outerRadius)) =
-      (b : Real) * Real.log 10 + Real.log (6 * max 1 P.outerRadius) := by
-    rw [Real.log_mul (decimalScale_pos b).ne' (by positivity :
-      (6 * max 1 P.outerRadius) ≠ 0)]
-    simp [decimalScale, Real.log_pow]
-  exact hlog.trans_eq hright
-
 theorem Decomposition.component_outerRadius_le_theorem3OuterRadiusMax
     {n k : Nat} {F : LRAFormula n k} (D : Decomposition F)
     (i : Fin D.componentCount) :
@@ -297,25 +136,6 @@ theorem Decomposition.component_outerRadius_le_theorem3OuterRadiusMax
     _ ≤ TTCRuntime.theorem3OuterRadiusMax D := by
       unfold TTCRuntime.theorem3OuterRadiusMax
       exact_mod_cast hle
-
-theorem Decomposition.log_scaled_outer_ball_radius_le_global
-    {n k : Nat} {F : LRAFormula n k} (D : Decomposition F)
-    (i : Fin D.componentCount) (b : Nat) :
-    Real.log (5 * decimalScale b * (D.component i).outerRadius + 1) ≤
-      (b : Real) * Real.log 10 +
-        Real.log (6 * max 1 (TTCRuntime.theorem3OuterRadiusMax D)) := by
-  have hlocal := (D.component i).log_scaled_outer_ball_radius_le b
-  have hmax : max 1 (D.component i).outerRadius ≤
-      max 1 (TTCRuntime.theorem3OuterRadiusMax D) := by
-    gcongr
-    exact D.component_outerRadius_le_theorem3OuterRadiusMax i
-  have hpos : 0 < 6 * max 1 (D.component i).outerRadius := by
-    have := le_max_left (1 : Real) (D.component i).outerRadius
-    positivity
-  have hlog : Real.log (6 * max 1 (D.component i).outerRadius) ≤
-      Real.log (6 * max 1 (TTCRuntime.theorem3OuterRadiusMax D)) :=
-    Real.log_le_log hpos (by gcongr)
-  linarith
 
 theorem log_six_max_one (R : Real) (hR : 0 ≤ R) :
     Real.log (6 * max 1 R) = Real.log 6 + max 0 (Real.log R) := by
@@ -334,62 +154,6 @@ theorem log_six_max_one (R : Real) (hR : 0 ≤ R) :
     rw [max_eq_right hone]
     have hlog : 0 ≤ Real.log R := Real.log_nonneg hone
     simp [hlog]
-
-theorem Decomposition.log_scaled_outer_ball_radius_le_precisionScale
-    {n k : Nat} {F : LRAFormula n k} (D : Decomposition F)
-    (i : Fin D.componentCount) (b : Nat) :
-    Real.log (5 * decimalScale b * (D.component i).outerRadius + 1) ≤
-      (b : Real) * Real.log 10 + Real.log 6 +
-        max 0 (Real.log (TTCRuntime.theorem3OuterRadiusMax D)) := by
-  have hR : 0 ≤ TTCRuntime.theorem3OuterRadiusMax D := by
-    unfold TTCRuntime.theorem3OuterRadiusMax
-    positivity
-  have h := D.log_scaled_outer_ball_radius_le_global i b
-  rw [log_six_max_one _ hR] at h
-  linarith
-
-theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
-    {n k : Nat} {F : LRAFormula n k} (hn : 0 < n)
-    (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.precisionEta)
-    (i : Fin D.componentCount) :
-    Metric.diam ((D.component i).normalizedHitAndRunBody b p.ε') ≤
-      4 * TTCRuntime.Rho D := by
-  let P := D.component i
-  have heta0 : 0 < p.ε' := by
-    dsimp [ApproxParams.ε']
-    positivity [p.epsilon_pos]
-  have heta1 : p.ε' ≤ 1 := by
-    dsimp [ApproxParams.ε']
-    linarith [p.epsilon_le_one]
-  have hprec : samplerRadiusRequirement P p.ε' ≤
-      decimalScale b * P.inradius := by
-    simpa only [P, decimalScale] using
-      (le_max_right _ _).trans (hprecision.split i)
-  have hD := P.normalizedHitAndRun_diameter_le_four_ratio hn b heta0 heta1 hprec
-  have hratio : P.outerRadius / P.inradius ≤ TTCRuntime.Rho D := by
-    have hnonneg : 0 ≤ P.outerRadius / P.inradius :=
-      div_nonneg P.outerRadius_nonneg P.inradius_pos.le
-    have hle : Real.toNNReal (P.outerRadius / P.inradius) ≤
-        (Finset.univ.sup fun j : Fin D.componentCount =>
-          Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius) :
-            NNReal) := Finset.le_sup (f := fun j : Fin D.componentCount =>
-              Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius))
-              (Finset.mem_univ i)
-    have hleR : P.outerRadius / P.inradius ≤
-        ((Finset.univ.sup fun j : Fin D.componentCount =>
-          Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius) :
-            NNReal) : Real) := by
-      calc
-        P.outerRadius / P.inradius =
-            (Real.toNNReal (P.outerRadius / P.inradius) : Real) :=
-          (Real.coe_toNNReal _ hnonneg).symm
-        _ ≤ _ := by exact_mod_cast hle
-    exact hleR.trans (le_max_right _ _)
-  calc
-    _ ≤ 4 * P.outerRadius / P.inradius := by simpa only [P] using hD
-    _ = 4 * (P.outerRadius / P.inradius) := by ring
-    _ ≤ 4 * TTCRuntime.Rho D := by gcongr
 
 /-- The paper's walk length `T = ⌈C n³ (R'₀/γ)² log (2R'₀/h)⌉` within the per-component
 sampler allowance. `R₀ = BoundingRadius ≤ 2√n R` gives `(R'₀/γ)² ≤ 5n ρ²`, and
@@ -526,18 +290,18 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
         gcongr
     _ = _ := by ring
 
-theorem TTCRuntime.expectedComponentBudgetLinearPrecision_le_geometric
+theorem TTCRuntime.expectedComponentBudget_le_geometric
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
-    TTCRuntime.expectedComponentBudgetLinearPrecision hn p
+    TTCRuntime.expectedComponentBudget hn p
       D.componentCount b cv18NonQueryFactor (D.component i) ≤
       TTCRuntime.expectedComponentBudgetGeometric hn D p b
         cv18NonQueryFactor i := by
   have hsteps := D.normalizedHitAndRunSteps_le_explicitEnvelope
     hn b p hprecision i
-  unfold TTCRuntime.expectedComponentBudgetLinearPrecision
+  unfold TTCRuntime.expectedComponentBudget
     TTCRuntime.expectedComponentBudgetGeometric
   dsimp only
   gcongr

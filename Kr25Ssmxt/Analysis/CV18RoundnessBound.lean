@@ -305,16 +305,16 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
     positivity [ArlibCommunity.Algorithms.CV18.runCostConstant_pos]
   exact mul_le_mul_of_nonneg_left hlog hcoeff
 
-theorem TTCRuntime.expectedComponentBudgetGeometricClip_le_theorem3
+theorem TTCRuntime.expectedComponentBudgetGeometric_le_theorem3
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) :
-    TTCRuntime.expectedComponentBudgetGeometricClip hn D p b
+    TTCRuntime.expectedComponentBudgetGeometric hn D p b
       cv18NonQueryFactor i ≤
       TTCRuntime.expectedComponentBudgetTheorem3 hn D p b
         cv18NonQueryFactor i := by
   have hqueries := D.communityCV18_queryBudget_le_envelope hn p i
-  unfold TTCRuntime.expectedComponentBudgetGeometricClip
+  unfold TTCRuntime.expectedComponentBudgetGeometric
     TTCRuntime.expectedComponentBudgetTheorem3
   dsimp only
   unfold TTCRuntime.membershipQueryOperations
