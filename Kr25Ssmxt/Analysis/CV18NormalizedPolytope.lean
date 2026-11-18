@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.BoundingRadius
 import Kr25Ssmxt.Analysis.ArlibPolytopeBridge
 import Mathlib.Analysis.Complex.ExponentialBounds
 
@@ -219,6 +220,25 @@ lemma PolytopeData.cv18Body_subset_outerBall {n : Nat} (P : PolytopeData n) :
   apply le_trans ?_ (le_max_right _ _)
   rw [le_div_iff₀ P.inradius_pos]
   simpa [mul_comm] using hscaled
+
+/-- Corollary `cor:vol`'s ball: `P* = (P − z)/γ ⊆ B₂(0, R₀/γ)`. -/
+lemma PolytopeData.cv18Body_subset_boundingBall {n : Nat} (P : PolytopeData n) :
+    P.cv18Body ⊆ closedBall (0 : EuclideanSpace Real (Fin n))
+      (P.BoundingRadius / P.inradius) := by
+  intro x hx
+  have hy : P.inradius • x + toEuclidean P.incenter ∈ P.arlibBody := hx
+  unfold PolytopeData.arlibBody at hy
+  rw [← P.image_toEuclidean_carrier] at hy
+  obtain ⟨x', hx', hxeq⟩ := hy
+  have hnorm := P.norm_sub_incenter_le_boundingRadius hx'
+  have heq : toEuclidean (x' - P.incenter) = P.inradius • x := by
+    have h1 : toEuclidean (x' - P.incenter) = toEuclidean x' - toEuclidean P.incenter := by
+      simp [toEuclidean, WithLp.toLp_sub]
+    rw [h1, hxeq]
+    abel
+  rw [heq, norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos] at hnorm
+  rw [mem_closedBall, dist_zero_right, le_div_iff₀ P.inradius_pos]
+  linarith
 
 /-- The normalized body has a finite, explicit outer-radius certificate, as required by
 the Gaussian-cooling schedule. -/

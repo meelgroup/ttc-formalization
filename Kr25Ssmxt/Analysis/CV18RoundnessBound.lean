@@ -1,3 +1,4 @@
+import Kr25Ssmxt.Analysis.BoundingRadius
 import Kr25Ssmxt.Analysis.CV18Admissible
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
@@ -169,76 +170,6 @@ theorem CommunityCV18.queryBudget_cast_le_rho_polylog
       dsimp [C, L]
       ring
 
-theorem PolytopeData.communityCV18_roundness_le_outer_sq {n : Nat}
-    (P : PolytopeData n) :
-    CommunityCV18.roundness P ≤ P.cv18OuterRadius ^ 2 + 1 := by
-  have hR : 0 ≤ P.cv18OuterRadius := P.cv18OuterRadius_nonneg
-  have hbound :
-      ‖∫ x in P.cv18Body, ‖x‖ ^ 2‖ ≤
-        P.cv18OuterRadius ^ 2 * (volume P.cv18Body).toReal := by
-    apply norm_setIntegral_le_of_norm_le_const
-      (P.volume_cv18Body_ne_top.lt_top)
-    intro x hx
-    have hxR : ‖x‖ ≤ P.cv18OuterRadius := by
-      have := P.cv18Body_subset_outerBall hx
-      simpa [Metric.mem_closedBall, dist_zero_right] using this
-    have hsq : ‖x‖ ^ 2 ≤ P.cv18OuterRadius ^ 2 :=
-      (sq_le_sq₀ (norm_nonneg _) hR).2 hxR
-    simpa only [Real.norm_eq_abs, abs_pow, abs_of_nonneg (norm_nonneg x)] using hsq
-  unfold CommunityCV18.roundness
-  have hvol : 0 ≤ (volume P.cv18Body).toReal := ENNReal.toReal_nonneg
-  by_cases hz : (volume P.cv18Body).toReal = 0
-  · have hint : (∫ x in P.cv18Body, ‖x‖ ^ 2) = 0 := by
-      have hzero : ‖∫ x in P.cv18Body, ‖x‖ ^ 2‖ = 0 := by
-        have h := hbound
-        rw [hz, mul_zero] at h
-        exact le_antisymm h (norm_nonneg _)
-      exact norm_eq_zero.mp hzero
-    simp [hz, hint]
-    positivity
-  · have hvolpos : 0 < (volume P.cv18Body).toReal := lt_of_le_of_ne hvol (Ne.symm hz)
-    have hdiv :
-        |(∫ x in P.cv18Body, ‖x‖ ^ 2) / (volume P.cv18Body).toReal| ≤
-          P.cv18OuterRadius ^ 2 := by
-      rw [abs_div, abs_of_pos hvolpos]
-      exact (div_le_iff₀ hvolpos).2 (by
-        simpa [Real.norm_eq_abs] using hbound)
-    linarith
-
-theorem PolytopeData.cv18OuterRadius_le_two_ratio {n : Nat}
-    (P : PolytopeData n) :
-    P.cv18OuterRadius ≤ 2 * max 1 (P.outerRadius / P.inradius) := by
-  have hcenter : ‖toEuclidean P.incenter‖ ≤ P.outerRadius := by
-    have hmem : P.incenter ∈ P.carrier := P.incenter_mem_carrier
-    simpa only [toEuclidean] using P.outer_bound P.incenter hmem
-  have hratio : (P.outerRadius + ‖toEuclidean P.incenter‖) /
-      P.inradius ≤ 2 * (P.outerRadius / P.inradius) := by
-    calc
-      (P.outerRadius + ‖toEuclidean P.incenter‖) / P.inradius ≤
-          (2 * P.outerRadius) / P.inradius :=
-        (div_le_div_iff_of_pos_right P.inradius_pos).2 (by linarith)
-      _ = 2 * (P.outerRadius / P.inradius) := by ring
-  unfold PolytopeData.cv18OuterRadius
-  apply max_le
-  · have h : (1 : Real) ≤ max 1 (P.outerRadius / P.inradius) :=
-      le_max_left _ _
-    linarith
-  · exact hratio.trans (by
-      gcongr
-      exact le_max_right _ _)
-
-theorem PolytopeData.communityCV18_roundness_le_ratio {n : Nat}
-    (P : PolytopeData n) :
-    CommunityCV18.roundness P ≤
-      4 * (max 1 (P.outerRadius / P.inradius)) ^ 2 + 1 := by
-  have hR := P.communityCV18_roundness_le_outer_sq
-  have houter := P.cv18OuterRadius_le_two_ratio
-  have hnonneg : 0 ≤ P.cv18OuterRadius := P.cv18OuterRadius_nonneg
-  have hmax : 0 ≤ max 1 (P.outerRadius / P.inradius) :=
-    le_trans (by norm_num : (0 : Real) ≤ 1) (le_max_left _ _)
-  nlinarith [sq_le_sq₀ hnonneg (by positivity : 0 ≤ 2 * max 1
-    (P.outerRadius / P.inradius)) |>.2 houter]
-
 theorem Decomposition.communityCV18_roundness_le_rho {n k : Nat}
     {F : LRAFormula n k} (D : Decomposition F)
     (i : Fin D.componentCount) :
@@ -265,15 +196,39 @@ theorem Decomposition.communityCV18_roundness_le_rho {n k : Nat}
           (Real.coe_toNNReal _ hratio0).symm
         _ ≤ _ := by exact_mod_cast hle
     exact hleR.trans (le_max_right _ _)
-  have hmax : max 1 (P.outerRadius / P.inradius) ≤
-      TTCRuntime.Rho D :=
-    max_le (le_max_left _ _) hsup
-  have hbase := P.communityCV18_roundness_le_ratio
-  have hnonneg : 0 ≤ max 1 (P.outerRadius / P.inradius) := by
-    exact le_trans (by norm_num) (le_max_left _ _)
-  nlinarith [sq_le_sq₀ hnonneg (by
-    unfold TTCRuntime.Rho
-    exact le_trans (by norm_num : (0 : Real) ≤ 1) (le_max_left _ _)) |>.2 hmax]
+  -- `roundness = (R₀/γ)²/n` and `R₀ ≤ 2√n R`, so `roundness ≤ 4 (R/γ)² ≤ 4ρ²`.
+  have hγ := P.inradius_pos
+  have hB := P.boundingRadius_le
+  have hB0 := P.boundingRadius_nonneg
+  have hρ0 : 0 ≤ P.outerRadius / P.inradius := hratio0
+  have hρ := le_trans zero_le_one (le_max_left 1 _ : (1 : Real) ≤ TTCRuntime.Rho D)
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn
+    simp only [CommunityCV18.roundness, P, Nat.cast_zero, div_zero]
+    positivity
+  have hn0 : (0 : Real) < n := by exact_mod_cast hn
+  have hsq : Real.sqrt n ^ 2 = n := Real.sq_sqrt hn0.le
+  have hratio : P.BoundingRadius / P.inradius ≤
+      2 * Real.sqrt n * (P.outerRadius / P.inradius) := by
+    rw [div_le_iff₀ hγ]
+    calc P.BoundingRadius ≤ 2 * Real.sqrt n * P.outerRadius := hB
+      _ = _ := by field_simp
+  have hsq2 : (P.BoundingRadius / P.inradius) ^ 2 ≤
+      4 * n * (P.outerRadius / P.inradius) ^ 2 := by
+    have h := pow_le_pow_left₀ (div_nonneg hB0 hγ.le) hratio 2
+    calc _ ≤ (2 * Real.sqrt n * (P.outerRadius / P.inradius)) ^ 2 := h
+      _ = 4 * (Real.sqrt n ^ 2) * (P.outerRadius / P.inradius) ^ 2 := by ring
+      _ = _ := by rw [hsq]
+  have hmax : max 1 (P.BoundingRadius / P.inradius) = P.BoundingRadius / P.inradius :=
+    max_eq_right ((one_le_div hγ).2 (P.inradius_le_boundingRadius hn))
+  have hround : CommunityCV18.roundness P ≤ 4 * (P.outerRadius / P.inradius) ^ 2 := by
+    unfold CommunityCV18.roundness
+    rw [hmax, div_le_iff₀ hn0]
+    linarith
+  have hsup2 : (P.outerRadius / P.inradius) ^ 2 ≤ (TTCRuntime.Rho D) ^ 2 :=
+    pow_le_pow_left₀ hρ0 hsup 2
+  change CommunityCV18.roundness P ≤ _
+  linarith
 
 theorem Decomposition.communityCV18_queryBudget_le_rho_polylog
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)

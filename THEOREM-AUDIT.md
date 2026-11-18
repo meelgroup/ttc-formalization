@@ -92,7 +92,7 @@ precision scale, CV18's constant and logarithmic bound
 the Hit-and-Run constant `2⁶⁸` with its logarithms. arlib-community's
 `figureOneScheduledLogEnvelope_le` (pinned at `4823189`) bounds them by
 `14113440000 · Λ¹⁰`, and `Analysis/Theorem3ExplicitBound.lean` specialises this to TTC's
-calls via the roundness bound `roundness ≤ 4ρ² + 1`.
+calls via the roundness bound `roundness = (R₀/γ)²/n ≤ 4ρ² + 1`.
 
 **Theorem 3 statement.** The charged execution has exactly the output law of
 `ttc`, and its *expected* operation count is at most
@@ -324,8 +324,11 @@ therefore prove the certified charged sample batch's expected retry cost.
 adaptive component and the whole charged TTC run. The public
 `ttc_expected_runtime_explicit` theorem proves an expected-operation bound of
 `T_preprocessing + Σᵢ Bᵢ`, with each explicit `Bᵢ` defined in `Model/Run.lean`.
-`CV18RoundnessBound.lean` proves the imported CV18 roundness input is at most
-`4ρ²+1` and restates the amplified CV18 program's exact cap in terms of its
+CV18's roundness parameter is Corollary `cor:vol`'s `(R₀/γ)²` in arlib-community's
+normalisation `E‖X‖² ≤ roundness · n`, i.e. `(max 1 (R₀/γ))²/n` (`CommunityCV18.roundness`;
+the `max 1` is a no-op since `γ ≤ R₀`). `CommunityCV18.wellRounded` proves CV18's
+well-roundedness promise from `P* ⊆ B₂(0, R₀/γ)`, and `CV18RoundnessBound.lean` uses
+`R₀ ≤ 2√n R` to bound the parameter by `4ρ² ≤ 4ρ²+1`. It also restates the amplified CV18 program's exact cap in terms of its
 proved scheduled complexity rate. `RateLogBound.lean` proves that the first-loop logarithmic counter
 is bounded by `4bn + clog₂(ceil(clipped-volume-bound)+1)`. The public
 `ttc_expected_runtime_linear_precision` theorem replaces that term in the

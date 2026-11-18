@@ -133,9 +133,13 @@ open ArlibCommunity.Algorithms.CV18
 def AdmissibleCV18Request (eta delta : Real) : Prop :=
   0 < eta ∧ eta ≤ 1 ∧ 0 < delta ∧ delta ≤ 1
 
-/-- A positive roundness value computed from the actual normalized body. -/
+/-- CV18's roundness parameter. Corollary `cor:vol` runs CV18 on `P* = (P − z)/γ`, which
+lies in `B₂(0, R₀/γ)`, so `E_{P*}‖X‖² ≤ (R₀/γ)²`. arlib-community states roundness as
+`E‖X‖² ≤ roundness · n`, so the parameter is `(R₀/γ)² / n`. The `max 1` changes nothing,
+since `γ ≤ R₀` (`PolytopeData.inradius_le_boundingRadius`); it keeps the parameter visibly
+positive. -/
 noncomputable def roundness {n : Nat} (P : PolytopeData n) : Real :=
-  |(∫ x in P.cv18Body, ‖x‖ ^ 2) / (volume P.cv18Body).toReal| + 1
+  (max 1 (P.BoundingRadius / P.inradius)) ^ 2 / n
 
 /-- The CV18 parameters used by TTC. -/
 def params {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
@@ -147,7 +151,10 @@ def params {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   p := delta / 2
   hp := ⟨div_pos h.2.2.1 (by norm_num), by linarith [h.2.2.2]⟩
   roundness := roundness P
-  roundness_pos := by unfold roundness; positivity
+  roundness_pos := by
+    have hn0 : (0 : Real) < n := by exact_mod_cast (show 0 < n by omega)
+    unfold roundness
+    exact div_pos (pow_pos (lt_of_lt_of_le one_pos (le_max_left _ _)) 2) hn0
 
 /-- arlib-community's CV18 membership-oracle program `cv18Program`
 (`CV18/Model/Pseudocode.lean`), the subject of `cv18TheoremOneOne`. -/

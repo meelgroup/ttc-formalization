@@ -9,8 +9,8 @@ import ArlibCommunity.Algorithms.CV18
 This module instantiates `NormalizedCV18VolumeProvider` with `cv18Program`,
 the membership-oracle program of arlib-community's `CV18/Model/Pseudocode.lean`,
 using its headline theorem `cv18TheoremOneOne` (`CV18/Model/Theorem.lean`).  The only geometric work here is the
-already-proved normalization of a TTC polytope and a harmless explicit choice
-of its second-moment parameter.
+already-proved normalization of a TTC polytope and Corollary `cor:vol`'s roundness
+`E_{P*}‖X‖² ≤ (R₀/γ)²`, with `R₀ = BoundingRadius`.
 -/
 
 noncomputable section
@@ -46,25 +46,38 @@ noncomputable def oracle {n : Nat} (P : PolytopeData n) : MembershipOracle (inpu
       correct := fun x => by
         simp [query] }
 
-lemma roundness_pos {n : Nat} (P : PolytopeData n) : 0 < roundness P := by
-  unfold roundness
-  positivity
-
+/-- Corollary `cor:vol`'s roundness: `E_{P*}‖X‖² ≤ (R₀/γ)² ≤ roundness · n`. -/
 lemma wellRounded {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
     WellRounded (params hn P eta delta h) (input P) := by
-  have hnR : (1 : Real) ≤ n := by exact_mod_cast (show 1 ≤ n by omega)
-  have habs : uniformSecondMoment (input P) ≤
-      |uniformSecondMoment (input P)| := le_abs_self _
-  have hnonneg : 0 ≤ |uniformSecondMoment (input P)| + 1 := by positivity
+  have hn0 : (0 : Real) < n := by exact_mod_cast (show 0 < n by omega)
+  let M := max 1 (P.BoundingRadius / P.inradius)
+  have hM : 0 ≤ M := le_trans zero_le_one (le_max_left _ _)
+  have hbound : ‖∫ x in P.cv18Body, ‖x‖ ^ 2‖ ≤ M ^ 2 * (volume P.cv18Body).toReal := by
+    apply norm_setIntegral_le_of_norm_le_const (P.volume_cv18Body_ne_top.lt_top)
+    intro x hx
+    have hxR : ‖x‖ ≤ M := by
+      have := P.cv18Body_subset_boundingBall hx
+      simp only [Metric.mem_closedBall, dist_zero_right] at this
+      exact this.trans (le_max_right _ _)
+    have hsq : ‖x‖ ^ 2 ≤ M ^ 2 := (sq_le_sq₀ (norm_nonneg _) hM).2 hxR
+    simpa only [Real.norm_eq_abs, abs_pow, abs_of_nonneg (norm_nonneg x)] using hsq
   have hmoment : uniformSecondMoment (input P) =
-      (∫ x in P.cv18Body, ‖x‖ ^ 2) / (volume P.cv18Body).toReal := by
+      (∫ x in P.cv18Body, ‖x‖ ^ 2) / (volume P.cv18Body).toReal := rfl
+  have hround : roundness P * (n : Real) = M ^ 2 := by
+    unfold roundness
+    field_simp
     rfl
-  rw [hmoment] at habs hnonneg
   change uniformSecondMoment (input P) ≤ roundness P * (n : Real)
-  rw [hmoment]
-  unfold roundness
-  nlinarith
+  rw [hmoment, hround]
+  have hvol : 0 ≤ (volume P.cv18Body).toReal := ENNReal.toReal_nonneg
+  rcases hvol.eq_or_lt with hz | hpos
+  · rw [← hz, div_zero]
+    positivity
+  · rw [div_le_iff₀ hpos]
+    have := le_abs_self (∫ x in P.cv18Body, ‖x‖ ^ 2)
+    rw [← Real.norm_eq_abs] at this
+    linarith
 
 instance law_probability {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
