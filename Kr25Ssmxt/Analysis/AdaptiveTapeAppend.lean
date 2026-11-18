@@ -13,12 +13,12 @@ open MeasureTheory
 theorem community_adaptive_tape_append_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (s : TTCState n) (pending : Nat) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcPseudocode.secondLoop s pending threshold).bind fun thinned =>
       ((ttcSubroutines hn prep).GenerateSamples P thinned.2
@@ -35,7 +35,7 @@ theorem community_adaptive_tape_append_law
                   (ttcPseudocode.secondLoopExitRound s pending threshold coins)
                   s.nextLabel pending) i)) := by
   dsimp only
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun thinned =>
     ((ttcSubroutines hn prep).GenerateSamples P thinned.2

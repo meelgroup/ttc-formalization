@@ -54,7 +54,7 @@ theorem measurable_communityOriginTapeResult
 theorem communityOriginTapeKernel_eq_tapeResult
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -66,7 +66,7 @@ theorem communityOriginTapeKernel_eq_tapeResult
     communityOriginTapeKernel hn P b eta threshold hroute
       s intensity preCoins preRounds basePending pair =
     (Measure.infinitePi (fun _ : Nat =>
-      normalizedHitAndRunPointLaw hn P b hroute.1 eta
+      normalizedHitAndRunPointLaw hn P b eta hroute.1
         hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
       (communityOriginTapeResult s intensity threshold
         preCoins preRounds basePending pair) := rfl
@@ -91,7 +91,7 @@ ghost fields of `advance` gives exactly the source-labelled sampler kernel. -/
 theorem OriginConfiguration.advance_state_tapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -102,7 +102,7 @@ theorem OriginConfiguration.advance_state_tapeLaw
     let fresh := originalSurvivorCoinRestriction preCoins preRounds
       deleted.nextLabel basePending future
     (Measure.infinitePi (fun _ : Nat =>
-      normalizedHitAndRunPointLaw hn P b hroute.1 eta
+      normalizedHitAndRunPointLaw hn P b eta hroute.1
         hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
       (fun tape =>
         (c.advance P intensity threshold basePending preCoins future tape).state) =

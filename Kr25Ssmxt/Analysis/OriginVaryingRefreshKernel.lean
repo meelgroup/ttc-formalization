@@ -11,7 +11,7 @@ set_option maxHeartbeats 1000000 in
 theorem measurable_originPoissonAfterRefresh_intensity
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :
@@ -39,7 +39,7 @@ set_option maxHeartbeats 1000000 in
 theorem measurable_originRefreshedSourceFormula_intensity
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :
@@ -69,7 +69,7 @@ set_option maxHeartbeats 1000000 in
 theorem originRefreshedComponentLaw_eq_source
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -97,7 +97,7 @@ set_option maxHeartbeats 1000000 in
 theorem measurable_originRefreshedComponentLaw_intensity
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :

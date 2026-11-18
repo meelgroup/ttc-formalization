@@ -126,12 +126,12 @@ the stopping coins and the incoming state. -/
 theorem community_adaptive_batch_from_iid_tape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (s : TTCState n) (pending : Nat) (coins : Nat × Nat → Bool) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     let rounds := ttcPseudocode.secondLoopExitRound s pending threshold coins
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
@@ -142,7 +142,7 @@ theorem community_adaptive_batch_from_iid_tape
       (ttcSubroutines hn prep).GenerateSamples P
         (ttcPseudocode.secondLoopResult s pending threshold coins).2 b eta := by
   dsimp only
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1

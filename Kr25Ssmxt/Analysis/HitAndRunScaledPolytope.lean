@@ -17,6 +17,23 @@ namespace Kr25Ssmxt
 open MeasureTheory ProbabilityTheory Metric
 open scoped ENNReal
 
+/-- The inflated KV97 body `P'` in lattice units. The sampler walks on its unit-inball
+chart `PolytopeData.normalizedHitAndRunBody`. -/
+def hitAndRunBody {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
+    Set (EuclideanSpace Real (Fin n)) :=
+  ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
+    (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)
+
+/-- `P'` in the unit-inball chart: the body on which the walk runs. -/
+def PolytopeData.normalizedHitAndRunBody {n : Nat} (P : PolytopeData n)
+    (b : Nat) (eta : Real) : Set (EuclideanSpace Real (Fin n)) :=
+  ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal (P.normalizedHitAndRunOffset b eta)
+
+/-- The sampling accuracy `ν = ε hⁿ / (16 (2R'₀)ⁿ)` of `eq:sampler-parameters`, in lattice
+units. -/
+def hitAndRunTolerance {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Real :=
+  eta / (16 * (2 * P.samplerOuterRadius b eta) ^ n)
+
 private theorem dist_homothety_apply (c : EuclideanSpace Real (Fin n)) (k : Real)
     (p q : EuclideanSpace Real (Fin n)) :
     dist (AffineMap.homothety c k p) (AffineMap.homothety c k q) = |k| * dist p q := by

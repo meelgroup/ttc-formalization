@@ -74,7 +74,7 @@ theorem normalized_component_step_envelope
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount)
-    (hunit : 1 ≤ decimalScale b * (D.component i).inradius)
+    (hunit : samplerRadiusRequirement (D.component i) p.ε' ≤ decimalScale b * (D.component i).inradius)
     (hfinite : (codedLatticePoints (D.component i) b).Finite)
     (hnonempty : (codedLatticePoints (D.component i) b).Nonempty)
     (volumeEstimate : NNReal)
@@ -82,8 +82,8 @@ theorem normalized_component_step_envelope
       Arlib.relErr p.ε'
         (volume (D.component i).carrier).toReal)
     (rate : NNReal) :
-    let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b hunit
-      p.ε'
+    let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b p.ε'
+      hunit
       (div_pos p.epsilon_pos (by norm_num))
       (by dsimp [ApproxParams.ε']; linarith [p.epsilon_le_one])
       hfinite hnonempty
@@ -101,8 +101,8 @@ theorem normalized_component_step_envelope
   have heta1 : p.ε' ≤ 1 := by
     dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
-  let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b hunit
-    p.ε' heta0 heta1 hfinite hnonempty
+  let pointLaw := normalizedHitAndRunPointLaw hn (D.component i) b p.ε'
+    hunit heta0 heta1 hfinite hnonempty
   have halmost : AlmostUniformPointwise pointLaw
       (codedLatticePoints (D.component i) b) p.ε' :=
     (D.component i).normalizedHitAndRun_latticePointLaw hn b hunit
@@ -116,13 +116,13 @@ batch from the normalized Hit-and-Run/KV97 point law. -/
 theorem community_generateSamples_eq_iid
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :
     (ttcSubroutines hn prep).GenerateSamples
       P count b eta =
-    iidSampleBatchLaw (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    iidSampleBatchLaw (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) := by
   simp only [ttcSubroutines, dif_pos hroute]
 

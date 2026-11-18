@@ -14,7 +14,7 @@ fair sources and the independent point tape keeps the step tail-fair. -/
 theorem originOrderedInnerLaw_tailFair
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -37,7 +37,7 @@ theorem originOrderedInnerLaw_tailFair
   let _ : IsProbabilityMeasure pairLaw := by
     dsimp [pairLaw]
     infer_instance
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let _ : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -101,7 +101,7 @@ set_option maxHeartbeats 1000000 in
 theorem originRefreshedComponentLaw_tailFair
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -128,7 +128,7 @@ fixed by the source-tail refresh kernel. -/
 theorem originRefreshedComponentLaw_bind_stationary
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)

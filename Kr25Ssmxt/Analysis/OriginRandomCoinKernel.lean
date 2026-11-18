@@ -14,7 +14,7 @@ private abbrev GhostCoinInput'' (n : Nat) :=
 noncomputable def originCoinPairTapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -22,7 +22,7 @@ noncomputable def originCoinPairTapeLaw
     (z : GhostCoinInput'' n) :
     Measure (OriginConfiguration n) :=
   (Measure.infinitePi (fun _ : Nat =>
-    normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
     (fun tape => z.1.advance P intensity threshold basePending
       z.2.1 z.2.2 tape)
@@ -30,14 +30,14 @@ noncomputable def originCoinPairTapeLaw
 theorem measurable_originCoinPairTapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (basePending : Nat) :
     Measurable (originCoinPairTapeLaw hn P b eta threshold
       hroute intensity basePending) := by
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -70,7 +70,7 @@ theorem measurable_originCoinPairTapeLaw
 noncomputable def originFairCoinTapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -84,7 +84,7 @@ noncomputable def originFairCoinTapeLaw
 theorem measurable_originFairCoinTapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -109,7 +109,7 @@ theorem measurable_originFairCoinTapeLaw
 theorem originCoinPairTapeLaw_isProbabilityMeasure
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -123,7 +123,7 @@ theorem originCoinPairTapeLaw_isProbabilityMeasure
 theorem originFairCoinTapeLaw_isProbabilityMeasure
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -149,7 +149,7 @@ theorem originFairCoinTapeLaw_isProbabilityMeasure
 noncomputable def originPoissonCoinTapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -162,7 +162,7 @@ noncomputable def originPoissonCoinTapeLaw
 theorem measurable_originPoissonCoinTapeLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -188,7 +188,7 @@ theorem measurable_originPoissonCoinTapeLaw
 theorem originPoissonCoinTapeLaw_isProbabilityMeasure
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -208,7 +208,7 @@ theorem originPoissonCoinTapeLaw_isProbabilityMeasure
 noncomputable def originPoissonCoinTapeKernel
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -222,7 +222,7 @@ noncomputable def originPoissonCoinTapeKernel
 instance originPoissonCoinTapeKernel_isMarkov
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)

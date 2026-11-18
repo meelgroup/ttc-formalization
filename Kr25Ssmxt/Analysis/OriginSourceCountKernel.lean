@@ -51,7 +51,7 @@ set_option maxHeartbeats 1000000 in
 theorem originPoissonCoinTapeLaw_map_source
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -62,7 +62,7 @@ theorem originPoissonCoinTapeLaw_map_source
     (ProbabilityTheory.poissonMeasure intensity).bind fun pending =>
       (fairCoinStreamLaw.prod fairCoinStreamLaw).bind fun pair =>
         (Measure.infinitePi (fun _ : Nat =>
-          normalizedHitAndRunPointLaw hn P b hroute.1 eta hroute.2.1
+          normalizedHitAndRunPointLaw hn P b eta hroute.1 hroute.2.1
             hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
           (fun tape => c.source.stepPoissonTape P c.state.nextLabel
             (pending, spliceCoins pair.1 pair.2
@@ -101,7 +101,7 @@ theorem originPoissonCoinTapeLaw_map_source
   intro pair
   unfold originCoinPairTapeLaw
   change ((Measure.infinitePi (fun _ : Nat =>
-      normalizedHitAndRunPointLaw hn P b hroute.1 eta hroute.2.1
+      normalizedHitAndRunPointLaw hn P b eta hroute.1 hroute.2.1
         hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
       (fun tape => c.advance P intensity threshold pending pair.1
         pair.2 tape)).map
@@ -115,7 +115,7 @@ set_option maxHeartbeats 1000000 in
 theorem originPoissonCoinTapeLaw_source_eq_spliced
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -124,12 +124,12 @@ theorem originPoissonCoinTapeLaw_source_eq_spliced
       intensity c).map
         (fun next : OriginConfiguration n => next.source) =
     (splicedSourceLaw intensity
-      (normalizedHitAndRunPointLaw hn P b hroute.1 eta hroute.2.1
+      (normalizedHitAndRunPointLaw hn P b eta hroute.1 hroute.2.1
         hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
       (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold)).map
       (c.source.stepPoissonTape P c.state.nextLabel) := by
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -187,7 +187,7 @@ theorem originPoissonCoinTapeLaw_source_eq_spliced
 theorem originPoissonCoinTapeLaw_source_eq_poissonTape
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -196,13 +196,13 @@ theorem originPoissonCoinTapeLaw_source_eq_poissonTape
       intensity c).map
         (fun next : OriginConfiguration n => next.source) =
     (poissonTapeLaw intensity
-      (normalizedHitAndRunPointLaw hn P b hroute.1 eta hroute.2.1
+      (normalizedHitAndRunPointLaw hn P b eta hroute.1 hroute.2.1
         hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
       (c.source.stepPoissonTape P c.state.nextLabel) := by
   rw [originPoissonCoinTapeLaw_source_eq_spliced hn P b eta
     threshold hthreshold hroute intensity c]
   letI : IsProbabilityMeasure
-      (normalizedHitAndRunPointLaw hn P b hroute.1 eta hroute.2.1
+      (normalizedHitAndRunPointLaw hn P b eta hroute.1 hroute.2.1
         hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2).1
@@ -212,13 +212,13 @@ set_option maxHeartbeats 1000000 in
 theorem originPoissonCoinTapeLaw_fixedLevel_sourceCounts
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (c : OriginConfiguration n)
     (S : Finset (LatticePoint n))
-    (hsupport : (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    (hsupport : (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (level : Nat) :
@@ -228,7 +228,7 @@ theorem originPoissonCoinTapeLaw_fixedLevel_sourceCounts
           next.source.pointCounts level S) =
     (Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
       (Real.toNNReal
-        ((normalizedHitAndRunPointLaw hn P b hroute.1 eta
+        ((normalizedHitAndRunPointLaw hn P b eta hroute.1
           hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2).real
             {(x : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability level) *
@@ -236,7 +236,7 @@ theorem originPoissonCoinTapeLaw_fixedLevel_sourceCounts
       (fun incoming : S → Nat => fun x : S =>
         (if x.1.toPoint ∈ P.carrier then 0 else
           c.source.pointCounts level S x) + incoming x) := by
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1

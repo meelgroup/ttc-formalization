@@ -11,7 +11,7 @@ open MeasureTheory
 noncomputable def communityGhostStateStep
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -19,7 +19,7 @@ noncomputable def communityGhostStateStep
   ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
     (fun outcome =>
       let intensity := ttcReference.t b n threshold outcome.2
-      let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+      let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
         hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
       (ProbabilityTheory.poissonMeasure intensity).bind
         (fun basePending =>
@@ -35,7 +35,7 @@ noncomputable def communityGhostStateStep
 theorem communityGhostStateStep_eq_program
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -76,7 +76,7 @@ single concrete paper component. -/
 theorem communityGhostStateStep_bind_eq_program
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)

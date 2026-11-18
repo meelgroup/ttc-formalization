@@ -28,7 +28,7 @@ private theorem ce_samples_mass_le_one_all
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
       P count b eta) Set.univ ≤ 1 := by
   classical
-  by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+  by_cases h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
   · exact communityCosted_samples_mass_le_one hn prep factor
       P count b eta delta h

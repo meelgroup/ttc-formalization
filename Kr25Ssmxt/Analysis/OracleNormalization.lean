@@ -33,16 +33,16 @@ theorem community_samples_isProbabilityMeasure
       ((ttcSubroutines hn prep).GenerateSamples
         P count b eta) := by
   classical
-  by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+  by_cases h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
   · have hpoint := P.normalizedHitAndRun_latticePointLaw hn b h.1
       h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
     letI : IsProbabilityMeasure
-        (normalizedHitAndRunPointLaw hn P b h.1 eta
+        (normalizedHitAndRunPointLaw hn P b eta h.1
           h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2) := hpoint.1
     simpa only [ttcSubroutines, dif_pos h] using
       (iidSampleBatchLaw_isProbabilityMeasure
-        (normalizedHitAndRunPointLaw hn P b h.1 eta
+        (normalizedHitAndRunPointLaw hn P b eta h.1
           h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2))
   · simp only [ttcSubroutines, dif_neg h]
     unfold failedSampleBatchLaw

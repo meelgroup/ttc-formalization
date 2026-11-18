@@ -376,7 +376,7 @@ later independent new-coin and point-tape draws. -/
 theorem OriginConfiguration.refreshFuture_oldKernelLaw
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -450,7 +450,7 @@ reproduces both finite coin blocks consumed by one component transition. -/
 theorem OriginConfiguration.refreshFuture_jointCoinKernelLaw
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -570,7 +570,7 @@ first-loop coin stream. -/
 theorem OriginConfiguration.refreshFuture_advance_state_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -578,7 +578,7 @@ theorem OriginConfiguration.refreshFuture_advance_state_law
     (basePending : Nat) (preCoins : Nat × Nat → Bool) :
     let s := c.state.removeComponent P
     let preRounds := c.level + ttcReference.firstLoopExit s intensity threshold
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((Measure.infinitePi
       (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
@@ -597,7 +597,7 @@ theorem OriginConfiguration.refreshFuture_advance_state_law
   dsimp only
   let s := c.state.removeComponent P
   let preRounds := c.level + ttcReference.firstLoopExit s intensity threshold
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let sourceLaw : Measure (Nat × (Nat × Nat) → Bool) :=
     Measure.infinitePi (fun _ => fairCoinLaw)
@@ -627,13 +627,13 @@ actual paper component program after its CV18 volume outcome is fixed. -/
 theorem OriginConfiguration.refreshFuture_component_state_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (c : OriginConfiguration n) (outcome : VolumeOutcome) :
     let intensity := ttcReference.t b n threshold outcome.2
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     (ProbabilityTheory.poissonMeasure intensity).bind (fun basePending =>
       fairCoinStreamLaw.bind (fun preCoins =>
@@ -666,7 +666,7 @@ the state law of `ttcReference.step`. -/
 theorem OriginConfiguration.refreshFuture_programComponent_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -674,7 +674,7 @@ theorem OriginConfiguration.refreshFuture_programComponent_law
     ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
       (fun outcome =>
         let intensity := ttcReference.t b n threshold outcome.2
-        let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+        let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
           hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
         (ProbabilityTheory.poissonMeasure intensity).bind
           (fun basePending =>

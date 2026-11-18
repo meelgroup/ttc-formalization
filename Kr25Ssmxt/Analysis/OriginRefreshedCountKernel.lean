@@ -13,13 +13,13 @@ set_option maxHeartbeats 1000000 in
 theorem originRefreshedComponentLaw_fixedLevel_sourceCounts
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (c : OriginConfiguration n)
     (S : Finset (LatticePoint n))
-    (hsupport : (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    (hsupport : (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (level : Nat) :
@@ -31,7 +31,7 @@ theorem originRefreshedComponentLaw_fixedLevel_sourceCounts
       (fun old =>
         (Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
           (Real.toNNReal
-            ((normalizedHitAndRunPointLaw hn P b hroute.1 eta
+            ((normalizedHitAndRunPointLaw hn P b eta hroute.1
               hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
                 hroute.2.2.2.2).real {(x : LatticePoint n)} *
               ((unitInterval.toNNReal (survivalProbability level) *
@@ -47,7 +47,7 @@ theorem originRefreshedComponentLaw_fixedLevel_sourceCounts
   let q : Measure (S → Nat) := Measure.pi
     (fun x : S => ProbabilityTheory.poissonMeasure
       (Real.toNNReal
-        ((normalizedHitAndRunPointLaw hn P b hroute.1 eta
+        ((normalizedHitAndRunPointLaw hn P b eta hroute.1
           hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
             hroute.2.2.2.2).real {(x : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability level) *
@@ -85,13 +85,13 @@ every level at or below the incoming configuration's current level. -/
 theorem originRefreshedComponentLaw_pastLevel_sourceCounts
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (c : OriginConfiguration n)
     (S : Finset (LatticePoint n))
-    (hsupport : (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    (hsupport : (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (level : Nat) (hle : level ≤ c.level) :
@@ -101,7 +101,7 @@ theorem originRefreshedComponentLaw_pastLevel_sourceCounts
           next.source.pointCounts level S) =
     (Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
       (Real.toNNReal
-        ((normalizedHitAndRunPointLaw hn P b hroute.1 eta
+        ((normalizedHitAndRunPointLaw hn P b eta hroute.1
           hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
             hroute.2.2.2.2).real {(x : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability level) *
@@ -115,7 +115,7 @@ theorem originRefreshedComponentLaw_pastLevel_sourceCounts
   have hK : Measurable (fun old : S → Nat =>
       (Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
         (Real.toNNReal
-          ((normalizedHitAndRunPointLaw hn P b hroute.1 eta
+          ((normalizedHitAndRunPointLaw hn P b eta hroute.1
             hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
               hroute.2.2.2.2).real {(x : LatticePoint n)} *
             ((unitInterval.toNNReal (survivalProbability level) *
@@ -131,13 +131,13 @@ adds the independent Poisson point-count vector of the new component. -/
 theorem originRefreshedComponentLaw_futureLevel_sourceCounts
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (c : OriginConfiguration n)
     (S : Finset (LatticePoint n))
-    (hsupport : (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    (hsupport : (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (level : Nat) (hle : c.level ≤ level) :
@@ -152,7 +152,7 @@ theorem originRefreshedComponentLaw_futureLevel_sourceCounts
       (fun old =>
         (Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
           (Real.toNNReal
-            ((normalizedHitAndRunPointLaw hn P b hroute.1 eta
+            ((normalizedHitAndRunPointLaw hn P b eta hroute.1
               hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
                 hroute.2.2.2.2).real {(x : LatticePoint n)} *
               ((unitInterval.toNNReal (survivalProbability level) *

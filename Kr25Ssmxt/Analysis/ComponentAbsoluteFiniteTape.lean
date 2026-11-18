@@ -11,7 +11,7 @@ open MeasureTheory ProbabilityTheory
 theorem communityComponentGivenVolume_absolute_finite_tape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -20,7 +20,7 @@ theorem communityComponentGivenVolume_absolute_finite_tape
     (hfresh : state.LabelsFresh) :
     let intensity := ttcReference.t b n threshold outcome.2
     let deleted := state.removeComponent P
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     communityComponentGivenVolume hn prep P b eta delta threshold
       outcome state =
@@ -41,7 +41,7 @@ theorem communityComponentGivenVolume_absolute_finite_tape
         (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
           second.1.addBatch
             (fun i : Fin second.2 => tape (second.1.nextLabel + i.val)) := by
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>

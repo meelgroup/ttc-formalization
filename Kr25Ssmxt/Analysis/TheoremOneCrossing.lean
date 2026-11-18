@@ -20,7 +20,7 @@ surely under the refreshed component law. -/
 theorem originRefreshedComponentLaw_ae_of_forall
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -71,12 +71,12 @@ theorem measurable_originTotalCount {n : Nat}
 theorem origin_refreshed_step_crossing
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (S : Finset (LatticePoint n))
-    (hsupport : (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    (hsupport : (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (level0 : Nat)
@@ -167,7 +167,7 @@ theorem originGivenVolumesLaw_crossing
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))
     (hsupport : ∀ d ∈ components,
-      (normalizedHitAndRunPointLaw hn d.polytope b d.route.1 eta
+      (normalizedHitAndRunPointLaw hn d.polytope b eta d.route.1
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1 d.route.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (outcomes : Fin components.length → VolumeOutcome)

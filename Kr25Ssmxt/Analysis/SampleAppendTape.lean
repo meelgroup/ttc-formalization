@@ -34,12 +34,12 @@ theorem measurable_community_sampleAppend_kernel
 theorem community_sampleAppend_from_iidTape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (second : TTCState n × Nat) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta).map (fun batch => second.1.addBatch batch) =
@@ -47,7 +47,7 @@ theorem community_sampleAppend_from_iidTape
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape (second.1.nextLabel + i.val))) := by
   dsimp only
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -88,13 +88,13 @@ tape. The labels may be the surviving original Poisson-copy labels. -/
 theorem community_sampleAppend_from_iidTape_at_labels
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (second : TTCState n × Nat)
     (labels : Fin second.2 → Nat) (hlabels : Function.Injective labels) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta).map (fun batch => second.1.addBatch batch) =
@@ -102,7 +102,7 @@ theorem community_sampleAppend_from_iidTape_at_labels
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape (labels i))) := by
   dsimp only
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -138,7 +138,7 @@ level-zero Poisson, absolute-thinning, and IID point-tape representation. -/
 theorem communityComponentGivenVolume_absolute_tape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -146,7 +146,7 @@ theorem communityComponentGivenVolume_absolute_tape
     (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :
     let intensity := ttcReference.t b n threshold outcome.2
     let deleted := state.removeComponent P
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     communityComponentGivenVolume hn prep P b eta delta threshold
       outcome state =

@@ -126,8 +126,8 @@ names.
   `|X|/(p·10^(bn))`. VolED is not clipped. The error budget `δ/6 + δ/6 + δ/4` is the paper's.
 - Line `line:inradius` (`R₀ᵢ ← BoundingRadius(Kᵢ)`, `γᵢ ← MaxInscribedBall(Kᵢ)`, still
   marked TODO in the paper) is not a separate step: `γᵢ`, the incentre and an outer radius
-  are fields of `PolytopeData`, and `BoundingRadius`'s LP is not modelled (see the
-  sampler bullet below).
+  are fields of `PolytopeData`, and `BoundingRadius`'s LP is not modelled (see Open
+  items). The sampler's `T` is computed from these fields.
 - Hypotheses not in the printed statements: a bounded solution set (needed for
   finite volume and the outer radii) and `n ≥ 21` (inherited from the
   formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
@@ -159,24 +159,33 @@ names.
 - Hit-and-Run starts from a uniform point of the inscribed ball, as the revised
   `GenerateSamples` (Algorithm `alg:generatesamples`, `proof-appendix.tex`) now says. Each
   sampler attempt draws a fresh start and is charged `ballStartOperations n = 4n + 2`, then
-  walks, rounds to `𝕃ⁿ` and rejects outside `P`, as printed. **Walk length differs.** The
-  paper takes `T = ⌈C n³ (R₀'/γ)² log(2R₀'/h)⌉` with `R₀' = (1 + hκ/γ)R₀`, the LP bound
-  `R₀ = BoundingRadius(P)`, an unspecified constant `C` and `ν = ε hⁿ/(16(2R₀')ⁿ)`. Lean
-  uses arlib-community's deadline `⌈2⁶⁴ n² D² log(8M/ν²)⌉`, where `D` is the exact diameter
-  and `M` the exact volume ratio of the normalized inflated body, and
-  `ν = min(1, (ε'/8)/vol P')`. Both have the paper's order, and the Lean values are not
-  computable from the LP.
+  walks, rounds to `𝕃ⁿ` and rejects outside `P`, as printed. The walk length and accuracy
+  are the paper's (`eq:sampler-parameters`), in lattice units `h = 1`:
+  `T = ⌈C n³ (R₀'/γ)² log(2R₀'/h)⌉` and `ν = ε hⁿ/(16(2R₀')ⁿ)` with
+  `R₀' = (1 + hκ/γ)R₀` (`normalizedHitAndRunSteps`, `PolytopeData.samplerOuterRadius`,
+  `hitAndRunTolerance`), computed from `γ`, the outer radius, `b`, `ε`, `n` and `r` only.
+  `C = 2⁶⁸` (`hitAndRunWalkConstant`). The sampler runs under Corollary `cor:linf`'s
+  hypothesis `γ/h ≥ (512n/ε)√log(32r/ε)` (`samplerRadiusRequirement`), which every
+  certified call satisfies. Under it, `PolytopeData.hitAndRun_deadline_le_steps` shows that
+  `T` is at least arlib-community's proved deadline `2⁶⁴ n² D² log(8M/ν²)` at the walk
+  body's true diameter `D ≤ 2R₀'/γ` and warmness `M ≤ (2R₀'/γ + 1)ⁿ`. The proof follows the
+  paper's `log(M/ν) ≤ 3n log(2R₀'/h)`, with the `2⁶⁴ n²` deadline (not `[LV04]`'s
+  `10¹⁰ n² (R/γ)²`) fixing `C`. Also, `vol P' ≤ (2R₀'/h)ⁿ` (`P'` has diameter `2R₀'/h`, so it
+  lies in a box of that side), which gives `ν ≤ (ε/8)/vol P'`, the accuracy KV97 rounding
+  needs. Two differences from the paper: Lean's `R₀` is a radius about the origin rather than
+  the incentre, which changes only the constant in `P' ⊆ B(·, R₀')` and is all the diameter
+  bound uses; and Lean's `κ` uses arlib-community's `cOf ε = √(2 log(4/ε))`.
 - Preprocessing returns full-dimensional components whose union agrees with the
   solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
   are dropped.
 
 **Open items.**
 - Boolean abstraction and DNF conversion (Theorem 2).
-- Sampler walk length: make `GenerateSamples` use the paper's
-  `T = ⌈C n³ (R₀'/γ)² log(2R₀'/h)⌉` with `R₀ = BoundingRadius(P)` (the coordinate LPs
-  of the appendix, `R₀ ≤ 2√n R`) and an explicit `C`. This needs a proof that this `T`
-  dominates arlib-community's deadline. The paper should also fix `C`.
-- Paper edits: state boundedness; finish line `line:inradius` (its TODO); include the
+- `BoundingRadius`: `outerRadius` is still a field of `PolytopeData`, not the output of
+  the appendix's coordinate LPs (`R₀ ≤ 2√n R`). Everything downstream already uses only
+  the enclosing-radius property, so this is a Model-only change.
+- Paper edits: state boundedness; finish line `line:inradius` (its TODO); fix the walk
+  constant `C` (Lean proves `C = 2⁶⁸` suffices with arlib-community's deadline); include the
   `getprec`/decomposition cost (its TODO in `thm:runtime`). Theorem 3 is now stated in
   expectation with `R_max` and `1/γ_min` among the suppressed quantities, as the Lean
   bound requires.
@@ -318,16 +327,12 @@ proved scheduled complexity rate. `RateLogBound.lean` proves that the first-loop
 is bounded by `4bn + clog₂(ceil(clipped-volume-bound)+1)`. The public
 `ttc_expected_runtime_linear_precision` theorem replaces that term in the
 whole-run expected allowance, exposing linear decimal-precision dependence.
-`NormalizedDiameterRuntime.lean` uses the existing precision certificate to
-show KV97's inflation width is at most the scaled inradius. Consequently the
-normalized Hit-and-Run diameter is at most `4ρ`, its warmness is at most
-`(4ρ+1)^n`, and its selected step count is bounded by the imported deadline
-with `2^68 n²ρ²` outside the logarithm. The scaled inflated body lies in a
-ball of radius `5·10^b R_i+1`, whose logarithm is at most
-`b log 10 + log 6 + log⁺ R_max`. The TV-tolerance logarithm is bounded by
-`n` times this term plus logarithms of `1+8/ε'` and the dimension's
-unit-ball volume. The public `ttc_expected_runtime_geometric` theorem now
-uses the resulting concrete sampler-step envelope. These are proved Lean
+`NormalizedDiameterRuntime.lean` uses the precision certificate to show
+`128 κ ≤ γ/h`, so `R₀'/γ ≤ (129/128)ρ` and `2R₀'/h ≤ 6·10^b·max(1, R_max)`. The paper's
+walk length `T = ⌈2⁶⁸ n³ (R₀'/γ)² log(2R₀'/h)⌉` is therefore at most
+`⌈2⁶⁸ n² ρ² · 2n(b log 10 + log 6 + log⁺ R_max)⌉`, inside the per-component sampler
+envelope (`normalizedHitAndRunSteps_le_explicitEnvelope`). The public
+`ttc_expected_runtime_geometric` theorem uses the resulting concrete sampler-step envelope. These are proved Lean
 inequalities. `CV18RoundnessBound.lean` also specializes the imported query cap
 to `45(64C+1)n³ρ²/eps_CV18²` times the exact six-factor scheduled logarithmic
 product.
@@ -1046,6 +1051,8 @@ equal coin prefixes after survivor renumbering, which is the input needed
 to identify the original Poisson labels selected for the appended batch.
 
 #### Avoidable scaling cost in the older sampler implementation
+
+(Historical: `ttc` now uses the paper's `T`; see the sampler bullet under Fidelity.)
 
 The older `communityTTC` sampler walks directly on the decimal-scaled body:
 `hitAndRunDiameter P b eta` is the diameter of `hitAndRunBody P b eta`, whose

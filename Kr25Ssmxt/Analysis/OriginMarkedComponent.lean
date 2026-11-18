@@ -10,7 +10,7 @@ open MeasureTheory
 theorem community_active_finite_origin_tape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -18,7 +18,7 @@ theorem community_active_finite_origin_tape
     (preCoins : Nat × Nat → Bool) (preRounds basePending : Nat) :
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
     let rounds := ttcReference.firstLoopExit s intensity threshold
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     let coinLaw := fairCoinStreamLaw.prod
       (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))
@@ -69,7 +69,7 @@ theorem community_active_finite_origin_tape
 noncomputable def communityOriginTapeKernel
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -86,7 +86,7 @@ noncomputable def communityOriginTapeKernel
   let activeRounds := firstExitRoundSplit first pending threshold
     (shiftCoins rounds pair.1)
     (pendingCoinExtension s.nextLabel pending pair.2)
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
     second.1.addBatch (fun i : Fin second.2 =>
@@ -96,7 +96,7 @@ noncomputable def communityOriginTapeKernel
 theorem measurable_communityOriginTapeKernel
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -134,7 +134,7 @@ attached to those same original labels. -/
 theorem community_originTape_futureCoins
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -180,7 +180,7 @@ coin stream. -/
 noncomputable def communityOriginSourceKernel
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -189,7 +189,7 @@ noncomputable def communityOriginSourceKernel
   let intensity := ttcReference.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let rounds := ttcReference.firstLoopExit deleted intensity threshold
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   (ProbabilityTheory.poissonMeasure intensity).bind fun basePending =>
     fairCoinStreamLaw.bind fun preCoins =>
@@ -215,7 +215,7 @@ at original Poisson labels. -/
 theorem communityComponentGivenVolume_eq_originSourceKernel
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -286,7 +286,7 @@ finite survivor-indexed coin block. -/
 noncomputable def communityFutureSourceKernel
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -306,7 +306,7 @@ noncomputable def communityFutureSourceKernel
 theorem communityComponentGivenVolume_eq_futureSourceKernel
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)

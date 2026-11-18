@@ -124,20 +124,20 @@ set_option linter.unusedVariables false in
 theorem originRefreshedComponentLaw_ae_marksIn
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (intensity : NNReal) (S : Finset (LatticePoint n))
-    (hsupport : (normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    (hsupport : (normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (c : OriginConfiguration n) (hc : c.MarksIn S) :
     ∀ᵐ c' ∂(originRefreshedComponentLaw hn P b eta threshold
       hroute intensity c), c'.MarksIn S := by
   have hmeas := measurableSet_originMarksIn (n := n) S
-  let _ : IsProbabilityMeasure (normalizedHitAndRunPointLaw hn P b hroute.1
-      eta hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) :=
+  let _ : IsProbabilityMeasure (normalizedHitAndRunPointLaw hn P b eta
+      hroute.1 hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2).1
   have htape := ae_tape_mem_marksIn _ S hsupport
@@ -175,7 +175,7 @@ theorem originGivenVolumesLaw_ae_marksIn
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))
     (hsupport : ∀ d ∈ components,
-      (normalizedHitAndRunPointLaw hn d.polytope b d.route.1 eta
+      (normalizedHitAndRunPointLaw hn d.polytope b eta d.route.1
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1 d.route.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (outcomes : Fin components.length → VolumeOutcome)

@@ -326,12 +326,13 @@ theorem iid_batch_poisson_count_law
 independent Poisson point counts after the program's Poisson draw. -/
 theorem normalized_batch_poisson_count_law
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
-    (hunit : 1 ≤ decimalScale b * P.inradius)
-    (eta : Real) (heta0 : 0 < eta) (heta1 : eta ≤ 1)
+    (eta : Real)
+    (hunit : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)
+    (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (hfinite : (codedLatticePoints P b).Finite)
     (hnonempty : (codedLatticePoints P b).Nonempty)
     (mean : NNReal) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hunit eta heta0 heta1
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hunit heta0 heta1
       hfinite hnonempty
     let S := hfinite.toFinset
     ((poissonMeasure mean).bind fun N =>
@@ -341,7 +342,7 @@ theorem normalized_batch_poisson_count_law
         poissonMeasure (Real.toNNReal
           (pointLaw.real {(x : LatticePoint n)} * (mean : Real)))) := by
   dsimp only
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hunit eta heta0 heta1
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hunit heta0 heta1
     hfinite hnonempty
   have halmost : AlmostUniformPointwise pointLaw (codedLatticePoints P b) eta :=
     P.normalizedHitAndRun_latticePointLaw hn b hunit heta0 heta1 hfinite hnonempty

@@ -50,7 +50,7 @@ theorem communityCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
       P count b eta).map Prod.fst =
       (ttcSubroutines hn prep).GenerateSamples P count b eta := by
   classical
-  by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+  by_cases h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
   · have halmost := P.normalizedHitAndRun_latticePointLaw hn b h.1
       h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
@@ -66,7 +66,7 @@ theorem communityCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
 theorem communityCosted_samples_expected_cost {n k : Nat}
     (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
-    (h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+    (h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty)
     (haccept : (1 / 2 : Real) ≤
       (roundedAcceptanceProbability (normalizedHitAndRunContinuousLaw P b eta) P b : Real)) :
@@ -86,7 +86,7 @@ theorem communityCosted_samples_expected_cost {n k : Nat}
 theorem communityCosted_samples_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
-    (h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+    (h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty) :
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
       P count b eta) Set.univ ≤ 1 := by

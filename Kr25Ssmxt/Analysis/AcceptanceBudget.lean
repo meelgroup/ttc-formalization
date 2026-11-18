@@ -119,6 +119,7 @@ theorem kv97_raw_point_lower_of_tvLe {n : Nat} (P : PolytopeData n)
 theorem normalizedHitAndRun_acceptance_ge_half_of_count_volume {n : Nat}
     (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
     {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
+    (hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)
     (hfinite : (codedLatticePoints P b).Finite)
     (hcount : (1 / 2 : Real) ≤
       ((acceptedIntegers P b).ncard : Real) *
@@ -138,7 +139,7 @@ theorem normalizedHitAndRun_acceptance_ge_half_of_count_volume {n : Nat}
     ?_ hcount
   intro z hz
   exact kv97_raw_point_lower_of_tvLe P b heta0 heta1 μ
-    (P.normalizedHitAndRun_tvLe hn b heta0) z hz
+    (P.normalizedHitAndRun_tvLe hn b heta0 heta1 hprec) z hz
 
 /-- Algebraic bridge from lattice count and inflation-volume estimates to
 the raw acceptance-mass budget. -/
@@ -297,6 +298,6 @@ theorem normalizedHitAndRun_acceptance_ge_half_of_base_comparison {n : Nat}
     (volume (hitAndRunBody P b eta)).toReal eta latticeEta inflation
     hV (by positivity) hbase hinflate hinflation hbudget
   exact normalizedHitAndRun_acceptance_ge_half_of_count_volume hn P b
-    heta0 (by linarith) hfinite hcount
+    heta0 (by linarith) hprecision hfinite hcount
 
 end Kr25Ssmxt

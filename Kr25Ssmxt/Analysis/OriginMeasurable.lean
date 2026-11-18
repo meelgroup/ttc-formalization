@@ -781,7 +781,7 @@ source history and attaching the independent normalized sampler tape. -/
 noncomputable def OriginConfiguration.tapeAdvanceLaw
     {n : Nat} (hn : 21 ≤ n) (c : OriginConfiguration n)
     (P : PolytopeData n) (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -789,7 +789,7 @@ noncomputable def OriginConfiguration.tapeAdvanceLaw
     (preCoins future : Nat × Nat → Bool) :
     Measure (OriginConfiguration n) :=
   (Measure.infinitePi (fun _ : Nat =>
-    normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
     (fun tape => c.advance P intensity threshold basePending
       preCoins future tape)
@@ -797,7 +797,7 @@ noncomputable def OriginConfiguration.tapeAdvanceLaw
 theorem OriginConfiguration.tapeAdvanceLaw_isProbabilityMeasure
     {n : Nat} (hn : 21 ≤ n) (c : OriginConfiguration n)
     (P : PolytopeData n) (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -805,7 +805,7 @@ theorem OriginConfiguration.tapeAdvanceLaw_isProbabilityMeasure
     (preCoins future : Nat × Nat → Bool) :
     IsProbabilityMeasure (c.tapeAdvanceLaw hn P b eta threshold hroute
       intensity basePending preCoins future) := by
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   letI : IsProbabilityMeasure pointLaw :=
     (P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -821,7 +821,7 @@ theorem OriginConfiguration.tapeAdvanceLaw_isProbabilityMeasure
 theorem OriginConfiguration.tapeAdvanceLaw_map_state
     {n : Nat} (hn : 21 ≤ n) (c : OriginConfiguration n)
     (P : PolytopeData n) (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)

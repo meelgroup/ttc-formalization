@@ -23,11 +23,11 @@ noncomputable def communityPointLaw
     dsimp [ApproxParams.ε']
     linarith [p.epsilon_le_one]
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
-  have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
-    (one_le_samplerRadiusRequirement hn0 (D.component i) heta0 heta1).trans
-      ((le_max_right _ _).trans (hprecision.split i))
-  exact normalizedHitAndRunPointLaw hn (D.component i) b hunit
-    p.ε' heta0 heta1 hset.1 hset.2
+  have hunit : samplerRadiusRequirement (D.component i) p.ε' ≤
+      decimalScale b * (D.component i).inradius :=
+    (le_max_right _ _).trans (hprecision.split i)
+  exact normalizedHitAndRunPointLaw hn (D.component i) b p.ε'
+    hunit heta0 heta1 hset.1 hset.2
 
 theorem communityPointLaw_almostUniform
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}

@@ -510,7 +510,7 @@ draw its IID marks from the original Poisson-copy labels. -/
 theorem community_twoStage_sampler_tape
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -527,7 +527,7 @@ theorem community_twoStage_sampler_tape
     let activeRounds := firstExitRoundSplit first pending threshold
       (shiftCoins rounds oldCoins)
       (pendingCoinExtension s.nextLabel pending activeCoins)
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
       b eta).map (fun batch => second.1.addBatch batch) =

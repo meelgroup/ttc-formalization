@@ -30,10 +30,9 @@ noncomputable def communityCertifiedComponents
       route := by
         have hset := coded_lattice_points_finite_nonempty hn0 D p b
           choice.adequate i
-        have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
-          (one_le_samplerRadiusRequirement hn0 (D.component i)
-            heta0 heta1).trans
-            ((le_max_right _ _).trans (choice.adequate.split i))
+        have hunit : samplerRadiusRequirement (D.component i) p.ε' ≤
+            decimalScale b * (D.component i).inradius :=
+          (le_max_right _ _).trans (choice.adequate.split i)
         exact ⟨hunit, heta0, heta1, hset.1, hset.2⟩
       volumeProbability :=
         community_volume_isProbabilityMeasure hn D p prep i })

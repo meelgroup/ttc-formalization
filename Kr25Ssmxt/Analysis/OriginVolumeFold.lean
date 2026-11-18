@@ -12,7 +12,7 @@ structure OriginCertifiedComponent
     (n k : Nat) (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta : Real) where
   polytope : PolytopeData n
-  route : 1 ≤ decimalScale b * polytope.inradius ∧
+  route : samplerRadiusRequirement polytope eta ≤ decimalScale b * polytope.inradius ∧
     0 < eta ∧ eta ≤ 1 ∧
     (codedLatticePoints polytope b).Finite ∧
     (codedLatticePoints polytope b).Nonempty

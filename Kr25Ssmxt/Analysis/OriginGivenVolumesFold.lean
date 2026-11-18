@@ -56,7 +56,7 @@ noncomputable def originGivenVolumesSteps
   | d :: rest, outcomes =>
       { deleted := componentDeletedCodes S d.polytope
         incoming := fun x => Real.toNNReal
-          ((normalizedHitAndRunPointLaw hn d.polytope b d.route.1 eta
+          ((normalizedHitAndRunPointLaw hn d.polytope b eta d.route.1
             d.route.2.1 d.route.2.2.1 d.route.2.2.2.1
               d.route.2.2.2.2).real {(x : LatticePoint n)} *
             ((unitInterval.toNNReal (survivalProbability level) *
@@ -90,7 +90,7 @@ theorem originGivenVolumesLaw_fixedLevel
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))
     (hsupport : ∀ d ∈ components,
-      (normalizedHitAndRunPointLaw hn d.polytope b d.route.1 eta
+      (normalizedHitAndRunPointLaw hn d.polytope b eta d.route.1
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1 d.route.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0)
     (outcomes : Fin components.length → VolumeOutcome)
@@ -128,7 +128,7 @@ theorem originGivenVolumesLaw_fixedLevel
         originRefreshedComponentLaw_bind_stationary hn d.polytope b
           eta threshold hthreshold d.route intensity μ
       have hsupp' : ∀ d' ∈ rest,
-          (normalizedHitAndRunPointLaw hn d'.polytope b d'.route.1 eta
+          (normalizedHitAndRunPointLaw hn d'.polytope b eta d'.route.1
             d'.route.2.1 d'.route.2.2.1 d'.route.2.2.2.1 d'.route.2.2.2.2)
             (S : Set (LatticePoint n))ᶜ = 0 := by
         intro d' hd'

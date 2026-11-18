@@ -241,12 +241,6 @@ def acceptedRoundedWithAttempts {n : Nat}
   ((ProbabilityTheory.geometricMeasure (roundedAcceptanceProbability mu P b)).prod
     (acceptedRoundedLatticeLaw mu P b)).map fun pair => (pair.2, pair.1 + 1)
 
-/-- The inflated KV97 body sampled by TTC. -/
-def hitAndRunBody {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
-    Set (EuclideanSpace Real (Fin n)) :=
-  ArlibCommunity.Algorithms.KV97.inflated P.arlibNormal (P.scaledOffset b)
-    (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real)
-
 /-- The explicitly inflated offsets scanned by the finite-facet implementation. -/
 def hitAndRunOffset {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
     Fin P.presentation.facetCount → Real :=
@@ -254,12 +248,12 @@ def hitAndRunOffset {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
     ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta) (P.presentation.facetCount : Real) *
       ‖P.arlibNormal i‖
 
-/-! ## Similarity-normalized finite-facet walk
+/-! ## `GenerateSamples` (Algorithm `alg:generatesamples`)
 
-The paper's sampler bound uses the ratio of outer and inner radii. The
-chart below gives its walk a unit inball before selecting its deadline.
-`Analysis/NormalizedHitAndRunGeometry.lean` proves the mapped law satisfies
-the KV97 TV contract. -/
+The walk runs on `P'` (the KV97-inflated, decimal-dilated component) in the chart that
+maps the inscribed ball `B₂(z, γ)` to the unit ball, so that "`y ← Unif(B₂(z, γ))`" is the
+uniform law on the unit ball. `Analysis/NormalizedHitAndRunGeometry.lean` proves that the
+mapped law satisfies the KV97 TV contract. -/
 
 /-- Radius and center of the inscribed ball after decimal dilation. -/
 def PolytopeData.scaledInradius {n : Nat} (P : PolytopeData n) (b : Nat) : Real :=
@@ -281,26 +275,41 @@ def PolytopeData.normalizedHitAndRunOffset {n : Nat} (P : PolytopeData n)
     (hitAndRunOffset P b eta i -
       ⟪P.arlibNormal i, P.scaledIncenter b⟫_Real) / P.scaledInradius b
 
-/-- The body on which the finite-facet walk should run for a ratio-based deadline. -/
-def PolytopeData.normalizedHitAndRunBody {n : Nat} (P : PolytopeData n)
-    (b : Nat) (eta : Real) : Set (EuclideanSpace Real (Fin n)) :=
-  ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal (P.normalizedHitAndRunOffset b eta)
+/-! ### Line `alg:generatesamples`: the walk length `T` and accuracy `ν`
 
-def hitAndRunTolerance {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) : Real :=
-  min 1 ((eta / 8) / (volume (hitAndRunBody P b eta)).toReal)
+In lattice units (`h = 1` after the decimal dilation) the inscribed ball has radius
+`γ / h = scaledInradius`, the enclosing radius is `R₀ / h = 10^b · outerRadius`, and the
+inflation is `κ = cOf ε + √(2 log r)`. The inflated body `P'` has radius
+`R'₀ / h = (1 + hκ/γ) R₀ / h`, and the walk length of `eq:sampler-parameters` is
 
-/-- The deadline selected on the unit-inball body; its diameter can be bounded
-by the radius ratio rather than by `10^b` times the absolute outer radius. -/
+  `T = ⌈C n³ (R'₀/γ)² log (2R'₀/h)⌉`,
+
+arithmetic in `γ`, `outerRadius`, `b`, `ε`, `n` and the facet count. The accuracy
+`ν = ε hⁿ / (16 (2R'₀)ⁿ)` is not computed by the algorithm; it is defined with the
+analysis (`hitAndRunTolerance`, `Analysis/HitAndRunScaledPolytope.lean`). -/
+
+/-- The KV97 inflation `κ` of the sampler body, in lattice units. -/
+def PolytopeData.samplerKappa {n : Nat} (P : PolytopeData n) (eta : Real) : Real :=
+  ArlibCommunity.Algorithms.KV97.kappaOf (ArlibCommunity.Algorithms.KV97.cOf eta)
+    (P.presentation.facetCount : Real)
+
+/-- `R'₀ / h = (1 + hκ/γ) · R₀ / h`: the enclosing radius of the inflated body `P'`. -/
+def PolytopeData.samplerOuterRadius {n : Nat} (P : PolytopeData n) (b : Nat)
+    (eta : Real) : Real :=
+  (1 + P.samplerKappa eta / P.scaledInradius b) * (decimalScale b * P.outerRadius)
+
+/-- The constant `C` of the walk length `T`. -/
+def hitAndRunWalkConstant : Real := 2 ^ 68
+
+/-- The walk length `T = ⌈C n³ (R'₀/γ)² log (2R'₀/h)⌉`. -/
 def normalizedHitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat)
     (eta : Real) : Nat :=
-  Nat.ceil (ArlibCommunity.Algorithms.HitAndRun.deadline n
-    (Metric.diam (P.normalizedHitAndRunBody b eta))
-    (volume (P.normalizedHitAndRunBody b eta) /
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-    (hitAndRunTolerance P b eta))
+  Nat.ceil (hitAndRunWalkConstant * (n : Real) ^ 3 *
+    (P.samplerOuterRadius b eta / P.scaledInradius b) ^ 2 *
+    Real.log (2 * P.samplerOuterRadius b eta))
 
-/-- The finite-facet walk in unit-inball coordinates, mapped back to the
-decimal-scaled body before KV97 rounding. -/
+/-- `p ← HitAndRun(P', y, T)` from `y ← Unif(B₂(z, γ))`: `T` lazy finite-facet steps in
+the unit-inball chart, mapped back to the decimal-scaled body before KV97 rounding. -/
 def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Measure (EuclideanSpace Real (Fin n)) :=
   (ArlibCommunity.Foundations.MarkovChainTheory.iterate
@@ -311,11 +320,13 @@ def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
       (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
     (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b)
 
-/-- The paper sampler uses a unit-inball chart before each finite-facet walk. -/
+/-- One accepted sample of `GenerateSamples`: walk, round, and retry until the rounded
+point lies in the component. The hypotheses are the regime of Corollary `cor:linf`. -/
 def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
     (P : PolytopeData n) (b : Nat)
-    (_hunit : 1 ≤ decimalScale b * P.inradius)
-    (eta : Real) (_heta0 : 0 < eta) (_heta1 : eta ≤ 1)
+    (eta : Real)
+    (_hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)
+    (_heta0 : 0 < eta) (_heta1 : eta ≤ 1)
     (_hfinite : (codedLatticePoints P b).Finite)
     (_hnonempty : (codedLatticePoints P b).Nonempty) : Measure (LatticePoint n) :=
   acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b
@@ -357,10 +368,10 @@ def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
     choosePrecision := fun D p => GetPrecision D p.precisionEta
     ComputeVolume := fun P eta delta => communityCV18VolumeLaw (by omega) P eta delta
     GenerateSamples := fun P count b eta =>
-      if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+      if h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
           (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
         iidSampleBatchLaw
-          (normalizedHitAndRunPointLaw hn P b h.1 eta h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
+          (normalizedHitAndRunPointLaw hn P b eta h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
       else failedSampleBatchLaw }
 
 /-- **Algorithm `ttc`** with `GetPrecision`, `ComputeVolume` and `GenerateSamples` as above. -/
@@ -391,7 +402,7 @@ def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
           ((ttcSubroutines hn prep).ComputeVolume P eta delta)
           (membership + nonQuery)
       generateSamplesWithCost := fun P count b eta =>
-        if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
+        if h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
             (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
           normalizedHitAndRunBatchWithCostLaw P count b eta
         else costedCharge failedSampleBatchLaw 0 }

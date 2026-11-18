@@ -243,6 +243,12 @@ def ApproxParams.Thresh (p : ApproxParams) (m : Nat) : Real :=
       ((1 - p.ε') * p.ε' ^ 2))
     (15 * (Real.log (6 / p.delta) + Real.log m))
 
+/-- The inball size `(512 n / ε) √(log (32 r / ε))` that Corollary `cor:linf` asks of a
+component's scaled inradius `γ / h` before `GenerateSamples` is run on it at accuracy `ε`. -/
+def samplerRadiusRequirement {n : Nat} (P : PolytopeData n) (η : Real) : Real :=
+  (512 * n / η) *
+    Real.sqrt (Real.log (32 * P.presentation.facetCount / η))
+
 /-- The inball size required by the finite-union lattice comparison. -/
 def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Real :=

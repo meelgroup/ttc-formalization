@@ -19,7 +19,7 @@ noncomputable def originGivenVolumesStep
     (o : VolumeOutcome) : FixedLevelStep S :=
   { deleted := componentDeletedCodes S d.polytope
     incoming := fun x => Real.toNNReal
-      ((normalizedHitAndRunPointLaw hn d.polytope b d.route.1 eta
+      ((normalizedHitAndRunPointLaw hn d.polytope b eta d.route.1
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1
           d.route.2.2.2.2).real {(x : LatticePoint n)} *
         ((unitInterval.toNNReal (survivalProbability level) *

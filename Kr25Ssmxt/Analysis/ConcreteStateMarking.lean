@@ -14,14 +14,14 @@ theorem community_poisson_append_pointCounts_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (S : Finset (LatticePoint n))
     (hsubset : codedLatticePoints P b ⊆ (S : Set (LatticePoint n)))
     (mean : NNReal) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun count =>
       ((ttcSubroutines hn prep).GenerateSamples
@@ -31,7 +31,7 @@ theorem community_poisson_append_pointCounts_law
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
         (fun fresh x => s.pointCounts S x + fresh x) := by
   dsimp only
-  let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+  let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   have halmost : AlmostUniformPointwise pointLaw (codedLatticePoints P b) eta :=
     P.normalizedHitAndRun_latticePointLaw hn b hroute.1
@@ -51,14 +51,14 @@ theorem community_poisson_delete_append_pointCounts_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (S : Finset (LatticePoint n))
     (hsubset : codedLatticePoints P b ⊆ (S : Set (LatticePoint n)))
     (mean : NNReal) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun count =>
       ((ttcSubroutines hn prep).GenerateSamples
@@ -81,14 +81,14 @@ theorem community_fixed_round_append_pointCounts_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (S : Finset (LatticePoint n))
     (hsubset : codedLatticePoints P b ⊆ (S : Set (LatticePoint n)))
     (mean : NNReal) (firstLabel rounds : Nat) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun pending =>
       (fairCoinStreamLaw.map (fun coins =>
@@ -129,14 +129,14 @@ theorem community_fixed_round_delete_append_pointCounts_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (S : Finset (LatticePoint n))
     (hsubset : codedLatticePoints P b ⊆ (S : Set (LatticePoint n)))
     (mean : NNReal) (firstLabel rounds : Nat) :
-    let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
+    let pointLaw := normalizedHitAndRunPointLaw hn P b eta hroute.1
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun pending =>
       (fairCoinStreamLaw.map (fun coins =>

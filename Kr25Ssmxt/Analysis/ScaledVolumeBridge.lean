@@ -142,11 +142,8 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
         (normalizedHitAndRunSteps (D.component i) b p.ε')) := by
   have hn0 : 0 < n := by omega
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
-  have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
-    (one_le_samplerRadiusRequirement hn0 (D.component i)
-      (by dsimp [ApproxParams.ε']; exact div_pos p.epsilon_pos (by norm_num))
-      (by dsimp [ApproxParams.ε']; linarith [p.epsilon_le_one])).trans
-      ((le_max_right _ _).trans (hprecision.split i))
+  have hunit : samplerRadiusRequirement (D.component i) p.ε' ≤ decimalScale b * (D.component i).inradius :=
+      (le_max_right _ _).trans (hprecision.split i)
   have hsample0 : 0 < p.ε' := by
     dsimp [ApproxParams.ε']
     exact div_pos p.epsilon_pos (by norm_num)
@@ -168,11 +165,8 @@ theorem certified_community_sampler_mass_le_one {n k : Nat}
       (D.component i) count b p.ε') Set.univ ≤ 1 := by
   have hn0 : 0 < n := by omega
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
-  have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=
-    (one_le_samplerRadiusRequirement hn0 (D.component i)
-      (by dsimp [ApproxParams.ε']; exact div_pos p.epsilon_pos (by norm_num))
-      (by dsimp [ApproxParams.ε']; linarith [p.epsilon_le_one])).trans
-      ((le_max_right _ _).trans (hprecision.split i))
+  have hunit : samplerRadiusRequirement (D.component i) p.ε' ≤ decimalScale b * (D.component i).inradius :=
+      (le_max_right _ _).trans (hprecision.split i)
   have hsample0 : 0 < p.ε' := by
     dsimp [ApproxParams.ε']
     exact div_pos p.epsilon_pos (by norm_num)

@@ -9,7 +9,7 @@ open MeasureTheory
 noncomputable def originOrderedInnerLaw
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -27,7 +27,7 @@ noncomputable def originOrderedInnerLaw
 theorem measurable_originOrderedInnerLaw_preCoins
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -71,7 +71,7 @@ theorem measurable_originOrderedInnerLaw_preCoins
 theorem originCoinPairTapeLaw_map_state
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -82,7 +82,7 @@ theorem originCoinPairTapeLaw_map_state
       intensity basePending z).map
         (fun next : OriginConfiguration n => next.state) =
     (Measure.infinitePi (fun _ : Nat =>
-      normalizedHitAndRunPointLaw hn P b hroute.1 eta
+      normalizedHitAndRunPointLaw hn P b eta hroute.1
         hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
           hroute.2.2.2.2)).map
       (fun tape => (z.1.advance P intensity threshold basePending
@@ -96,7 +96,7 @@ theorem originCoinPairTapeLaw_map_state
 theorem originOrderedInnerLaw_map_state
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -110,7 +110,7 @@ theorem originOrderedInnerLaw_map_state
       (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
       fairCoinStreamLaw).bind (fun pair =>
         (Measure.infinitePi (fun _ : Nat =>
-          normalizedHitAndRunPointLaw hn P b hroute.1 eta
+          normalizedHitAndRunPointLaw hn P b eta hroute.1
             hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
               hroute.2.2.2.2)).map
           (fun tape =>
@@ -143,7 +143,7 @@ theorem originOrderedInnerLaw_map_state
 theorem originOrderedComponentLaw_map_state
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -157,7 +157,7 @@ theorem originOrderedComponentLaw_map_state
           (fun _ : Nat × (Nat × Nat) => fairCoinLaw)).prod
           fairCoinStreamLaw).bind (fun pair =>
             (Measure.infinitePi (fun _ : Nat =>
-              normalizedHitAndRunPointLaw hn P b hroute.1 eta
+              normalizedHitAndRunPointLaw hn P b eta hroute.1
                 hroute.2.1 hroute.2.2.1 hroute.2.2.2.1
                   hroute.2.2.2.2)).map (fun tape =>
                     ((c.refreshFuture pair.1).advance P intensity threshold
@@ -194,7 +194,7 @@ theorem originOrderedComponentLaw_map_state_eq_givenVolume
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
@@ -213,7 +213,7 @@ theorem originRefreshedComponentLaw_map_state_eq_givenVolume
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
-    (hroute : 1 ≤ decimalScale b * P.inradius ∧
+    (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)

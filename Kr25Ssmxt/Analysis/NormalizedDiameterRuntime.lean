@@ -65,136 +65,6 @@ theorem euclidean_unitBall_log_volume_le_two_dim (n : Nat) (hn : 1 ≤ n) :
   push_cast at hlog
   nlinarith
 
-theorem PolytopeData.normalizedHitAndRun_warmness_ge_one {n : Nat}
-    (P : PolytopeData n) (b : Nat) (eta : Real) :
-    1 ≤ (volume (P.normalizedHitAndRunBody b eta) /
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal := by
-  let B := Metric.ball (0 : EuclideanSpace Real (Fin n)) 1
-  let K := P.normalizedHitAndRunBody b eta
-  have hB0 : volume B ≠ 0 :=
-    (Metric.measure_ball_pos volume _ one_pos).ne'
-  have hBtop : volume B ≠ ⊤ := measure_ball_lt_top.ne
-  have hKtop : volume K ≠ ⊤ := (P.normalizedHitAndRun_bounded b eta).measure_lt_top.ne
-  have hsubset : B ⊆ K :=
-    Metric.ball_subset_closedBall.trans (P.normalizedHitAndRun_unitBall b eta)
-  have hreal : (volume B).toReal ≤ (volume K).toReal :=
-    ENNReal.toReal_mono hKtop (measure_mono hsubset)
-  have hBreal : 0 < (volume B).toReal := ENNReal.toReal_pos hB0 hBtop
-  rw [ENNReal.toReal_div]
-  exact (one_le_div hBreal).2 hreal
-
-theorem PolytopeData.normalizedHitAndRun_deadline_log_nonneg {n : Nat}
-    (P : PolytopeData n) (b : Nat) {eta : Real} (heta0 : 0 < eta) :
-    0 ≤ Real.log
-      (8 * (volume (P.normalizedHitAndRunBody b eta) /
-        volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-        (hitAndRunTolerance P b eta) ^ 2) := by
-  let M := (volume (P.normalizedHitAndRunBody b eta) /
-    volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-  let nu := hitAndRunTolerance P b eta
-  have hM : 1 ≤ M := P.normalizedHitAndRun_warmness_ge_one b eta
-  have hnu0 : 0 ≤ nu := by
-    dsimp [nu, hitAndRunTolerance]
-    apply le_min (by norm_num)
-    exact div_nonneg (by positivity) ENNReal.toReal_nonneg
-  have hnu1 : nu ≤ 1 := by
-    dsimp [nu, hitAndRunTolerance]
-    exact min_le_left _ _
-  by_cases hz : nu = 0
-  · simp [nu, hz]
-  · have hnu : 0 < nu := lt_of_le_of_ne hnu0 (Ne.symm hz)
-    have hsq : 0 < nu ^ 2 := sq_pos_of_pos hnu
-    have hsq1 : nu ^ 2 ≤ 1 := by nlinarith
-    apply Real.log_nonneg
-    exact (le_div_iff₀ hsq).2 (by nlinarith)
-
-theorem PolytopeData.hitAndRunTolerance_pos {n : Nat}
-    (P : PolytopeData n) (b : Nat) {eta : Real} (heta0 : 0 < eta) :
-    0 < hitAndRunTolerance P b eta := by
-  have hG : 0 < P.scaledInradius b :=
-    mul_pos (decimalScale_pos b) P.inradius_pos
-  have hbaseball : Metric.ball (P.scaledIncenter b) (P.scaledInradius b) ⊆
-      P.scaledBody b := Metric.ball_subset_closedBall.trans (P.scaledBody_inball b)
-  have hfin : volume (P.scaledBody b) ≠ ⊤ :=
-    (P.scaledBody_bounded b).measure_lt_top.ne
-  have hV : 0 < (volume (hitAndRunBody P b eta)).toReal := by
-    simpa [hitAndRunBody, PolytopeData.scaledIncenter, PolytopeData.scaledInradius]
-      using (ArlibCommunity.Algorithms.KV97.toReal_volume_inflated_pos hG ArlibCommunity.Algorithms.KV97.cOf_nonneg
-        hbaseball hfin)
-  unfold hitAndRunTolerance
-  exact lt_min one_pos (div_pos (by positivity) hV)
-
-theorem PolytopeData.hitAndRunTolerance_log_inv_le_volume
-    {n : Nat} (P : PolytopeData n) (b : Nat)
-    {eta : Real} (heta0 : 0 < eta) :
-    Real.log (1 / hitAndRunTolerance P b eta) ≤
-      Real.log (1 + 8 * (volume (hitAndRunBody P b eta)).toReal / eta) := by
-  let V := (volume (hitAndRunBody P b eta)).toReal
-  let nu := hitAndRunTolerance P b eta
-  have hnu : 0 < nu := P.hitAndRunTolerance_pos b heta0
-  have hV0 : 0 ≤ V := ENNReal.toReal_nonneg
-  have hright : 0 < 1 + 8 * V / eta := by positivity
-  have hinv : 1 / nu ≤ 1 + 8 * V / eta := by
-    by_cases hraw : 1 ≤ (eta / 8) / V
-    · have heq : nu = 1 := by
-        dsimp [nu, hitAndRunTolerance]
-        exact min_eq_left hraw
-      rw [heq]
-      have hquot : 0 ≤ 8 * V / eta := div_nonneg (by positivity) heta0.le
-      norm_num
-      linarith
-    · have hrawle : (eta / 8) / V ≤ 1 := le_of_not_ge hraw
-      have heq : nu = (eta / 8) / V := by
-        dsimp [nu, hitAndRunTolerance]
-        exact min_eq_right hrawle
-      have hV : 0 < V := by
-        by_contra hnot
-        have hz : V = 0 := le_antisymm (le_of_not_gt hnot) hV0
-        simp [heq, hz] at hnu
-      rw [heq]
-      have hident : 1 / ((eta / 8) / V) = 8 * V / eta := by
-        field_simp
-      rw [hident]
-      linarith
-  exact Real.log_le_log (div_pos one_pos hnu) hinv
-
-theorem PolytopeData.normalizedHitAndRun_warmness_le_diameter_pow
-    {n : Nat} (hn : 0 < n) (P : PolytopeData n) (b : Nat)
-    (eta R : Real) (hR : 0 ≤ R)
-    (hdiam : Metric.diam (P.normalizedHitAndRunBody b eta) ≤ R) :
-    (volume (P.normalizedHitAndRunBody b eta) /
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal ≤
-        (R + 1) ^ n := by
-  letI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
-  let K := P.normalizedHitAndRunBody b eta
-  let B := Metric.ball (0 : EuclideanSpace Real (Fin n)) 1
-  let BR := Metric.ball (0 : EuclideanSpace Real (Fin n)) (R + 1)
-  have h0 : (0 : EuclideanSpace Real (Fin n)) ∈ K := by
-    apply P.normalizedHitAndRun_unitBall b eta
-    simp [Metric.mem_closedBall]
-  have hsubset : K ⊆ BR := by
-    intro x hx
-    have hdist := Metric.dist_le_diam_of_mem (P.normalizedHitAndRun_bounded b eta)
-      hx h0
-    change dist x 0 ≤ Metric.diam K at hdist
-    have : ‖x‖ < R + 1 := by
-      simpa [dist_zero_right] using lt_of_le_of_lt (hdist.trans hdiam) (by linarith)
-    simpa [BR, Metric.mem_ball, dist_zero_right] using this
-  have hBRtop : volume BR ≠ ⊤ := measure_ball_lt_top.ne
-  have hB0 : volume B ≠ 0 := (Metric.measure_ball_pos volume _ one_pos).ne'
-  have hBtop : volume B ≠ ⊤ := measure_ball_lt_top.ne
-  have hBreal : 0 < (volume B).toReal := ENNReal.toReal_pos hB0 hBtop
-  have hvol : (volume K).toReal ≤ (volume BR).toReal :=
-    ENNReal.toReal_mono hBRtop (measure_mono hsubset)
-  have hball : (volume BR).toReal = (R + 1) ^ n * (volume B).toReal := by
-    dsimp only [BR, B]
-    rw [EuclideanSpace.volume_ball, EuclideanSpace.volume_ball]
-    simp only [ENNReal.toReal_mul, ENNReal.toReal_pow]
-    rw [ENNReal.toReal_ofReal (by linarith : 0 ≤ R + 1)]
-    norm_num
-  rw [ENNReal.toReal_div]
-  exact (div_le_iff₀ hBreal).2 (by rw [hball] at hvol; linarith)
-
 theorem PolytopeData.kv97_kappa_le_samplerRadiusRequirement {n : Nat}
     (P : PolytopeData n) (hn : 0 < n) {eta : Real}
     (heta0 : 0 < eta) (heta1 : eta ≤ 1) :
@@ -477,76 +347,6 @@ theorem Decomposition.log_scaled_outer_ball_radius_le_precisionScale
   rw [log_six_max_one _ hR] at h
   linarith
 
-private theorem log_one_add_mul_le (n : Nat)
-    {A C r V : Real} (hA : 0 ≤ A) (hC : 0 ≤ C) (hr : 1 ≤ r)
-    (hV0 : 0 ≤ V) (hV : V ≤ r ^ n * C) :
-    Real.log (1 + A * V) ≤
-      (n : Real) * Real.log r + Real.log (1 + A) + Real.log (1 + C) := by
-  have hrpow : 1 ≤ r ^ n := one_le_pow₀ hr
-  have hstep1 : 1 + A * V ≤ 1 + A * (r ^ n * C) := by
-    simpa only [add_comm] using
-      (add_le_add_right (mul_le_mul_of_nonneg_left hV hA) 1)
-  have hstep2 : 1 + A * (r ^ n * C) ≤ r ^ n * (1 + A * C) := by
-    nlinarith [mul_nonneg hA hC]
-  have hstep3 : 1 + A * C ≤ (1 + A) * (1 + C) := by nlinarith
-  have hstep4 : r ^ n * (1 + A * C) ≤ r ^ n * ((1 + A) * (1 + C)) :=
-    mul_le_mul_of_nonneg_left hstep3 (by positivity)
-  have hleft : 0 < 1 + A * V := by
-    positivity
-  have hlog := Real.log_le_log hleft
-    (hstep1.trans (hstep2.trans hstep4))
-  have heq : Real.log (r ^ n * ((1 + A) * (1 + C))) =
-      (n : Real) * Real.log r + Real.log (1 + A) + Real.log (1 + C) := by
-    rw [Real.log_mul (by positivity) (by positivity),
-      Real.log_mul (by positivity) (by positivity), Real.log_pow]
-    ring
-  exact hlog.trans_eq heq
-
-theorem Decomposition.normalizedHitAndRun_log_inv_tolerance_le
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.precisionEta)
-    (i : Fin D.componentCount) :
-    Real.log (1 / hitAndRunTolerance (D.component i) b p.ε') ≤
-      (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 +
-        max 0 (Real.log (TTCRuntime.theorem3OuterRadiusMax D))) +
-        Real.log (1 + 8 / p.ε') +
-        Real.log (1 +
-          (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) := by
-  let P := D.component i
-  let eta := p.ε'
-  let R := 5 * decimalScale b * P.outerRadius + 1
-  let V := (volume (hitAndRunBody P b eta)).toReal
-  let C := (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-  have heta : 0 < eta := by
-    dsimp [eta, ApproxParams.ε']
-    positivity [p.epsilon_pos]
-  have heta1 : eta ≤ 1 := by
-    dsimp [eta, ApproxParams.ε']
-    linarith [p.epsilon_le_one]
-  have hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius := by
-    simpa only [P, eta, decimalScale] using
-      (le_max_right _ _).trans (hprecision.split i)
-  have hV : V ≤ R ^ n * C :=
-    P.hitAndRunBody_volume_toReal_le_scaled_outer_pow
-      (by omega) b heta heta1 hprec
-  have hr : 1 ≤ R := by
-    dsimp [R]
-    have := mul_nonneg (decimalScale_pos b).le P.outerRadius_nonneg
-    linarith
-  have hbase := P.hitAndRunTolerance_log_inv_le_volume b heta
-  have hgeneric := log_one_add_mul_le n
-    (A := 8 / eta) (C := C) (r := R) (V := V)
-    (div_nonneg (by norm_num) heta.le) ENNReal.toReal_nonneg hr
-    ENNReal.toReal_nonneg hV
-  have hform : 1 + 8 * V / eta = 1 + (8 / eta) * V := by ring
-  rw [hform] at hbase
-  have hlogR := D.log_scaled_outer_ball_radius_le_precisionScale i b
-  have hmul := mul_le_mul_of_nonneg_left hlogR
-    (by exact_mod_cast (Nat.zero_le n) : 0 ≤ (n : Real))
-  dsimp only [P, eta, R, V, C] at *
-  linarith
-
 theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     {n k : Nat} {F : LRAFormula n k} (hn : 0 < n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
@@ -590,111 +390,8 @@ theorem Decomposition.normalizedHitAndRun_diameter_le_four_rho
     _ = 4 * (P.outerRadius / P.inradius) := by ring
     _ ≤ 4 * TTCRuntime.Rho D := by gcongr
 
-theorem Decomposition.normalizedHitAndRun_warmness_le_rho_pow
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.precisionEta)
-    (i : Fin D.componentCount) :
-    (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal ≤
-        (4 * TTCRuntime.Rho D + 1) ^ n := by
-  apply (D.component i).normalizedHitAndRun_warmness_le_diameter_pow
-    (by omega) b p.ε' (4 * TTCRuntime.Rho D)
-  · unfold TTCRuntime.Rho
-    positivity
-  · exact D.normalizedHitAndRun_diameter_le_four_rho
-      (by omega) b p hprecision i
-
-theorem Decomposition.normalizedHitAndRun_log_warmness_le
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.precisionEta)
-    (i : Fin D.componentCount) :
-    Real.log ((volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) ≤
-      (n : Real) * Real.log (4 * TTCRuntime.Rho D + 1) := by
-  have hM0 := (D.component i).normalizedHitAndRun_warmness_ge_one b p.ε'
-  have hM := D.normalizedHitAndRun_warmness_le_rho_pow hn b p hprecision i
-  have hlog := Real.log_le_log (by linarith : 0 <
-    (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-      volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) hM
-  simpa only [Real.log_pow] using hlog
-
-/-- Specialization of the imported `2^64 n²D² log(8M/ν²)` deadline
-to TTC's common radius ratio. -/
-theorem Decomposition.normalizedHitAndRunSteps_le_rho_deadline
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.precisionEta)
-    (i : Fin D.componentCount) :
-    normalizedHitAndRunSteps (D.component i) b p.ε' ≤
-      Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
-        (TTCRuntime.Rho D) ^ 2 *
-        Real.log (8 *
-          (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-            volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-          (hitAndRunTolerance (D.component i) b p.ε') ^ 2)) := by
-  let d := Metric.diam ((D.component i).normalizedHitAndRunBody b p.ε')
-  let rho := TTCRuntime.Rho D
-  let M := (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-    volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-  let nu := hitAndRunTolerance (D.component i) b p.ε'
-  have hlog : 0 ≤ Real.log (8 * M / nu ^ 2) := by
-    apply (D.component i).normalizedHitAndRun_deadline_log_nonneg b
-    dsimp [ApproxParams.ε']
-    positivity [p.epsilon_pos]
-  have hd : d ≤ 4 * rho := D.normalizedHitAndRun_diameter_le_four_rho
-    (by omega) b p hprecision i
-  have hd0 : 0 ≤ d := by exact Metric.diam_nonneg
-  have hrho : 0 ≤ rho := by
-    dsimp [rho, TTCRuntime.Rho]
-    exact le_trans (by norm_num : (0 : Real) ≤ 1) (le_max_left _ _)
-  have hsq : d ^ 2 ≤ (4 * rho) ^ 2 :=
-    (sq_le_sq₀ hd0 (by positivity)).2 hd
-  unfold normalizedHitAndRunSteps
-  apply Nat.ceil_mono
-  unfold ArlibCommunity.Algorithms.HitAndRun.deadline
-  change (2 : Real) ^ 64 * (n : Real) ^ 2 * d ^ 2 * Real.log (8 * M / nu ^ 2) ≤
-    2 ^ 68 * (n : Real) ^ 2 * rho ^ 2 * Real.log (8 * M / nu ^ 2)
-  calc
-    _ ≤ (2 : Real) ^ 64 * (n : Real) ^ 2 * (4 * rho) ^ 2 *
-        Real.log (8 * M / nu ^ 2) := by
-      gcongr
-    _ = _ := by
-      rw [show (2 : Real) ^ 68 = 2 ^ 64 * 16 by norm_num]
-      ring
-
-theorem Decomposition.normalizedHitAndRun_deadline_log_le
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
-    (D : Decomposition F) (b : Nat) (p : ApproxParams)
-    (hprecision : PrecisionAdequate D b p.precisionEta)
-    (i : Fin D.componentCount) :
-    Real.log (8 *
-      (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-        volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-      (hitAndRunTolerance (D.component i) b p.ε') ^ 2) ≤
-      Real.log 8 + (n : Real) * Real.log (4 * TTCRuntime.Rho D + 1) +
-        2 * Real.log (1 / hitAndRunTolerance (D.component i) b p.ε') := by
-  let M := (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-    volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal
-  let nu := hitAndRunTolerance (D.component i) b p.ε'
-  have hM : 0 < M := lt_of_lt_of_le zero_lt_one
-    ((D.component i).normalizedHitAndRun_warmness_ge_one b p.ε')
-  have heta : 0 < p.ε' := by
-    dsimp [ApproxParams.ε']
-    positivity [p.epsilon_pos]
-  have hnu : 0 < nu := (D.component i).hitAndRunTolerance_pos b heta
-  have hlogM := D.normalizedHitAndRun_log_warmness_le hn b p hprecision i
-  have hidentity : Real.log (8 * M / nu ^ 2) =
-      Real.log 8 + Real.log M + 2 * Real.log (1 / nu) := by
-    rw [Real.log_div (by positivity) (by positivity),
-      Real.log_mul (by norm_num) hM.ne', Real.log_pow,
-      Real.log_div (by norm_num) hnu.ne']
-    simp
-    ring
-  rw [hidentity]
-  linarith
-
+/-- The paper's walk length `T = ⌈C n³ (R'₀/γ)² log (2R'₀/h)⌉` within the per-component
+sampler allowance: `R'₀/γ ≤ (1 + 1/128) ρ` and `log (2R'₀/h) ≤ b log 10 + log 6 + log⁺ R_max`. -/
 theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
@@ -706,22 +403,117 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
         TTCRuntime.theorem3SamplerLogEnvelope n b
           (TTCRuntime.Rho D)
           (TTCRuntime.theorem3OuterRadiusMax D) p.ε') := by
-  have hstep := D.normalizedHitAndRunSteps_le_rho_deadline hn b p hprecision i
-  have hlog := D.normalizedHitAndRun_deadline_log_le hn b p hprecision i
-  have hnu := D.normalizedHitAndRun_log_inv_tolerance_le hn b p hprecision i
-  have henvelope :
-      Real.log (8 *
-        (volume ((D.component i).normalizedHitAndRunBody b p.ε') /
-          volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal /
-        (hitAndRunTolerance (D.component i) b p.ε') ^ 2) ≤
-      TTCRuntime.theorem3SamplerLogEnvelope n b (TTCRuntime.Rho D)
-        (TTCRuntime.theorem3OuterRadiusMax D) p.ε' := by
-    unfold TTCRuntime.theorem3SamplerLogEnvelope
+  let P := D.component i
+  have heta0 : 0 < p.ε' := by
+    dsimp [ApproxParams.ε']
+    positivity [p.epsilon_pos]
+  have heta1 : p.ε' ≤ 1 := by
+    dsimp [ApproxParams.ε']
+    linarith [p.epsilon_le_one]
+  have hprec : samplerRadiusRequirement P p.ε' ≤ decimalScale b * P.inradius := by
+    simpa only [P, decimalScale] using (le_max_right _ _).trans (hprecision.split i)
+  obtain ⟨h16, h128, hγR, hRS⟩ := P.samplerRadii (by omega) b heta0 heta1 hprec
+  have hd := decimalScale_pos b
+  have hγ : 0 < P.scaledInradius b := mul_pos hd P.inradius_pos
+  have hκ0 : 0 ≤ P.samplerKappa p.ε' :=
+    ArlibCommunity.Algorithms.KV97.kappaOf_nonneg ArlibCommunity.Algorithms.KV97.cOf_nonneg
+  have hκ : P.samplerKappa p.ε' / P.scaledInradius b ≤ 1 / 128 := by
+    rw [div_le_div_iff₀ hγ (by norm_num)]
     linarith
-  exact hstep.trans (Nat.ceil_mono (by
-    have hfactor : 0 ≤ (2 : Real) ^ 68 * (n : Real) ^ 2 *
-        (TTCRuntime.Rho D) ^ 2 := by positivity
-    exact mul_le_mul_of_nonneg_left henvelope hfactor))
+  have hκ' : 0 ≤ P.samplerKappa p.ε' / P.scaledInradius b := div_nonneg hκ0 hγ.le
+  have hratio0 : 0 ≤ P.outerRadius / P.inradius :=
+    div_nonneg P.outerRadius_nonneg P.inradius_pos.le
+  have hratio : P.outerRadius / P.inradius ≤ TTCRuntime.Rho D := by
+    have hle : Real.toNNReal (P.outerRadius / P.inradius) ≤
+        (Finset.univ.sup fun j : Fin D.componentCount =>
+          Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius) :
+            NNReal) := Finset.le_sup (f := fun j : Fin D.componentCount =>
+              Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius))
+              (Finset.mem_univ i)
+    have hleR : P.outerRadius / P.inradius ≤
+        ((Finset.univ.sup fun j : Fin D.componentCount =>
+          Real.toNNReal ((D.component j).outerRadius / (D.component j).inradius) :
+            NNReal) : Real) := by
+      calc
+        P.outerRadius / P.inradius =
+            (Real.toNNReal (P.outerRadius / P.inradius) : Real) :=
+          (Real.coe_toNNReal _ hratio0).symm
+        _ ≤ _ := by exact_mod_cast hle
+    exact hleR.trans (le_max_right _ _)
+  have ha : P.samplerOuterRadius b p.ε' / P.scaledInradius b =
+      (1 + P.samplerKappa p.ε' / P.scaledInradius b) * (P.outerRadius / P.inradius) := by
+    have hi := P.inradius_pos
+    unfold PolytopeData.samplerOuterRadius
+    rw [show P.scaledInradius b = decimalScale b * P.inradius from rfl]
+    field_simp
+  have ha2 : (P.samplerOuterRadius b p.ε' / P.scaledInradius b) ^ 2 ≤
+      2 * (TTCRuntime.Rho D) ^ 2 := by
+    rw [ha]
+    have h1 : (1 + P.samplerKappa p.ε' / P.scaledInradius b) *
+        (P.outerRadius / P.inradius) ≤ (129 / 128) * TTCRuntime.Rho D := by
+      calc _ ≤ (129 / 128) * (P.outerRadius / P.inradius) := by
+            apply mul_le_mul_of_nonneg_right _ hratio0
+            linarith
+        _ ≤ _ := by gcongr
+    have h0 : 0 ≤ (1 + P.samplerKappa p.ε' / P.scaledInradius b) *
+        (P.outerRadius / P.inradius) := by positivity
+    nlinarith
+  let Rmax := TTCRuntime.theorem3OuterRadiusMax D
+  have hRmax : P.outerRadius ≤ Rmax := D.component_outerRadius_le_theorem3OuterRadiusMax i
+  have hRmax0 : 0 ≤ Rmax := P.outerRadius_nonneg.trans hRmax
+  have hS1 : 1 ≤ 2 * P.samplerOuterRadius b p.ε' := by
+    have : (1 : Real) ≤ 16 / p.ε' := (le_div_iff₀ heta0).2 (by linarith)
+    linarith
+  have h2S : 2 * P.samplerOuterRadius b p.ε' ≤ decimalScale b * (6 * max 1 Rmax) := by
+    have hR1 : P.outerRadius ≤ max 1 Rmax := hRmax.trans (le_max_right _ _)
+    have hR0 := P.outerRadius_nonneg
+    have hmul : decimalScale b * P.outerRadius ≤ decimalScale b * max 1 Rmax :=
+      mul_le_mul_of_nonneg_left hR1 hd.le
+    have hdR : 0 ≤ decimalScale b * P.outerRadius := mul_nonneg hd.le hR0
+    unfold PolytopeData.samplerOuterRadius
+    nlinarith
+  have hL : Real.log (2 * P.samplerOuterRadius b p.ε') ≤
+      (b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax) := by
+    refine (Real.log_le_log (by linarith) h2S).trans_eq ?_
+    have h6 : (0 : Real) < 6 * max 1 Rmax := by
+      have := le_max_left (1 : Real) Rmax
+      positivity
+    rw [Real.log_mul hd.ne' h6.ne', log_six_max_one _ hRmax0]
+    simp [decimalScale, Real.log_pow]
+    ring
+  have hL0 : 0 ≤ Real.log (2 * P.samplerOuterRadius b p.ε') := Real.log_nonneg hS1
+  have hrho : 1 ≤ TTCRuntime.Rho D := by unfold TTCRuntime.Rho; exact le_max_left _ _
+  have hEnv : 2 * (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax)) ≤
+      TTCRuntime.theorem3SamplerLogEnvelope n b (TTCRuntime.Rho D) Rmax p.ε' := by
+    unfold TTCRuntime.theorem3SamplerLogEnvelope
+    have h8 : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
+    have hρ : 0 ≤ (n : Real) * Real.log (4 * TTCRuntime.Rho D + 1) :=
+      mul_nonneg (by positivity) (Real.log_nonneg (by linarith))
+    have hE : 0 ≤ Real.log (1 + 8 / p.ε') := by
+      apply Real.log_nonneg
+      have : 0 ≤ 8 / p.ε' := div_nonneg (by norm_num) heta0.le
+      linarith
+    have hG : 0 ≤ Real.log (1 +
+        (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal) := by
+      apply Real.log_nonneg
+      have : 0 ≤ (volume (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)).toReal :=
+        ENNReal.toReal_nonneg
+      linarith
+    linarith
+  have hX0 : 0 ≤ (b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax) := by
+    linarith
+  unfold normalizedHitAndRunSteps hitAndRunWalkConstant
+  apply Nat.ceil_mono
+  calc (2 : Real) ^ 68 * (n : Real) ^ 3 *
+        (P.samplerOuterRadius b p.ε' / P.scaledInradius b) ^ 2 *
+        Real.log (2 * P.samplerOuterRadius b p.ε') ≤
+      (2 : Real) ^ 68 * (n : Real) ^ 3 * (2 * (TTCRuntime.Rho D) ^ 2) *
+        ((b : Real) * Real.log 10 + Real.log 6 + max 0 (Real.log Rmax)) := by
+        gcongr
+    _ = (2 : Real) ^ 68 * (n : Real) ^ 2 * (TTCRuntime.Rho D) ^ 2 *
+        (2 * (n : Real) * ((b : Real) * Real.log 10 + Real.log 6 +
+          max 0 (Real.log Rmax))) := by ring
+    _ ≤ _ := by gcongr
 
 theorem TTCRuntime.expectedComponentBudgetLinearPrecision_le_geometric
     {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)

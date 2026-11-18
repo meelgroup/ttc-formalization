@@ -19,47 +19,6 @@ theorem Decomposition.theorem3RMax_pos {n k : Nat} {F : LRAFormula n k}
       (D.component j).presentation.facetCount) (Finset.mem_univ i)
   omega
 
-theorem PolytopeData.inradius_le_outerRadius {n : Nat}
-    (P : PolytopeData n) (hn : 0 < n) : P.inradius ≤ P.outerRadius := by
-  let e : Point n := Pi.single ⟨0, hn⟩ (1 : Real)
-  have he : ‖e‖ = 1 := by simp [e, Pi.norm_single]
-  have heE : ‖toEuclidean e‖ = 1 := by
-    simp [toEuclidean, e]
-  let x : Point n := P.incenter + P.inradius • e
-  let y : Point n := P.incenter - P.inradius • e
-  have hx : x ∈ P.carrier := by
-    apply P.inball
-    change ‖(WithLp.toLp 2 (x - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
-    have hxc : x - P.incenter = P.inradius • e := by simp [x]
-    rw [hxc, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs, abs_of_pos P.inradius_pos]
-    change P.inradius * ‖toEuclidean e‖ ≤ _
-    rw [heE, mul_one]
-  have hy : y ∈ P.carrier := by
-    apply P.inball
-    change ‖(WithLp.toLp 2 (y - P.incenter) : EuclideanSpace Real (Fin n))‖ ≤ P.inradius
-    have hyc : y - P.incenter = -(P.inradius • e) := by simp [y]
-    rw [hyc, WithLp.toLp_neg, norm_neg, WithLp.toLp_smul, norm_smul, Real.norm_eq_abs,
-      abs_of_pos P.inradius_pos]
-    change P.inradius * ‖toEuclidean e‖ ≤ _
-    rw [heE, mul_one]
-  have hxR := P.outer_bound x hx
-  have hyR := P.outer_bound y hy
-  have hxy : dist (toEuclidean x) (toEuclidean y) = 2 * P.inradius := by
-    have heq : toEuclidean x - toEuclidean y =
-        (2 * P.inradius) • toEuclidean e := by
-      ext i
-      simp [x, y, toEuclidean, PiLp.smul_apply, PiLp.add_apply]
-      ring
-    rw [dist_eq_norm, heq, norm_smul, Real.norm_eq_abs,
-      abs_of_pos (by nlinarith [P.inradius_pos] : 0 < 2 * P.inradius), heE]
-    ring
-  have htri : dist (toEuclidean x) (toEuclidean y) ≤
-      ‖toEuclidean x‖ + ‖toEuclidean y‖ := by
-    simpa [dist_eq_norm] using norm_sub_le (toEuclidean x) (toEuclidean y)
-  change ‖toEuclidean x‖ ≤ P.outerRadius at hxR
-  change ‖toEuclidean y‖ ≤ P.outerRadius at hyR
-  linarith
-
 theorem PolytopeData.volumeClip_le_outer_pow {n : Nat}
     (P : PolytopeData n) (hn : 21 ≤ n) {eta : Real}
     (heta0 : 0 < eta) (heta1 : eta ≤ 1) :

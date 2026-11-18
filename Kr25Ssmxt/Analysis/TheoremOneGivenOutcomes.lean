@@ -131,7 +131,7 @@ theorem communityCertifiedComponents_support
     let S := (D.codedUnion_finite (by omega) p b
       (prep.choosePrecision D p).adequate).toFinset
     ∀ d ∈ communityCertifiedComponents hn D p prep,
-      (normalizedHitAndRunPointLaw hn d.polytope b d.route.1 p.ε'
+      (normalizedHitAndRunPointLaw hn d.polytope b p.ε' d.route.1
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1 d.route.2.2.2.2)
         (S : Set (LatticePoint n))ᶜ = 0 := by
   intro b S d hd
