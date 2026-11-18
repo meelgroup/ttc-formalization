@@ -160,7 +160,7 @@ theorem poisson_averaged_firstExitRound_le_four_of_guard {n : Nat}
     (s : TTCState n) (r : NNReal) (threshold : Real)
     (hthreshold : 0 ≤ threshold)
     (hsamples : (s.X.card : Real) ≤ threshold)
-    (hrate : (r : Real) < threshold) :
+    (hrate : (r : Real) ≤ threshold) :
     ∫⁻ pending : Nat, (∫⁻ coins,
         (ttcPseudocode.secondLoopExitRound s pending threshold coins : ENNReal)
           ∂fairCoinStreamLaw) ∂poissonMeasure r ≤ 4 := by
@@ -184,7 +184,7 @@ theorem poisson_averaged_countThinCost_le_four_of_guard {n : Nat}
     (s : TTCState n) (r : NNReal) (threshold : Real)
     (hthreshold : 0 ≤ threshold)
     (hsamples : (s.X.card : Real) ≤ threshold)
-    (hrate : (r : Real) < threshold) :
+    (hrate : (r : Real) ≤ threshold) :
     ∫⁻ pending : Nat, (∫⁻ result, (result.2 : ENNReal) ∂
       ttcPseudocode.secondLoopWithCost s pending threshold) ∂poissonMeasure r ≤
       4 * TTCRuntime.countThinningRoundOperations s.X.card := by
@@ -220,7 +220,7 @@ theorem poissonCountThin_expected_cost_le {n : Nat}
     (s : TTCState n) (r : NNReal) (threshold : Real)
     (hthreshold : 0 ≤ threshold)
     (hsamples : (s.X.card : Real) ≤ threshold)
-    (hrate : (r : Real) < threshold) :
+    (hrate : (r : Real) ≤ threshold) :
     ∫⁻ result, (result.2 : ENNReal) ∂
       costedBind
         (costedCharge (poissonMeasure r) TTCRuntime.poissonDrawOperations)

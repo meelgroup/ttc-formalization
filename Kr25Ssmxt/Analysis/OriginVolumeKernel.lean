@@ -19,13 +19,13 @@ noncomputable def originComponentVolumeLaw
     Measure (OriginConfiguration n) :=
   volumeLaw.bind fun outcome =>
     originRefreshedComponentLaw hn P b eta threshold hroute
-      (ttcPseudocode.t b n threshold outcome.2) c
+      (ttcReference.t b n threshold outcome.2) c
 
 theorem measurable_intensity_outcome
     {n : Nat} (b : Nat) (threshold : Real) :
     Measurable (fun z : OriginConfiguration n × VolumeOutcome =>
-      ttcPseudocode.t b n threshold z.2.2) := by
-  unfold ttcPseudocode.t
+      ttcReference.t b n threshold z.2.2) := by
+  unfold ttcReference.t
   exact (measurable_const.mul measurable_const).mul
     (measurable_snd.comp measurable_snd)
 
@@ -43,13 +43,13 @@ theorem measurable_originComponentVolumeLaw
       hroute volumeLaw) := by
   have hpair : Measurable (fun z :
       OriginConfiguration n × VolumeOutcome =>
-      (z.1, ttcPseudocode.t b n threshold z.2.2)) :=
+      (z.1, ttcReference.t b n threshold z.2.2)) :=
     measurable_fst.prodMk
       (measurable_intensity_outcome b threshold)
   have hnext : Measurable (fun z :
       OriginConfiguration n × VolumeOutcome =>
       originRefreshedComponentLaw hn P b eta threshold hroute
-        (ttcPseudocode.t b n threshold z.2.2) z.1) := by
+        (ttcReference.t b n threshold z.2.2) z.1) := by
     have hcomp :=
       (measurable_originRefreshedComponentLaw_intensity hn P b
         eta threshold hthreshold hroute).comp hpair
@@ -59,7 +59,7 @@ theorem measurable_originComponentVolumeLaw
     measurable_const (fun _ => hvolume)
     (fun z : OriginConfiguration n × VolumeOutcome =>
       originRefreshedComponentLaw hn P b eta threshold hroute
-        (ttcPseudocode.t b n threshold z.2.2) z.1) hnext
+        (ttcReference.t b n threshold z.2.2) z.1) hnext
 
 theorem measurable_originRefreshedComponentLaw_outcome
     {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
@@ -71,11 +71,11 @@ theorem measurable_originRefreshedComponentLaw_outcome
     (c : OriginConfiguration n) :
     Measurable (fun outcome : VolumeOutcome =>
       originRefreshedComponentLaw hn P b eta threshold hroute
-        (ttcPseudocode.t b n threshold outcome.2) c) := by
+        (ttcReference.t b n threshold outcome.2) c) := by
   have hpair : Measurable (fun outcome : VolumeOutcome =>
-      (c, ttcPseudocode.t b n threshold outcome.2)) := by
+      (c, ttcReference.t b n threshold outcome.2)) := by
     apply measurable_const.prodMk
-    unfold ttcPseudocode.t
+    unfold ttcReference.t
     exact (measurable_const.mul measurable_const).mul measurable_snd
   have hcomp :=
     (measurable_originRefreshedComponentLaw_intensity hn P b
@@ -102,7 +102,7 @@ theorem originComponentVolumeLaw_isProbabilityMeasure
     (Filter.Eventually.of_forall (fun outcome =>
       originRefreshedComponentLaw_isProbabilityMeasure hn P b
         eta threshold hthreshold hroute
-        (ttcPseudocode.t b n threshold outcome.2) c))
+        (ttcReference.t b n threshold outcome.2) c))
 
 set_option maxHeartbeats 1000000 in
 theorem originComponentVolumeLaw_map_state
@@ -123,7 +123,7 @@ theorem originComponentVolumeLaw_map_state
         threshold outcome c.state) := by
   let K : VolumeOutcome → Measure (OriginConfiguration n) :=
     fun outcome => originRefreshedComponentLaw hn P b eta
-      threshold hroute (ttcPseudocode.t b n threshold outcome.2) c
+      threshold hroute (ttcReference.t b n threshold outcome.2) c
   have hK : Measurable K :=
     measurable_originRefreshedComponentLaw_outcome hn P b eta
       threshold hthreshold hroute c
@@ -162,7 +162,7 @@ theorem communityOriginComponentLaw_map_state
     (communityOriginComponentLaw hn prep P b eta delta
       threshold hroute c).map
         (fun next : OriginConfiguration n => next.state) =
-    ttcPseudocode.step (ttcSubroutines hn prep)
+    ttcReference.step (ttcSubroutines hn prep)
       b eta delta threshold P c.state := by
   unfold communityOriginComponentLaw
   rw [originComponentVolumeLaw_map_state hn prep P b eta delta

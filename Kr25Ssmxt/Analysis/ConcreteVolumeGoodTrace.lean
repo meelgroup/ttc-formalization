@@ -99,7 +99,7 @@ theorem community_components_volume_trace_good_accurate
     let components := List.ofFn D.component
     (communityComponentsVolumeTrace hn prep factor b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
-      components (TTCState.initial n)).real
+      components (TTCState.unitInitial n)).real
       {z | ∀ i : Fin components.length,
         (z.1 i).1 = true ∧
           ((z.1 i).2 : Real) ∈ Arlib.relErr p.ε'
@@ -136,7 +136,7 @@ theorem community_components_volume_trace_good_accurate
     hn prep factor b p.ε' (p.δ' D.componentCount)
     (p.Thresh D.componentCount) (p.δ' D.componentCount)
     (p.threshold_pos D.componentCount) components hvolume hfail haccuracy
-    (TTCState.initial n)
+    (TTCState.unitInitial n)
   have hbudget : (components.length : Real) *
       p.δ' D.componentCount = p.delta / 4 := by
     have hm : (D.componentCount : Real) ≠ 0 := by

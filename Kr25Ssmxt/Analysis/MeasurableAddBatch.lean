@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-!
 # Joint measurability of batch insertion

@@ -5,7 +5,7 @@ import Kr25Ssmxt.Analysis.OriginVolumeFold
 import Kr25Ssmxt.Analysis.OracleNormalization
 
 /-! Equip each preprocessed component with the geometric sampling route and
-the normalized clipped CV18 volume law. -/
+the normalized CV18 volume law. -/
 
 namespace Kr25Ssmxt
 
@@ -58,9 +58,9 @@ theorem communityCertifiedRun_map_state
       (communityCertifiedComponents hn D p prep)
       (OriginConfiguration.initial n)).map
         (fun next : OriginConfiguration n => next.state) =
-    ttcPseudocode.loop (ttcSubroutines hn prep)
+    ttcReference.loop (ttcSubroutines hn prep)
       b p.ε' (p.δ' D.componentCount) threshold
-      (List.ofFn D.component) (TTCState.initial n) := by
+      (List.ofFn D.component) (TTCState.unitInitial n) := by
   dsimp only
   rw [communityOriginComponentsLaw_map_state hn prep
     (prep.choosePrecision D p).value p.ε'

@@ -24,11 +24,11 @@ structure OriginConfiguration (n : Nat) where
 
 noncomputable def OriginConfiguration.initial (n : Nat) :
     OriginConfiguration n where
-  state := TTCState.initial n
+  state := TTCState.unitInitial n
   source := OriginSourceState.initial
   origin := fun _ => (0, 0)
   level := 0
-  p := by simp [TTCState.initial]
+  p := by simp [TTCState.unitInitial]
   fresh := TTCState.initial_labelsFresh n
   history := originHistory_initial _
   valid := originValid_initial _
@@ -54,12 +54,12 @@ noncomputable def OriginConfiguration.advance
     OriginConfiguration n := by
   let deleted := c.state.removeComponent P
   let oldCoins := sourceOldCoins c.origin c.source.coins c.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold oldCoins
+  let first := ttcReference.firstLoopResult deleted intensity threshold oldCoins
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds oldCoins) activeCoins
   let activeRounds := firstExitRoundSplit first pending threshold
@@ -255,7 +255,7 @@ theorem OriginConfiguration.advance_source
         { component := P
           firstLabel := c.state.nextLabel
           basePending := basePending
-          preRounds := c.level + ttcPseudocode.firstLoopExit
+          preRounds := c.level + ttcReference.firstLoopExit
             (c.state.removeComponent P) intensity threshold
           preCoins := preCoins
           futureCoins := future
@@ -268,14 +268,14 @@ theorem OriginConfiguration.advance_level
     (tape : Nat → LatticePoint n) :
     (c.advance P intensity threshold basePending preCoins future tape).level =
       let deleted := c.state.removeComponent P
-      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+      let rounds := ttcReference.firstLoopExit deleted intensity threshold
       let preRounds := c.level + rounds
       let pending := pendingAfter preCoins preRounds deleted.nextLabel
         basePending
       let oldCoins := sourceOldCoins c.origin c.source.coins c.level
       let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
         deleted.nextLabel basePending future
-      let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+      let first := ttcReference.firstLoopResult deleted intensity threshold
         oldCoins
       preRounds + firstExitRoundSplit first pending threshold
         (shiftCoins rounds oldCoins)
@@ -295,7 +295,7 @@ theorem OriginConfiguration.advance_pointCounts
       poissonTapePointCounts S c.state.nextLabel next.level
         (basePending,
           spliceCoins preCoins future
-            (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+            (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
               intensity threshold), tape) x := by
   dsimp only
   let next := c.advance P intensity threshold basePending preCoins future tape
@@ -306,7 +306,7 @@ theorem OriginConfiguration.advance_pointCounts
     { component := P
       firstLabel := c.state.nextLabel
       basePending := basePending
-      preRounds := c.level + ttcPseudocode.firstLoopExit
+      preRounds := c.level + ttcReference.firstLoopExit
         (c.state.removeComponent P) intensity threshold
       preCoins := preCoins
       futureCoins := future

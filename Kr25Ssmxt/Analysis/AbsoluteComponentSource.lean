@@ -13,25 +13,25 @@ theorem poisson_twoLoops_absolute_predraw
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (level : Nat)
     (hrate : s.p = 1 / (2 : NNReal) ^ level) :
-    (ttcPseudocode.firstLoop s intensity threshold).bind (fun first =>
+    (ttcReference.firstLoop s intensity threshold).bind (fun first =>
       (poissonMeasure (intensity * first.p)).bind fun pending =>
         ttcPseudocode.secondLoop first pending threshold) =
     (poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
           ttcPseudocode.secondLoopResult
-            (ttcPseudocode.firstLoopResult s intensity threshold activeCoins)
+            (ttcReference.firstLoopResult s intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + ttcPseudocode.firstLoopExit s intensity threshold)
+              (level + ttcReference.firstLoopExit s intensity threshold)
               s.nextLabel basePending)
             threshold
-            (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold)
+            (shiftCoins (ttcReference.firstLoopExit s intensity threshold)
               activeCoins) := by
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   let K : Nat → Measure (TTCState n × Nat) := fun pending =>
     fairCoinStreamLaw.map fun coins =>
       ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult s intensity threshold coins)
+        (ttcReference.firstLoopResult s intensity threshold coins)
         pending threshold (shiftCoins rounds coins)
   have hK : Measurable K := Measurable.of_discrete
   have hmean : intensity * (s.p / (2 : NNReal) ^ rounds) =
@@ -40,7 +40,7 @@ theorem poisson_twoLoops_absolute_predraw
     simp only [div_eq_mul_inv, mul_inv_rev]
     ac_rfl
   calc
-    (ttcPseudocode.firstLoop s intensity threshold).bind (fun first =>
+    (ttcReference.firstLoop s intensity threshold).bind (fun first =>
         (poissonMeasure (intensity * first.p)).bind fun pending =>
           ttcPseudocode.secondLoop first pending threshold) =
       (poissonMeasure (intensity * (s.p / (2 : NNReal) ^ rounds))).bind K := by

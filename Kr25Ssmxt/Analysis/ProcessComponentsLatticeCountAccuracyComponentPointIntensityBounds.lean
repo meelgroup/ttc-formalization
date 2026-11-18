@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.PrecisionRequirements
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-!
 # Per-point intensity bounds for one component

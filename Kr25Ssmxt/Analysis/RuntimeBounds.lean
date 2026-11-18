@@ -1,7 +1,7 @@
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.PrecisionChoice
 import Kr25Ssmxt.Analysis.PrecisionRequirements
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.TTCPaperRuntime
 import Kr25Ssmxt.Analysis.ComponentExpectation
 import Kr25Ssmxt.Analysis.CV18RoundnessBound
@@ -24,7 +24,7 @@ theorem ttc_expected_runtime_explicit {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations cv18NonQueryFactor ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,
@@ -42,7 +42,7 @@ theorem ttc_expected_runtime_linear_precision {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations cv18NonQueryFactor ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,
@@ -74,7 +74,7 @@ theorem ttc_expected_runtime_geometric {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations cv18NonQueryFactor ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,
@@ -105,7 +105,7 @@ theorem ttc_expected_runtime_geometric_clip {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations cv18NonQueryFactor ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,
@@ -136,7 +136,7 @@ theorem ttc_expected_runtime_theorem3_expanded {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations cv18NonQueryFactor ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,
@@ -167,7 +167,7 @@ theorem ttc_expected_runtime_theorem3_fixed_charge {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations 1 ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,
@@ -184,7 +184,7 @@ theorem ttc_expected_runtime_uniform_budget {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         TTCRuntime.theorem3UniformComponentBudget hn D p b 1 := by
@@ -216,7 +216,7 @@ theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *

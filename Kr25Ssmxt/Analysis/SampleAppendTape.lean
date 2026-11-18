@@ -12,16 +12,16 @@ theorem measurable_community_sampleAppend_kernel
     (P : PolytopeData n) (b : Nat) (eta delta : Real) :
     Measurable (fun second : TTCState n × Nat =>
       ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map fun batch => second.1.addBatch batch) := by
+        b eta).map fun batch => second.1.addBatch batch) := by
   have hcost := community_sample_append_kernel_measurable
     hn prep 1 P b eta delta
   have heq : (fun second : TTCState n × Nat =>
       ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map fun batch => second.1.addBatch batch) =
+        b eta).map fun batch => second.1.addBatch batch) =
       (fun second =>
         (costedBind
           ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
-            P second.2 b eta delta)
+            P second.2 b eta)
           (fun batch => costedCharge
             (Measure.dirac (second.1.addBatch batch))
             (second.2 * TTCRuntime.appendCopyOperations))).map Prod.fst) := by
@@ -42,7 +42,7 @@ theorem community_sampleAppend_from_iidTape
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map (fun batch => second.1.addBatch batch) =
+      b eta).map (fun batch => second.1.addBatch batch) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape (second.1.nextLabel + i.val))) := by
@@ -67,7 +67,7 @@ theorem community_sampleAppend_from_iidTape
   have hselect : Measurable select := hpointsMeas
   have hsample : tapeLaw.map select =
       (ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta := by
+        b eta := by
     rw [community_generateSamples_eq_iid hn prep P second.2 b eta delta hroute]
     exact hpoints
   let f : SampleBatch n second.2 → TTCState n :=
@@ -76,7 +76,7 @@ theorem community_sampleAppend_from_iidTape
     measurable_addBatch.comp (measurable_const.prodMk measurable_id)
   calc
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map f =
+        b eta).map f =
       (tapeLaw.map select).map f := by rw [hsample]
     _ = tapeLaw.map (f ∘ select) := by
           rw [Measure.map_map hf hselect]
@@ -97,7 +97,7 @@ theorem community_sampleAppend_from_iidTape_at_labels
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map (fun batch => second.1.addBatch batch) =
+      b eta).map (fun batch => second.1.addBatch batch) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape (labels i))) := by
@@ -118,7 +118,7 @@ theorem community_sampleAppend_from_iidTape_at_labels
   have hselect : Measurable select := hpointsMeas
   have hsample : tapeLaw.map select =
       (ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta := by
+        b eta := by
     rw [community_generateSamples_eq_iid hn prep P second.2 b eta delta hroute]
     exact hpoints
   let f : SampleBatch n second.2 → TTCState n :=
@@ -127,7 +127,7 @@ theorem community_sampleAppend_from_iidTape_at_labels
     measurable_addBatch.comp (measurable_const.prodMk measurable_id)
   calc
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-        b eta delta).map f =
+        b eta).map f =
       (tapeLaw.map select).map f := by rw [hsample]
     _ = tapeLaw.map (f ∘ select) := by
           rw [Measure.map_map hf hselect]
@@ -144,7 +144,7 @@ theorem communityComponentGivenVolume_absolute_tape
       (codedLatticePoints P b).Nonempty)
     (outcome : VolumeOutcome) (state : TTCState n)
     (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :
-    let intensity := ttcPseudocode.t b n threshold outcome.2
+    let intensity := ttcReference.t b n threshold outcome.2
     let deleted := state.removeComponent P
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
@@ -154,12 +154,12 @@ theorem communityComponentGivenVolume_absolute_tape
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
           ttcPseudocode.secondLoopResult
-            (ttcPseudocode.firstLoopResult deleted intensity threshold activeCoins)
+            (ttcReference.firstLoopResult deleted intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
+              (level + ttcReference.firstLoopExit deleted intensity threshold)
               deleted.nextLabel basePending)
             threshold
-            (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+            (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
               activeCoins)).bind fun second =>
         (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
           second.1.addBatch

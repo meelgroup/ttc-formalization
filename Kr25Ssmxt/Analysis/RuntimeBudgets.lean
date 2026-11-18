@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.CV18Admissible
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-! # Intermediate runtime allowances
 
@@ -104,7 +104,7 @@ noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.ThresholdCap p m
-  let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
+  let upperIntensity := ttcReference.t b n (p.Thresh m)
     (max (P.volumeClipLower p.ε')
       (P.volumeClipUpper p.ε'))
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
@@ -124,7 +124,7 @@ noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
       TTCRuntime.appendCopyOperations)
 
 /-- The same component allowance with decimal precision exposed linearly.
-The remaining volume logarithm is the clipped geometric volume bound. -/
+The remaining volume logarithm is the geometric volume envelope. -/
 noncomputable def TTCRuntime.expectedComponentBudgetLinearPrecision {n : Nat}
     (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=

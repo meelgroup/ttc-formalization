@@ -68,7 +68,7 @@ theorem concrete_component_step_envelope
     hvolume hlattice halmost hT
 
 /-- Instantiate the component envelope with the normalized finite-step
-Hit-and-Run/KV97 point law used by `ttc`. -/
+Hit-and-Run/KV97 point law used by `ttcRef`. -/
 theorem normalized_component_step_envelope
     {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
@@ -121,7 +121,7 @@ theorem community_generateSamples_eq_iid
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty) :
     (ttcSubroutines hn prep).GenerateSamples
-      P count b eta delta =
+      P count b eta =
     iidSampleBatchLaw (normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2) := by
   simp only [ttcSubroutines, dif_pos hroute]

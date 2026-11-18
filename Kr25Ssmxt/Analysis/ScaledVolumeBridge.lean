@@ -136,7 +136,7 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
     (delta : Real) (i : Fin D.componentCount) :
     ∫⁻ result, (result.2 : ENNReal) ∂
       (ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-        (D.component i) count b p.ε' delta ≤
+        (D.component i) count b p.ε' ≤
       count * (2 * TTCRuntime.samplingAttemptOperations n
         (D.component i).presentation.facetCount
         (normalizedHitAndRunSteps (D.component i) b p.ε')) := by
@@ -165,7 +165,7 @@ theorem certified_community_sampler_mass_le_one {n k : Nat}
     (prep : TTCPreprocessor n k) (factor count : Nat)
     (delta : Real) (i : Fin D.componentCount) :
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-      (D.component i) count b p.ε' delta) Set.univ ≤ 1 := by
+      (D.component i) count b p.ε') Set.univ ≤ 1 := by
   have hn0 : 0 < n := by omega
   have hset := coded_lattice_points_finite_nonempty hn0 D p b hprecision i
   have hunit : 1 ≤ decimalScale b * (D.component i).inradius :=

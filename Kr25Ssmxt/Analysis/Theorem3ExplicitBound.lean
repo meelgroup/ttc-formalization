@@ -174,7 +174,7 @@ theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
     (preprocessingOperations : Nat) :
     let D := prep.run F hbounded
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep preprocessingOperations 1 ≤
+      ttcRefWithCost hn F hbounded p prep preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
         ENNReal.ofReal (30 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *

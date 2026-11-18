@@ -77,12 +77,12 @@ theorem OriginConfiguration.advance_state_eq_total
         basePending preCoins future c tape := by
   let deleted := c.state.removeComponent P
   let oldCoins := sourceOldCoins c.origin c.source.coins c.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   let activeRounds := originSplitExit P intensity threshold
     basePending preCoins future c

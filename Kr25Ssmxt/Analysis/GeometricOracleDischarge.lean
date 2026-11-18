@@ -48,7 +48,7 @@ def exactSemanticOracles {n k : Nat} (prep : TTCPreprocessor n k) : TTCOracles n
   preprocessing := prep
   choosePrecision := fun D p => GetPrecision D p.precisionEta
   ComputeVolume := fun P _ _ => exactVolumeLaw P
-  GenerateSamples := fun P count b _ _ => exactSampleBatchLaw P b
+  GenerateSamples := fun P count b _ => exactSampleBatchLaw P b
 
 set_option maxHeartbeats 800000 in
 lemma exact_volume_law_specification {n : Nat} (P : PolytopeData n) (eta delta : Real)

@@ -31,7 +31,7 @@ theorem community_source_fixedLevel_fold
         (1 / (2 : NNReal) ^ level)
     let sourceLaw : Fin D.componentCount → Measure (PoissonTape n) :=
       fun i => poissonTapeLaw
-        (ttcPseudocode.t b n (p.Thresh D.componentCount)
+        (ttcReference.t b n (p.Thresh D.componentCount)
           (volumeEstimate i)) (pointLaw i)
     (Measure.pi sourceLaw).map
       (fun sources => fixedLevelFold steps (fun _ => 0)
@@ -51,7 +51,7 @@ theorem community_source_fixedLevel_fold
       (1 / (2 : NNReal) ^ level)
   let sourceLaw : Fin D.componentCount → Measure (PoissonTape n) :=
     fun i => poissonTapeLaw
-      (ttcPseudocode.t b n (p.Thresh D.componentCount)
+      (ttcReference.t b n (p.Thresh D.componentCount)
         (volumeEstimate i)) (pointLaw i)
   have hlength : steps.length = D.componentCount := by
     simp [steps, certifiedFixedLevelSteps, fixedLevelComponentSteps]
@@ -80,7 +80,7 @@ theorem community_source_fixedLevel_fold
       hn D p b hprecision (e.symm i)
     letI : IsProbabilityMeasure (pointLaw (e.symm i)) := hprob (e.symm i)
     have h := poissonTapeLaw_fixedLevel_pointCounts
-      (ttcPseudocode.t b n (p.Thresh D.componentCount)
+      (ttcReference.t b n (p.Thresh D.componentCount)
         (volumeEstimate (e.symm i)))
       (pointLaw (e.symm i)) S hsupport 0 level
     change (sourceLaw (e.symm i)).map
@@ -95,7 +95,7 @@ theorem community_source_fixedLevel_fold
         ({ deleted := componentDeletedCodes S (D.component j)
            incoming := fun y : S => Real.toNNReal
              ((pointLaw j).real {(y.1 : LatticePoint n)} *
-               ((ttcPseudocode.t b n (p.Thresh D.componentCount)
+               ((ttcReference.t b n (p.Thresh D.componentCount)
                  (volumeEstimate j) *
                  (1 / (2 : NNReal) ^ level) : NNReal) : Real)) } :
           FixedLevelStep S)) i
@@ -103,7 +103,7 @@ theorem community_source_fixedLevel_fold
         ({ deleted := componentDeletedCodes S (D.component j)
            incoming := fun y : S => Real.toNNReal
              ((pointLaw j).real {(y.1 : LatticePoint n)} *
-               ((ttcPseudocode.t b n (p.Thresh D.componentCount)
+               ((ttcReference.t b n (p.Thresh D.componentCount)
                  (volumeEstimate j) *
                  (1 / (2 : NNReal) ^ level) : NNReal) : Real)) } :
           FixedLevelStep S)).get i).incoming x
@@ -111,11 +111,11 @@ theorem community_source_fixedLevel_fold
     change Real.toNNReal
         ((pointLaw (e.symm i)).real {(x.1 : LatticePoint n)} *
           ((unitInterval.toNNReal (survivalProbability level) *
-            ttcPseudocode.t b n (p.Thresh D.componentCount)
+            ttcReference.t b n (p.Thresh D.componentCount)
               (volumeEstimate (e.symm i)) : NNReal) : Real)) =
       Real.toNNReal
         ((pointLaw (Fin.cast hlength i)).real {(x.1 : LatticePoint n)} *
-          ((ttcPseudocode.t b n (p.Thresh D.componentCount)
+          ((ttcReference.t b n (p.Thresh D.componentCount)
               (volumeEstimate (Fin.cast hlength i)) *
               (1 / (2 : NNReal) ^ level) : NNReal) : Real))
     have hindex : e.symm i = Fin.cast hlength i := Fin.ext rfl
@@ -186,7 +186,7 @@ theorem community_source_fixedLevel_total_law
         (1 / (2 : NNReal) ^ level)
     let sourceLaw : Fin D.componentCount → Measure (PoissonTape n) :=
       fun i => poissonTapeLaw
-        (ttcPseudocode.t b n (p.Thresh D.componentCount)
+        (ttcReference.t b n (p.Thresh D.componentCount)
           (volumeEstimate i)) (pointLaw i)
     (Measure.pi sourceLaw).map
       (fun sources => ∑ x : S, fixedLevelFold steps (fun _ => 0)
@@ -206,7 +206,7 @@ theorem community_source_fixedLevel_total_law
       (1 / (2 : NNReal) ^ level)
   let sourceLaw : Fin D.componentCount → Measure (PoissonTape n) :=
     fun i => poissonTapeLaw
-      (ttcPseudocode.t b n (p.Thresh D.componentCount)
+      (ttcReference.t b n (p.Thresh D.componentCount)
         (volumeEstimate i)) (pointLaw i)
   let hlength := certifiedFixedLevelSteps_length D b S
     (p.Thresh D.componentCount) volumeEstimate pointLaw
@@ -249,7 +249,7 @@ theorem community_source_fixedLevel_error_bound
         (1 / (2 : NNReal) ^ level)
     let sourceLaw : Fin D.componentCount → Measure (PoissonTape n) :=
       fun i => poissonTapeLaw
-        (ttcPseudocode.t b n (p.Thresh D.componentCount)
+        (ttcReference.t b n (p.Thresh D.componentCount)
           (volumeEstimate i)) (pointLaw i)
     let lower := Real.toNNReal (p.Thresh D.componentCount *
       (1 - p.ε') ^ 2 * (1 - p.latticeEta) *

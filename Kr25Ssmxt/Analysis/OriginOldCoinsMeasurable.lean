@@ -49,7 +49,7 @@ theorem OriginConfiguration.measurable_advance_controls
     {n : Nat} (P : PolytopeData n) (intensity : NNReal)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun c : OriginConfiguration n =>
-      (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+      (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold, (c.state.removeComponent P).nextLabel)) := by
   have hstate : Measurable (fun c : OriginConfiguration n =>
       c.state) := measurable_originConfiguration_state
@@ -57,7 +57,7 @@ theorem OriginConfiguration.measurable_advance_controls
       c.state.removeComponent P) :=
     (measurable_removeComponent P).comp hstate
   have hround : Measurable (fun c : OriginConfiguration n =>
-      ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
+      ttcReference.firstLoopExit (c.state.removeComponent P) intensity
         threshold) :=
     (measurable_rateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_const)
@@ -76,7 +76,7 @@ theorem OriginConfiguration.measurable_activeFullCoins
     (basePending : Nat) (preCoins future : Nat × Nat → Bool) :
     Measurable (fun c : OriginConfiguration n =>
       let deleted := c.state.removeComponent P
-      let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity
+      let preRounds := c.level + ttcReference.firstLoopExit deleted intensity
         threshold
       pendingCoinExtension deleted.nextLabel
         (pendingAfter preCoins preRounds deleted.nextLabel basePending)

@@ -10,12 +10,12 @@ theorem OriginConfiguration.advance_unusedTail_newComponent
     (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
     (basePending : Nat) (preCoins future : Nat × Nat → Bool)
     (tape : Nat → LatticePoint n) (round label : Nat) :
-    let preRounds := c.level + ttcPseudocode.firstLoopExit
+    let preRounds := c.level + ttcReference.firstLoopExit
       (c.state.removeComponent P) intensity threshold
     let next := c.advance P intensity threshold basePending preCoins future tape
     next.unusedTail (c.source.processed, (round, label)) =
       future (next.level - preRounds + round, label) := by
-  let preRounds := c.level + ttcPseudocode.firstLoopExit
+  let preRounds := c.level + ttcReference.firstLoopExit
     (c.state.removeComponent P) intensity threshold
   let next := c.advance P intensity threshold basePending preCoins future tape
   change next.unusedTail (c.source.processed, (round, label)) =
@@ -52,7 +52,7 @@ theorem OriginConfiguration.advance_unusedTail_otherComponent
   rw [c.advance_source]
   change coinsAppend c.source.coins c.source.processed
       preCoins future
-      (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+      (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold) component (next.level + round, label) = _
   simp [coinsAppend, hne]
 
@@ -75,7 +75,7 @@ theorem OriginConfiguration.refreshAdvance_unusedTail_otherComponent
     oldFuture (component, (next.level - c.level + round, label))
   have hlevel : c.level ≤ next.level := by
     rw [refreshed.advance_level]
-    change c.level ≤ c.level + ttcPseudocode.firstLoopExit
+    change c.level ≤ c.level + ttcReference.firstLoopExit
         (c.state.removeComponent P) intensity threshold + _
     omega
   have hne' : component ≠ refreshed.source.processed := hne
@@ -100,7 +100,7 @@ theorem OriginConfiguration.refreshAdvance_unusedTail
     let refreshed := c.refreshFuture oldFuture
     let next := refreshed.advance P intensity threshold basePending
       preCoins future tape
-    let preRounds := c.level + ttcPseudocode.firstLoopExit
+    let preRounds := c.level + ttcReference.firstLoopExit
       (c.state.removeComponent P) intensity threshold
     next.unusedTail = fun index =>
       if index.1 = c.source.processed then
@@ -111,7 +111,7 @@ theorem OriginConfiguration.refreshAdvance_unusedTail
   let refreshed := c.refreshFuture oldFuture
   let next := refreshed.advance P intensity threshold basePending
     preCoins future tape
-  let preRounds := c.level + ttcPseudocode.firstLoopExit
+  let preRounds := c.level + ttcReference.firstLoopExit
     (c.state.removeComponent P) intensity threshold
   change next.unusedTail = fun index =>
     if index.1 = c.source.processed then

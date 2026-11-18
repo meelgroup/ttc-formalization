@@ -68,7 +68,7 @@ theorem OriginConfiguration.refreshed_advance_tailFair_of_prefix
     (hthreshold : 0 < threshold)
     (basePending : Nat) (preCoins : Nat × Nat → Bool)
     (tape : Nat → LatticePoint n) (pre : Nat × (Nat × Nat) → Bool) :
-    let rounds := ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+    let rounds := ttcReference.firstLoopExit (c.state.removeComponent P)
       intensity threshold
     OriginTailFair
       (((Measure.infinitePi
@@ -91,11 +91,11 @@ theorem OriginConfiguration.refreshed_advance_tailFair_of_prefix
     dsimp [μ]
     infer_instance
   let deleted := c.state.removeComponent P
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let glue := globalSourceGlue rounds pre
   let firstOf : (Nat × (Nat × Nat) → Bool) → TTCState n := fun old =>
-    ttcPseudocode.firstLoopResult deleted intensity threshold
+    ttcReference.firstLoopResult deleted intensity threshold
       (sourceOldCoins c.origin
         (c.refreshFuture old).source.coins c.level)
   let first := firstOf (glue (fun _ => false))
@@ -242,7 +242,7 @@ theorem OriginConfiguration.refreshed_advance_tailFair
   let _ : IsProbabilityMeasure μ := by
     dsimp [μ]
     infer_instance
-  let rounds := ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+  let rounds := ttcReference.firstLoopExit (c.state.removeComponent P)
     intensity threshold
   let lam := sourceLaw.map (globalSourcePrefix rounds)
   let split : (Nat × (Nat × Nat) → Bool) × (Nat × Nat → Bool) →

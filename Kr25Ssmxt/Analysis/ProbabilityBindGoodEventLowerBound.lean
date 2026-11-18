@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-!
 # A one-step probability union bound for measure bind

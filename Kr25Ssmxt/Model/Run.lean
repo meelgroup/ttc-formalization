@@ -15,8 +15,7 @@ them, in the order the algorithm calls them:
 
 * `GetPrecision` (line `line:getprec`, Algorithm `getprec`), with `MaxInscribedBall`
   computed by the Chebyshev-centre LP;
-* `ComputeVolume` (line `line:volume`): arlib-community's CV18 volume algorithm, followed by
-  the paper's clipping;
+* `ComputeVolume` (line `line:volume`): arlib-community's CV18 volume algorithm;
 * `GenerateSamples` (line `line:sample`): arlib-community's Hit-and-Run walk, KV97
   randomized rounding and rejection.
 
@@ -199,21 +198,6 @@ def communityCV18VolumeLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   else
     Measure.dirac (true, 0)
 
-/-- The paper's lower and upper clipping interval for a component volume estimate. -/
-def PolytopeData.volumeClipLower {n : Nat} (P : PolytopeData n)
-    (eta : Real) : NNReal :=
-  Real.toNNReal ((1 - eta) * (2 * P.inradius / Real.sqrt n) ^ n)
-
-def PolytopeData.volumeClipUpper {n : Nat} (P : PolytopeData n)
-    (eta : Real) : NNReal :=
-  Real.toNNReal ((1 + eta) * (2 * P.outerRadius) ^ n)
-
-/-- Clip a CV18 result while preserving its diagnostic success tag. -/
-def PolytopeData.clipVolume {n : Nat} (P : PolytopeData n)
-    (eta : Real) (o : VolumeOutcome) : VolumeOutcome :=
-  (o.1, max (P.volumeClipLower eta)
-    (min (P.volumeClipUpper eta) o.2))
-
 /-! ## Line `line:sample`: `GenerateSamples` is Hit-and-Run, KV97 rounding and rejection -/
 
 open ArlibCommunity.Algorithms.KV97
@@ -363,18 +347,16 @@ def failedSampleBatchLaw {n count : Nat} : Measure (SampleBatch n count) :=
 
 /-! ## Algorithm `ttc` -/
 
-/-- The concrete oracle bundle: community CV18 with the paper's post-CV18 clipping, and the
-normalized community Hit-and-Run walk followed by KV97 rounding and rejection. -/
+/-- The concrete oracle bundle: community CV18, and the normalized community Hit-and-Run walk
+followed by KV97 rounding and rejection. -/
 def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
     (prep : TTCPreprocessor n k) : TTCOracles n k := by
   classical
   exact {
     preprocessing := prep
     choosePrecision := fun D p => GetPrecision D p.precisionEta
-    ComputeVolume := fun P eta delta =>
-      (communityCV18VolumeLaw (by omega) P eta delta).map
-        (P.clipVolume eta)
-    GenerateSamples := fun P count b eta _ =>
+    ComputeVolume := fun P eta delta => communityCV18VolumeLaw (by omega) P eta delta
+    GenerateSamples := fun P count b eta =>
       if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
           (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
         iidSampleBatchLaw
@@ -408,7 +390,7 @@ def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
         costedCharge
           ((ttcSubroutines hn prep).ComputeVolume P eta delta)
           (membership + nonQuery)
-      generateSamplesWithCost := fun P count b eta _ =>
+      generateSamplesWithCost := fun P count b eta =>
         if h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
             (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty then
           normalizedHitAndRunBatchWithCostLaw P count b eta

@@ -10,9 +10,9 @@ open MeasureTheory
 theorem measurable_rateExit_joint {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      ttcPseudocode.firstLoopExit z.1 z.2 threshold) := by
+      ttcReference.firstLoopExit z.1 z.2 threshold) := by
   let guard (j : Nat) : TTCState n × NNReal → Prop := fun z =>
-    ((z.2 * z.1.p / (2 : NNReal) ^ j : NNReal) : Real) < threshold
+    ((z.2 * z.1.p / (2 : NNReal) ^ j : NNReal) : Real) ≤ threshold
   have hguard (j : Nat) : MeasurableSet {z | guard j z} := by
     have hcoords : Measurable (fun z : TTCState n × NNReal =>
         (z.1.p, z.1.X, z.1.nextLabel)) :=
@@ -22,9 +22,9 @@ theorem measurable_rateExit_joint {n : Nat}
     have hval : Measurable (fun z : TTCState n × NNReal =>
         ((z.2 * z.1.p / (2 : NNReal) ^ j : NNReal) : Real)) := by
       fun_prop
-    exact hval measurableSet_Iio
+    exact hval measurableSet_Iic
   have hfiber (k : Nat) :
-      (fun z : TTCState n × NNReal => ttcPseudocode.firstLoopExit z.1 z.2 threshold) ⁻¹' {k} =
+      (fun z : TTCState n × NNReal => ttcReference.firstLoopExit z.1 z.2 threshold) ⁻¹' {k} =
         {z | guard k z} ∩ ⋂ j : Nat,
           (if j < k then {z | guard j z}ᶜ else Set.univ) := by
     ext z
@@ -39,30 +39,30 @@ theorem measurable_rateExit_joint {n : Nat}
       split_ifs with hj
       · simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
         intro hjg
-        have hle : ttcPseudocode.firstLoopExit z.1 z.2 threshold ≤ j := by
-          unfold ttcPseudocode.firstLoopExit
+        have hle : ttcReference.firstLoopExit z.1 z.2 threshold ≤ j := by
+          unfold ttcReference.firstLoopExit
           exact Nat.sInf_le hjg
         omega
       · simp
     · rintro ⟨hg, hprior⟩
       apply le_antisymm
-      · unfold ttcPseudocode.firstLoopExit
+      · unfold ttcReference.firstLoopExit
         exact Nat.sInf_le hg
-      · unfold ttcPseudocode.firstLoopExit
+      · unfold ttcReference.firstLoopExit
         have hnonempty : {rounds : Nat |
-            ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}.Nonempty :=
+            ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) ≤ threshold}.Nonempty :=
           rateExit_exists z.1 z.2 hthreshold
         have hmem := Nat.sInf_mem hnonempty
         by_contra hnot
         have hjk : sInf {rounds : Nat |
-            ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold} < k := by
+            ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) ≤ threshold} < k := by
           omega
         have hbad : ¬guard
             (sInf {rounds : Nat |
-              ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold}) z := by
+              ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) ≤ threshold}) z := by
           simpa only [if_pos hjk, Set.mem_compl_iff, Set.mem_setOf_eq] using
             hprior (sInf {rounds : Nat |
-              ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold})
+              ((z.2 * z.1.p / (2 : NNReal) ^ rounds : NNReal) : Real) ≤ threshold})
         exact hbad hmem
   apply measurable_to_countable'
   intro k
@@ -77,10 +77,10 @@ theorem measurable_rateExit_joint {n : Nat}
 theorem measurable_rateThinningResult_joint {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-      ttcPseudocode.firstLoopResult z.1.1 z.1.2 threshold z.2) := by
+      ttcReference.firstLoopResult z.1.1 z.1.2 threshold z.2) := by
   classical
   let rounds := fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-    ttcPseudocode.firstLoopExit z.1.1 z.1.2 threshold
+    ttcReference.firstLoopExit z.1.1 z.1.2 threshold
   have hrounds : Measurable rounds :=
     (measurable_rateExit_joint threshold hthreshold).comp measurable_fst
   have hstate : Measurable
@@ -142,7 +142,7 @@ theorem measurable_rateThinningResult_joint {n : Nat}
 theorem measurable_rateThinningCost_joint {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      ttcPseudocode.firstLoopCost z.1 z.2 threshold) := by
+      ttcReference.firstLoopCost z.1 z.2 threshold) := by
   have hcoords : Measurable (fun z : TTCState n × NNReal =>
       (z.1.p, z.1.X, z.1.nextLabel)) :=
     (comap_measurable _).comp measurable_fst
@@ -150,19 +150,25 @@ theorem measurable_rateThinningCost_joint {n : Nat}
     (measurable_fst.comp measurable_snd).comp hcoords
   have hcard : Measurable (fun z : TTCState n × NNReal => z.1.X.card) :=
     (measurable_of_countable (fun s : Finset (SampleCopy n) => s.card)).comp hsamples
-  unfold ttcPseudocode.firstLoopCost
-  exact (measurable_rateExit_joint threshold hthreshold).mul
-    ((measurable_of_countable TTCRuntime.rateThinningRoundOperations).comp hcard)
+  have hexit := measurable_rateExit_joint (n := n) threshold hthreshold
+  have hpair : Measurable (fun z : TTCState n × NNReal =>
+      (ttcReference.firstLoopExit z.1 z.2 threshold, z.1.X.card)) :=
+    hexit.prodMk hcard
+  have hf : Measurable (fun q : Nat × Nat =>
+      if q.1 = 0 then 0 else TTCRuntime.rateThinningRoundOperations q.2) :=
+    measurable_of_countable _
+  unfold ttcReference.firstLoopCost
+  exact hf.comp hpair
 
 theorem rateThinWithCost_kernel_measurable {n : Nat}
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      ttcPseudocode.firstLoopWithCost z.1 z.2 threshold) := by
+      ttcReference.firstLoopWithCost z.1 z.2 threshold) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   let G := fun z : (TTCState n × NNReal) × (Nat × Nat → Bool) =>
-    (ttcPseudocode.firstLoopResult z.1.1 z.1.2 threshold z.2,
-      ttcPseudocode.firstLoopCost z.1.1 z.1.2 threshold)
+    (ttcReference.firstLoopResult z.1.1 z.1.2 threshold z.2,
+      ttcReference.firstLoopCost z.1.1 z.1.2 threshold)
   have hG : Measurable G :=
     (measurable_rateThinningResult_joint threshold hthreshold).prodMk
       ((measurable_rateThinningCost_joint threshold hthreshold).comp measurable_fst)
@@ -177,10 +183,10 @@ theorem rateThinWithCost_kernel_measurable {n : Nat}
       (fun z : TTCState n × NNReal =>
         (fairCoinStreamLaw.map (Prod.mk z)).map G) =
       (fun z : TTCState n × NNReal =>
-        ttcPseudocode.firstLoopWithCost z.1 z.2 threshold) := by
+        ttcReference.firstLoopWithCost z.1 z.2 threshold) := by
     funext z
     rw [Measure.map_map hG measurable_prodMk_left]
-    unfold ttcPseudocode.firstLoopWithCost
+    unfold ttcReference.firstLoopWithCost
     rfl
   rw [← heq]
   exact hmap

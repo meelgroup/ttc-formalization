@@ -18,7 +18,7 @@ theorem communityComponentGivenVolume_absolute_finite_tape
     (outcome : VolumeOutcome) (state : TTCState n)
     (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level)
     (hfresh : state.LabelsFresh) :
-    let intensity := ttcPseudocode.t b n threshold outcome.2
+    let intensity := ttcReference.t b n threshold outcome.2
     let deleted := state.removeComponent P
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
@@ -27,15 +27,15 @@ theorem communityComponentGivenVolume_absolute_finite_tape
     ((poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         let pending := pendingAfter preCoins
-          (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
+          (level + ttcReference.firstLoopExit deleted intensity threshold)
           deleted.nextLabel basePending
         (fairCoinStreamLaw.prod
           (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).map
           fun pair =>
             thinningResultSplitFinite
-              (ttcPseudocode.firstLoopResult deleted intensity threshold pair.1)
+              (ttcReference.firstLoopResult deleted intensity threshold pair.1)
               pending threshold
-              (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+              (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
                 pair.1) pair.2).bind
       fun second =>
         (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
@@ -48,32 +48,32 @@ theorem communityComponentGivenVolume_absolute_finite_tape
       second.1.addBatch
         (fun i : Fin second.2 => tape (second.1.nextLabel + i.val))
   let deleted := state.removeComponent P
-  let intensity := ttcPseudocode.t b n threshold outcome.2
+  let intensity := ttcReference.t b n threshold outcome.2
   let source : Measure (TTCState n × Nat) :=
     (poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
           ttcPseudocode.secondLoopResult
-            (ttcPseudocode.firstLoopResult deleted intensity threshold activeCoins)
+            (ttcReference.firstLoopResult deleted intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
+              (level + ttcReference.firstLoopExit deleted intensity threshold)
               deleted.nextLabel basePending)
             threshold
-            (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+            (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
               activeCoins)
   let finiteSource : Measure (TTCState n × Nat) :=
     (poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         let pending := pendingAfter preCoins
-          (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
+          (level + ttcReference.firstLoopExit deleted intensity threshold)
           deleted.nextLabel basePending
         (fairCoinStreamLaw.prod
           (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).map
           fun pair =>
             thinningResultSplitFinite
-              (ttcPseudocode.firstLoopResult deleted intensity threshold pair.1)
+              (ttcReference.firstLoopResult deleted intensity threshold pair.1)
               pending threshold
-              (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+              (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
                 pair.1) pair.2
   have hsource : source = finiteSource :=
     poisson_twoLoops_absolute_finite deleted intensity threshold

@@ -53,7 +53,7 @@ theorem estimate_of_not_badWindow
     {n : Nat} (s : TTCState n) (b count m level : Nat) (p : ApproxParams)
     (hrate : s.p = 1 / (2 : NNReal) ^ level)
     (hwin : s.X.card ∉ badWindow p m count level) :
-    (Est b (p.Thresh m) s : Real) ∈
+    (EstReference b (p.Thresh m) s : Real) ∈
       Arlib.relErr (p.epsilon / 2)
         ((count : Real) / (10 : Real) ^ (b * n)) := by
   have hT := p.threshold_pos m
@@ -141,7 +141,7 @@ theorem communityCertifiedComponents_support
     (prep.choosePrecision D p).adequate i
 
 set_option maxHeartbeats 4000000 in
-/-- **Conditional Theorem 1.** For successful clipped CV18 outcomes, the
+/-- **Conditional Theorem 1.** For successful CV18 outcomes, the
 ghost run's final estimate misses the `ε/2` scaled-lattice guarantee with
 probability at most `δ/6 + δ/6`. -/
 theorem community_ghost_estimate_bad_le
@@ -163,7 +163,7 @@ theorem community_ghost_estimate_bad_le
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
       (communityCertifiedComponents hn D p prep) outcomes
       (OriginConfiguration.initial n))
-      {c | (Est b (p.Thresh D.componentCount) c.state : Real) ∉
+      {c | (EstReference b (p.Thresh D.componentCount) c.state : Real) ∉
         Arlib.relErr (p.epsilon / 2)
           (((D.latticePoints b).ncard : Real) / (10 : Real) ^ (b * n))} ≤
       ENNReal.ofReal (p.delta / 6) + ENNReal.ofReal (p.delta / 6) := by
@@ -260,9 +260,9 @@ theorem community_ghost_estimate_bad_le
     exact hs
   have hnocross : ∀ i : Fin comps.length,
       ∀ c : OriginConfiguration n, c.level ≤ level0 →
-        c.level + ttcPseudocode.firstLoopExit
+        c.level + ttcReference.firstLoopExit
           (c.state.removeComponent (comps.get i).polytope)
-          (ttcPseudocode.t b n T (outcomes i).2) T ≤ level0 := by
+          (ttcReference.t b n T (outcomes i).2) T ≤ level0 := by
     intro i c hc
     rw [communityCertifiedComponents_get_polytope hn D p prep i]
     have hidx : Fin.cast hlen.symm (Fin.cast hlen i) = i := Fin.ext rfl
@@ -353,7 +353,7 @@ theorem community_ghost_estimate_bad_le
   -- union bound
   have hsub : ∀ᵐ c ∂(μ0.bind G),
       c ∈ {c : OriginConfiguration n |
-        (Est b T c.state : Real) ∉
+        (EstReference b T c.state : Real) ∉
           Arlib.relErr (p.epsilon / 2) ((N : Real) / (10 : Real) ^ (b * n))} →
       c ∈ {c | level0 < c.level} ∪
         ⋃ level ∈ Finset.range (level0 + 1), E level := by
@@ -372,7 +372,7 @@ theorem community_ghost_estimate_bad_le
   show G (OriginConfiguration.initial n) _ ≤ _
   rw [hν]
   calc
-    (μ0.bind G) {c | (Est b T c.state : Real) ∉
+    (μ0.bind G) {c | (EstReference b T c.state : Real) ∉
         Arlib.relErr (p.epsilon / 2) ((N : Real) / (10 : Real) ^ (b * n))} ≤
         (μ0.bind G) ({c | level0 < c.level} ∪
           ⋃ level ∈ Finset.range (level0 + 1), E level) :=

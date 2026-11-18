@@ -200,12 +200,12 @@ theorem originOrderedComponentLaw_map_state_eq_givenVolume
       (codedLatticePoints P b).Nonempty)
     (c : OriginConfiguration n) (outcome : VolumeOutcome) :
     (originOrderedComponentLaw hn P b eta threshold hroute
-      (ttcPseudocode.t b n threshold outcome.2) c).map
+      (ttcReference.t b n threshold outcome.2) c).map
         (fun next : OriginConfiguration n => next.state) =
     communityComponentGivenVolume hn prep P b eta delta
       threshold outcome c.state := by
   rw [originOrderedComponentLaw_map_state hn P b eta threshold
-    hthreshold hroute (ttcPseudocode.t b n threshold outcome.2) c]
+    hthreshold hroute (ttcReference.t b n threshold outcome.2) c]
   exact c.refreshFuture_component_state_law hn prep P b eta delta
     threshold hroute outcome
 
@@ -219,13 +219,13 @@ theorem originRefreshedComponentLaw_map_state_eq_givenVolume
       (codedLatticePoints P b).Nonempty)
     (c : OriginConfiguration n) (outcome : VolumeOutcome) :
     (originRefreshedComponentLaw hn P b eta threshold hroute
-      (ttcPseudocode.t b n threshold outcome.2) c).map
+      (ttcReference.t b n threshold outcome.2) c).map
         (fun next : OriginConfiguration n => next.state) =
     communityComponentGivenVolume hn prep P b eta delta
       threshold outcome c.state := by
   rw [originRefreshedComponentLaw_eq_ordered hn P b eta
     threshold hthreshold hroute
-    (ttcPseudocode.t b n threshold outcome.2) c]
+    (ttcReference.t b n threshold outcome.2) c]
   exact originOrderedComponentLaw_map_state_eq_givenVolume hn
     prep P b eta delta threshold hthreshold hroute c outcome
 

@@ -1,7 +1,7 @@
 import Kr25Ssmxt.Analysis.OracleContracts
 import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.ArlibPolytopeBridge
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import ArlibCommunity.Algorithms.KV97.Analysis.RoundLaw
 import ArlibCommunity.Algorithms.KV97.Analysis.ProdKernel
 import ArlibCommunity.Algorithms.KV97.Analysis.SamplerRoutes

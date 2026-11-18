@@ -81,7 +81,7 @@ theorem origin_refreshed_step_crossing
         (S : Set (LatticePoint n))ᶜ = 0)
     (level0 : Nat)
     (hnocross : ∀ c : OriginConfiguration n, c.level ≤ level0 →
-      c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
+      c.level + ttcReference.firstLoopExit (c.state.removeComponent P) intensity
         threshold ≤ level0)
     (μ : Measure (OriginConfiguration n))
     (hmarks : ∀ᵐ c ∂μ, c.MarksIn S) :
@@ -175,9 +175,9 @@ theorem originGivenVolumesLaw_crossing
       threshold S level0 components outcomes, s ∈ full)
     (hnocross : ∀ i : Fin components.length,
       ∀ c : OriginConfiguration n, c.level ≤ level0 →
-        c.level + ttcPseudocode.firstLoopExit
+        c.level + ttcReference.firstLoopExit
           (c.state.removeComponent (components.get i).polytope)
-          (ttcPseudocode.t b n threshold (outcomes i).2) threshold ≤ level0)
+          (ttcReference.t b n threshold (outcomes i).2) threshold ≤ level0)
     (μ : Measure (OriginConfiguration n))
     (hstationary : μ.bind (fun c => c.refreshLaw) = μ)
     (hmarks : ∀ᵐ c ∂μ, c.MarksIn S)
@@ -195,7 +195,7 @@ theorem originGivenVolumesLaw_crossing
       rw [Measure.bind_dirac]
       simp
   | cons d rest ih =>
-      let intensity := ttcPseudocode.t b n threshold (outcomes 0).2
+      let intensity := ttcReference.t b n threshold (outcomes 0).2
       let R := originRefreshedComponentLaw hn d.polytope b eta
         threshold d.route intensity
       let G := originGivenVolumesLaw hn prep b eta delta threshold

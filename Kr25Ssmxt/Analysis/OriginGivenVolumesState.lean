@@ -154,7 +154,7 @@ theorem originGivenVolumesLaw_map_state
       change (Measure.dirac c).map _ = Measure.dirac c.state
       exact Measure.map_dirac' measurable_originConfiguration_state c
   | cons d rest ih =>
-      let intensity := ttcPseudocode.t b n threshold (outcomes 0).2
+      let intensity := ttcReference.t b n threshold (outcomes 0).2
       let R := originRefreshedComponentLaw hn d.polytope b eta
         threshold d.route intensity
       let G := originGivenVolumesLaw hn prep b eta delta threshold

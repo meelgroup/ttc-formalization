@@ -577,7 +577,7 @@ theorem OriginConfiguration.refreshFuture_advance_state_law
     (c : OriginConfiguration n) (intensity : NNReal)
     (basePending : Nat) (preCoins : Nat × Nat → Bool) :
     let s := c.state.removeComponent P
-    let preRounds := c.level + ttcPseudocode.firstLoopExit s intensity threshold
+    let preRounds := c.level + ttcReference.firstLoopExit s intensity threshold
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((Measure.infinitePi
@@ -596,7 +596,7 @@ theorem OriginConfiguration.refreshFuture_advance_state_law
           (allocatedCoinExtension s.nextLabel pair.1, pair.2)) := by
   dsimp only
   let s := c.state.removeComponent P
-  let preRounds := c.level + ttcPseudocode.firstLoopExit s intensity threshold
+  let preRounds := c.level + ttcReference.firstLoopExit s intensity threshold
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let sourceLaw : Measure (Nat × (Nat × Nat) → Bool) :=
@@ -632,7 +632,7 @@ theorem OriginConfiguration.refreshFuture_component_state_law
       (codedLatticePoints P b).Finite ∧
       (codedLatticePoints P b).Nonempty)
     (c : OriginConfiguration n) (outcome : VolumeOutcome) :
-    let intensity := ttcPseudocode.t b n threshold outcome.2
+    let intensity := ttcReference.t b n threshold outcome.2
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     (ProbabilityTheory.poissonMeasure intensity).bind (fun basePending =>
@@ -646,7 +646,7 @@ theorem OriginConfiguration.refreshFuture_component_state_law
       communityComponentGivenVolume hn prep P b eta delta
         threshold outcome c.state := by
   dsimp only
-  let intensity := ttcPseudocode.t b n threshold outcome.2
+  let intensity := ttcReference.t b n threshold outcome.2
   have hgiven := communityComponentGivenVolume_eq_finiteCoinSourceKernel
     hn prep P b eta delta threshold hroute outcome c.state c.level
       c.p c.fresh
@@ -662,7 +662,7 @@ theorem OriginConfiguration.refreshFuture_component_state_law
     threshold hroute intensity basePending preCoins
 
 /-- Including the CV18 draw, the refreshed source transition has precisely
-the state law of `ttcPseudocode.step`. -/
+the state law of `ttcReference.step`. -/
 theorem OriginConfiguration.refreshFuture_programComponent_law
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
@@ -673,7 +673,7 @@ theorem OriginConfiguration.refreshFuture_programComponent_law
     (c : OriginConfiguration n) :
     ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
       (fun outcome =>
-        let intensity := ttcPseudocode.t b n threshold outcome.2
+        let intensity := ttcReference.t b n threshold outcome.2
         let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
           hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
         (ProbabilityTheory.poissonMeasure intensity).bind
@@ -686,9 +686,9 @@ theorem OriginConfiguration.refreshFuture_programComponent_law
                     (fun tape =>
                       ((c.refreshFuture pair.1).advance P intensity threshold
                         basePending preCoins pair.2 tape).state))))) =
-      ttcPseudocode.step (ttcSubroutines hn prep)
+      ttcReference.step (ttcSubroutines hn prep)
         b eta delta threshold P c.state := by
-  unfold ttcPseudocode.step
+  unfold ttcReference.step
   apply Measure.bind_congr_right
   apply Filter.Eventually.of_forall
   intro outcome

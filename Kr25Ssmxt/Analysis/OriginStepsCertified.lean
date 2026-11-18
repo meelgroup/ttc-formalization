@@ -23,7 +23,7 @@ noncomputable def originGivenVolumesStep
         d.route.2.1 d.route.2.2.1 d.route.2.2.2.1
           d.route.2.2.2.2).real {(x : LatticePoint n)} *
         ((unitInterval.toNNReal (survivalProbability level) *
-          ttcPseudocode.t b n threshold o.2 : NNReal) : Real)) }
+          ttcReference.t b n threshold o.2 : NNReal) : Real)) }
 
 theorem originGivenVolumesSteps_eq_ofFn_get
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)

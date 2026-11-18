@@ -1,7 +1,7 @@
 import Kr25Ssmxt.Analysis.CV18Admissible
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.EuclideanInball
 
 /-! A geometric bound on the concrete CV18 roundness parameter. -/

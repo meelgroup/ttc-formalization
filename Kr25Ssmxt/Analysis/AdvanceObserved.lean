@@ -132,20 +132,20 @@ theorem OriginConfiguration.refreshed_rateThinningResult_eq_of_prefix_eq
     (P : PolytopeData n) (intensity : NNReal) (threshold : Real)
     (a b : Nat × (Nat × Nat) → Bool)
     (hprefix : globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) a =
       globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) b) :
-    ttcPseudocode.firstLoopResult (c.state.removeComponent P)
+    ttcReference.firstLoopResult (c.state.removeComponent P)
       intensity threshold
       (sourceOldCoins c.origin
         (c.refreshFuture a).source.coins c.level) =
-    ttcPseudocode.firstLoopResult (c.state.removeComponent P)
+    ttcReference.firstLoopResult (c.state.removeComponent P)
       intensity threshold
       (sourceOldCoins c.origin
         (c.refreshFuture b).source.coins c.level) := by
-  let rounds := ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+  let rounds := ttcReference.firstLoopExit (c.state.removeComponent P)
     intensity threshold
   have ha := c.refreshFuture_oldCoins a
   have hb := c.refreshFuture_oldCoins b
@@ -186,15 +186,15 @@ theorem OriginConfiguration.refreshed_secondResult_eq_of_observations
     (basePending : Nat) (preCoins freshA freshB : Nat × Nat → Bool)
     (oldA oldB : Nat × (Nat × Nat) → Bool)
     (hfirst : globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldA =
       globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldB)
     (hsecond :
       let deleted := c.state.removeComponent P
-      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
-      let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+      let rounds := ttcReference.firstLoopExit deleted intensity threshold
+      let first := ttcReference.firstLoopResult deleted intensity threshold
         (sourceOldCoins c.origin
           (c.refreshFuture oldA).source.coins c.level)
       let preRounds := c.level + rounds
@@ -205,7 +205,7 @@ theorem OriginConfiguration.refreshed_secondResult_eq_of_observations
           preRounds basePending c.origin
           (globalSourceShift rounds oldB, freshB)) :
     let deleted := c.state.removeComponent P
-    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+    let rounds := ttcReference.firstLoopExit deleted intensity threshold
     let preRounds := c.level + rounds
     let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
     let active := fun fresh => originalSurvivorCoinRestriction preCoins
@@ -213,19 +213,19 @@ theorem OriginConfiguration.refreshed_secondResult_eq_of_observations
     let old := fun global => sourceOldCoins c.origin
       (c.refreshFuture global).source.coins c.level
     thinningResultSplitFinite
-      (ttcPseudocode.firstLoopResult deleted intensity threshold (old oldA))
+      (ttcReference.firstLoopResult deleted intensity threshold (old oldA))
       pending threshold (shiftCoins rounds (old oldA)) (active freshA) =
     thinningResultSplitFinite
-      (ttcPseudocode.firstLoopResult deleted intensity threshold (old oldB))
+      (ttcReference.firstLoopResult deleted intensity threshold (old oldB))
       pending threshold (shiftCoins rounds (old oldB)) (active freshB) := by
   let deleted := c.state.removeComponent P
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let old := fun global => sourceOldCoins c.origin
     (c.refreshFuture global).source.coins c.level
-  let firstA := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let firstA := ttcReference.firstLoopResult deleted intensity threshold
     (old oldA)
-  let firstB := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let firstB := ttcReference.firstLoopResult deleted intensity threshold
     (old oldB)
   have hfirstState : firstA = firstB :=
     c.refreshed_rateThinningResult_eq_of_prefix_eq P intensity threshold
@@ -279,11 +279,11 @@ theorem OriginConfiguration.refreshed_activeRounds_eq_pairStop
     (basePending : Nat) (preCoins fresh : Nat × Nat → Bool)
     (oldFuture : Nat × (Nat × Nat) → Bool) :
     let deleted := c.state.removeComponent P
-    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+    let rounds := ttcReference.firstLoopExit deleted intensity threshold
     let preRounds := c.level + rounds
     let old := sourceOldCoins c.origin
       (c.refreshFuture oldFuture).source.coins c.level
-    let first := ttcPseudocode.firstLoopResult deleted intensity threshold old
+    let first := ttcReference.firstLoopResult deleted intensity threshold old
     let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
     let active := originalSurvivorCoinRestriction preCoins preRounds
       deleted.nextLabel basePending fresh
@@ -293,11 +293,11 @@ theorem OriginConfiguration.refreshed_activeRounds_eq_pairStop
         basePending c.origin
         (globalSourceShift rounds oldFuture, fresh) := by
   let deleted := c.state.removeComponent P
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let old := sourceOldCoins c.origin
     (c.refreshFuture oldFuture).source.coins c.level
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold old
+  let first := ttcReference.firstLoopResult deleted intensity threshold old
   have hshift : shiftCoins rounds old =
       (fun pair : Nat × Nat =>
         globalSourceShift rounds oldFuture
@@ -330,15 +330,15 @@ theorem OriginConfiguration.refreshed_advance_level_eq_of_observations
     (oldA oldB : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n)
     (hfirst : globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldA =
       globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldB)
     (hsecond :
       let deleted := c.state.removeComponent P
-      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
-      let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+      let rounds := ttcReference.firstLoopExit deleted intensity threshold
+      let first := ttcReference.firstLoopResult deleted intensity threshold
         (sourceOldCoins c.origin
           (c.refreshFuture oldA).source.coins c.level)
       let preRounds := c.level + rounds
@@ -353,13 +353,13 @@ theorem OriginConfiguration.refreshed_advance_level_eq_of_observations
     ((c.refreshFuture oldB).advance P intensity threshold basePending
       preCoins freshB tape).level := by
   let deleted := c.state.removeComponent P
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let old := fun global => sourceOldCoins c.origin
     (c.refreshFuture global).source.coins c.level
-  let firstA := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let firstA := ttcReference.firstLoopResult deleted intensity threshold
     (old oldA)
-  let firstB := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let firstB := ttcReference.firstLoopResult deleted intensity threshold
     (old oldB)
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let active := fun fresh => originalSurvivorCoinRestriction preCoins
@@ -421,15 +421,15 @@ theorem OriginConfiguration.refreshed_advance_sourcePrefix_eq_of_observations
     (oldA oldB : Nat × (Nat × Nat) → Bool)
     (tape : Nat → LatticePoint n)
     (hfirst : globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldA =
       globalSourcePrefix
-        (ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+        (ttcReference.firstLoopExit (c.state.removeComponent P)
           intensity threshold) oldB)
     (hsecond :
       let deleted := c.state.removeComponent P
-      let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
-      let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+      let rounds := ttcReference.firstLoopExit deleted intensity threshold
+      let first := ttcReference.firstLoopResult deleted intensity threshold
         (sourceOldCoins c.origin
           (c.refreshFuture oldA).source.coins c.level)
       let preRounds := c.level + rounds
@@ -446,13 +446,13 @@ theorem OriginConfiguration.refreshed_advance_sourcePrefix_eq_of_observations
     originCoinPrefix nextA.level nextA.source.coins =
       originCoinPrefix nextB.level nextB.source.coins := by
   let deleted := c.state.removeComponent P
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := c.level + rounds
   let old := fun global => sourceOldCoins c.origin
     (c.refreshFuture global).source.coins c.level
-  let firstA := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let firstA := ttcReference.firstLoopResult deleted intensity threshold
     (old oldA)
-  let firstB := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let firstB := ttcReference.firstLoopResult deleted intensity threshold
     (old oldB)
   let stopA := survivorPairStop firstA threshold preCoins
     preRounds basePending c.origin

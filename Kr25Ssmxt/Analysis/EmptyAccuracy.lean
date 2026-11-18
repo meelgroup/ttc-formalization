@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.TheoremProof
 
 /-! The exact zero-component branch of the current paper TTC program. -/
@@ -12,8 +12,8 @@ theorem ttc_empty_accuracy
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (O : TTCOracles n k)
     (hempty : (O.preprocessing.run F hbounded).componentCount = 0) :
-    IsProbabilityMeasure (ttcPseudocode F hbounded p O) ∧
-    (ttcPseudocode F hbounded p O).real
+    IsProbabilityMeasure (ttcReference F hbounded p O) ∧
+    (ttcReference F hbounded p O).real
       {estimate | (estimate : Real) ∈
         Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
       1 - p.delta := by
@@ -36,7 +36,7 @@ theorem ttc_empty_accuracy
   have hset : MeasurableSet
       {estimate : NNReal | (estimate : Real) ∈ Arlib.relErr p.epsilon 0} :=
     measurableSet_Icc.preimage (by fun_prop)
-  simp only [ttcPseudocode, hempty, if_pos, hvolume]
+  simp only [ttcReference, hempty, if_pos, hvolume]
   constructor
   · infer_instance
   · have hmem : (0 : NNReal) ∈

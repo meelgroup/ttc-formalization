@@ -1,6 +1,6 @@
 import Kr25Ssmxt.Analysis.PrecisionRequirements
 import Kr25Ssmxt.Analysis.PrecisionAdequateSplit
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.DecimalLatticeComponentComparison
 import Kr25Ssmxt.Analysis.DecimalLatticeUnionComparison
 import Kr25Ssmxt.Analysis.DecompositionLatticePointsEq

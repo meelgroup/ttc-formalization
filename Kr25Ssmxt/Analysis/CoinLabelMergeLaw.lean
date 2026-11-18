@@ -125,10 +125,10 @@ theorem samplesAfter_mergeCoins_old
 theorem rateThinningResult_mergeCoinsAtLabel
     {n : Nat} (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (old fresh : Nat × Nat → Bool) (hfresh : s.LabelsFresh) :
-    ttcPseudocode.firstLoopResult s intensity threshold
+    ttcReference.firstLoopResult s intensity threshold
       (mergeCoinsAtLabel s.nextLabel old fresh) =
-    ttcPseudocode.firstLoopResult s intensity threshold old := by
-  simp only [ttcPseudocode.firstLoopResult,
+    ttcReference.firstLoopResult s intensity threshold old := by
+  simp only [ttcReference.firstLoopResult,
     samplesAfter_mergeCoins_old s _ old fresh hfresh]
 
 theorem shiftCoins_mergeCoinsAtLabel (boundary rounds : Nat)
@@ -460,25 +460,25 @@ theorem absolute_active_split_path
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (pending : Nat) (old fresh : Nat × Nat → Bool)
     (hfresh : s.LabelsFresh) :
-    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+    let rounds := ttcReference.firstLoopExit s intensity threshold
     ttcPseudocode.secondLoopResult
-      (ttcPseudocode.firstLoopResult s intensity threshold
+      (ttcReference.firstLoopResult s intensity threshold
         (mergeCoinsAtLabel s.nextLabel old fresh))
       pending threshold
       (shiftCoins rounds (mergeCoinsAtLabel s.nextLabel old fresh)) =
     thinningResultSplit
-      (ttcPseudocode.firstLoopResult s intensity threshold old)
+      (ttcReference.firstLoopResult s intensity threshold old)
       pending threshold (shiftCoins rounds old)
       (shiftCoins rounds fresh) := by
   dsimp only
   rw [rateThinningResult_mergeCoinsAtLabel s intensity threshold
     old fresh hfresh]
   rw [shiftCoins_mergeCoinsAtLabel s.nextLabel
-    (ttcPseudocode.firstLoopExit s intensity threshold) old fresh]
+    (ttcReference.firstLoopExit s intensity threshold) old fresh]
   exact thinningResult_mergeCoinsAtLabel
-    (ttcPseudocode.firstLoopResult s intensity threshold old)
-    pending threshold (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) old)
-    (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) fresh)
+    (ttcReference.firstLoopResult s intensity threshold old)
+    pending threshold (shiftCoins (ttcReference.firstLoopExit s intensity threshold) old)
+    (shiftCoins (ttcReference.firstLoopExit s intensity threshold) fresh)
     (rateThinningResult_labelsFresh s intensity threshold old hfresh)
 
 /-- A full active thinning stream can be replaced by independent old-copy and
@@ -488,19 +488,19 @@ theorem absolute_active_split_law
     (threshold : Real) (pending : Nat) (hfresh : s.LabelsFresh) :
     fairCoinStreamLaw.map (fun coins =>
       ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult s intensity threshold coins)
+        (ttcReference.firstLoopResult s intensity threshold coins)
         pending threshold
-        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) coins)) =
+        (shiftCoins (ttcReference.firstLoopExit s intensity threshold) coins)) =
     (fairCoinStreamLaw.prod fairCoinStreamLaw).map (fun pair =>
       thinningResultSplit
-        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
+        (ttcReference.firstLoopResult s intensity threshold pair.1)
         pending threshold
-        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1)
-        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.2)) := by
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+        (shiftCoins (ttcReference.firstLoopExit s intensity threshold) pair.1)
+        (shiftCoins (ttcReference.firstLoopExit s intensity threshold) pair.2)) := by
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   let result : (Nat × Nat → Bool) → TTCState n × Nat :=
     fun coins => ttcPseudocode.secondLoopResult
-      (ttcPseudocode.firstLoopResult s intensity threshold coins)
+      (ttcReference.firstLoopResult s intensity threshold coins)
       pending threshold (shiftCoins rounds coins)
   have hresult : Measurable result := by
     exact (measurable_thinningResult_joint threshold).comp
@@ -514,7 +514,7 @@ theorem absolute_active_split_law
   have hpath (pair : (Nat × Nat → Bool) × (Nat × Nat → Bool)) :
       result (merge pair) =
       thinningResultSplit
-        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
+        (ttcReference.firstLoopResult s intensity threshold pair.1)
         pending threshold (shiftCoins rounds pair.1)
         (shiftCoins rounds pair.2) :=
     absolute_active_split_path s intensity threshold pending

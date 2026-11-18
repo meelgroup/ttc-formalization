@@ -22,7 +22,7 @@ noncomputable def certifiedFixedLevelSteps
     (rate : NNReal) : List (FixedLevelStep S) :=
   fixedLevelComponentSteps D S (fun i x => Real.toNNReal
     ((pointLaw i).real {(x.1 : LatticePoint n)} *
-      ((ttcPseudocode.t b n threshold (volumeEstimate i) * rate : NNReal) : Real)))
+      ((ttcReference.t b n threshold (volumeEstimate i) * rate : NNReal) : Real)))
 
 theorem certifiedFixedLevelSteps_coverage
     {n k : Nat} {F : LRAFormula n k}
@@ -64,7 +64,7 @@ theorem certifiedFixedLevelSteps_envelope
   change step ∈ fixedLevelComponentSteps D S
     (fun i x => Real.toNNReal
       ((pointLaw i).real {(x.1 : LatticePoint n)} *
-        ((ttcPseudocode.t b n (p.Thresh D.componentCount)
+        ((ttcReference.t b n (p.Thresh D.componentCount)
           (volumeEstimate i) * rate : NNReal) : Real))) at hstep
   obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hstep
   exact concrete_component_step_envelope hn D p b hprecision

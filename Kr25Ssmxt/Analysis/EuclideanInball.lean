@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-! Basic facts about a component's maximal inscribed `ℓ₂` ball. -/
 

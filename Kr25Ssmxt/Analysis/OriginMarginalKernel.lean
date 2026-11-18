@@ -18,7 +18,7 @@ noncomputable def communityGhostStateStep
     (c : OriginConfiguration n) : Measure (TTCState n) :=
   ((ttcSubroutines hn prep).ComputeVolume P eta delta).bind
     (fun outcome =>
-      let intensity := ttcPseudocode.t b n threshold outcome.2
+      let intensity := ttcReference.t b n threshold outcome.2
       let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
         hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
       (ProbabilityTheory.poissonMeasure intensity).bind
@@ -42,7 +42,7 @@ theorem communityGhostStateStep_eq_program
     (c : OriginConfiguration n) :
     communityGhostStateStep hn prep P b eta delta threshold
       hroute c =
-    ttcPseudocode.step (ttcSubroutines hn prep)
+    ttcReference.step (ttcSubroutines hn prep)
       b eta delta threshold P c.state :=
   c.refreshFuture_programComponent_law hn prep P b eta delta threshold
     hroute
@@ -53,7 +53,7 @@ theorem measurable_community_programComponent
     (hthreshold : 0 < threshold)
     (hvolume : IsProbabilityMeasure
       ((ttcSubroutines hn prep).ComputeVolume P eta delta)) :
-    Measurable (ttcPseudocode.step
+    Measurable (ttcReference.step
       (ttcSubroutines hn prep) b eta delta threshold P) := by
   let volumeLaw := (ttcSubroutines hn prep).ComputeVolume
     P eta delta
@@ -87,9 +87,9 @@ theorem communityGhostStateStep_bind_eq_program
     μ.bind (communityGhostStateStep hn prep P b eta delta
       threshold hroute) =
     (μ.map (fun c => c.state)).bind
-      (ttcPseudocode.step (ttcSubroutines hn prep)
+      (ttcReference.step (ttcSubroutines hn prep)
         b eta delta threshold P) := by
-  let program := ttcPseudocode.step (ttcSubroutines hn prep)
+  let program := ttcReference.step (ttcSubroutines hn prep)
     b eta delta threshold P
   have hprogram : Measurable program :=
     measurable_community_programComponent hn prep P b eta delta

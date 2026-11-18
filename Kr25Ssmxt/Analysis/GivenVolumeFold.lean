@@ -63,7 +63,7 @@ theorem measurable_communityComponentGivenVolume
   unfold communityComponentGivenVolume
   exact (community_deletion_tail_fst hn prep 1 P b eta delta
     threshold hthreshold z.1
-    (ttcPseudocode.t b n threshold z.2.2)).symm
+    (ttcReference.t b n threshold z.2.2)).symm
 
 theorem communityComponentGivenVolume_isProbabilityMeasure
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -75,7 +75,7 @@ theorem communityComponentGivenVolume_isProbabilityMeasure
         threshold outcome state) := by
   have hmass := community_deletion_tail_mass_one
     hn prep 1 P b eta delta threshold hthreshold state
-    (ttcPseudocode.t b n threshold outcome.2)
+    (ttcReference.t b n threshold outcome.2)
   have hmap : IsProbabilityMeasure
       ((communityCostedComponentTail hn prep 1 P b eta delta threshold
         state outcome).map Prod.fst) := by
@@ -87,7 +87,7 @@ theorem communityComponentGivenVolume_isProbabilityMeasure
   unfold communityComponentGivenVolume
   rw [← community_deletion_tail_fst hn prep 1 P b eta delta
     threshold hthreshold state
-    (ttcPseudocode.t b n threshold outcome.2)]
+    (ttcReference.t b n threshold outcome.2)]
   exact hmap
 
 noncomputable def communityComponentsGivenVolumes
@@ -186,7 +186,7 @@ theorem measurable_communityProcessComponents
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
       ((ttcSubroutines hn prep).ComputeVolume P eta delta)) :
-    Measurable (ttcPseudocode.loop
+    Measurable (ttcReference.loop
       (ttcSubroutines hn prep) b eta delta threshold components) := by
   induction components with
   | nil => exact Measure.measurable_dirac
@@ -199,7 +199,7 @@ theorem measurable_communityProcessComponents
         intro Q hQ
         exact hvolume Q (by simp [hQ])
       let first : TTCState n → Measure (TTCState n) := fun state =>
-        ttcPseudocode.step (ttcSubroutines hn prep)
+        ttcReference.step (ttcSubroutines hn prep)
           b eta delta threshold P state
       have hfirst : Measurable first := by
         let volumeLaw := (ttcSubroutines hn prep).ComputeVolume
@@ -218,7 +218,7 @@ theorem measurable_communityProcessComponents
               threshold outcome state)
         exact hbase
       change Measurable (fun state => (first state).bind
-        (ttcPseudocode.loop (ttcSubroutines hn prep)
+        (ttcReference.loop (ttcSubroutines hn prep)
           b eta delta threshold rest))
       exact (Measure.measurable_bind' (ih hvolRest)).comp hfirst
 
@@ -230,7 +230,7 @@ theorem communityProcessComponents_eq_volumeVector_bind
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
       ((ttcSubroutines hn prep).ComputeVolume P eta delta))
     (state : TTCState n) :
-    ttcPseudocode.loop (ttcSubroutines hn prep)
+    ttcReference.loop (ttcSubroutines hn prep)
       b eta delta threshold components state =
     (communityVolumeVectorLaw hn prep eta delta components).bind
       (fun outcomes =>
@@ -238,7 +238,7 @@ theorem communityProcessComponents_eq_volumeVector_bind
           threshold components outcomes state) := by
   induction components generalizing state with
   | nil =>
-      simp [ttcPseudocode.loop, communityVolumeVectorLaw,
+      simp [ttcReference.loop, communityVolumeVectorLaw,
         communityComponentsGivenVolumes]
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
@@ -277,7 +277,7 @@ theorem communityProcessComponents_eq_volumeVector_bind
           (fun z : TTCState n × (Fin rest.length → VolumeOutcome) =>
             R z.2 z.1) := hR.comp measurable_swap
       have htail : Measurable
-          (ttcPseudocode.loop (ttcSubroutines hn prep)
+          (ttcReference.loop (ttcSubroutines hn prep)
             b eta delta threshold rest) :=
         measurable_communityProcessComponents
           hn prep b eta delta threshold hthreshold rest hvolRest
@@ -294,10 +294,10 @@ theorem communityProcessComponents_eq_volumeVector_bind
             hcoords
         exact h
       calc
-        ttcPseudocode.loop (ttcSubroutines hn prep)
+        ttcReference.loop (ttcSubroutines hn prep)
             b eta delta threshold (P :: rest) state =
           μ.bind (fun outcome => (G outcome).bind
-            (ttcPseudocode.loop
+            (ttcReference.loop
               (ttcSubroutines hn prep)
               b eta delta threshold rest)) := by
                 change (μ.bind G).bind _ = _

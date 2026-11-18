@@ -5,6 +5,7 @@ import Kr25Ssmxt.Analysis.GetPrecisionBound
 import Kr25Ssmxt.Analysis.Theorem3ExplicitBound
 import Kr25Ssmxt.Analysis.RunMarginal
 import Kr25Ssmxt.Analysis.TheoremOneFinal
+import Kr25Ssmxt.Analysis.TTCSimulation
 
 namespace Kr25Ssmxt
 
@@ -15,13 +16,14 @@ open MeasureTheory
 
 Both statements concern `ttc`, the TTC algorithm printed in the
 current paper (Algorithm 1), run with the concrete arlib-community CV18 volume
-oracle (clipped as in the paper) and the normalized Hit-and-Run/KV97 sampler.
+oracle and the normalized Hit-and-Run/KV97 sampler.
 
 Where the definitions are:
-* `Model/Program.lean` — `ttcPseudocode F params O`: Algorithm 1's control flow (loops, thinning,
-  Poisson draw, output `Est`) with its subroutines `O` left open.
+* `Model/Program.lean` — `ttcPseudocode F params O`: Algorithm 1's control flow (`p ← Thresh`,
+  the rate check `k ← ⌈log₂ (t p / Thresh)⌉`, thinning, Poisson draw, the halving loop,
+  output `Est = |X| / (p · 10^{bn})`) with its subroutines `O` left open.
 * `Model/Run.lean` — the concrete subroutines (`GetPrecision` via the Chebyshev LP,
-  `ComputeVolume` = CV18 + clipping, `GenerateSamples` = Hit-and-Run + KV97 rounding +
+  `ComputeVolume` = CV18, `GenerateSamples` = Hit-and-Run + KV97 rounding +
   rejection), and `ttc := ttcPseudocode F params (those subroutines)`, the object of Theorem 1.
   `ttcWithCost` is the same run with operation counts, the object of Theorem 3.
 
@@ -54,6 +56,7 @@ theorem ttc_theorem1_volume_accuracy
       (estimate : Real) ∈
         Arlib.relErr params.epsilon (MeasureTheory.volume (solutionSet F)).toReal] ≥
       1 - params.delta := by
+  rw [ttc_eq_ttcRef]
   exact community_ttc_volume_accuracy hn F hbounded params prep
 
 /-- Corrected Theorem 3.
@@ -82,6 +85,7 @@ theorem ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
           TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := by
   dsimp only
+  rw [ttcWithCost_eq_ttcRefWithCost, ttc_eq_ttcRef]
   refine ⟨fun S hS => ?_, ttc_expected_runtime_theorem3_explicit hn F hbounded p prep
     preprocessingOperations⟩
   rw [← community_costed_output_fst hn F hbounded p prep preprocessingOperations 1,
@@ -96,7 +100,7 @@ theorem ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
   TTCRuntime.deletionPassOperations TTCRuntime.rateThinningRoundOperations
   TTCRuntime.countThinningRoundOperations TTCRuntime.samplingAttemptOperations
   TTCRuntime.poissonDrawOperations TTCRuntime.appendCopyOperations
-  ttcPseudocode.firstLoopWithCost ttcPseudocode.secondLoopWithCost
+  ttcPseudocode.rateCheckWithCost ttcPseudocode.secondLoopWithCost
 
 /-!
 Both public statements are recursively sealed above.  `ttc` and every

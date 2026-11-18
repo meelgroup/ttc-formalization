@@ -17,7 +17,7 @@ theorem OriginConfiguration.advance_source_eq_stepPoissonTape
       c.source.stepPoissonTape P c.state.nextLabel
         (basePending,
           spliceCoins preCoins future
-            (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+            (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
               intensity threshold), tape) := by
   rw [c.advance_source P intensity threshold basePending preCoins future
     tape]
@@ -37,7 +37,7 @@ theorem OriginConfiguration.advance_source_fixedLevel_pointCounts
         poissonTapePointCounts S c.state.nextLabel level
           (basePending,
             spliceCoins preCoins future
-              (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+              (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
                 intensity threshold), tape) x := by
   rw [c.advance_source_eq_stepPoissonTape P intensity threshold
     basePending preCoins future tape]

@@ -13,7 +13,7 @@ theorem communityComponentGivenVolume_absolute_predraw
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (outcome : VolumeOutcome) (state : TTCState n)
     (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :
-    let intensity := ttcPseudocode.t b n threshold outcome.2
+    let intensity := ttcReference.t b n threshold outcome.2
     let deleted := state.removeComponent P
     communityComponentGivenVolume hn prep P b eta delta threshold
       outcome state =
@@ -21,28 +21,28 @@ theorem communityComponentGivenVolume_absolute_predraw
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
           ttcPseudocode.secondLoopResult
-            (ttcPseudocode.firstLoopResult deleted intensity threshold activeCoins)
+            (ttcReference.firstLoopResult deleted intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + ttcPseudocode.firstLoopExit deleted intensity threshold)
+              (level + ttcReference.firstLoopExit deleted intensity threshold)
               deleted.nextLabel basePending)
             threshold
-            (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+            (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
               activeCoins)).bind fun second =>
         ((ttcSubroutines hn prep).GenerateSamples P second.2
-          b eta delta).map fun batch => second.1.addBatch batch := by
+          b eta).map fun batch => second.1.addBatch batch := by
   dsimp only
-  let intensity := ttcPseudocode.t b n threshold outcome.2
+  let intensity := ttcReference.t b n threshold outcome.2
   let deleted := state.removeComponent P
   let K : TTCState n × Nat → Measure (TTCState n) := fun second =>
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map fun batch => second.1.addBatch batch
+      b eta).map fun batch => second.1.addBatch batch
   have hK : Measurable K := by
     have hcost := community_sample_append_kernel_measurable
       hn prep 1 P b eta delta
     have heq : K = fun second : TTCState n × Nat =>
         (costedBind
           ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
-            P second.2 b eta delta)
+            P second.2 b eta)
           (fun batch => costedCharge
             (Measure.dirac (second.1.addBatch batch))
             (second.2 * TTCRuntime.appendCopyOperations))).map Prod.fst := by
@@ -51,7 +51,7 @@ theorem communityComponentGivenVolume_absolute_predraw
         second.2 b eta delta second.1).symm
     rw [heq]
     exact (Measure.measurable_map _ measurable_fst).comp hcost
-  let firstLaw := ttcPseudocode.firstLoop deleted intensity threshold
+  let firstLaw := ttcReference.firstLoop deleted intensity threshold
   let pendingLaw : TTCState n → Measure Nat :=
     fun first => poissonMeasure (intensity * first.p)
   let secondLaw : TTCState n → Measure (TTCState n × Nat) :=

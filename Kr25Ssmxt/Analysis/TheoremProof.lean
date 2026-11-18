@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.PreludeProof
 import Kr25Ssmxt.Analysis.TtcVolumeAccuracyLatticeComparison
 

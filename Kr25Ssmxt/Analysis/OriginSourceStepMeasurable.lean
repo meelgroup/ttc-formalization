@@ -191,13 +191,13 @@ theorem OriginConfiguration.measurable_advance_source_joint
       (comap_measurable (fun s : TTCState n =>
         (s.p, s.X, s.nextLabel)))).comp hstate
   have hround : Measurable (fun c : OriginConfiguration n =>
-      ttcPseudocode.firstLoopExit (c.state.removeComponent P) intensity
+      ttcReference.firstLoopExit (c.state.removeComponent P) intensity
         threshold) :=
     (measurable_rateExit_joint threshold hthreshold).comp
       (((measurable_removeComponent P).comp hstate).prodMk
         measurable_const)
   have hpre : Measurable (fun c : OriginConfiguration n =>
-      c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+      c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold) :=
     measurable_originConfiguration_level.add hround
   have heq : (fun z : OriginConfiguration n ×
@@ -208,7 +208,7 @@ theorem OriginConfiguration.measurable_advance_source_joint
         { component := P
           firstLabel := z.1.state.nextLabel
           basePending := basePending
-          preRounds := z.1.level + ttcPseudocode.firstLoopExit
+          preRounds := z.1.level + ttcReference.firstLoopExit
             (z.1.state.removeComponent P) intensity threshold
           preCoins := preCoins
           futureCoins := future

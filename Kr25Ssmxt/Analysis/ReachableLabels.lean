@@ -58,8 +58,8 @@ theorem ae_bind_of_ae {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 
 theorem rateThinUntil_labelsFresh {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) (h : s.LabelsFresh) :
-    ∀ᵐ t ∂ttcPseudocode.firstLoop s intensity threshold, t.LabelsFresh := by
-  unfold ttcPseudocode.firstLoop
+    ∀ᵐ t ∂ttcReference.firstLoop s intensity threshold, t.LabelsFresh := by
+  unfold ttcReference.firstLoop
   rw [ae_map_iff
     (measurable_rateThinningResult s intensity threshold).aemeasurable
     measurableSet_labelsFresh]
@@ -80,7 +80,7 @@ theorem thinUntil_labelsFresh {n : Nat} (s : TTCState n)
 theorem sample_append_labelsFresh {n k : Nat} (O : TTCOracles n k)
     (P : PolytopeData n) (s : TTCState n) (count b : Nat)
     (ε' δ' : Real) (h : s.LabelsFresh) :
-    ∀ᵐ result ∂(O.GenerateSamples P count b ε' δ').map
+    ∀ᵐ result ∂(O.GenerateSamples P count b ε').map
       (fun batch => s.addBatch batch), result.LabelsFresh := by
   have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch) :=
     measurable_addBatch.comp (measurable_const.prodMk measurable_id)

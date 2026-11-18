@@ -1,7 +1,7 @@
 import Kr25Ssmxt.Analysis.OracleContracts
 import Kr25Ssmxt.Analysis.MathlibCompat
 import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-!
 # Adapting a normalized CV18 volume law to TTC

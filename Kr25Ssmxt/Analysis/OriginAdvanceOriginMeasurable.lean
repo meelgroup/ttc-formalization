@@ -12,7 +12,7 @@ noncomputable def originAdvanceActiveFullCoins
     (preCoins future : Nat × Nat → Bool)
     (c : OriginConfiguration n) : Nat × Nat → Bool :=
   let deleted := c.state.removeComponent P
-  let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
+  let preRounds := c.level + ttcReference.firstLoopExit deleted intensity threshold
   pendingCoinExtension deleted.nextLabel
     (pendingAfter preCoins preRounds deleted.nextLabel basePending)
     (originalSurvivorCoinRestriction preCoins preRounds deleted.nextLabel
@@ -33,7 +33,7 @@ noncomputable def originAdvanceSecondCount
     (preCoins future : Nat × Nat → Bool)
     (c : OriginConfiguration n) : Nat :=
   let deleted := c.state.removeComponent P
-  let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
+  let preRounds := c.level + ttcReference.firstLoopExit deleted intensity threshold
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   pendingAfter
     (originAdvanceActiveFullCoins P intensity threshold
@@ -68,7 +68,7 @@ noncomputable def originAdvanceIndex
     (preCoins future : Nat × Nat → Bool)
     (c : OriginConfiguration n) : Nat → Nat := fun i =>
   let deleted := c.state.removeComponent P
-  let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
+  let preRounds := c.level + ttcReference.firstLoopExit deleted intensity threshold
   twoStageSurvivorLabelOrZero preCoins
     (originAdvanceActiveFullCoins P intensity threshold
       basePending preCoins future c)
@@ -86,7 +86,7 @@ theorem measurable_originAdvanceIndex
   have hcontrols := OriginConfiguration.measurable_advance_controls
     P intensity threshold hthreshold
   have hpre : Measurable (fun c : OriginConfiguration n =>
-      c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+      c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold) := measurable_fst.comp hcontrols
   have hlabel : Measurable (fun c : OriginConfiguration n =>
       (c.state.removeComponent P).nextLabel) :=
@@ -152,16 +152,16 @@ theorem OriginConfiguration.advance_origin_eq_total
       originAdvanceOriginTotal P intensity threshold basePending
         preCoins future c := by
   let deleted := c.state.removeComponent P
-  let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
+  let preRounds := c.level + ttcReference.firstLoopExit deleted intensity threshold
   let pending := pendingAfter preCoins preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     (sourceOldCoins c.origin c.source.coins c.level)
   let activeRounds := originSplitExit P intensity threshold
     basePending preCoins future c
   let second := thinningResultSplitFinite first pending threshold
-    (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+    (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
       (sourceOldCoins c.origin c.source.coins c.level)) activeCoins
   have hcount : originAdvanceSecondCount P intensity threshold
       basePending preCoins future c = second.2 := rfl

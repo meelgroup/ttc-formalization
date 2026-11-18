@@ -24,8 +24,8 @@ theorem no_first_halving_at_cutoff
     (hrate : (s.p : Real) =
       1 / (2 : Real) ^
         (dyadicCutoff (D.latticePoints b).ncard - 1)) :
-    ttcPseudocode.firstLoopExit s
-      (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeEstimate)
+    ttcReference.firstLoopExit s
+      (ttcReference.t b n (p.Thresh D.componentCount) volumeEstimate)
       (p.Thresh D.componentCount) = 0 := by
   let count := (D.latticePoints b).ncard
   have hcount : 0 < count :=
@@ -40,7 +40,7 @@ theorem no_first_halving_at_cutoff
     ((D.component i).carrier ∩ decimalLattice b n).ncard count
     hcomponentCount hvolume hlattice
   exact rateExit_zero_at_cutoff s
-    (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeEstimate)
+    (ttcReference.t b n (p.Thresh D.componentCount) volumeEstimate)
     count hcount (p.Thresh D.componentCount)
     (p.threshold_pos D.componentCount) hrate hintensity
 
@@ -59,8 +59,8 @@ theorem no_first_halving_past_cutoff
     (s : TTCState n) (level : Nat)
     (hlevel : level ≤ dyadicCutoff (D.latticePoints b).ncard - 1)
     (hrate : s.p = 1 / (2 : NNReal) ^ level) :
-    ttcPseudocode.firstLoopExit s
-      (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeEstimate)
+    ttcReference.firstLoopExit s
+      (ttcReference.t b n (p.Thresh D.componentCount) volumeEstimate)
       (p.Thresh D.componentCount) ≤
         dyadicCutoff (D.latticePoints b).ncard - 1 - level := by
   let count := (D.latticePoints b).ncard
@@ -77,7 +77,7 @@ theorem no_first_halving_past_cutoff
     ((D.component i).carrier ∩ decimalLattice b n).ncard count
     hcomponentCount hvolume hlattice
   exact rateExit_le_cutoff_gap s
-    (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeEstimate)
+    (ttcReference.t b n (p.Thresh D.componentCount) volumeEstimate)
     count hcount (p.Thresh D.componentCount)
     (p.threshold_pos D.componentCount) level hlevel hrate hintensity
 

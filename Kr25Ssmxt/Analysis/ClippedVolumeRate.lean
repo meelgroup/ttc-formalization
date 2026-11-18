@@ -151,7 +151,7 @@ theorem Decomposition.rate_clog_le_precision_outerRadius
     let v := max ((D.component i).volumeClipLower p.ε')
       ((D.component i).volumeClipUpper p.ε')
     Nat.clog 2
-      (Nat.ceil (((ttcPseudocode.t b n (p.Thresh D.componentCount) v : NNReal) :
+      (Nat.ceil (((ttcReference.t b n (p.Thresh D.componentCount) v : NNReal) :
         Real) / p.Thresh D.componentCount) + 1) ≤
       4 * (b * n) + 2 + n * Nat.clog 2
         (Nat.ceil (4 * TTCRuntime.theorem3OuterRadiusMax D) + 1) := by

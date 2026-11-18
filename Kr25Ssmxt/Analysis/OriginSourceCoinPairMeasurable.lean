@@ -208,7 +208,7 @@ theorem OriginConfiguration.measurable_advance_source_coinPair
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
       ((z.1.1.state.removeComponent P).nextLabel,
-        z.1.1.level + ttcPseudocode.firstLoopExit
+        z.1.1.level + ttcReference.firstLoopExit
           (z.1.1.state.removeComponent P) intensity threshold)) :=
     (measurable_snd.comp hcontrols).prodMk
       (measurable_fst.comp hcontrols)
@@ -230,7 +230,7 @@ theorem OriginConfiguration.measurable_advance_source_coinPair
         z.1.2.2 z.2).source) =
       (fun z => originSourceStepCoinPair P basePending
         (((z.1.1.state.removeComponent P).nextLabel,
-            z.1.1.level + ttcPseudocode.firstLoopExit
+            z.1.1.level + ttcReference.firstLoopExit
               (z.1.1.state.removeComponent P) intensity threshold),
           ((z.1.1.source, z.2), z.1.2))) := by
     funext z
@@ -254,7 +254,7 @@ theorem OriginConfiguration.measurable_advance_level_coinPair
       (OriginConfiguration n ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
-      z.1.1.level + ttcPseudocode.firstLoopExit
+      z.1.1.level + ttcReference.firstLoopExit
         (z.1.1.state.removeComponent P) intensity threshold) :=
     (measurable_fst.comp
       (OriginConfiguration.measurable_advance_controls
@@ -274,7 +274,7 @@ theorem OriginConfiguration.measurable_advance_level_coinPair
         (Nat → LatticePoint n) =>
       (z.1.1.advance P intensity threshold basePending z.1.2.1
         z.1.2.2 z.2).level) =
-      (fun z => z.1.1.level + ttcPseudocode.firstLoopExit
+      (fun z => z.1.1.level + ttcReference.firstLoopExit
           (z.1.1.state.removeComponent P) intensity threshold +
         originCoinPairSplitExit P intensity threshold
           basePending z.1) := by

@@ -459,8 +459,8 @@ theorem twoStageComponent_pointCounts_eq_absoluteTape
     let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
       s.nextLabel basePending future
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-    let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
+    let rounds := ttcReference.firstLoopExit s intensity threshold
+    let first := ttcReference.firstLoopResult s intensity threshold oldCoins
     let second := thinningResultSplitFinite first pending threshold
       (shiftCoins rounds oldCoins) activeCoins
     let activeRounds := firstExitRoundSplit first pending threshold
@@ -478,8 +478,8 @@ theorem twoStageComponent_pointCounts_eq_absoluteTape
   let activeCoins := originalSurvivorCoinRestriction preCoins preRounds
     s.nextLabel basePending future
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-  let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
+  let rounds := ttcReference.firstLoopExit s intensity threshold
+  let first := ttcReference.firstLoopResult s intensity threshold oldCoins
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds oldCoins) activeCoins
   let activeRounds := firstExitRoundSplit first pending threshold
@@ -520,8 +520,8 @@ theorem community_twoStage_sampler_tape
     (activeCoins : Nat × Fin
       (pendingAfter preCoins preRounds s.nextLabel basePending) → Bool) :
     let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-    let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
+    let rounds := ttcReference.firstLoopExit s intensity threshold
+    let first := ttcReference.firstLoopResult s intensity threshold oldCoins
     let second := thinningResultSplitFinite first pending threshold
       (shiftCoins rounds oldCoins) activeCoins
     let activeRounds := firstExitRoundSplit first pending threshold
@@ -530,7 +530,7 @@ theorem community_twoStage_sampler_tape
     let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcSubroutines hn prep).GenerateSamples P second.2
-      b eta delta).map (fun batch => second.1.addBatch batch) =
+      b eta).map (fun batch => second.1.addBatch batch) =
     (Measure.infinitePi (fun _ : Nat => pointLaw)).map
       (fun tape => second.1.addBatch
         (fun i : Fin second.2 => tape
@@ -538,8 +538,8 @@ theorem community_twoStage_sampler_tape
             activeCoins activeRounds i))) := by
   dsimp only
   let pending := pendingAfter preCoins preRounds s.nextLabel basePending
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-  let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
+  let rounds := ttcReference.firstLoopExit s intensity threshold
+  let first := ttcReference.firstLoopResult s intensity threshold oldCoins
   let second := thinningResultSplitFinite first pending threshold
     (shiftCoins rounds oldCoins) activeCoins
   let activeRounds := firstExitRoundSplit first pending threshold

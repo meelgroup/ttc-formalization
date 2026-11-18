@@ -263,9 +263,9 @@ def OriginMarked {n : Nat} (s : TTCState n)
 theorem originMarked_initial {n : Nat}
     (origin : Nat → Nat × Nat)
     (marks : Nat × Nat → LatticePoint n) :
-    OriginMarked (TTCState.initial n) origin marks := by
+    OriginMarked (TTCState.unitInitial n) origin marks := by
   intro copy hcopy
-  simp [TTCState.initial] at hcopy
+  simp [TTCState.unitInitial] at hcopy
 
 theorem originMarked_removeComponent {n : Nat}
     (s : TTCState n) (P : PolytopeData n)
@@ -296,7 +296,7 @@ theorem originMarked_rateThinningResult {n : Nat}
     (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) :
     OriginMarked
-      (ttcPseudocode.firstLoopResult s intensity threshold coins)
+      (ttcReference.firstLoopResult s intensity threshold coins)
       origin marks := by
   classical
   intro copy hcopy
@@ -433,9 +433,9 @@ def OriginSurvives {n : Nat} (s : TTCState n)
 theorem originSurvives_initial {n : Nat}
     (origin : Nat → Nat × Nat)
     (sources : Nat → Nat × Nat → Bool) :
-    OriginSurvives (TTCState.initial n) origin sources 0 := by
+    OriginSurvives (TTCState.unitInitial n) origin sources 0 := by
   intro copy hcopy
-  simp [TTCState.initial] at hcopy
+  simp [TTCState.unitInitial] at hcopy
 
 theorem originSurvives_removeComponent {n : Nat}
     (s : TTCState n) (P : PolytopeData n)
@@ -496,8 +496,8 @@ theorem originSurvives_twoLoops {n : Nat}
     (activeCoins : Nat × Fin pending → Bool)
     (h : OriginSurvives s origin sources level) :
     let oldCoins := sourceOldCoins origin sources level
-    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-    let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
+    let rounds := ttcReference.firstLoopExit s intensity threshold
+    let first := ttcReference.firstLoopResult s intensity threshold oldCoins
     let activeRounds := firstExitRoundSplit first pending threshold
       (shiftCoins rounds oldCoins)
       (pendingCoinExtension s.nextLabel pending activeCoins)
@@ -507,8 +507,8 @@ theorem originSurvives_twoLoops {n : Nat}
       (level + rounds + activeRounds) := by
   dsimp only
   let oldCoins := sourceOldCoins origin sources level
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-  let first := ttcPseudocode.firstLoopResult s intensity threshold oldCoins
+  let rounds := ttcReference.firstLoopExit s intensity threshold
+  let first := ttcReference.firstLoopResult s intensity threshold oldCoins
   let activeRounds := firstExitRoundSplit first pending threshold
     (shiftCoins rounds oldCoins)
     (pendingCoinExtension s.nextLabel pending activeCoins)
@@ -591,9 +591,9 @@ def OriginValid {n : Nat} (s : TTCState n)
 
 theorem originValid_initial {n : Nat}
     (origin : Nat → Nat × Nat) :
-    OriginValid (TTCState.initial n) origin ∅ := by
+    OriginValid (TTCState.unitInitial n) origin ∅ := by
   intro copy hcopy
-  simp [TTCState.initial] at hcopy
+  simp [TTCState.unitInitial] at hcopy
 
 theorem originValid_removeComponent {n : Nat}
     (s : TTCState n) (P : PolytopeData n)
@@ -611,7 +611,7 @@ theorem originValid_rateThinningResult {n : Nat}
     (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) :
     OriginValid
-      (ttcPseudocode.firstLoopResult s intensity threshold coins)
+      (ttcReference.firstLoopResult s intensity threshold coins)
       origin valid := by
   classical
   intro copy hcopy
@@ -666,7 +666,7 @@ def OriginComplete {n : Nat} (s : TTCState n)
 theorem originComplete_initial {n : Nat}
     (origin : Nat → Nat × Nat)
     (sources : Nat → Nat × Nat → Bool) :
-    OriginComplete (TTCState.initial n) origin ∅ sources 0 := by
+    OriginComplete (TTCState.unitInitial n) origin ∅ sources 0 := by
   intro tag htag
   simp at htag
 

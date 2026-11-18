@@ -71,9 +71,9 @@ theorem rateThinningResult_congr_allocated {n : Nat}
     (h : s.LabelsFresh) (coins other : Nat × Nat → Bool)
     (hagrees : ∀ round label, label < s.nextLabel →
       coins (round, label) = other (round, label)) :
-    ttcPseudocode.firstLoopResult s intensity threshold coins =
-      ttcPseudocode.firstLoopResult s intensity threshold other := by
-  simp only [ttcPseudocode.firstLoopResult,
+    ttcReference.firstLoopResult s intensity threshold coins =
+      ttcReference.firstLoopResult s intensity threshold other := by
+  simp only [ttcReference.firstLoopResult,
     samplesAfter_congr_allocated s _ h coins other hagrees]
 
 theorem firstExitRoundSplit_congr_old_allocated {n : Nat}

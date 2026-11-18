@@ -17,11 +17,13 @@ quoted in the section headers. The subroutines `BooleanAbstraction`, `toDNF`,
 `Model/Run.lean` fills them, and its `ttc` is the algorithm the theorems are about.
 
 Random choices are composed with `Measure.bind`, so every adaptive call is a fresh
-conditional draw. "Remove every element of `X` with probability 1/2" is realised by an
-infinite stream of independent fair coins, one per round and per labelled copy; the two
-unbounded `while` loops are their first-exit semantics under that stream (`sInf` totalises
-the null set of streams on which no exit occurs). Labelling the `N` pending Poisson copies
-too makes the second loop's `N ← Binomial(N, 1/2)` the same coins' survivor count.
+conditional draw. Random deletions are realised by an infinite stream of independent fair
+coins, one per round and per labelled copy: "remove every element of `X` with probability
+`1 - 2^{-k}`" keeps a copy when its first `k` coins all show `true`, and "remove every element
+of `X` with probability 1/2" is one round. The unbounded `while` loop is its first-exit
+semantics under that stream (`sInf` totalises the null set of streams on which no exit
+occurs). Labelling the `N` pending Poisson copies too makes that loop's
+`N ← Binomial(N, 1/2)` the same coins' survivor count.
 -/
 
 noncomputable section
@@ -83,11 +85,11 @@ structure TTCOracles (n k : Nat) where
   choosePrecision : {F : LRAFormula n k} → (D : Decomposition F) → (p : ApproxParams) → Nat
   /-- `ComputeVolume(Pᵢ, ε', δ')` (line `line:volume`). -/
   ComputeVolume : PolytopeData n → Real → Real → Measure VolumeOutcome
-  /-- `GenerateSamples(Pᵢ, Nᵢ, b, ε', δ')` (line `line:sample`). -/
+  /-- `GenerateSamples(Kᵢ, Nᵢ, b, ε')` (line `line:sample`). -/
   GenerateSamples : (P : PolytopeData n) → (count b : Nat) →
-    Real → Real → Measure (SampleBatch n count)
+    Real → Measure (SampleBatch n count)
 
-/-! ## Line `line:candidate`: `p ← 1`, `X ← ∅` -/
+/-! ## `p ← Thresh`, `X ← ∅` -/
 
 /-- The state of Algorithm `ttc`: the probability `p`, the multiset `X` of labelled
 lattice copies, and the next fresh label. -/
@@ -104,17 +106,17 @@ matches the paper's lattice-supported execution and makes its finite control sta
 instance TTCState.instMeasurableSpace (n : Nat) : MeasurableSpace (TTCState n) :=
   MeasurableSpace.comap (fun s => (s.p, s.X, s.nextLabel)) inferInstance
 
-/-- `p ← 1`, `X ← ∅`. -/
-def TTCState.initial (n : Nat) : TTCState n where
-  p := 1
+/-- `p ← Thresh`, `X ← ∅`. -/
+def TTCState.initial (n : Nat) (Thresh : Real) : TTCState n where
+  p := Real.toNNReal Thresh
   X := ∅
   nextLabel := 0
 
-/-! ## Line `line:volume`: `t ← Thresh · 10^{bn} · ComputeVolume(Pᵢ, ε', δ')` -/
+/-! ## Line `line:volume`: `t ← 10^{bn} · ComputeVolume(Kᵢ, ε', δ')` -/
 
-/-- `t = Thresh · 10^{bn} · v` for a `ComputeVolume` estimate `v`. -/
-def ttcPseudocode.t (b n : Nat) (Thresh : Real) (volumeEstimate : NNReal) : NNReal :=
-  Real.toNNReal Thresh * (10 : NNReal) ^ (b * n) * volumeEstimate
+/-- `t = 10^{bn} · v` for a `ComputeVolume` estimate `v`. -/
+def ttcPseudocode.t (b n : Nat) (volumeEstimate : NNReal) : NNReal :=
+  (10 : NNReal) ^ (b * n) * volumeEstimate
 
 /-! ## Line `line:inside-remove`: remove from `X` every `s ∈ Pᵢ` -/
 
@@ -154,26 +156,32 @@ def pendingAfter (coins : Nat × Nat → Bool) (rounds firstLabel count : Nat) :
     exact ((Finset.range count).filter
       (fun i => survives coins rounds (firstLabel + i))).card
 
-/-! ## Line `line:prob-remove`: `while p ≥ Thresh / t`, halve `X` and `p` -/
+/-! ## Lines `line:check-threshold` to `line:final-remove`:
+`if t p ≥ Thresh`: `k ← ⌈log₂ (t p / Thresh)⌉`, `p ← p · 2^{-k}`,
+remove every element of `X` with probability `1 - 2^{-k}` -/
 
-/-- The first `while` guard becomes false after this many halvings. -/
-def ttcPseudocode.firstLoopExit {n : Nat} (s : TTCState n) (t : NNReal)
+/-- The exponent `k` of lines `line:check-threshold` and `line:final-k`; it is `0` when the
+guard `t p ≥ Thresh` fails, so that the state is left unchanged. -/
+def ttcPseudocode.rateHalvings {n : Nat} (s : TTCState n) (t : NNReal)
     (Thresh : Real) : Nat :=
-  sInf {rounds : Nat |
-    ((t * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) < Thresh}
+  if Thresh ≤ ((t * s.p : NNReal) : Real) then
+    Nat.ceil (Real.logb 2 (((t * s.p : NNReal) : Real) / Thresh))
+  else 0
 
-/-- The state when the first `while` loop exits. -/
-def ttcPseudocode.firstLoopResult {n : Nat} (s : TTCState n)
+/-- `p ← p · 2^{-k}` and "remove every element of `X` with probability `1 - 2^{-k}`": a copy
+is kept exactly when its `k` independent fair coins all show `true`, which happens with
+probability `2^{-k}`, independently across copies. -/
+def ttcPseudocode.rateCheckResult {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) (coins : Nat × Nat → Bool) : TTCState n :=
-  let rounds := ttcPseudocode.firstLoopExit s t Thresh
-  { p := s.p / (2 : NNReal) ^ rounds
-    X := samplesAfter coins rounds s.X
+  let k := ttcPseudocode.rateHalvings s t Thresh
+  { p := s.p / (2 : NNReal) ^ k
+    X := samplesAfter coins k s.X
     nextLabel := s.nextLabel }
 
-/-- The first `while` loop. -/
-def ttcPseudocode.firstLoop {n : Nat} (s : TTCState n)
+/-- Lines `line:check-threshold` to `line:final-remove`. -/
+def ttcPseudocode.rateCheck {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) : Measure (TTCState n) :=
-  fairCoinStreamLaw.map (ttcPseudocode.firstLoopResult s t Thresh)
+  fairCoinStreamLaw.map (ttcPseudocode.rateCheckResult s t Thresh)
 
 /-! ## `Nᵢ ← Poisson(t · p)` -/
 
@@ -208,7 +216,7 @@ def ttcPseudocode.secondLoop {n : Nat} (s : TTCState n) (N : Nat)
     (Thresh : Real) : Measure (TTCState n × Nat) :=
   fairCoinStreamLaw.map (ttcPseudocode.secondLoopResult s N Thresh)
 
-/-! ## Line `line:sample`: `S ← GenerateSamples(Pᵢ, Nᵢ, b, ε', δ')`; `X.Append(S)` -/
+/-! ## Line `line:sample`: `S ← GenerateSamples(Kᵢ, Nᵢ, b, ε')`; `X.Append(S)` -/
 
 /-- `X.Append(S)`, giving the new copies fresh labels so multiplicity is kept. -/
 def TTCState.addBatch {n count : Nat} (s : TTCState n)
@@ -221,28 +229,26 @@ def TTCState.addBatch {n count : Nat} (s : TTCState n)
       X := s.X ∪ added
       nextLabel := s.nextLabel + count }
 
-/-! ## Line `line:output`: output `|X| / (p · Thresh · 10^{bn})` -/
+/-! ## Line `line:output`: output `|X| / (p · 10^{bn})` -/
 
-/-- The output `Est = |X| / (p · Thresh · 10^{bn})`. -/
-def Est {n : Nat} (b : Nat) (Thresh : Real)
-    (s : TTCState n) : NNReal :=
-  (s.X.card : NNReal) /
-    (s.p * Real.toNNReal Thresh * (10 : NNReal) ^ (b * n))
+/-- The output `Est = |X| / (p · 10^{bn})`. -/
+def Est {n : Nat} (b : Nat) (s : TTCState n) : NNReal :=
+  (s.X.card : NNReal) / (s.p * (10 : NNReal) ^ (b * n))
 
 /-! ## The algorithm -/
 
 /-- One iteration of the `for` loop (lines `line:final-for-sketch-begin` to
-`line:final-for-sketch-end`) on the polytope `Pᵢ`. -/
+`line:final-for-sketch-end`) on the polytope `Kᵢ`. -/
 def ttcPseudocode.step {n k : Nat} (O : TTCOracles n k) (b : Nat)
     (ε' δ' Thresh : Real) (P : PolytopeData n)
     (state : TTCState n) : Measure (TTCState n) :=
   (O.ComputeVolume P ε' δ').bind fun volumeOutcome =>
-    let t := ttcPseudocode.t b n Thresh volumeOutcome.2
+    let t := ttcPseudocode.t b n volumeOutcome.2
     let withoutDuplicates := state.removeComponent P
-    (ttcPseudocode.firstLoop withoutDuplicates t Thresh).bind fun firstThinned =>
-      (Poisson (t * firstThinned.p)).bind fun N =>
-        (ttcPseudocode.secondLoop firstThinned N Thresh).bind fun secondThinned =>
-          (O.GenerateSamples P secondThinned.2 b ε' δ').map fun S =>
+    (ttcPseudocode.rateCheck withoutDuplicates t Thresh).bind fun rateChecked =>
+      (Poisson (t * rateChecked.p)).bind fun N =>
+        (ttcPseudocode.secondLoop rateChecked N Thresh).bind fun secondThinned =>
+          (O.GenerateSamples P secondThinned.2 b ε').map fun S =>
             secondThinned.1.addBatch S
 
 /-- The `for` loop over `P₁, …, Pₘ`. -/
@@ -267,8 +273,8 @@ def ttcPseudocode {n k : Nat} (F : LRAFormula n k)
     let Thresh := params.Thresh D.componentCount
     (ttcPseudocode.loop O b params.ε'
       (params.δ' D.componentCount) Thresh
-      (List.ofFn D.component) (TTCState.initial n)).map
-        (Est b Thresh)
+      (List.ofFn D.component) (TTCState.initial n Thresh)).map
+        (Est b)
 
 /-! ## The same algorithm with operation counts (for Theorem 3) -/
 
@@ -285,19 +291,19 @@ def costedCharge {α : Type*} [MeasurableSpace α]
     (law : Measure α) (operations : Nat) : Measure (α × Nat) :=
   law.map fun result => (result, operations)
 
-/-- An upper charge for the first loop: each round visits at most the copies
-present at entry, and performs its guard and rate update. -/
-def ttcPseudocode.firstLoopCost {n : Nat} (s : TTCState n)
+/-- The charge for lines `line:check-threshold` to `line:final-remove`: when `k > 0`, one
+survival draw per stored copy and the scalar work for `k` and `p`. -/
+def ttcPseudocode.rateCheckCost {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) : Nat :=
-  ttcPseudocode.firstLoopExit s t Thresh *
-    TTCRuntime.rateThinningRoundOperations s.X.card
+  if ttcPseudocode.rateHalvings s t Thresh = 0 then 0
+  else TTCRuntime.rateThinningRoundOperations s.X.card
 
-/-- The first loop with its charged rounds retained in the result. -/
-def ttcPseudocode.firstLoopWithCost {n : Nat} (s : TTCState n)
+/-- The rate check with its charge retained in the result. -/
+def ttcPseudocode.rateCheckWithCost {n : Nat} (s : TTCState n)
     (t : NNReal) (Thresh : Real) : Measure (TTCState n × Nat) :=
   fairCoinStreamLaw.map fun coins =>
-    (ttcPseudocode.firstLoopResult s t Thresh coins,
-      ttcPseudocode.firstLoopCost s t Thresh)
+    (ttcPseudocode.rateCheckResult s t Thresh coins,
+      ttcPseudocode.rateCheckCost s t Thresh)
 
 /-- An upper charge for the second loop. The pending count is represented by
 one binomial draw per round, regardless of its numeric value. -/
@@ -319,7 +325,7 @@ structure CostedTTCOracles (n k : Nat) where
   computeVolumeWithCost : (P : PolytopeData n) → Real → Real →
     Measure (VolumeOutcome × Nat)
   generateSamplesWithCost : (P : PolytopeData n) → (count b : Nat) →
-    Real → Real → Measure (SampleBatch n count × Nat)
+    Real → Measure (SampleBatch n count × Nat)
 
 /-- One charged iteration of the `for` loop, using the fixed real-RAM charges in `Prelude`.
 The oracle fields retain their own charges, including retries. -/
@@ -327,23 +333,23 @@ def ttcPseudocode.stepWithCost {n k : Nat} (O : CostedTTCOracles n k)
     (b : Nat) (ε' δ' Thresh : Real) (P : PolytopeData n)
     (state : TTCState n) : Measure (TTCState n × Nat) :=
   costedBind (O.computeVolumeWithCost P ε' δ') fun volumeOutcome =>
-    let t := ttcPseudocode.t b n Thresh volumeOutcome.2
+    let t := ttcPseudocode.t b n volumeOutcome.2
     let withoutDuplicates := state.removeComponent P
     let deletionCost := TTCRuntime.deletionPassOperations n
       P.presentation.facetCount state.X.card
         (state.X.card - withoutDuplicates.X.card)
     costedBind (costedCharge (Measure.dirac withoutDuplicates) deletionCost)
       fun deleted =>
-        costedBind (ttcPseudocode.firstLoopWithCost deleted t Thresh)
-          fun firstThinned =>
+        costedBind (ttcPseudocode.rateCheckWithCost deleted t Thresh)
+          fun rateChecked =>
             costedBind
-              (costedCharge (Poisson (t * firstThinned.p))
+              (costedCharge (Poisson (t * rateChecked.p))
                 TTCRuntime.poissonDrawOperations)
               fun N =>
-                costedBind (ttcPseudocode.secondLoopWithCost firstThinned N Thresh)
+                costedBind (ttcPseudocode.secondLoopWithCost rateChecked N Thresh)
                   fun secondThinned =>
                     costedBind
-                      (O.generateSamplesWithCost P secondThinned.2 b ε' δ')
+                      (O.generateSamplesWithCost P secondThinned.2 b ε')
                       fun S =>
                         costedCharge (Measure.dirac (secondThinned.1.addBatch S))
                           (secondThinned.2 * TTCRuntime.appendCopyOperations)
@@ -371,8 +377,8 @@ def ttcPseudocodeWithCost {n k : Nat} (F : LRAFormula n k)
     let Thresh := params.Thresh D.componentCount
     (ttcPseudocode.loopWithCost O b params.ε'
       (params.δ' D.componentCount) Thresh
-      (List.ofFn D.component) (TTCState.initial n)).map
-        fun result => (Est b Thresh result.1,
+      (List.ofFn D.component) (TTCState.initial n Thresh)).map
+        fun result => (Est b result.1,
           preprocessingOperations + result.2)
 
 #krModelClosure ttcPseudocode
@@ -383,6 +389,6 @@ end Kr25Ssmxt
 namespace Kr25Ssmxt
 
 #krSurplusIn Kr25Ssmxt.Model.Program from ttcPseudocode
-  ttcPseudocode.firstLoopWithCost ttcPseudocode.secondLoopWithCost ttcPseudocodeWithCost
+  ttcPseudocode.rateCheckWithCost ttcPseudocode.secondLoopWithCost ttcPseudocodeWithCost
 
 end Kr25Ssmxt

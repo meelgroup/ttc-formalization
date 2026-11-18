@@ -49,13 +49,13 @@ theorem community_source_product_fixedLevel_incoming
     let pointLaw := communityPointLaw hn D p b hprecision
     let sourceLaw : Fin D.componentCount → Measure (PoissonTape n) :=
       fun i => poissonTapeLaw
-        (ttcPseudocode.t b n threshold (volumeEstimate i)) (pointLaw i)
+        (ttcReference.t b n threshold (volumeEstimate i)) (pointLaw i)
     (Measure.pi sourceLaw).map
       (fun sources i => poissonTapePointCounts S 0 level (sources i)) =
     Measure.pi (fun i : Fin D.componentCount =>
       Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
         (Real.toNNReal ((pointLaw i).real {(x.1 : LatticePoint n)} *
-          ((ttcPseudocode.t b n threshold (volumeEstimate i) *
+          ((ttcReference.t b n threshold (volumeEstimate i) *
             (1 / (2 : NNReal) ^ level) : NNReal) : Real))))) := by
   dsimp only
   let S := (D.codedUnion_finite (by omega) p b hprecision).toFinset
@@ -69,7 +69,7 @@ theorem community_source_product_fixedLevel_incoming
     exact communityPointLaw_support_codedUnion
       hn D p b hprecision i
   have hprod := poissonTape_product_fixedLevel_pointCounts
-    (fun i => ttcPseudocode.t b n (p.Thresh D.componentCount)
+    (fun i => ttcReference.t b n (p.Thresh D.componentCount)
       (volumeEstimate i)) pointLaw (fun i => (halmost i).1)
     S hsupport (fun _ => 0) level
   calc
@@ -77,7 +77,7 @@ theorem community_source_product_fixedLevel_incoming
         Measure.pi (fun x : S => ProbabilityTheory.poissonMeasure
           (Real.toNNReal ((pointLaw i).real {(x.1 : LatticePoint n)} *
             ((unitInterval.toNNReal (survivalProbability level) *
-              ttcPseudocode.t b n (p.Thresh D.componentCount)
+              ttcReference.t b n (p.Thresh D.componentCount)
                 (volumeEstimate i) : NNReal) : Real))))) := hprod
     _ = _ := by
       congr 1

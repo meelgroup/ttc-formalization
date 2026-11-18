@@ -15,8 +15,8 @@ def TTCState.LabelsFresh {n : Nat} (s : TTCState n) : Prop :=
     (∀ c ∈ s.X, ∀ d ∈ s.X, c.1 = d.1 → c = d)
 
 theorem TTCState.initial_labelsFresh (n : Nat) :
-    (TTCState.initial n).LabelsFresh := by
-  simp [TTCState.LabelsFresh, TTCState.initial]
+    (TTCState.unitInitial n).LabelsFresh := by
+  simp [TTCState.LabelsFresh, TTCState.unitInitial]
 
 theorem TTCState.labelsFresh_removeComponent {n : Nat}
     (s : TTCState n) (P : PolytopeData n) (h : s.LabelsFresh) :
@@ -81,9 +81,9 @@ theorem TTCState.labelsFresh_samplesAfter {n : Nat}
 theorem rateThinningResult_labelsFresh {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) (h : s.LabelsFresh) :
-    (ttcPseudocode.firstLoopResult s intensity threshold coins).LabelsFresh := by
+    (ttcReference.firstLoopResult s intensity threshold coins).LabelsFresh := by
   exact s.labelsFresh_samplesAfter coins
-    (ttcPseudocode.firstLoopExit s intensity threshold) h
+    (ttcReference.firstLoopExit s intensity threshold) h
 
 theorem thinningResult_labelsFresh {n : Nat}
     (s : TTCState n) (pending : Nat) (threshold : Real)

@@ -140,7 +140,7 @@ theorem community_adaptive_batch_from_iid_tape
           (pendingSurvivorIndices coins rounds s.nextLabel pending).orderEmbOfFin
             (pendingSurvivorIndices_card coins rounds s.nextLabel pending) i))) =
       (ttcSubroutines hn prep).GenerateSamples P
-        (ttcPseudocode.secondLoopResult s pending threshold coins).2 b eta delta := by
+        (ttcPseudocode.secondLoopResult s pending threshold coins).2 b eta := by
   dsimp only
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2

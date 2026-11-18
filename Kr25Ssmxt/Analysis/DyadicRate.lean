@@ -11,8 +11,8 @@ def TTCState.IsDyadicRate {n : Nat} (s : TTCState n) : Prop :=
   ∃ level : Nat, s.p = 1 / (2 : NNReal) ^ level
 
 theorem TTCState.initial_isDyadicRate (n : Nat) :
-    (TTCState.initial n).IsDyadicRate := by
-  exact ⟨0, by simp [TTCState.initial]⟩
+    (TTCState.unitInitial n).IsDyadicRate := by
+  exact ⟨0, by simp [TTCState.unitInitial]⟩
 
 theorem TTCState.isDyadicRate_removeComponent {n : Nat}
     (s : TTCState n) (P : PolytopeData n)
@@ -27,10 +27,10 @@ theorem TTCState.isDyadicRate_addBatch {n count : Nat}
 theorem rateThinningResult_isDyadicRate {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) (h : s.IsDyadicRate) :
-    (ttcPseudocode.firstLoopResult s intensity threshold coins).IsDyadicRate := by
+    (ttcReference.firstLoopResult s intensity threshold coins).IsDyadicRate := by
   obtain ⟨level, hrate⟩ := h
-  refine ⟨level + ttcPseudocode.firstLoopExit s intensity threshold, ?_⟩
-  simp only [ttcPseudocode.firstLoopResult, hrate, pow_add,
+  refine ⟨level + ttcReference.firstLoopExit s intensity threshold, ?_⟩
+  simp only [ttcReference.firstLoopResult, hrate, pow_add,
     div_eq_mul_inv, mul_inv_rev]
   ac_rfl
 
@@ -62,9 +62,9 @@ theorem measurableSet_isDyadicRate {n : Nat} :
 theorem rateThinUntil_isDyadicRate {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (h : s.IsDyadicRate) :
-    ∀ᵐ t ∂ttcPseudocode.firstLoop s intensity threshold,
+    ∀ᵐ t ∂ttcReference.firstLoop s intensity threshold,
       t.IsDyadicRate := by
-  unfold ttcPseudocode.firstLoop
+  unfold ttcReference.firstLoop
   rw [ae_map_iff
     (measurable_rateThinningResult s intensity threshold).aemeasurable
     measurableSet_isDyadicRate]
@@ -89,7 +89,7 @@ theorem sample_append_isDyadicRate {n k : Nat}
     (O : TTCOracles n k) (P : PolytopeData n)
     (s : TTCState n) (count b : Nat)
     (ε' δ' : Real) (h : s.IsDyadicRate) :
-    ∀ᵐ result ∂(O.GenerateSamples P count b ε' δ').map
+    ∀ᵐ result ∂(O.GenerateSamples P count b ε').map
       (fun batch => s.addBatch batch), result.IsDyadicRate := by
   have hmap : Measurable (fun batch : SampleBatch n count => s.addBatch batch) :=
     measurable_addBatch.comp (measurable_const.prodMk measurable_id)

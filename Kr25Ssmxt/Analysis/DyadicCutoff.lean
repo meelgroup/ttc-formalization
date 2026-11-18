@@ -92,7 +92,7 @@ theorem rateExit_zero_at_cutoff
       1 / (2 : Real) ^ (dyadicCutoff count - 1))
     (hintensity : (intensity : Real) ≤
       (4 / 3) * threshold * count) :
-    ttcPseudocode.firstLoopExit s intensity threshold = 0 := by
+    ttcReference.firstLoopExit s intensity threshold = 0 := by
   apply rateExit_zero_of_lt
   rw [NNReal.coe_mul, hrate, mul_one_div]
   exact dyadicCutoff_intensity_below count hcount threshold
@@ -109,7 +109,7 @@ theorem rateExit_le_cutoff_gap
     (hrate : s.p = 1 / (2 : NNReal) ^ level)
     (hintensity : (intensity : Real) ≤
       (4 / 3) * threshold * count) :
-    ttcPseudocode.firstLoopExit s intensity threshold ≤
+    ttcReference.firstLoopExit s intensity threshold ≤
       dyadicCutoff count - 1 - level := by
   let d := dyadicCutoff count - 1
   have hgap : level + (d - level) = d := Nat.add_sub_of_le hlevel
@@ -136,7 +136,7 @@ theorem rateExit_le_cutoff_gap
     simpa only [NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat] using
       dyadicCutoff_intensity_below count hcount threshold
         (intensity : Real) hthreshold hintensity
-  unfold ttcPseudocode.firstLoopExit
-  exact Nat.sInf_le hguard
+  unfold ttcReference.firstLoopExit
+  exact Nat.sInf_le hguard.le
 
 end Kr25Ssmxt

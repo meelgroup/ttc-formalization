@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.Probability.Distributions.Poisson.Basic
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Probability.Distributions.Binomial
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
 
 /-! Bridge between an actual finite IID batch law and Arlib's algebraic

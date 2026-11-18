@@ -5,7 +5,7 @@
 unfolds only through `Model/` definitions, and `#krSurplusIn` checks that `Model/`
 contains nothing the public statements do not use.
 
-## Current status (2026-11-07, revised)
+## Current status (2026-11-18)
 
 **Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `41a5467`
 (`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
@@ -26,7 +26,8 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
 **Oracles, discharged to arlib-community public headlines.**
 - *Volume:* the program run is arlib-community's `CV18.cv18Program`
   (`CV18/Model/Pseudocode.lean`; `CommunityCV18.algorithm` in `Model/Run.lean`)
-  on an exact facet-membership query, rescaled and clipped as in the paper. Its
+  on an exact facet-membership query, rescaled to the component (no clipping, as in
+  the revised paper). Its
   guarantee is `CV18.cv18TheoremOneOne` (`CV18/Model/Theorem.lean`): accuracy
   with probability `1 - p`, and `queryCost ≤ ⌈queryRate q⌉`
   (`CommunityCV18.queryCostBound`).
@@ -36,6 +37,37 @@ Shared hypotheses: `n ≥ 21` and a bounded solution set.
 - A dependency walk confirms the project references neither internal capstone
   (`volumeTheorem_finalScheduled`, `tvLe_iterate_lazy_hitAndRun_uncond`)
   directly; they appear only inside the proofs of those headlines.
+
+**Revised Algorithm 1 (paper as of `42a4999`).** The paper now starts
+from `p ← Thresh`, sets `t ← 10^{bn}·VolED(Kᵢ, ε', δ')`, replaces the first while loop by
+the rate check "if `tp ≥ Thresh`: `k ← ⌈log₂(tp/Thresh)⌉`, `p ← p·2^{-k}`, remove every
+element of `X` with probability `1 - 2^{-k}`", outputs `|X|/(p·10^{bn})`, drops the
+clipping of VolED, and calls `GenerateSamples(Kᵢ, Nᵢ, b, ε')` without `δ'`. `Model/` follows
+this text:
+- `TTCState.initial n Thresh`, `ttcPseudocode.t b n v = 10^{bn}·v`, `Est b s = |X|/(p·10^{bn})`.
+- `ttcPseudocode.rateHalvings` is the printed `k` (`0` when the guard fails);
+  `rateCheckResult` keeps a copy exactly when its `k` fair coins all show `true`
+  (probability `2^{-k}`, independently across copies). Its charge, `rateCheckCost`, is one
+  thinning pass `|X| + 2` when `k > 0`, and `0` otherwise.
+- `ComputeVolume` is `communityCV18VolumeLaw` itself; `GenerateSamples` takes no `δ'`.
+
+The proofs are written in the old normalisation `p = 1`, `t = Thresh·10^{bn}·v`, where
+every reachable rate is `2^{-level}`. `Analysis/ReferenceProgram.lean` keeps that
+reference run (`ttcRef`, `ttcRefWithCost`) with the same oracles. Its rate check is the
+first-exit loop "least `r` with `tp/2^r ≤ Thresh`" (non-strict, matching
+`⌈log₂(tp/Thresh)⌉`), charged as above. `Analysis/TTCSimulation.lean` proves
+`ttc_eq_ttcRef` and `ttcWithCost_eq_ttcRefWithCost`: the algorithm's state is the
+reference state with `p` multiplied by `Thresh`. Every product `tp`, hence every guard,
+Poisson mean, `k` and charge, agrees, and `Est` of the scaled state is the reference
+output. `rateHalvings_eq_sInf` is the identity `⌈log₂(x/Thresh)⌉ = min{r | x/2^r ≤ Thresh}`.
+The public theorems rewrite along these two equalities.
+
+Without clipping, the runtime proof no longer needs geometric volume bounds. The rate
+check costs at most one pass, which is at most the old allowance
+`⌈log₂(…envelope…)⌉·(|X|+2)` because the envelope is positive. Theorem 3's statement
+is therefore unchanged (now slightly loose). The volume contract is CV18's own
+(`community_volume_contract_of_cv18`). `PolytopeData.volumeClipLower/Upper` survive only
+as that runtime envelope, in `ReferenceProgram.lean`.
 
 **Theorem 1 proof outline.**
 1. Strong Markov property of one refreshed component: every refreshed component
@@ -70,13 +102,11 @@ calls via the roundness bound `roundness ≤ 4ρ² + 1`.
 radius `getprec` requires. The bound no longer mentions the precision `b`:
 `getPrecision_le_theorem3PrecisionBound` shows `getprec` returns
 `b ≤ 1 + log₁₀⁺ γ + log₁₀⁺(1/minᵢ γᵢ)`.
-This corrects the printed claim in two ways: it is an expected (not worst-case)
-bound, since the second loop and the rejection sampler have unbounded iteration
-counts; and it carries a precision factor, which the printed bound omits (a
-two-cube family forces `Ω(b)` first-loop halvings with every quantity in the
-printed bound fixed). In particular the bound grows like `log(1/minᵢ γᵢ)`: a
-very small component forces a fine lattice, and neither `ρ` nor `maxᵢ Rᵢ`
-captures this.
+The revised paper states Theorem 3 in expectation and lets `Õ` suppress
+polylogarithmic factors of `R_max` and `1/γ_min`, which is how the Lean bound depends on
+the precision: through the sampler's `log(2·10^b R)` and `b ≤ 1 + log₁₀⁺γ +
+log₁₀⁺(1/minᵢ γᵢ)`. The Lean statement also keeps the old first-loop term
+`⌈log₂(…)⌉·(⌈Thresh⌉+2)`, which bounds the new one-pass rate check.
 
 **Names and layout.** `Model/Program.lean` and `Model/Run.lean` follow Algorithm `ttc`
 line by line, with section headers quoting the paper's line labels, and use the paper's
@@ -88,15 +118,18 @@ element with probability 1/2", the charged run, the sampler's charts) keep descr
 names.
 
 **Fidelity to the paper** (`sections/algo.tex`, `sections/analysis.tex`).
-- Matches Algorithm 1: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`,
-  `t = Threshold·10^(bn)·VolED`, overlap deletion, the first loop
-  `while p ≥ Threshold/t`, `N ~ Pois(tp)`, the second loop
-  `while N + |X| > Threshold` with binomial thinning (realised by labelled fair
-  coins), sampling, append, the output `|X|/(p·Threshold·10^(bn))`, and the
-  clipping of VolED to `[(1-ε')(2γ/√n)^n, (1+ε')(2R)^n]`. The error budget
-  `δ/6 + δ/6 + δ/4` is the paper's.
+- Matches the revised Algorithm 1: `ε' = ε/12`, `δ' = δ/(4m)`, the printed `Threshold`,
+  `p ← Threshold`, `t = 10^(bn)·VolED`, overlap deletion, the rate check with
+  `k = ⌈log₂(tp/Threshold)⌉` and removal with probability `1 - 2^{-k}` (realised by `k`
+  labelled fair coins per copy), `N ~ Pois(tp)`, the loop `while N + |X| > Threshold` with
+  binomial thinning (realised by labelled fair coins), sampling, append, and the output
+  `|X|/(p·10^(bn))`. VolED is not clipped. The error budget `δ/6 + δ/6 + δ/4` is the paper's.
+- Line `line:inradius` (`R₀ᵢ ← BoundingRadius(Kᵢ)`, `γᵢ ← MaxInscribedBall(Kᵢ)`, still
+  marked TODO in the paper) is not a separate step: `γᵢ`, the incentre and an outer radius
+  are fields of `PolytopeData`, and `BoundingRadius`'s LP is not modelled (see the
+  sampler bullet below).
 - Hypotheses not in the printed statements: a bounded solution set (needed for
-  finite volume and the clipping radii) and `n ≥ 21` (inherited from the
+  finite volume and the outer radii) and `n ≥ 21` (inherited from the
   formalized Hit-and-Run mixing theorem; the paper cites Lovász–Vempala without
   a dimension restriction).
 - `getprec` is concrete and lives in `Model/Run.lean`, as the `choosePrecision`
@@ -123,22 +156,30 @@ names.
   (`log(8r/η)/log(4r/η)` can reach `3/2`); the one-sided escape bound `η/8` (the paper
   uses `η/4`) absorbs the difference. `L2LatticeBridge.lean` transfers it to TTC's
   components; it replaces the earlier cube-based cubulation argument.
-- Hit-and-Run starts from a uniform point of the inscribed ball (a warm start, as
-  arlib-community's `hitAndRun_mixes` requires), not from the inner-ball centre as
-  `proof-appendix.tex` says (citing [LV04, Cor. 1.2]). Each sampler attempt draws a fresh
-  start and is charged `ballStartOperations n = 4n + 2` for it; the step count
-  `⌈2⁶⁴ n² D² log(8M/ν²)⌉` has the paper's order. A manuscript edit should describe the
-  warm start.
+- Hit-and-Run starts from a uniform point of the inscribed ball, as the revised
+  `GenerateSamples` (Algorithm `alg:generatesamples`, `proof-appendix.tex`) now says. Each
+  sampler attempt draws a fresh start and is charged `ballStartOperations n = 4n + 2`, then
+  walks, rounds to `𝕃ⁿ` and rejects outside `P`, as printed. **Walk length differs.** The
+  paper takes `T = ⌈C n³ (R₀'/γ)² log(2R₀'/h)⌉` with `R₀' = (1 + hκ/γ)R₀`, the LP bound
+  `R₀ = BoundingRadius(P)`, an unspecified constant `C` and `ν = ε hⁿ/(16(2R₀')ⁿ)`. Lean
+  uses arlib-community's deadline `⌈2⁶⁴ n² D² log(8M/ν²)⌉`, where `D` is the exact diameter
+  and `M` the exact volume ratio of the normalized inflated body, and
+  `ν = min(1, (ε'/8)/vol P')`. Both have the paper's order, and the Lean values are not
+  computable from the LP.
 - Preprocessing returns full-dimensional components whose union agrees with the
   solution set almost everywhere; empty or degenerate DNF cubes (volume zero)
   are dropped.
 
 **Open items.**
 - Boolean abstraction and DNF conversion (Theorem 2).
-- Paper edits: state boundedness; state Theorem 3 in expectation with the
-  precision factor and the second-loop and `getprec`/decomposition costs; add
-  `minᵢ γᵢ` (the smallest inradius) to the quantities whose polylogarithmic
-  factors `Õ` suppresses, since the runtime grows like `log(1/minᵢ γᵢ)`.
+- Sampler walk length: make `GenerateSamples` use the paper's
+  `T = ⌈C n³ (R₀'/γ)² log(2R₀'/h)⌉` with `R₀ = BoundingRadius(P)` (the coordinate LPs
+  of the appendix, `R₀ ≤ 2√n R`) and an explicit `C`. This needs a proof that this `T`
+  dominates arlib-community's deadline. The paper should also fix `C`.
+- Paper edits: state boundedness; finish line `line:inradius` (its TODO); include the
+  `getprec`/decomposition cost (its TODO in `thm:runtime`). Theorem 3 is now stated in
+  expectation with `R_max` and `1/γ_min` among the suppressed quantities, as the Lean
+  bound requires.
 - Paper constant in `lem:nonconv`: `(1 + κ/γ)ⁿ ≤ (1 + η/(32mn))ⁿ` should read
   `η/(26mn)` (or bound the escape by `η/8`); the lemma holds either way.
 - Model contents: `Model/Program.lean` and `Model/Run.lean` contain definitions only (no
@@ -146,7 +187,9 @@ names.
   Model's definitions behave as specified are under `Analysis/`: the LP and `GetPrecision`
   adequacy (`PrecisionChoice.lean`, together with `PrecisionChoice` itself), the CV18
   parameter range (`CV18Admissible.lean`), and the KV97 rounding kernel with its
-  measurability (`IntegerRoundingBridge.lean`). `#krSurplusIn` reports only the paper
+  measurability (`IntegerRoundingBridge.lean`). The reference normalisation the proofs use,
+  and its equivalence with `ttc`, are `ReferenceProgram.lean` and `TTCSimulation.lean`.
+  `#krSurplusIn` reports only the paper
   vocabulary `decimalLattice`, `Decomposition.latticePoints`, `Decomposition.union`. Proof-only definitions also live under `Analysis/`: the runtime
   allowances (`RuntimeBudgets.lean`), the oracle contracts `AlmostUniformPointwise` and
   `ComputeVolumeContract` (`OracleContracts.lean`), `PrecisionAdequate`,

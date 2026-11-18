@@ -25,7 +25,7 @@ theorem community_poisson_append_pointCounts_law
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun count =>
       ((ttcSubroutines hn prep).GenerateSamples
-        P count b eta delta).map
+        P count b eta).map
         (fun batch => (s.addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
@@ -62,7 +62,7 @@ theorem community_poisson_delete_append_pointCounts_law
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((poissonMeasure mean).bind fun count =>
       ((ttcSubroutines hn prep).GenerateSamples
-        P count b eta delta).map
+        P count b eta).map
         (fun batch => ((s.removeComponent P).addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} * (mean : Real))))).map
@@ -94,7 +94,7 @@ theorem community_fixed_round_append_pointCounts_law
       (fairCoinStreamLaw.map (fun coins =>
         pendingAfter coins rounds firstLabel pending)).bind fun count =>
         ((ttcSubroutines hn prep).GenerateSamples
-          P count b eta delta).map
+          P count b eta).map
           (fun batch => (s.addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} *
@@ -106,7 +106,7 @@ theorem community_fixed_round_append_pointCounts_law
       pendingAfter coins rounds firstLabel pending)
   let G : Nat → Measure (S → Nat) := fun count =>
     ((ttcSubroutines hn prep).GenerateSamples
-      P count b eta delta).map
+      P count b eta).map
       (fun batch => (s.addBatch batch).pointCounts S)
   change (poissonMeasure mean).bind (fun pending => (K pending).bind G) = _
   calc
@@ -142,7 +142,7 @@ theorem community_fixed_round_delete_append_pointCounts_law
       (fairCoinStreamLaw.map (fun coins =>
         pendingAfter coins rounds firstLabel pending)).bind fun count =>
         ((ttcSubroutines hn prep).GenerateSamples
-          P count b eta delta).map
+          P count b eta).map
           (fun batch => ((s.removeComponent P).addBatch batch).pointCounts S)) =
       (Measure.pi (fun x : S => poissonMeasure (Real.toNNReal
         (pointLaw.real {(x : LatticePoint n)} *

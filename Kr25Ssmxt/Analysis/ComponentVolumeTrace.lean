@@ -34,7 +34,7 @@ theorem communityComponentVolumeTrace_fst
   · intro outcome
     exact ⟨community_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (ttcPseudocode.t b n threshold outcome.2)⟩
+      (ttcReference.t b n threshold outcome.2)⟩
 
 theorem communityComponentVolumeTrace_snd
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -43,7 +43,7 @@ theorem communityComponentVolumeTrace_snd
     (state : TTCState n) :
     (communityComponentVolumeTrace hn prep factor P b eta delta
       threshold state).map Prod.snd =
-    ttcPseudocode.stepWithCost
+    ttcReference.stepWithCost
       (ttcCostedSubroutines hn prep factor)
       b eta delta threshold P state := by
   unfold communityComponentVolumeTrace
@@ -58,9 +58,9 @@ theorem communityComponentVolumeTrace_snd
   · intro outcome
     exact ⟨community_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (ttcPseudocode.t b n threshold outcome.2)⟩
+      (ttcReference.t b n threshold outcome.2)⟩
 
-/-- Forgetting the oracle's operation charge recovers the exact clipped CV18
+/-- Forgetting the oracle's operation charge recovers the exact CV18
 outcome law used by the uncharged paper program. -/
 theorem communityComponentVolumeTrace_volumeOutcome
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
@@ -117,7 +117,7 @@ theorem communityComponentVolumeTrace_measurable
       IsProbabilityMeasure (tail z) := by
     exact ⟨community_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold z.1
-      (ttcPseudocode.t b n threshold z.2.1.2)⟩
+      (ttcReference.t b n threshold z.2.1.2)⟩
   let out : (TTCState n × (VolumeOutcome × Nat)) ×
       (TTCState n × Nat) →
       (VolumeOutcome × Nat) × (TTCState n × Nat) :=
@@ -164,6 +164,6 @@ theorem communityComponentVolumeTrace_isProbabilityMeasure
   · intro outcome
     exact ⟨community_deletion_tail_mass_one hn prep factor P b
       eta delta threshold hthreshold state
-      (ttcPseudocode.t b n threshold outcome.2)⟩
+      (ttcReference.t b n threshold outcome.2)⟩
 
 end Kr25Ssmxt

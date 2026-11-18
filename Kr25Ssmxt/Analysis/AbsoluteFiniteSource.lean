@@ -13,15 +13,15 @@ noncomputable def absoluteFinitePreKernel
     (threshold : Real) (level basePending : Nat)
     (preCoins : Nat × Nat → Bool) : Measure (TTCState n × Nat) :=
   let pending := pendingAfter preCoins
-    (level + ttcPseudocode.firstLoopExit s intensity threshold)
+    (level + ttcReference.firstLoopExit s intensity threshold)
     s.nextLabel basePending
   (fairCoinStreamLaw.prod
     (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).map
     fun pair =>
       thinningResultSplitFinite
-        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
+        (ttcReference.firstLoopResult s intensity threshold pair.1)
         pending threshold
-        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1)
+        (shiftCoins (ttcReference.firstLoopExit s intensity threshold) pair.1)
         pair.2
 
 theorem measurable_absolute_finite_preKernel
@@ -29,14 +29,14 @@ theorem measurable_absolute_finite_preKernel
     (threshold : Real) (level basePending : Nat) (hfresh : s.LabelsFresh) :
     Measurable (absoluteFinitePreKernel s intensity threshold
       level basePending) := by
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   let pending : (Nat × Nat → Bool) → Nat :=
     fun preCoins => pendingAfter preCoins (level + rounds)
       s.nextLabel basePending
   let K : Nat → Measure (TTCState n × Nat) := fun count =>
     fairCoinStreamLaw.map fun activeCoins =>
       ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult s intensity threshold activeCoins)
+        (ttcReference.firstLoopResult s intensity threshold activeCoins)
         count threshold (shiftCoins rounds activeCoins)
   have hK : Measurable K := Measurable.of_discrete
   have hpending : Measurable pending :=
@@ -89,25 +89,25 @@ theorem poisson_twoLoops_absolute_finite
       fairCoinStreamLaw.bind fun preCoins =>
         fairCoinStreamLaw.map fun activeCoins =>
           ttcPseudocode.secondLoopResult
-            (ttcPseudocode.firstLoopResult s intensity threshold activeCoins)
+            (ttcReference.firstLoopResult s intensity threshold activeCoins)
             (pendingAfter preCoins
-              (level + ttcPseudocode.firstLoopExit s intensity threshold)
+              (level + ttcReference.firstLoopExit s intensity threshold)
               s.nextLabel basePending)
             threshold
-            (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold)
+            (shiftCoins (ttcReference.firstLoopExit s intensity threshold)
               activeCoins)) =
     ((poissonMeasure intensity).bind fun basePending =>
       fairCoinStreamLaw.bind fun preCoins =>
         let pending := pendingAfter preCoins
-          (level + ttcPseudocode.firstLoopExit s intensity threshold)
+          (level + ttcReference.firstLoopExit s intensity threshold)
           s.nextLabel basePending
         (fairCoinStreamLaw.prod
           (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).map
           fun pair =>
             thinningResultSplitFinite
-              (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
+              (ttcReference.firstLoopResult s intensity threshold pair.1)
               pending threshold
-              (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1)
+              (shiftCoins (ttcReference.firstLoopExit s intensity threshold) pair.1)
               pair.2) := by
   apply Measure.bind_congr_right
   apply Filter.Eventually.of_forall
@@ -117,7 +117,7 @@ theorem poisson_twoLoops_absolute_finite
   intro preCoins
   exact absolute_active_finite_coin_law s intensity threshold
     (pendingAfter preCoins
-      (level + ttcPseudocode.firstLoopExit s intensity threshold)
+      (level + ttcReference.firstLoopExit s intensity threshold)
       s.nextLabel basePending) hfresh
 
 end Kr25Ssmxt

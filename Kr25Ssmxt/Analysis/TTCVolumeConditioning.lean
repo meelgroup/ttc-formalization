@@ -4,7 +4,7 @@ import Kr25Ssmxt.Analysis.VolumeGeometry
 import Kr25Ssmxt.Analysis.RunMarginal
 
 /-! The paper TTC output distribution conditioned on the complete
-independent vector of clipped CV18 volume outcomes. -/
+independent vector of CV18 volume outcomes. -/
 
 namespace Kr25Ssmxt
 
@@ -20,13 +20,13 @@ theorem communityTTC_eq_volumeVector_bind
     let b := (prep.choosePrecision D p).value
     let threshold := p.Thresh D.componentCount
     let components := List.ofFn D.component
-    ttc hn F hbounded p prep =
+    ttcRef hn F hbounded p prep =
       (communityVolumeVectorLaw hn prep p.ε'
         (p.δ' D.componentCount) components).bind fun outcomes =>
           (communityComponentsGivenVolumes hn prep b
             p.ε' (p.δ' D.componentCount) threshold
-            components outcomes (TTCState.initial n)).map
-              (Est b threshold) := by
+            components outcomes (TTCState.unitInitial n)).map
+              (EstReference b threshold) := by
   dsimp only
   let D := prep.run F hbounded
   let b := (prep.choosePrecision D p).value
@@ -38,12 +38,12 @@ theorem communityTTC_eq_volumeVector_bind
     intro P hP
     obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
     exact ((community_volume_contract hn prep F hbounded p) i).1
-  have hrun : ttc hn F hbounded p prep =
-      (ttcPseudocode.loop (ttcSubroutines hn prep)
+  have hrun : ttcRef hn F hbounded p prep =
+      (ttcReference.loop (ttcSubroutines hn prep)
         b p.ε' (p.δ' D.componentCount) threshold
-        components (TTCState.initial n)).map
-          (Est b threshold) := by
-    simp [ttc, ttcPseudocode,
+        components (TTCState.unitInitial n)).map
+          (EstReference b threshold) := by
+    simp [ttcRef, ttcReference,
       ttcSubroutines, TTCPreprocessor.choosePrecision, getPrecisionChoice, D, b, threshold,
       components, hnonempty]
   let law := communityVolumeVectorLaw hn prep p.ε'
@@ -51,11 +51,11 @@ theorem communityTTC_eq_volumeVector_bind
   let K : (Fin components.length → VolumeOutcome) → Measure (TTCState n) :=
     fun outcomes => communityComponentsGivenVolumes hn prep b
       p.ε' (p.δ' D.componentCount) threshold components
-      outcomes (TTCState.initial n)
+      outcomes (TTCState.unitInitial n)
   have hK : Measurable K := by
     have hcoords : Measurable
         (fun outcomes : Fin components.length → VolumeOutcome =>
-          (outcomes, TTCState.initial n)) :=
+          (outcomes, TTCState.unitInitial n)) :=
       measurable_id.prodMk measurable_const
     have h := (measurable_communityComponentsGivenVolumes
       hn prep b p.ε' (p.δ' D.componentCount) threshold
@@ -64,8 +64,8 @@ theorem communityTTC_eq_volumeVector_bind
   rw [hrun, communityProcessComponents_eq_volumeVector_bind
     hn prep b p.ε' (p.δ' D.componentCount) threshold
     (p.threshold_pos D.componentCount) components hvolume
-    (TTCState.initial n)]
-  exact map_bind_measure law K (Est b threshold)
+    (TTCState.unitInitial n)]
+  exact map_bind_measure law K (EstReference b threshold)
     hK.aemeasurable (measurable_estimate b threshold)
 
 end Kr25Ssmxt

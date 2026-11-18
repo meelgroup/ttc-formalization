@@ -13,13 +13,13 @@ theorem measurable_active_finite_result
     Measurable (fun pair : (Nat × Nat → Bool) ×
         (Nat × Fin pending → Bool) =>
       thinningResultSplitFinite
-        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
+        (ttcReference.firstLoopResult s intensity threshold pair.1)
         pending threshold
-        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) pair.1)
+        (shiftCoins (ttcReference.firstLoopExit s intensity threshold) pair.1)
         pair.2) := by
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   let first : (Nat × Nat → Bool) → TTCState n :=
-    ttcPseudocode.firstLoopResult s intensity threshold
+    ttcReference.firstLoopResult s intensity threshold
   have hfirst : Measurable first :=
     measurable_rateThinningResult s intensity threshold
   have hmerge : Measurable
@@ -50,20 +50,20 @@ theorem measurable_active_finite_result
 theorem absolute_active_finite_coin_law
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (pending : Nat) (hfresh : s.LabelsFresh) :
-    let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+    let rounds := ttcReference.firstLoopExit s intensity threshold
     fairCoinStreamLaw.map (fun coins =>
       ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult s intensity threshold coins)
+        (ttcReference.firstLoopResult s intensity threshold coins)
         pending threshold (shiftCoins rounds coins)) =
     (fairCoinStreamLaw.prod
       (Measure.infinitePi (fun _ : Nat × Fin pending => fairCoinLaw))).map
       (fun pair => thinningResultSplitFinite
-        (ttcPseudocode.firstLoopResult s intensity threshold pair.1)
+        (ttcReference.firstLoopResult s intensity threshold pair.1)
         pending threshold (shiftCoins rounds pair.1) pair.2) := by
   dsimp only
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   let first : (Nat × Nat → Bool) → TTCState n :=
-    ttcPseudocode.firstLoopResult s intensity threshold
+    ttcReference.firstLoopResult s intensity threshold
   let project : (Nat × Nat → Bool) × (Nat × Nat → Bool) →
       (Nat × Nat → Bool) × (Nat × Fin pending → Bool) :=
     fun pair => (pair.1,

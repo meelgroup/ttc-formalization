@@ -22,7 +22,7 @@ theorem community_adaptive_tape_append_law
       hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
     ((ttcPseudocode.secondLoop s pending threshold).bind fun thinned =>
       ((ttcSubroutines hn prep).GenerateSamples P thinned.2
-        b eta delta).map fun batch => thinned.1.addBatch batch) =
+        b eta).map fun batch => thinned.1.addBatch batch) =
     fairCoinStreamLaw.bind fun coins =>
       (Measure.infinitePi (fun _ : Nat => pointLaw)).map fun tape =>
         (ttcPseudocode.secondLoopResult s pending threshold coins).1.addBatch
@@ -39,14 +39,14 @@ theorem community_adaptive_tape_append_law
     hroute.2.1 hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2
   let K : TTCState n × Nat → Measure (TTCState n) := fun thinned =>
     ((ttcSubroutines hn prep).GenerateSamples P thinned.2
-      b eta delta).map fun batch => thinned.1.addBatch batch
+      b eta).map fun batch => thinned.1.addBatch batch
   have hK : Measurable K := by
     have hcost := community_sample_append_kernel_measurable
       hn prep 1 P b eta delta
     have heq : K = fun thinned : TTCState n × Nat =>
         (costedBind
           ((ttcCostedSubroutines hn prep 1).generateSamplesWithCost
-            P thinned.2 b eta delta)
+            P thinned.2 b eta)
           (fun batch => costedCharge
             (Measure.dirac (thinned.1.addBatch batch))
             (thinned.2 * TTCRuntime.appendCopyOperations))).map Prod.fst := by

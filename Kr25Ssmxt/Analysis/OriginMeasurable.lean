@@ -737,7 +737,7 @@ theorem OriginConfiguration.measurable_advance_tape
       c.advance P intensity threshold basePending preCoins future tape) := by
   rw [measurable_comap_iff]
   let deleted := c.state.removeComponent P
-  let preRounds := c.level + ttcPseudocode.firstLoopExit deleted intensity threshold
+  let preRounds := c.level + ttcReference.firstLoopExit deleted intensity threshold
   let fresh := originalSurvivorCoinRestriction preCoins preRounds
     deleted.nextLabel basePending future
   have hstate : Measurable (fun tape : Nat → LatticePoint n =>
@@ -831,11 +831,11 @@ theorem OriginConfiguration.tapeAdvanceLaw_map_state
       preCoins future).map (fun next => next.state) =
     communityOriginTapeKernel hn P b eta threshold hroute
       (c.state.removeComponent P) intensity preCoins
-      (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+      (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold) basePending
       (sourceOldCoins c.origin c.source.coins c.level,
         originalSurvivorCoinRestriction preCoins
-          (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+          (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
             intensity threshold)
           (c.state.removeComponent P).nextLabel basePending future) := by
   unfold OriginConfiguration.tapeAdvanceLaw

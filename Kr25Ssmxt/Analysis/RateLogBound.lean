@@ -1,6 +1,6 @@
 import Kr25Ssmxt.Analysis.RuntimeBudgets
 import Kr25Ssmxt.Analysis.ThinningCosts
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-! Elementary logarithmic bounds used to remove the decimal scale from
 the first thinning loop's operation count. -/
@@ -82,9 +82,9 @@ theorem clog_two_ceil_decimal_mul_le (k : Nat) (u : Real) :
 
 theorem intensity_div_threshold (b n : Nat)
     {threshold : Real} (hthreshold : 0 < threshold) (volume : NNReal) :
-    ((ttcPseudocode.t b n threshold volume : NNReal) : Real) / threshold =
+    ((ttcReference.t b n threshold volume : NNReal) : Real) / threshold =
       (10 : Real) ^ (b * n) * (volume : Real) := by
-  unfold ttcPseudocode.t
+  unfold ttcReference.t
   push_cast
   rw [Real.coe_toNNReal _ hthreshold.le]
   field_simp
@@ -92,7 +92,7 @@ theorem intensity_div_threshold (b n : Nat)
 theorem rate_clog_le_linear_precision (b n : Nat)
     {threshold : Real} (hthreshold : 0 < threshold) (volume : NNReal) :
     Nat.clog 2
-        (Nat.ceil (((ttcPseudocode.t b n threshold volume : NNReal) : Real) /
+        (Nat.ceil (((ttcReference.t b n threshold volume : NNReal) : Real) /
           threshold) + 1) ≤
       4 * (b * n) + Nat.clog 2 (Nat.ceil (volume : Real) + 1) := by
   rw [intensity_div_threshold b n hthreshold volume]
@@ -103,7 +103,7 @@ theorem clipped_component_rate_clog_le_linear_precision {n : Nat}
     let v := max (P.volumeClipLower p.ε')
       (P.volumeClipUpper p.ε')
     Nat.clog 2
-        (Nat.ceil (((ttcPseudocode.t b n (p.Thresh m) v : NNReal) : Real) /
+        (Nat.ceil (((ttcReference.t b n (p.Thresh m) v : NNReal) : Real) /
           p.Thresh m) + 1) ≤
       4 * (b * n) + Nat.clog 2 (Nat.ceil (v : Real) + 1) := by
   exact rate_clog_le_linear_precision b n

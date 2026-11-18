@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.MathlibCompat
-import Kr25Ssmxt.Model.Program
+import Kr25Ssmxt.Analysis.ReferenceProgram
 import Kr25Ssmxt.Analysis.MeasurableFixedSfiniteBind
 import Mathlib.Probability.Kernel.MeasurableLIntegral
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure

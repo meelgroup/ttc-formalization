@@ -19,7 +19,7 @@ noncomputable def componentFixedLevelStep
   deleted := T
   incoming := fun x => Real.toNNReal
     (pointLaw.real {(x.1 : LatticePoint n)} *
-      ((ttcPseudocode.t b n threshold volumeEstimate * rate : NNReal) : Real))
+      ((ttcReference.t b n threshold volumeEstimate * rate : NNReal) : Real))
 
 theorem componentFixedLevelStep_envelope
     {n : Nat} (S : Finset (LatticePoint n)) (T : Finset S)
@@ -60,17 +60,17 @@ theorem componentFixedLevelStep_envelope
       calc
         threshold * (1 - ε') ^ 2 * (1 - latticeEta) *
             (rate : Real) ≤
-          (ttcPseudocode.t b n threshold volumeEstimate : Real) *
+          (ttcReference.t b n threshold volumeEstimate : Real) *
             rate * pointLaw.real {(x.1 : LatticePoint n)} := hbounds.1
         _ = pointLaw.real {(x.1 : LatticePoint n)} *
-              ((ttcPseudocode.t b n threshold volumeEstimate * rate : NNReal) : Real) := by
+              ((ttcReference.t b n threshold volumeEstimate * rate : NNReal) : Real) := by
           rw [NNReal.coe_mul]
           ring
     · apply Real.toNNReal_mono
       calc
         pointLaw.real {(x.1 : LatticePoint n)} *
-            ((ttcPseudocode.t b n threshold volumeEstimate * rate : NNReal) : Real) =
-          (ttcPseudocode.t b n threshold volumeEstimate : Real) *
+            ((ttcReference.t b n threshold volumeEstimate * rate : NNReal) : Real) =
+          (ttcReference.t b n threshold volumeEstimate : Real) *
             rate * pointLaw.real {(x.1 : LatticePoint n)} := by
           rw [NNReal.coe_mul]
           ring

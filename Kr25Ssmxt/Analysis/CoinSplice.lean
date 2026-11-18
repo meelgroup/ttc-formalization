@@ -54,34 +54,37 @@ theorem two_loops_samples_splice {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (pending : Nat) (first second : Nat × Nat → Bool) :
     (ttcPseudocode.secondLoopResult
-      (ttcPseudocode.firstLoopResult s intensity threshold first)
+      (ttcReference.firstLoopResult s intensity threshold first)
       pending threshold second).1.X =
     samplesAfter (spliceCoins first second
-      (ttcPseudocode.firstLoopExit s intensity threshold))
-      (ttcPseudocode.firstLoopExit s intensity threshold +
+      (ttcReference.firstLoopExit s intensity threshold))
+      (ttcReference.firstLoopExit s intensity threshold +
         ttcPseudocode.secondLoopExitRound
-          (ttcPseudocode.firstLoopResult s intensity threshold first)
+          (ttcReference.firstLoopResult s intensity threshold first)
           pending threshold second) s.X := by
   exact samplesAfter_spliceCoins first second
-    (ttcPseudocode.firstLoopExit s intensity threshold)
+    (ttcReference.firstLoopExit s intensity threshold)
     (ttcPseudocode.secondLoopExitRound
-      (ttcPseudocode.firstLoopResult s intensity threshold first)
+      (ttcReference.firstLoopResult s intensity threshold first)
       pending threshold second) s.X
 
 theorem two_loops_rate_add {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real)
     (pending : Nat) (first second : Nat × Nat → Bool) :
     (ttcPseudocode.secondLoopResult
-      (ttcPseudocode.firstLoopResult s intensity threshold first)
+      (ttcReference.firstLoopResult s intensity threshold first)
       pending threshold second).1.p =
     s.p / (2 : NNReal) ^
-      (ttcPseudocode.firstLoopExit s intensity threshold +
+      (ttcReference.firstLoopExit s intensity threshold +
         ttcPseudocode.secondLoopExitRound
-          (ttcPseudocode.firstLoopResult s intensity threshold first)
+          (ttcReference.firstLoopResult s intensity threshold first)
           pending threshold second) := by
-  simp only [ttcPseudocode.secondLoopResult, ttcPseudocode.firstLoopResult,
-    pow_add, div_eq_mul_inv, mul_inv_rev, mul_assoc]
-  ac_rfl
+  change (ttcReference.firstLoopResult s intensity threshold first).p /
+      (2 : NNReal) ^ ttcPseudocode.secondLoopExitRound
+        (ttcReference.firstLoopResult s intensity threshold first)
+        pending threshold second = _
+  rw [pow_add, ← div_div]
+  rfl
 
 /-- For one component, the actual stored point count after both thinning
 loops and batch append is the count obtained by one cumulative coin block,
@@ -93,19 +96,19 @@ theorem two_loops_addBatch_pointCount {n : Nat}
     {count : Nat} (batch : Fin count → LatticePoint n)
     (x : LatticePoint n) (hfresh : s.LabelsFresh) :
     let deleted := s.removeComponent P
-    let firstState := ttcPseudocode.firstLoopResult deleted intensity threshold first
+    let firstState := ttcReference.firstLoopResult deleted intensity threshold first
     let secondState := (ttcPseudocode.secondLoopResult firstState pending threshold second).1
     (secondState.addBatch batch).pointCount x =
       ((samplesAfter (spliceCoins first second
-        (ttcPseudocode.firstLoopExit deleted intensity threshold))
-        (ttcPseudocode.firstLoopExit deleted intensity threshold +
+        (ttcReference.firstLoopExit deleted intensity threshold))
+        (ttcReference.firstLoopExit deleted intensity threshold +
           ttcPseudocode.secondLoopExitRound firstState pending threshold second)
         deleted.X).filter (fun copy => copy.2 = x)).card +
         Arlib.Probability.colourCount batch x := by
   classical
   dsimp only
   let deleted := s.removeComponent P
-  let firstState := ttcPseudocode.firstLoopResult deleted intensity threshold first
+  let firstState := ttcReference.firstLoopResult deleted intensity threshold first
   let secondState := (ttcPseudocode.secondLoopResult firstState pending threshold second).1
   have hdeleted : deleted.LabelsFresh :=
     s.labelsFresh_removeComponent P hfresh

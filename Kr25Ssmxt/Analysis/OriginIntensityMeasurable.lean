@@ -12,14 +12,14 @@ theorem OriginConfiguration.measurable_advance_controls_intensity
     {n : Nat} (P : PolytopeData n)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : OriginConfiguration n × NNReal =>
-      (z.1.level + ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
+      (z.1.level + ttcReference.firstLoopExit (z.1.state.removeComponent P)
         z.2 threshold, (z.1.state.removeComponent P).nextLabel)) := by
   have hdeleted : Measurable (fun z : OriginConfiguration n ×
       NNReal => z.1.state.removeComponent P) :=
     (measurable_removeComponent P).comp
       (measurable_originConfiguration_state.comp measurable_fst)
   have hround : Measurable (fun z : OriginConfiguration n ×
-      NNReal => ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
+      NNReal => ttcReference.firstLoopExit (z.1.state.removeComponent P)
         z.2 threshold) :=
     (measurable_rateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_snd)
@@ -37,7 +37,7 @@ theorem OriginConfiguration.measurable_advance_firstState_intensity
     {n : Nat} (P : PolytopeData n)
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : OriginConfiguration n × NNReal =>
-      ttcPseudocode.firstLoopResult (z.1.state.removeComponent P)
+      ttcReference.firstLoopResult (z.1.state.removeComponent P)
         z.2 threshold
         (sourceOldCoins z.1.origin z.1.source.coins
           z.1.level)) := by
@@ -58,14 +58,14 @@ theorem OriginConfiguration.measurable_advance_shiftedOldCoins_intensity
     (threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : OriginConfiguration n × NNReal =>
       shiftCoins
-        (ttcPseudocode.firstLoopExit (z.1.state.removeComponent P) z.2 threshold)
+        (ttcReference.firstLoopExit (z.1.state.removeComponent P) z.2 threshold)
         (sourceOldCoins z.1.origin z.1.source.coins z.1.level)) := by
   have hdeleted : Measurable (fun z : OriginConfiguration n ×
       NNReal => z.1.state.removeComponent P) :=
     (measurable_removeComponent P).comp
       (measurable_originConfiguration_state.comp measurable_fst)
   have hround : Measurable (fun z : OriginConfiguration n ×
-      NNReal => ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
+      NNReal => ttcReference.firstLoopExit (z.1.state.removeComponent P)
         z.2 threshold) :=
     (measurable_rateExit_joint threshold hthreshold).comp
       (hdeleted.prodMk measurable_snd)
@@ -81,13 +81,13 @@ theorem OriginConfiguration.measurable_pending_coinPair_intensity
     Measurable (fun z : (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       pendingAfter z.2.1
-        (z.1.1.level + ttcPseudocode.firstLoopExit
+        (z.1.1.level + ttcReference.firstLoopExit
           (z.1.1.state.removeComponent P) z.1.2 threshold)
         (z.1.1.state.removeComponent P).nextLabel basePending) := by
   have hcontrols : Measurable (fun z :
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.1.level + ttcPseudocode.firstLoopExit
+      (z.1.1.level + ttcReference.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold,
         (z.1.1.state.removeComponent P).nextLabel)) :=
     (OriginConfiguration.measurable_advance_controls_intensity
@@ -105,7 +105,7 @@ theorem OriginConfiguration.measurable_activeFullCoins_coinPair_intensity
     Measurable (fun z : (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       let deleted := z.1.1.state.removeComponent P
-      let preRounds := z.1.1.level + ttcPseudocode.firstLoopExit deleted z.1.2
+      let preRounds := z.1.1.level + ttcReference.firstLoopExit deleted z.1.2
         threshold
       pendingCoinExtension deleted.nextLabel
         (pendingAfter z.2.1 preRounds deleted.nextLabel basePending)
@@ -123,7 +123,7 @@ theorem OriginConfiguration.measurable_mergedCoins_coinPair_intensity
     Measurable (fun z : (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       let deleted := z.1.1.state.removeComponent P
-      let rounds := ttcPseudocode.firstLoopExit deleted z.1.2 threshold
+      let rounds := ttcReference.firstLoopExit deleted z.1.2 threshold
       let preRounds := z.1.1.level + rounds
       mergeCoinsAtLabel deleted.nextLabel
         (shiftCoins rounds
@@ -144,7 +144,7 @@ theorem OriginConfiguration.measurable_mergedCoins_coinPair_intensity
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       shiftCoins
-        (ttcPseudocode.firstLoopExit (z.1.1.state.removeComponent P)
+        (ttcReference.firstLoopExit (z.1.1.state.removeComponent P)
           z.1.2 threshold)
         (sourceOldCoins z.1.1.origin z.1.1.source.coins
           z.1.1.level)) :=
@@ -168,7 +168,7 @@ theorem OriginConfiguration.measurable_secondExit_coinPair_intensity
   have hfirst : Measurable (fun z :
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
+      ttcReference.firstLoopResult (z.1.1.state.removeComponent P)
         z.1.2 threshold
         (sourceOldCoins z.1.1.origin z.1.1.source.coins
           z.1.1.level)) :=
@@ -214,7 +214,7 @@ theorem OriginConfiguration.measurable_advance_level_coinPair_intensity
       ((OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
-      z.1.1.1.level + ttcPseudocode.firstLoopExit
+      z.1.1.1.level + ttcReference.firstLoopExit
         (z.1.1.1.state.removeComponent P) z.1.1.2 threshold) :=
     (measurable_fst.comp
       (OriginConfiguration.measurable_advance_controls_intensity
@@ -234,7 +234,7 @@ theorem OriginConfiguration.measurable_advance_level_coinPair_intensity
         (Nat → LatticePoint n) =>
       (z.1.1.1.advance P z.1.1.2 threshold basePending
         z.1.2.1 z.1.2.2 z.2).level) =
-      (fun z => z.1.1.1.level + ttcPseudocode.firstLoopExit
+      (fun z => z.1.1.1.level + ttcReference.firstLoopExit
         (z.1.1.1.state.removeComponent P) z.1.1.2 threshold +
         originCoinPairSplitExit P z.1.1.2 threshold
           basePending (z.1.1.1, z.1.2)) := by
@@ -264,7 +264,7 @@ theorem OriginConfiguration.measurable_advance_source_coinPair_intensity
       ((OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
-      (z.1.1.1.level + ttcPseudocode.firstLoopExit
+      (z.1.1.1.level + ttcReference.firstLoopExit
         (z.1.1.1.state.removeComponent P) z.1.1.2 threshold,
         (z.1.1.1.state.removeComponent P).nextLabel)) :=
     (OriginConfiguration.measurable_advance_controls_intensity
@@ -275,7 +275,7 @@ theorem OriginConfiguration.measurable_advance_source_coinPair_intensity
         ((Nat × Nat → Bool) × (Nat × Nat → Bool))) ×
         (Nat → LatticePoint n) =>
       ((z.1.1.1.state.removeComponent P).nextLabel,
-        z.1.1.1.level + ttcPseudocode.firstLoopExit
+        z.1.1.1.level + ttcReference.firstLoopExit
           (z.1.1.1.state.removeComponent P) z.1.1.2 threshold)) :=
     (measurable_snd.comp hcontrols).prodMk
       (measurable_fst.comp hcontrols)
@@ -297,7 +297,7 @@ theorem OriginConfiguration.measurable_advance_source_coinPair_intensity
         z.1.2.1 z.1.2.2 z.2).source) =
       (fun z => originSourceStepCoinPair P basePending
         (((z.1.1.1.state.removeComponent P).nextLabel,
-            z.1.1.1.level + ttcPseudocode.firstLoopExit
+            z.1.1.1.level + ttcReference.firstLoopExit
               (z.1.1.1.state.removeComponent P) z.1.1.2 threshold),
           ((z.1.1.1.source, z.2), z.1.2))) := by
     funext z
@@ -320,13 +320,13 @@ theorem measurable_originCoinPairSecondCountFormula_intensity
           (z.1.1, z.2))
         (z.1.1.state.removeComponent P).nextLabel
         (pendingAfter z.2.1
-          (z.1.1.level + ttcPseudocode.firstLoopExit
+          (z.1.1.level + ttcReference.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)) := by
   have hcontrols : Measurable (fun z :
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.1.level + ttcPseudocode.firstLoopExit
+      (z.1.1.level + ttcReference.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold,
         (z.1.1.state.removeComponent P).nextLabel)) :=
     (OriginConfiguration.measurable_advance_controls_intensity
@@ -368,7 +368,7 @@ theorem measurable_originCoinPairSecondCount_intensity
           (z.1.1, z.2))
         (z.1.1.state.removeComponent P).nextLabel
         (pendingAfter z.2.1
-          (z.1.1.level + ttcPseudocode.firstLoopExit
+          (z.1.1.level + ttcReference.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)) := by
     funext z
@@ -389,7 +389,7 @@ theorem measurable_originCoinPairIndex_intensity
   have hcontrols : Measurable (fun z :
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.1.level + ttcPseudocode.firstLoopExit
+      (z.1.1.level + ttcReference.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold,
         (z.1.1.state.removeComponent P).nextLabel)) :=
     (OriginConfiguration.measurable_advance_controls_intensity
@@ -397,7 +397,7 @@ theorem measurable_originCoinPairIndex_intensity
   have hpre : Measurable (fun z :
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      z.1.1.level + ttcPseudocode.firstLoopExit
+      z.1.1.level + ttcReference.firstLoopExit
         (z.1.1.state.removeComponent P) z.1.2 threshold) :=
     measurable_fst.comp hcontrols
   have hlabel : Measurable (fun z :
@@ -417,7 +417,7 @@ theorem measurable_originCoinPairIndex_intensity
       fun i : Nat => twoStageSurvivorLabelOrZero z.2.1
         (originCoinPairActiveFull P z.1.2 threshold
           basePending (z.1.1, z.2))
-        (z.1.1.level + ttcPseudocode.firstLoopExit
+        (z.1.1.level + ttcReference.firstLoopExit
           (z.1.1.state.removeComponent P) z.1.2 threshold)
         (z.1.1.state.removeComponent P).nextLabel basePending
         (originCoinPairSplitExit P z.1.2 threshold
@@ -437,7 +437,7 @@ theorem measurable_originCoinPairIndex_intensity
       (fun z => fun i : Nat => twoStageSurvivorLabelOrZero z.2.1
         (originCoinPairActiveFull P z.1.2 threshold
           basePending (z.1.1, z.2))
-        (z.1.1.level + ttcPseudocode.firstLoopExit
+        (z.1.1.level + ttcReference.firstLoopExit
           (z.1.1.state.removeComponent P) z.1.2 threshold)
         (z.1.1.state.removeComponent P).nextLabel basePending
         (originCoinPairSplitExit P z.1.2 threshold
@@ -545,7 +545,7 @@ theorem measurable_originCoinPairMergedSecondResult_intensity
   have hfirst : Measurable (fun z :
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
+      ttcReference.firstLoopResult (z.1.1.state.removeComponent P)
         z.1.2 threshold
         (sourceOldCoins z.1.1.origin z.1.1.source.coins
           z.1.1.level)) :=
@@ -561,18 +561,18 @@ theorem measurable_originCoinPairMergedSecondResult_intensity
       (OriginConfiguration n × NNReal) ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
+        (ttcReference.firstLoopResult (z.1.1.state.removeComponent P)
           z.1.2 threshold
           (sourceOldCoins z.1.1.origin z.1.1.source.coins
             z.1.1.level))
         (pendingAfter z.2.1
-          (z.1.1.level + ttcPseudocode.firstLoopExit
+          (z.1.1.level + ttcReference.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)
         threshold
         (mergeCoinsAtLabel (z.1.1.state.removeComponent P).nextLabel
           (shiftCoins
-            (ttcPseudocode.firstLoopExit (z.1.1.state.removeComponent P)
+            (ttcReference.firstLoopExit (z.1.1.state.removeComponent P)
               z.1.2 threshold)
             (sourceOldCoins z.1.1.origin z.1.1.source.coins
               z.1.1.level))
@@ -585,18 +585,18 @@ theorem measurable_originCoinPairMergedSecondResult_intensity
       originCoinPairMergedSecondResult P z.1.2 threshold
         basePending (z.1.1, z.2)) =
       (fun z => ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult (z.1.1.state.removeComponent P)
+        (ttcReference.firstLoopResult (z.1.1.state.removeComponent P)
           z.1.2 threshold
           (sourceOldCoins z.1.1.origin z.1.1.source.coins
             z.1.1.level))
         (pendingAfter z.2.1
-          (z.1.1.level + ttcPseudocode.firstLoopExit
+          (z.1.1.level + ttcReference.firstLoopExit
             (z.1.1.state.removeComponent P) z.1.2 threshold)
           (z.1.1.state.removeComponent P).nextLabel basePending)
         threshold
         (mergeCoinsAtLabel (z.1.1.state.removeComponent P).nextLabel
           (shiftCoins
-            (ttcPseudocode.firstLoopExit (z.1.1.state.removeComponent P)
+            (ttcReference.firstLoopExit (z.1.1.state.removeComponent P)
               z.1.2 threshold)
             (sourceOldCoins z.1.1.origin z.1.1.source.coins
               z.1.1.level))

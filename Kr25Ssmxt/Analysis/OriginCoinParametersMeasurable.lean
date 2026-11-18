@@ -92,7 +92,7 @@ theorem OriginConfiguration.measurable_activeFullCoins_coinPair
     Measurable (fun z : OriginConfiguration n ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       let deleted := z.1.state.removeComponent P
-      let preRounds := z.1.level + ttcPseudocode.firstLoopExit deleted intensity
+      let preRounds := z.1.level + ttcReference.firstLoopExit deleted intensity
         threshold
       pendingCoinExtension deleted.nextLabel
         (pendingAfter z.2.1 preRounds deleted.nextLabel basePending)
@@ -110,12 +110,12 @@ theorem OriginConfiguration.measurable_pending_coinPair
     Measurable (fun z : OriginConfiguration n ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       pendingAfter z.2.1
-        (z.1.level + ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
+        (z.1.level + ttcReference.firstLoopExit (z.1.state.removeComponent P)
           intensity threshold)
         (z.1.state.removeComponent P).nextLabel basePending) := by
   have hcontrols : Measurable (fun z : OriginConfiguration n ×
       ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
-      (z.1.level + ttcPseudocode.firstLoopExit (z.1.state.removeComponent P)
+      (z.1.level + ttcReference.firstLoopExit (z.1.state.removeComponent P)
         intensity threshold, (z.1.state.removeComponent P).nextLabel)) :=
     (OriginConfiguration.measurable_advance_controls
       P intensity threshold hthreshold).comp measurable_fst
@@ -132,10 +132,10 @@ theorem OriginConfiguration.measurable_mergedCoins_coinPair
     Measurable (fun z : OriginConfiguration n ×
         ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       let deleted := z.1.state.removeComponent P
-      let preRounds := z.1.level + ttcPseudocode.firstLoopExit deleted intensity
+      let preRounds := z.1.level + ttcReference.firstLoopExit deleted intensity
         threshold
       mergeCoinsAtLabel deleted.nextLabel
-        (shiftCoins (ttcPseudocode.firstLoopExit deleted intensity threshold)
+        (shiftCoins (ttcReference.firstLoopExit deleted intensity threshold)
           (sourceOldCoins z.1.origin z.1.source.coins
             z.1.level))
         (pendingCoinExtension deleted.nextLabel
@@ -151,7 +151,7 @@ theorem OriginConfiguration.measurable_mergedCoins_coinPair
   have hshift : Measurable (fun z : OriginConfiguration n ×
       ((Nat × Nat → Bool) × (Nat × Nat → Bool)) =>
       shiftCoins
-        (ttcPseudocode.firstLoopExit (z.1.state.removeComponent P) intensity
+        (ttcReference.firstLoopExit (z.1.state.removeComponent P) intensity
           threshold)
         (sourceOldCoins z.1.origin z.1.source.coins
           z.1.level)) :=
@@ -172,10 +172,10 @@ private noncomputable def originCoinPairMergedInput
   let deleted := z.1.state.removeComponent P
   let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
     z.1.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := z.1.level + rounds
   let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   ((first, pending),
     mergeCoinsAtLabel deleted.nextLabel (shiftCoins rounds oldCoins)
@@ -229,10 +229,10 @@ noncomputable def originCoinPairSplitExit
   let deleted := z.1.state.removeComponent P
   let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
     z.1.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := z.1.level + rounds
   let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   firstExitRoundSplit first pending threshold (shiftCoins rounds oldCoins)
     (pendingCoinExtension deleted.nextLabel pending
@@ -251,10 +251,10 @@ theorem originCoinPairSplitExit_eq_mergedExit
   let deleted := z.1.state.removeComponent P
   let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
     z.1.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := z.1.level + rounds
   let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   have hdeleted : deleted.LabelsFresh :=
     z.1.state.labelsFresh_removeComponent P z.1.fresh

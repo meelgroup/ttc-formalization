@@ -18,7 +18,7 @@ theorem estimate_of_population_envelope
       (s.X.card : Real) ≤
         (1 + p.ε') ^ 3 * (1 + p.latticeEta) *
           threshold * count * (s.p : Real)) :
-    (Est b threshold s : Real) ∈
+    (EstReference b threshold s : Real) ∈
       Arlib.relErr (p.epsilon / 2)
         ((count : Real) / (10 : Real) ^ (b * n)) := by
   let scale : Real := (10 : Real) ^ (b * n)
@@ -47,9 +47,9 @@ theorem estimate_of_population_envelope
       _ ≤ (1 + p.epsilon / 2) * count * (s.p : Real) * threshold := by
         have h := mul_le_mul_of_nonneg_right hbase.2 hmult
         nlinarith
-  have hestimate : (Est b threshold s : Real) =
+  have hestimate : (EstReference b threshold s : Real) =
       (s.X.card : Real) / ((s.p : Real) * threshold * scale) := by
-    simp [Est, scale, Real.coe_toNNReal threshold hthreshold.le]
+    simp [EstReference, scale, Real.coe_toNNReal threshold hthreshold.le]
   rw [Arlib.mem_relErr, hestimate]
   constructor
   · change (1 - p.epsilon / 2) * ((count : Real) / scale) ≤

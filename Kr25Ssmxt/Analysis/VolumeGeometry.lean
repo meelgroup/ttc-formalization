@@ -2,7 +2,7 @@ import Kr25Ssmxt.Analysis.OracleContracts
 import Kr25Ssmxt.Analysis.VolumeClipAccuracy
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
-/-! Geometric validity of the paper's volume-clipping interval. -/
+/-! The geometric volume envelope of a component, and the `ComputeVolume` contract. -/
 
 namespace Kr25Ssmxt
 
@@ -127,15 +127,6 @@ theorem community_volume_contract
     (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams) :
     ComputeVolumeContract (ttcSubroutines hn prep)
       F hbounded p := by
-  apply community_volume_contract_of_bounds hn prep F hbounded p
-  dsimp only
-  intro i
-  have heta0 : 0 ≤ p.ε' :=
-    (div_pos p.epsilon_pos (by norm_num)).le
-  have heta1 : p.ε' ≤ 1 := by
-    dsimp only [ApproxParams.ε']
-    linarith [p.epsilon_le_one]
-  exact ((prep.run F hbounded).component i).volume_bounds
-    (by omega : 0 < n) p.ε' heta0 heta1
+  exact community_volume_contract_of_cv18 hn prep F hbounded p
 
 end Kr25Ssmxt

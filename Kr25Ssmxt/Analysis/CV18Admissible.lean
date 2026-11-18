@@ -1,4 +1,4 @@
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-! Every CV18 call TTC makes is within CV18's parameter domain. -/
 

@@ -26,7 +26,7 @@ private theorem ce_samples_mass_le_one_all
     (factor : Nat) (P : PolytopeData n) (count b : Nat)
     (eta delta : Real) :
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-      P count b eta delta) Set.univ ≤ 1 := by
+      P count b eta) Set.univ ≤ 1 := by
   classical
   by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
@@ -52,13 +52,13 @@ private theorem ce_sample_append_kernel_measurable
     Measurable (fun z : TTCState n × Nat =>
       costedBind
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-          P z.2 b eta delta)
+          P z.2 b eta)
         (fun batch => costedCharge (Measure.dirac (z.1.addBatch batch))
           (z.2 * TTCRuntime.appendCopyOperations))) := by
   apply measurable_from_prod_countable_left
   intro count
   let μ := (ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-    P count b eta delta
+    P count b eta
   have hmass : μ Set.univ ≤ 1 :=
     ce_samples_mass_le_one_all hn prep factor P count b eta delta
   letI : IsFiniteMeasure μ := ⟨lt_of_le_of_lt hmass (by norm_num)⟩
@@ -108,7 +108,7 @@ private theorem ce_count_sample_append_kernel_measurable
       costedBind (ttcPseudocode.secondLoopWithCost z.1 z.2 threshold)
         (fun secondThinned => costedBind
           ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-            P secondThinned.2 b eta delta)
+            P secondThinned.2 b eta)
           (fun batch => costedCharge
             (Measure.dirac (secondThinned.1.addBatch batch))
             (secondThinned.2 * TTCRuntime.appendCopyOperations)))) := by
@@ -150,7 +150,7 @@ private theorem ce_poisson_count_sample_joint_measurable
           costedBind (ttcPseudocode.secondLoopWithCost z.1 pending threshold)
             (fun secondThinned => costedBind
               ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                P secondThinned.2 b eta delta)
+                P secondThinned.2 b eta)
               (fun batch => costedCharge
                 (Measure.dirac (secondThinned.1.addBatch batch))
                 (secondThinned.2 * TTCRuntime.appendCopyOperations))))) := by
@@ -163,7 +163,7 @@ private theorem ce_poisson_count_sample_joint_measurable
       costedBind (ttcPseudocode.secondLoopWithCost w.1.1 w.2 threshold)
         (fun secondThinned => costedBind
           ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-            P secondThinned.2 b eta delta)
+            P secondThinned.2 b eta)
           (fun batch => costedCharge
             (Measure.dirac (secondThinned.1.addBatch batch))
             (secondThinned.2 * TTCRuntime.appendCopyOperations)))) := by
@@ -180,7 +180,7 @@ private theorem ce_rate_tail_joint_measurable
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
-      costedBind (ttcPseudocode.firstLoopWithCost z.1 z.2 threshold)
+      costedBind (ttcReference.firstLoopWithCost z.1 z.2 threshold)
         (fun firstThinned =>
           costedBind
             (costedCharge (poissonMeasure (z.2 * firstThinned.p))
@@ -189,7 +189,7 @@ private theorem ce_rate_tail_joint_measurable
               costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
                 (fun secondThinned => costedBind
                   ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                    P secondThinned.2 b eta delta)
+                    P secondThinned.2 b eta)
                   (fun batch => costedCharge
                     (Measure.dirac (secondThinned.1.addBatch batch))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) := by
@@ -201,7 +201,7 @@ private theorem ce_rate_tail_joint_measurable
           costedBind (ttcPseudocode.secondLoopWithCost w.2 pending threshold)
             (fun secondThinned => costedBind
               ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                P secondThinned.2 b eta delta)
+                P secondThinned.2 b eta)
               (fun batch => costedCharge
                 (Measure.dirac (secondThinned.1.addBatch batch))
                 (secondThinned.2 * TTCRuntime.appendCopyOperations))))) := by
@@ -226,7 +226,7 @@ private theorem ce_poisson_count_sample_measurable
           costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
             (fun secondThinned => costedBind
               ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                P secondThinned.2 b eta delta)
+                P secondThinned.2 b eta)
               (fun batch => costedCharge
                 (Measure.dirac (secondThinned.1.addBatch batch))
                 (secondThinned.2 * TTCRuntime.appendCopyOperations))))) := by
@@ -240,7 +240,7 @@ private theorem ce_rate_tail_measurable
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) (intensity : NNReal) :
     Measurable (fun deleted : TTCState n =>
-      costedBind (ttcPseudocode.firstLoopWithCost deleted intensity threshold)
+      costedBind (ttcReference.firstLoopWithCost deleted intensity threshold)
         (fun firstThinned =>
           costedBind
             (costedCharge (poissonMeasure (intensity * firstThinned.p))
@@ -249,7 +249,7 @@ private theorem ce_rate_tail_measurable
               costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
                 (fun secondThinned => costedBind
                   ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                    P secondThinned.2 b eta delta)
+                    P secondThinned.2 b eta)
                   (fun batch => costedCharge
                     (Measure.dirac (secondThinned.1.addBatch batch))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) := by
@@ -296,7 +296,7 @@ private theorem ce_deletion_tail_joint_measurable
             z.1.X.card
             (z.1.X.card - (z.1.removeComponent P).X.card)))
         (fun deleted =>
-          costedBind (ttcPseudocode.firstLoopWithCost deleted z.2 threshold)
+          costedBind (ttcReference.firstLoopWithCost deleted z.2 threshold)
             (fun firstThinned =>
               costedBind
                 (costedCharge (poissonMeasure (z.2 * firstThinned.p))
@@ -305,7 +305,7 @@ private theorem ce_deletion_tail_joint_measurable
                   costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
                     (fun secondThinned => costedBind
                       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                        P secondThinned.2 b eta delta)
+                        P secondThinned.2 b eta)
                       (fun batch => costedCharge
                         (Measure.dirac (secondThinned.1.addBatch batch))
                         (secondThinned.2 * TTCRuntime.appendCopyOperations))))))) := by
@@ -335,7 +335,7 @@ private theorem ce_deletion_tail_joint_measurable
     rw [heq]
     exact Measure.measurable_dirac.comp hpair
   have hnext : Measurable (fun w : (TTCState n × NNReal) × TTCState n =>
-      costedBind (ttcPseudocode.firstLoopWithCost w.2 w.1.2 threshold)
+      costedBind (ttcReference.firstLoopWithCost w.2 w.1.2 threshold)
         (fun firstThinned =>
           costedBind
             (costedCharge (poissonMeasure (w.1.2 * firstThinned.p))
@@ -344,7 +344,7 @@ private theorem ce_deletion_tail_joint_measurable
               costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
                 (fun secondThinned => costedBind
                   ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                    P secondThinned.2 b eta delta)
+                    P secondThinned.2 b eta)
                   (fun batch => costedCharge
                     (Measure.dirac (secondThinned.1.addBatch batch))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) := by
@@ -358,8 +358,8 @@ private theorem ce_deletion_tail_joint_measurable
 
 private theorem ce_intensity_measurable (b n : Nat) (threshold : Real) :
     Measurable (fun outcome : VolumeOutcome =>
-      ttcPseudocode.t b n threshold outcome.2) := by
-  unfold ttcPseudocode.t
+      ttcReference.t b n threshold outcome.2) := by
+  unfold ttcReference.t
   exact measurable_const.mul measurable_snd
 
 private theorem ce_component_tail_joint_measurable
@@ -373,18 +373,18 @@ private theorem ce_component_tail_joint_measurable
             z.1.X.card
             (z.1.X.card - (z.1.removeComponent P).X.card)))
         (fun deleted =>
-          costedBind (ttcPseudocode.firstLoopWithCost deleted
-              (ttcPseudocode.t b n threshold z.2.2) threshold)
+          costedBind (ttcReference.firstLoopWithCost deleted
+              (ttcReference.t b n threshold z.2.2) threshold)
             (fun firstThinned =>
               costedBind
                 (costedCharge (poissonMeasure
-                  (ttcPseudocode.t b n threshold z.2.2 * firstThinned.p))
+                  (ttcReference.t b n threshold z.2.2 * firstThinned.p))
                   TTCRuntime.poissonDrawOperations)
                 (fun pending =>
                   costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
                     (fun secondThinned => costedBind
                       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                        P secondThinned.2 b eta delta)
+                        P secondThinned.2 b eta)
                       (fun batch => costedCharge
                         (Measure.dirac (secondThinned.1.addBatch batch))
                         (secondThinned.2 * TTCRuntime.appendCopyOperations))))))) := by
@@ -405,18 +405,18 @@ private theorem ce_component_step_measurable
             state.X.card
             (state.X.card - (state.removeComponent P).X.card)))
         (fun deleted =>
-          costedBind (ttcPseudocode.firstLoopWithCost deleted
-              (ttcPseudocode.t b n threshold volumeOutcome.2) threshold)
+          costedBind (ttcReference.firstLoopWithCost deleted
+              (ttcReference.t b n threshold volumeOutcome.2) threshold)
             (fun firstThinned =>
               costedBind
                 (costedCharge (poissonMeasure
-                  (ttcPseudocode.t b n threshold volumeOutcome.2 * firstThinned.p))
+                  (ttcReference.t b n threshold volumeOutcome.2 * firstThinned.p))
                   TTCRuntime.poissonDrawOperations)
                 (fun pending =>
                   costedBind (ttcPseudocode.secondLoopWithCost firstThinned pending threshold)
                     (fun secondThinned => costedBind
                       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                        P secondThinned.2 b eta delta)
+                        P secondThinned.2 b eta)
                       (fun batch => costedCharge
                         (Measure.dirac (secondThinned.1.addBatch batch))
                         (secondThinned.2 * TTCRuntime.appendCopyOperations))))))) := by
@@ -432,7 +432,7 @@ private theorem ce_component_kernel_measurable
     (hvolume : ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
       P eta delta) Set.univ ≤ 1) :
     Measurable (fun state : TTCState n =>
-      ttcPseudocode.stepWithCost
+      ttcReference.stepWithCost
         (ttcCostedSubroutines hn prep factor)
         b eta delta threshold P state) := by
   have h := measurable_costedBind_dependent_finite
@@ -454,7 +454,7 @@ private theorem ce_components_kernel_measurable
       ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         P eta delta) Set.univ ≤ 1) :
     Measurable (fun state : TTCState n =>
-      ttcPseudocode.loopWithCost
+      ttcReference.loopWithCost
         (ttcCostedSubroutines hn prep factor)
         b eta delta threshold components state) := by
   induction components with
@@ -469,10 +469,10 @@ private theorem ce_components_kernel_measurable
         exact hvolume Q (by simp [hQ])
       change Measurable (fun state : TTCState n =>
         costedBind
-          (ttcPseudocode.stepWithCost
+          (ttcReference.stepWithCost
             (ttcCostedSubroutines hn prep factor)
             b eta delta threshold P state)
-          (ttcPseudocode.loopWithCost
+          (ttcReference.loopWithCost
             (ttcCostedSubroutines hn prep factor)
             b eta delta threshold rest))
       exact costedBind_kernel_measurable _ _
@@ -482,7 +482,7 @@ private theorem ce_components_kernel_measurable
 
 private theorem ce_estimate_measurable {n : Nat} (b : Nat)
     (threshold : Real) :
-    Measurable (Est (n := n) b threshold) := by
+    Measurable (EstReference (n := n) b threshold) := by
   have hcoords : Measurable (fun s : TTCState n =>
       (s.p, s.X, s.nextLabel)) := comap_measurable _
   have hrate : Measurable (fun s : TTCState n => s.p) :=
@@ -493,45 +493,24 @@ private theorem ce_estimate_measurable {n : Nat} (b : Nat)
       (s.X.card : NNReal)) :=
     (measurable_of_countable (fun copies : Finset (SampleCopy n) =>
       (copies.card : NNReal))).comp hsamples
-  unfold Est
+  unfold EstReference
   exact hcount.div ((hrate.mul_const _).mul_const _)
 
 
-theorem PolytopeData.clipVolume_le_max {n : Nat}
-    (P : PolytopeData n) (eta : Real) (o : VolumeOutcome) :
-    (P.clipVolume eta o).2 ≤
-      max (P.volumeClipLower eta) (P.volumeClipUpper eta) := by
-  unfold PolytopeData.clipVolume
-  dsimp only
-  exact max_le_max_left _ (min_le_left _ _)
-
-theorem PolytopeData.measurable_clipVolume {n : Nat}
-    (P : PolytopeData n) (eta : Real) :
-    Measurable (P.clipVolume eta) := by
-  unfold PolytopeData.clipVolume
-  fun_prop
-
 theorem intensity_mono_volume (b n : Nat) (threshold : Real)
     {small large : NNReal} (hvol : small ≤ large) :
-    ttcPseudocode.t b n threshold small ≤
-      ttcPseudocode.t b n threshold large := by
-  unfold ttcPseudocode.t
+    ttcReference.t b n threshold small ≤
+      ttcReference.t b n threshold large := by
+  unfold ttcReference.t
   gcongr
 
-theorem clipped_rateThinningCost_le {n : Nat}
-    (s : TTCState n) (P : PolytopeData n) (b : Nat)
-    (threshold eta : Real) (hthreshold : 0 < threshold)
-    (outcome : VolumeOutcome) :
-    ttcPseudocode.firstLoopCost s
-      (ttcPseudocode.t b n threshold (P.clipVolume eta outcome).2)
-      threshold ≤
-    ttcPseudocode.firstLoopCost s
-      (ttcPseudocode.t b n threshold
-        (max (P.volumeClipLower eta) (P.volumeClipUpper eta)))
-      threshold := by
-  apply rateThinningCost_mono_intensity s _ hthreshold
-  exact intensity_mono_volume b n threshold
-    (P.clipVolume_le_max eta outcome)
+/-- The rate check is charged at most one thinning pass. -/
+theorem rateThinningCost_le_round {n : Nat}
+    (s : TTCState n) (intensity : NNReal) (threshold : Real) :
+    ttcReference.firstLoopCost s intensity threshold ≤
+      TTCRuntime.rateThinningRoundOperations s.X.card := by
+  unfold ttcReference.firstLoopCost
+  split_ifs <;> omega
 
 theorem certified_community_volume_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
@@ -551,8 +530,7 @@ theorem certified_community_volume_continuation_bound {n k : Nat}
     (p : ApproxParams) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (f : VolumeOutcome → ENNReal)
     {budget : ENNReal}
-    (hbudget : ∀ outcome : VolumeOutcome,
-      f ((D.component i).clipVolume p.ε' outcome) ≤ budget) :
+    (hbudget : ∀ outcome : VolumeOutcome, f outcome ≤ budget) :
     (∫⁻ result, (result.2 : ENNReal) + f result.1 ∂
       (ttcCostedSubroutines hn prep factor).computeVolumeWithCost
         (D.component i) p.ε' (p.δ' D.componentCount)) ≤
@@ -567,8 +545,7 @@ theorem certified_community_volume_continuation_bound {n k : Nat}
   have hbase := costedCharge_map_continuation_bound
     (communityCV18VolumeLaw (by omega) (D.component i) p.ε'
       (p.δ' D.componentCount))
-    ((D.component i).clipVolume p.ε')
-    ((D.component i).measurable_clipVolume p.ε').aemeasurable
+    id aemeasurable_id
     (TTCRuntime.membershipQueryOperations n
       (D.component i).presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) (D.component i)
@@ -578,17 +555,14 @@ theorem certified_community_volume_continuation_bound {n k : Nat}
         (CommunityCV18.queryBudgetFor (by omega) (D.component i)
           p.ε' (p.δ' D.componentCount) + 1))
     f (certified_community_volume_mass_le_one hn D p i) hbudget
-  simpa only [ttcCostedSubroutines, ttcSubroutines,
+  simpa only [ttcCostedSubroutines, ttcSubroutines, Measure.map_id,
     Nat.cast_add, Nat.cast_mul] using hbase
 
 private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) (m b : Nat)
     (P : PolytopeData n) (state : TTCState n) : ENNReal :=
   let deleted := state.removeComponent P
   state.X.card * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
-  ttcPseudocode.firstLoopCost deleted
-    (ttcPseudocode.t b n (p.Thresh m)
-      (max (P.volumeClipLower p.ε')
-        (P.volumeClipUpper p.ε'))) (p.Thresh m) +
+  TTCRuntime.rateThinningRoundOperations deleted.X.card +
   TTCRuntime.poissonDrawOperations +
   4 * TTCRuntime.countThinningRoundOperations state.X.card +
   (TTCRuntime.ThresholdCap p m : ENNReal) *
@@ -599,7 +573,7 @@ private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) 
 private noncomputable def componentUniformBudget {n : Nat} (p : ApproxParams)
     (m b : Nat) (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.ThresholdCap p m
-  let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
+  let upperIntensity := ttcReference.t b n (p.Thresh m)
     (max (P.volumeClipLower p.ε')
       (P.volumeClipUpper p.ε'))
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
@@ -634,14 +608,14 @@ theorem ratePoissonCount_expected_cost_le {n : Nat}
     (hthreshold : 0 < threshold)
     (hsamples : (s.X.card : Real) ≤ threshold) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-      costedBind (ttcPseudocode.firstLoopWithCost s intensity threshold)
+      costedBind (ttcReference.firstLoopWithCost s intensity threshold)
         (fun firstThinned =>
           costedBind
             (costedCharge
               (poissonMeasure (intensity * firstThinned.p))
               TTCRuntime.poissonDrawOperations)
             (fun pending => ttcPseudocode.secondLoopWithCost firstThinned pending threshold)) ≤
-      ttcPseudocode.firstLoopCost s intensity threshold +
+      ttcReference.firstLoopCost s intensity threshold +
         (TTCRuntime.poissonDrawOperations +
           4 * TTCRuntime.countThinningRoundOperations s.X.card) := by
   let next : TTCState n → Measure ((TTCState n × Nat) × Nat) := fun firstThinned =>
@@ -660,7 +634,7 @@ theorem ratePoissonCount_expected_cost_le {n : Nat}
   have hnextMeas : Measurable next :=
     ce_poisson_count_kernel_measurable intensity threshold
   apply (costedBind_lintegral_cost_le _ next hnextMeas hnextMass).trans
-  unfold ttcPseudocode.firstLoopWithCost
+  unfold ttcReference.firstLoopWithCost
   apply (lintegral_map_le _
     ((measurable_rateThinningResult s intensity threshold).prodMk
       measurable_const).aemeasurable).trans
@@ -679,16 +653,16 @@ theorem ratePoissonCount_expected_cost_le {n : Nat}
       intro coins
       have hcard := rateThinningResult_card_le s intensity threshold coins
       have hcardReal :
-          ((ttcPseudocode.firstLoopResult s intensity threshold coins).X.card : Real) ≤
+          ((ttcReference.firstLoopResult s intensity threshold coins).X.card : Real) ≤
             threshold := (Nat.cast_le.mpr hcard).trans hsamples
       have hguard := rateThinningResult_guard s intensity hthreshold coins
       have hcost := poissonCountThin_expected_cost_le
-        (ttcPseudocode.firstLoopResult s intensity threshold coins)
-        (intensity * (ttcPseudocode.firstLoopResult s intensity threshold coins).p)
+        (ttcReference.firstLoopResult s intensity threshold coins)
+        (intensity * (ttcReference.firstLoopResult s intensity threshold coins).p)
         threshold hthreshold.le hcardReal hguard
       have hround :
           TTCRuntime.countThinningRoundOperations
-              (ttcPseudocode.firstLoopResult s intensity threshold coins).X.card ≤
+              (ttcReference.firstLoopResult s intensity threshold coins).X.card ≤
             TTCRuntime.countThinningRoundOperations s.X.card := by
         unfold TTCRuntime.countThinningRoundOperations TTCRuntime.fairCoinOperations
           TTCRuntime.binomialDrawOperations TTCRuntime.scalarOperationCost
@@ -733,7 +707,7 @@ theorem certified_community_sample_append_expected_cost {n k : Nat}
     ∫⁻ result, (result.2 : ENNReal) ∂
       costedBind
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-          (D.component i) count b p.ε' delta)
+          (D.component i) count b p.ε')
         (fun batch => costedCharge (Measure.dirac (state.addBatch batch))
           (count * TTCRuntime.appendCopyOperations)) ≤
       count * (2 * TTCRuntime.samplingAttemptOperations n
@@ -760,8 +734,7 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
         (fun secondThinned =>
           costedBind
             ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-              (D.component i) secondThinned.2 b p.ε'
-              (p.δ' D.componentCount))
+              (D.component i) secondThinned.2 b p.ε')
             (fun batch => costedCharge
               (Measure.dirac (secondThinned.1.addBatch batch))
               (secondThinned.2 * TTCRuntime.appendCopyOperations))) ≤
@@ -781,8 +754,7 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
     fun secondThinned =>
       costedBind
         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-          (D.component i) secondThinned.2 b p.ε'
-          (p.δ' D.componentCount))
+          (D.component i) secondThinned.2 b p.ε')
         (fun batch => costedCharge
           (Measure.dirac (secondThinned.1.addBatch batch))
           (secondThinned.2 * TTCRuntime.appendCopyOperations))
@@ -848,8 +820,7 @@ theorem certified_count_sample_append_mass_le_one {n k : Nat}
       (fun secondThinned =>
         costedBind
           ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-            (D.component i) secondThinned.2 b p.ε'
-            (p.δ' D.componentCount))
+            (D.component i) secondThinned.2 b p.ε')
           (fun batch => costedCharge
             (Measure.dirac (secondThinned.1.addBatch batch))
             (secondThinned.2 * TTCRuntime.appendCopyOperations)))) Set.univ ≤ 1 := by
@@ -874,7 +845,7 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (rate : NNReal)
     (hsamples : (state.X.card : Real) ≤ p.Thresh D.componentCount)
-    (hrate : (rate : Real) < p.Thresh D.componentCount) :
+    (hrate : (rate : Real) ≤ p.Thresh D.componentCount) :
     ∫⁻ result, (result.2 : ENNReal) ∂
       costedBind
         (costedCharge (poissonMeasure rate) TTCRuntime.poissonDrawOperations)
@@ -884,8 +855,7 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
             (fun secondThinned =>
               costedBind
                 ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                  (D.component i) secondThinned.2 b p.ε'
-                  (p.δ' D.componentCount))
+                  (D.component i) secondThinned.2 b p.ε')
                 (fun batch => costedCharge
                   (Measure.dirac (secondThinned.1.addBatch batch))
                   (secondThinned.2 * TTCRuntime.appendCopyOperations)))) ≤
@@ -907,8 +877,7 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
       (fun secondThinned =>
         costedBind
           ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-            (D.component i) secondThinned.2 b p.ε'
-            (p.δ' D.componentCount))
+            (D.component i) secondThinned.2 b p.ε')
           (fun batch => costedCharge
             (Measure.dirac (secondThinned.1.addBatch batch))
             (secondThinned.2 * TTCRuntime.appendCopyOperations)))
@@ -958,7 +927,7 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
     (hsamples : (state.X.card : Real) ≤ p.Thresh D.componentCount) :
     ∫⁻ result, (result.2 : ENNReal) ∂
       costedBind
-        (ttcPseudocode.firstLoopWithCost state intensity (p.Thresh D.componentCount))
+        (ttcReference.firstLoopWithCost state intensity (p.Thresh D.componentCount))
         (fun firstThinned =>
           costedBind
             (costedCharge
@@ -971,12 +940,11 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
                 (fun secondThinned =>
                   costedBind
                     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                      (D.component i) secondThinned.2 b p.ε'
-                      (p.δ' D.componentCount))
+                      (D.component i) secondThinned.2 b p.ε')
                     (fun batch => costedCharge
                       (Measure.dirac (secondThinned.1.addBatch batch))
                       (secondThinned.2 * TTCRuntime.appendCopyOperations))))) ≤
-      ttcPseudocode.firstLoopCost state intensity (p.Thresh D.componentCount) +
+      ttcReference.firstLoopCost state intensity (p.Thresh D.componentCount) +
         TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations state.X.card +
         (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
@@ -1001,8 +969,7 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
           (fun secondThinned =>
             costedBind
               ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                (D.component i) secondThinned.2 b p.ε'
-                (p.δ' D.componentCount))
+                (D.component i) secondThinned.2 b p.ε')
               (fun batch => costedCharge
                 (Measure.dirac (secondThinned.1.addBatch batch))
                 (secondThinned.2 * TTCRuntime.appendCopyOperations))))
@@ -1018,7 +985,7 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
     ce_poisson_count_sample_measurable hn prep factor (D.component i) b
       p.ε' (p.δ' D.componentCount) threshold intensity
   apply (costedBind_lintegral_cost_le _ next hnextMeas hnextMass).trans
-  unfold ttcPseudocode.firstLoopWithCost
+  unfold ttcReference.firstLoopWithCost
   apply (lintegral_map_le _
     ((measurable_rateThinningResult state intensity threshold).prodMk
       measurable_const).aemeasurable).trans
@@ -1038,18 +1005,18 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
       intro coins
       have hcard := rateThinningResult_card_le state intensity threshold coins
       have hcardReal :
-          ((ttcPseudocode.firstLoopResult state intensity threshold coins).X.card :
+          ((ttcReference.firstLoopResult state intensity threshold coins).X.card :
             Real) ≤ threshold := (Nat.cast_le.mpr hcard).trans hsamples
       have hguard := rateThinningResult_guard state intensity
         (p.threshold_pos D.componentCount) coins
       have hcost := certified_poisson_count_sample_expected_cost hn D p b
         hprecision prep factor i
-        (ttcPseudocode.firstLoopResult state intensity threshold coins)
-        (intensity * (ttcPseudocode.firstLoopResult state intensity threshold coins).p)
+        (ttcReference.firstLoopResult state intensity threshold coins)
+        (intensity * (ttcReference.firstLoopResult state intensity threshold coins).p)
         hcardReal hguard
       have hround :
           TTCRuntime.countThinningRoundOperations
-              (ttcPseudocode.firstLoopResult state intensity threshold coins).X.card ≤
+              (ttcReference.firstLoopResult state intensity threshold coins).X.card ≤
             TTCRuntime.countThinningRoundOperations state.X.card := by
         unfold TTCRuntime.countThinningRoundOperations TTCRuntime.fairCoinOperations
           TTCRuntime.binomialDrawOperations TTCRuntime.scalarOperationCost
@@ -1068,7 +1035,7 @@ theorem certified_rate_rest_mass_le_one {n k : Nat}
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (intensity : NNReal) :
     (costedBind
-      (ttcPseudocode.firstLoopWithCost state intensity (p.Thresh D.componentCount))
+      (ttcReference.firstLoopWithCost state intensity (p.Thresh D.componentCount))
       (fun firstThinned =>
         costedBind
           (costedCharge
@@ -1081,8 +1048,7 @@ theorem certified_rate_rest_mass_le_one {n k : Nat}
               (fun secondThinned =>
                 costedBind
                   ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                    (D.component i) secondThinned.2 b p.ε'
-                    (p.δ' D.componentCount))
+                    (D.component i) secondThinned.2 b p.ε')
                   (fun batch => costedCharge
                     (Measure.dirac (secondThinned.1.addBatch batch))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations))))))
@@ -1100,7 +1066,7 @@ theorem certified_rate_rest_mass_le_one {n k : Nat}
       exact certified_count_sample_append_mass_le_one hn D p b hprecision
         prep factor pending i firstThinned
 
-/-- The deletion pass and all later stages, conditional on one clipped volume
+/-- The deletion pass and all later stages, conditional on one volume
 estimate, have an explicit expected-operation bound. -/
 theorem certified_deleted_component_expected_cost {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
@@ -1110,7 +1076,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
     (i : Fin D.componentCount) (state : TTCState n) (volumeEstimate : NNReal)
     (hsamples : (state.X.card : Real) ≤ p.Thresh D.componentCount) :
     let deleted := state.removeComponent (D.component i)
-    let intensity := ttcPseudocode.t b n (p.Thresh D.componentCount) volumeEstimate
+    let intensity := ttcReference.t b n (p.Thresh D.componentCount) volumeEstimate
     let deletionCost := TTCRuntime.deletionPassOperations n
       (D.component i).presentation.facetCount state.X.card
       (state.X.card - deleted.X.card)
@@ -1118,7 +1084,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
       costedBind (costedCharge (Measure.dirac deleted) deletionCost)
         (fun deleted =>
           costedBind
-            (ttcPseudocode.firstLoopWithCost deleted intensity
+            (ttcReference.firstLoopWithCost deleted intensity
               (p.Thresh D.componentCount))
             (fun firstThinned =>
               costedBind
@@ -1132,13 +1098,12 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
                     (fun secondThinned =>
                       costedBind
                         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                          (D.component i) secondThinned.2 b p.ε'
-                          (p.δ' D.componentCount))
+                          (D.component i) secondThinned.2 b p.ε')
                         (fun batch => costedCharge
                           (Measure.dirac (secondThinned.1.addBatch batch))
                           (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) ≤
       deletionCost +
-        ttcPseudocode.firstLoopCost deleted intensity (p.Thresh D.componentCount) +
+        ttcReference.firstLoopCost deleted intensity (p.Thresh D.componentCount) +
         TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations deleted.X.card +
         (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
@@ -1148,13 +1113,13 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
             TTCRuntime.appendCopyOperations) := by
   dsimp only
   let deleted := state.removeComponent (D.component i)
-  let intensity := ttcPseudocode.t b n (p.Thresh D.componentCount) volumeEstimate
+  let intensity := ttcReference.t b n (p.Thresh D.componentCount) volumeEstimate
   let deletionCost := TTCRuntime.deletionPassOperations n
     (D.component i).presentation.facetCount state.X.card
     (state.X.card - deleted.X.card)
   let next : TTCState n → Measure (TTCState n × Nat) := fun deleted =>
     costedBind
-      (ttcPseudocode.firstLoopWithCost deleted intensity (p.Thresh D.componentCount))
+      (ttcReference.firstLoopWithCost deleted intensity (p.Thresh D.componentCount))
       (fun firstThinned =>
         costedBind
           (costedCharge
@@ -1167,8 +1132,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
               (fun secondThinned =>
                 costedBind
                   ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                    (D.component i) secondThinned.2 b p.ε'
-                    (p.δ' D.componentCount))
+                    (D.component i) secondThinned.2 b p.ε')
                   (fun batch => costedCharge
                     (Measure.dirac (secondThinned.1.addBatch batch))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations)))))
@@ -1189,7 +1153,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
     _ ≤ (deletionCost : ENNReal) +
         (∫⁻ result, (result.2 : ENNReal) ∂next deleted) := hstep
     _ ≤ (deletionCost : ENNReal) +
-        ((ttcPseudocode.firstLoopCost deleted intensity
+        ((ttcReference.firstLoopCost deleted intensity
           (p.Thresh D.componentCount) : ENNReal) +
           TTCRuntime.poissonDrawOperations +
           4 * TTCRuntime.countThinningRoundOperations deleted.X.card +
@@ -1209,8 +1173,8 @@ theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
     (hsamples : (state.X.card : Real) ≤ p.Thresh D.componentCount) :
     let P := D.component i
     let deleted := state.removeComponent P
-    let intensity := ttcPseudocode.t b n (p.Thresh D.componentCount)
-      (P.clipVolume p.ε' outcome).2
+    let intensity := ttcReference.t b n (p.Thresh D.componentCount)
+      outcome.2
     let deletionCost := TTCRuntime.deletionPassOperations n
       P.presentation.facetCount state.X.card
       (state.X.card - deleted.X.card)
@@ -1218,7 +1182,7 @@ theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
       costedBind (costedCharge (Measure.dirac deleted) deletionCost)
         (fun deleted =>
           costedBind
-            (ttcPseudocode.firstLoopWithCost deleted intensity
+            (ttcReference.firstLoopWithCost deleted intensity
               (p.Thresh D.componentCount))
             (fun firstThinned =>
               costedBind
@@ -1232,8 +1196,7 @@ theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
                     (fun secondThinned =>
                       costedBind
                         ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                          P secondThinned.2 b p.ε'
-                          (p.δ' D.componentCount))
+                          P secondThinned.2 b p.ε')
                         (fun batch => costedCharge
                           (Measure.dirac (secondThinned.1.addBatch batch))
                           (secondThinned.2 * TTCRuntime.appendCopyOperations)))))) ≤
@@ -1241,14 +1204,14 @@ theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
   dsimp only
   let P := D.component i
   let deleted := state.removeComponent P
-  let intensity := ttcPseudocode.t b n (p.Thresh D.componentCount)
-    (P.clipVolume p.ε' outcome).2
+  let intensity := ttcReference.t b n (p.Thresh D.componentCount)
+    outcome.2
   have hbase := certified_deleted_component_expected_cost hn D p b hprecision
-    prep factor i state (P.clipVolume p.ε' outcome).2 hsamples
+    prep factor i state outcome.2 hsamples
   have hdeletion := deletionPassOperations_le state P
-  have hrate := clipped_rateThinningCost_le deleted P b
-    (p.Thresh D.componentCount) p.ε'
-    (p.threshold_pos D.componentCount) outcome
+  have hrate := rateThinningCost_le_round deleted
+    (ttcReference.t b n (p.Thresh D.componentCount) outcome.2)
+    (p.Thresh D.componentCount)
   have hcount :
       TTCRuntime.countThinningRoundOperations deleted.X.card ≤
         TTCRuntime.countThinningRoundOperations state.X.card := by
@@ -1260,7 +1223,7 @@ theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
   calc
     _ ≤ (TTCRuntime.deletionPassOperations n P.presentation.facetCount
           state.X.card (state.X.card - deleted.X.card) : ENNReal) +
-        ttcPseudocode.firstLoopCost deleted intensity (p.Thresh D.componentCount) +
+        ttcReference.firstLoopCost deleted intensity (p.Thresh D.componentCount) +
         TTCRuntime.poissonDrawOperations +
         4 * TTCRuntime.countThinningRoundOperations deleted.X.card +
         (TTCRuntime.ThresholdCap p D.componentCount : ENNReal) *
@@ -1281,48 +1244,50 @@ private theorem componentNonVolumeBudget_le_uniform {n : Nat}
       componentUniformBudget p m b P := by
   let cap := TTCRuntime.ThresholdCap p m
   let deleted := state.removeComponent P
-  let upperIntensity := ttcPseudocode.t b n (p.Thresh m)
+  let upperIntensity := ttcReference.t b n (p.Thresh m)
     (max (P.volumeClipLower p.ε')
       (P.volumeClipUpper p.ε'))
   have hcap : state.X.card ≤ cap := by
     exact_mod_cast hcard.trans (Nat.le_ceil (p.Thresh m))
   have hdeleted : deleted.X.card ≤ cap :=
     (TTCState.removeComponent_card_le state P).trans hcap
-  have hrateDeleted : deleted.p ≤ 1 := by
-    simpa only [deleted, TTCState.removeComponent] using hrate
-  have hmeanNN : upperIntensity * deleted.p ≤ upperIntensity := by
-    calc
-      upperIntensity * deleted.p ≤ upperIntensity * 1 :=
-        mul_le_mul_of_nonneg_left hrateDeleted (by positivity)
-      _ = upperIntensity := mul_one _
-  have hmean : ((upperIntensity * deleted.p : NNReal) : Real) /
-      p.Thresh m ≤ (upperIntensity : Real) / p.Thresh m := by
-    apply div_le_div_of_nonneg_right
-    · exact_mod_cast hmeanNN
-    · exact (p.threshold_pos m).le
-  have hlog : Nat.clog 2
-      (Nat.ceil (((upperIntensity * deleted.p : NNReal) : Real) /
-        p.Thresh m) + 1) ≤
-      Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) := by
-    apply Nat.clog_mono_right
-    exact Nat.add_le_add_right (Nat.ceil_mono hmean) 1
-  have hrateCost : ttcPseudocode.firstLoopCost deleted upperIntensity
-      (p.Thresh m) ≤
+  have hlowerPos : 0 < (P.volumeClipLower p.ε' : Real) := by
+    have heps : p.ε' < 1 := by
+      unfold ApproxParams.ε'
+      linarith [p.epsilon_le_one]
+    have hbase : 0 < (2 * P.inradius / Real.sqrt n) ^ n := by
+      rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+      · subst hn0
+        simp
+      · have hsqrt : 0 < Real.sqrt n := Real.sqrt_pos.mpr (by exact_mod_cast hnpos)
+        exact pow_pos (div_pos (by linarith [P.inradius_pos]) hsqrt) n
+    unfold PolytopeData.volumeClipLower
+    rw [Real.coe_toNNReal _ (by nlinarith)]
+    nlinarith
+  have hupperPos : 0 < (upperIntensity : Real) := by
+    have hT := p.threshold_pos m
+    have hmax : (0 : NNReal) < max (P.volumeClipLower p.ε') (P.volumeClipUpper p.ε') :=
+      lt_max_of_lt_left (by exact_mod_cast hlowerPos)
+    have hpos : (0 : NNReal) < upperIntensity := by
+      dsimp only [upperIntensity, ttcReference.t]
+      exact mul_pos (mul_pos (Real.toNNReal_pos.mpr hT) (by positivity)) hmax
+    exact_mod_cast hpos
+  have hlogPos : 1 ≤ Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) := by
+    have hceil : 0 < Nat.ceil ((upperIntensity : Real) / p.Thresh m) :=
+      Nat.ceil_pos.mpr (div_pos hupperPos (p.threshold_pos m))
+    exact Nat.clog_pos (by norm_num) (by omega)
+  have hrateCost : TTCRuntime.rateThinningRoundOperations deleted.X.card ≤
       Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) *
         TTCRuntime.rateThinningRoundOperations cap := by
+    have hround : TTCRuntime.rateThinningRoundOperations deleted.X.card ≤
+        TTCRuntime.rateThinningRoundOperations cap := by
+      unfold TTCRuntime.rateThinningRoundOperations TTCRuntime.fairCoinOperations
+        TTCRuntime.scalarOperationCost
+      omega
     calc
-      _ ≤ Nat.clog 2 (Nat.ceil (((upperIntensity * deleted.p : NNReal) : Real) /
-            p.Thresh m) + 1) *
-          TTCRuntime.rateThinningRoundOperations deleted.X.card :=
-        rateThinningCost_le_clog deleted upperIntensity (p.threshold_pos m)
-      _ ≤ Nat.clog 2 (Nat.ceil ((upperIntensity : Real) / p.Thresh m) + 1) *
-          TTCRuntime.rateThinningRoundOperations cap := by
-        have hround : TTCRuntime.rateThinningRoundOperations deleted.X.card ≤
-            TTCRuntime.rateThinningRoundOperations cap := by
-          unfold TTCRuntime.rateThinningRoundOperations TTCRuntime.fairCoinOperations
-            TTCRuntime.scalarOperationCost
-          omega
-        exact Nat.mul_le_mul hlog hround
+      _ ≤ TTCRuntime.rateThinningRoundOperations cap := hround
+      _ = 1 * TTCRuntime.rateThinningRoundOperations cap := (one_mul _).symm
+      _ ≤ _ := Nat.mul_le_mul_right _ hlogPos
   have hdelete : state.X.card *
       (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) ≤
       cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) :=
@@ -1345,7 +1310,7 @@ theorem certified_component_expected_cost {n k : Nat}
     (i : Fin D.componentCount) (state : TTCState n)
     (hsamples : (state.X.card : Real) ≤ p.Thresh D.componentCount) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcPseudocode.stepWithCost
+      ttcReference.stepWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         (D.component i) state ≤
@@ -1361,7 +1326,7 @@ theorem certified_component_expected_cost {n k : Nat}
   let P := D.component i
   let O := ttcCostedSubroutines hn prep factor
   let step : VolumeOutcome → Measure (TTCState n × Nat) := fun volumeOutcome =>
-    let intensity := ttcPseudocode.t b n (p.Thresh D.componentCount)
+    let intensity := ttcReference.t b n (p.Thresh D.componentCount)
       volumeOutcome.2
     let deleted := state.removeComponent P
     let deletionCost := TTCRuntime.deletionPassOperations n
@@ -1370,7 +1335,7 @@ theorem certified_component_expected_cost {n k : Nat}
     costedBind (costedCharge (Measure.dirac deleted) deletionCost)
       (fun deleted =>
         costedBind
-          (ttcPseudocode.firstLoopWithCost deleted intensity
+          (ttcReference.firstLoopWithCost deleted intensity
             (p.Thresh D.componentCount))
           (fun firstThinned =>
             costedBind
@@ -1383,8 +1348,7 @@ theorem certified_component_expected_cost {n k : Nat}
                     (p.Thresh D.componentCount))
                   (fun secondThinned =>
                     costedBind
-                      (O.generateSamplesWithCost P secondThinned.2 b p.ε'
-                        (p.δ' D.componentCount))
+                      (O.generateSamplesWithCost P secondThinned.2 b p.ε')
                       (fun batch => costedCharge
                         (Measure.dirac (secondThinned.1.addBatch batch))
                         (secondThinned.2 * TTCRuntime.appendCopyOperations))))))
@@ -1395,17 +1359,17 @@ theorem certified_component_expected_cost {n k : Nat}
       (ce_rate_tail_measurable hn prep factor P b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         (p.threshold_pos D.componentCount)
-        (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeOutcome.2))
+        (ttcReference.t b n (p.Thresh D.componentCount) volumeOutcome.2))
       ?_ ?_
     · apply costedCharge_mass_le_one
       simp
     · intro deleted
       exact certified_rate_rest_mass_le_one hn D p b hprecision prep factor
-        i deleted (ttcPseudocode.t b n (p.Thresh D.componentCount)
+        i deleted (ttcReference.t b n (p.Thresh D.componentCount)
           volumeOutcome.2)
   have hstepCost (outcome : VolumeOutcome) :
       (∫⁻ result, (result.2 : ENNReal) ∂
-        step (P.clipVolume p.ε' outcome)) ≤
+        step outcome) ≤
         componentNonVolumeBudget p D.componentCount b P state := by
     exact certified_deleted_component_expected_cost_le_budget hn D p b hprecision
       prep factor i state outcome hsamples
@@ -1430,7 +1394,7 @@ theorem certified_component_expected_cost_uniform {n k : Nat}
     (hcard : (state.X.card : Real) ≤ p.Thresh D.componentCount)
     (hrate : state.p ≤ 1) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcPseudocode.stepWithCost
+      ttcReference.stepWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         (D.component i) state ≤
@@ -1455,7 +1419,7 @@ theorem certified_component_mass_le_one {n k : Nat}
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) :
-    (ttcPseudocode.stepWithCost
+    (ttcReference.stepWithCost
       (ttcCostedSubroutines hn prep factor) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
       (D.component i) state) Set.univ ≤ 1 := by
@@ -1468,11 +1432,8 @@ theorem certified_component_mass_le_one {n k : Nat}
         (p.δ' D.componentCount)) Set.univ ≤ 1 := by
     apply costedCharge_mass_le_one
     dsimp only [ttcSubroutines]
-    rw [Measure.map_apply
-      ((D.component i).measurable_clipVolume p.ε')
-      MeasurableSet.univ]
-    simpa using hcv
-  unfold ttcPseudocode.stepWithCost
+    exact hcv
+  unfold ttcReference.stepWithCost
   refine costedBind_mass_le_one _ _
     (ce_component_step_measurable hn prep factor (D.component i) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
@@ -1482,13 +1443,13 @@ theorem certified_component_mass_le_one {n k : Nat}
     (ce_rate_tail_measurable hn prep factor (D.component i) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
       (p.threshold_pos D.componentCount)
-      (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeOutcome.2))
+      (ttcReference.t b n (p.Thresh D.componentCount) volumeOutcome.2))
     ?_ ?_
   · apply costedCharge_mass_le_one
     simp
   · intro deleted
     exact certified_rate_rest_mass_le_one hn D p b hprecision prep factor
-      i deleted (ttcPseudocode.t b n (p.Thresh D.componentCount)
+      i deleted (ttcReference.t b n (p.Thresh D.componentCount)
         volumeOutcome.2)
 
 /-- The concrete charged paper component has a deterministic expected
@@ -1516,22 +1477,22 @@ private theorem measurableSet_state_rate_le_one {n : Nat} :
 private theorem rateThinningResult_rate_le_one {n : Nat}
     (state : TTCState n) (intensity : NNReal) (threshold : Real)
     (coins : Nat × Nat → Bool) (hrate : state.p ≤ 1) :
-    (ttcPseudocode.firstLoopResult state intensity threshold coins).p ≤ 1 := by
-  dsimp only [ttcPseudocode.firstLoopResult]
-  have hdenom : (1 : NNReal) ≤ (2 : NNReal) ^ ttcPseudocode.firstLoopExit state intensity
+    (ttcReference.firstLoopResult state intensity threshold coins).p ≤ 1 := by
+  dsimp only [ttcReference.firstLoopResult]
+  have hdenom : (1 : NNReal) ≤ (2 : NNReal) ^ ttcReference.firstLoopExit state intensity
       threshold := one_le_pow₀ (by norm_num)
   exact (div_le_self (by positivity) hdenom).trans hrate
 
 private theorem rateThinWithCost_rate_le_one_ae {n : Nat}
     (state : TTCState n) (intensity : NNReal) (threshold : Real)
     (hrate : state.p ≤ 1) :
-    ∀ᵐ result ∂ttcPseudocode.firstLoopWithCost state intensity threshold,
+    ∀ᵐ result ∂ttcReference.firstLoopWithCost state intensity threshold,
       result.1.p ≤ 1 := by
   have hset : MeasurableSet {s : TTCState n | s.p ≤ 1} :=
     measurableSet_state_rate_le_one
-  have hbase : ∀ᵐ result ∂ttcPseudocode.firstLoop state intensity threshold,
+  have hbase : ∀ᵐ result ∂ttcReference.firstLoop state intensity threshold,
       result.p ≤ 1 := by
-    unfold ttcPseudocode.firstLoop
+    unfold ttcReference.firstLoop
     rw [ae_map_iff
       (measurable_rateThinningResult state intensity threshold).aemeasurable
       hset]
@@ -1591,8 +1552,7 @@ private theorem count_sample_append_card_le_ae {n k : Nat}
         (fun secondThinned =>
           costedBind
             ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-              (D.component i) secondThinned.2 b p.ε'
-              (p.δ' D.componentCount))
+              (D.component i) secondThinned.2 b p.ε')
             (fun batch => costedCharge
               (Measure.dirac (secondThinned.1.addBatch batch))
               (secondThinned.2 * TTCRuntime.appendCopyOperations))),
@@ -1616,12 +1576,12 @@ theorem certified_component_card_le_ae {n k : Nat}
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) :
     ∀ᵐ result ∂
-      ttcPseudocode.stepWithCost
+      ttcReference.stepWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         (D.component i) state,
       (result.1.X.card : Real) ≤ p.Thresh D.componentCount := by
-  unfold ttcPseudocode.stepWithCost
+  unfold ttcReference.stepWithCost
   apply costedBind_ae_state_of_forall _ _
     (ce_component_step_measurable hn prep factor (D.component i) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
@@ -1633,14 +1593,14 @@ theorem certified_component_card_le_ae {n k : Nat}
     (ce_rate_tail_measurable hn prep factor (D.component i) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
       (p.threshold_pos D.componentCount)
-      (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeOutcome.2))
+      (ttcReference.t b n (p.Thresh D.componentCount) volumeOutcome.2))
     (fun s : TTCState n => (s.X.card : Real) ≤ p.Thresh D.componentCount)
     (measurableSet_state_card_le _)
   intro deleted
   apply costedBind_ae_state_of_forall _ _
     (ce_poisson_count_sample_measurable hn prep factor (D.component i) b
       p.ε' (p.δ' D.componentCount) (p.Thresh D.componentCount)
-      (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeOutcome.2))
+      (ttcReference.t b n (p.Thresh D.componentCount) volumeOutcome.2))
     (fun s : TTCState n => (s.X.card : Real) ≤ p.Thresh D.componentCount)
     (measurableSet_state_card_le _)
   intro firstThinned
@@ -1674,8 +1634,7 @@ private theorem count_sample_append_rate_le_one_ae {n k : Nat}
         (fun secondThinned =>
           costedBind
             ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-              (D.component i) secondThinned.2 b p.ε'
-              (p.δ' D.componentCount))
+              (D.component i) secondThinned.2 b p.ε')
             (fun batch => costedCharge
               (Measure.dirac (secondThinned.1.addBatch batch))
               (secondThinned.2 * TTCRuntime.appendCopyOperations))),
@@ -1703,8 +1662,7 @@ private theorem poisson_count_sample_rate_le_one_ae {n k : Nat}
           (fun secondThinned =>
             costedBind
               ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                (D.component i) secondThinned.2 b p.ε'
-                (p.δ' D.componentCount))
+                (D.component i) secondThinned.2 b p.ε')
               (fun batch => costedCharge
                 (Measure.dirac (secondThinned.1.addBatch batch))
                 (secondThinned.2 * TTCRuntime.appendCopyOperations)))),
@@ -1720,7 +1678,7 @@ private theorem rate_poisson_count_sample_rate_le_one_ae {n k : Nat}
     (i : Fin D.componentCount) (state : TTCState n) (intensity : NNReal)
     (hrate : state.p ≤ 1) :
     ∀ᵐ result ∂costedBind
-      (ttcPseudocode.firstLoopWithCost state intensity (p.Thresh D.componentCount))
+      (ttcReference.firstLoopWithCost state intensity (p.Thresh D.componentCount))
       (fun firstThinned =>
         costedBind
           (costedCharge (poissonMeasure (intensity * firstThinned.p))
@@ -1732,8 +1690,7 @@ private theorem rate_poisson_count_sample_rate_le_one_ae {n k : Nat}
               (fun secondThinned =>
                 costedBind
                   ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-                    (D.component i) secondThinned.2 b p.ε'
-                    (p.δ' D.componentCount))
+                    (D.component i) secondThinned.2 b p.ε')
                   (fun batch => costedCharge
                     (Measure.dirac (secondThinned.1.addBatch batch))
                     (secondThinned.2 * TTCRuntime.appendCopyOperations))))),
@@ -1755,12 +1712,12 @@ theorem certified_component_rate_le_one_ae {n k : Nat}
     (i : Fin D.componentCount) (state : TTCState n)
     (hrate : state.p ≤ 1) :
     ∀ᵐ result ∂
-      ttcPseudocode.stepWithCost
+      ttcReference.stepWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         (D.component i) state,
       result.1.p ≤ 1 := by
-  unfold ttcPseudocode.stepWithCost
+  unfold ttcReference.stepWithCost
   apply costedBind_ae_state_of_forall _ _
     (ce_component_step_measurable hn prep factor (D.component i) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
@@ -1771,7 +1728,7 @@ theorem certified_component_rate_le_one_ae {n k : Nat}
     (ce_rate_tail_measurable hn prep factor (D.component i) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
       (p.threshold_pos D.componentCount)
-      (ttcPseudocode.t b n (p.Thresh D.componentCount) volumeOutcome.2))
+      (ttcReference.t b n (p.Thresh D.componentCount) volumeOutcome.2))
     (fun s : TTCState n => s.p ≤ 1)
     (fun s : TTCState n => s.p ≤ 1) measurableSet_state_rate_le_one
   · apply costedCharge_dirac_ae_state _ _ _ measurableSet_state_rate_le_one
@@ -1789,10 +1746,7 @@ private theorem ce_certified_volume_mass_le_one {n k : Nat}
       (p.δ' D.componentCount)) Set.univ ≤ 1 := by
   apply costedCharge_mass_le_one
   dsimp only [ttcSubroutines]
-  rw [Measure.map_apply
-    ((D.component i).measurable_clipVolume p.ε')
-    MeasurableSet.univ]
-  simpa using certified_community_volume_mass_le_one hn D p i
+  exact certified_community_volume_mass_le_one hn D p i
 
 private theorem ce_certified_components_kernel_measurable {n k : Nat}
     (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
@@ -1801,7 +1755,7 @@ private theorem ce_certified_components_kernel_measurable {n k : Nat}
     (hcomponents : ∀ P ∈ components, ∃ i : Fin D.componentCount,
       D.component i = P) :
     Measurable (fun state : TTCState n =>
-      ttcPseudocode.loopWithCost
+      ttcReference.loopWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         components state) :=
@@ -1819,13 +1773,13 @@ private theorem certified_component_list_mass_le_one {n k : Nat}
     (components : List (PolytopeData n))
     (hcomponents : ∀ P ∈ components, ∃ i : Fin D.componentCount,
       D.component i = P) (state : TTCState n) :
-    (ttcPseudocode.loopWithCost
+    (ttcReference.loopWithCost
       (ttcCostedSubroutines hn prep factor) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
       components state) Set.univ ≤ 1 := by
   induction components generalizing state with
   | nil =>
-      simp only [ttcPseudocode.loopWithCost]
+      simp only [ttcReference.loopWithCost]
       simp
   | cons P rest ih =>
       obtain ⟨i, rfl⟩ := hcomponents P (by simp)
@@ -1834,11 +1788,11 @@ private theorem certified_component_list_mass_le_one {n k : Nat}
         intro Q hQ
         exact hcomponents Q (by simp [hQ])
       change (costedBind
-        (ttcPseudocode.stepWithCost
+        (ttcReference.stepWithCost
           (ttcCostedSubroutines hn prep factor) b p.ε'
           (p.δ' D.componentCount) (p.Thresh D.componentCount)
           (D.component i) state)
-        (ttcPseudocode.loopWithCost
+        (ttcReference.loopWithCost
           (ttcCostedSubroutines hn prep factor) b p.ε'
           (p.δ' D.componentCount) (p.Thresh D.componentCount)
           rest)) Set.univ ≤ 1
@@ -1861,14 +1815,14 @@ theorem certified_component_list_expected_cost {n k : Nat}
     (hcard : (state.X.card : Real) ≤ p.Thresh D.componentCount)
     (hrate : state.p ≤ 1) :
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcPseudocode.loopWithCost
+      ttcReference.loopWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         components state ≤
       (components.map (uniformComponentCost hn p D.componentCount b factor)).sum := by
   induction components generalizing state with
   | nil =>
-      simp only [ttcPseudocode.loopWithCost, List.map_nil, List.sum_nil]
+      simp only [ttcReference.loopWithCost, List.map_nil, List.sum_nil]
       simp
   | cons P rest ih =>
       obtain ⟨i, rfl⟩ := hcomponents P (by simp)
@@ -1876,11 +1830,11 @@ theorem certified_component_list_expected_cost {n k : Nat}
           D.component j = Q := by
         intro Q hQ
         exact hcomponents Q (by simp [hQ])
-      let first := ttcPseudocode.stepWithCost
+      let first := ttcReference.stepWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount)
         (D.component i) state
-      let next := ttcPseudocode.loopWithCost
+      let next := ttcReference.loopWithCost
         (ttcCostedSubroutines hn prep factor) b p.ε'
         (p.δ' D.componentCount) (p.Thresh D.componentCount) rest
       have hfirstMass : first Set.univ ≤ 1 :=
@@ -1926,48 +1880,48 @@ theorem community_expected_cost_finite_sum {n k : Nat}
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations factor ≤
       preprocessingOperations +
         ((List.ofFn D.component).map
           (uniformComponentCost hn p D.componentCount b factor)).sum := by
   dsimp only
-  unfold ttcWithCost ttcPseudocodeWithCost
+  unfold ttcRefWithCost ttcReferenceWithCost
   rw [communityCosted_preprocessing_eq]
   let D := prep.run F hbounded
   let b := (prep.choosePrecision D p).value
   have hprecision : PrecisionAdequate D b p.precisionEta :=
     (prep.choosePrecision D p).adequate
   by_cases hempty : D.componentCount = 0
-  · simp [ttcWithCost, ttcPseudocodeWithCost,
+  · simp [ttcRefWithCost, ttcReferenceWithCost,
       D, hempty]
   · have hcomponents : ∀ P ∈ List.ofFn D.component,
         ∃ i : Fin D.componentCount, D.component i = P := by
       intro P hP
       exact (List.mem_ofFn' D.component P).mp hP
     have hinitialCard :
-        (((TTCState.initial n).X.card : Nat) : Real) ≤
+        (((TTCState.unitInitial n).X.card : Nat) : Real) ≤
           p.Thresh D.componentCount := by
-      simp only [TTCState.initial, Finset.card_empty, Nat.cast_zero]
+      simp only [TTCState.unitInitial, Finset.card_empty, Nat.cast_zero]
       exact (p.threshold_pos D.componentCount).le
-    have hinitialRate : (TTCState.initial n).p ≤ 1 := by
-      simp only [TTCState.initial, le_refl]
+    have hinitialRate : (TTCState.unitInitial n).p ≤ 1 := by
+      simp only [TTCState.unitInitial, le_refl]
     have hcoreCost := certified_component_list_expected_cost hn D p b
       hprecision prep factor (List.ofFn D.component) hcomponents
-      (TTCState.initial n) hinitialCard hinitialRate
+      (TTCState.unitInitial n) hinitialCard hinitialRate
     have hcoreMass := certified_component_list_mass_le_one hn D p b
       hprecision prep factor (List.ofFn D.component) hcomponents
-      (TTCState.initial n)
-    let core := ttcPseudocode.loopWithCost
+      (TTCState.unitInitial n)
+    let core := ttcReference.loopWithCost
       (ttcCostedSubroutines hn prep factor) b p.ε'
       (p.δ' D.componentCount) (p.Thresh D.componentCount)
-      (List.ofFn D.component) (TTCState.initial n)
+      (List.ofFn D.component) (TTCState.unitInitial n)
     have hempty' : (prep.run F hbounded).componentCount ≠ 0 := by
       simpa only [D] using hempty
     rw [if_neg hempty']
     change (∫⁻ result, (result.2 : ENNReal) ∂
       core.map (fun result =>
-        (Est b (p.Thresh D.componentCount) result.1,
+        (EstReference b (p.Thresh D.componentCount) result.1,
           preprocessingOperations + result.2))) ≤ _
     apply (lintegral_map_le _
       (((ce_estimate_measurable b (p.Thresh D.componentCount)).comp
@@ -1987,7 +1941,7 @@ theorem community_expected_cost_explicit {n k : Nat}
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     ∫⁻ result, (result.2 : ENNReal) ∂
-      ttcWithCost hn F hbounded p prep
+      ttcRefWithCost hn F hbounded p prep
         preprocessingOperations factor ≤
       preprocessingOperations +
         ∑ i : Fin D.componentCount,

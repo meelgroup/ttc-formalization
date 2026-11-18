@@ -66,7 +66,7 @@ theorem originPoissonCoinTapeLaw_map_source
             hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)).map
           (fun tape => c.source.stepPoissonTape P c.state.nextLabel
             (pending, spliceCoins pair.1 pair.2
-              (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+              (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
                 intensity threshold), tape)) := by
   have hsource := measurable_originConfiguration_source (n := n)
   have hK₁ : Measurable (fun pending : Nat =>
@@ -126,7 +126,7 @@ theorem originPoissonCoinTapeLaw_source_eq_spliced
     (splicedSourceLaw intensity
       (normalizedHitAndRunPointLaw hn P b hroute.1 eta hroute.2.1
         hroute.2.2.1 hroute.2.2.2.1 hroute.2.2.2.2)
-      (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+      (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
         intensity threshold)).map
       (c.source.stepPoissonTape P c.state.nextLabel) := by
   let pointLaw := normalizedHitAndRunPointLaw hn P b hroute.1 eta
@@ -137,7 +137,7 @@ theorem originPoissonCoinTapeLaw_source_eq_spliced
   let tapeLaw : Measure (Nat → LatticePoint n) :=
     Measure.infinitePi (fun _ : Nat => pointLaw)
   letI : IsProbabilityMeasure tapeLaw := inferInstance
-  let preRounds := c.level + ttcPseudocode.firstLoopExit
+  let preRounds := c.level + ttcReference.firstLoopExit
     (c.state.removeComponent P) intensity threshold
   let result := c.source.stepPoissonTape P c.state.nextLabel
   have hresult : Measurable result :=
@@ -254,7 +254,7 @@ theorem originPoissonCoinTapeLaw_fixedLevel_sourceCounts
     (measurable_originSourceState_stepPoissonTape c.source P
       c.state.nextLabel)]
   exact c.source.stepPoissonTape_fixedLevel_law P c.state.nextLabel
-    level (c.level + ttcPseudocode.firstLoopExit (c.state.removeComponent P)
+    level (c.level + ttcReference.firstLoopExit (c.state.removeComponent P)
       intensity threshold) intensity pointLaw S hsupport c.bound
 
 end Kr25Ssmxt

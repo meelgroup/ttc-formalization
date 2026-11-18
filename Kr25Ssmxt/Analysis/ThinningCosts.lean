@@ -33,8 +33,8 @@ theorem ApproxParams.threshold_pos (p : ApproxParams) (m : Nat) :
 
 theorem measurable_rateThinningResult {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) :
-    Measurable (ttcPseudocode.firstLoopResult s intensity threshold) := by
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+    Measurable (ttcReference.firstLoopResult s intensity threshold) := by
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   have hsamples : Measurable (fun coins : Nat × Nat → Bool =>
       samplesAfter coins rounds s.X) :=
     measurable_samplesAfter_fixed rounds s.X
@@ -48,7 +48,7 @@ theorem measurable_rateThinningResult {n : Nat} (s : TTCState n)
 /-- The paper's deterministic-rate loop preserves total probability. -/
 theorem rateThinUntil_isProbabilityMeasure {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) :
-    IsProbabilityMeasure (ttcPseudocode.firstLoop s intensity threshold) := by
+    IsProbabilityMeasure (ttcReference.firstLoop s intensity threshold) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   exact Measure.isProbabilityMeasure_map
@@ -57,23 +57,23 @@ theorem rateThinUntil_isProbabilityMeasure {n : Nat} (s : TTCState n)
 /-- The charged first loop has precisely the program's uncharged state law. -/
 theorem rateThinWithCost_fst {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) :
-    (ttcPseudocode.firstLoopWithCost s intensity threshold).map Prod.fst =
-      ttcPseudocode.firstLoop s intensity threshold := by
+    (ttcReference.firstLoopWithCost s intensity threshold).map Prod.fst =
+      ttcReference.firstLoop s intensity threshold := by
   have hpair : Measurable (fun coins : Nat × Nat → Bool =>
-      (ttcPseudocode.firstLoopResult s intensity threshold coins,
-        ttcPseudocode.firstLoopCost s intensity threshold)) :=
+      (ttcReference.firstLoopResult s intensity threshold coins,
+        ttcReference.firstLoopCost s intensity threshold)) :=
     (measurable_rateThinningResult s intensity threshold).prodMk
       measurable_const
-  unfold ttcPseudocode.firstLoopWithCost ttcPseudocode.firstLoop
+  unfold ttcReference.firstLoopWithCost ttcReference.firstLoop
   rw [MeasureTheory.Measure.map_map measurable_fst hpair]
   rfl
 
 theorem rateThinWithCost_isProbabilityMeasure {n : Nat}
     (s : TTCState n) (intensity : NNReal) (threshold : Real) :
-    IsProbabilityMeasure (ttcPseudocode.firstLoopWithCost s intensity threshold) := by
+    IsProbabilityMeasure (ttcReference.firstLoopWithCost s intensity threshold) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
-  unfold ttcPseudocode.firstLoopWithCost
+  unfold ttcReference.firstLoopWithCost
   apply Measure.isProbabilityMeasure_map
   exact ((measurable_rateThinningResult s intensity threshold).prodMk
     measurable_const).aemeasurable
@@ -82,51 +82,39 @@ theorem rateThinWithCost_isProbabilityMeasure {n : Nat}
 copies are random. -/
 theorem rateThinWithCost_expectedCost {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) :
-    ∫⁻ result, (result.2 : ENNReal) ∂ttcPseudocode.firstLoopWithCost s intensity threshold =
-      ttcPseudocode.firstLoopCost s intensity threshold := by
+    ∫⁻ result, (result.2 : ENNReal) ∂ttcReference.firstLoopWithCost s intensity threshold =
+      ttcReference.firstLoopCost s intensity threshold := by
   letI : MeasureTheory.IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
   have hpair : Measurable (fun coins : Nat × Nat → Bool =>
-      (ttcPseudocode.firstLoopResult s intensity threshold coins,
-        ttcPseudocode.firstLoopCost s intensity threshold)) :=
+      (ttcReference.firstLoopResult s intensity threshold coins,
+        ttcReference.firstLoopCost s intensity threshold)) :=
     (measurable_rateThinningResult s intensity threshold).prodMk
       measurable_const
-  unfold ttcPseudocode.firstLoopWithCost
+  unfold ttcReference.firstLoopWithCost
   rw [MeasureTheory.lintegral_map (by fun_prop) hpair]
   simp only [MeasureTheory.lintegral_const, measure_univ, mul_one]
 
 theorem rateThinWithCost_mass_le_one {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) :
-    (ttcPseudocode.firstLoopWithCost s intensity threshold) Set.univ ≤ 1 := by
+    (ttcReference.firstLoopWithCost s intensity threshold) Set.univ ≤ 1 := by
   have hpair : Measurable (fun coins : Nat × Nat → Bool =>
-      (ttcPseudocode.firstLoopResult s intensity threshold coins,
-        ttcPseudocode.firstLoopCost s intensity threshold)) :=
+      (ttcReference.firstLoopResult s intensity threshold coins,
+        ttcReference.firstLoopCost s intensity threshold)) :=
     (measurable_rateThinningResult s intensity threshold).prodMk
       measurable_const
-  unfold ttcPseudocode.firstLoopWithCost
+  unfold ttcReference.firstLoopWithCost
   rw [Measure.map_apply hpair MeasurableSet.univ]
   simpa using (show fairCoinStreamLaw Set.univ ≤ 1 from by
     letI : IsProbabilityMeasure fairCoinStreamLaw :=
       fairCoinStreamLaw_isProbabilityMeasure
     simp)
 
-/-- Any explicit dyadic level below the guard threshold bounds the number of
-first-loop rounds and hence its charged cost. The clipping bound must supply
-such a level for the full runtime theorem. -/
-theorem rateThinningCost_le {n : Nat} (s : TTCState n)
-    (intensity : NNReal) (threshold : Real) (rounds : Nat)
-    (hexit :
-      ((intensity * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold) :
-    ttcPseudocode.firstLoopCost s intensity threshold ≤
-      rounds * TTCRuntime.rateThinningRoundOperations s.X.card := by
-  unfold ttcPseudocode.firstLoopCost ttcPseudocode.firstLoopExit
-  exact Nat.mul_le_mul_right _ (Nat.sInf_le hexit)
-
-/-- A positive threshold makes the deterministic first rate loop terminate. -/
+/-- A positive threshold makes the deterministic rate check terminate. -/
 theorem rateExit_exists {n : Nat} (s : TTCState n)
     (intensity : NNReal) {threshold : Real} (hthreshold : 0 < threshold) :
     ∃ rounds : Nat,
-      ((intensity * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) < threshold := by
+      ((intensity * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) ≤ threshold := by
   let a : Real := (intensity * s.p : NNReal)
   obtain ⟨rounds, hrounds⟩ := exists_nat_gt (a / threshold)
   have hpowNat : rounds < 2 ^ rounds := Nat.lt_two_pow_self
@@ -138,44 +126,57 @@ theorem rateExit_exists {n : Nat} (s : TTCState n)
     nlinarith [mul_lt_mul_of_pos_left hpow hthreshold]
   refine ⟨rounds, ?_⟩
   have hdenom : 0 < (2 : Real) ^ rounds := pow_pos (by norm_num) _
-  have hratio : a / (2 : Real) ^ rounds < threshold :=
-    (div_lt_iff₀ hdenom).2 (by nlinarith)
+  have hratio : a / (2 : Real) ^ rounds ≤ threshold :=
+    ((div_lt_iff₀ hdenom).2 (by nlinarith)).le
   simpa only [a, NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat] using hratio
 
-/-- The first rate loop exits at a level satisfying its strict guard. -/
+/-- The rate check exits at a level satisfying its guard. -/
 theorem rateExit_guard {n : Nat} (s : TTCState n)
     (intensity : NNReal) {threshold : Real} (hthreshold : 0 < threshold) :
     ((intensity * s.p / (2 : NNReal) ^
-      ttcPseudocode.firstLoopExit s intensity threshold : NNReal) : Real) < threshold := by
-  unfold ttcPseudocode.firstLoopExit
+      ttcReference.firstLoopExit s intensity threshold : NNReal) : Real) ≤ threshold := by
+  unfold ttcReference.firstLoopExit
   exact Nat.sInf_mem (by
     obtain ⟨rounds, hrounds⟩ := rateExit_exists s intensity hthreshold
     exact ⟨rounds, hrounds⟩)
 
-/-- Once the current scaled Poisson mean is below the threshold, the first
-while-loop does not halve the rate. -/
-theorem rateExit_zero_of_lt {n : Nat} (s : TTCState n)
+/-- Once the current scaled Poisson mean is at most the threshold, the rate check does
+not halve the rate. -/
+theorem rateExit_zero_of_le {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real)
-    (hbelow : ((intensity * s.p : NNReal) : Real) < threshold) :
-    ttcPseudocode.firstLoopExit s intensity threshold = 0 := by
-  unfold ttcPseudocode.firstLoopExit
+    (hbelow : ((intensity * s.p : NNReal) : Real) ≤ threshold) :
+    ttcReference.firstLoopExit s intensity threshold = 0 := by
+  unfold ttcReference.firstLoopExit
   apply Nat.eq_zero_of_not_pos
   intro hpos
   have hmin : sInf {rounds : Nat |
-      ((intensity * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) <
+      ((intensity * s.p / (2 : NNReal) ^ rounds : NNReal) : Real) ≤
         threshold} ≤ 0 := by
     apply Nat.sInf_le
     simpa using hbelow
   omega
 
+theorem rateExit_zero_of_lt {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real)
+    (hbelow : ((intensity * s.p : NNReal) : Real) < threshold) :
+    ttcReference.firstLoopExit s intensity threshold = 0 :=
+  rateExit_zero_of_le s intensity threshold hbelow.le
+
+theorem rateThinningResult_of_le {n : Nat} (s : TTCState n)
+    (intensity : NNReal) (threshold : Real)
+    (hbelow : ((intensity * s.p : NNReal) : Real) ≤ threshold)
+    (coins : Nat × Nat → Bool) :
+    ttcReference.firstLoopResult s intensity threshold coins = s := by
+  simp [ttcReference.firstLoopResult,
+    rateExit_zero_of_le s intensity threshold hbelow,
+    samplesAfter, survives]
+
 theorem rateThinningResult_of_below {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real)
     (hbelow : ((intensity * s.p : NNReal) : Real) < threshold)
     (coins : Nat × Nat → Bool) :
-    ttcPseudocode.firstLoopResult s intensity threshold coins = s := by
-  simp [ttcPseudocode.firstLoopResult,
-    rateExit_zero_of_lt s intensity threshold hbelow,
-    samplesAfter, survives]
+    ttcReference.firstLoopResult s intensity threshold coins = s :=
+  rateThinningResult_of_le s intensity threshold hbelow.le coins
 
 /-- If the second while-loop passes a fixed dyadic level, the hypothetical
 population at that level exceeds its threshold. -/
@@ -195,49 +196,49 @@ theorem second_loop_crossing_implies_large_population
     exact Nat.sInf_le hexit
   omega
 
-/-- Every first-loop result has a Poisson mean below the threshold. -/
+/-- Every rate-check result has a Poisson mean at most the threshold. -/
 theorem rateThinningResult_guard {n : Nat} (s : TTCState n)
     (intensity : NNReal) {threshold : Real} (hthreshold : 0 < threshold)
     (coins : Nat × Nat → Bool) :
-    ((intensity * (ttcPseudocode.firstLoopResult s intensity threshold coins).p :
-      NNReal) : Real) < threshold := by
-  simpa only [ttcPseudocode.firstLoopResult, mul_div_assoc] using
+    ((intensity * (ttcReference.firstLoopResult s intensity threshold coins).p :
+      NNReal) : Real) ≤ threshold := by
+  simpa only [ttcReference.firstLoopResult, mul_div_assoc] using
     rateExit_guard s intensity hthreshold
 
 theorem rateExit_mono_intensity {n : Nat} (s : TTCState n)
     {small large : NNReal} (hsmall : small ≤ large)
     {threshold : Real} (hthreshold : 0 < threshold) :
-    ttcPseudocode.firstLoopExit s small threshold ≤
-      ttcPseudocode.firstLoopExit s large threshold := by
+    ttcReference.firstLoopExit s small threshold ≤
+      ttcReference.firstLoopExit s large threshold := by
   have hlarge := rateExit_guard s large hthreshold
   have hbound : small * s.p /
-      (2 : NNReal) ^ ttcPseudocode.firstLoopExit s large threshold ≤
+      (2 : NNReal) ^ ttcReference.firstLoopExit s large threshold ≤
       large * s.p /
-      (2 : NNReal) ^ ttcPseudocode.firstLoopExit s large threshold := by
+      (2 : NNReal) ^ ttcReference.firstLoopExit s large threshold := by
     gcongr
   have hboundReal :
       ((small * s.p /
-        (2 : NNReal) ^ ttcPseudocode.firstLoopExit s large threshold : NNReal) : Real) ≤
+        (2 : NNReal) ^ ttcReference.firstLoopExit s large threshold : NNReal) : Real) ≤
       ((large * s.p /
-        (2 : NNReal) ^ ttcPseudocode.firstLoopExit s large threshold : NNReal) : Real) := by
+        (2 : NNReal) ^ ttcReference.firstLoopExit s large threshold : NNReal) : Real) := by
     exact_mod_cast hbound
-  unfold ttcPseudocode.firstLoopExit
-  exact Nat.sInf_le (hboundReal.trans_lt hlarge)
+  unfold ttcReference.firstLoopExit
+  exact Nat.sInf_le (hboundReal.trans hlarge)
 
 theorem rateThinningCost_mono_intensity {n : Nat} (s : TTCState n)
     {small large : NNReal} (hsmall : small ≤ large)
     {threshold : Real} (hthreshold : 0 < threshold) :
-    ttcPseudocode.firstLoopCost s small threshold ≤
-      ttcPseudocode.firstLoopCost s large threshold := by
-  unfold ttcPseudocode.firstLoopCost
-  exact Nat.mul_le_mul_right _
-    (rateExit_mono_intensity s hsmall hthreshold)
+    ttcReference.firstLoopCost s small threshold ≤
+      ttcReference.firstLoopCost s large threshold := by
+  have hmono := rateExit_mono_intensity s hsmall hthreshold
+  unfold ttcReference.firstLoopCost
+  split_ifs with hs hl <;> omega
 
 /-- The first loop's number of halvings is logarithmic in its initial mean
 relative to the threshold. -/
 theorem rateExit_le_clog {n : Nat} (s : TTCState n)
     (intensity : NNReal) {threshold : Real} (hthreshold : 0 < threshold) :
-    ttcPseudocode.firstLoopExit s intensity threshold ≤
+    ttcReference.firstLoopExit s intensity threshold ≤
       Nat.clog 2 (Nat.ceil (((intensity * s.p : NNReal) : Real) / threshold) + 1) := by
   let a : Real := (intensity * s.p : NNReal)
   let N : Nat := Nat.ceil (a / threshold) + 1
@@ -254,21 +255,24 @@ theorem rateExit_le_clog {n : Nat} (s : TTCState n)
     nlinarith
   have hdenom : 0 < (2 : Real) ^ Nat.clog 2 N := pow_pos (by norm_num) _
   have hexit :
-      ((intensity * s.p / (2 : NNReal) ^ Nat.clog 2 N : NNReal) : Real) <
+      ((intensity * s.p / (2 : NNReal) ^ Nat.clog 2 N : NNReal) : Real) ≤
         threshold := by
-    have hratio : a / (2 : Real) ^ Nat.clog 2 N < threshold :=
-      (div_lt_iff₀ hdenom).2 (by nlinarith)
+    have hratio : a / (2 : Real) ^ Nat.clog 2 N ≤ threshold :=
+      ((div_lt_iff₀ hdenom).2 (by nlinarith)).le
     simpa only [a, NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat] using hratio
-  unfold ttcPseudocode.firstLoopExit
+  unfold ttcReference.firstLoopExit
   exact Nat.sInf_le hexit
 
 theorem rateThinningCost_le_clog {n : Nat} (s : TTCState n)
     (intensity : NNReal) {threshold : Real} (hthreshold : 0 < threshold) :
-    ttcPseudocode.firstLoopCost s intensity threshold ≤
+    ttcReference.firstLoopCost s intensity threshold ≤
       Nat.clog 2 (Nat.ceil (((intensity * s.p : NNReal) : Real) / threshold) + 1) *
         TTCRuntime.rateThinningRoundOperations s.X.card := by
-  unfold ttcPseudocode.firstLoopCost
-  exact Nat.mul_le_mul_right _ (rateExit_le_clog s intensity hthreshold)
+  have hle := rateExit_le_clog s intensity hthreshold
+  unfold ttcReference.firstLoopCost
+  split_ifs with h0
+  · exact Nat.zero_le _
+  · exact Nat.le_mul_of_pos_left _ (by omega)
 
 /-- The charged second loop has precisely the program's uncharged state and
 pending-count law. -/

@@ -18,7 +18,7 @@ theorem community_ttc_volume_accuracy_empty
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (hempty : (prep.run F hbounded).componentCount = 0) :
-    (ttc hn F hbounded p prep).real
+    (ttcRef hn F hbounded p prep).real
       {estimate | (estimate : Real) ∈
         Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
       1 - p.delta := by
@@ -42,9 +42,9 @@ theorem community_ttc_volume_accuracy_empty
   have hzero : (0 : NNReal) ∈
       {estimate : NNReal | (estimate : Real) ∈ Arlib.relErr p.epsilon 0} := by
     simp [Arlib.relErr]
-  have hrun : ttc hn F hbounded p prep =
+  have hrun : ttcRef hn F hbounded p prep =
       Measure.dirac 0 := by
-    simp [ttc, ttcPseudocode,
+    simp [ttcRef, ttcReference,
       ttcSubroutines, hempty]
   rw [hrun, hvolume]
   simp only [ENNReal.toReal_zero]
@@ -63,12 +63,12 @@ theorem community_ttc_volume_accuracy_of_lattice_estimate
     (hlatticeEstimate :
       let D := prep.run F hbounded
       let b := (prep.choosePrecision D p).value
-      (ttc hn F hbounded p prep).real
+      (ttcRef hn F hbounded p prep).real
         {estimate | (estimate : Real) ∈
           Arlib.relErr (p.epsilon / 2)
             ((D.latticePoints b).ncard / (10 : Real) ^ (b * n))} ≥
         1 - p.delta) :
-    (ttc hn F hbounded p prep).real
+    (ttcRef hn F hbounded p prep).real
       {estimate | (estimate : Real) ∈
         Arlib.relErr p.epsilon (volume (solutionSet F)).toReal} ≥
       1 - p.delta := by
@@ -81,7 +81,7 @@ theorem community_ttc_volume_accuracy_of_lattice_estimate
   have hunion : (volume D.union).toReal ∈
       Arlib.relErr p.latticeEta
         ((D.latticePoints b).ncard / (10 : Real) ^ (b * n)) := hcomparison.2
-  let μ := ttc hn F hbounded p prep
+  let μ := ttcRef hn F hbounded p prep
   letI : IsProbabilityMeasure μ :=
     community_ttc_isProbabilityMeasure hn F hbounded p prep
   have htarget : μ.real

@@ -12,21 +12,21 @@ open MeasureTheory ProbabilityTheory
 theorem poisson_twoLoops_oneCoinStream
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
-    (ttcPseudocode.firstLoop s intensity threshold).bind (fun first =>
+    (ttcReference.firstLoop s intensity threshold).bind (fun first =>
       (poissonMeasure (intensity * first.p)).bind fun pending =>
         ttcPseudocode.secondLoop first pending threshold) =
     (poissonMeasure
       (intensity * (s.p /
-        (2 : NNReal) ^ ttcPseudocode.firstLoopExit s intensity threshold))).bind
+        (2 : NNReal) ^ ttcReference.firstLoopExit s intensity threshold))).bind
       (fun pending => fairCoinStreamLaw.map fun coins =>
         ttcPseudocode.secondLoopResult
-          (ttcPseudocode.firstLoopResult s intensity threshold coins)
+          (ttcReference.firstLoopResult s intensity threshold coins)
           pending threshold
-          (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) coins)) := by
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
+          (shiftCoins (ttcReference.firstLoopExit s intensity threshold) coins)) := by
+  let rounds := ttcReference.firstLoopExit s intensity threshold
   let mean := intensity * (s.p / (2 : NNReal) ^ rounds)
-  let firstResult := ttcPseudocode.firstLoopResult s intensity threshold
-  let firstLaw := ttcPseudocode.firstLoop s intensity threshold
+  let firstResult := ttcReference.firstLoopResult s intensity threshold
+  let firstLaw := ttcReference.firstLoop s intensity threshold
   let pendingLaw : TTCState n → Measure Nat :=
     fun first => poissonMeasure (intensity * first.p)
   let pendingJoint : TTCState n → Measure (TTCState n × Nat) :=

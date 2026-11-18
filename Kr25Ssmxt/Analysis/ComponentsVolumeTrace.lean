@@ -111,7 +111,7 @@ noncomputable def communityComponentsVolumeTrace
           threshold rest current.2.1).map fun future =>
           traceJoin rest.length (current, future)
 
-/-- The independent clipped CV18 outcomes in component order. -/
+/-- The independent CV18 outcomes in component order. -/
 noncomputable def communityVolumeVectorLaw
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (eta delta : Real) :
@@ -414,7 +414,7 @@ theorem communityComponentsVolumeTrace_volume_marginal
       rw [hcurrent]
 
 /-- The complete charged paper trace has the independent product of
-its concrete clipped CV18 outcome laws as its volume marginal. -/
+its concrete CV18 outcome laws as its volume marginal. -/
 theorem communityComponentsVolumeTrace_volume_pi
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
@@ -451,13 +451,13 @@ theorem communityComponentsVolumeTrace_run_marginal
     (state : TTCState n) :
     (communityComponentsVolumeTrace hn prep factor b eta delta
       threshold components state).map Prod.snd =
-    ttcPseudocode.loopWithCost
+    ttcReference.loopWithCost
       (ttcCostedSubroutines hn prep factor)
       b eta delta threshold components state := by
   induction components generalizing state with
   | nil =>
       simp [communityComponentsVolumeTrace,
-        ttcPseudocode.loopWithCost]
+        ttcReference.loopWithCost]
   | cons P rest ih =>
       have hvolP : IsProbabilityMeasure
           ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
@@ -482,12 +482,12 @@ theorem communityComponentsVolumeTrace_run_marginal
         community_trace_tail_measurable hn prep factor b eta delta
           threshold rest hrest.1 hrest.2
       let K : (TTCState n × Nat) → Measure (TTCState n × Nat) :=
-        fun c => (ttcPseudocode.loopWithCost
+        fun c => (ttcReference.loopWithCost
           (ttcCostedSubroutines hn prep factor)
           b eta delta threshold rest c.1).map fun future =>
             (future.1, c.2 + future.2)
       have htailMeas : Measurable (fun s : TTCState n =>
-          ttcPseudocode.loopWithCost
+          ttcReference.loopWithCost
             (ttcCostedSubroutines hn prep factor)
             b eta delta threshold rest s) := by
         apply community_components_kernel_measurable hn prep factor
@@ -522,17 +522,17 @@ theorem communityComponentsVolumeTrace_run_marginal
             rfl
           _ = K c.2 := by rw [ih hvolRest c.2.1]
       have hcurrent : current.map Prod.snd =
-          ttcPseudocode.stepWithCost
+          ttcReference.stepWithCost
             (ttcCostedSubroutines hn prep factor)
             b eta delta threshold P state :=
         communityComponentVolumeTrace_snd hn prep factor P b
           eta delta threshold hthreshold state
       change (current.bind G).map Prod.snd =
         costedBind
-          (ttcPseudocode.stepWithCost
+          (ttcReference.stepWithCost
             (ttcCostedSubroutines hn prep factor)
             b eta delta threshold P state)
-          (ttcPseudocode.loopWithCost
+          (ttcReference.loopWithCost
             (ttcCostedSubroutines hn prep factor)
             b eta delta threshold rest)
       rw [map_bind_measure current G Prod.snd hG.aemeasurable measurable_snd]

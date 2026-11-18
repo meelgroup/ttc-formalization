@@ -17,13 +17,13 @@ theorem poisson_predraw_after_rate_halving
     (threshold : Real) :
     (poissonMeasure (intensity * s.p)).bind (fun baseCount =>
       fairCoinStreamLaw.map (fun coins => pendingAfter coins
-        (ttcPseudocode.firstLoopExit s intensity threshold) s.nextLabel baseCount)) =
+        (ttcReference.firstLoopExit s intensity threshold) s.nextLabel baseCount)) =
       poissonMeasure
-        (intensity * (ttcPseudocode.firstLoopResult s intensity threshold
+        (intensity * (ttcReference.firstLoopResult s intensity threshold
           (fun _ => true)).p) := by
   rw [poisson_pendingAfter_law]
   rw [survivalProbability_toNNReal]
-  simp only [ttcPseudocode.firstLoopResult]
+  simp only [ttcReference.firstLoopResult]
   simp only [one_div, ← inv_pow, div_eq_mul_inv]
   ac_rfl
 

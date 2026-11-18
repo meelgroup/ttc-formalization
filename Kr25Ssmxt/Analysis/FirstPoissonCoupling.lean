@@ -13,19 +13,19 @@ open MeasureTheory ProbabilityTheory
 theorem firstLoop_poisson_joint_law
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) :
-    (ttcPseudocode.firstLoop s intensity threshold).bind (fun first =>
+    (ttcReference.firstLoop s intensity threshold).bind (fun first =>
       (poissonMeasure (intensity * first.p)).map
         (Prod.mk first)) =
     (fairCoinStreamLaw.prod
       (poissonMeasure
         (intensity * (s.p /
-          (2 : NNReal) ^ ttcPseudocode.firstLoopExit s intensity threshold)))).map
+          (2 : NNReal) ^ ttcReference.firstLoopExit s intensity threshold)))).map
       (fun pair =>
-        (ttcPseudocode.firstLoopResult s intensity threshold pair.1,
+        (ttcReference.firstLoopResult s intensity threshold pair.1,
           pair.2)) := by
-  let firstResult := ttcPseudocode.firstLoopResult s intensity threshold
+  let firstResult := ttcReference.firstLoopResult s intensity threshold
   let mean := intensity * (s.p /
-    (2 : NNReal) ^ ttcPseudocode.firstLoopExit s intensity threshold)
+    (2 : NNReal) ^ ttcReference.firstLoopExit s intensity threshold)
   let law : TTCState n → Measure Nat :=
     fun first => poissonMeasure (intensity * first.p)
   let K : TTCState n → Measure (TTCState n × Nat) :=

@@ -91,7 +91,7 @@ theorem communityOriginComponentsLaw_map_state
     (communityOriginComponentsLaw hn prep b eta delta
       threshold components c).map
         (fun next : OriginConfiguration n => next.state) =
-    ttcPseudocode.loop (ttcSubroutines hn prep)
+    ttcReference.loop (ttcSubroutines hn prep)
       b eta delta threshold (components.map (fun d => d.polytope))
       c.state := by
   induction components generalizing c with
@@ -106,7 +106,7 @@ theorem communityOriginComponentsLaw_map_state
         b eta delta threshold d.route c
       let tail := communityOriginComponentsLaw hn prep b eta
         delta threshold rest
-      let programTail := ttcPseudocode.loop
+      let programTail := ttcReference.loop
         (ttcSubroutines hn prep) b eta delta threshold
         (rest.map (fun d => d.polytope))
       have htail : Measurable tail :=
@@ -144,12 +144,12 @@ theorem communityOriginComponentsLaw_map_state
           exact (bind_mapped_measure step (fun next => next.state)
             measurable_originConfiguration_state programTail
             hprogram).symm
-        _ = (ttcPseudocode.step
+        _ = (ttcReference.step
             (ttcSubroutines hn prep) b eta delta threshold
             d.polytope c.state).bind programTail := by
           rw [communityOriginComponentLaw_map_state hn prep
             d.polytope b eta delta threshold hthreshold d.route c]
-        _ = ttcPseudocode.loop (ttcSubroutines hn prep)
+        _ = ttcReference.loop (ttcSubroutines hn prep)
             b eta delta threshold
             ((d :: rest).map (fun d => d.polytope)) c.state := rfl
 

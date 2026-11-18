@@ -19,17 +19,17 @@ theorem measurable_shiftCoins (rounds : Nat) :
 theorem twoLoops_givenPending_eq_oneCoinStream
     {n : Nat} (s : TTCState n) (intensity : NNReal)
     (threshold : Real) (pending : Nat) :
-    (ttcPseudocode.firstLoop s intensity threshold).bind
+    (ttcReference.firstLoop s intensity threshold).bind
       (fun first => ttcPseudocode.secondLoop first pending threshold) =
     fairCoinStreamLaw.map (fun coins =>
       ttcPseudocode.secondLoopResult
-        (ttcPseudocode.firstLoopResult s intensity threshold coins)
+        (ttcReference.firstLoopResult s intensity threshold coins)
         pending threshold
-        (shiftCoins (ttcPseudocode.firstLoopExit s intensity threshold) coins)) := by
+        (shiftCoins (ttcReference.firstLoopExit s intensity threshold) coins)) := by
   letI : IsProbabilityMeasure fairCoinStreamLaw :=
     fairCoinStreamLaw_isProbabilityMeasure
-  let rounds := ttcPseudocode.firstLoopExit s intensity threshold
-  let firstResult := ttcPseudocode.firstLoopResult s intensity threshold
+  let rounds := ttcReference.firstLoopExit s intensity threshold
+  let firstResult := ttcReference.firstLoopResult s intensity threshold
   let K := fun first : TTCState n => ttcPseudocode.secondLoop first pending threshold
   have hK : Measurable K :=
     (thinUntil_kernel_measurable threshold).comp

@@ -1,5 +1,5 @@
 import Kr25Ssmxt.Analysis.PrecisionRequirements
-import Kr25Ssmxt.Model.Run
+import Kr25Ssmxt.Analysis.ReferenceProgram
 
 /-! # `GetPrecision` meets its specification
 
@@ -117,7 +117,7 @@ noncomputable def getPrecisionChoice {n k : Nat} {F : LRAFormula n k}
     linarith
 
 
-/-! ## Line `line:volume`: `ComputeVolume` is CV18 on the normalized component, then clipping -/
+/-! ## Line `line:volume`: `ComputeVolume` is CV18 on the normalized component -/
 
 /-- TTC's precision stage with its certificate; its `value` is the `choosePrecision` slot of
 `ttcSubroutines` (definitionally). -/

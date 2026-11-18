@@ -22,18 +22,16 @@ theorem community_volume_isProbabilityMeasure
       p.ε' (p.δ' D.componentCount)
       (PaperRuntime.ttc_request_admissible D p i)).1
   change IsProbabilityMeasure
-    ((communityCV18VolumeLaw (by omega) (D.component i) p.ε'
-      (p.δ' D.componentCount)).map
-      ((D.component i).clipVolume p.ε'))
-  exact Measure.isProbabilityMeasure_map
-    ((D.component i).measurable_clipVolume p.ε').aemeasurable
+    (communityCV18VolumeLaw (by omega) (D.component i) p.ε'
+      (p.δ' D.componentCount))
+  infer_instance
 
 theorem community_samples_isProbabilityMeasure
     {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
     IsProbabilityMeasure
       ((ttcSubroutines hn prep).GenerateSamples
-        P count b eta delta) := by
+        P count b eta) := by
   classical
   by_cases h : 1 ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty
@@ -67,9 +65,9 @@ theorem community_costed_samples_isProbabilityMeasure
     (eta delta : Real) :
     IsProbabilityMeasure
       ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
-        P count b eta delta) := by
+        P count b eta) := by
   apply costed_probability_of_fst
-  rw [communityCosted_samples_fst]
+  rw [communityCosted_samples_fst hn prep factor P count b eta delta]
   exact community_samples_isProbabilityMeasure hn prep P count b eta delta
 
 end Kr25Ssmxt

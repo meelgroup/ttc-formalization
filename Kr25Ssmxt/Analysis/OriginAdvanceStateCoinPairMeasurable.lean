@@ -17,10 +17,10 @@ noncomputable def originCoinPairMergedSecondResult
   let deleted := z.1.state.removeComponent P
   let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
     z.1.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := z.1.level + rounds
   let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   ttcPseudocode.secondLoopResult first pending threshold
     (mergeCoinsAtLabel deleted.nextLabel (shiftCoins rounds oldCoins)
@@ -36,7 +36,7 @@ theorem measurable_originCoinPairMergedSecondResult
     Measurable (originCoinPairMergedSecondResult P intensity
       threshold basePending) := by
   have hfirst : Measurable (fun z : GhostCoinInput' n =>
-      ttcPseudocode.firstLoopResult (z.1.state.removeComponent P)
+      ttcReference.firstLoopResult (z.1.state.removeComponent P)
         intensity threshold
         (sourceOldCoins z.1.origin z.1.source.coins
           z.1.level)) :=
@@ -59,24 +59,24 @@ theorem originCoinPairMergedSecondResult_eq_splitFinite
     let deleted := z.1.state.removeComponent P
     let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
       z.1.level
-    let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+    let rounds := ttcReference.firstLoopExit deleted intensity threshold
     let preRounds := z.1.level + rounds
     let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
     let activeCoins := originalSurvivorCoinRestriction z.2.1 preRounds
       deleted.nextLabel basePending z.2.2
-    let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+    let first := ttcReference.firstLoopResult deleted intensity threshold
       oldCoins
     thinningResultSplitFinite first pending threshold
       (shiftCoins rounds oldCoins) activeCoins := by
   let deleted := z.1.state.removeComponent P
   let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
     z.1.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := z.1.level + rounds
   let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction z.2.1 preRounds
     deleted.nextLabel basePending z.2.2
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   have hdeleted : deleted.LabelsFresh :=
     z.1.state.labelsFresh_removeComponent P z.1.fresh
@@ -135,12 +135,12 @@ theorem OriginConfiguration.advance_state_eq_coinPairTotal
   let deleted := z.1.state.removeComponent P
   let oldCoins := sourceOldCoins z.1.origin z.1.source.coins
     z.1.level
-  let rounds := ttcPseudocode.firstLoopExit deleted intensity threshold
+  let rounds := ttcReference.firstLoopExit deleted intensity threshold
   let preRounds := z.1.level + rounds
   let pending := pendingAfter z.2.1 preRounds deleted.nextLabel basePending
   let activeCoins := originalSurvivorCoinRestriction z.2.1 preRounds
     deleted.nextLabel basePending z.2.2
-  let first := ttcPseudocode.firstLoopResult deleted intensity threshold
+  let first := ttcReference.firstLoopResult deleted intensity threshold
     oldCoins
   let activeRounds := originCoinPairSplitExit P intensity threshold
     basePending z

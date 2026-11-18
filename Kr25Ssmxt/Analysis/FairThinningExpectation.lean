@@ -461,9 +461,9 @@ theorem deletionPassOperations_le {n : Nat} (s : TTCState n)
 
 theorem rateThinningResult_card_le {n : Nat} (s : TTCState n)
     (intensity : NNReal) (threshold : Real) (coins : Nat × Nat → Bool) :
-    (ttcPseudocode.firstLoopResult s intensity threshold coins).X.card ≤
+    (ttcReference.firstLoopResult s intensity threshold coins).X.card ≤
       s.X.card := by
-  dsimp only [ttcPseudocode.firstLoopResult]
+  dsimp only [ttcReference.firstLoopResult]
   unfold samplesAfter
   exact Finset.card_filter_le _ _
 
