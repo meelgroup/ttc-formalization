@@ -115,7 +115,7 @@ theorem ttc_expected_runtime_theorem3_input_scale {n k : Nat} (hn : 21 ≤ n)
       ttcRefWithCost hn F hbounded p prep
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
-        ENNReal.ofReal (30 * (n : Real) ^ 5 *
+        ENNReal.ofReal (50 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
           TTCRuntime.theorem3InputScale D p *

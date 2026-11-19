@@ -322,6 +322,37 @@ open Classical in
 /-- The comparison `a ≤ b`: one operation. -/
 def le (a b : Real) : Counted Bool := ⟨decide (a ≤ b), 1⟩
 
+/-- `a − b`: one operation. -/
+def sub (a b : Real) : Counted Real := ⟨a - b, 1⟩
+
+/-- `a / b`: one operation. -/
+def div (a b : Real) : Counted Real := ⟨a / b, 1⟩
+
+/-- `√a`: one operation. -/
+def sqrt (a : Real) : Counted Real := ⟨Real.sqrt a, 1⟩
+
+open Classical in
+/-- The strict comparison `a < b`: one operation. -/
+def lt (a b : Real) : Counted Bool := ⟨decide (a < b), 1⟩
+
+/-- The larger of two endpoints, where `±∞` stand for a missing endpoint: one operation. -/
+def maxE (a b : EReal) : Counted EReal := ⟨max a b, 1⟩
+
+/-- The smaller of two endpoints: one operation. -/
+def minE (a b : EReal) : Counted EReal := ⟨min a b, 1⟩
+
+/-- Read an endpoint as a real number (a missing endpoint `±∞` reads as `0`): one
+operation. -/
+def toReal (a : EReal) : Counted Real := ⟨a.toReal, 1⟩
+
+/-- Read `k` random numbers (coins, Gaussians, uniforms) from the random tape: one operation
+each. -/
+def draw (k : Nat) : Counted Unit := ⟨(), k⟩
+
+/-- Compute each coordinate `f i` of a vector, one after another; the costs add. -/
+def forEach {n : Nat} (f : Fin n → Counted Real) : Counted (Fin n → Real) :=
+  ⟨fun i => (f i).value, ∑ i, (f i).cost⟩
+
 /-- The dot product `a₀x₀ + a₁x₁ + ⋯ + aₙ₋₁xₙ₋₁`: `n` multiplications and `n − 1`
 additions. -/
 def dot : (n : Nat) → (Fin n → Real) → (Fin n → Real) → Counted Real
@@ -351,6 +382,79 @@ def HalfspacePresentation.memberProg {n : Nat} (H : HalfspacePresentation n) (x 
     Counted Bool :=
   Counted.allFacets H.facetCount H.normal H.offset x
 
+/-! ### One Hit-and-Run step
+
+The step reads its randomness from a tape: a fair `coin`, a standard Gaussian vector `g`,
+and a uniform number `u ∈ [0, 1]`. If the coin shows `true` it stays put (the walk is lazy).
+Otherwise it takes the direction `θ = g/‖g‖`, scans the facets for the chord
+`{x + tθ} ∩ P = [lo, hi]`, and moves to `x + (lo + u (hi − lo)) θ`.
+`Analysis/HitAndRunStep.lean` proves that this is arlib's lazy Hit-and-Run kernel. -/
+
+namespace HitAndRunProg
+
+/-- The direction `g/‖g‖`: the squared norm `g · g`, a square root, a reciprocal, and `n`
+scalings. -/
+def normalize (n : Nat) (g : Fin n → Real) : Counted (Fin n → Real) := do
+  let sq ← Counted.dot n g g
+  let len ← Counted.sqrt sq
+  let inv ← Counted.div 1 len
+  Counted.forEach fun i => Counted.mul inv (g i)
+
+/-- Where the line `x + tθ` crosses the facet `a · y ≤ β`: at `t = (β − a·x)/(a·θ)`. It is a
+lower endpoint if `a·θ < 0`, an upper endpoint if `a·θ > 0`, and neither (`⊥`, `⊤`)
+otherwise. -/
+def facetEndpoints (n : Nat) (a : Fin n → Real) (β : Real) (x θ : Fin n → Real) :
+    Counted (EReal × EReal) := do
+  let c ← Counted.dot n a θ
+  let ax ← Counted.dot n a x
+  let slack ← Counted.sub β ax
+  let q ← Counted.div slack c
+  let neg ← Counted.lt c 0
+  let pos ← Counted.lt 0 c
+  Counted.pure ((if neg then (q : EReal) else ⊥), (if pos then (q : EReal) else ⊤))
+
+/-- The chord's endpoints: the largest lower and the smallest upper endpoint over all
+facets. -/
+def chord (n : Nat) : (r : Nat) → (Fin r → Fin n → Real) → (Fin r → Real) →
+    (Fin n → Real) → (Fin n → Real) → Counted (EReal × EReal)
+  | 0, _, _, _, _ => Counted.pure (⊥, ⊤)
+  | r + 1, a, β, x, θ => do
+      let first ← facetEndpoints n (a 0) (β 0) x θ
+      let rest ← chord n r (Fin.tail a) (Fin.tail β) x θ
+      let lo ← Counted.maxE first.1 rest.1
+      let hi ← Counted.minE first.2 rest.2
+      Counted.pure (lo, hi)
+
+end HitAndRunProg
+
+/-- One lazy Hit-and-Run step from `x` in `H`, reading a coin, a Gaussian vector `g` and a
+uniform `u ∈ [0, 1]` from the tape. -/
+def HalfspacePresentation.hitAndRunStep {n : Nat} (H : HalfspacePresentation n)
+    (x : Point n) (coin : Bool) (g : Point n) (u : Real) : Counted (Point n) := do
+  Counted.draw 1
+  if coin then Counted.pure x else do
+    Counted.draw n
+    let θ ← HitAndRunProg.normalize n g
+    let ends ← HitAndRunProg.chord n H.facetCount H.normal H.offset x θ
+    let lo ← Counted.toReal ends.1
+    let hi ← Counted.toReal ends.2
+    let ok ← Counted.lt lo hi
+    if ok then do
+      Counted.draw 1
+      let width ← Counted.sub hi lo
+      let shift ← Counted.mul u width
+      let t ← Counted.add lo shift
+      Counted.forEach fun i => do
+        let step ← Counted.mul t (θ i)
+        Counted.add (x i) step
+    else Counted.pure x
+
+/-- The cost of one Hit-and-Run step in `H`: the most `hitAndRunStep` spends on any point and
+any tape. -/
+noncomputable def HalfspacePresentation.hitAndRunStepCost {n : Nat}
+    (H : HalfspacePresentation n) : Nat :=
+  ⨆ (x : Point n) (coin : Bool) (g : Point n) (u : Real), (H.hitAndRunStep x coin g u).cost
+
 /-- The cost of one membership test in `H`: the most `memberProg` spends at any point.
 (`Analysis/MembershipCost.lean` proves it spends the same `2 n r` at every point.) -/
 noncomputable def HalfspacePresentation.memberCost {n : Nat} (H : HalfspacePresentation n) :
@@ -360,14 +464,11 @@ noncomputable def HalfspacePresentation.memberCost {n : Nat} (H : HalfspacePrese
 /-! ### Charges
 
 The deletion pass, CV18's membership queries and the sampler's rejection test are charged
-`memberCost` or the actual `memberProg` cost (`Model/Program.lean`, `Model/Run.lean`).
-The charges below are assumed. -/
+`memberCost` or the actual `memberProg` cost, and each Hit-and-Run step is charged
+`hitAndRunStepCost` (`Model/Program.lean`, `Model/Run.lean`). The charges below are
+assumed. -/
 
 namespace TTCRuntime
-
-/-- One Hit-and-Run step in a polytope with `r` facets: charged `2 n r`, the cost of one
-membership test. This charge is assumed. -/
-def facetScanOperations (dimension facets : Nat) : Nat := 2 * dimension * facets
 
 /-- Rounding one point coordinatewise to the lattice: `n`. -/
 def roundPointOperations (dimension : Nat) : Nat := dimension

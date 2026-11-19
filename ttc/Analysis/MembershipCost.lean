@@ -11,6 +11,9 @@ them into the closed forms used by the runtime proofs. -/
 
 namespace ttc
 
+/-- `2 n r`: the cost of one membership test in a polytope with `r` facets (proved below). -/
+def TTCRuntime.facetScanOperations (dimension facets : Nat) : Nat := 2 * dimension * facets
+
 namespace Counted
 
 @[simp] theorem andThen_value {α β : Type} (m : Counted α) (f : α → Counted β) :
@@ -147,9 +150,13 @@ def deletionPassOperations (dimension facets checked removed : Nat) : Nat :=
   checked * facetScanOperations dimension facets +
     removed * deleteCopyOperations
 
+/-- `4 n r + 4 r + 6 n + 9`: a bound on one Hit-and-Run step (`hitAndRunStepCost_le`). -/
+def hitAndRunStepOperations (dimension facets : Nat) : Nat :=
+  4 * dimension * facets + 4 * facets + 6 * dimension + 9
+
 /-- One sampler attempt: start point, the walk, rounding, and the rejection test. -/
 def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
-  ballStartOperations dimension + steps * facetScanOperations dimension facets +
+  ballStartOperations dimension + steps * hitAndRunStepOperations dimension facets +
     roundPointOperations dimension + rejectionTestOperations dimension facets
 
 end TTCRuntime
@@ -168,14 +175,6 @@ theorem PolytopeData.cv18QueryCost_eq {n : Nat} (hn : 0 < n) (P : PolytopeData n
     P.cv18Presentation.memberCost * q =
       TTCRuntime.membershipQueryOperations n P.presentation.facetCount q := by
   rw [HalfspacePresentation.memberCost_eq hn]
-  rfl
-
-/-- The charge for one sampler attempt, in closed form. -/
-theorem PolytopeData.samplingAttemptCost_eq {n : Nat} (hn : 0 < n) (P : PolytopeData n)
-    (b steps : Nat) :
-    P.samplingAttemptCost b steps =
-      TTCRuntime.samplingAttemptOperations n P.presentation.facetCount steps := by
-  rw [PolytopeData.samplingAttemptCost, HalfspacePresentation.memberCost_eq hn]
   rfl
 
 end ttc

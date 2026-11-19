@@ -66,7 +66,7 @@ theorem ttc_theorem1_volume_accuracy
   `ttcWithCost`, with its cost discarded, is that of `ttc`, so the cost bound is about the
   algorithm of Theorem 1.
 * **Expected cost.** The expected operation count is at most the preprocessing cost plus
-  `m · 30 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²`, which depends on the input
+  `m · 50 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²`, which depends on the input
   only. -/
 theorem ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
@@ -79,7 +79,7 @@ theorem ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
     Exp[result ← ttcWithCost hn F hbounded p prep preprocessingOperations 1;
       (result.2 : ENNReal)] ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
-        ENNReal.ofReal (30 * (n : Real) ^ 5 *
+        ENNReal.ofReal (50 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *

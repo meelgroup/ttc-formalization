@@ -66,7 +66,7 @@ theorem ttc_theorem3_expected_runtime ... :
       Pr[result ← ttcWithCost ...; result.1 ∈ S] = Pr[estimate ← ttc ...; estimate ∈ S]) ∧
     -- (2) the expected operation count is bounded
     Exp[result ← ttcWithCost ...; result.2] ≤
-      preprocessingOperations + m * (30 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²)
+      preprocessingOperations + m * (50 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²)
 ```
 
 `ttcWithCost` is the same algorithm with an operation counter attached. Part (1) says its
@@ -103,15 +103,22 @@ Read these before citing the result.
   normalization (Theorem 2 of the paper) are an input `prep`. Its output type requires
   bounded, full-dimensional polytopes whose union equals the solution set almost
   everywhere, but Lean does not check how they are computed.
-* **Most of the cost model is assumed.** Arithmetic is counted with one operation for
-  each `·`, `+` and `≤` on real numbers. The membership test is a program written with
-  these operations (`memberProg`, in the "Cost model" section of `ttc/Model/Prelude.lean`),
-  and `ttc/Analysis/MembershipCost.lean` proves it is correct and costs exactly `2nr` in a
-  polytope with `r` facets. CV18's oracle, the deletion pass and the sampler's rejection
-  test all run this program, and the charged algorithm charges them what the program
-  spends. The remaining charges are definitions in `ttc/Model/Prelude.lean`, not proved
-  costs of a program:
-  * one Hit-and-Run step: `2nr`, the same as a membership test;
+* **Part of the cost model is assumed.** Arithmetic is counted with one operation for
+  each `+`, `−`, `·`, `/`, `√` and comparison on real numbers, and one for each random
+  number read. Two subroutines are programs written with these operations, in the
+  "Cost model" section of `ttc/Model/Prelude.lean`, and the charged algorithm charges
+  them what the programs spend:
+  * the membership test `memberProg` (CV18's oracle, the deletion pass and the sampler's
+    rejection test). `ttc/Analysis/MembershipCost.lean` proves it is correct and costs
+    exactly `2nr` in a polytope with `r` facets;
+  * one Hit-and-Run step `hitAndRunStep` (a lazy coin, a Gaussian direction, the chord
+    scan over the facets, a uniform point on the chord). `ttc/Analysis/HitAndRunStep.lean`
+    proves that its output law is arlib's lazy Hit-and-Run kernel, so `T` steps are
+    arlib's `T`-step chain, and that it costs at most `4nr + 4r + 6n + 9`. The sampler
+    runs this program.
+
+  The remaining charges are definitions in `ttc/Model/Prelude.lean`, not proved costs of
+  a program:
   * uniform start point in the inscribed ball: `4n + 2`;
   * rounding a point to the lattice: `n`;
   * a fair coin, a Poisson or binomial draw, deleting or appending a copy, and a
@@ -183,8 +190,9 @@ is defined in `Model/`, so nothing hidden in `Analysis/` can change what they sa
 3. CV18 fails with probability at most `δ/4` in total over all `m` calls.
 4. Lemma `lem:nonconv` turns a lattice-point estimate into a volume estimate.
 
-**Theorem 3.** Per polytope, the cost is: CV18's query count times `n·r`, plus
-`⌈Thresh⌉` samples times the walk length `T` times `n·r`, plus thinning and deletion.
+**Theorem 3.** Per polytope, the cost is: CV18's query count times `2nr`, plus
+`⌈Thresh⌉` samples times the walk length `T` times the step cost `O(nr)`, plus thinning
+and deletion.
 `T` is bounded by `n⁴ρ²` up to logarithms, using `R₀ ≤ 2√n R`. The CV18 query bound
 comes from arlib-community.
 

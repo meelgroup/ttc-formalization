@@ -35,7 +35,7 @@ def uniformBudgetNat (n r cap queries steps rounds : Nat) : Nat :=
 theorem uniformBudgetNat_le_coarse_product
     (n r cap queries steps rounds : Nat) (hn : 1 ≤ n) (hr : 1 ≤ r) :
     uniformBudgetNat n r cap queries steps rounds ≤
-      30 * n * r * (cap + 1) * (queries + steps + rounds + 1) := by
+      50 * n * r * (cap + 1) * (queries + steps + rounds + 1) := by
   obtain ⟨a, ha⟩ := Nat.exists_eq_add_of_le hn
   obtain ⟨c, hc⟩ := Nat.exists_eq_add_of_le hr
   subst n
@@ -44,7 +44,7 @@ theorem uniformBudgetNat_le_coarse_product
     rateThinningRoundOperations countThinningRoundOperations
     poissonDrawOperations fairCoinOperations binomialDrawOperations
     scalarOperationCost samplingAttemptOperations ballStartOperations roundPointOperations
-    rejectionTestOperations appendCopyOperations
+    rejectionTestOperations appendCopyOperations hitAndRunStepOperations
   dsimp [facetScanOperations]
   ring_nf
   omega
@@ -68,7 +68,7 @@ theorem theorem3UniformComponentBudget_le_coarse_product
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hm : 0 < D.componentCount) :
     theorem3UniformComponentBudget hn D p b 1 ≤
-      ((30 * n * RMax D * (ThresholdCap p D.componentCount + 1) *
+      ((50 * n * RMax D * (ThresholdCap p D.componentCount + 1) *
         (theorem3CV18QueryMax hn D p +
           Nat.ceil ((2 : Real) ^ 68 * (n : Real) ^ 2 *
             (Rho D) ^ 2 *
@@ -224,7 +224,7 @@ theorem theorem3UniformComponentBudget_le_headline_scale
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hm : 0 < D.componentCount) :
     theorem3UniformComponentBudget hn D p b 1 ≤
-      ENNReal.ofReal (30 * (n : Real) ^ 5 *
+      ENNReal.ofReal (50 * (n : Real) ^ 5 *
         (RMax D : Real) * (Rho D) ^ 2 *
         theorem3PrecisionScale b (theorem3OuterRadiusMax D) *
         ((ThresholdCap p D.componentCount : Real) + 1) *
@@ -244,14 +244,14 @@ theorem theorem3UniformComponentBudget_le_headline_scale
     simpa only [Q, S, K, M, L, rho, R, H] using
       theorem3UniformIndexSum_le_parameterFactor hn D p b
   have hbudget : theorem3UniformComponentBudget hn D p b 1 ≤
-      ((30 * n * r * (cap + 1) * (Q + S + K + 1) : Nat) : ENNReal) := by
+      ((50 * n * r * (cap + 1) * (Q + S + K + 1) : Nat) : ENNReal) := by
     simpa only [Q, S, K, r, cap, rho, R] using
       theorem3UniformComponentBudget_le_coarse_product hn D p b hm
-  have hnat : 30 * n * r * (cap + 1) * (Q + S + K + 1) ≤
-      30 * n * r * (cap + 1) * Nat.ceil (M * L) := by
+  have hnat : 50 * n * r * (cap + 1) * (Q + S + K + 1) ≤
+      50 * n * r * (cap + 1) * Nat.ceil (M * L) := by
     gcongr
   have hfirst : theorem3UniformComponentBudget hn D p b 1 ≤
-      ((30 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) :=
+      ((50 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) :=
     hbudget.trans (by exact_mod_cast hnat)
   have hrho : 1 ≤ rho := by
     dsimp [rho, Rho]
@@ -285,27 +285,27 @@ theorem theorem3UniformComponentBudget_le_headline_scale
   have hceil : (Nat.ceil (M * L) : Real) ≤ M * L + 1 :=
     (Nat.ceil_lt_add_one hML).le
   have hreal :
-      ((30 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : Real) ≤
-        30 * (n : Real) ^ 5 * r * rho ^ 2 * H *
+      ((50 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : Real) ≤
+        50 * (n : Real) ^ 5 * r * rho ^ 2 * H *
           ((cap : Real) + 1) * (L + 1) := by
     push_cast
-    have hcoeff : 0 ≤ 30 * (n : Real) * r * ((cap : Real) + 1) := by positivity
+    have hcoeff : 0 ≤ 50 * (n : Real) * r * ((cap : Real) + 1) := by positivity
     have hupper := mul_le_mul_of_nonneg_left hceil hcoeff
     have hMplus : M * L + 1 ≤ M * (L + 1) := by nlinarith [hM]
     have hupper2 := mul_le_mul_of_nonneg_left hMplus hcoeff
-    have hidentity : 30 * (n : Real) * r * ((cap : Real) + 1) *
+    have hidentity : 50 * (n : Real) * r * ((cap : Real) + 1) *
         (M * (L + 1)) =
-        30 * (n : Real) ^ 5 * r * rho ^ 2 * H *
+        50 * (n : Real) ^ 5 * r * rho ^ 2 * H *
           ((cap : Real) + 1) * (L + 1) := by dsimp [M]; ring
     nlinarith [hupper, hupper2]
   have hcast :
-      ((30 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) ≤
-        ENNReal.ofReal (30 * (n : Real) ^ 5 * r * rho ^ 2 * H *
+      ((50 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) ≤
+        ENNReal.ofReal (50 * (n : Real) ^ 5 * r * rho ^ 2 * H *
           ((cap : Real) + 1) * (L + 1)) := by
     calc
-      ((30 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) =
+      ((50 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : ENNReal) =
           ENNReal.ofReal
-            ((30 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : Real) := by
+            ((50 * n * r * (cap + 1) * Nat.ceil (M * L) : Nat) : Real) := by
         norm_cast
       _ ≤ _ := ENNReal.ofReal_le_ofReal hreal
   have hresult := hfirst.trans hcast

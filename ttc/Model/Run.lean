@@ -1,5 +1,6 @@
 import ttc.Model.Program
 import Mathlib.Probability.Distributions.Geometric
+import Mathlib.Probability.Distributions.Gaussian.Multivariate
 import ArlibCommunity.Algorithms.CV18
 import ArlibCommunity.Algorithms.HitAndRun.Model.Theorem
 import ArlibCommunity.Algorithms.KV97.Analysis.Inflate
@@ -339,14 +340,38 @@ def normalizedHitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat)
     (P.samplerOuterRadius b eta / P.scaledInradius b) ^ 2 *
     Real.log (2 * P.samplerOuterRadius b eta))
 
-/-- `p ← HitAndRun(P', y, T)` from `y ← Unif(B₂(z, γ))`: `T` lazy finite-facet steps in
-the unit-inball chart, mapped back to the decimal-scaled body before KV97 rounding. -/
+/-- The walk's body in the unit-inball chart, as a presentation:
+`aⱼ · y ≤ (b'ⱼ − aⱼ · z')/γ'` (`PolytopeData.normalizedHitAndRunOffset`). -/
+def PolytopeData.hitAndRunPresentation {n : Nat} (P : PolytopeData n) (b : Nat)
+    (eta : Real) : HalfspacePresentation n where
+  facetCount := P.presentation.facetCount
+  normal := P.presentation.normal
+  offset := P.normalizedHitAndRunOffset b eta
+
+/-- The random tape of one Hit-and-Run step: a fair coin, a standard Gaussian vector, and a
+uniform number in `[0, 1]`, independent. -/
+def hitAndRunTape (n : Nat) : Measure (Bool × EuclideanSpace Real (Fin n) × Real) :=
+  fairCoinLaw.prod ((stdGaussian (EuclideanSpace Real (Fin n))).prod
+    (volume.restrict (Icc (0 : Real) 1)))
+
+/-- The law of the point after one step `hitAndRunStep` from `x`. -/
+def HalfspacePresentation.hitAndRunStepLaw {n : Nat} (H : HalfspacePresentation n)
+    (x : EuclideanSpace Real (Fin n)) : Measure (EuclideanSpace Real (Fin n)) :=
+  (hitAndRunTape n).map fun ω =>
+    WithLp.toLp 2 (H.hitAndRunStep (WithLp.ofLp x) ω.1 (WithLp.ofLp ω.2.1) ω.2.2).value
+
+/-- The law of the point after `T` steps, each with a fresh tape, from a start law `μ`. -/
+def HalfspacePresentation.hitAndRunWalk {n : Nat} (H : HalfspacePresentation n)
+    (μ : Measure (EuclideanSpace Real (Fin n))) : Nat → Measure (EuclideanSpace Real (Fin n))
+  | 0 => μ
+  | T + 1 => (H.hitAndRunWalk μ T).bind H.hitAndRunStepLaw
+
+/-- `p ← HitAndRun(P', y, T)` from `y ← Unif(B₂(z, γ))`: `T` steps of the program
+`hitAndRunStep` in the unit-inball chart, mapped back to the decimal-scaled body before KV97
+rounding. -/
 def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Measure (EuclideanSpace Real (Fin n)) :=
-  (ArlibCommunity.Foundations.MarkovChainTheory.iterate
-    (ArlibCommunity.Foundations.MarkovChainTheory.lazy
-      (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
-        P.arlibNormal (P.normalizedHitAndRunOffset b eta)))
+  ((P.hitAndRunPresentation b eta).hitAndRunWalk
     (ArlibCommunity.Foundations.Convex.uniformOn volume
       (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
     (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b)
@@ -363,11 +388,12 @@ def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
   acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b
 
 /-- The charge for one sampler attempt with `T` steps: the start point in the inscribed
-ball, `T` Hit-and-Run steps, rounding, and the rejection test `memberProg` on `10^b · P`. -/
+ball, `T` steps of `hitAndRunStep` at `hitAndRunStepCost` each, rounding, and the rejection
+test `memberProg` on `10^b · P`. -/
 noncomputable def PolytopeData.samplingAttemptCost {n : Nat} (P : PolytopeData n)
-    (b steps : Nat) : Nat :=
+    (b : Nat) (eta : Real) (steps : Nat) : Nat :=
   TTCRuntime.ballStartOperations n +
-    steps * TTCRuntime.facetScanOperations n P.presentation.facetCount +
+    steps * (P.hitAndRunPresentation b eta).hitAndRunStepCost +
     TTCRuntime.roundPointOperations n + (P.scaledPresentation b).memberCost
 
 /-- A one-point trace retaining the geometric number of rejection attempts.
@@ -376,7 +402,7 @@ def normalizedHitAndRunPointWithCostLaw {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Measure (LatticePoint n × Nat) :=
   (acceptedRoundedWithAttempts (normalizedHitAndRunContinuousLaw P b eta) P b).map
     fun result =>
-      (result.1, result.2 * P.samplingAttemptCost b (normalizedHitAndRunSteps P b eta))
+      (result.1, result.2 * P.samplingAttemptCost b eta (normalizedHitAndRunSteps P b eta))
 
 /-- Independent accepted points, retaining the sum of all retry costs. -/
 def normalizedHitAndRunBatchWithCostLaw {n : Nat} (P : PolytopeData n)

@@ -177,7 +177,7 @@ theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
     ∫⁻ result, (result.2 : ENNReal) ∂
       ttcRefWithCost hn F hbounded p prep preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
-        ENNReal.ofReal (30 * (n : Real) ^ 5 *
+        ENNReal.ofReal (50 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
@@ -193,21 +193,21 @@ theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
       TTCRuntime.polylogFactors D p / p.epsilon ^ 2 :=
     (mul_le_mul_of_nonneg_left (by linarith) hS).trans
       (TTCRuntime.inputScale_mul_factor_le D p)
-  have hC : 0 ≤ 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+  have hC : 0 ≤ 50 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
       ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) := by positivity
   refine add_le_add le_rfl (mul_le_mul' le_rfl (ENNReal.ofReal_le_ofReal ?_))
-  calc 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+  calc 50 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
         TTCRuntime.theorem3InputScale D p *
         ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
         (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)
-      = (30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+      = (50 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1)) *
         (TTCRuntime.theorem3InputScale D p *
           (TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1)) := by ring
-    _ ≤ (30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+    _ ≤ (50 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1)) *
         (TTCRuntime.polylogFactors D p / p.epsilon ^ 2) := mul_le_mul_of_nonneg_left hkey hC
-    _ = 30 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
+    _ = 50 * (n : Real) ^ 5 * (TTCRuntime.RMax D : Real) * (TTCRuntime.Rho D) ^ 2 *
           ((TTCRuntime.ThresholdCap p D.componentCount : Real) + 1) *
           TTCRuntime.polylogFactors D p / p.epsilon ^ 2 := by ring
 

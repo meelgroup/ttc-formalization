@@ -154,7 +154,7 @@ theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 21 ≤ n)
       ttcRefWithCost hn F hbounded p prep
         preprocessingOperations 1 ≤
       preprocessingOperations + (D.componentCount : ENNReal) *
-        ENNReal.ofReal (30 * (n : Real) ^ 5 *
+        ENNReal.ofReal (50 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
           TTCRuntime.theorem3PrecisionScale b
@@ -183,7 +183,7 @@ theorem ttc_theorem3_headline_budget_finite {n k : Nat} (hn : 21 ≤ n)
     let D := prep.run F hbounded
     let b := (prep.choosePrecision D p).value
     (preprocessingOperations : ENNReal) + (D.componentCount : ENNReal) *
-        ENNReal.ofReal (30 * (n : Real) ^ 5 *
+        ENNReal.ofReal (50 * (n : Real) ^ 5 *
           (TTCRuntime.RMax D : Real) *
           (TTCRuntime.Rho D) ^ 2 *
           TTCRuntime.theorem3PrecisionScale b

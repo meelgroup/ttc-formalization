@@ -1,3 +1,4 @@
+import ttc.Analysis.HitAndRunStep
 import ttc.Analysis.ScaledBody
 import ttc.Analysis.EuclideanInball
 import ttc.Analysis.BoundingRadius
@@ -118,6 +119,38 @@ theorem PolytopeData.normalizedHitAndRun_bounded {n : Nat}
 facet count only. Under the precision hypothesis of Corollary `cor:linf` this `T` is at least
 arlib-community's proved mixing deadline at the true diameter and warmness of the walk's
 body, and this `ν` is at most the inverse-volume accuracy KV97 rounding needs. -/
+
+/-- **The sampler runs arlib's lazy Hit-and-Run chain.** `T` steps of the program
+`hitAndRunStep` from the uniform law on the unit ball have the law of arlib's `T`-step lazy
+finite-facet chain (`Analysis/HitAndRunStep.lean`). -/
+theorem normalizedHitAndRunContinuousLaw_eq_kernel {n : Nat} (hn : 0 < n)
+    (P : PolytopeData n) (b : Nat) (eta : Real) :
+    normalizedHitAndRunContinuousLaw P b eta =
+      (ArlibCommunity.Foundations.MarkovChainTheory.iterate
+        (ArlibCommunity.Foundations.MarkovChainTheory.lazy
+          (ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
+            P.arlibNormal (P.normalizedHitAndRunOffset b eta)))
+        (ArlibCommunity.Foundations.Convex.uniformOn volume
+          (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
+        (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b) := by
+  letI : NeZero n := ⟨by omega⟩
+  have hstart : ArlibCommunity.Foundations.Convex.uniformOn volume
+      (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)
+      (HitAndRunLaw.body (P.hitAndRunPresentation b eta))ᶜ = 0 := by
+    rw [ArlibCommunity.Foundations.Convex.uniformOn_def, Measure.smul_apply, smul_eq_mul,
+      Measure.restrict_apply (HitAndRunLaw.measurableSet_body _).compl]
+    have hsub : (HitAndRunLaw.body (P.hitAndRunPresentation b eta))ᶜ ∩
+        Metric.ball (0 : EuclideanSpace Real (Fin n)) 1 = ∅ := by
+      ext y
+      simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_empty_iff_false, iff_false,
+        not_and]
+      intro hout hy
+      exact hout (P.normalizedHitAndRun_unitBall b eta (Metric.ball_subset_closedBall hy))
+    rw [hsub, measure_empty, mul_zero]
+  unfold normalizedHitAndRunContinuousLaw
+  rw [(HitAndRunLaw.hitAndRunWalk_eq_iterate (P.hitAndRunPresentation b eta)
+    (P.normalizedHitAndRun_bounded b eta) _ hstart _).1]
+  rfl
 
 /-- The decimal-scaled component has diameter at most `2 · 10^b · R₀`. -/
 theorem PolytopeData.scaledBody_dist_le_boundingRadius {n : Nat}
@@ -537,8 +570,7 @@ theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 21 ≤ n)
         (samplerC eta) (P.presentation.facetCount : Real))
   have hmix' := hmapped.mono (ENNReal.ofReal_mono hepsle)
   rw [htarget] at hmix'
-  unfold normalizedHitAndRunContinuousLaw
-  rw [hfiniteStep]
+  rw [normalizedHitAndRunContinuousLaw_eq_kernel (by omega), hfiniteStep]
   simpa only [K, PolytopeData.normalizedHitAndRunBody,
     ArlibCommunity.Algorithms.HitAndRun.step] using hmix'
 
@@ -560,10 +592,7 @@ theorem normalizedHitAndRunContinuousLaw_isProbabilityMeasure {n : Nat}
         P.arlibNormal (P.normalizedHitAndRunOffset b eta)) := by
     unfold ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
     infer_instance
-  dsimp only [normalizedHitAndRunContinuousLaw,
-    ArlibCommunity.Algorithms.HitAndRun.run,
-    ArlibCommunity.Algorithms.HitAndRun.lazyStep,
-    ArlibCommunity.Algorithms.HitAndRun.step]
+  rw [normalizedHitAndRunContinuousLaw_eq_kernel hn]
   exact Measure.isProbabilityMeasure_map (by
     unfold PolytopeData.samplerChart
     fun_prop)
@@ -595,10 +624,8 @@ theorem PolytopeData.normalizedHitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ 
     unfold ArlibCommunity.Algorithms.HitAndRun.finiteFacetStep
     infer_instance
   letI : IsProbabilityMeasure mu := by
-    dsimp only [mu, normalizedHitAndRunContinuousLaw,
-      ArlibCommunity.Algorithms.HitAndRun.run,
-      ArlibCommunity.Algorithms.HitAndRun.lazyStep,
-      ArlibCommunity.Algorithms.HitAndRun.step]
+    dsimp only [mu]
+    rw [normalizedHitAndRunContinuousLaw_eq_kernel (by omega)]
     exact Measure.isProbabilityMeasure_map (by
       unfold PolytopeData.samplerChart
       fun_prop)
