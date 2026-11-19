@@ -1,4 +1,5 @@
 import ttc.Analysis.ReferenceProgram
+import ttc.Analysis.MembershipCost
 
 /-!
 # Measurability of component removal
@@ -35,6 +36,7 @@ lemma measurable_removeComponent {n : Nat} (P : PolytopeData n) :
     simpa only [Finset.mem_filter] using
       hm.and (measurable_const :
         Measurable (fun _ : TTCState n => copy.2.toPoint ∉ P.carrier))
+  simp only [TTCState.removeComponent_eq]
   rw [measurable_comap_iff]
   change Measurable (fun s : TTCState n =>
     (s.p, s.X.filter (fun copy => copy.2.toPoint ∉ P.carrier), s.nextLabel))

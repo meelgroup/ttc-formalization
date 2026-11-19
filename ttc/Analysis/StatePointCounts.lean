@@ -1,5 +1,6 @@
 import ttc.Analysis.LabelFreshness
 import ttc.Analysis.MarkingMeasure
+import ttc.Analysis.MembershipCost
 
 /-! The count-vector projection of a labelled paper state. This is the
 deterministic bridge from the executable state to the fixed-level Poisson
@@ -24,6 +25,7 @@ theorem TTCState.pointCount_removeComponent {n : Nat}
     (s.removeComponent P).pointCount x =
       if x.toPoint ∈ P.carrier then 0 else s.pointCount x := by
   classical
+  rw [TTCState.removeComponent_eq]
   by_cases hx : x.toPoint ∈ P.carrier
   · have hfilter :
         ((s.X.filter fun copy => copy.2.toPoint ∉ P.carrier).filter

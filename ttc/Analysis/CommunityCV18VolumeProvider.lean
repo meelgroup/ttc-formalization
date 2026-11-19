@@ -1,4 +1,5 @@
 import ttc.Analysis.OracleContracts
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.CV18VolumeAdapter
 import ttc.Analysis.TheoremProof
 import ArlibCommunity.Algorithms.CV18
@@ -43,8 +44,7 @@ noncomputable def oracle {n : Nat} (P : PolytopeData n) : MembershipOracle (inpu
   classical
   exact
     { query := query P
-      correct := fun x => by
-        simp [query] }
+      correct := fun x => query_eq_true_iff P x }
 
 /-- Corollary `cor:vol`'s roundness: `E_{P*}‖X‖² ≤ (R₀/γ)² ≤ roundness · n`. -/
 lemma wellRounded {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)

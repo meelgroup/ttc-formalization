@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.SampleAppendTape
 import ttc.Analysis.GivenVolumeFold
 import ttc.Analysis.RunMarginal
@@ -681,7 +682,10 @@ theorem simCostedGivenVolume_scaleRate (delta : Real) (hThresh : 0 < Thresh)
 theorem stepWithCost_eq_sim (delta : Real) (x : TTCState n) :
     ttcPseudocode.stepWithCost (ttcCostedSubroutines hn prep factor) b eta delta Thresh P x =
       costedBind ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost P eta delta)
-        (fun outcome => simCostedGivenVolume hn prep factor P b eta Thresh outcome x) := rfl
+        (fun outcome => simCostedGivenVolume hn prep factor P b eta Thresh outcome x) := by
+  unfold ttcPseudocode.stepWithCost simCostedGivenVolume
+  simp only [TTCState.deletionCost_eq (by omega : 0 < n)]
+  rfl
 
 theorem refStepWithCost_eq_tail (delta : Real) (s : TTCState n) :
     ttcReference.stepWithCost (ttcCostedSubroutines hn prep factor) b eta delta Thresh P s =

@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.MathlibCompat
 import ttc.Analysis.NormalizedHitAndRunGeometry
 import Mathlib.Analysis.SpecificLimits.Normed
@@ -124,8 +125,7 @@ theorem normalizedHitAndRunPointWithCost_expected_bound {n : Nat}
     (haccept : (1 / 2 : Real) ≤
       (roundedAcceptanceProbability (normalizedHitAndRunContinuousLaw P b eta) P b : Real)) :
     ∫⁻ result, (result.2 : ENNReal) ∂normalizedHitAndRunPointWithCostLaw P b eta ≤
-      2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-        (normalizedHitAndRunSteps P b eta) := by
+      2 * P.samplingAttemptCost b (normalizedHitAndRunSteps P b eta) := by
   unfold normalizedHitAndRunPointWithCostLaw
   rw [lintegral_map (by fun_prop) (by fun_prop)]
   simp only [Nat.cast_mul]
@@ -142,8 +142,7 @@ theorem normalizedHitAndRunBatchWithCost_expected_bound {n : Nat}
       (roundedAcceptanceProbability (normalizedHitAndRunContinuousLaw P b eta) P b : Real)) :
     ∫⁻ result, (result.2 : ENNReal) ∂
         normalizedHitAndRunBatchWithCostLaw P count b eta ≤
-      count * (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-        (normalizedHitAndRunSteps P b eta)) := by
+      count * (2 * P.samplingAttemptCost b (normalizedHitAndRunSteps P b eta)) := by
   let μ := normalizedHitAndRunPointWithCostLaw P b eta
   letI : IsProbabilityMeasure
       (acceptedRoundedWithAttempts (normalizedHitAndRunContinuousLaw P b eta) P b) := by
@@ -174,8 +173,7 @@ theorem normalizedHitAndRunBatchWithCost_expected_bound {n : Nat}
   calc
     (∑ _i : Fin count, ∫⁻ result, (result.2 : ENNReal) ∂μ) =
         count * (∫⁻ result, (result.2 : ENNReal) ∂μ) := by simp
-    _ ≤ count * (2 * TTCRuntime.samplingAttemptOperations n P.presentation.facetCount
-        (normalizedHitAndRunSteps P b eta)) :=
+    _ ≤ count * (2 * P.samplingAttemptCost b (normalizedHitAndRunSteps P b eta)) :=
       mul_le_mul_of_nonneg_left hpoint (by positivity)
 
 end ttc

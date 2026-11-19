@@ -1,4 +1,5 @@
 import ttc.Analysis.OriginMarksIn
+import ttc.Analysis.MembershipCost
 
 /-! If one refreshed component step moves the dyadic level past `level0`
 while its deterministic first loop stops at or before `level0`, then the
@@ -117,7 +118,8 @@ theorem OriginConfiguration.split_population_le_survivors
     intro copy hcopy
     have h1 : copy ∈ first.X := (Finset.mem_filter.mp hcopy).1
     have h2 : copy ∈ deleted.X := (Finset.mem_filter.mp h1).1
-    exact Finset.mem_filter.mp h2
+    have h3 := Finset.mem_filter.mp h2
+    exact ⟨h3.1, (P.presentation.memberProg_eq_false _).1 h3.2⟩
   have hdeletedSurv : OriginSurvives deleted d.origin
       d.source.coins d.level :=
     originSurvives_removeComponent d.state P d.origin

@@ -103,9 +103,15 @@ Read these before citing the result.
   normalization (Theorem 2 of the paper) are an input `prep`. Its output type requires
   bounded, full-dimensional polytopes whose union equals the solution set almost
   everywhere, but Lean does not check how they are computed.
-* **The cost model is assumed.** These charges are definitions in
-  `ttc/Model/Prelude.lean`, not proved costs of a program:
-  * membership test, and one Hit-and-Run step, in a polytope with `r` facets: `n·r`;
+* **Most of the cost model is assumed.** Arithmetic is counted with one operation for
+  each `·`, `+` and `≤` on real numbers. The membership test is a program written with
+  these operations (`memberProg`, in the "Cost model" section of `ttc/Model/Prelude.lean`),
+  and `ttc/Analysis/MembershipCost.lean` proves it is correct and costs exactly `2nr` in a
+  polytope with `r` facets. CV18's oracle, the deletion pass and the sampler's rejection
+  test all run this program, and the charged algorithm charges them what the program
+  spends. The remaining charges are definitions in `ttc/Model/Prelude.lean`, not proved
+  costs of a program:
+  * one Hit-and-Run step: `2nr`, the same as a membership test;
   * uniform start point in the inscribed ball: `4n + 2`;
   * rounding a point to the lattice: `n`;
   * a fair coin, a Poisson or binomial draw, deleting or appending a copy, and a
@@ -113,7 +119,8 @@ Read these before citing the result.
 * **Some costs are not counted.** The linear programs (`GetPrecision`, `BoundingRadius`)
   and preprocessing are not charged; preprocessing enters only as the number
   `preprocessingOperations`. CV18's work besides membership queries is charged by a
-  single factor.
+  single factor. Rewriting each polytope's offsets once for CV18's normalized body and
+  for the `10^b`-scaled body (`O(nr)` per polytope) is not charged.
 * **Exact real arithmetic.** The algorithm works over the real numbers. Rounding error in
   floating point is not modelled.
 * **The `ε` dependence is looser than the paper's.** Lean's bound multiplies the

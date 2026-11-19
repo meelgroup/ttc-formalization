@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.MathlibCompat
 import ttc.Analysis.NormalizedHitAndRunGeometry
 import ttc.Analysis.CostedMeasureMonad
@@ -35,7 +36,8 @@ theorem communityCosted_volume_expected_cost {n k : Nat}
         (CommunityCV18.queryBudgetFor (by omega) P eta delta) +
       factor * TTCRuntime.membershipQueryOperations n P.presentation.facetCount
         (CommunityCV18.queryBudgetFor (by omega) P eta delta + 1) := by
-  simpa only [ttcCostedSubroutines, Nat.cast_add, Nat.cast_mul] using
+  simpa only [ttcCostedSubroutines, P.cv18QueryCost_eq (by omega : 0 < n),
+    Nat.cast_add, Nat.cast_mul] using
     (costedCharge_expected_cost
     ((ttcSubroutines hn prep).ComputeVolume P eta delta)
     (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
@@ -80,8 +82,8 @@ theorem communityCosted_samples_expected_cost {n k : Nat}
   letI : IsProbabilityMeasure
       (acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b) :=
     halmost.1
-  simpa only [ttcCostedSubroutines, dif_pos h] using
-    normalizedHitAndRunBatchWithCost_expected_bound P count b eta haccept
+  simpa only [ttcCostedSubroutines, dif_pos h, P.samplingAttemptCost_eq (by omega : 0 < n)]
+    using normalizedHitAndRunBatchWithCost_expected_bound P count b eta haccept
 
 theorem communityCosted_samples_mass_le_one {n k : Nat}
     (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)

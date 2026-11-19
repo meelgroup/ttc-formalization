@@ -46,10 +46,12 @@ def PolytopeData.scaledOffset {n : Nat} (P : PolytopeData n) (b : Nat) :
     Fin P.presentation.facetCount → Real :=
   fun i => decimalScale b * P.presentation.offset i
 
-/-- The arlib body obtained by scaling every point of `P` by `10^b`. -/
-def PolytopeData.scaledBody {n : Nat} (P : PolytopeData n) (b : Nat) :
-    Set (EuclideanSpace Real (Fin n)) :=
-  ArlibCommunity.Foundations.Convex.Polytope.body P.arlibNormal (P.scaledOffset b)
+/-- The presentation of `10^b · P`: the same normals, with offsets `10^b · bⱼ`. -/
+def PolytopeData.scaledPresentation {n : Nat} (P : PolytopeData n) (b : Nat) :
+    HalfspacePresentation n where
+  facetCount := P.presentation.facetCount
+  normal := P.presentation.normal
+  offset := P.scaledOffset b
 
 /-! ## Line `line:prec:getmaxball`: `MaxInscribedBall` by the Chebyshev-centre LP
 
@@ -104,6 +106,14 @@ def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
 def GetPrecision {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Nat :=
   Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
+
+/-- The presentation of the normalized body `P* = (P − z)/γ`: the same normals, with offsets
+`(bⱼ − aⱼ · z)/γ`. It is computed once per component. -/
+def PolytopeData.cv18Presentation {n : Nat} (P : PolytopeData n) : HalfspacePresentation n where
+  facetCount := P.presentation.facetCount
+  normal := P.presentation.normal
+  offset := fun j =>
+    (P.presentation.offset j - dotProduct (P.presentation.normal j) P.incenter) / P.inradius
 
 /-- Pull the component back along `y ↦ inradius • y + incenter`. -/
 def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
@@ -165,11 +175,11 @@ def queryBudgetFor {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
   else
     0
 
-/-- Exact finite-facet membership in the normalized TTC component. -/
-noncomputable def query {n : Nat} (P : PolytopeData n) :
-    EuclideanSpace Real (Fin n) → Bool := by
-  classical
-  exact fun x => if x ∈ P.cv18Body then true else false
+/-- CV18's membership oracle for the normalized body `P* = (P − z)/γ`: the membership test
+`memberProg` on its presentation `aⱼ · y ≤ (bⱼ − aⱼ · z)/γ` (`PolytopeData.cv18Presentation`). -/
+def query {n : Nat} (P : PolytopeData n) :
+    EuclideanSpace Real (Fin n) → Bool :=
+  fun y => (P.cv18Presentation.memberProg (WithLp.ofLp y)).value
 
 /-- The estimator law obtained by running the imported CV18 program. -/
 def law {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
@@ -221,10 +231,6 @@ def communityCV18VolumeLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
 
 open ArlibCommunity.Algorithms.KV97
 
-/-- The integer lattice embedded in arlib's Euclidean state space. -/
-def kv97LatEmb (n : Nat) (z : Fin n → Int) : EuclideanSpace Real (Fin n) :=
-  WithLp.toLp 2 fun i => (z i : Real)
-
 /-- Draw from a continuous law, then round every coordinate independently. -/
 def kv97RoundedMeasureLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) : Measure (Fin n → Int) :=
@@ -233,9 +239,10 @@ def kv97RoundedMeasureLaw {n : Nat}
 /-- Attach TTC's decimal precision to an integer vector returned by KV97. -/
 def encodeInteger {n : Nat} (b : Nat) (z : Fin n → Int) : LatticePoint n := (b, z)
 
-/-- Integer vectors accepted by rejection from the scaled TTC component. -/
+/-- Integer vectors accepted by the rejection test: the membership test `memberProg` on the
+scaled component `10^b · P`. -/
 def acceptedIntegers {n : Nat} (P : PolytopeData n) (b : Nat) : Set (Fin n → Int) :=
-  {z | kv97LatEmb n z ∈ P.scaledBody b}
+  {z | ((P.scaledPresentation b).memberProg (fun i => (z i : Real))).value = true}
 
 /-- Round, reject outside the scaled component, and attach TTC's precision code. -/
 def acceptedRoundedLatticeLaw {n : Nat}
@@ -355,14 +362,21 @@ def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
     (_hnonempty : (codedLatticePoints P b).Nonempty) : Measure (LatticePoint n) :=
   acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b
 
+/-- The charge for one sampler attempt with `T` steps: the start point in the inscribed
+ball, `T` Hit-and-Run steps, rounding, and the rejection test `memberProg` on `10^b · P`. -/
+noncomputable def PolytopeData.samplingAttemptCost {n : Nat} (P : PolytopeData n)
+    (b steps : Nat) : Nat :=
+  TTCRuntime.ballStartOperations n +
+    steps * TTCRuntime.facetScanOperations n P.presentation.facetCount +
+    TTCRuntime.roundPointOperations n + (P.scaledPresentation b).memberCost
+
 /-- A one-point trace retaining the geometric number of rejection attempts.
 Each attempt pays for its finite walk, rounding and membership test. -/
 def normalizedHitAndRunPointWithCostLaw {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Measure (LatticePoint n × Nat) :=
   (acceptedRoundedWithAttempts (normalizedHitAndRunContinuousLaw P b eta) P b).map
     fun result =>
-      (result.1, result.2 * TTCRuntime.samplingAttemptOperations n
-        P.presentation.facetCount (normalizedHitAndRunSteps P b eta))
+      (result.1, result.2 * P.samplingAttemptCost b (normalizedHitAndRunSteps P b eta))
 
 /-- Independent accepted points, retaining the sum of all retry costs. -/
 def normalizedHitAndRunBatchWithCostLaw {n : Nat} (P : PolytopeData n)
@@ -398,6 +412,7 @@ def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
           (normalizedHitAndRunPointLaw hn P b eta h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
       else failedSampleBatchLaw }
 
+set_option linter.dupNamespace false in
 /-- **Algorithm `ttc`** with `GetPrecision`, `ComputeVolume` and `GenerateSamples` as above. -/
 def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
@@ -417,11 +432,8 @@ def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
     { base := ttcSubroutines hn prep
       computeVolumeWithCost := fun P eta delta =>
         let queries := CommunityCV18.queryBudgetFor (by omega) P eta delta
-        let membership := TTCRuntime.membershipQueryOperations n
-          P.presentation.facetCount queries
-        let nonQuery := cv18NonQueryFactor *
-          TTCRuntime.membershipQueryOperations n P.presentation.facetCount
-            (queries + 1)
+        let membership := P.cv18Presentation.memberCost * queries
+        let nonQuery := cv18NonQueryFactor * (P.cv18Presentation.memberCost * (queries + 1))
         costedCharge
           ((ttcSubroutines hn prep).ComputeVolume P eta delta)
           (membership + nonQuery)

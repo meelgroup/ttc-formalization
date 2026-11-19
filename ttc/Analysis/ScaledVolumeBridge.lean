@@ -1,3 +1,5 @@
+import ttc.Analysis.MembershipCost
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.PrecisionRequirements
 import ttc.Analysis.PrecisionAdequateSplit
 import ttc.Analysis.AcceptanceBudget
@@ -54,7 +56,8 @@ theorem acceptedIntegers_ncard_eq_point_lattice {n : Nat}
   · intro z hz
     constructor
     · rw [← scaledBody_preimage_toEuclidean P b]
-      simpa [acceptedIntegers, toEuclidean, kv97LatEmb] using hz
+      rw [acceptedIntegers_eq] at hz
+      simpa [toEuclidean, kv97LatEmb] using hz
     · intro i
       exact ⟨z i, rfl⟩
   · intro z w _ _ hzw
@@ -63,7 +66,8 @@ theorem acceptedIntegers_ncard_eq_point_lattice {n : Nat}
   · intro x hx
     choose z hz using hx.2
     refine ⟨z, ?_, ?_⟩
-    · change kv97LatEmb n z ∈ P.scaledBody b
+    · rw [acceptedIntegers_eq]
+      change kv97LatEmb n z ∈ P.scaledBody b
       rw [← scaledBody_preimage_toEuclidean P b] at hx
       have heq : (fun i : Fin n => (z i : Real)) = x := by
         funext i

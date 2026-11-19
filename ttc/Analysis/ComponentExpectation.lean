@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.PrecisionRequirements
 import ttc.Analysis.RuntimeBudgets
 import ttc.Analysis.PrecisionChoice
@@ -556,7 +557,8 @@ theorem certified_community_volume_continuation_bound {n k : Nat}
           p.ε' (p.δ' D.componentCount) + 1))
     f (certified_community_volume_mass_le_one hn D p i) hbudget
   simpa only [ttcCostedSubroutines, ttcSubroutines, Measure.map_id,
-    Nat.cast_add, Nat.cast_mul] using hbase
+    (D.component i).cv18QueryCost_eq (by omega : 0 < n), Nat.cast_add, Nat.cast_mul]
+    using hbase
 
 private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) (m b : Nat)
     (P : PolytopeData n) (state : TTCState n) : ENNReal :=

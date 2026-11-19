@@ -1,3 +1,4 @@
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.EuclideanInball
 import ttc.Analysis.BoundingRadius
 import ttc.Analysis.OracleContracts

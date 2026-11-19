@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.RuntimeBudgets
 import ttc.Analysis.EuclideanInball
 import ttc.Analysis.PrecisionRequirements

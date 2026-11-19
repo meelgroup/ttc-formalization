@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.FairCoinStreamLawIsProbabilityMeasure
 import ttc.Analysis.MeasurableSetSurvives
 import ttc.Analysis.MeasurableSurvivorCount

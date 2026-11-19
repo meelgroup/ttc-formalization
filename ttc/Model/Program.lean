@@ -120,10 +120,16 @@ def ttcPseudocode.t (b n : Nat) (volumeEstimate : NNReal) : NNReal :=
 
 /-! ## Line `line:inside-remove`: remove from `X` every `s ∈ Pᵢ` -/
 
-/-- Remove every retained copy whose point lies in `Pᵢ`. -/
-def TTCState.removeComponent {n : Nat} (s : TTCState n) (P : PolytopeData n) : TTCState n := by
-  classical
-  exact { s with X := s.X.filter (fun copy => copy.2.toPoint ∉ P.carrier) }
+/-- Remove every retained copy whose point lies in `Pᵢ`, as decided by the membership
+test `memberProg`. -/
+def TTCState.removeComponent {n : Nat} (s : TTCState n) (P : PolytopeData n) : TTCState n :=
+  { s with X := s.X.filter (fun copy => (P.presentation.memberProg copy.2.toPoint).value = false) }
+
+/-- The charge for the deletion pass: what `memberProg` spends on each stored copy, plus one
+operation for each copy removed. -/
+def TTCState.deletionCost {n : Nat} (s : TTCState n) (P : PolytopeData n) : Nat :=
+  (∑ copy ∈ s.X, (P.presentation.memberProg copy.2.toPoint).cost) +
+    (s.X.card - (s.removeComponent P).X.card) * TTCRuntime.deleteCopyOperations
 
 /-! ## "Remove every element of `X` with probability 1/2" -/
 
@@ -335,9 +341,7 @@ def ttcPseudocode.stepWithCost {n k : Nat} (O : CostedTTCOracles n k)
   costedBind (O.computeVolumeWithCost P ε' δ') fun volumeOutcome =>
     let t := ttcPseudocode.t b n volumeOutcome.2
     let withoutDuplicates := state.removeComponent P
-    let deletionCost := TTCRuntime.deletionPassOperations n
-      P.presentation.facetCount state.X.card
-        (state.X.card - withoutDuplicates.X.card)
+    let deletionCost := state.deletionCost P
     costedBind (costedCharge (Measure.dirac withoutDuplicates) deletionCost)
       fun deleted =>
         costedBind (ttcPseudocode.rateCheckWithCost deleted t Thresh)

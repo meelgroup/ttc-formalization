@@ -1,3 +1,4 @@
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.ArlibPolytopeBridge
 import ArlibCommunity.Algorithms.HitAndRun.Model.Theorem
 import ArlibCommunity.Algorithms.KV97.Analysis.Inflate

@@ -1,4 +1,5 @@
 import ttc.Analysis.SplicedSourcePointLaw
+import ttc.Analysis.MembershipCost
 
 /-! A ghost configuration links the executable TTC state to the permanent
 component source tapes through all processed components. -/
@@ -161,7 +162,7 @@ noncomputable def OriginConfiguration.advance
       constructor
       · exact hsecondValid copy hcopy
       · have hout : copy.2.toPoint ∉ P.carrier :=
-          (Finset.mem_filter.mp hcopyDeleted).2
+          (P.presentation.memberProg_eq_false _).1 (Finset.mem_filter.mp hcopyDeleted).2
         have hmark := hdeletedMarked copy hcopyDeleted
         rwa [hmark] at hout
     exact originValid_appendSource second.1 c.origin

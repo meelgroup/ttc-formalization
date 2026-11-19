@@ -1,3 +1,4 @@
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.L2LatticeUnion
 import ttc.Analysis.ArlibPolytopeBridge
 

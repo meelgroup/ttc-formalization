@@ -1,4 +1,5 @@
 import ttc.Analysis.OriginMarkedComponent
+import ttc.Analysis.MembershipCost
 
 /-! Ghost bookkeeping for the source coupling. Every executable copy label
 records a unique component and original Poisson-copy index. -/
@@ -693,7 +694,7 @@ theorem originComplete_removeComponent {n : Nat}
   have hpoint := hmarked copy hcopy
   rw [horigin] at hpoint
   rw [hpoint]
-  exact hout
+  exact (P.presentation.memberProg_eq_false _).2 hout
 
 theorem originComplete_thin_of_samples {n : Nat}
     (s t : TTCState n) (origin : Nat → Nat × Nat)

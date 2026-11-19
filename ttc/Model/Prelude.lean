@@ -286,24 +286,91 @@ def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
 /-- The accuracy `ε / 96` passed to `GetPrecision` in line 3 of Algorithm `ttc`. -/
 def ApproxParams.precisionEta (p : ApproxParams) : Real := p.epsilon / 96
 
-/-! ## Runtime vocabulary -/
+/-! ## Cost model
+
+### Counting arithmetic operations
+
+`Counted α` is a value together with the number of arithmetic operations spent computing it.
+Programs are built from three primitives, each costing one operation: a multiplication
+`mul`, an addition `add`, and a comparison `le`. Sequencing (`do`) adds the costs. -/
+
+/-- A value and the number of arithmetic operations used to compute it. -/
+structure Counted (α : Type) where
+  value : α
+  cost : Nat
+
+namespace Counted
+
+/-- Return a value without computing anything: cost `0`. -/
+def pure {α : Type} (a : α) : Counted α := ⟨a, 0⟩
+
+/-- Run `m`, then `f` on its value; the costs add. -/
+def andThen {α β : Type} (m : Counted α) (f : α → Counted β) : Counted β :=
+  ⟨(f m.value).value, m.cost + (f m.value).cost⟩
+
+instance : Monad Counted where
+  pure := Counted.pure
+  bind := Counted.andThen
+
+/-- `a · b`: one operation. -/
+def mul (a b : Real) : Counted Real := ⟨a * b, 1⟩
+
+/-- `a + b`: one operation. -/
+def add (a b : Real) : Counted Real := ⟨a + b, 1⟩
+
+open Classical in
+/-- The comparison `a ≤ b`: one operation. -/
+def le (a b : Real) : Counted Bool := ⟨decide (a ≤ b), 1⟩
+
+/-- The dot product `a₀x₀ + a₁x₁ + ⋯ + aₙ₋₁xₙ₋₁`: `n` multiplications and `n − 1`
+additions. -/
+def dot : (n : Nat) → (Fin n → Real) → (Fin n → Real) → Counted Real
+  | 0, _, _ => Counted.pure 0
+  | 1, a, x => mul (a 0) (x 0)
+  | n + 2, a, x => do
+      let first ← mul (a 0) (x 0)
+      let rest ← dot (n + 1) (Fin.tail a) (Fin.tail x)
+      add first rest
+
+/-- Check `aⱼ · x ≤ bⱼ` for every facet `j = 0, …, r − 1`, one facet after another. -/
+def allFacets {n : Nat} : (r : Nat) → (Fin r → Point n) → (Fin r → Real) → Point n →
+    Counted Bool
+  | 0, _, _, _ => Counted.pure true
+  | r + 1, a, b, x => do
+      let s ← dot n (a 0) x
+      let ok ← le s (b 0)
+      let rest ← allFacets r (Fin.tail a) (Fin.tail b) x
+      Counted.pure (ok && rest)
+
+end Counted
+
+/-- The membership test `x ∈ P`: compute `aⱼ · x` and compare it with `bⱼ`, for each of
+the `r` facets. `Analysis/MembershipCost.lean` proves that it answers correctly and costs
+exactly `2 n r` operations. -/
+def HalfspacePresentation.memberProg {n : Nat} (H : HalfspacePresentation n) (x : Point n) :
+    Counted Bool :=
+  Counted.allFacets H.facetCount H.normal H.offset x
+
+/-- The cost of one membership test in `H`: the most `memberProg` spends at any point.
+(`Analysis/MembershipCost.lean` proves it spends the same `2 n r` at every point.) -/
+noncomputable def HalfspacePresentation.memberCost {n : Nat} (H : HalfspacePresentation n) :
+    Nat :=
+  ⨆ x : Point n, (H.memberProg x).cost
+
+/-! ### Charges
+
+The deletion pass, CV18's membership queries and the sampler's rejection test are charged
+`memberCost` or the actual `memberProg` cost (`Model/Program.lean`, `Model/Run.lean`).
+The charges below are assumed. -/
 
 namespace TTCRuntime
 
-/-- One CV18 membership call or one Hit-and-Run chord step scans the facet
-presentation in dimension `n`. -/
-def facetScanOperations (dimension facets : Nat) : Nat := dimension * facets
+/-- One Hit-and-Run step in a polytope with `r` facets: charged `2 n r`, the cost of one
+membership test. This charge is assumed. -/
+def facetScanOperations (dimension facets : Nat) : Nat := 2 * dimension * facets
 
-/-- Each polytope membership query is one facet scan. -/
-def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
-  facetScanOperations dimension facets * queries
-
-/-- Arithmetic to round one proposed point coordinatewise. -/
+/-- Rounding one point coordinatewise to the lattice: `n`. -/
 def roundPointOperations (dimension : Nat) : Nat := dimension
-
-/-- One final acceptance test after rounding is another facet scan. -/
-def rejectionTestOperations (dimension facets : Nat) : Nat :=
-  facetScanOperations dimension facets
 
 /-- Unit-cost primitive operations in the requested real-RAM accounting model. -/
 def deleteCopyOperations : Nat := 1
@@ -312,12 +379,6 @@ def poissonDrawOperations : Nat := 1
 def binomialDrawOperations : Nat := 1
 def appendCopyOperations : Nat := 1
 def scalarOperationCost : Nat := 1
-
-/-- Deleting stored copies tests each one against the current polytope and
-charges one additional operation for each copy actually removed. -/
-def deletionPassOperations (dimension facets checked removed : Nat) : Nat :=
-  checked * facetScanOperations dimension facets +
-    removed * deleteCopyOperations
 
 /-- A rate-thinning round flips one coin for each stored copy; the two scalar
 operations cover the guard and rate update. -/
@@ -335,12 +396,7 @@ norm, a uniform draw raised to the power `1/n`, the radial scaling, and the affi
 the ball. -/
 def ballStartOperations (dimension : Nat) : Nat := 4 * dimension + 2
 
-/-- Per rejected or accepted sampler attempt, before multiplying by its
-random number of attempts: a fresh start in the inscribed ball, the walk, rounding, and
-the final membership test. -/
-def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
-  ballStartOperations dimension + steps * facetScanOperations dimension facets +
-    roundPointOperations dimension + rejectionTestOperations dimension facets
+/-! ### The quantities in Theorem 3's bound -/
 
 /-- Maximum number of accepted samples charged per component. -/
 def ThresholdCap (p : ApproxParams) (componentCount : Nat) : Nat :=

@@ -1,3 +1,4 @@
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.ReferenceProgram
 import ArlibCommunity.Foundations.Convex.Basic.Polytope
 

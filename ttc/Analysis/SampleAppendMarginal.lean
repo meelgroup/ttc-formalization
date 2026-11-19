@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.RateKernelMeasurable
 import ttc.Analysis.CostedOracles
 import ttc.Analysis.MeasurableAddBatch

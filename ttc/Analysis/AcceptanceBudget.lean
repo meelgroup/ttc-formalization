@@ -1,3 +1,4 @@
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.PrecisionRequirements
 import ttc.Analysis.PoissonMean
 import ttc.Analysis.KV97HitAndRunSampling
@@ -91,7 +92,8 @@ theorem kv97_raw_point_lower_of_tvLe {n : Nat} (P : PolytopeData n)
   have hesc : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 := by
     have he := setIntegral_prodTent_compl_inflate_le_exp
       (c := samplerC eta) (r := (P.presentation.facetCount : Real))
-      P.arlibNormal (P.scaledOffset b) hz ArlibCommunity.Algorithms.KV97.cOf_nonneg hfacet1 (by simp)
+      P.arlibNormal (P.scaledOffset b)
+      (show kv97LatEmb n z ∈ P.scaledBody b by rwa [acceptedIntegers_eq] at hz) ArlibCommunity.Algorithms.KV97.cOf_nonneg hfacet1 (by simp)
     have hexp := ArlibCommunity.Algorithms.KV97.exp_cOf (ε := eta / 4) (by positivity)
       (by linarith)
     have h16 : ∫ p in Sᶜ, prodTent (kv97LatEmb n z) p ≤ eta / 4 / 4 := by

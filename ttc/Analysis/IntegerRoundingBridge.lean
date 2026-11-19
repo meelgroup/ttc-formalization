@@ -1,7 +1,9 @@
+import ttc.Analysis.ScaledBody
 import ttc.Analysis.OracleContracts
 import ttc.Analysis.MathlibCompat
 import ttc.Analysis.ArlibPolytopeBridge
 import ttc.Analysis.ReferenceProgram
+import ttc.Analysis.MembershipCost
 import ArlibCommunity.Algorithms.KV97.Analysis.RoundLaw
 import ArlibCommunity.Algorithms.KV97.Analysis.ProdKernel
 import ArlibCommunity.Algorithms.KV97.Analysis.SamplerRoutes
@@ -141,7 +143,7 @@ theorem encodeInteger_mem_coded_iff {n : Nat} (P : PolytopeData n) (b : Nat)
     encodeInteger b z ∈ codedLatticePoints P b ↔ z ∈ acceptedIntegers P b := by
   change ((encodeInteger b z).1 = b ∧ (encodeInteger b z).toPoint ∈ P.carrier) ↔ _
   simp only [encodeInteger, true_and]
-  rw [acceptedIntegers, Set.mem_setOf_eq, ← P.image_decimalScale_eq_scaledBody b]
+  rw [acceptedIntegers_eq, Set.mem_setOf_eq, ← P.image_decimalScale_eq_scaledBody b]
   constructor
   · intro hz
     exact ⟨(encodeInteger b z).toPoint, hz, scaled_toPoint_encodeInteger b z⟩

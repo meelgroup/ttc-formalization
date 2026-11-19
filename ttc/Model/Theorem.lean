@@ -97,8 +97,8 @@ theorem ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
 #krSurplusIn ttc.Model from ttc_theorem1_volume_accuracy
   ttc_theorem3_expected_runtime
   ttc
-  TTCRuntime.deletionPassOperations TTCRuntime.rateThinningRoundOperations
-  TTCRuntime.countThinningRoundOperations TTCRuntime.samplingAttemptOperations
+  TTCState.deletionCost TTCRuntime.rateThinningRoundOperations
+  TTCRuntime.countThinningRoundOperations PolytopeData.samplingAttemptCost
   TTCRuntime.poissonDrawOperations TTCRuntime.appendCopyOperations
   ttcPseudocode.rateCheckWithCost ttcPseudocode.secondLoopWithCost
 

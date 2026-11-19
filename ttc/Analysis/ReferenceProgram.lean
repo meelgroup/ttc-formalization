@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Model.Run
 import ttc.Analysis.ChebyshevCenter
 

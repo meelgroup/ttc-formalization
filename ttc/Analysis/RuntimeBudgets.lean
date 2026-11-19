@@ -1,3 +1,4 @@
+import ttc.Analysis.MembershipCost
 import ttc.Analysis.CV18Admissible
 import ttc.Analysis.ReferenceProgram
 
