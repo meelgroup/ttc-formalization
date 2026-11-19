@@ -104,24 +104,9 @@ Read these before citing the result.
   bounded, full-dimensional polytopes whose union equals the solution set almost
   everywhere, but Lean does not check how they are computed.
 * **Part of the cost model is assumed.** Arithmetic is counted with one operation for
-  each `+`, `−`, `·`, `/`, `√`, `k`-th root and comparison on real numbers, and one for each random
-  number read. Three subroutines are programs written with these operations, in the
-  "Cost model" section of `ttc/Model/Prelude.lean`, and the charged algorithm charges
-  them what the programs spend:
-  * the membership test `memberProg` (CV18's oracle, the deletion pass and the sampler's
-    rejection test). `ttc/Analysis/MembershipCost.lean` proves it is correct and costs
-    exactly `2nr` in a polytope with `r` facets;
-  * one Hit-and-Run step `hitAndRunStep` (a lazy coin, a Gaussian direction, the chord
-    scan over the facets, a uniform point on the chord). `ttc/Analysis/HitAndRunStep.lean`
-    proves that its output law is arlib's lazy Hit-and-Run kernel, so `T` steps are
-    arlib's `T`-step chain, and that it costs at most `4nr + 4r + 6n + 9`. The sampler
-    runs this program;
-  * the walk's start point `ballStart` (direction `g/‖g‖` of a Gaussian vector, scaled to
-    radius `u^{1/n}`). `ttc/Analysis/BallStart.lean` proves that it is uniform on the
-    inscribed ball and costs exactly `4n + 3`.
-
-  The remaining charges are definitions in `ttc/Model/Prelude.lean`, not proved costs of
-  a program:
+  each `+`, `−`, `·`, `/`, `√`, `k`-th root and comparison on real numbers, and one for
+  each random number read. These charges are definitions in `ttc/Model/Prelude.lean`,
+  not proved costs of a program:
   * rounding a point to the lattice: `n`;
   * a fair coin, a Poisson or binomial draw, deleting or appending a copy, and a
     scalar update: `1` each.
