@@ -325,6 +325,12 @@ def le (a b : Real) : Counted Bool := ⟨decide (a ≤ b), 1⟩
 /-- `a − b`: one operation. -/
 def sub (a b : Real) : Counted Real := ⟨a - b, 1⟩
 
+/-- `⌊a⌋`: one operation. -/
+def floor (a : Real) : Counted Int := ⟨⌊a⌋, 1⟩
+
+/-- `z + k` on integers: one operation. -/
+def addInt (z k : Int) : Counted Int := ⟨z + k, 1⟩
+
 /-- `a / b`: one operation. -/
 def div (a b : Real) : Counted Real := ⟨a / b, 1⟩
 
@@ -353,7 +359,7 @@ each. -/
 def draw (k : Nat) : Counted Unit := ⟨(), k⟩
 
 /-- Compute each coordinate `f i` of a vector, one after another; the costs add. -/
-def forEach {n : Nat} (f : Fin n → Counted Real) : Counted (Fin n → Real) :=
+def forEach {α : Type} {n : Nat} (f : Fin n → Counted α) : Counted (Fin n → α) :=
   ⟨fun i => (f i).value, ∑ i, (f i).cost⟩
 
 /-- The dot product `a₀x₀ + a₁x₁ + ⋯ + aₙ₋₁xₙ₋₁`: `n` multiplications and `n − 1`
@@ -404,6 +410,25 @@ def ballStart (n : Nat) (g : Point n) (u : Real) : Counted (Point n) := do
 /-- The cost of the start point: the most `ballStart` spends on any tape. -/
 noncomputable def ballStartCost (n : Nat) : Nat :=
   ⨆ (g : Point n) (u : Real), (ballStart n g u).cost
+
+/-! ### Rounding a point to the lattice
+
+KV97's randomized rounding: coordinate `pᵢ` becomes `⌊pᵢ⌋ + 1` with probability
+`pᵢ − ⌊pᵢ⌋` and `⌊pᵢ⌋` otherwise, using a uniform `vᵢ ∈ [0, 1]` from the tape.
+`Analysis/RoundPoint.lean` proves that this is KV97's rounding law. -/
+
+/-- Round each coordinate: `⌊pᵢ⌋ + [vᵢ < pᵢ − ⌊pᵢ⌋]`. -/
+def roundPoint (n : Nat) (p : Point n) (v : Fin n → Real) : Counted (Fin n → Int) :=
+  Counted.forEach fun i => do
+    Counted.draw 1
+    let fl ← Counted.floor (p i)
+    let frac ← Counted.sub (p i) fl
+    let up ← Counted.lt (v i) frac
+    Counted.addInt fl (if up then 1 else 0)
+
+/-- The cost of rounding: the most `roundPoint` spends on any point and tape. -/
+noncomputable def roundCost (n : Nat) : Nat :=
+  ⨆ (p : Point n) (v : Fin n → Real), (roundPoint n p v).cost
 
 /-! ### One Hit-and-Run step
 
@@ -488,14 +513,11 @@ noncomputable def HalfspacePresentation.memberCost {n : Nat} (H : HalfspacePrese
 
 The deletion pass, CV18's membership queries and the sampler's rejection test are charged
 `memberCost` or the actual `memberProg` cost, each Hit-and-Run step is charged
-`hitAndRunStepCost`, and the start point `ballStartCost` (`Model/Program.lean`,
-`Model/Run.lean`). The charges below are
+`hitAndRunStepCost`, the start point `ballStartCost`, and rounding `roundCost`
+(`Model/Program.lean`, `Model/Run.lean`). The charges below are
 assumed. -/
 
 namespace TTCRuntime
-
-/-- Rounding one point coordinatewise to the lattice: `n`. -/
-def roundPointOperations (dimension : Nat) : Nat := dimension
 
 /-- Unit-cost primitive operations in the requested real-RAM accounting model. -/
 def deleteCopyOperations : Nat := 1

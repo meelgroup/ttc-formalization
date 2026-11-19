@@ -4,6 +4,7 @@ import ttc.Analysis.MathlibCompat
 import ttc.Analysis.ArlibPolytopeBridge
 import ttc.Analysis.ReferenceProgram
 import ttc.Analysis.MembershipCost
+import ttc.Analysis.RoundPoint
 import ArlibCommunity.Algorithms.KV97.Analysis.RoundLaw
 import ArlibCommunity.Algorithms.KV97.Analysis.ProdKernel
 import ArlibCommunity.Algorithms.KV97.Analysis.SamplerRoutes
@@ -52,10 +53,15 @@ instance (n : Nat) : IsMarkovKernel (kv97RoundingKernel n) := by
   change IsProbabilityMeasure (roundLaw (WithLp.ofLp p))
   infer_instance
 
-/-- `kv97RoundedMeasureLaw` is the bind with the rounding kernel. -/
+/-- **The rounding program performs KV97's rounding**: `kv97RoundedMeasureLaw`, which runs
+`roundPoint`, is the bind with KV97's rounding kernel (`Analysis/RoundPoint.lean`). -/
 theorem kv97RoundedMeasureLaw_eq_bind_kernel {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) :
-    kv97RoundedMeasureLaw mu = mu.bind (kv97RoundingKernel n) := rfl
+    kv97RoundedMeasureLaw mu = mu.bind (kv97RoundingKernel n) := by
+  change mu.bind roundPointLaw = mu.bind (fun p => roundLaw (WithLp.ofLp p))
+  congr 1
+  funext p
+  exact RoundPoint.roundPointLaw_eq p
 
 end ttc
 

@@ -232,10 +232,15 @@ def communityCV18VolumeLaw {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
 
 open ArlibCommunity.Algorithms.KV97
 
+/-- The law of `roundPoint p` over its tape: `n` independent uniform numbers in `[0, 1]`. -/
+def roundPointLaw {n : Nat} (p : EuclideanSpace Real (Fin n)) : Measure (Fin n → Int) :=
+  (Measure.pi fun _ : Fin n => volume.restrict (Icc (0 : Real) 1)).map fun v =>
+    (roundPoint n (WithLp.ofLp p) v).value
+
 /-- Draw from a continuous law, then round every coordinate independently. -/
 def kv97RoundedMeasureLaw {n : Nat}
     (mu : Measure (EuclideanSpace Real (Fin n))) : Measure (Fin n → Int) :=
-  mu.bind fun p => roundLaw (WithLp.ofLp p)
+  mu.bind roundPointLaw
 
 /-- Attach TTC's decimal precision to an integer vector returned by KV97. -/
 def encodeInteger {n : Nat} (b : Nat) (z : Fin n → Int) : LatticePoint n := (b, z)
@@ -397,7 +402,7 @@ noncomputable def PolytopeData.samplingAttemptCost {n : Nat} (P : PolytopeData n
     (b : Nat) (eta : Real) (steps : Nat) : Nat :=
   ballStartCost n +
     steps * (P.hitAndRunPresentation b eta).hitAndRunStepCost +
-    TTCRuntime.roundPointOperations n + (P.scaledPresentation b).memberCost
+    roundCost n + (P.scaledPresentation b).memberCost
 
 /-- A one-point trace retaining the geometric number of rejection attempts.
 Each attempt pays for its finite walk, rounding and membership test. -/

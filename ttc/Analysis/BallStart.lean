@@ -1,4 +1,5 @@
 import ttc.Analysis.HitAndRunStep
+import ttc.Analysis.RoundPoint
 import Mathlib.MeasureTheory.Function.JacobianOneDim
 
 /-! # The start point is uniform on the unit ball
@@ -209,8 +210,8 @@ theorem PolytopeData.samplingAttemptCost_le {n : Nat} (hn : 0 < n) (P : Polytope
       TTCRuntime.samplingAttemptOperations n P.presentation.facetCount steps := by
   have hstep := (P.hitAndRunPresentation b eta).hitAndRunStepCost_le hn
   rw [PolytopeData.samplingAttemptCost, HalfspacePresentation.memberCost_eq hn,
-    BallStart.ballStartCost_eq hn, TTCRuntime.samplingAttemptOperations,
-    TTCRuntime.ballStartOperations, TTCRuntime.hitAndRunStepOperations,
+    BallStart.ballStartCost_eq hn, RoundPoint.roundCost_eq, TTCRuntime.samplingAttemptOperations,
+    TTCRuntime.ballStartOperations, TTCRuntime.roundPointOperations, TTCRuntime.hitAndRunStepOperations,
     TTCRuntime.rejectionTestOperations]
   have : steps * (P.hitAndRunPresentation b eta).hitAndRunStepCost ≤
       steps * (4 * n * P.presentation.facetCount + 4 * P.presentation.facetCount + 6 * n + 9) :=

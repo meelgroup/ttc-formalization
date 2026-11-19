@@ -150,6 +150,9 @@ def deletionPassOperations (dimension facets checked removed : Nat) : Nat :=
   checked * facetScanOperations dimension facets +
     removed * deleteCopyOperations
 
+/-- `5 n`: the cost of rounding a point (`roundCost_eq`). -/
+def roundPointOperations (dimension : Nat) : Nat := 5 * dimension
+
 /-- `4 n + 3`: the cost of the start point (`ballStartCost_eq`). -/
 def ballStartOperations (dimension : Nat) : Nat := 4 * dimension + 3
 
