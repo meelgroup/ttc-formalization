@@ -150,6 +150,9 @@ def deletionPassOperations (dimension facets checked removed : Nat) : Nat :=
   checked * facetScanOperations dimension facets +
     removed * deleteCopyOperations
 
+/-- `4 n + 3`: the cost of the start point (`ballStartCost_eq`). -/
+def ballStartOperations (dimension : Nat) : Nat := 4 * dimension + 3
+
 /-- `4 n r + 4 r + 6 n + 9`: a bound on one Hit-and-Run step (`hitAndRunStepCost_le`). -/
 def hitAndRunStepOperations (dimension facets : Nat) : Nat :=
   4 * dimension * facets + 4 * facets + 6 * dimension + 9

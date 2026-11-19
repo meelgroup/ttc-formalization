@@ -354,6 +354,12 @@ def hitAndRunTape (n : Nat) : Measure (Bool × EuclideanSpace Real (Fin n) × Re
   fairCoinLaw.prod ((stdGaussian (EuclideanSpace Real (Fin n))).prod
     (volume.restrict (Icc (0 : Real) 1)))
 
+/-- The law of the start point `ballStart` over its tape: a standard Gaussian vector and an
+independent uniform number in `[0, 1]`. -/
+def ballStartLaw (n : Nat) : Measure (EuclideanSpace Real (Fin n)) :=
+  ((stdGaussian (EuclideanSpace Real (Fin n))).prod (volume.restrict (Icc (0 : Real) 1))).map
+    fun ω => WithLp.toLp 2 (ballStart n (WithLp.ofLp ω.1) ω.2).value
+
 /-- The law of the point after one step `hitAndRunStep` from `x`. -/
 def HalfspacePresentation.hitAndRunStepLaw {n : Nat} (H : HalfspacePresentation n)
     (x : EuclideanSpace Real (Fin n)) : Measure (EuclideanSpace Real (Fin n)) :=
@@ -366,14 +372,12 @@ def HalfspacePresentation.hitAndRunWalk {n : Nat} (H : HalfspacePresentation n)
   | 0 => μ
   | T + 1 => (H.hitAndRunWalk μ T).bind H.hitAndRunStepLaw
 
-/-- `p ← HitAndRun(P', y, T)` from `y ← Unif(B₂(z, γ))`: `T` steps of the program
-`hitAndRunStep` in the unit-inball chart, mapped back to the decimal-scaled body before KV97
-rounding. -/
+/-- `p ← HitAndRun(P', y, T)` from `y ← Unif(B₂(z, γ))`: the start point `ballStart`, then
+`T` steps of the program `hitAndRunStep`, in the unit-inball chart, mapped back to the
+decimal-scaled body before KV97 rounding. -/
 def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) : Measure (EuclideanSpace Real (Fin n)) :=
-  ((P.hitAndRunPresentation b eta).hitAndRunWalk
-    (ArlibCommunity.Foundations.Convex.uniformOn volume
-      (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
+  ((P.hitAndRunPresentation b eta).hitAndRunWalk (ballStartLaw n)
     (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b)
 
 /-- One accepted sample of `GenerateSamples`: walk, round, and retry until the rounded
@@ -387,12 +391,11 @@ def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
     (_hnonempty : (codedLatticePoints P b).Nonempty) : Measure (LatticePoint n) :=
   acceptedRoundedLatticeLaw (normalizedHitAndRunContinuousLaw P b eta) P b
 
-/-- The charge for one sampler attempt with `T` steps: the start point in the inscribed
-ball, `T` steps of `hitAndRunStep` at `hitAndRunStepCost` each, rounding, and the rejection
+/-- The charge for one sampler attempt with `T` steps: the start point `ballStart`, `T` steps of `hitAndRunStep` at `hitAndRunStepCost` each, rounding, and the rejection
 test `memberProg` on `10^b · P`. -/
 noncomputable def PolytopeData.samplingAttemptCost {n : Nat} (P : PolytopeData n)
     (b : Nat) (eta : Real) (steps : Nat) : Nat :=
-  TTCRuntime.ballStartOperations n +
+  ballStartCost n +
     steps * (P.hitAndRunPresentation b eta).hitAndRunStepCost +
     TTCRuntime.roundPointOperations n + (P.scaledPresentation b).memberCost
 

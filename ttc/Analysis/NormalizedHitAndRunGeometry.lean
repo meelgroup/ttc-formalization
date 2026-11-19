@@ -1,4 +1,4 @@
-import ttc.Analysis.HitAndRunStep
+import ttc.Analysis.BallStart
 import ttc.Analysis.ScaledBody
 import ttc.Analysis.EuclideanInball
 import ttc.Analysis.BoundingRadius
@@ -120,9 +120,10 @@ facet count only. Under the precision hypothesis of Corollary `cor:linf` this `T
 arlib-community's proved mixing deadline at the true diameter and warmness of the walk's
 body, and this `ν` is at most the inverse-volume accuracy KV97 rounding needs. -/
 
-/-- **The sampler runs arlib's lazy Hit-and-Run chain.** `T` steps of the program
-`hitAndRunStep` from the uniform law on the unit ball have the law of arlib's `T`-step lazy
-finite-facet chain (`Analysis/HitAndRunStep.lean`). -/
+/-- **The sampler runs arlib's lazy Hit-and-Run chain.** The start point `ballStart` is
+uniform on the unit ball (`Analysis/BallStart.lean`), and `T` steps of the program
+`hitAndRunStep` from it have the law of arlib's `T`-step lazy finite-facet chain
+(`Analysis/HitAndRunStep.lean`). -/
 theorem normalizedHitAndRunContinuousLaw_eq_kernel {n : Nat} (hn : 0 < n)
     (P : PolytopeData n) (b : Nat) (eta : Real) :
     normalizedHitAndRunContinuousLaw P b eta =
@@ -148,7 +149,7 @@ theorem normalizedHitAndRunContinuousLaw_eq_kernel {n : Nat} (hn : 0 < n)
       exact hout (P.normalizedHitAndRun_unitBall b eta (Metric.ball_subset_closedBall hy))
     rw [hsub, measure_empty, mul_zero]
   unfold normalizedHitAndRunContinuousLaw
-  rw [(HitAndRunLaw.hitAndRunWalk_eq_iterate (P.hitAndRunPresentation b eta)
+  rw [BallStart.ballStartLaw_eq, (HitAndRunLaw.hitAndRunWalk_eq_iterate (P.hitAndRunPresentation b eta)
     (P.normalizedHitAndRun_bounded b eta) _ hstart _).1]
   rfl
 

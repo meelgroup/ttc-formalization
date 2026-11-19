@@ -331,6 +331,9 @@ def div (a b : Real) : Counted Real := ⟨a / b, 1⟩
 /-- `√a`: one operation. -/
 def sqrt (a : Real) : Counted Real := ⟨Real.sqrt a, 1⟩
 
+/-- The `k`-th root `u^{1/k}`: one operation. -/
+def root (k : Nat) (u : Real) : Counted Real := ⟨u ^ ((k : Real)⁻¹), 1⟩
+
 open Classical in
 /-- The strict comparison `a < b`: one operation. -/
 def lt (a b : Real) : Counted Bool := ⟨decide (a < b), 1⟩
@@ -381,6 +384,26 @@ exactly `2 n r` operations. -/
 def HalfspacePresentation.memberProg {n : Nat} (H : HalfspacePresentation n) (x : Point n) :
     Counted Bool :=
   Counted.allFacets H.facetCount H.normal H.offset x
+
+/-! ### A uniform start point in the unit ball
+
+The walk starts from a uniform point of the unit ball (the inscribed ball, in the chart
+where it is the unit ball). It reads a standard Gaussian vector `g` and a uniform number
+`u ∈ [0, 1]` from the tape and returns the direction `g/‖g‖` scaled to radius `u^{1/n}`.
+`Analysis/BallStart.lean` proves that the result is uniform on the unit ball. -/
+
+/-- A uniform point of the unit ball: `(u^{1/n} / ‖g‖) · g`. -/
+def ballStart (n : Nat) (g : Point n) (u : Real) : Counted (Point n) := do
+  Counted.draw (n + 1)
+  let sq ← Counted.dot n g g
+  let len ← Counted.sqrt sq
+  let radius ← Counted.root n u
+  let scale ← Counted.div radius len
+  Counted.forEach fun i => Counted.mul scale (g i)
+
+/-- The cost of the start point: the most `ballStart` spends on any tape. -/
+noncomputable def ballStartCost (n : Nat) : Nat :=
+  ⨆ (g : Point n) (u : Real), (ballStart n g u).cost
 
 /-! ### One Hit-and-Run step
 
@@ -464,8 +487,9 @@ noncomputable def HalfspacePresentation.memberCost {n : Nat} (H : HalfspacePrese
 /-! ### Charges
 
 The deletion pass, CV18's membership queries and the sampler's rejection test are charged
-`memberCost` or the actual `memberProg` cost, and each Hit-and-Run step is charged
-`hitAndRunStepCost` (`Model/Program.lean`, `Model/Run.lean`). The charges below are
+`memberCost` or the actual `memberProg` cost, each Hit-and-Run step is charged
+`hitAndRunStepCost`, and the start point `ballStartCost` (`Model/Program.lean`,
+`Model/Run.lean`). The charges below are
 assumed. -/
 
 namespace TTCRuntime
@@ -491,11 +515,6 @@ depend on the pending count represented by that draw. -/
 def countThinningRoundOperations (stored : Nat) : Nat :=
   stored * fairCoinOperations + binomialDrawOperations +
     2 * scalarOperationCost
-
-/-- Drawing the walk's start uniformly from the inscribed ball: `n` Gaussian draws, their
-norm, a uniform draw raised to the power `1/n`, the radial scaling, and the affine map onto
-the ball. -/
-def ballStartOperations (dimension : Nat) : Nat := 4 * dimension + 2
 
 /-! ### The quantities in Theorem 3's bound -/
 

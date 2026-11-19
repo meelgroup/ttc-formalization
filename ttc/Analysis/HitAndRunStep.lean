@@ -183,21 +183,6 @@ theorem HalfspacePresentation.hitAndRunStepCost_le {n : Nat} (hn : 0 < n)
   ciSup_le fun x => ciSup_le fun coin => ciSup_le fun g => ciSup_le fun u =>
     H.hitAndRunStep_cost_le hn x coin g u
 
-/-- The charge for one sampler attempt is at most its closed form. -/
-theorem PolytopeData.samplingAttemptCost_le {n : Nat} (hn : 0 < n) (P : PolytopeData n)
-    (b : Nat) (eta : Real) (steps : Nat) :
-    P.samplingAttemptCost b eta steps ≤
-      TTCRuntime.samplingAttemptOperations n P.presentation.facetCount steps := by
-  have hstep := (P.hitAndRunPresentation b eta).hitAndRunStepCost_le hn
-  rw [PolytopeData.samplingAttemptCost, HalfspacePresentation.memberCost_eq hn,
-    TTCRuntime.samplingAttemptOperations, TTCRuntime.hitAndRunStepOperations,
-    TTCRuntime.rejectionTestOperations]
-  have : steps * (P.hitAndRunPresentation b eta).hitAndRunStepCost ≤
-      steps * (4 * n * P.presentation.facetCount + 4 * P.presentation.facetCount + 6 * n + 9) :=
-    Nat.mul_le_mul_left _ hstep
-  simp only [PolytopeData.scaledPresentation] at *
-  omega
-
 /-! ## Probability facts about the tape -/
 
 namespace HitAndRunLaw
