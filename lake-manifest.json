@@ -111,6 +111,6 @@
    "inputRev": "v4.35.0",
    "inherited": true,
    "configFile": "lakefile.toml"}],
- "name": "kr25ssmxt",
+ "name": "ttc",
  "lakeDir": ".lake",
  "fixedToolchain": false}

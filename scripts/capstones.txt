@@ -1,4 +1,4 @@
 # The headlines of this development, one per line.
 # The axiom profile of each is read from Lean whenever the checks run.
-Kr25Ssmxt.ttc_volume_accuracy
-Kr25Ssmxt.ttc_theorem3_corrected_expected_runtime
+ttc.ttc_volume_accuracy
+ttc.ttc_theorem3_corrected_expected_runtime

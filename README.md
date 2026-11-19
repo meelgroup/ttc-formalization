@@ -1,4 +1,4 @@
-# Kr25Ssmxt
+# ttc
 
 A Lean 4 formalization scaffolded by the Tex2Lean extension.
 
@@ -23,18 +23,18 @@ when all three agree:
    dependency tree and is the only authoritative check.
 2. `lake build` emits **zero** `declaration uses sorry` warnings. This also
    catches sorries in dead declarations that (1) never reaches.
-3. `grep -rn "sorry\|admit\|native_decide\|sorryAx" Kr25Ssmxt/` comes back clean.
+3. `grep -rn "sorry\|admit\|native_decide\|sorryAx" ttc/` comes back clean.
    Cheap, necessary, and not sufficient — it is fooled by comments and blind to
    transitive use. On its own it is the classic false "it's proven".
 
 ## Audit surface
 
-`Kr25Ssmxt/Model/` holds everything the headline theorem asserts, and nothing
-else. `Kr25Ssmxt/Meta/ModelClosure.lean` machine-checks that boundary on every
+`ttc/Model/` holds everything the headline theorem asserts, and nothing
+else. `ttc/Meta/ModelClosure.lean` machine-checks that boundary on every
 build.
 
 **It holds no proofs.** Statements and the vocabulary they are stated in live in
-`Model/`; the arguments live in `Kr25Ssmxt/Analysis/`, one file per surface file
+`Model/`; the arguments live in `ttc/Analysis/`, one file per surface file
 that states something — `Model/Theorem.lean` is proved in
 `Analysis/TheoremProof.lean`. **No name is used on both sides**, so that a file
 named anywhere — a tab, a log line, a commit — is one file rather than two. The

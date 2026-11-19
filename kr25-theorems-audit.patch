@@ -1,16 +1,16 @@
-diff --git a/lean/Kr25Ssmxt/Analysis/AcceptanceBudget.lean b/lean/Kr25Ssmxt/Analysis/AcceptanceBudget.lean
+diff --git a/lean/ttc/Analysis/AcceptanceBudget.lean b/lean/ttc/Analysis/AcceptanceBudget.lean
 new file mode 100644
 index 0000000..1950a2f
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/AcceptanceBudget.lean
++++ b/lean/ttc/Analysis/AcceptanceBudget.lean
 @@ -0,0 +1,301 @@
-+import Kr25Ssmxt.Analysis.PoissonMean
-+import Kr25Ssmxt.Analysis.KV97HitAndRunSampling
-+import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
++import ttc.Analysis.PoissonMean
++import ttc.Analysis.KV97HitAndRunSampling
++import ttc.Analysis.NormalizedHitAndRunGeometry
 +
 +/-! The finite-mass step in bounding sampler rejection attempts. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory ProbabilityTheory Metric Set
 +open Arlib.Lattice.Rounding
@@ -304,19 +304,19 @@ index 0000000..1950a2f
 +  exact normalizedHitAndRun_acceptance_ge_half_of_count_volume hn P b
 +    heta0 (by linarith) hfinite hcount
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/CV18RoundnessBound.lean b/lean/Kr25Ssmxt/Analysis/CV18RoundnessBound.lean
++end ttc
+diff --git a/lean/ttc/Analysis/CV18RoundnessBound.lean b/lean/ttc/Analysis/CV18RoundnessBound.lean
 new file mode 100644
 index 0000000..2cf8ae9
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/CV18RoundnessBound.lean
++++ b/lean/ttc/Analysis/CV18RoundnessBound.lean
 @@ -0,0 +1,386 @@
-+import Kr25Ssmxt.Analysis.CV18NormalizedPolytope
-+import Kr25Ssmxt.Model.Run
++import ttc.Analysis.CV18NormalizedPolytope
++import ttc.Model.Run
 +
 +/-! A geometric bound on the concrete CV18 roundness parameter. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -696,19 +696,19 @@ index 0000000..2cf8ae9
 +  gcongr <;> simp only [TTCRuntime.facetScanOperations,
 +    TTCRuntime.rejectionTestOperations] <;> gcongr
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ClippedVolumeRate.lean b/lean/Kr25Ssmxt/Analysis/ClippedVolumeRate.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ClippedVolumeRate.lean b/lean/ttc/Analysis/ClippedVolumeRate.lean
 new file mode 100644
 index 0000000..d763b92
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ClippedVolumeRate.lean
++++ b/lean/ttc/Analysis/ClippedVolumeRate.lean
 @@ -0,0 +1,276 @@
-+import Kr25Ssmxt.Analysis.NormalizedDiameterRuntime
-+import Kr25Ssmxt.Analysis.RateLogBound
++import ttc.Analysis.NormalizedDiameterRuntime
++import ttc.Analysis.RateLogBound
 +
 +/-! Bounding the manuscript volume clip used by the first thinning loop. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +theorem Decomposition.theorem3RMax_pos {n k : Nat} {F : LRAFormula n k}
 +    (D : Decomposition F) (hm : 0 < D.componentCount) :
@@ -978,15 +978,15 @@ index 0000000..d763b92
 +    mul_nonneg (by positivity : 0 ≤ (n : Real)) hbR,
 +    mul_nonneg (by positivity : 0 ≤ (n : Real)) hL]
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/CostedMeasureMonad.lean b/lean/Kr25Ssmxt/Analysis/CostedMeasureMonad.lean
++end ttc
+diff --git a/lean/ttc/Analysis/CostedMeasureMonad.lean b/lean/ttc/Analysis/CostedMeasureMonad.lean
 new file mode 100644
 index 0000000..d23d060
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/CostedMeasureMonad.lean
++++ b/lean/ttc/Analysis/CostedMeasureMonad.lean
 @@ -0,0 +1,545 @@
-+import Kr25Ssmxt.Model.Program
-+import Kr25Ssmxt.Analysis.MeasurableFixedSfiniteBind
++import ttc.Model.Program
++import ttc.Analysis.MeasurableFixedSfiniteBind
 +import Mathlib.Probability.Kernel.MeasurableLIntegral
 +
 +/-!
@@ -996,7 +996,7 @@ index 0000000..d23d060
 +These lemmas prove that operation counts do not change its output law.
 +-/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -1529,19 +1529,19 @@ index 0000000..d23d060
 +  · intro x _
 +    exact hnext x
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/FairThinningExpectation.lean b/lean/Kr25Ssmxt/Analysis/FairThinningExpectation.lean
++end ttc
+diff --git a/lean/ttc/Analysis/FairThinningExpectation.lean b/lean/ttc/Analysis/FairThinningExpectation.lean
 new file mode 100644
 index 0000000..c20e1c6
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/FairThinningExpectation.lean
++++ b/lean/ttc/Analysis/FairThinningExpectation.lean
 @@ -0,0 +1,470 @@
-+import Kr25Ssmxt.Analysis.FairCoinStreamLawIsProbabilityMeasure
-+import Kr25Ssmxt.Analysis.MeasurableSetSurvives
-+import Kr25Ssmxt.Analysis.MeasurableSurvivorCount
-+import Kr25Ssmxt.Analysis.MeasurableFirstExitRound
-+import Kr25Ssmxt.Analysis.NatTailExpectation
-+import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
++import ttc.Analysis.FairCoinStreamLawIsProbabilityMeasure
++import ttc.Analysis.MeasurableSetSurvives
++import ttc.Analysis.MeasurableSurvivorCount
++import ttc.Analysis.MeasurableFirstExitRound
++import ttc.Analysis.NatTailExpectation
++import ttc.Analysis.ManuscriptThinningCosts
 +import Mathlib.Analysis.SpecificLimits.Basic
 +
 +/-!
@@ -1551,7 +1551,7 @@ index 0000000..c20e1c6
 +`2⁻ʳ`. This is the input to the second-loop expectation bound.
 +-/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory ProbabilityTheory Set
 +open Classical
@@ -2005,14 +2005,14 @@ index 0000000..c20e1c6
 +  unfold samplesAfter
 +  exact Finset.card_filter_le _ _
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/GeometricRetryExpectation.lean b/lean/Kr25Ssmxt/Analysis/GeometricRetryExpectation.lean
++end ttc
+diff --git a/lean/ttc/Analysis/GeometricRetryExpectation.lean b/lean/ttc/Analysis/GeometricRetryExpectation.lean
 new file mode 100644
 index 0000000..8bb8f78
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/GeometricRetryExpectation.lean
++++ b/lean/ttc/Analysis/GeometricRetryExpectation.lean
 @@ -0,0 +1,180 @@
-+import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
++import ttc.Analysis.NormalizedHitAndRunGeometry
 +import Mathlib.Analysis.SpecificLimits.Normed
 +
 +/-!
@@ -2022,7 +2022,7 @@ index 0000000..8bb8f78
 +additional attempt for the successful proposal.
 +-/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory ProbabilityTheory
 +
@@ -2191,15 +2191,15 @@ index 0000000..8bb8f78
 +        (normalizedHitAndRunSteps P b eta)) :=
 +      mul_le_mul_of_nonneg_left hpoint (by positivity)
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/HitAndRunSamplingOracle.lean b/lean/Kr25Ssmxt/Analysis/HitAndRunSamplingOracle.lean
++end ttc
+diff --git a/lean/ttc/Analysis/HitAndRunSamplingOracle.lean b/lean/ttc/Analysis/HitAndRunSamplingOracle.lean
 index 296da59..d78608c 100644
---- a/lean/Kr25Ssmxt/Analysis/HitAndRunSamplingOracle.lean
-+++ b/lean/Kr25Ssmxt/Analysis/HitAndRunSamplingOracle.lean
+--- a/lean/ttc/Analysis/HitAndRunSamplingOracle.lean
++++ b/lean/ttc/Analysis/HitAndRunSamplingOracle.lean
 @@ -1,5 +1,6 @@
- import Kr25Ssmxt.Analysis.GeometricOracleDischarge
- import Kr25Ssmxt.Analysis.KV97HitAndRunSampling
-+import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
+ import ttc.Analysis.GeometricOracleDischarge
+ import ttc.Analysis.KV97HitAndRunSampling
++import ttc.Analysis.NormalizedHitAndRunGeometry
  
  /-!
  # A TTC sampling oracle implemented by Hit-and-Run and KV97 rounding
@@ -2254,11 +2254,11 @@ index 296da59..d78608c 100644
 +    hitAndRunSamplingOracles, D, choice, b, dif_pos hroute, pointLaw]
 +    using hmain
 +
- end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/HitAndRunScaledPolytope.lean b/lean/Kr25Ssmxt/Analysis/HitAndRunScaledPolytope.lean
+ end ttc
+diff --git a/lean/ttc/Analysis/HitAndRunScaledPolytope.lean b/lean/ttc/Analysis/HitAndRunScaledPolytope.lean
 index 4471a4f..77930fa 100644
---- a/lean/Kr25Ssmxt/Analysis/HitAndRunScaledPolytope.lean
-+++ b/lean/Kr25Ssmxt/Analysis/HitAndRunScaledPolytope.lean
+--- a/lean/ttc/Analysis/HitAndRunScaledPolytope.lean
++++ b/lean/ttc/Analysis/HitAndRunScaledPolytope.lean
 @@ -24,7 +24,7 @@ private theorem dist_homothety_apply (c : EuclideanSpace Real (Fin n)) (k : Real
    rw [show (k • (p - c) + c) - (k • (q - c) + c) = k • (p - q) by module,
      norm_smul, Real.norm_eq_abs]
@@ -2277,19 +2277,19 @@ index 4471a4f..77930fa 100644
      {K : Set (EuclideanSpace Real (Fin n))}
      (hKc : Convex Real K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
      (hKb : Bornology.IsBounded K) {z : EuclideanSpace Real (Fin n)}
-diff --git a/lean/Kr25Ssmxt/Analysis/ManuscriptComponentExpectation.lean b/lean/Kr25Ssmxt/Analysis/ManuscriptComponentExpectation.lean
+diff --git a/lean/ttc/Analysis/ManuscriptComponentExpectation.lean b/lean/ttc/Analysis/ManuscriptComponentExpectation.lean
 new file mode 100644
 index 0000000..97bec53
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ManuscriptComponentExpectation.lean
++++ b/lean/ttc/Analysis/ManuscriptComponentExpectation.lean
 @@ -0,0 +1,1409 @@
-+import Kr25Ssmxt.Analysis.PoissonMean
-+import Kr25Ssmxt.Analysis.ScaledVolumeBridge
-+import Kr25Ssmxt.Analysis.TTCPaperRuntime
++import ttc.Analysis.PoissonMean
++import ttc.Analysis.ScaledVolumeBridge
++import ttc.Analysis.TTCPaperRuntime
 +
 +/-! Expected cost of the manuscript's adaptive rate and count thinning stages. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory ProbabilityTheory
 +
@@ -3691,16 +3691,16 @@ index 0000000..97bec53
 +    community_manuscript_expected_cost_finite_sum hn F hbounded p prep
 +      preprocessingOperations factor
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ManuscriptCostedOracles.lean b/lean/Kr25Ssmxt/Analysis/ManuscriptCostedOracles.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ManuscriptCostedOracles.lean b/lean/ttc/Analysis/ManuscriptCostedOracles.lean
 new file mode 100644
 index 0000000..9d15869
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ManuscriptCostedOracles.lean
++++ b/lean/ttc/Analysis/ManuscriptCostedOracles.lean
 @@ -0,0 +1,113 @@
-+import Kr25Ssmxt.Analysis.NormalizedHitAndRunGeometry
-+import Kr25Ssmxt.Analysis.CostedMeasureMonad
-+import Kr25Ssmxt.Analysis.GeometricRetryExpectation
++import ttc.Analysis.NormalizedHitAndRunGeometry
++import ttc.Analysis.CostedMeasureMonad
++import ttc.Analysis.GeometricRetryExpectation
 +
 +/-!
 +# Marginals of the charged manuscript oracles
@@ -3709,7 +3709,7 @@ index 0000000..9d15869
 +distributions equal to the uncharged manuscript oracle laws.
 +-/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -3810,19 +3810,19 @@ index 0000000..9d15869
 +  simpa only [communityManuscriptCostedOracles, dif_pos h] using
 +    hbatch
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ManuscriptRateKernelMeasurable.lean b/lean/Kr25Ssmxt/Analysis/ManuscriptRateKernelMeasurable.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ManuscriptRateKernelMeasurable.lean b/lean/ttc/Analysis/ManuscriptRateKernelMeasurable.lean
 new file mode 100644
 index 0000000..c32cfa9
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ManuscriptRateKernelMeasurable.lean
++++ b/lean/ttc/Analysis/ManuscriptRateKernelMeasurable.lean
 @@ -0,0 +1,241 @@
-+import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
-+import Kr25Ssmxt.Analysis.MeasurableThinningResultJoint
++import ttc.Analysis.ManuscriptThinningCosts
++import ttc.Analysis.MeasurableThinningResultJoint
 +
 +/-! Joint measurability of the manuscript's first thinning counter. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -4057,17 +4057,17 @@ index 0000000..c32cfa9
 +  rw [← heq]
 +  exact hmap
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ManuscriptRunMarginal.lean b/lean/Kr25Ssmxt/Analysis/ManuscriptRunMarginal.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ManuscriptRunMarginal.lean b/lean/ttc/Analysis/ManuscriptRunMarginal.lean
 new file mode 100644
 index 0000000..73b9d17
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ManuscriptRunMarginal.lean
++++ b/lean/ttc/Analysis/ManuscriptRunMarginal.lean
 @@ -0,0 +1,95 @@
-+import Kr25Ssmxt.Analysis.ManuscriptComponentExpectation
-+import Kr25Ssmxt.Analysis.ManuscriptSampleAppendMarginal
++import ttc.Analysis.ManuscriptComponentExpectation
++import ttc.Analysis.ManuscriptSampleAppendMarginal
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -4158,23 +4158,23 @@ index 0000000..73b9d17
 +        law.map (manuscriptEstimate b threshold)) hseq
 +
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ManuscriptSampleAppendMarginal.lean b/lean/Kr25Ssmxt/Analysis/ManuscriptSampleAppendMarginal.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ManuscriptSampleAppendMarginal.lean b/lean/ttc/Analysis/ManuscriptSampleAppendMarginal.lean
 new file mode 100644
 index 0000000..cda8ec5
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ManuscriptSampleAppendMarginal.lean
++++ b/lean/ttc/Analysis/ManuscriptSampleAppendMarginal.lean
 @@ -0,0 +1,806 @@
-+import Kr25Ssmxt.Analysis.ManuscriptRateKernelMeasurable
-+import Kr25Ssmxt.Analysis.ManuscriptCostedOracles
-+import Kr25Ssmxt.Analysis.MeasurableAddBatch
-+import Kr25Ssmxt.Analysis.MeasurableFixedSfiniteBind
-+import Kr25Ssmxt.Analysis.MeasurablePoissonMeasure
-+import Kr25Ssmxt.Analysis.MeasurableRemoveComponent
++import ttc.Analysis.ManuscriptRateKernelMeasurable
++import ttc.Analysis.ManuscriptCostedOracles
++import ttc.Analysis.MeasurableAddBatch
++import ttc.Analysis.MeasurableFixedSfiniteBind
++import ttc.Analysis.MeasurablePoissonMeasure
++import ttc.Analysis.MeasurableRemoveComponent
 +
 +/-! The charged sampling-and-append tail has the manuscript's state marginal. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -4970,16 +4970,16 @@ index 0000000..cda8ec5
 +      funext nextState
 +      exact ih hrest nextState
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ManuscriptThinningCosts.lean b/lean/Kr25Ssmxt/Analysis/ManuscriptThinningCosts.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ManuscriptThinningCosts.lean b/lean/ttc/Analysis/ManuscriptThinningCosts.lean
 new file mode 100644
 index 0000000..62a5a32
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ManuscriptThinningCosts.lean
++++ b/lean/ttc/Analysis/ManuscriptThinningCosts.lean
 @@ -0,0 +1,251 @@
-+import Kr25Ssmxt.Analysis.MeasurableThinningResult
-+import Kr25Ssmxt.Analysis.MeasurableSamplesAfterFixed
-+import Kr25Ssmxt.Analysis.FairCoinStreamLawIsProbabilityMeasure
++import ttc.Analysis.MeasurableThinningResult
++import ttc.Analysis.MeasurableSamplesAfterFixed
++import ttc.Analysis.FairCoinStreamLawIsProbabilityMeasure
 +
 +/-!
 +# Costed manuscript thinning loops
@@ -4989,7 +4989,7 @@ index 0000000..62a5a32
 +the expected number of second-loop rounds.
 +-/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -5227,19 +5227,19 @@ index 0000000..62a5a32
 +    fairCoinStreamLaw_isProbabilityMeasure
 +  simp
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/NatTailExpectation.lean b/lean/Kr25Ssmxt/Analysis/NatTailExpectation.lean
++end ttc
+diff --git a/lean/ttc/Analysis/NatTailExpectation.lean b/lean/ttc/Analysis/NatTailExpectation.lean
 new file mode 100644
 index 0000000..c0aea00
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/NatTailExpectation.lean
++++ b/lean/ttc/Analysis/NatTailExpectation.lean
 @@ -0,0 +1,36 @@
 +import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
 +import Mathlib.MeasureTheory.Integral.Lebesgue.Add
 +
 +/-! The layer-cake identity for a measurable natural-valued runtime. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory
 +
@@ -5269,19 +5269,19 @@ index 0000000..c0aea00
 +    exact (Measurable.ite (hf measurableSet_Ioi)
 +      measurable_const measurable_const).aemeasurable
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/NormalizedDiameterRuntime.lean b/lean/Kr25Ssmxt/Analysis/NormalizedDiameterRuntime.lean
++end ttc
+diff --git a/lean/ttc/Analysis/NormalizedDiameterRuntime.lean b/lean/ttc/Analysis/NormalizedDiameterRuntime.lean
 new file mode 100644
 index 0000000..0d1d814
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/NormalizedDiameterRuntime.lean
++++ b/lean/ttc/Analysis/NormalizedDiameterRuntime.lean
 @@ -0,0 +1,886 @@
-+import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
-+import Kr25Ssmxt.Analysis.CV18RoundnessBound
++import ttc.Analysis.HitAndRunSamplingOracle
++import ttc.Analysis.CV18RoundnessBound
 +
 +/-! Runtime geometry of the normalized Hit-and-Run walk. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open Real
 +open MeasureTheory
@@ -6161,14 +6161,14 @@ index 0000000..0d1d814
 +  have hmul := mul_le_mul_of_nonneg_left henv hfactor
 +  nlinarith [sq_nonneg (n : Real)]
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/NormalizedHitAndRunGeometry.lean b/lean/Kr25Ssmxt/Analysis/NormalizedHitAndRunGeometry.lean
++end ttc
+diff --git a/lean/ttc/Analysis/NormalizedHitAndRunGeometry.lean b/lean/ttc/Analysis/NormalizedHitAndRunGeometry.lean
 new file mode 100644
 index 0000000..3b230c3
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/NormalizedHitAndRunGeometry.lean
++++ b/lean/ttc/Analysis/NormalizedHitAndRunGeometry.lean
 @@ -0,0 +1,377 @@
-+import Kr25Ssmxt.Analysis.KV97HitAndRunSampling
++import ttc.Analysis.KV97HitAndRunSampling
 +import Mathlib.MeasureTheory.Constructions.Pi
 +
 +/-!
@@ -6179,7 +6179,7 @@ index 0000000..3b230c3
 +before the normalized walk can replace the current absolute-diameter walk.
 +-/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open Set
 +open MeasureTheory
@@ -6544,20 +6544,20 @@ index 0000000..3b230c3
 +  rw [← hpi, Measure.map_map (by fun_prop) (by fun_prop)]
 +  rfl
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/PoissonMean.lean b/lean/Kr25Ssmxt/Analysis/PoissonMean.lean
++end ttc
+diff --git a/lean/ttc/Analysis/PoissonMean.lean b/lean/ttc/Analysis/PoissonMean.lean
 new file mode 100644
 index 0000000..964c196
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/PoissonMean.lean
++++ b/lean/ttc/Analysis/PoissonMean.lean
 @@ -0,0 +1,245 @@
-+import Kr25Ssmxt.Analysis.FairThinningExpectation
-+import Kr25Ssmxt.Analysis.CostedMeasureMonad
++import ttc.Analysis.FairThinningExpectation
++import ttc.Analysis.CostedMeasureMonad
 +import Mathlib.Probability.Distributions.Poisson.Basic
 +
 +/-! The first moment of the Poisson count used by manuscript TTC. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory ProbabilityTheory
 +
@@ -6795,20 +6795,20 @@ index 0000000..964c196
 +    (poisson_averaged_countThinCost_le_four_of_guard s r threshold
 +      hthreshold hsamples hrate) (1 : ENNReal)
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/RateLogBound.lean b/lean/Kr25Ssmxt/Analysis/RateLogBound.lean
++end ttc
+diff --git a/lean/ttc/Analysis/RateLogBound.lean b/lean/ttc/Analysis/RateLogBound.lean
 new file mode 100644
 index 0000000..374323e
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/RateLogBound.lean
++++ b/lean/ttc/Analysis/RateLogBound.lean
 @@ -0,0 +1,123 @@
-+import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
-+import Kr25Ssmxt.Model.Run
++import ttc.Analysis.ManuscriptThinningCosts
++import ttc.Model.Run
 +
 +/-! Elementary logarithmic bounds used to remove the decimal scale from
 +the first thinning loop's operation count. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +theorem ceil_decimal_mul_le (k : Nat) (u : Real) :
 +    Nat.ceil ((10 : Real) ^ k * u) + 1 ≤
@@ -6924,24 +6924,24 @@ index 0000000..374323e
 +  gcongr
 +  exact_mod_cast clipped_component_rate_clog_le_linear_precision P p m b
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ScaledVolumeBridge.lean b/lean/Kr25Ssmxt/Analysis/ScaledVolumeBridge.lean
++end ttc
+diff --git a/lean/ttc/Analysis/ScaledVolumeBridge.lean b/lean/ttc/Analysis/ScaledVolumeBridge.lean
 new file mode 100644
 index 0000000..11e079f
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ScaledVolumeBridge.lean
++++ b/lean/ttc/Analysis/ScaledVolumeBridge.lean
 @@ -0,0 +1,184 @@
-+import Kr25Ssmxt.Analysis.AcceptanceBudget
-+import Kr25Ssmxt.Analysis.PolytopeCarrierMeasurable
++import ttc.Analysis.AcceptanceBudget
++import ttc.Analysis.PolytopeCarrierMeasurable
 +import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
-+import Kr25Ssmxt.Analysis.IntegerLatticePolytopeComparison
-+import Kr25Ssmxt.Analysis.GeometricOracleDischarge
-+import Kr25Ssmxt.Analysis.ManuscriptCostedOracles
-+import Kr25Ssmxt.Analysis.HitAndRunSamplingOracle
++import ttc.Analysis.IntegerLatticePolytopeComparison
++import ttc.Analysis.GeometricOracleDischarge
++import ttc.Analysis.ManuscriptCostedOracles
++import ttc.Analysis.HitAndRunSamplingOracle
 +
 +/-! Volume and lattice-count representation bridges for acceptance. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open MeasureTheory Set
 +
@@ -7114,15 +7114,15 @@ index 0000000..11e079f
 +    (D.component i) count b p.epsilonPrime delta
 +    ⟨hunit, hsample0, hsample1, hset.1, hset.2⟩
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/TTCPaperRuntime.lean b/lean/Kr25Ssmxt/Analysis/TTCPaperRuntime.lean
++end ttc
+diff --git a/lean/ttc/Analysis/TTCPaperRuntime.lean b/lean/ttc/Analysis/TTCPaperRuntime.lean
 index c4e5d02..c0cb5af 100644
---- a/lean/Kr25Ssmxt/Analysis/TTCPaperRuntime.lean
-+++ b/lean/Kr25Ssmxt/Analysis/TTCPaperRuntime.lean
+--- a/lean/ttc/Analysis/TTCPaperRuntime.lean
++++ b/lean/ttc/Analysis/TTCPaperRuntime.lean
 @@ -1,16 +1,16 @@
- import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
-+import Kr25Ssmxt.Analysis.ManuscriptThinningCosts
- import Kr25Ssmxt.Model.Prelude
+ import ttc.Analysis.CV18HitAndRunOracles
++import ttc.Analysis.ManuscriptThinningCosts
+ import ttc.Model.Prelude
  
  /-!
  # TTC runtime in the paper's membership-query real-RAM model
@@ -8012,18 +8012,18 @@ index c4e5d02..c0cb5af 100644
 +#print axioms community_runtime_cost_bound
  
  end PaperRuntime
- end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/ThresholdCapBound.lean b/lean/Kr25Ssmxt/Analysis/ThresholdCapBound.lean
+ end ttc
+diff --git a/lean/ttc/Analysis/ThresholdCapBound.lean b/lean/ttc/Analysis/ThresholdCapBound.lean
 new file mode 100644
 index 0000000..c25562c
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/ThresholdCapBound.lean
++++ b/lean/ttc/Analysis/ThresholdCapBound.lean
 @@ -0,0 +1,96 @@
-+import Kr25Ssmxt.Analysis.ClippedVolumeRate
++import ttc.Analysis.ClippedVolumeRate
 +
 +/-! An explicit parameter bound for the manuscript's sample threshold. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +open Real
 +
@@ -8114,18 +8114,18 @@ index 0000000..c25562c
 +  have hceil := (Nat.ceil_lt_add_one harg).le
 +  linarith
 +
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Analysis/UniformBudgetAlgebra.lean b/lean/Kr25Ssmxt/Analysis/UniformBudgetAlgebra.lean
++end ttc
+diff --git a/lean/ttc/Analysis/UniformBudgetAlgebra.lean b/lean/ttc/Analysis/UniformBudgetAlgebra.lean
 new file mode 100644
 index 0000000..b68a3c6
 --- /dev/null
-+++ b/lean/Kr25Ssmxt/Analysis/UniformBudgetAlgebra.lean
++++ b/lean/ttc/Analysis/UniformBudgetAlgebra.lean
 @@ -0,0 +1,315 @@
-+import Kr25Ssmxt.Analysis.ThresholdCapBound
++import ttc.Analysis.ThresholdCapBound
 +
 +/-! Elementary arithmetic behind the uniform per-component cost envelope. -/
 +
-+namespace Kr25Ssmxt
++namespace ttc
 +
 +namespace TTCRuntime
 +
@@ -8435,11 +8435,11 @@ index 0000000..b68a3c6
 +  simpa only [r, cap, rho, R, H, L] using hresult
 +
 +end TTCRuntime
-+end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Model/Prelude.lean b/lean/Kr25Ssmxt/Model/Prelude.lean
++end ttc
+diff --git a/lean/ttc/Model/Prelude.lean b/lean/ttc/Model/Prelude.lean
 index 51cb79d..1b169f1 100644
---- a/lean/Kr25Ssmxt/Model/Prelude.lean
-+++ b/lean/Kr25Ssmxt/Model/Prelude.lean
+--- a/lean/ttc/Model/Prelude.lean
++++ b/lean/ttc/Model/Prelude.lean
 @@ -248,12 +248,54 @@ real-arithmetic operations in the paper's cost model. -/
  def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
    dimension * facets * queries
@@ -8579,10 +8579,10 @@ index 51cb79d..1b169f1 100644
  
  end TTCRuntime
  
-diff --git a/lean/Kr25Ssmxt/Model/Program.lean b/lean/Kr25Ssmxt/Model/Program.lean
+diff --git a/lean/ttc/Model/Program.lean b/lean/ttc/Model/Program.lean
 index 01add03..d4df719 100644
---- a/lean/Kr25Ssmxt/Model/Program.lean
-+++ b/lean/Kr25Ssmxt/Model/Program.lean
+--- a/lean/ttc/Model/Program.lean
++++ b/lean/ttc/Model/Program.lean
 @@ -270,6 +270,182 @@ def ttc {n k : Nat} (F : LRAFormula n k)
        (params.threshold D.componentCount) (List.ofFn D.component) (TTCState.initial n)).map
          TTCState.estimate
@@ -8772,23 +8772,23 @@ index 01add03..d4df719 100644
  #krModelClosure ttc
 +#krModelClosure manuscriptTTC
  
- end Kr25Ssmxt
+ end ttc
  
 @@ -326,6 +503,7 @@ structure Prior : Prop where
        (params : ApproxParams) (O : TTCOracles n k),
        StreamingCoreAccuracy F hbounded params O
  
--#krSurplusIn Kr25Ssmxt.Model.Program from ttc StreamingCoreAccuracy Prior
-+#krSurplusIn Kr25Ssmxt.Model.Program from ttc manuscriptTTC StreamingCoreAccuracy Prior
+-#krSurplusIn ttc.Model.Program from ttc StreamingCoreAccuracy Prior
++#krSurplusIn ttc.Model.Program from ttc manuscriptTTC StreamingCoreAccuracy Prior
 +  manuscriptRateThinWithCost manuscriptCountThinWithCost
  
- end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Model/Run.lean b/lean/Kr25Ssmxt/Model/Run.lean
+ end ttc
+diff --git a/lean/ttc/Model/Run.lean b/lean/ttc/Model/Run.lean
 index 73cfb75..d0831c0 100644
---- a/lean/Kr25Ssmxt/Model/Run.lean
-+++ b/lean/Kr25Ssmxt/Model/Run.lean
+--- a/lean/ttc/Model/Run.lean
++++ b/lean/ttc/Model/Run.lean
 @@ -1,4 +1,5 @@
- import Kr25Ssmxt.Model.Program
+ import ttc.Model.Program
 +import Mathlib.Probability.Distributions.Geometric
  import ArlibCommunity.Algorithms.CV18
  import ArlibCommunity.Algorithms.HitAndRun.Model.Theorem
@@ -9328,26 +9328,26 @@ index 73cfb75..d0831c0 100644
  #krModelClosure communityTTC
 +#krModelClosure communityManuscriptTTC
  
- end Kr25Ssmxt
-diff --git a/lean/Kr25Ssmxt/Model/Theorem.lean b/lean/Kr25Ssmxt/Model/Theorem.lean
+ end ttc
+diff --git a/lean/ttc/Model/Theorem.lean b/lean/ttc/Model/Theorem.lean
 index d66af07..deb4816 100644
---- a/lean/Kr25Ssmxt/Model/Theorem.lean
-+++ b/lean/Kr25Ssmxt/Model/Theorem.lean
+--- a/lean/ttc/Model/Theorem.lean
++++ b/lean/ttc/Model/Theorem.lean
 @@ -1,16 +1,30 @@
- import Kr25Ssmxt.Model.Run
- import Kr25Ssmxt.Analysis.CV18HitAndRunOracles
- import Kr25Ssmxt.Analysis.TTCPaperRuntime
-+import Kr25Ssmxt.Analysis.ManuscriptComponentExpectation
-+import Kr25Ssmxt.Analysis.CV18RoundnessBound
-+import Kr25Ssmxt.Analysis.RateLogBound
-+import Kr25Ssmxt.Analysis.NormalizedDiameterRuntime
-+import Kr25Ssmxt.Analysis.ClippedVolumeRate
-+import Kr25Ssmxt.Analysis.ThresholdCapBound
-+import Kr25Ssmxt.Analysis.UniformBudgetAlgebra
-+import Kr25Ssmxt.Analysis.ManuscriptRateKernelMeasurable
-+import Kr25Ssmxt.Analysis.ManuscriptRunMarginal
+ import ttc.Model.Run
+ import ttc.Analysis.CV18HitAndRunOracles
+ import ttc.Analysis.TTCPaperRuntime
++import ttc.Analysis.ManuscriptComponentExpectation
++import ttc.Analysis.CV18RoundnessBound
++import ttc.Analysis.RateLogBound
++import ttc.Analysis.NormalizedDiameterRuntime
++import ttc.Analysis.ClippedVolumeRate
++import ttc.Analysis.ThresholdCapBound
++import ttc.Analysis.UniformBudgetAlgebra
++import ttc.Analysis.ManuscriptRateKernelMeasurable
++import ttc.Analysis.ManuscriptRunMarginal
  
- namespace Kr25Ssmxt
+ namespace ttc
  
 +open MeasureTheory
 +
@@ -9753,7 +9753,7 @@ index d66af07..deb4816 100644
  
  #krModelClosureOfType ttc_volume_accuracy
  #krModelClosureOfType ttc_total_runtime_theorem3
--#krSurplusIn Kr25Ssmxt.Model from ttc_volume_accuracy ttc_total_runtime_theorem3 StreamingCoreAccuracy
+-#krSurplusIn ttc.Model from ttc_volume_accuracy ttc_total_runtime_theorem3 StreamingCoreAccuracy
 +#krModelClosureOfType ttc_expected_runtime_explicit
 +#krModelClosureOfType ttc_expected_runtime_linear_precision
 +#krModelClosureOfType ttc_expected_runtime_geometric
@@ -9764,7 +9764,7 @@ index d66af07..deb4816 100644
 +#krModelClosureOfType ttc_expected_runtime_theorem3_headline_scale
 +#krModelClosureOfType ttc_theorem3_corrected_expected_runtime
 +#krModelClosureOfType ttc_theorem3_headline_budget_finite
-+#krSurplusIn Kr25Ssmxt.Model from ttc_volume_accuracy ttc_total_runtime_theorem3
++#krSurplusIn ttc.Model from ttc_volume_accuracy ttc_total_runtime_theorem3
 +  ttc_expected_runtime_explicit ttc_expected_runtime_linear_precision
 +  ttc_expected_runtime_geometric ttc_expected_runtime_geometric_clip
 +  ttc_expected_runtime_theorem3_expanded
@@ -9795,7 +9795,7 @@ index d66af07..deb4816 100644
 +#print axioms ttc_theorem3_corrected_expected_runtime
 +#print axioms ttc_theorem3_headline_budget_finite
  
- end Kr25Ssmxt
+ end ttc
 diff --git a/lean/THEOREM-AUDIT.md b/lean/THEOREM-AUDIT.md
 new file mode 100644
 index 0000000..4d9cd83
@@ -9804,8 +9804,8 @@ index 0000000..4d9cd83
 @@ -0,0 +1,307 @@
 +# Manuscript theorem audit
 +
-+`Kr25Ssmxt/Model/` is the statement and program audit surface. Proofs belong in
-+`Kr25Ssmxt/Analysis/`. `#krModelClosureOfType` checks that both public theorem
++`ttc/Model/` is the statement and program audit surface. Proofs belong in
++`ttc/Analysis/`. `#krModelClosureOfType` checks that both public theorem
 +statements unfold only through `Model/` definitions.
 +
 +## Theorem 1 (`sections/analysis.tex`, `thm:volumettc`)
@@ -10116,8 +10116,8 @@ index 11d9ed6..2e0d0df 100644
 @@ -1,3 +1,7 @@
  # The headlines of this development, one per line.
  # The axiom profile of each is read from Lean whenever the checks run.
- Kr25Ssmxt.ttc_volume_accuracy
-+Kr25Ssmxt.ttc_total_runtime_theorem3
-+Kr25Ssmxt.ttc_expected_runtime_theorem3_headline_scale
-+Kr25Ssmxt.ttc_theorem3_corrected_expected_runtime
-+Kr25Ssmxt.ttc_theorem3_headline_budget_finite
+ ttc.ttc_volume_accuracy
++ttc.ttc_total_runtime_theorem3
++ttc.ttc_expected_runtime_theorem3_headline_scale
++ttc.ttc_theorem3_corrected_expected_runtime
++ttc.ttc_theorem3_headline_budget_finite

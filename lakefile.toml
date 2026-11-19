@@ -1,5 +1,5 @@
-name = "kr25ssmxt"
-defaultTargets = ["Kr25Ssmxt"]
+name = "ttc"
+defaultTargets = ["ttc"]
 
 # Pinned so a fresh clone builds without a version hunt. If you bump the
 # toolchain in lean-toolchain, bump both revs below to match.
@@ -29,4 +29,4 @@ git = "https://github.com/uddaloksarkar/arlib-community.git"
 rev = "41a546726cc03bf02eaae77208e24aa23a4fb67a"
 
 [[lean_lib]]
-name = "Kr25Ssmxt"
+name = "ttc"

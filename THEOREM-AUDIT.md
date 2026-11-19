@@ -1,14 +1,14 @@
 # Paper theorem audit
 
-`Kr25Ssmxt/Model/` is the statement and program audit surface; proofs live in
-`Kr25Ssmxt/Analysis/`. `#krModelClosureOfType` checks that each public statement
+`ttc/Model/` is the statement and program audit surface; proofs live in
+`ttc/Analysis/`. `#krModelClosureOfType` checks that each public statement
 unfolds only through `Model/` definitions, and `#krSurplusIn` checks that `Model/`
 contains nothing the public statements do not use.
 
 ## Current status (2026-11-18)
 
 **Build.** Lean/Mathlib `v4.35.0`, arlib `8d08f89`, arlib-community `41a5467`
-(`github.com/uddaloksarkar/arlib-community`). `lake build Kr25Ssmxt` succeeds
+(`github.com/uddaloksarkar/arlib-community`). `lake build ttc` succeeds
 with no errors and no `sorry`. Both public theorems depend only on `propext`,
 `Classical.choice` and `Quot.sound`.
 

@@ -1,0 +1,76 @@
+import ttc.Analysis.PrecisionChoice
+import ttc.Analysis.MathlibCompat
+import ttc.Analysis.RunMarginal
+import ttc.Analysis.OracleNormalization
+
+/-! The concrete paper TTC run has total probability one, independently
+of its accuracy analysis. -/
+
+namespace ttc
+
+open MeasureTheory
+
+theorem community_ttc_isProbabilityMeasure
+    {n k : Nat} (hn : 21 ≤ n)
+    (F : LRAFormula n k)
+    (hbounded : Bornology.IsBounded (solutionSet F))
+    (p : ApproxParams) (prep : TTCPreprocessor n k) :
+    IsProbabilityMeasure (ttcRef hn F hbounded p prep) := by
+  let D := prep.run F hbounded
+  by_cases hempty : D.componentCount = 0
+  · simp [ttcRef, ttcReference,
+      ttcSubroutines, D, hempty]
+    infer_instance
+  · let b := (prep.choosePrecision D p).value
+    let threshold := p.Thresh D.componentCount
+    let components := List.ofFn D.component
+    have hvolume : ∀ P ∈ components,
+        IsProbabilityMeasure
+          ((ttcCostedSubroutines hn prep 1).computeVolumeWithCost
+            P p.ε' (p.δ' D.componentCount)) := by
+      intro P hP
+      obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hP
+      exact community_costed_volume_isProbabilityMeasure
+        hn D p prep 1 i
+    let core := ttcReference.loopWithCost
+      (ttcCostedSubroutines hn prep 1) b p.ε'
+      (p.δ' D.componentCount) threshold components (TTCState.unitInitial n)
+    letI : IsProbabilityMeasure core :=
+      ⟨community_components_mass_one hn prep 1 b p.ε'
+        (p.δ' D.componentCount) threshold (p.threshold_pos D.componentCount)
+        components hvolume (TTCState.unitInitial n)⟩
+    have hvolumeMass : ∀ P ∈ components,
+        ((ttcCostedSubroutines hn prep 1).computeVolumeWithCost
+          P p.ε' (p.δ' D.componentCount)) Set.univ ≤ 1 := by
+      intro P hP
+      letI := hvolume P hP
+      simp
+    have hcoreEq := community_components_fst hn prep 1 b
+      p.ε' (p.δ' D.componentCount) threshold
+      (p.threshold_pos D.componentCount) components hvolumeMass
+      (TTCState.unitInitial n)
+    have hcore : IsProbabilityMeasure
+        (ttcReference.loop (ttcSubroutines hn prep)
+          b p.ε' (p.δ' D.componentCount) threshold
+          components (TTCState.unitInitial n)) := by
+      rw [← hcoreEq]
+      exact Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    have hprep : (ttcSubroutines hn prep).preprocessing = prep := rfl
+    have hempty' :
+        ((ttcSubroutines hn prep).preprocessing.run F hbounded).componentCount
+          ≠ 0 := by simpa only [hprep, D] using hempty
+    have hrunequality : ttcRef hn F hbounded p prep =
+        (ttcReference.loop (ttcSubroutines hn prep)
+          b p.ε' (p.δ' D.componentCount) threshold
+          components (TTCState.unitInitial n)).map
+            (EstReference b threshold) := by
+      simp [ttcRef, ttcReference, ttcSubroutines,
+        TTCPreprocessor.choosePrecision, getPrecisionChoice, D, b, threshold, components, hempty]
+    rw [hrunequality]
+    letI := hcore
+    exact Measure.isProbabilityMeasure_map
+      (measurable_estimate b threshold).aemeasurable
+
+#print axioms community_ttc_isProbabilityMeasure
+
+end ttc
