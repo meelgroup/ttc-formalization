@@ -452,6 +452,7 @@ theorem deletionPassOperations_le {n : Nat} (s : TTCState n)
     (P : PolytopeData n) :
     TTCRuntime.deletionPassOperations n P.presentation.facetCount
       s.X.card (s.X.card - (s.removeComponent P).X.card) ≤
+      TTCRuntime.rewriteOperations n P.presentation.facetCount +
       s.X.card * (TTCRuntime.facetScanOperations n
         P.presentation.facetCount + 1) := by
   unfold TTCRuntime.deletionPassOperations TTCRuntime.deleteCopyOperations

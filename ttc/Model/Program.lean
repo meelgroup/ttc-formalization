@@ -328,12 +328,16 @@ def ttcPseudocode.secondLoopWithCost {n : Nat} (s : TTCState n) (N : Nat)
 /-- Charged implementations of `ComputeVolume` and `GenerateSamples`. -/
 structure CostedTTCOracles (n k : Nat) where
   base : TTCOracles n k
+  /-- The one-time cost of preparing the oracles for a polytope at precision `b` and
+  accuracy `ε'`, such as rewriting its offsets. -/
+  setupCost : PolytopeData n → Nat → Real → Nat
   computeVolumeWithCost : (P : PolytopeData n) → Real → Real →
     Measure (VolumeOutcome × Nat)
   generateSamplesWithCost : (P : PolytopeData n) → (count b : Nat) →
     Real → Measure (SampleBatch n count × Nat)
 
 /-- One charged iteration of the `for` loop, using the fixed real-RAM charges in `Prelude`.
+Preparing the oracles for the polytope (`O.setupCost`) is charged with the deletion pass.
 The oracle fields retain their own charges, including retries. -/
 def ttcPseudocode.stepWithCost {n k : Nat} (O : CostedTTCOracles n k)
     (b : Nat) (ε' δ' Thresh : Real) (P : PolytopeData n)
@@ -341,7 +345,7 @@ def ttcPseudocode.stepWithCost {n k : Nat} (O : CostedTTCOracles n k)
   costedBind (O.computeVolumeWithCost P ε' δ') fun volumeOutcome =>
     let t := ttcPseudocode.t b n volumeOutcome.2
     let withoutDuplicates := state.removeComponent P
-    let deletionCost := state.deletionCost P
+    let deletionCost := O.setupCost P b ε' + state.deletionCost P
     costedBind (costedCharge (Measure.dirac withoutDuplicates) deletionCost)
       fun deleted =>
         costedBind (ttcPseudocode.rateCheckWithCost deleted t Thresh)

@@ -337,6 +337,9 @@ def div (a b : Real) : Counted Real := ⟨a / b, 1⟩
 /-- `√a`: one operation. -/
 def sqrt (a : Real) : Counted Real := ⟨Real.sqrt a, 1⟩
 
+/-- The natural logarithm `log a`: one operation. -/
+def log (a : Real) : Counted Real := ⟨Real.log a, 1⟩
+
 /-- The `k`-th root `u^{1/k}`: one operation. -/
 def root (k : Nat) (u : Real) : Counted Real := ⟨u ^ ((k : Real)⁻¹), 1⟩
 

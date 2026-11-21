@@ -26,6 +26,7 @@ namespace TTCRuntime
 def uniformBudgetNat (n r cap queries steps rounds : Nat) : Nat :=
   membershipQueryOperations n r queries +
     membershipQueryOperations n r (queries + 1) +
+    rewriteOperations n r +
     cap * (facetScanOperations n r + 1) +
     rounds * rateThinningRoundOperations cap +
     poissonDrawOperations +
@@ -44,7 +45,7 @@ theorem uniformBudgetNat_le_coarse_product
     rateThinningRoundOperations countThinningRoundOperations
     poissonDrawOperations fairCoinOperations binomialDrawOperations
     scalarOperationCost samplingAttemptOperations ballStartOperations roundPointOperations
-    rejectionTestOperations appendCopyOperations hitAndRunStepOperations
+    rejectionTestOperations appendCopyOperations hitAndRunStepOperations rewriteOperations
   dsimp [facetScanOperations]
   ring_nf
   omega

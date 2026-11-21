@@ -100,6 +100,7 @@ noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
       P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m) + 1) :
       ENNReal) +
+  TTCRuntime.rewriteOperations n P.presentation.facetCount +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
@@ -129,6 +130,7 @@ noncomputable def TTCRuntime.expectedComponentBudgetGeometric
       P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε'
         (p.δ' D.componentCount) + 1) : ENNReal) +
+  TTCRuntime.rewriteOperations n P.presentation.facetCount +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
@@ -154,6 +156,7 @@ noncomputable def TTCRuntime.expectedComponentBudgetTheorem3
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount queries +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n
       P.presentation.facetCount (queries + 1) : ENNReal) +
+  TTCRuntime.rewriteOperations n P.presentation.facetCount +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +
@@ -179,6 +182,7 @@ noncomputable def TTCRuntime.theorem3UniformComponentBudget
   (TTCRuntime.membershipQueryOperations n r queries +
     cv18NonQueryFactor * TTCRuntime.membershipQueryOperations n r (queries + 1) :
       ENNReal) +
+  TTCRuntime.rewriteOperations n r +
   cap * (TTCRuntime.facetScanOperations n r + 1) +
   TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +

@@ -103,18 +103,17 @@ Read these before citing the result.
   normalization (Theorem 2 of the paper) are an input `prep`. Its output type requires
   bounded, full-dimensional polytopes whose union equals the solution set almost
   everywhere, but Lean does not check how they are computed.
-* **Part of the cost model is assumed.** Arithmetic is counted with one operation for
-  each `+`, `−`, `·`, `/`, `√`, `k`-th root, `⌊·⌋` and comparison on real numbers, and one
-  for each random number read. These charges are definitions in `ttc/Model/Prelude.lean`,
-  not proved costs of a program: a fair coin, a Poisson or binomial draw, deleting or
-  appending a copy, and a scalar update, `1` each.
-* **Some costs are not counted.** The linear programs (`GetPrecision`, `BoundingRadius`)
-  and preprocessing are not charged; preprocessing enters only as the number
-  `preprocessingOperations`. CV18's work besides membership queries is charged by a
-  single factor. Rewriting each polytope's offsets once for CV18's normalized body and
-  for the `10^b`-scaled body (`O(nr)` per polytope) is not charged.
-* **Exact real arithmetic.** The algorithm works over the real numbers. Rounding error in
-  floating point is not modelled.
+* **The machine model is a real RAM.** Running time is the number of operations on exact
+  real numbers. Each of `+`, `−`, `·`, `/`, `√`, `log`, `k`-th root, `⌊·⌋` and a
+  comparison costs 1, and so does reading one random number (a uniform number, a
+  Gaussian, a fair coin). A Poisson draw, a binomial draw, deleting or appending a stored
+  copy, and updating a scalar also cost 1 each. Floating-point rounding is not modelled.
+* **Three parts of the work are not counted.**
+  * The linear programs (`GetPrecision`, `BoundingRadius`, the Chebyshev centre).
+  * Preprocessing; it enters the bound only as the number `preprocessingOperations`.
+  * CV18's arithmetic other than its membership tests. Its membership tests are counted;
+    the rest is charged as at most the same amount again (the factor `1` in
+    `ttcWithCost … 1`), which is assumed, not proved.
 * **The `ε` dependence is looser than the paper's.** Lean's bound multiplies the
   volume and sampling costs, giving `1/ε⁴`. The `n⁵ ρ² r_max m` shape matches.
 

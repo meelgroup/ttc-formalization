@@ -104,6 +104,66 @@ theorem inner_toEuclidean {n : Nat} (a : Point n) (x : EuclideanSpace Real (Fin 
     inner Real (toEuclidean a) x = dotProduct a (WithLp.ofLp x) := by
   simp [toEuclidean, PiLp.inner_apply, dotProduct, mul_comm]
 
+/-! ## Rewriting a polytope's offsets -/
+
+/-- `cv18OffsetsProg` computes CV18's offsets `(bⱼ − aⱼ · z)/γ`. -/
+theorem PolytopeData.cv18OffsetsProg_value {n : Nat} (P : PolytopeData n) :
+    P.cv18OffsetsProg.value = fun j =>
+      (P.presentation.offset j - dotProduct (P.presentation.normal j) P.incenter) /
+        P.inradius := by
+  funext j
+  simp [PolytopeData.cv18OffsetsProg, Counted.forEach, Counted.dot_value, Counted.sub,
+    Counted.div]
+
+/-- `scaledOffsetsProg` computes the offsets `10^b · bⱼ` of `10^b · P`. -/
+theorem PolytopeData.scaledOffsetsProg_value {n : Nat} (P : PolytopeData n) (b : Nat) :
+    (P.scaledOffsetsProg b).value = P.scaledOffset b := by
+  funext j
+  simp [PolytopeData.scaledOffsetsProg, Counted.forEach, Counted.mul, PolytopeData.scaledOffset]
+
+/-- `hitAndRunOffsetsProg` computes the walk's offsets `normalizedHitAndRunOffset`. -/
+theorem PolytopeData.hitAndRunOffsetsProg_value {n : Nat} (P : PolytopeData n) (b : Nat)
+    (eta : Real) :
+    (P.hitAndRunOffsetsProg b eta).value = P.normalizedHitAndRunOffset b eta := by
+  funext j
+  have hnorm : ‖P.arlibNormal j‖ =
+      Real.sqrt (dotProduct (P.presentation.normal j) (P.presentation.normal j)) := by
+    rw [PolytopeData.arlibNormal, EuclideanSpace.norm_eq]
+    simp [toEuclidean, dotProduct, sq]
+  have hinner : inner Real (P.arlibNormal j) (P.scaledIncenter b) =
+      dotProduct (P.presentation.normal j) (fun k => decimalScale b * P.incenter k) := by
+    rw [PolytopeData.arlibNormal, inner_toEuclidean]
+    simp [PolytopeData.scaledIncenter, toEuclidean]
+    rw [show (fun k => decimalScale b * P.incenter k) = decimalScale b • P.incenter from rfl,
+      dotProduct_smul, smul_eq_mul]
+  simp only [PolytopeData.hitAndRunOffsetsProg, Counted.bind_eq, Counted.andThen_value,
+    Counted.forEach, Counted.dot_value, Counted.sub, Counted.div, Counted.mul, Counted.add,
+    Counted.sqrt, Counted.log, PolytopeData.normalizedHitAndRunOffset, hitAndRunOffset,
+    hinner, hnorm, PolytopeData.scaledInradius, PolytopeData.scaledOffset,
+    ArlibCommunity.Algorithms.KV97.kappaOf, samplerC, ArlibCommunity.Algorithms.KV97.cOf]
+
+theorem PolytopeData.cv18OffsetsProg_cost {n : Nat} (hn : 0 < n) (P : PolytopeData n) :
+    P.cv18OffsetsProg.cost = P.presentation.facetCount * (2 * n + 1) := by
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_add_of_lt hn
+  simp only [PolytopeData.cv18OffsetsProg, Counted.forEach, Counted.bind_eq,
+    Counted.andThen_cost, Counted.sub, Counted.div, zero_add, Counted.dot_cost,
+    Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
+  ring
+
+theorem PolytopeData.scaledOffsetsProg_cost {n : Nat} (P : PolytopeData n) (b : Nat) :
+    (P.scaledOffsetsProg b).cost = P.presentation.facetCount := by
+  simp [PolytopeData.scaledOffsetsProg, Counted.forEach, Counted.mul]
+
+theorem PolytopeData.hitAndRunOffsetsProg_cost {n : Nat} (hn : 0 < n) (P : PolytopeData n)
+    (b : Nat) (eta : Real) :
+    (P.hitAndRunOffsetsProg b eta).cost = 10 + n + P.presentation.facetCount * (4 * n + 4) := by
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_add_of_lt hn
+  simp only [PolytopeData.hitAndRunOffsetsProg, Counted.forEach, Counted.bind_eq,
+    Counted.andThen_cost, Counted.sub, Counted.div, Counted.mul, Counted.add, Counted.sqrt,
+    Counted.log, zero_add, Counted.dot_cost, Finset.sum_const, Finset.card_univ,
+    Fintype.card_fin, smul_eq_mul]
+  ring
+
 /-- CV18's oracle answers membership in the normalized body. -/
 theorem CommunityCV18.query_eq_true_iff {n : Nat} (P : PolytopeData n)
     (y : EuclideanSpace Real (Fin n)) :
@@ -111,7 +171,8 @@ theorem CommunityCV18.query_eq_true_iff {n : Nat} (P : PolytopeData n)
   have hγ := P.inradius_pos
   unfold CommunityCV18.query
   rw [HalfspacePresentation.memberProg_correct]
-  simp only [HalfspacePresentation.carrier, PolytopeData.cv18Presentation, Set.mem_setOf_eq,
+  simp only [HalfspacePresentation.carrier, PolytopeData.cv18Presentation,
+    PolytopeData.cv18OffsetsProg_value, Set.mem_setOf_eq,
     PolytopeData.cv18Body, Set.mem_preimage, ArlibCommunity.Foundations.Convex.Polytope.body,
     PolytopeData.arlibNormal, inner_toEuclidean]
   refine forall_congr' fun j => ?_
@@ -129,7 +190,8 @@ theorem acceptedIntegers_eq {n : Nat} (P : PolytopeData n) (b : Nat) :
     acceptedIntegers P b = {z | kv97LatEmb n z ∈ P.scaledBody b} := by
   ext z
   simp only [acceptedIntegers, Set.mem_setOf_eq, HalfspacePresentation.memberProg_correct,
-    HalfspacePresentation.carrier, PolytopeData.scaledPresentation, PolytopeData.scaledBody,
+    HalfspacePresentation.carrier, PolytopeData.scaledPresentation,
+    PolytopeData.scaledOffsetsProg_value, PolytopeData.scaledBody,
     ArlibCommunity.Foundations.Convex.Polytope.body, PolytopeData.arlibNormal,
     inner_toEuclidean, kv97LatEmb]
 
@@ -145,10 +207,16 @@ def membershipQueryOperations (dimension facets queries : Nat) : Nat :=
 def rejectionTestOperations (dimension facets : Nat) : Nat :=
   facetScanOperations dimension facets
 
-/-- The deletion pass: one membership test per stored copy, one operation per removal. -/
+/-- Rewriting a polytope's offsets for CV18, for `10^b · P` and for the walk:
+`r (2n + 1) + r + (10 + n + r (4n + 4))` (`setupCost_eq`). -/
+def rewriteOperations (dimension facets : Nat) : Nat :=
+  facets * (2 * dimension + 1) + facets + (10 + dimension + facets * (4 * dimension + 4))
+
+/-- Preparing a polytope (rewriting its offsets), then the deletion pass: one membership
+test per stored copy, one operation per removal. -/
 def deletionPassOperations (dimension facets checked removed : Nat) : Nat :=
-  checked * facetScanOperations dimension facets +
-    removed * deleteCopyOperations
+  rewriteOperations dimension facets +
+    (checked * facetScanOperations dimension facets + removed * deleteCopyOperations)
 
 /-- `5 n`: the cost of rounding a point (`roundCost_eq`). -/
 def roundPointOperations (dimension : Nat) : Nat := 5 * dimension
@@ -167,13 +235,26 @@ def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
 
 end TTCRuntime
 
-/-- The deletion pass's charge, in closed form. -/
-theorem TTCState.deletionCost_eq {n : Nat} (hn : 0 < n) (s : TTCState n)
-    (P : PolytopeData n) :
-    s.deletionCost P = TTCRuntime.deletionPassOperations n P.presentation.facetCount
-      s.X.card (s.X.card - (s.removeComponent P).X.card) := by
+/-- Preparing a polytope costs `rewriteOperations n r`, whatever `b` and `ε'` are. -/
+theorem setupCost_eq {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
+    (P : PolytopeData n) (b : Nat) (eta : Real) :
+    (ttcCostedSubroutines hn prep factor).setupCost P b eta =
+      TTCRuntime.rewriteOperations n P.presentation.facetCount := by
+  have hn0 : 0 < n := by omega
+  change P.cv18OffsetsProg.cost + (P.scaledOffsetsProg b).cost +
+      (P.hitAndRunOffsetsProg b eta).cost = _
+  rw [P.cv18OffsetsProg_cost hn0, P.scaledOffsetsProg_cost, P.hitAndRunOffsetsProg_cost hn0]
+  rfl
+
+/-- Preparing a polytope plus the deletion pass, in closed form. -/
+theorem TTCState.deletionCost_eq {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (factor : Nat) (s : TTCState n) (P : PolytopeData n) (b : Nat) (eta : Real) :
+    (ttcCostedSubroutines hn prep factor).setupCost P b eta + s.deletionCost P =
+      TTCRuntime.deletionPassOperations n P.presentation.facetCount
+        s.X.card (s.X.card - (s.removeComponent P).X.card) := by
+  rw [setupCost_eq hn prep factor P b eta]
   simp only [TTCState.deletionCost, TTCRuntime.deletionPassOperations,
-    P.presentation.memberProg_cost hn, Finset.sum_const, smul_eq_mul]
+    P.presentation.memberProg_cost (by omega : 0 < n), Finset.sum_const, smul_eq_mul]
 
 /-- The charge for `q` CV18 queries, in closed form. -/
 theorem PolytopeData.cv18QueryCost_eq {n : Nat} (hn : 0 < n) (P : PolytopeData n)

@@ -339,7 +339,7 @@ theorem TTCRuntime.expectedComponentBudgetTheorem3_le_uniform
   dsimp only
   unfold TTCRuntime.membershipQueryOperations TTCRuntime.facetScanOperations
     TTCRuntime.samplingAttemptOperations TTCRuntime.rejectionTestOperations
-    TTCRuntime.hitAndRunStepOperations
+    TTCRuntime.hitAndRunStepOperations TTCRuntime.rewriteOperations
   gcongr <;> (try simp only [TTCRuntime.facetScanOperations]) <;> gcongr
 
 end ttc

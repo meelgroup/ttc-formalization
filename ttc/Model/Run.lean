@@ -42,17 +42,19 @@ def PolytopeData.arlibNormal {n : Nat} (P : PolytopeData n) :
 /-- The positive dilation carrying the precision-`b` decimal lattice to `ℤⁿ`. -/
 def decimalScale (b : Nat) : Real := (10 : Real) ^ b
 
-/-- Facet offsets of the decimal-dilated body. -/
-def PolytopeData.scaledOffset {n : Nat} (P : PolytopeData n) (b : Nat) :
-    Fin P.presentation.facetCount → Real :=
-  fun i => decimalScale b * P.presentation.offset i
+/-- Rewrite the offsets for `10^b · P`: `10^b · bⱼ` for each facet. The scale `10^b` comes
+with the precision `b` from `GetPrecision`. -/
+def PolytopeData.scaledOffsetsProg {n : Nat} (P : PolytopeData n) (b : Nat) :
+    Counted (Fin P.presentation.facetCount → Real) :=
+  Counted.forEach fun j => Counted.mul (decimalScale b) (P.presentation.offset j)
 
-/-- The presentation of `10^b · P`: the same normals, with offsets `10^b · bⱼ`. -/
+/-- The presentation of `10^b · P`: the same normals, with offsets `10^b · bⱼ` computed by
+`scaledOffsetsProg`. -/
 def PolytopeData.scaledPresentation {n : Nat} (P : PolytopeData n) (b : Nat) :
     HalfspacePresentation n where
   facetCount := P.presentation.facetCount
   normal := P.presentation.normal
-  offset := P.scaledOffset b
+  offset := (P.scaledOffsetsProg b).value
 
 /-! ## Line `line:prec:getmaxball`: `MaxInscribedBall` by the Chebyshev-centre LP
 
@@ -108,13 +110,20 @@ def GetPrecision {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (η : Real) : Nat :=
   Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
 
+/-- Rewrite the offsets for CV18's normalized body: `(bⱼ − aⱼ · z)/γ` for each facet. -/
+def PolytopeData.cv18OffsetsProg {n : Nat} (P : PolytopeData n) :
+    Counted (Fin P.presentation.facetCount → Real) :=
+  Counted.forEach fun j => do
+    let az ← Counted.dot n (P.presentation.normal j) P.incenter
+    let slack ← Counted.sub (P.presentation.offset j) az
+    Counted.div slack P.inradius
+
 /-- The presentation of the normalized body `P* = (P − z)/γ`: the same normals, with offsets
 `(bⱼ − aⱼ · z)/γ`. It is computed once per component. -/
 def PolytopeData.cv18Presentation {n : Nat} (P : PolytopeData n) : HalfspacePresentation n where
   facetCount := P.presentation.facetCount
   normal := P.presentation.normal
-  offset := fun j =>
-    (P.presentation.offset j - dotProduct (P.presentation.normal j) P.incenter) / P.inradius
+  offset := P.cv18OffsetsProg.value
 
 /-- Pull the component back along `y ↦ inradius • y + incenter`. -/
 def PolytopeData.cv18Body {n : Nat} (P : PolytopeData n) :
@@ -277,13 +286,6 @@ def acceptedRoundedWithAttempts {n : Nat}
 accuracy `ε/4`. -/
 abbrev samplerC (eta : Real) : Real := ArlibCommunity.Algorithms.KV97.cOf (eta / 4)
 
-/-- The explicitly inflated offsets scanned by the finite-facet implementation. -/
-def hitAndRunOffset {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
-    Fin P.presentation.facetCount → Real :=
-  fun i => P.scaledOffset b i +
-    ArlibCommunity.Algorithms.KV97.kappaOf (samplerC eta) (P.presentation.facetCount : Real) *
-      ‖P.arlibNormal i‖
-
 /-! ## `GenerateSamples` (Algorithm `alg:generatesamples`)
 
 The walk runs on `P'` (the KV97-inflated, decimal-dilated component) in the chart that
@@ -303,13 +305,6 @@ def PolytopeData.scaledIncenter {n : Nat} (P : PolytopeData n) (b : Nat) :
 def PolytopeData.samplerChart {n : Nat} (P : PolytopeData n) (b : Nat)
     (y : EuclideanSpace Real (Fin n)) : EuclideanSpace Real (Fin n) :=
   P.scaledInradius b • y + P.scaledIncenter b
-
-/-- Facet offsets after centering and dividing by the scaled inradius. -/
-def PolytopeData.normalizedHitAndRunOffset {n : Nat} (P : PolytopeData n)
-    (b : Nat) (eta : Real) : Fin P.presentation.facetCount → Real :=
-  fun i =>
-    (hitAndRunOffset P b eta i -
-      ⟪P.arlibNormal i, P.scaledIncenter b⟫_Real) / P.scaledInradius b
 
 /-! ### Line `alg:generatesamples`: the walk length `T` and accuracy `ν`
 
@@ -345,13 +340,39 @@ def normalizedHitAndRunSteps {n : Nat} (P : PolytopeData n) (b : Nat)
     (P.samplerOuterRadius b eta / P.scaledInradius b) ^ 2 *
     Real.log (2 * P.samplerOuterRadius b eta))
 
+/-- Rewrite the offsets for the walk's body (`PolytopeData.normalizedHitAndRunOffset`): the
+KV97 inflation `κ = c + √(2 log r)` with `c = √(2 log(4/(η/4)))`, the scaled inball
+`γ' = 10^b γ`, `z' = 10^b z`, and for each facet `(10^b bⱼ + κ ‖aⱼ‖ − aⱼ · z')/γ'`. -/
+def PolytopeData.hitAndRunOffsetsProg {n : Nat} (P : PolytopeData n) (b : Nat) (eta : Real) :
+    Counted (Fin P.presentation.facetCount → Real) := do
+  let e ← Counted.div eta 4
+  let q ← Counted.div 4 e
+  let lq ← Counted.log q
+  let lq2 ← Counted.mul 2 lq
+  let c ← Counted.sqrt lq2
+  let lr ← Counted.log (P.presentation.facetCount : Real)
+  let lr2 ← Counted.mul 2 lr
+  let sr ← Counted.sqrt lr2
+  let κ ← Counted.add c sr
+  let γ' ← Counted.mul (decimalScale b) P.inradius
+  let z' ← Counted.forEach fun k => Counted.mul (decimalScale b) (P.incenter k)
+  Counted.forEach fun j => do
+    let sb ← Counted.mul (decimalScale b) (P.presentation.offset j)
+    let aa ← Counted.dot n (P.presentation.normal j) (P.presentation.normal j)
+    let na ← Counted.sqrt aa
+    let infl ← Counted.mul κ na
+    let bj ← Counted.add sb infl
+    let az ← Counted.dot n (P.presentation.normal j) z'
+    let slack ← Counted.sub bj az
+    Counted.div slack γ'
+
 /-- The walk's body in the unit-inball chart, as a presentation:
 `aⱼ · y ≤ (b'ⱼ − aⱼ · z')/γ'` (`PolytopeData.normalizedHitAndRunOffset`). -/
 def PolytopeData.hitAndRunPresentation {n : Nat} (P : PolytopeData n) (b : Nat)
     (eta : Real) : HalfspacePresentation n where
   facetCount := P.presentation.facetCount
   normal := P.presentation.normal
-  offset := P.normalizedHitAndRunOffset b eta
+  offset := (P.hitAndRunOffsetsProg b eta).value
 
 /-- The random tape of one Hit-and-Run step: a fair coin, a standard Gaussian vector, and a
 uniform number in `[0, 1]`, independent. -/
@@ -455,7 +476,8 @@ def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
 
 /-! ## The charged run (Theorem 3) -/
 
-/-- Charged implementations of the paper's two geometric calls. The
+/-- Charged implementations of the paper's two geometric calls. Preparing a polytope
+rewrites its offsets for CV18, for `10^b · P` and for the walk (`setupCost`). The
 CV18 charge includes its certified membership-query budget and the public
 non-query allowance factor; the sampler retains its random retry count. -/
 def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
@@ -464,6 +486,8 @@ def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
   classical
   exact
     { base := ttcSubroutines hn prep
+      setupCost := fun P b eta =>
+        P.cv18OffsetsProg.cost + (P.scaledOffsetsProg b).cost + (P.hitAndRunOffsetsProg b eta).cost
       computeVolumeWithCost := fun P eta delta =>
         let queries := CommunityCV18.queryBudgetFor (by omega) P eta delta
         let membership := P.cv18Presentation.memberCost * queries

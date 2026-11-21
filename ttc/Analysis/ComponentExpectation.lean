@@ -563,6 +563,7 @@ theorem certified_community_volume_continuation_bound {n k : Nat}
 private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) (m b : Nat)
     (P : PolytopeData n) (state : TTCState n) : ENNReal :=
   let deleted := state.removeComponent P
+  TTCRuntime.rewriteOperations n P.presentation.facetCount +
   state.X.card * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   TTCRuntime.rateThinningRoundOperations deleted.X.card +
   TTCRuntime.poissonDrawOperations +
@@ -575,6 +576,7 @@ private noncomputable def componentNonVolumeBudget {n : Nat} (p : ApproxParams) 
 private noncomputable def componentUniformBudget {n : Nat} (p : ApproxParams)
     (m b : Nat) (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.ThresholdCap p m
+  TTCRuntime.rewriteOperations n P.presentation.facetCount +
   cap * (TTCRuntime.facetScanOperations n P.presentation.facetCount + 1) +
   TTCRuntime.rateThinningRoundOperations cap +
   TTCRuntime.poissonDrawOperations +

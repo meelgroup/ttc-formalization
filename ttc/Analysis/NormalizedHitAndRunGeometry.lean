@@ -135,6 +135,11 @@ theorem normalizedHitAndRunContinuousLaw_eq_kernel {n : Nat} (hn : 0 < n)
           (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1))
         (normalizedHitAndRunSteps P b eta)).map (P.samplerChart b) := by
   letI : NeZero n := ⟨by omega⟩
+  have hbody : HitAndRunLaw.body (P.hitAndRunPresentation b eta) =
+      P.normalizedHitAndRunBody b eta := by
+    simp only [HitAndRunLaw.body, PolytopeData.hitAndRunPresentation,
+      PolytopeData.hitAndRunOffsetsProg_value]
+    rfl
   have hstart : ArlibCommunity.Foundations.Convex.uniformOn volume
       (Metric.ball (0 : EuclideanSpace Real (Fin n)) 1)
       (HitAndRunLaw.body (P.hitAndRunPresentation b eta))ᶜ = 0 := by
@@ -146,11 +151,14 @@ theorem normalizedHitAndRunContinuousLaw_eq_kernel {n : Nat} (hn : 0 < n)
       simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_empty_iff_false, iff_false,
         not_and]
       intro hout hy
+      rw [hbody] at hout
       exact hout (P.normalizedHitAndRun_unitBall b eta (Metric.ball_subset_closedBall hy))
     rw [hsub, measure_empty, mul_zero]
   unfold normalizedHitAndRunContinuousLaw
   rw [BallStart.ballStartLaw_eq, (HitAndRunLaw.hitAndRunWalk_eq_iterate (P.hitAndRunPresentation b eta)
-    (P.normalizedHitAndRun_bounded b eta) _ hstart _).1]
+    (hbody ▸ P.normalizedHitAndRun_bounded b eta) _ hstart _).1]
+  simp only [HitAndRunLaw.lazyKernel, PolytopeData.hitAndRunPresentation,
+    PolytopeData.hitAndRunOffsetsProg_value]
   rfl
 
 /-- The decimal-scaled component has diameter at most `2 · 10^b · R₀`. -/

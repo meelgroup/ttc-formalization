@@ -684,7 +684,7 @@ theorem stepWithCost_eq_sim (delta : Real) (x : TTCState n) :
       costedBind ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost P eta delta)
         (fun outcome => simCostedGivenVolume hn prep factor P b eta Thresh outcome x) := by
   unfold ttcPseudocode.stepWithCost simCostedGivenVolume
-  simp only [TTCState.deletionCost_eq (by omega : 0 < n)]
+  simp only [TTCState.deletionCost_eq hn prep factor]
   rfl
 
 theorem refStepWithCost_eq_tail (delta : Real) (s : TTCState n) :
