@@ -402,7 +402,7 @@ theorem agree_repeatIndependently {d : ℕ} (count : Num ℕ) {bodyM : M d (Num 
     Agree (repeatIndependently count bodyM) (interp (repeatIndependentlyT count body)) :=
   Agree.bindT (agree_loop count (fun estimates => Agree.bindT h fun x =>
     Agree.bindT (agree_run _) fun _ => agree_pure _) _) fun r =>
-    agree_pure_of_eq (by rcases r with _ | e <;> first | rfl | exact e.elim)
+    agree_pure_of_eq (by rcases r with _ | e <;> rfl)
 
 /-- **CV18, as a tree.** -/
 def cv18T (d : ℕ) : CV18Tree d := fun member eps roundness p =>

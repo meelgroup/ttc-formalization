@@ -426,4 +426,109 @@ theorem mf_cv18T {member : NumPoint d → Prog Bool} (hmem : MemberMP member) (e
   refine MeasFam.bind' (mf_repeatIndependently _ (mf_cappedRun _ hmem)) ?_
   exact MeasFam.computeEnd (mp_median measurable_const measurable_snd)
 
+/-! ## One component, and the algorithm -/
+
+theorem memberMP_allFacets (r : ℕ) (a : Fin r → NumPoint d) (b : Fin r → Num ℝ) :
+    MemberMP (allFacets r a b) :=
+  fun _ _ _ hx => mp_allFacets r a b hx
+
+theorem mp_powHeld {a : Q → Num ℝ} {k : Q → Num ℕ} (ha : Measurable a) (hk : Measurable k) :
+    MP fun q => powHeld (a q) (k q) := by
+  unfold powHeld
+  refine MP.bind' (mp_cast hk) ?_
+  refine MP.bind' (mp_log (by fun_prop)) ?_
+  refine MP.bind' (mp_mul (by fun_prop) (by fun_prop)) ?_
+  exact mp_exp measurable_snd
+
+theorem mf_step (fuel : ℕ) (K : Params) (L : Loaded d) {s : Q → State d} (hs : Measurable s) :
+    MeasFam fun q => stepT (cv18T d) fuel K L (s q) := by
+  have hp : Measurable fun q => (s q).p := State.measurable_p.comp hs
+  have hX : Measurable fun q => (s q).X := State.measurable_X.comp hs
+  unfold stepT
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.bind' (mf_cv18T (memberMP_allFacets _ _ _) _ _ _) ?_
+  apply MeasFam.compute
+  · exact MP.bind' (MP.const _) (MP.bind' (mp_max measurable_snd (by fun_prop))
+      (MP.bind' (MP.const _) (MP.bind' (mp_mul measurable_snd measurable_fst.snd)
+        (mp_mul measurable_const measurable_snd))))
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.bind' (mf_filterCopies
+    (keep := fun _ x => (Tree.compute (latticeMember L (scaledOffsets L K.scale).val x)).bind
+      fun inside => Tree.pure (!inside)) ?_ (X := fun p : (Q × Num ℝ) × Num ℝ => (s p.1.1).X)
+      (hX.comp (by fun_prop))) ?_
+  · exact MeasFam.compute (mp_latticeMember L _ measurable_snd)
+      (MeasFam.pure (g := fun p : (((Q × Num ℝ) × Num ℝ) × (Fin d → Num ℤ)) × Bool => !p.2)
+        ((measurable_of_countable (fun b : Bool => !b)).comp measurable_snd))
+  refine MeasFam.compute (mp_mul ?_ ?_) ?_
+  · fun_prop
+  · exact hp.comp (by fun_prop)
+  refine MeasFam.compute (mp_le measurable_const measurable_snd) ?_
+  refine MeasFam.bind' (MeasFam.iteB measurable_snd ?_ (MeasFam.pure ?_)) ?_
+  · apply MeasFam.compute
+    · refine MP.bind' (mp_div (by fun_prop) measurable_const) ?_
+      refine MP.bind' (mp_log measurable_snd) ?_
+      refine MP.bind' (MP.const _) ?_
+      refine MP.bind' (mp_log measurable_snd) ?_
+      refine MP.bind' (mp_div (by fun_prop) measurable_snd) ?_
+      refine MP.bind' (mp_ceil measurable_snd) ?_
+      refine MP.bind' (mp_powHeld (by fun_prop) measurable_snd) ?_
+      refine MP.bind' (mp_div ?_ measurable_snd) ?_
+      · exact hp.comp (by fun_prop)
+      refine MP.bind' (MP.const _) ?_
+      refine MP.bind' (mp_div measurable_snd (by fun_prop)) ?_
+      exact MP.pure (by fun_prop)
+    apply MeasFam.bind'
+    · apply mf_filterCopies
+      · refine MeasFam.unitT ?_
+        exact MeasFam.computeEnd (mp_lt measurable_snd (by fun_prop))
+      · fun_prop
+    · exact MeasFam.pure (by fun_prop)
+  · exact (hp.comp (by fun_prop)).prodMk (by fun_prop)
+  refine MeasFam.compute (mp_mul ?_ ?_) ?_
+  · fun_prop
+  · fun_prop
+  refine MeasFam.poissonT measurable_snd ?_
+  apply MeasFam.bind'
+  · apply mf_halve <;> fun_prop
+  refine MeasFam.computeConst _ ?_
+  apply MeasFam.bind'
+  · apply MeasFam.loopTree
+    · fun_prop
+    · refine MeasFam.bind' ((mf_sampleUntilAccepted L _ _ K.dimN fuel).comp
+        (φ := fun _ => ()) measurable_const) ?_
+      refine MeasFam.compute (mp_push (by fun_prop) measurable_snd) ?_
+      apply MeasFam.compute
+      · exact MP.bind' (MP.const _) (mp_addN (by fun_prop) measurable_snd)
+      exact MeasFam.pure (measurable_inl.comp (by fun_prop))
+    · fun_prop
+  · refine MeasFam.pure (State.measurable_mk ?_ ?_ ?_)
+    · fun_prop
+    · exact measurable_fst.comp ((measurable_id.sumElim measurable_from_top).comp measurable_snd)
+    · exact measurable_snd.comp ((measurable_id.sumElim measurable_from_top).comp measurable_snd)
+
+theorem mf_estimator (fuel : ℕ) (cs : List (ComponentInput d)) (eps delta : ℝ) :
+    MeasFam fun _ : Q => estimatorT (cv18T d) fuel cs eps delta := by
+  cases cs with
+  | nil => exact MeasFam.computeEnd (MP.const _)
+  | cons c cs =>
+      unfold estimatorT
+      refine MeasFam.computeConst _ ?_
+      refine MeasFam.computeConst _ ?_
+      refine MeasFam.computeConst _ ?_
+      refine MeasFam.bind' ((MeasFam.foldlM_fixed
+        (g := fun (_ : Q) s L => stepT (cv18T d) fuel _ L s)
+        (fun L => mf_step fuel _ L (s := fun p : Q × State d => p.2) measurable_snd) _).comp
+        (φ := fun q => (q, _)) (measurable_id.prodMk measurable_const)) ?_
+      refine MeasFam.computeEnd ?_
+      refine MP.bind' (mp_cast (State.measurable_size.comp measurable_snd)) ?_
+      refine MP.bind' (mp_mul (State.measurable_p.comp (by fun_prop)) measurable_const) ?_
+      exact mp_div (by fun_prop) measurable_snd
+
+/-- **The run of the whole program is a measurable function of the tape.** -/
+theorem measurable_exec_estimatorT (fuel : ℕ) (cs : List (ComponentInput d)) (eps delta : ℝ)
+    (b : ℕ) :
+    Measurable fun t => outcome (exec (estimatorT (cv18T d) fuel cs eps delta) b t) :=
+  (mf_estimator (Q := Unit) fuel cs eps delta).outcome () b
+
 end ttc.Tape
