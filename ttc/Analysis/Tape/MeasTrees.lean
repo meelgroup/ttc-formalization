@@ -163,4 +163,127 @@ theorem mf_halve (K : Params) :
         (size := fun x => x.1.1.2.2) (N := fun x => x.1.2) (by fun_prop) (by fun_prop)
         (by fun_prop) (by fun_prop)
 
+/-! ## CV18 -/
+
+/-- A membership routine with measurable value and count. -/
+def MemberMP (member : NumPoint d → Prog Bool) : Prop :=
+  ∀ (Q : Type) [MeasurableSpace Q] (x : Q → NumPoint d), Measurable x → MP fun q => member (x q)
+
+/-- A weight with measurable value and count. -/
+def WeightMP (weight : NumPoint d → Prog (Num ℝ)) : Prop :=
+  ∀ (Q : Type) [MeasurableSpace Q] (x : Q → NumPoint d), Measurable x → MP fun q => weight (x q)
+
+section CV18
+
+variable (G : RunConstants) {member : NumPoint d → Prog Bool} (hmem : MemberMP member)
+include hmem
+
+theorem mf_isMember {x : Q → NumPoint d} (hx : Measurable x) :
+    MeasFam fun q => isMemberT d member (x q) := by
+  unfold isMemberT
+  refine MeasFam.spendT ?_
+  exact MeasFam.iteB measurable_snd (MeasFam.computeEnd (hmem _ _ (hx.comp measurable_fst)))
+    MeasFam.fail
+
+theorem mf_ballWalkStep (P : PhaseConstants) (sigma2 : Num ℝ) {x : Q → NumPoint d}
+    (hx : Measurable x) : MeasFam fun q => ballWalkStepT d G member P sigma2 (x q) := by
+  unfold ballWalkStepT
+  refine MeasFam.gaussianT ?_
+  refine MeasFam.unitT ?_
+  refine MeasFam.compute (mp_ballProposalProg measurable_const ?_ measurable_const ?_ ?_) ?_
+  · fun_prop
+  · fun_prop
+  · fun_prop
+  refine MeasFam.bind' (mf_isMember hmem (x := fun p : ((Q × NumPoint d) × Num ℝ) ×
+    NumPoint d => p.2) measurable_snd) ?_
+  refine MeasFam.unitT ?_
+  refine MeasFam.compute (mp_properTestProg measurable_const measurable_const ?_) ?_
+  · fun_prop
+  refine MeasFam.compute (mp_lazyTestProg measurable_const ?_ ?_ ?_) ?_
+  · fun_prop
+  · fun_prop
+  · fun_prop
+  refine MeasFam.iteP ?_ (MeasFam.pure ?_) (MeasFam.pure ?_)
+  · exact (measurableSet_eq_fun (by fun_prop) measurable_const).inter
+      (measurableSet_eq_fun (by fun_prop) measurable_const)
+  · exact measurable_const.prodMk (measurable_bif (by fun_prop) (by fun_prop) (by fun_prop))
+  · fun_prop
+
+theorem mf_properWalkRound (P : PhaseConstants) (sigma2 : Num ℝ) {left : Q → Num ℕ}
+    {x : Q → NumPoint d} (hl : Measurable left) (hx : Measurable x) :
+    MeasFam fun q => properWalkRoundT d G member P sigma2 (left q) (x q) := by
+  unfold properWalkRoundT
+  apply MeasFam.compute
+  · exact MP.bind' (MP.const _) (mp_leN (by fun_prop) measurable_snd)
+  refine MeasFam.iteB measurable_snd ?_ ?_
+  · refine MeasFam.compute (mp_smul measurable_const ?_) ?_
+    · fun_prop
+    refine MeasFam.bind' (mf_isMember hmem (x := fun p : (Q × Bool) × NumPoint d => p.2)
+      measurable_snd) (MeasFam.pure ?_)
+    exact measurable_inr.comp (by fun_prop)
+  · refine MeasFam.bind' (mf_ballWalkStep G hmem P sigma2 (x := fun p : Q × Bool => x p.1)
+      (by fun_prop)) ?_
+    refine MeasFam.iteB (by fun_prop) ?_ (MeasFam.pure ?_)
+    · apply MeasFam.compute
+      · exact MP.bind' (MP.const _) (mp_subN (by fun_prop) measurable_snd)
+      exact MeasFam.pure (measurable_inl.comp (by fun_prop))
+    · exact measurable_inl.comp (by fun_prop)
+
+theorem mf_properWalk (P : PhaseConstants) (sigma2 : Num ℝ) (cap : Num ℕ) {x : Q → NumPoint d}
+    (hx : Measurable x) : MeasFam fun q => properWalkT d G member P sigma2 cap (x q) := by
+  unfold properWalkT
+  refine MeasFam.bind' (MeasFam.loopTree measurable_const
+    (body := fun _ s => properWalkRoundT d G member P sigma2 s.1 s.2) ?_
+    (measurable_const.prodMk hx)) (MeasFam.pure ?_)
+  · exact mf_properWalkRound G hmem P sigma2 (left := fun p : Q × (Num ℕ × NumPoint d) => p.2.1)
+      (x := fun p => p.2.2) (by fun_prop) (by fun_prop)
+  · exact (measurable_const.sumElim measurable_some).comp measurable_snd
+
+theorem mf_rejectionAttempt (P : PhaseConstants) (sigma2 : Num ℝ) {x : Q → NumPoint d}
+    (hx : Measurable x) : MeasFam fun q => rejectionAttemptT d G member P sigma2 (x q) := by
+  unfold rejectionAttemptT
+  refine MeasFam.compute (mp_smul measurable_const hx) ?_
+  refine MeasFam.bind' (mf_isMember hmem (x := fun p : Q × NumPoint d => p.2)
+    measurable_snd) ?_
+  refine MeasFam.unitT ?_
+  refine MeasFam.compute (mp_properTestProg measurable_const measurable_const ?_) ?_
+  · fun_prop
+  refine MeasFam.compute (mp_scaleAcceptTestProg measurable_const measurable_const ?_ ?_) ?_
+  · fun_prop
+  · fun_prop
+  refine MeasFam.iteP ?_ (MeasFam.pure ?_) (MeasFam.pure ?_)
+  · exact (measurableSet_eq_fun (by fun_prop) measurable_const).inter
+      ((measurableSet_eq_fun (by fun_prop) measurable_const).inter
+        (measurableSet_eq_fun (by fun_prop) measurable_const))
+  · fun_prop
+  · fun_prop
+
+theorem mf_sampleAttempt (P : PhaseConstants) (sigma2 : Num ℝ) (walkCap : Num ℕ)
+    {x : Q → NumPoint d} (hx : Measurable x) :
+    MeasFam fun q => sampleAttemptT d G member P sigma2 walkCap (x q) := by
+  unfold sampleAttemptT
+  refine MeasFam.bind' (mf_properWalk G hmem P sigma2 walkCap hx) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.pure measurable_const) ?_
+  refine MeasFam.bind' (mf_rejectionAttempt G hmem P sigma2 (x := fun p : (Q × _) × _ => p.2)
+    measurable_snd) ?_
+  refine MeasFam.iteB (by fun_prop) (MeasFam.pure ?_) (MeasFam.pure ?_)
+  · exact measurable_inr.comp (measurable_some.comp (by fun_prop))
+  · exact measurable_inl.comp (by fun_prop)
+
+omit hmem in
+theorem mf_sampleFinish {weight : NumPoint d → Prog (Num ℝ)} (hw : WeightMP weight)
+    {total : Q → Num ℝ} (ht : Measurable total)
+    {a : Q → NumPoint d ⊕ Option (NumPoint d × NumPoint d)} (ha : Measurable a) :
+    MeasFam fun q => sampleFinishT d weight (total q) (a q) := by
+  unfold sampleFinishT
+  refine MeasFam.sumElim ha (MeasFam.pure measurable_const) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.pure measurable_const) ?_
+  refine MeasFam.compute (hw _ (fun p : (Q × Option (NumPoint d × NumPoint d)) ×
+    (NumPoint d × NumPoint d) => p.2.1) (by fun_prop)) ?_
+  refine MeasFam.compute (mp_add ?_ measurable_snd) ?_
+  · exact ht.comp (by fun_prop)
+  exact MeasFam.pure (measurable_inl.comp (measurable_snd.prodMk (by fun_prop)))
+
+end CV18
+
 end ttc.Tape
