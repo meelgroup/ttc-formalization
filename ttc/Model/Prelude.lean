@@ -286,6 +286,24 @@ def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
 /-- The accuracy `ε / 96` passed to `GetPrecision` in line 3 of Algorithm `ttc`. -/
 def ApproxParams.precisionEta (p : ApproxParams) : Real := p.epsilon / 96
 
+/-! ## What the program is given
+
+The preprocessing (`BooleanAbstraction`, `toDNF`, normalization) and the linear programs
+(`MaxInscribedBall` and `BoundingRadius`) are not part of the charged program: their
+results are its input.  A component is handed over as its facets and those LP results;
+the program reads every number it is given into the sealed world, at the price of one
+literal each. -/
+
+/-- One component, as the program receives it: its facets `aⱼ · x ≤ bⱼ`, the centre `z`
+and radius `γ` of a largest inscribed ball, and the bounding radius `R₀` about `z`. -/
+structure ComponentInput (n : Nat) where
+  facetCount : Nat
+  normal : Fin facetCount → Point n
+  offset : Fin facetCount → Real
+  inradius : Real
+  incenter : Point n
+  boundingRadius : Real
+
 /-! ## Cost model
 
 ### Counting arithmetic operations
