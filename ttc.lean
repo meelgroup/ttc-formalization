@@ -10,7 +10,7 @@ Keep this file a pure aggregation of area roots — put content in the modules.
 import ttc.Model.Theorem
 import ttc.Model.SealedRun
 import ttc.Analysis.Tape.Bridge
-import ttc.Analysis.Tape.HitAndRunLaw
+import ttc.Analysis.Tape.SampleLaw
 import ttc.Analysis.ChargedCV18.Theorem
 import ttc.Analysis.L2LatticeUnion
 import ttc.Analysis.TTCProbabilityMeasure
