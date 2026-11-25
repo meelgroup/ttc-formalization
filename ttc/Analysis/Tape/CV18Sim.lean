@@ -689,4 +689,156 @@ theorem sim_figureOneRun :
 
 end Procedures
 
+
+/-! ## The top level: no outer cap -/
+
+section Top
+
+variable {O : EuclideanSpace ℝ (Fin d) → Bool}
+
+theorem cexec_top_budget (P : ChargedProgram d α) (t : Tape d) : (cexec O P ⊤ t).2.1 = ⊤ := by
+  induction P generalizing t with
+  | pure a => rfl
+  | query x k ih =>
+      simp only [cexec, ENat.top_ne_zero, ite_false, enat_top_sub_one]
+      exact ih _ t
+  | randomNat law k ih => exact ih _ t
+  | randomPoint law h k ih => exact ih _ _
+  | randomReal law h k ih => exact ih _ _
+  | tick c k ih => exact ih t
+
+variable (O) in
+/-- **`p` runs like `P` with no cap on `P`**: from every number of calls left for `p`, the
+results are related by `R`, and the tapes left are the same. -/
+def SimTop (R : α → β → Prop) (p : Tree d α) (P : ChargedProgram d β) : Prop :=
+  ∀ (b : ℕ) (t : Tape d), Option.Rel R (exec p b t).1 (cexec O P ⊤ t).1 ∧
+    (exec p b t).2.2.2 = (cexec O P ⊤ t).2.2
+
+theorem SimTop.bind {R : α → β → Prop} {S : γ → δ → Prop} {p : Tree d α}
+    {P : ChargedProgram d β} {f : α → Tree d γ} {F : β → ChargedProgram d δ}
+    (hp : SimTop O R p P) (hf : ∀ a a', R a a' → SimTop O S (f a) (F a')) :
+    SimTop O S (p.bind f) (P.bind F) := by
+  intro b t
+  rw [exec_bind, cexec_bind]
+  obtain ⟨h1, h3⟩ := hp b t
+  have h2 := cexec_top_budget (O := O) P t
+  rcases e : exec p b t with ⟨o, m, b', t'⟩
+  rcases E : cexec O P ⊤ t with ⟨o', B', T'⟩
+  rw [e, E] at h1 h3
+  rw [E] at h2
+  simp only at h1 h2 h3
+  subst h2 h3
+  cases h1 with
+  | none => exact ⟨Option.Rel.none, rfl⟩
+  | some h => exact hf _ _ h b' t'
+
+theorem simTop_pure {R : α → β → Prop} {a : α} {a' : β} (h : R a a') :
+    SimTop O R (Tree.pure a) (ChargedProgram.pure a') :=
+  fun _ _ => ⟨Option.Rel.some h, rfl⟩
+
+theorem simTop_compute {R : α → β → Prop} (c : Prog α) (c' : ttc.ChargedCV18.Counted β)
+    (h : R c.val c'.value) : SimTop O R (compute c) (ttc.ChargedCV18.compute c') :=
+  fun _ _ => ⟨Option.Rel.some h, rfl⟩
+
+theorem simTop_loopRounds {β' : Type} {body : β → Tree d (β ⊕ β')}
+    {body' : β → ChargedProgram d (β ⊕ β')} (h : ∀ s, SimTop O Eq (body s) (body' s)) :
+    ∀ (k : ℕ) (s : β), SimTop O Eq (loopRounds body k s) (ChargedProgram.loopRounds body' k s)
+  | 0, s => simTop_pure rfl
+  | k + 1, s => by
+      refine SimTop.bind (h s) fun r r' hr => ?_
+      subst hr
+      rcases r with s' | c
+      · exact simTop_loopRounds h k s'
+      · exact simTop_pure rfl
+
+theorem simTop_loopTree {β' : Type} (count : Num ℕ) {body : β → Tree d (β ⊕ β')}
+    {body' : β → ChargedProgram d (β ⊕ β')} (h : ∀ s, SimTop O Eq (body s) (body' s)) (init : β) :
+    SimTop O Eq (loopTree count body init) (ttc.ChargedCV18.loopUntil count body' init) :=
+  fun b t => simTop_loopRounds h count.get init b t
+
+theorem simTop_repeatIndependently (count : Num ℕ) {body : Tree d (Num ℝ)}
+    {body' : ChargedProgram d (Num ℝ)} (h : SimTop O Eq body body') :
+    SimTop O Eq (repeatIndependentlyT count body)
+      (ttc.ChargedCV18.repeatIndependently count body') := by
+  refine SimTop.bind (simTop_loopTree count (fun es => SimTop.bind h fun x _ hx => ?_) [])
+    fun r _ hr => ?_
+  · subst hx
+    exact SimTop.bind (simTop_compute _ _ (rfl : (ttc.Program.A.push es x).val = _))
+      fun _ _ h => h ▸ simTop_pure rfl
+  · subst hr
+    rcases r with _ | e
+    · exact simTop_pure rfl
+    · exact e.elim
+
+end Top
+
+
+/-! ## CV18 -/
+
+section CV18
+
+open ttc.Program
+open ArlibCommunity.Algorithms.CV18 (VolumeParams)
+
+variable (q : VolumeParams) (member : NumPoint q.n → Prog Bool)
+
+local notation "O" => memberOracle member
+
+/-- **The capped run**: the cap set by `queryCap` is the charged program's query cap. -/
+theorem simTop_cappedRun (G : ttc.Program.RunConstants) :
+    SimTop O Eq (cappedRunT q.n G member) (ttc.ChargedCV18.cappedRun q (RunConstants.toC G)) := by
+  intro b t
+  obtain ⟨h1, h2, h3⟩ := sim_figureOneRun q G member G.queryBudget.get t
+  have hours : exec (cappedRunT q.n G member) b t =
+      let r := exec (figureOneRunT q.n G member) G.queryBudget.get t
+      match r with
+      | (some a, m, b', t') => (some a, 1 + m, b', t')
+      | (none, m, b', t') =>
+          let r' := exec (compute (A.lit (0 : ℝ))) b' t'
+          (r'.1, 1 + (m + r'.2.1), r'.2.2) := by
+    show exec (Tree.setBudget G.queryBudget ((Tree.pure ()).bind fun _ =>
+      (figureOneRunT q.n G member).orElse (compute (A.lit (0 : ℝ))))) b t = _
+    simp only [exec, Tree.bind, Tree.exec_orElse]
+    rcases exec (figureOneRunT q.n G member) G.queryBudget.get t with ⟨_ | a, m, b', t'⟩ <;> rfl
+  have htheirs : cexec O (ttc.ChargedCV18.cappedRun q (RunConstants.toC G)) ⊤ t =
+      match (cexec O (ttc.ChargedCV18.figureOneRun q (RunConstants.toC G)) G.queryBudget.get t).1 with
+      | some e => (some e, ⊤, (cexec O (ttc.ChargedCV18.figureOneRun q (RunConstants.toC G))
+          G.queryBudget.get t).2.2)
+      | none => (some (ttc.ChargedCV18.Counted.lit (0 : ℝ)).value, ⊤,
+          (cexec O (ttc.ChargedCV18.figureOneRun q (RunConstants.toC G)) G.queryBudget.get t).2.2) := by
+    show cexec O ((ChargedProgram.tick _ ((ttc.ChargedCV18.figureOneRun q (RunConstants.toC G)).withQueryCap
+      G.queryBudget.get)).bind _) ⊤ t = _
+    rw [cexec_bind]
+    simp only [cexec]
+    rw [cexec_withQueryCap]
+    rcases (cexec O (ttc.ChargedCV18.figureOneRun q (RunConstants.toC G)) G.queryBudget.get t).1
+      with _ | e <;> rfl
+  rw [hours, htheirs]
+  rcases e : exec (figureOneRunT q.n G member) G.queryBudget.get t with ⟨o, m, b', t'⟩
+  rw [e] at h1 h2 h3
+  simp only at h1 h3
+  rw [← h3]
+  generalize (cexec O (ttc.ChargedCV18.figureOneRun q (RunConstants.toC G)) G.queryBudget.get t).1
+    = y at h1 ⊢
+  cases h1 with
+  | none => exact ⟨Option.Rel.some (Num.ext rfl), rfl⟩
+  | some h => exact ⟨Option.Rel.some h, rfl⟩
+
+/-- **CV18 runs like the charged CV18 program**: on every tape, the sealed program's
+estimate is the charged program's, when the charged program's queries are answered by the
+sealed program's membership routine. -/
+theorem simTop_cv18T (eps roundness p : Num ℝ) (he : eps.get = q.eps)
+    (hr : roundness.get = q.roundness) (hp : p.get = q.p) :
+    SimTop O (fun (m : Num ℝ) (r : ℝ) => m.get = r) (cv18T q.n member eps roundness p)
+      (ttc.ChargedCV18.cv18Program q) := by
+  refine SimTop.bind (simTop_compute (R := fun G G' => RunConstants.toC G = G') _ _
+    (val_runConstantsProg q eps roundness p he hr hp)) fun G _ h => ?_
+  subst h
+  refine SimTop.bind (simTop_repeatIndependently _ (simTop_cappedRun q member G)) fun est _ h => ?_
+  subst h
+  show SimTop O _ ((compute (A.median G.repetitions est)).bind Tree.pure) _
+  exact SimTop.bind (simTop_compute _ _ (val_median_eq _ _)) fun m _ h => h ▸ simTop_pure rfl
+
+end CV18
+
 end ttc.Tape
