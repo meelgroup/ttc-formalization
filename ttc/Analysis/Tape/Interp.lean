@@ -71,6 +71,10 @@ theorem cost_charged_bind {γ δ : Type} (p : Prog γ) (f : γ → Prog δ) :
     (Charged.bind p f).cost = p.cost + (f p.val).cost :=
   Charged.cost_bind p f
 
+theorem val_charged_bind {γ δ : Type} (p : Prog γ) (f : γ → Prog δ) :
+    (Charged.bind p f).val = (f p.val).val :=
+  Charged.val_bind p f
+
 theorem cost_charged_pure {γ : Type} (a : γ) : (Charged.pure a : Prog γ).cost = 0 := rfl
 
 variable (t : Tape n) (b : ℕ)
