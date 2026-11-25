@@ -247,4 +247,182 @@ theorem tapeLaw_map_cexec [MeasurableSpace α] (P : ChargedProgram d α) (hP : C
       rw [Measure.map_bind hK.aemeasurable ArlibCommunity.Algorithms.CV18.measurable_some.aemeasurable]
   | tick c k ih => exact ih hP hm
 
+
+/-! ## The charged CV18 draws only what the tape provides -/
+
+section Std
+
+open ArlibCommunity.Algorithms.CV18 (VolumeParams)
+
+theorem chargedStd_pure (a : α) : ChargedStd (ChargedProgram.pure (n := d) a) := trivial
+
+theorem chargedStd_compute (c : ttc.ChargedCV18.Counted α) :
+    ChargedStd (ttc.ChargedCV18.compute (n := d) c) := trivial
+
+theorem chargedStd_drawPoint :
+    ChargedStd (ttc.ChargedCV18.drawPoint (ttc.ChargedCV18.standardGaussian d)) :=
+  ⟨rfl, fun _ => trivial⟩
+
+theorem chargedStd_drawReal :
+    ChargedStd (ttc.ChargedCV18.drawReal (n := d) ArlibCommunity.Algorithms.CV18.uniformUnit) :=
+  ⟨ttc.ChargedCV18.uniformUnit_eq, fun _ => trivial⟩
+
+theorem chargedStd_isMember (x : ttc.ChargedCV18.NumPoint d) :
+    ChargedStd (ttc.ChargedCV18.isMember x) := fun _ => trivial
+
+theorem chargedStd_ite (c : Prop) [Decidable c] {P Q : ChargedProgram d α} (hP : ChargedStd P)
+    (hQ : ChargedStd Q) : ChargedStd (if c then P else Q) := by
+  split_ifs <;> assumption
+
+theorem chargedStd_loopRounds {β' : Type} {body : β → ChargedProgram d (β ⊕ β')}
+    (h : ∀ s, ChargedStd (body s)) :
+    ∀ (k : ℕ) (s : β), ChargedStd (ChargedProgram.loopRounds body k s)
+  | 0, _ => trivial
+  | k + 1, s => ChargedStd.bind (h s) fun r => by
+      rcases r with s' | c
+      · exact chargedStd_loopRounds h k s'
+      · trivial
+
+theorem chargedStd_loopUntil {β' : Type} (count : Arlib.Computation.Num ℕ)
+    {body : β → ChargedProgram d (β ⊕ β')} (h : ∀ s, ChargedStd (body s)) (init : β) :
+    ChargedStd (ttc.ChargedCV18.loopUntil count body init) :=
+  chargedStd_loopRounds h _ init
+
+theorem chargedStd_withQueryCap (P : ChargedProgram d α) (hP : ChargedStd P) :
+    ∀ c : ℕ, ChargedStd (P.withQueryCap c) := by
+  induction P with
+  | pure a => intro c; trivial
+  | query x k ih =>
+      intro c
+      cases c with
+      | zero => trivial
+      | succ c => exact fun a => ih a (hP a) c
+  | randomNat law k ih => exact hP.elim
+  | randomPoint law h k ih => exact fun c => ⟨hP.1, fun g => ih g (hP.2 g) c⟩
+  | randomReal law h k ih => exact fun c => ⟨hP.1, fun v => ih v (hP.2 v) c⟩
+  | tick ops k ih => exact fun c => ih hP c
+
+section Procedures
+
+open ttc.ChargedCV18
+
+variable (q : VolumeParams) (G : ttc.ChargedCV18.RunConstants)
+
+local notation "NP" => ttc.ChargedCV18.NumPoint q.n
+
+theorem chargedStd_ballWalkStep (P : PhaseConstants) (s : Arlib.Computation.Num ℝ) (x : NP) :
+    ChargedStd (ballWalkStep q G P s x) :=
+  ChargedStd.bind chargedStd_drawPoint fun _ => ChargedStd.bind chargedStd_drawReal fun _ =>
+  ChargedStd.bind (chargedStd_compute _) fun _ => ChargedStd.bind (chargedStd_isMember _) fun _ =>
+  ChargedStd.bind chargedStd_drawReal fun _ => ChargedStd.bind (chargedStd_compute _) fun _ =>
+  ChargedStd.bind (chargedStd_compute _) fun _ => chargedStd_ite _ trivial trivial
+
+theorem chargedStd_properWalkRound (P : PhaseConstants) (s : Arlib.Computation.Num ℝ)
+    (left : Arlib.Computation.Num ℕ) (x : NP) : ChargedStd (properWalkRound q G P s left x) :=
+  ChargedStd.bind (chargedStd_compute _) fun _ => chargedStd_ite _
+    (ChargedStd.bind (chargedStd_compute _) fun _ => ChargedStd.bind (chargedStd_isMember _)
+      fun _ => trivial)
+    (ChargedStd.bind (chargedStd_ballWalkStep q G P s x) fun r => by
+      rcases r with ⟨proper, y⟩
+      exact chargedStd_ite _ (ChargedStd.bind (chargedStd_compute _) fun _ => trivial) trivial)
+
+theorem chargedStd_properWalk (P : PhaseConstants) (s : Arlib.Computation.Num ℝ)
+    (cap : Arlib.Computation.Num ℕ) (x : NP) : ChargedStd (properWalk q G P s cap x) :=
+  ChargedStd.bind (chargedStd_loopUntil _ (fun st => chargedStd_properWalkRound q G P s st.1 st.2) _)
+    fun _ => trivial
+
+theorem chargedStd_rejectionAttempt (P : PhaseConstants) (s : Arlib.Computation.Num ℝ) (x : NP) :
+    ChargedStd (rejectionAttempt q G P s x) :=
+  ChargedStd.bind (chargedStd_compute _) fun _ => ChargedStd.bind (chargedStd_isMember _) fun _ =>
+  ChargedStd.bind chargedStd_drawReal fun _ => ChargedStd.bind (chargedStd_compute _) fun _ =>
+  ChargedStd.bind (chargedStd_compute _) fun _ => chargedStd_ite _ trivial trivial
+
+theorem chargedStd_sampleAttempt (P : PhaseConstants) (s : Arlib.Computation.Num ℝ)
+    (walkCap : Arlib.Computation.Num ℕ) (x : NP) : ChargedStd (sampleAttempt q G P s walkCap x) :=
+  ChargedStd.bind (chargedStd_properWalk q G P s walkCap x) fun r => by
+    rcases r with _ | y
+    · trivial
+    · exact ChargedStd.bind (chargedStd_rejectionAttempt q G P s y) fun a => by
+        rcases a with ⟨acc, z⟩
+        exact chargedStd_ite _ trivial trivial
+
+theorem chargedStd_sampleFinish (weight : NP → ttc.ChargedCV18.Counted (Arlib.Computation.Num ℝ))
+    (total : Arlib.Computation.Num ℝ) (a : NP ⊕ Option (NP × NP)) :
+    ChargedStd (sampleFinish q weight total a) := by
+  rcases a with _ | _ | ⟨z, y⟩
+  · trivial
+  · trivial
+  · exact ChargedStd.bind (chargedStd_compute _) fun _ =>
+      ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+
+theorem chargedStd_collectSamples (P : PhaseConstants) (s : Arlib.Computation.Num ℝ)
+    (weight : NP → ttc.ChargedCV18.Counted (Arlib.Computation.Num ℝ)) (samples : Arlib.Computation.Num ℕ)
+    (start : NP) : ChargedStd (collectSamples q G P s weight samples start) :=
+  ChargedStd.bind (chargedStd_compute _) fun c => by
+    rcases c with ⟨zero, walkCap⟩
+    exact ChargedStd.bind (chargedStd_loopUntil _ (fun st =>
+      ChargedStd.bind (chargedStd_loopUntil _ (fun x => chargedStd_sampleAttempt q G P s walkCap x) _)
+        fun a => chargedStd_sampleFinish q weight st.1 a) _) fun _ => trivial
+
+theorem chargedStd_coolingPhase (s t : Arlib.Computation.Num ℝ) (x : NP) :
+    ChargedStd (coolingPhase q G s t x) :=
+  ChargedStd.bind (chargedStd_compute _) fun P => ChargedStd.bind (chargedStd_compute _) fun start =>
+    ChargedStd.bind (chargedStd_collectSamples q G P s _ _ start) fun r => by
+      rcases r with _ | ⟨total, y⟩
+      · trivial
+      · exact ChargedStd.bind (chargedStd_compute _) fun _ =>
+          ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+
+theorem chargedStd_uniformPhase (s : Arlib.Computation.Num ℝ) (x : NP) :
+    ChargedStd (uniformPhase q G s x) :=
+  ChargedStd.bind (chargedStd_compute _) fun P => ChargedStd.bind (chargedStd_compute _) fun start =>
+    ChargedStd.bind (chargedStd_collectSamples q G P s _ _ start) fun r => by
+      rcases r with _ | ⟨total, y⟩
+      · trivial
+      · exact ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+
+theorem chargedStd_coolingPhases :
+    ∀ (l : List (Arlib.Computation.Num ℝ)) (x : NP), ChargedStd (coolingPhases q G l x)
+  | s :: t :: rest, x =>
+      ChargedStd.bind (chargedStd_compute _) fun _ => ChargedStd.bind (chargedStd_compute _) fun _ =>
+        ChargedStd.bind (chargedStd_coolingPhase q G _ _ x) fun r => by
+          rcases r with _ | ⟨W, y⟩
+          · trivial
+          · exact ChargedStd.bind (chargedStd_coolingPhases (t :: rest) y) fun r' => by
+              rcases r' with _ | ⟨product, z⟩
+              · trivial
+              · exact ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+  | [], x => ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+  | [_], x => ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+
+theorem chargedStd_figureOneRun : ChargedStd (figureOneRun q G) :=
+  ChargedStd.bind (ChargedStd.bind chargedStd_drawPoint fun _ =>
+    ChargedStd.bind (chargedStd_compute _) fun _ => ChargedStd.bind (chargedStd_isMember _) fun _ =>
+    ChargedStd.bind (chargedStd_compute _) fun _ => trivial) fun r₀ => by
+    rcases r₀ with _ | x₀
+    · trivial
+    · exact ChargedStd.bind (chargedStd_coolingPhases q G _ x₀) fun r₁ => by
+        rcases r₁ with _ | ⟨product, x⟩
+        · trivial
+        · exact ChargedStd.bind (chargedStd_uniformPhase q G _ x) fun r₂ => by
+            rcases r₂ with _ | U
+            · trivial
+            · trivial
+
+/-- **The charged CV18 program draws only standard Gaussian vectors and uniform numbers.** -/
+theorem chargedStd_cv18Program : ChargedStd (cv18Program q) := by
+  unfold cv18Program
+  refine ChargedStd.bind (chargedStd_compute _) fun G => ?_
+  refine ChargedStd.bind ?_ fun _ => ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+  unfold repeatIndependently
+  refine ChargedStd.bind (chargedStd_loopUntil _ (fun es => ?_) _) fun _ => trivial
+  refine ChargedStd.bind ?_ fun _ => ChargedStd.bind (chargedStd_compute _) fun _ => trivial
+  unfold cappedRun
+  refine ChargedStd.bind (chargedStd_withQueryCap _ (chargedStd_figureOneRun q G) _) fun r => ?_
+  rcases r with _ | e <;> trivial
+
+end Procedures
+
+end Std
+
 end ttc.Tape
