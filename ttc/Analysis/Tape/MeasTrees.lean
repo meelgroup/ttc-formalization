@@ -286,4 +286,144 @@ theorem mf_sampleFinish {weight : NumPoint d → Prog (Num ℝ)} (hw : WeightMP 
 
 end CV18
 
+theorem weightMP_gaussian (s t : Num ℝ) : WeightMP (d := d) (gaussianRatioWeightProg s t) :=
+  fun _ _ _ hx => mp_gaussianRatioWeightProg measurable_const measurable_const hx
+
+theorem weightMP_uniform (s : Num ℝ) : WeightMP (d := d) (uniformRatioWeightProg s) :=
+  fun _ _ _ hx => mp_uniformRatioWeightProg measurable_const hx
+
+section CV18b
+
+variable (G : RunConstants) {member : NumPoint d → Prog Bool} (hmem : MemberMP member)
+include hmem
+
+theorem mf_sampleRound (P : PhaseConstants) (sigma2 : Num ℝ)
+    {weight : NumPoint d → Prog (Num ℝ)} (hw : WeightMP weight) (walkCap : Num ℕ)
+    {state : Q → Num ℝ × NumPoint d} (hs : Measurable state) :
+    MeasFam fun q => sampleRoundT d G member P sigma2 weight walkCap (state q) := by
+  unfold sampleRoundT
+  refine MeasFam.bind' (MeasFam.loopTree measurable_const
+    (body := fun _ x => sampleAttemptT d G member P sigma2 walkCap x) ?_ (by fun_prop)) ?_
+  · exact mf_sampleAttempt G hmem P sigma2 walkCap (x := fun p : Q × NumPoint d => p.2)
+      measurable_snd
+  · exact mf_sampleFinish hw (total := fun p : Q × _ => (state p.1).1) (by fun_prop)
+      measurable_snd
+
+theorem mf_collectSamples (P : PhaseConstants) (sigma2 : Num ℝ)
+    {weight : NumPoint d → Prog (Num ℝ)} (hw : WeightMP weight) (samples : Num ℕ)
+    {start : Q → NumPoint d} (hs : Measurable start) :
+    MeasFam fun q => collectSamplesT d G member P sigma2 weight samples (start q) := by
+  unfold collectSamplesT
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.bind' (MeasFam.loopTree measurable_const
+    (body := fun _ st => sampleRoundT d G member P sigma2 weight _ st) ?_ (by fun_prop))
+    (MeasFam.pure ?_)
+  · exact mf_sampleRound G hmem P sigma2 hw _ (state := fun p : Q × (Num ℝ × NumPoint d) => p.2)
+      measurable_snd
+  · exact (measurable_some.sumElim measurable_const).comp measurable_snd
+
+theorem mf_coolingPhase (sigma2 tau2 : Num ℝ) {x : Q → NumPoint d} (hx : Measurable x) :
+    MeasFam fun q => coolingPhaseT d G member sigma2 tau2 (x q) := by
+  unfold coolingPhaseT
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.compute (mp_smul measurable_const hx) ?_
+  refine MeasFam.bind' (mf_collectSamples G hmem _ _ (weightMP_gaussian _ _) _
+    (start := fun p : Q × NumPoint d => p.2) measurable_snd) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.pure measurable_const) ?_
+  apply MeasFam.compute
+  · exact MP.bind' (MP.const _) (mp_div (by fun_prop) measurable_snd)
+  refine MeasFam.compute (mp_smul measurable_const ?_) ?_
+  · fun_prop
+  exact MeasFam.pure (measurable_some.comp (by fun_prop))
+
+theorem mf_uniformPhase (sigma2 : Num ℝ) {x : Q → NumPoint d} (hx : Measurable x) :
+    MeasFam fun q => uniformPhaseT d G member sigma2 (x q) := by
+  unfold uniformPhaseT
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.compute (mp_smul measurable_const hx) ?_
+  refine MeasFam.bind' (mf_collectSamples G hmem _ _ (weightMP_uniform _) _
+    (start := fun p : Q × NumPoint d => p.2) measurable_snd) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.pure measurable_const) ?_
+  apply MeasFam.compute
+  · exact MP.bind' (MP.const _) (mp_div (by fun_prop) measurable_snd)
+  exact MeasFam.pure (measurable_some.comp measurable_snd)
+
+theorem mf_initialSample : MeasFam fun _ : Q => initialSampleT d G member := by
+  unfold initialSampleT
+  refine MeasFam.gaussianT ?_
+  refine MeasFam.compute (mp_gaussianStartProg measurable_const measurable_snd) ?_
+  refine MeasFam.bind' (mf_isMember hmem (x := fun p : (Q × NumPoint d) × NumPoint d => p.2)
+    measurable_snd) ?_
+  apply MeasFam.compute
+  · exact MP.bind' (mp_norm (by fun_prop)) (mp_le measurable_snd measurable_const)
+  refine MeasFam.pure ?_
+  refine Measurable.ite ?_ (measurable_some.comp (by fun_prop)) measurable_const
+  exact (measurableSet_eq_fun (by fun_prop) measurable_const).inter
+    (measurableSet_eq_fun (by fun_prop) measurable_const)
+
+theorem mf_coolingPhases : ∀ (l : List (Num ℝ)) {Q : Type} [MeasurableSpace Q]
+    {x : Q → NumPoint d}, Measurable x → MeasFam fun q => coolingPhasesT d G member l (x q)
+  | [], Q, _, x, hx => by
+      unfold coolingPhasesT
+      exact MeasFam.computeConst _ (MeasFam.pure (measurable_some.comp
+        (measurable_const.prodMk hx)))
+  | [_], Q, _, x, hx => by
+      unfold coolingPhasesT
+      exact MeasFam.computeConst _ (MeasFam.pure (measurable_some.comp
+        (measurable_const.prodMk hx)))
+  | sigma2 :: tau2 :: rest, Q, _, x, hx => by
+      unfold coolingPhasesT
+      refine MeasFam.computeConst _ ?_
+      refine MeasFam.computeConst _ ?_
+      refine MeasFam.bind' (mf_coolingPhase G hmem _ _ hx) ?_
+      refine MeasFam.optionElim measurable_snd (MeasFam.pure measurable_const) ?_
+      refine MeasFam.bind' (mf_coolingPhases (tau2 :: rest)
+        (Q := (Q × Option (Num ℝ × NumPoint d)) × (Num ℝ × NumPoint d))
+        (x := fun p => p.2.2) (by fun_prop)) ?_
+      refine MeasFam.optionElim measurable_snd (MeasFam.pure measurable_const) ?_
+      refine MeasFam.compute (mp_mul ?_ ?_) ?_
+      · fun_prop
+      · fun_prop
+      exact MeasFam.pure (measurable_some.comp (by fun_prop))
+
+theorem mf_figureOneRun : MeasFam fun _ : Q => figureOneRunT d G member := by
+  unfold figureOneRunT
+  refine MeasFam.bind' (mf_initialSample G hmem) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.computeEnd (MP.const _)) ?_
+  refine MeasFam.bind' (mf_coolingPhases G hmem _ (x := fun p : (Q × _) × NumPoint d => p.2)
+    measurable_snd) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.computeEnd (MP.const _)) ?_
+  refine MeasFam.bind' (mf_uniformPhase G hmem _ (x := fun p : (((Q × Option (NumPoint d)) ×
+    NumPoint d) × Option (Num ℝ × NumPoint d)) × (Num ℝ × NumPoint d) => p.2.2) (by fun_prop)) ?_
+  refine MeasFam.optionElim measurable_snd (MeasFam.computeEnd (MP.const _)) ?_
+  exact MeasFam.computeEnd (MP.bind' (mp_mul measurable_const (by fun_prop))
+    (mp_mul measurable_snd (by fun_prop)))
+
+theorem mf_cappedRun : MeasFam fun _ : Q => cappedRunT d G member := by
+  unfold cappedRunT
+  refine MeasFam.queryCapT _ ?_
+  exact MeasFam.orElse (mf_figureOneRun G hmem) (MeasFam.computeEnd (MP.const _))
+
+end CV18b
+
+theorem mf_repeatIndependently (count : Num ℕ) {body : Tree d (Num ℝ)}
+    (hbody : MeasFam fun _ : Unit => body) :
+    MeasFam fun _ : Q => repeatIndependentlyT count body := by
+  unfold repeatIndependentlyT
+  refine MeasFam.bind' (MeasFam.loopTree measurable_const
+    (body := fun _ estimates => body.bind fun x =>
+      (Tree.compute (A.push estimates x)).bind fun estimates' => Tree.pure (Sum.inl estimates'))
+    ?_ measurable_const) (MeasFam.pure ?_)
+  · refine MeasFam.bind' (hbody.comp (φ := fun _ => ()) measurable_const) ?_
+    refine MeasFam.compute (mp_push (by fun_prop) measurable_snd) ?_
+    exact MeasFam.pure (measurable_inl.comp measurable_snd)
+  · exact (measurable_id.sumElim measurable_from_top).comp measurable_snd
+
+theorem mf_cv18T {member : NumPoint d → Prog Bool} (hmem : MemberMP member) (eps r p : Num ℝ) :
+    MeasFam fun _ : Q => cv18T d member eps r p := by
+  unfold cv18T
+  refine MeasFam.computeConst _ ?_
+  refine MeasFam.bind' (mf_repeatIndependently _ (mf_cappedRun _ hmem)) ?_
+  exact MeasFam.computeEnd (mp_median measurable_const measurable_snd)
+
 end ttc.Tape
