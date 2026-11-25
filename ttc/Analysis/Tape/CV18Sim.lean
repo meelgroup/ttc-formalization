@@ -839,6 +839,39 @@ theorem simTop_cv18T (eps roundness p : Num ℝ) (he : eps.get = q.eps)
   show SimTop O _ ((compute (A.median G.repetitions est)).bind Tree.pure) _
   exact SimTop.bind (simTop_compute _ _ (val_median_eq _ _)) fun m _ h => h ▸ simTop_pure rfl
 
+/-- **The law of the sealed CV18's estimate is the charged CV18's output law** (`runEstimate`),
+with membership queries answered by the sealed program's membership routine.  Through it,
+the CV18 accuracy theorem proved for the charged program holds for the sealed one. -/
+theorem vlaw_cv18T (hmem : MemberMP member) (eps roundness p : Num ℝ) (he : eps.get = q.eps)
+    (hr : roundness.get = q.roundness) (hp : p.get = q.p) (b : ℕ) :
+    (vlaw (cv18T q.n member eps roundness p) b).map (Option.map Num.get) =
+      ((ttc.ChargedCV18.cv18Program q).runEstimate O).map some := by
+  have hm : Measurable fun t => outcome (exec (cv18T q.n member eps roundness p) b t) :=
+    (mf_cv18T (Q := Unit) hmem eps roundness p).outcome () b
+  have hpt : ∀ t, Option.map Num.get (outcome (exec (cv18T q.n member eps roundness p) b t)).1 =
+      (cexec O (ttc.ChargedCV18.cv18Program q) ⊤ t).1 := by
+    intro t
+    have h1 := (simTop_cv18T q member eps roundness p he hr hp b t).1
+    show Option.map Num.get (exec (cv18T q.n member eps roundness p) b t).1 = _
+    generalize (exec (cv18T q.n member eps roundness p) b t).1 = x at h1 ⊢
+    generalize (cexec O (ttc.ChargedCV18.cv18Program q) ⊤ t).1 = y at h1 ⊢
+    cases h1 with
+    | none => rfl
+    | some h => exact congrArg some h
+  have hv : Measurable (Option.map (Num.get : Num ℝ → ℝ)) := measurable_optionMap Num.measurable_get
+  have hfun : (fun t => (cexec O (ttc.ChargedCV18.cv18Program q) ⊤ t).1) =
+      fun t => Option.map Num.get (outcome (exec (cv18T q.n member eps roundness p) b t)).1 :=
+    funext fun t => (hpt t).symm
+  have hcm : Measurable fun t => (cexec O (ttc.ChargedCV18.cv18Program q) ⊤ t).1 := by
+    rw [hfun]
+    exact hv.comp (measurable_fst.comp hm)
+  rw [vlaw, ← tapeLaw_map_exec _ b hm, Measure.map_map measurable_fst hm,
+    Measure.map_map hv (measurable_fst.comp hm)]
+  change (ttc.SealedRun.tapeLaw q.n).map (fun t => Option.map Num.get
+    (outcome (exec (cv18T q.n member eps roundness p) b t)).1) = _
+  rw [← hfun]
+  exact tapeLaw_map_cexec O _ (chargedStd_cv18Program q) hcm
+
 end CV18
 
 end ttc.Tape
