@@ -8,7 +8,7 @@ import ttc.Analysis.ChargedCV18.OperationCost
 # The charged CV18 program: equivalence and costs
 
 arlib-community proves CV18's Theorem 1.1 for its `cv18Program`, which counts membership
-queries only (`cv18TheoremOneOne`).  The charged `cv18Program` of this directory is the
+queries only (`cv18Program_volumeGuarantee`).  The charged `cv18Program` of this directory is the
 same algorithm with its arithmetic run through arlib's charged operations.  This file
 connects the two and adds the arithmetic cost.
 
@@ -68,13 +68,13 @@ theorem cv18Program_queryCost_le_community (q : VolumeParams) :
 /-- **Cousins–Vempala 2018, Theorem 1.1, accuracy**, for the charged program: on a
 well-rounded body with a correct membership oracle, the estimate is within relative error
 `ε` of the volume with probability at least `1 - p`.  It is arlib-community's
-`cv18TheoremOneOne`, through the equal output laws. -/
+`cv18Program_volumeGuarantee`, through the equal output laws. -/
 theorem cv18Program_accuracy (q : VolumeParams) (I : VolumeInput q.n)
     (oracle : MembershipOracle I) (hrounded : WellRounded q I) :
     1 - q.p ≤ outcomeProbability ((cv18Program q).runEstimate oracle.query)
       (accurateOutcome q I) := by
   rw [cv18Program_runEstimate_eq q I oracle]
-  exact (cv18TheoremOneOne q I oracle hrounded).1
+  exact (cv18Program_volumeGuarantee q I oracle hrounded).1
 
 /-- The `confidenceRepetitions q` runs, each capped at `⌈C₀ · rate q⌉` calls, make at most
 `⌈9 (C₀ + 1) · rate q · protectedLog (1/p)⌉` calls together. -/

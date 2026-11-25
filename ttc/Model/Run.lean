@@ -165,7 +165,7 @@ def params {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     exact div_pos (pow_pos (lt_of_lt_of_le one_pos (le_max_left _ _)) 2) hn0
 
 /-- arlib-community's CV18 membership-oracle program `cv18Program`
-(`CV18/Model/Pseudocode.lean`), the subject of `cv18TheoremOneOne`. -/
+(`CV18/Analysis/OracleProgram.lean`), the subject of `cv18Program_volumeGuarantee`. -/
 def algorithm : VolumeAlgorithm :=
   cv18Program
 

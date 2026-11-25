@@ -10,7 +10,7 @@ import ttc.Analysis.ChargedCV18.PointDrawLaws
 /-!
 # The pseudocode is the analysed program
 
-`cv18Program` (`Model/Pseudocode.lean`) holds its numbers sealed and is written in `do`
+`cv18Program` (arlib-community `CV18/Analysis/OracleProgram.lean`) holds its numbers sealed and is written in `do`
 notation.  The proof of Theorem 1.1 was developed against the same algorithm written with
 the program constructors, on plain numbers (`Analysis/ScheduledProgram.lean`).  This file
 proves that the first, with its operation counts erased, refines the second

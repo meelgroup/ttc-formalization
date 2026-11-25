@@ -8,8 +8,8 @@ import ArlibCommunity.Algorithms.CV18
 # Discharging TTC's volume oracle with arlib-community CV18
 
 This module instantiates `NormalizedCV18VolumeProvider` with `cv18Program`,
-the membership-oracle program of arlib-community's `CV18/Model/Pseudocode.lean`,
-using its headline theorem `cv18TheoremOneOne` (`CV18/Model/Theorem.lean`).  The only geometric work here is the
+the membership-oracle program of arlib-community's `CV18/Analysis/OracleProgram.lean`,
+using its guarantee `cv18Program_volumeGuarantee` (`CV18/Analysis/OracleProgramTheorem.lean`).  The only geometric work here is the
 already-proved normalization of a TTC polytope and Corollary `cor:vol`'s roundness
 `E_{P*}‖X‖² ≤ (R₀/γ)²`, with `R₀ = BoundingRadius`.
 -/
@@ -105,8 +105,8 @@ lemma taggedLaw_spec {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
         (o.2 : Real) ∈ Arlib.relErr eta (volume P.cv18Body).toReal := by
   letI : IsProbabilityMeasure (law hn P eta delta h) :=
     law_probability hn P eta delta h
-  -- The public arlib-community headline, CV18 Theorem 1.1.
-  have hfinal := cv18TheoremOneOne
+  -- arlib-community's guarantee for the CV18 oracle program (CV18 Theorem 1.1).
+  have hfinal := cv18Program_volumeGuarantee
   have hevent : accurateOutcome (params hn P eta delta h) (input P) =
       successSet P eta := by
     rfl
@@ -182,7 +182,7 @@ theorem queryCostBound {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (eta delta : Real) (h : AdmissibleCV18Request eta delta) :
     (algorithm (params hn P eta delta h)).queryCost ≤
       Nat.ceil (queryRate (params hn P eta delta h)) :=
-  (cv18TheoremOneOne (params hn P eta delta h) (input P) (oracle P)
+  (cv18Program_volumeGuarantee (params hn P eta delta h) (input P) (oracle P)
     (wellRounded hn P eta delta h)).2
 
 #print axioms provider

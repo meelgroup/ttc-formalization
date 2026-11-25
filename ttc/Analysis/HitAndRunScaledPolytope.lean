@@ -139,11 +139,12 @@ theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
   have hwarm : ArlibCommunity.Algorithms.HitAndRun.WarmStart problem.body
       (ArlibCommunity.Foundations.Convex.uniformOn volume B) M eps ∅ :=
     ⟨MeasurableSet.empty, by simp, hdom⟩
-  -- The public arlib-community Hit-and-Run headline theorem.
+  -- arlib-community's mixing theorem for the exact Hit-and-Run kernel.
   have hmix := ArlibCommunity.Algorithms.HitAndRun.hitAndRun_mixes hn problem
     hM heps0 heps1 hwarm
     (by simpa [ArlibCommunity.Algorithms.HitAndRun.deadline,
       ArlibCommunity.Foundations.MarkovChainTheory.hrDeadlineUncond, problem, M, B] using hm)
+  rw [ArlibCommunity.Algorithms.HitAndRun.target_eq_uniformOn] at hmix
   simpa [ArlibCommunity.Algorithms.HitAndRun.run,
     ArlibCommunity.Algorithms.HitAndRun.lazyStep,
     ArlibCommunity.Algorithms.HitAndRun.step,

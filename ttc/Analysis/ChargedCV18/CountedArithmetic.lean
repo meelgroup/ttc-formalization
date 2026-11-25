@@ -7,7 +7,7 @@ import ttc.Analysis.ChargedCV18.Program
 /-!
 # The counted arithmetic: values and costs
 
-`cv18Program` (`Model/Pseudocode.lean`) runs its arithmetic through the `Counted`
+`cv18Program` (arlib-community `CV18/Analysis/OracleProgram.lean`) runs its arithmetic through the `Counted`
 programs of `Model/Prelude.lean`, on sealed numbers.  This file proves, for each of them,
 
 * **its value**: the number it holds is the formula it stands for

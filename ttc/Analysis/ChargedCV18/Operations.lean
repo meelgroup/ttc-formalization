@@ -7,7 +7,7 @@ import Arlib.Computation.Num
 /-!
 # Operations: the arithmetic currency of CV18
 
-`cv18Program` (`Model/Pseudocode.lean`) holds every number it computes as a sealed
+`cv18Program` (arlib-community `CV18/Analysis/OracleProgram.lean`) holds every number it computes as a sealed
 `Arlib.Computation.Num`, and does its arithmetic with arlib's charged operations on
 them.  This file names what one charged operation can be:
 
