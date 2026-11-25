@@ -1021,24 +1021,27 @@ noncomputable def hitAndRunWalk {d : ℕ} (r : ℕ) (a : Fin r → NumPoint d) (
     | .inl y => y
     | .inr e => e.elim)
 
+/-- The rounding of `roundPoint`, coordinate by coordinate. -/
+noncomputable def roundCoords {d : ℕ} (one : Num ℤ) :
+    (k : ℕ) → (Fin k → Num ℝ) → M d (Fin k → Num ℤ)
+  | 0, _ => pure Fin.elim0
+  | k + 1, q => do
+      let v ← unit
+      let z ← run (do
+        let fl ← floor (q 0)
+        let flR ← intCast fl
+        let frac ← A.sub (q 0) flR
+        let up ← A.lt v frac
+        if up then A.add fl one else A.pure fl)
+      let rest ← roundCoords one k (Fin.tail q)
+      pure (Fin.cons z rest)
+
 /-- **KV97 rounding**: coordinate `pᵢ` becomes `⌊pᵢ⌋ + 1` with probability `pᵢ − ⌊pᵢ⌋`
 and `⌊pᵢ⌋` otherwise, from a uniform number of the tape.  The result is held by its
 integer coordinates. -/
 noncomputable def roundPoint {d : ℕ} (p : NumPoint d) : M d (Fin d → Num ℤ) := do
   let one ← run (A.lit (1 : ℤ))
-  let rec go : (k : ℕ) → (Fin k → Num ℝ) → M d (Fin k → Num ℤ)
-    | 0, _ => pure Fin.elim0
-    | k + 1, q => do
-        let v ← unit
-        let z ← run (do
-          let fl ← floor (q 0)
-          let flR ← intCast fl
-          let frac ← A.sub (q 0) flR
-          let up ← A.lt v frac
-          if up then A.add fl one else A.pure fl)
-        let rest ← go k (Fin.tail q)
-        pure (Fin.cons z rest)
-  go d p
+  roundCoords one d p
 
 /-- A lattice point held by its integer coordinates, as a point: one cast per
 coordinate. -/
@@ -1169,6 +1172,23 @@ structure Params where
   scale : Num ℝ
   scaleN : Num ℝ
 
+/-- **The halving loop** `while Nᵢ + |X| > Thresh`: halve `X`, `Nᵢ ← Binomial(Nᵢ, 1/2)`,
+`p ← p / 2`.  The loop is unbounded; it is run with `fuel` rounds, and stops the run
+(`failure`) when they run out. -/
+noncomputable def halve {d : ℕ} (K : Params) : ℕ → Num ℝ → List (Fin d → Num ℤ) → Num ℕ →
+    Num ℕ → M d (Num ℝ × List (Fin d → Num ℤ) × Num ℕ × Num ℕ)
+  | 0, _, _, _, _ => failure
+  | f + 1, p, X, size, N => do
+      let stop ← run (do
+        let total ← A.add size N
+        let totalR ← A.cast total
+        A.le totalR K.thresh)
+      if stop then pure (p, X, size, N) else do
+        let (X', size') ← filterCopies (fun _ => coin) X
+        let N' ← withOracle (drawBinomialHalf N)
+        let p' ← run (A.divLit p 2)
+        halve K f p' X' size' N'
+
 /-- **One iteration of the `for` loop** on the component `L`. -/
 noncomputable def step {d : ℕ} (fuel : ℕ) (K : Params) (L : Loaded d) (s : State d) :
     M d (State d) := do
@@ -1198,7 +1218,7 @@ noncomputable def step {d : ℕ} (fuel : ℕ) (K : Params) (L : Loaded d) (s : S
   -- probability `2^{-k}`
   let tp ← run (A.mul t s.p)
   let big ← run (A.le K.thresh tp)
-  let (p, X, size) ← if big then do
+  let (p, X, size) ← (if big then (do
       let (p', keepProb) ← run (do
         let ratio ← A.div tp K.thresh
         let lr ← A.log ratio
@@ -1214,26 +1234,13 @@ noncomputable def step {d : ℕ} (fuel : ℕ) (K : Params) (L : Loaded d) (s : S
       let (X', size') ← filterCopies (fun _ => do
           let u ← unit
           run (A.lt u keepProb)) X
-      pure (p', X', size')
-    else pure (s.p, X, size)
+      pure (p', X', size'))
+    else pure (s.p, X, size))
   -- `Nᵢ ← Poisson(t · p)`
   let rate ← run (A.mul t p)
   let N ← poisson rate
   -- `while Nᵢ + |X| > Thresh`: halve `X`, `Nᵢ ← Binomial(Nᵢ, 1/2)`, `p ← p / 2`
-  let rec halve : ℕ → Num ℝ → List (Fin d → Num ℤ) → Num ℕ → Num ℕ →
-      M d (Num ℝ × List (Fin d → Num ℤ) × Num ℕ × Num ℕ)
-    | 0, _, _, _, _ => failure
-    | f + 1, p, X, size, N => do
-        let stop ← run (do
-          let total ← A.add size N
-          let totalR ← A.cast total
-          A.le totalR K.thresh)
-        if stop then pure (p, X, size, N) else do
-          let (X', size') ← filterCopies (fun _ => coin) X
-          let N' ← withOracle (drawBinomialHalf N)
-          let p' ← run (A.divLit p 2)
-          halve f p' X' size' N'
-  let (p, X, size, N) ← halve fuel p X size N
+  let (p, X, size, N) ← halve K fuel p X size N
   -- `S ← GenerateSamples(Kᵢ, Nᵢ, b, ε')`; `X.Append(S)`
   let W ← run (walkConstantsProg L K.scale K.epsPrime K.dim)
   let res ← loopUntil (γ := Empty) N (fun (acc : List (Fin d → Num ℤ) × Num ℕ) => do
