@@ -204,16 +204,21 @@ def drawBinomialHalf {n : ℕ} (N : Num ℕ) (o : Oracle n) : Prog (Num ℕ × O
   let k ← sealDraw (binomialHalfQuantile N.get (o.tape 0).2.2)
   pure (k, ⟨o.tape.tail, o.budget⟩)
 
-/-! ### Rounding down -/
+/-! ### Integers -/
 
-/-- The relabelling that turns `Num.lit`'s one `NumOp.lit` into one `NumOp.ceil`. -/
-def ceilLabel (o : Op) : CostVec Op :=
-  if o = .num .lit then CostVec.one (.num .ceil) else CostVec.one o
+/-- The relabelling that turns `Num.lit`'s one `NumOp.lit` into one `o`. -/
+def relabelLit (o : Op) (o' : Op) : CostVec Op :=
+  if o' = .num .lit then CostVec.one o else CostVec.one o'
 
-/-- **`⌊x⌋`, as a real number**: one `NumOp.ceil` (arlib's rounding operation; its own
+/-- **`⌊x⌋`, as an integer**: one `NumOp.ceil` (arlib's rounding operation; its own
 `Num.ceil` rounds up to a natural number, and a lattice coordinate may be negative). -/
-def floor (x : Num ℝ) : Prog (Num ℝ) :=
-  Charged.exchange ceilLabel (Num.lit ((⌊x.get⌋ : ℤ) : ℝ))
+def floor (x : Num ℝ) : Prog (Num ℤ) :=
+  Charged.exchange (relabelLit (.num .ceil)) (Num.lit ⌊x.get⌋)
+
+/-- **An integer read as a real**: one `RealOp.cast` (arlib's own `Num.cast` reads a
+natural number). -/
+def intCast (z : Num ℤ) : Prog (Num ℝ) :=
+  Charged.exchange (relabelLit (.real .cast)) (Num.lit (z.get : ℝ))
 
 /-! The operations on an oracle named by `Oracle.withBudget`.  These are the only facts
 about the private fields that the analysis uses. -/

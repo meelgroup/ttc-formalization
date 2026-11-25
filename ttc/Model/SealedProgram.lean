@@ -1022,21 +1022,34 @@ noncomputable def hitAndRunWalk {d : ℕ} (r : ℕ) (a : Fin r → NumPoint d) (
     | .inr e => e.elim)
 
 /-- **KV97 rounding**: coordinate `pᵢ` becomes `⌊pᵢ⌋ + 1` with probability `pᵢ − ⌊pᵢ⌋`
-and `⌊pᵢ⌋` otherwise, from a uniform number of the tape. -/
-noncomputable def roundPoint {d : ℕ} (p : NumPoint d) : M d (NumPoint d) := do
-  let one ← run (A.lit (1 : ℝ))
-  let rec go : (k : ℕ) → (Fin k → Num ℝ) → M d (Fin k → Num ℝ)
+and `⌊pᵢ⌋` otherwise, from a uniform number of the tape.  The result is held by its
+integer coordinates. -/
+noncomputable def roundPoint {d : ℕ} (p : NumPoint d) : M d (Fin d → Num ℤ) := do
+  let one ← run (A.lit (1 : ℤ))
+  let rec go : (k : ℕ) → (Fin k → Num ℝ) → M d (Fin k → Num ℤ)
     | 0, _ => pure Fin.elim0
     | k + 1, q => do
         let v ← unit
         let z ← run (do
           let fl ← floor (q 0)
-          let frac ← A.sub (q 0) fl
+          let flR ← intCast fl
+          let frac ← A.sub (q 0) flR
           let up ← A.lt v frac
           if up then A.add fl one else A.pure fl)
         let rest ← go k (Fin.tail q)
         pure (Fin.cons z rest)
   go d p
+
+/-- A lattice point held by its integer coordinates, as a point: one cast per
+coordinate. -/
+def latticeReal {d : ℕ} (z : Fin d → Num ℤ) : Prog (NumPoint d) :=
+  A.forEach fun i => intCast (z i)
+
+/-- The membership test of a lattice point in `10^b · P` (offsets `scaled`). -/
+def latticeMember {d : ℕ} (L : Loaded d) (scaled : Fin L.facets → Num ℝ)
+    (z : Fin d → Num ℤ) : Prog Bool := do
+  let x ← latticeReal z
+  allFacets L.facets L.normal scaled x
 
 /-- The walk's constants for a component at precision scale `scale = 10^b` and accuracy
 `η`: the walk body's offsets `(10^b bⱼ + κ ‖aⱼ‖ − aⱼ · z')/γ'` in the chart where the
@@ -1094,7 +1107,7 @@ noncomputable def walkConstantsProg {d : ℕ} (L : Loaded d) (scale eta dim : Nu
 chart back to `10^b · P'`, rounding, and the membership test of the rounded point in
 `10^b · P` (offsets `scaled`). -/
 noncomputable def sampleTry {d : ℕ} (L : Loaded d) (W : WalkConstants d L.facets)
-    (scaled : Fin L.facets → Num ℝ) (dimN : Num ℕ) : M d (Option (NumPoint d)) := do
+    (scaled : Fin L.facets → Num ℝ) (dimN : Num ℕ) : M d (Option (Fin d → Num ℤ)) := do
   let g ← gaussian
   let u ← unit
   let y₀ ← run (A.ballStart dimN g u)
@@ -1103,14 +1116,14 @@ noncomputable def sampleTry {d : ℕ} (L : Loaded d) (W : WalkConstants d L.face
     let s ← A.mul W.scaledInradius (y i)
     A.add s (W.scaledIncenter i))
   let z ← roundPoint p
-  let ok ← run (allFacets L.facets L.normal scaled z)
+  let ok ← run (latticeMember L scaled z)
   pure (if ok then some z else none)
 
 /-- **One accepted sample**: attempts until one is accepted.  The loop is unbounded; it is
 run with `fuel` rounds, and stops the run (`failure`) when they run out (`Model/Run.lean`
 gives it enough). -/
 noncomputable def sampleUntilAccepted {d : ℕ} (L : Loaded d) (W : WalkConstants d L.facets)
-    (scaled : Fin L.facets → Num ℝ) (dimN : Num ℕ) : ℕ → M d (NumPoint d)
+    (scaled : Fin L.facets → Num ℝ) (dimN : Num ℕ) : ℕ → M d (Fin d → Num ℤ)
   | 0 => failure
   | fuel + 1 => do
       let r ← sampleTry L W scaled dimN
@@ -1124,15 +1137,15 @@ noncomputable def sampleUntilAccepted {d : ℕ} (L : Loaded d) (W : WalkConstant
 (each held by its integer coordinates in the decimal-scaled frame), and `|X|`. -/
 structure State (d : ℕ) where
   p : Num ℝ
-  X : List (NumPoint d)
+  X : List (Fin d → Num ℤ)
   size : Num ℕ
 
 /-- Keep the copies for which `keep` says so, counting them. -/
-noncomputable def filterCopies {d : ℕ} (keep : NumPoint d → M d Bool) (X : List (NumPoint d)) :
-    M d (List (NumPoint d) × Num ℕ) := do
+noncomputable def filterCopies {d : ℕ} (keep : (Fin d → Num ℤ) → M d Bool)
+    (X : List (Fin d → Num ℤ)) : M d (List (Fin d → Num ℤ) × Num ℕ) := do
   let zero ← run (A.lit (0 : ℕ))
   let one ← run (A.lit (1 : ℕ))
-  X.foldlM (fun (acc : List (NumPoint d) × Num ℕ) x => do
+  X.foldlM (fun (acc : List (Fin d → Num ℤ) × Num ℕ) x => do
       let x ← run (A.cell x)
       let k ← keep x
       if k then do
@@ -1179,7 +1192,7 @@ noncomputable def step {d : ℕ} (fuel : ℕ) (K : Params) (L : Loaded d) (s : S
   -- remove from `X` every point of `Pᵢ`, by the membership test in `10^b · Pᵢ`
   let scaled ← run (scaledOffsets L K.scale)
   let (X, size) ← filterCopies (fun x => do
-      let inside ← run (allFacets L.facets L.normal scaled x)
+      let inside ← run (latticeMember L scaled x)
       pure (!inside)) s.X
   -- `if t p ≥ Thresh`: `k ← ⌈log₂ (t p / Thresh)⌉`, `p ← p · 2^{-k}`, keep each point with
   -- probability `2^{-k}`
@@ -1207,8 +1220,8 @@ noncomputable def step {d : ℕ} (fuel : ℕ) (K : Params) (L : Loaded d) (s : S
   let rate ← run (A.mul t p)
   let N ← poisson rate
   -- `while Nᵢ + |X| > Thresh`: halve `X`, `Nᵢ ← Binomial(Nᵢ, 1/2)`, `p ← p / 2`
-  let rec halve : ℕ → Num ℝ → List (NumPoint d) → Num ℕ → Num ℕ →
-      M d (Num ℝ × List (NumPoint d) × Num ℕ × Num ℕ)
+  let rec halve : ℕ → Num ℝ → List (Fin d → Num ℤ) → Num ℕ → Num ℕ →
+      M d (Num ℝ × List (Fin d → Num ℤ) × Num ℕ × Num ℕ)
     | 0, _, _, _, _ => failure
     | f + 1, p, X, size, N => do
         let stop ← run (do
@@ -1223,7 +1236,7 @@ noncomputable def step {d : ℕ} (fuel : ℕ) (K : Params) (L : Loaded d) (s : S
   let (p, X, size, N) ← halve fuel p X size N
   -- `S ← GenerateSamples(Kᵢ, Nᵢ, b, ε')`; `X.Append(S)`
   let W ← run (walkConstantsProg L K.scale K.epsPrime K.dim)
-  let res ← loopUntil (γ := Empty) N (fun (acc : List (NumPoint d) × Num ℕ) => do
+  let res ← loopUntil (γ := Empty) N (fun (acc : List (Fin d → Num ℤ) × Num ℕ) => do
       let z ← sampleUntilAccepted L W scaled K.dimN fuel
       let ys ← run (A.push acc.1 z)
       let c ← run (do
