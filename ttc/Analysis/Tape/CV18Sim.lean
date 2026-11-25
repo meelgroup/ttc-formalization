@@ -357,6 +357,117 @@ theorem val_runConstantsProg (q : ArlibCommunity.Algorithms.CV18.VolumeParams)
   RunConstants.eq_of_view ((holds_runConstantsProg q eps roundness p he hr hp).view_eq.trans
     (ttc.ChargedCV18.runConstantsProg_value q).view_eq.symm)
 
+/-! ### The median -/
+
+section Median
+
+theorem val_Alt_gen {α : Type} [LinearOrder α] (x y : Num α) :
+    (A.lt x y).val = decide (x.get < y.get) := by
+  simp only [A.lt, Charged.val_bind, Num.val_le, val_Apure]
+  by_cases h : x.get < y.get
+  · simp [h, not_le.mpr h]
+  · simp [h, not_lt.mp h]
+
+theorem val_mapM {α β : Type} (f : α → Prog β) :
+    ∀ l : List α, (l.mapM f).val = l.map fun x => (f x).val
+  | [] => rfl
+  | x :: l => by
+      rw [List.mapM_cons]
+      simp only [Charged.val_bind, val_mapM f l, List.map_cons]
+      rfl
+
+theorem get_sumList : ∀ l : List (Num ℕ), (A.sumList l).val.get = (l.map Num.get).sum
+  | [] => by simp [A.sumList, A.lit]
+  | [a] => by simp [A.sumList]
+  | a :: b :: rest => by
+      simp only [A.sumList, Charged.val_bind, A.add, Num.get_add, get_sumList (b :: rest),
+        List.map_cons, List.sum_cons]
+
+theorem val_firstPassing : ∀ l : List (Num ℝ × Bool),
+    (A.firstPassing l).val = ((l.find? (·.2)).map (·.1)).getD (A.lit (0 : ℝ)).val
+  | [] => rfl
+  | e :: rest => by
+      rcases e with ⟨x, _ | _⟩
+      · simp only [A.firstPassing, Bool.false_eq_true, ite_false, List.find?_cons_of_neg,
+          not_false_eq_true]
+        exact val_firstPassing rest
+      · simp [A.firstPassing]
+
+/-- How many entries of `v` stand in relation `r` to `x`. -/
+def countRel (r : ℝ → ℝ → Prop) [DecidableRel r] (v : List (Num ℝ)) (x : Num ℝ) : ℕ :=
+  (v.map fun y => if r y.get x.get then 1 else 0).sum
+
+/-- Whether `x` has rank `⌊m/2⌋` in `v`. -/
+def rankTest (m : Num ℕ) (v : List (Num ℝ)) (x : Num ℝ) : Bool :=
+  decide (countRel (· < ·) v x ≤ m.get / 2) && decide (m.get / 2 < countRel (· ≤ ·) v x)
+
+theorem val_median (m : Num ℕ) (v : List (Num ℝ)) :
+    (A.median m v).val = ((v.find? (rankTest m v)).getD (A.lit (0 : ℝ)).val) := by
+  have hc : (v.mapM A.cell).val = v := by
+    rw [val_mapM]; simp [A.cell, ttc.Model.Operations.cell]
+  simp only [A.median, Charged.val_bind, hc, val_mapM, val_firstPassing, List.find?_map,
+    Option.map_map, Function.comp_def, val_Apure, Option.map_id']
+  congr 2
+  funext x
+  have hs : ∀ (R : ℝ → ℝ → Prop) [DecidableRel R],
+      (A.sumList ((v.map fun y => decide (R y.get x.get)).map fun f =>
+        if f = true then (Num.lit (κ := Op) (κₛ := Cell) (1 : ℕ)).val
+        else (Num.lit (κ := Op) (κₛ := Cell) (0 : ℕ)).val)).val.get = countRel R v x := by
+    intro R _
+    rw [get_sumList, countRel, List.map_map, List.map_map]
+    congr 1
+    refine List.map_congr_left fun y _ => ?_
+    simp only [Function.comp_apply]
+    split_ifs <;> simp_all
+  simp only [val_Alt, A.le, A.div, A.lit, Num.val_le, Charged.val_bind, val_Apure, Num.get_div,
+    Num.get_lit]
+  simp only [hs, rankTest, val_Alt_gen, Num.get_div, Num.get_lit]
+
+open ttc.ChargedCV18 in
+theorem value_medianC (m : Num ℕ) (v : List (Num ℝ)) :
+    (ttc.ChargedCV18.Counted.median m v).value = (v.find? (rankTest m v)).getD (A.lit (0 : ℝ)).val := by
+  simp only [ttc.ChargedCV18.Counted.median, ttc.ChargedCV18.Counted.bind_value, ttc.ChargedCV18.Counted.forEach_value, ttc.ChargedCV18.Counted.cell_value]
+  have hpred : (fun i : Fin v.length => (ttc.ChargedCV18.Counted.pure
+      ((ttc.ChargedCV18.Counted.le (ttc.ChargedCV18.Counted.sum v.length fun j =>
+          if (ttc.ChargedCV18.Counted.lt (v.get j) (v.get i)).value = true then (ttc.ChargedCV18.Counted.lit (1 : ℕ)).value
+          else (ttc.ChargedCV18.Counted.lit (0 : ℕ)).value).value (ttc.ChargedCV18.Counted.div m (ttc.ChargedCV18.Counted.lit 2).value).value).value &&
+        (ttc.ChargedCV18.Counted.lt (ttc.ChargedCV18.Counted.div m (ttc.ChargedCV18.Counted.lit 2).value).value
+          (ttc.ChargedCV18.Counted.sum v.length fun j =>
+            if (ttc.ChargedCV18.Counted.le (v.get j) (v.get i)).value = true then (ttc.ChargedCV18.Counted.lit (1 : ℕ)).value
+            else (ttc.ChargedCV18.Counted.lit (0 : ℕ)).value).value).value)).value) =
+      rankTest m v ∘ v.get := by
+    funext i
+    simp only [ttc.ChargedCV18.Counted.pure_value, ttc.ChargedCV18.Counted.le_value, ttc.ChargedCV18.Counted.lt_value, Function.comp_apply]
+    simp only [rankTest]
+    rw [Bool.eq_iff_iff]
+    simp only [Bool.and_eq_true, decide_eq_true_eq]
+    have hcnt : ∀ (R : ℝ → ℝ → Prop) (inst : DecidableRel R),
+        (ttc.ChargedCV18.Counted.sum v.length fun j => @ite _ (R (v.get j).get (v.get i).get) (inst _ _)
+          (ttc.ChargedCV18.Counted.lit (1 : ℕ)).value (ttc.ChargedCV18.Counted.lit (0 : ℕ)).value).value.get =
+          countRel R v (v.get i) := by
+      intro R inst
+      rw [ttc.ChargedCV18.Counted.sum_value, countRel, ← Fin.sum_univ_fun_getElem]
+      refine Finset.sum_congr rfl fun j _ => ?_
+      simp only [List.get_eq_getElem]
+      split_ifs <;> simp_all
+    rw [hcnt (· < ·) _, hcnt (· ≤ ·) _, ttc.ChargedCV18.Counted.div_value, ttc.ChargedCV18.Counted.lit_value]
+  rw [hpred]
+  have hfind : v.find? (rankTest m v) =
+      ((List.finRange v.length).find? (rankTest m v ∘ v.get)).map v.get := by
+    conv_lhs => arg 2; rw [← List.map_get_finRange v]
+    rw [List.find?_map]
+  rw [hfind]
+  cases h : (List.finRange v.length).find? (rankTest m v ∘ v.get) with
+  | none => rfl
+  | some i => rfl
+
+/-- **The median is the same in both programs.** -/
+theorem val_median_eq (m : Num ℕ) (v : List (Num ℝ)) :
+    (A.median m v).val = (ttc.ChargedCV18.Counted.median m v).value := by
+  rw [val_median, value_medianC]
+
+end Median
+
 end Values
 
 end ttc.Tape
