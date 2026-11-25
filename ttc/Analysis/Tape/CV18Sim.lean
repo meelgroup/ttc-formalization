@@ -470,4 +470,223 @@ end Median
 
 end Values
 
+
+/-! ## CV18's procedures, side by side -/
+
+section Procedures
+
+open ttc.Program
+open ArlibCommunity.Algorithms.CV18 (VolumeParams)
+
+/-- Membership queries answered by the sealed program's membership routine. -/
+def memberOracle {d : ℕ} (member : NumPoint d → Prog Bool) (y : EuclideanSpace ℝ (Fin d)) : Bool :=
+  (member (ofPt y)).val
+
+variable (q : VolumeParams) (G : ttc.Program.RunConstants) (member : NumPoint q.n → Prog Bool)
+
+local notation "O" => memberOracle member
+local notation "G'" => RunConstants.toC G
+
+theorem sim_isMember (x : NumPoint q.n) :
+    Sim O Eq (isMemberT q.n member x) (ttc.ChargedCV18.isMember x) := by
+  intro b t
+  cases b with
+  | zero => exact ⟨Option.Rel.none, rfl, rfl⟩
+  | succ b =>
+      have h1 : ((b + 1 : ℕ) : ℕ∞) ≠ 0 := by exact_mod_cast Nat.succ_ne_zero b
+      simp only [isMemberT, spendT, Tree.bind, exec, ttc.ChargedCV18.isMember, cexec, h1, ite_false,
+        enat_succ_sub_one, ttc.ChargedCV18.compute, compute, ite_true]
+      refine ⟨Option.Rel.some ?_, ?_, ?_⟩
+      · show (member x).val = memberOracle member (WithLp.toLp 2 fun i => (x i).get)
+        simp only [memberOracle]
+        rw [show (WithLp.toLp 2 fun i => (x i).get : EuclideanSpace ℝ (Fin q.n)) = toPt x from rfl,
+          ofPt_toPt]
+      all_goals first | trivial | rfl
+
+theorem sim_ballWalkStep (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ) (x : NumPoint q.n) :
+    Sim O Eq (ballWalkStepT q.n G member P sigma2 x)
+      (ttc.ChargedCV18.ballWalkStep q G' (PhaseConstants.toC P) sigma2 x) := by
+  refine Sim.bind sim_gaussianT fun g _ hg => ?_
+  subst hg
+  refine Sim.bind sim_unitT fun u _ hu => ?_
+  subst hu
+  refine Sim.bind (sim_compute_eq _ _ (val_ballProposalProg _ _ _ _ _)) fun y _ hy => ?_
+  subst hy
+  refine Sim.bind (sim_isMember q member y) fun inside _ hi => ?_
+  subst hi
+  refine Sim.bind sim_unitT fun coin _ hc => ?_
+  subst hc
+  refine Sim.bind (sim_compute_eq _ _ (val_properTestProg _ _ _)) fun proper _ hp => ?_
+  subst hp
+  refine Sim.bind (sim_compute_eq _ _ (val_lazyTestProg _ _ _ _)) fun move _ hm => ?_
+  subst hm
+  exact sim_ite _ (sim_pure_eq _) (sim_pure_eq _)
+
+theorem sim_properWalkRound (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ) (left : Num ℕ)
+    (x : NumPoint q.n) :
+    Sim O Eq (properWalkRoundT q.n G member P sigma2 left x)
+      (ttc.ChargedCV18.properWalkRound q G' (PhaseConstants.toC P) sigma2 left x) := by
+  refine Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun done _ h => ?_
+  subst h
+  refine sim_ite _ ?_ ?_
+  · refine Sim.bind (sim_compute_eq _ _ (val_smul _ _)) fun y _ h => ?_
+    subst h
+    exact Sim.bind (sim_isMember q member y) fun _ _ h => sim_pure_eq _
+  · refine Sim.bind (sim_ballWalkStep q G member P sigma2 x) fun r _ h => ?_
+    subst h
+    rcases r with ⟨proper, y⟩
+    exact sim_ite _ (Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun _ _ h => h ▸ sim_pure_eq _)
+      (sim_pure_eq _)
+
+theorem sim_properWalk (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ) (cap : Num ℕ)
+    (x : NumPoint q.n) :
+    Sim O Eq (properWalkT q.n G member P sigma2 cap x)
+      (ttc.ChargedCV18.properWalk q G' (PhaseConstants.toC P) sigma2 cap x) := by
+  refine Sim.bind (sim_loopTree cap (fun s => sim_properWalkRound q G member P sigma2 s.1 s.2) _)
+    fun r _ h => ?_
+  subst h
+  rcases r with _ | y <;> exact sim_pure_eq _
+
+theorem sim_rejectionAttempt (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ) (x : NumPoint q.n) :
+    Sim O Eq (rejectionAttemptT q.n G member P sigma2 x)
+      (ttc.ChargedCV18.rejectionAttempt q G' (PhaseConstants.toC P) sigma2 x) := by
+  refine Sim.bind (sim_compute_eq _ _ (val_smul _ _)) fun y _ h => ?_
+  subst h
+  refine Sim.bind (sim_isMember q member y) fun inside _ h => ?_
+  subst h
+  refine Sim.bind sim_unitT fun coin _ h => ?_
+  subst h
+  refine Sim.bind (sim_compute_eq _ _ (val_properTestProg _ _ _)) fun proper _ h => ?_
+  subst h
+  refine Sim.bind (sim_compute_eq _ _ (val_scaleAcceptTestProg _ _ _ _)) fun accept _ h => ?_
+  subst h
+  exact sim_ite _ (sim_pure_eq _) (sim_pure_eq _)
+
+theorem sim_sampleAttempt (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ) (walkCap : Num ℕ)
+    (x : NumPoint q.n) :
+    Sim O Eq (sampleAttemptT q.n G member P sigma2 walkCap x)
+      (ttc.ChargedCV18.sampleAttempt q G' (PhaseConstants.toC P) sigma2 walkCap x) := by
+  refine Sim.bind (sim_properWalk q G member P sigma2 walkCap x) fun r _ h => ?_
+  subst h
+  rcases r with _ | y
+  · exact sim_pure_eq _
+  · refine Sim.bind (sim_rejectionAttempt q G member P sigma2 y) fun a _ h => ?_
+    subst h
+    rcases a with ⟨accepted, z⟩
+    exact sim_ite _ (sim_pure_eq _) (sim_pure_eq _)
+
+theorem sim_sampleFinish (weight : NumPoint q.n → Prog (Num ℝ))
+    (weight' : NumPoint q.n → ttc.ChargedCV18.Counted (Num ℝ))
+    (hw : ∀ z, (weight z).val = (weight' z).value) (total : Num ℝ)
+    (a : NumPoint q.n ⊕ Option (NumPoint q.n × NumPoint q.n)) :
+    Sim O Eq (sampleFinishT q.n weight total a) (ttc.ChargedCV18.sampleFinish q weight' total a) := by
+  rcases a with _ | _ | ⟨z, y⟩
+  · exact sim_pure_eq _
+  · exact sim_pure_eq _
+  · refine Sim.bind (sim_compute_eq _ _ (hw z)) fun w _ h => ?_
+    subst h
+    exact Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun _ _ h => h ▸ sim_pure_eq _
+
+theorem sim_sampleRound (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ)
+    (weight : NumPoint q.n → Prog (Num ℝ))
+    (weight' : NumPoint q.n → ttc.ChargedCV18.Counted (Num ℝ))
+    (hw : ∀ z, (weight z).val = (weight' z).value) (walkCap : Num ℕ) (state : Num ℝ × NumPoint q.n) :
+    Sim O Eq (sampleRoundT q.n G member P sigma2 weight walkCap state)
+      (ttc.ChargedCV18.sampleRound q G' (PhaseConstants.toC P) sigma2 weight' walkCap state) :=
+  Sim.bind (sim_loopTree _ (fun x => sim_sampleAttempt q G member P sigma2 walkCap x) _)
+    fun a _ h => h ▸ sim_sampleFinish q member weight weight' hw state.1 a
+
+theorem sim_collectSamples (P : ttc.Program.PhaseConstants) (sigma2 : Num ℝ)
+    (weight : NumPoint q.n → Prog (Num ℝ))
+    (weight' : NumPoint q.n → ttc.ChargedCV18.Counted (Num ℝ))
+    (hw : ∀ z, (weight z).val = (weight' z).value) (samples : Num ℕ) (start : NumPoint q.n) :
+    Sim O Eq (collectSamplesT q.n G member P sigma2 weight samples start)
+      (ttc.ChargedCV18.collectSamples q G' (PhaseConstants.toC P) sigma2 weight' samples start) := by
+  refine Sim.bind (sim_compute_eq _ _ (by cv_simp; rfl)) fun c _ h => ?_
+  subst h
+  rcases c with ⟨zero, walkCap⟩
+  refine Sim.bind (sim_loopTree samples
+    (fun s => sim_sampleRound q G member P sigma2 weight weight' hw walkCap s) _) fun r _ h => ?_
+  subst h
+  rcases r with _ | _ <;> exact sim_pure_eq _
+
+theorem sim_coolingPhase (sigma2 tau2 : Num ℝ) (x : NumPoint q.n) :
+    Sim O Eq (coolingPhaseT q.n G member sigma2 tau2 x)
+      (ttc.ChargedCV18.coolingPhase q G' sigma2 tau2 x) := by
+  refine Sim.bind (sim_compute (R := fun P P' => PhaseConstants.toC P = P') _ _
+    (val_phaseConstantsProg G sigma2)) fun P _ h => ?_
+  subst h
+  refine Sim.bind (sim_compute_eq _ _ (val_smul _ _)) fun start _ h => ?_
+  subst h
+  refine Sim.bind (sim_collectSamples q G member P sigma2 _ _
+    (fun z => val_gaussianRatioWeightProg _ _ z) _ start) fun r _ h => ?_
+  subst h
+  rcases r with _ | ⟨total, y⟩
+  · exact sim_pure_eq _
+  · refine Sim.bind (sim_compute_eq _ _ (by cv_simp; rfl)) fun W _ h => ?_
+    subst h
+    exact Sim.bind (sim_compute_eq _ _ (val_smul _ _)) fun _ _ h => h ▸ sim_pure_eq _
+
+theorem sim_uniformPhase (sigma2 : Num ℝ) (x : NumPoint q.n) :
+    Sim O Eq (uniformPhaseT q.n G member sigma2 x) (ttc.ChargedCV18.uniformPhase q G' sigma2 x) := by
+  refine Sim.bind (sim_compute (R := fun P P' => PhaseConstants.toC P = P') _ _
+    (val_phaseConstantsProg G sigma2)) fun P _ h => ?_
+  subst h
+  refine Sim.bind (sim_compute_eq _ _ (val_smul _ _)) fun start _ h => ?_
+  subst h
+  refine Sim.bind (sim_collectSamples q G member P sigma2 _ _
+    (fun z => val_uniformRatioWeightProg _ z) _ start) fun r _ h => ?_
+  subst h
+  rcases r with _ | ⟨total, y⟩
+  · exact sim_pure_eq _
+  · exact Sim.bind (sim_compute_eq _ _ (by cv_simp; rfl)) fun _ _ h => h ▸ sim_pure_eq _
+
+theorem sim_initialSample :
+    Sim O Eq (initialSampleT q.n G member) (ttc.ChargedCV18.initialSample q G') := by
+  refine Sim.bind sim_gaussianT fun g _ h => ?_
+  subst h
+  refine Sim.bind (sim_compute_eq _ _ (val_gaussianStartProg _ _)) fun x _ h => ?_
+  subst h
+  refine Sim.bind (sim_isMember q member x) fun inside _ h => ?_
+  subst h
+  exact Sim.bind (sim_compute_eq _ _ (by cv_simp; rfl)) fun _ _ h => h ▸ sim_pure_eq _
+
+theorem sim_coolingPhases :
+    ∀ (l : List (Num ℝ)) (x : NumPoint q.n),
+      Sim O Eq (coolingPhasesT q.n G member l x) (ttc.ChargedCV18.coolingPhases q G' l x)
+  | sigma2 :: tau2 :: rest, x => by
+      refine Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun s _ h => ?_
+      subst h
+      refine Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun t _ h => ?_
+      subst h
+      refine Sim.bind (sim_coolingPhase q G member s t x) fun r _ h => ?_
+      subst h
+      rcases r with _ | ⟨W, y⟩
+      · exact sim_pure_eq _
+      · refine Sim.bind (sim_coolingPhases (tau2 :: rest) y) fun r' _ h => ?_
+        subst h
+        rcases r' with _ | ⟨product, z⟩
+        · exact sim_pure_eq _
+        · exact Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun _ _ h => h ▸ sim_pure_eq _
+  | [], x => Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun _ _ h => h ▸ sim_pure_eq _
+  | [_], x => Sim.bind (sim_compute_eq _ _ (by cv_simp)) fun _ _ h => h ▸ sim_pure_eq _
+
+theorem sim_figureOneRun :
+    Sim O Eq (figureOneRunT q.n G member) (ttc.ChargedCV18.figureOneRun q G') := by
+  refine Sim.bind (sim_initialSample q G member) fun r₀ _ h => ?_
+  subst h
+  rcases r₀ with _ | x₀
+  · exact sim_compute_eq _ _ (by cv_simp)
+  · refine Sim.bind (sim_coolingPhases q G member _ x₀) fun r₁ _ h => ?_
+    subst h
+    rcases r₁ with _ | ⟨product, x⟩
+    · exact sim_compute_eq _ _ (by cv_simp)
+    · refine Sim.bind (sim_uniformPhase q G member _ x) fun r₂ _ h => ?_
+      subst h
+      rcases r₂ with _ | U
+      · exact sim_compute_eq _ _ (by cv_simp)
+      · exact sim_compute_eq _ _ (by simp only [RunConstants.toC]; cv_simp)
+
+end Procedures
+
 end ttc.Tape
