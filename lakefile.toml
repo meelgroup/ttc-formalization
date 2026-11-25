@@ -18,8 +18,10 @@ rev = "v4.35.0"
 # in arlib before proving it in this project.
 [[require]]
 name = "arlib"
-git = "https://github.com/meelgroup/arlib.git"
-rev = "8d08f89a6d05c5e8368e91659bd6e117fbb74c4e"
+# The fork carrying the real-RAM `Num` operations
+# (cast, sqrt, exp, log, root) that the charged CV18 program uses.
+git = "https://github.com/uddaloksarkar/arlib.git"
+rev = "66d846527f544890621d0ba2c8f3774c13d13f27"
 
 # CV18 and Hit-and-Run now live in the community algorithms repository.  Pin
 # the audited head rather than tracking a moving branch.
