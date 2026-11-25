@@ -262,6 +262,20 @@ theorem MeasFam.sumMatch {β' : Type} [MeasurableSpace β'] {s : A → β ⊕ β
   rw [heq]
   exact hG.comp (measurable_id.prodMk (hs.comp measurable_fst))
 
+/-- A case split on a sum, by `Sum.elim`. -/
+theorem MeasFam.sumElim {β' : Type} [MeasurableSpace β'] {s : A → β ⊕ β'} (hs : Measurable s)
+    {f : A → β → Tree d γ} {g : A → β' → Tree d γ}
+    (hf : MeasFam fun p : A × β => f p.1 p.2) (hg : MeasFam fun p : A × β' => g p.1 p.2) :
+    MeasFam fun a => (s a).elim (f a) (g a) :=
+  (MeasFam.sumMatch hs hf hg).congr fun a => by rcases s a <;> rfl
+
+/-- A case split on an optional value, by `Option.elim`. -/
+theorem MeasFam.optionElim [Inhabited β] {o : A → Option β} (ho : Measurable o)
+    {f : A → Tree d γ} {g : A → β → Tree d γ} (hf : MeasFam f)
+    (hg : MeasFam fun p : A × β => g p.1 p.2) :
+    MeasFam fun a => (o a).elim (f a) (g a) :=
+  (MeasFam.optionMatch ho hf hg).congr fun a => by rcases o a <;> rfl
+
 /-! ## Recovery -/
 
 omit [MeasurableSpace β] in
@@ -347,17 +361,14 @@ theorem MeasFam.loopRounds [Inhabited β] {β' : Type} [MeasurableSpace β']
     ∀ k : ℕ, MeasFam fun p : A × β => ttc.Tape.loopRounds (body p.1) k p.2
   | 0 => MeasFam.pure (measurable_inl.comp measurable_snd)
   | k + 1 => by
-      have key := MeasFam.bind' (k := fun (p : A × β) (r : β ⊕ β') => match r with
-          | .inl b' => ttc.Tape.loopRounds (body p.1) k b'
-          | .inr c => Tree.pure (Sum.inr c)) hbody
-        (MeasFam.sumMatch (s := fun q : (A × β) × (β ⊕ β') => q.2) measurable_snd
+      exact MeasFam.bind' (k := fun (p : A × β) (r : β ⊕ β') =>
+          r.elim (fun b' => ttc.Tape.loopRounds (body p.1) k b') (fun c => Tree.pure (Sum.inr c)))
+        hbody
+        (MeasFam.sumElim (s := fun q : (A × β) × (β ⊕ β') => q.2) measurable_snd
           (f := fun q b' => ttc.Tape.loopRounds (body q.1.1) k b')
           (g := fun q c => Tree.pure (Sum.inr c))
           ((MeasFam.loopRounds hbody k).comp (measurable_fst.fst.fst.prodMk measurable_snd))
           (MeasFam.pure (measurable_inr.comp measurable_snd)))
-      refine key.congr fun p => ?_
-      show _ = (body p.1 p.2).bind _
-      rfl
 
 theorem MeasFam.loopTree [Inhabited β] {β' : Type} [MeasurableSpace β']
     {count : A → Num ℕ} (hcount : Measurable count) {body : A → β → Tree d (β ⊕ β')}

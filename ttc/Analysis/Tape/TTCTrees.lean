@@ -41,6 +41,9 @@ theorem agree_run (c : Prog α) : Agree (run c : M d α) (interp (compute c)) :=
 theorem agree_pure (a : α) : Agree (Pure.pure a : M d α) (interp (Tree.pure a)) :=
   Agree.refl _
 
+theorem agree_pure_of_eq {a b : α} (h : a = b) :
+    Agree (Pure.pure a : M d α) (interp (Tree.pure b)) := h ▸ Agree.refl _
+
 theorem agree_fail : Agree (failure : M d α) (interp (Tree.fail : Tree d α)) :=
   Agree.refl _
 
@@ -90,8 +93,7 @@ def hitAndRunStepT (r : ℕ) (a : Fin r → NumPoint d) (β' : Fin r → Num ℝ
       gaussianT.bind fun g =>
         (compute (normalize g)).bind fun θ =>
           (compute (chord r a β' x θ)).bind fun ends =>
-            match ends with
-            | (some lo, some hi) =>
+            ends.1.elim (.pure x) fun lo => ends.2.elim (.pure x) fun hi =>
                 (compute (A.lt lo hi)).bind fun ok =>
                   if ok then
                     unitT.bind fun u =>
@@ -103,7 +105,6 @@ def hitAndRunStepT (r : ℕ) (a : Fin r → NumPoint d) (β' : Fin r → Num ℝ
                           let step ← A.mul t (θ i)
                           A.add (x i) step)
                   else .pure x
-            | _ => .pure x
 
 theorem agree_hitAndRunStep (r : ℕ) (a : Fin r → NumPoint d) (β' : Fin r → Num ℝ)
     (x : NumPoint d) :
@@ -127,9 +128,7 @@ def hitAndRunWalkT (r : ℕ) (a : Fin r → NumPoint d) (β' : Fin r → Num ℝ
     (x : NumPoint d) : Tree d (NumPoint d) :=
   (loopTree (γ := Empty) steps (fun y => (hitAndRunStepT r a β' y).bind fun y' =>
       .pure (.inl y')) x).bind fun res =>
-    .pure (match res with
-      | .inl y => y
-      | .inr e => e.elim)
+    .pure (res.elim id Empty.elim)
 
 theorem agree_hitAndRunWalk (r : ℕ) (a : Fin r → NumPoint d) (β' : Fin r → Num ℝ)
     (steps : Num ℕ) (x : NumPoint d) :
@@ -137,7 +136,7 @@ theorem agree_hitAndRunWalk (r : ℕ) (a : Fin r → NumPoint d) (β' : Fin r �
   Agree.bindT
     (agree_loop steps (fun y => Agree.bindT (agree_hitAndRunStep r a β' y) fun y' =>
       agree_pure _) x)
-    fun res => agree_pure _
+    fun res => by rcases res with y | e; exacts [agree_pure _, e.elim]
 
 /-! ## Rounding and sampling -/
 
@@ -198,9 +197,7 @@ def sampleUntilAcceptedT (L : Loaded d) (W : WalkConstants d L.facets)
   | 0 => .fail
   | fuel + 1 =>
       (sampleTryT L W scaled dimN).bind fun r =>
-        match r with
-        | some z => .pure z
-        | none => sampleUntilAcceptedT L W scaled dimN fuel
+        r.elim (sampleUntilAcceptedT L W scaled dimN fuel) .pure
 
 theorem agree_sampleUntilAccepted (L : Loaded d) (W : WalkConstants d L.facets)
     (scaled : Fin L.facets → Num ℝ) (dimN : Num ℕ) :
@@ -287,9 +284,7 @@ def stepT (cv18T : CV18Tree d) (fuel : ℕ) (K : Params) (L : Loaded d) (s : Sta
     let m2 ← A.pow m 2
     let roundness ← A.div m2 K.dim
     A.pure (epsC, pC, roundness))).bind fun x =>
-  match x with
-  | (epsC, pC, roundness) =>
-  (cv18T (allFacets L.facets L.normal off') epsC roundness pC).bind fun v =>
+  (cv18T (allFacets L.facets L.normal off') x.1 x.2.2 x.2.1).bind fun v =>
   (compute (do
     let zero ← A.lit (0 : ℝ)
     let v' ← A.max zero v
@@ -299,8 +294,6 @@ def stepT (cv18T : CV18Tree d) (fuel : ℕ) (K : Params) (L : Loaded d) (s : Sta
   (compute (scaledOffsets L K.scale)).bind fun scaled =>
   (filterCopiesT (fun x => (compute (latticeMember L scaled x)).bind fun inside =>
       .pure (!inside)) s.X).bind fun r =>
-  match r with
-  | (X, size) =>
   (compute (A.mul t s.p)).bind fun tp =>
   (compute (A.le K.thresh tp)).bind fun big =>
   (if big then
@@ -316,31 +309,21 @@ def stepT (cv18T : CV18Tree d) (fuel : ℕ) (K : Params) (L : Loaded d) (s : Sta
         let one ← A.lit (1 : ℝ)
         let keepProb ← A.div one twoK
         A.pure (p', keepProb))).bind fun y =>
-      match y with
-      | (p', keepProb) =>
-      (filterCopiesT (fun _ => unitT.bind fun u => compute (A.lt u keepProb)) X).bind fun r' =>
-      match r' with
-      | (X', size') => .pure (p', X', size')
-    else .pure (s.p, X, size)).bind fun q =>
-  match q with
-  | (p, X, size) =>
-  (compute (A.mul t p)).bind fun rate =>
+      (filterCopiesT (fun _ => unitT.bind fun u => compute (A.lt u y.2)) r.1).bind fun r' =>
+      .pure (y.1, r'.1, r'.2)
+    else .pure (s.p, r.1, r.2)).bind fun q =>
+  (compute (A.mul t q.1)).bind fun rate =>
   (poissonT rate).bind fun N =>
-  (halveT K fuel p X size N).bind fun h =>
-  match h with
-  | (p, X, size, N) =>
+  (halveT K fuel q.1 q.2.1 q.2.2 N).bind fun h =>
   (compute (walkConstantsProg L K.scale K.epsPrime K.dim)).bind fun W =>
-  (loopTree (γ := Empty) N (fun (acc : List (Fin d → Num ℤ) × Num ℕ) =>
+  (loopTree (γ := Empty) h.2.2.2 (fun (acc : List (Fin d → Num ℤ) × Num ℕ) =>
       (sampleUntilAcceptedT L W scaled K.dimN fuel).bind fun z =>
       (compute (A.push acc.1 z)).bind fun ys =>
       (compute (do
         let one ← A.lit (1 : ℕ)
         A.add acc.2 one)).bind fun c =>
-      .pure (.inl (ys, c))) (X, size)).bind fun res =>
-  let (X, size) := match res with
-    | .inl r => r
-    | .inr e => e.elim
-  .pure ⟨p, X, size⟩
+      .pure (.inl (ys, c))) (h.2.1, h.2.2.1)).bind fun res =>
+  .pure ⟨h.1, (res.elim id Empty.elim).1, (res.elim id Empty.elim).2⟩
 
 theorem agree_step {cv18T : CV18Tree d} (hcv : CV18Agrees cv18T) (fuel : ℕ) (K : Params)
     (L : Loaded d) (s : State d) :
@@ -373,7 +356,9 @@ theorem agree_step {cv18T : CV18Tree d} (hcv : CV18Agrees cv18T) (fuel : ℕ) (K
     Agree.bindT (agree_sampleUntilAccepted L W scaled K.dimN fuel) fun z =>
     Agree.bindT (agree_run _) fun ys => Agree.bindT (agree_run _) fun c => agree_pure _) _)
     fun res => ?_
-  exact agree_pure _
+  rcases res with r | e
+  · exact agree_pure _
+  · exact e.elim
 
 /-- The parameters of the run, computed (as in `estimator`). -/
 def paramsProg {d : ℕ} (cs : List (ComponentInput d)) (Ls : List (Loaded d)) (eps delta : ℝ) :

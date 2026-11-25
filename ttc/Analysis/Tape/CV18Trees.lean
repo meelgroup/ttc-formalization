@@ -168,13 +168,11 @@ def properWalkRoundT (P : PhaseConstants) (sigma2 : Num ℝ) (left : Num ℕ) (x
     (isMemberT d member y).bind fun _ => .pure (.inr x)
   else
     (ballWalkStepT d G member P sigma2 x).bind fun r =>
-    match r with
-    | (proper, y) =>
-      if proper then
+      if r.1 then
         (compute (do
           let one ← A.lit (1 : ℕ)
-          A.sub left one)).bind fun left' => .pure (.inl (left', y))
-      else .pure (.inl (left, y))
+          A.sub left one)).bind fun left' => .pure (.inl (left', r.2))
+      else .pure (.inl (left, r.2))
 
 theorem agree_properWalkRound (P : PhaseConstants) (sigma2 : Num ℝ) (left : Num ℕ)
     (x : NumPoint d) :
@@ -190,9 +188,7 @@ theorem agree_properWalkRound (P : PhaseConstants) (sigma2 : Num ℝ) (left : Nu
 def properWalkT (P : PhaseConstants) (sigma2 : Num ℝ) (cap : Num ℕ) (x : NumPoint d) :
     Tree d (Option (NumPoint d)) :=
   (loopTree cap (fun s => properWalkRoundT d G member P sigma2 s.1 s.2) (P.steps, x)).bind
-    fun r => .pure (match r with
-      | .inl _ => none
-      | .inr y => some y)
+    fun r => .pure (r.elim (fun _ => none) some)
 
 theorem agree_properWalk (P : PhaseConstants) (sigma2 : Num ℝ) (cap : Num ℕ) (x : NumPoint d) :
     Agree (properWalk d G member P sigma2 cap x) (interp (properWalkT d G member P sigma2 cap x)) :=
@@ -200,7 +196,7 @@ theorem agree_properWalk (P : PhaseConstants) (sigma2 : Num ℝ) (cap : Num ℕ)
     (agree_loop (bodyM := fun s => properWalkRound d G member P sigma2 s.1 s.2)
       (body := fun s => properWalkRoundT d G member P sigma2 s.1 s.2) cap
       (fun s => agree_properWalkRound d G member P sigma2 s.1 s.2) (P.steps, x))
-    fun r => agree_pure _
+    fun r => agree_pure_of_eq (by rcases r with _ | _ <;> rfl)
 
 def rejectionAttemptT (P : PhaseConstants) (sigma2 : Num ℝ) (x : NumPoint d) :
     Tree d (Bool × NumPoint d) :=
@@ -220,12 +216,9 @@ theorem agree_rejectionAttempt (P : PhaseConstants) (sigma2 : Num ℝ) (x : NumP
 def sampleAttemptT (P : PhaseConstants) (sigma2 : Num ℝ) (walkCap : Num ℕ) (x : NumPoint d) :
     Tree d (NumPoint d ⊕ Option (NumPoint d × NumPoint d)) :=
   (properWalkT d G member P sigma2 walkCap x).bind fun r =>
-  match r with
-  | some y =>
+  r.elim (.pure (.inr none)) fun y =>
     (rejectionAttemptT d G member P sigma2 y).bind fun a =>
-    match a with
-    | (accepted, z) => if accepted then .pure (.inr (some (z, y))) else .pure (.inl y)
-  | _ => .pure (.inr none)
+      if a.1 then .pure (.inr (some (a.2, y))) else .pure (.inl y)
 
 theorem agree_sampleAttempt (P : PhaseConstants) (sigma2 : Num ℝ) (walkCap : Num ℕ)
     (x : NumPoint d) :
@@ -238,13 +231,12 @@ theorem agree_sampleAttempt (P : PhaseConstants) (sigma2 : Num ℝ) (walkCap : N
     obtain ⟨accepted, z⟩ := a
     exact agree_ite accepted (agree_pure _) (agree_pure _)
 
-def sampleFinishT (weight : NumPoint d → Prog (Num ℝ)) (total : Num ℝ) :
-    NumPoint d ⊕ Option (NumPoint d × NumPoint d) → Tree d ((Num ℝ × NumPoint d) ⊕ Unit)
-  | .inr (some (z, y)) =>
-      (compute (weight z)).bind fun w =>
-      (compute (A.add total w)).bind fun total' => .pure (.inl (total', y))
-  | .inr none => .pure (.inr ())
-  | .inl _ => .pure (.inr ())
+def sampleFinishT (weight : NumPoint d → Prog (Num ℝ)) (total : Num ℝ)
+    (a : NumPoint d ⊕ Option (NumPoint d × NumPoint d)) :
+    Tree d ((Num ℝ × NumPoint d) ⊕ Unit) :=
+  a.elim (fun _ => .pure (.inr ())) fun o => o.elim (.pure (.inr ())) fun zy =>
+    (compute (weight zy.1)).bind fun w =>
+    (compute (A.add total w)).bind fun total' => .pure (.inl (total', zy.2))
 
 theorem agree_sampleFinish (weight : NumPoint d → Prog (Num ℝ)) (total : Num ℝ)
     (a : NumPoint d ⊕ Option (NumPoint d × NumPoint d)) :
@@ -273,12 +265,8 @@ def collectSamplesT (P : PhaseConstants) (sigma2 : Num ℝ) (weight : NumPoint d
     let one ← A.lit (1 : ℕ)
     let walkCap ← A.add P.cap one
     A.pure (zero, walkCap))).bind fun c =>
-  match c with
-  | (zero, walkCap) =>
-    (loopTree samples (sampleRoundT d G member P sigma2 weight walkCap) (zero, start)).bind
-      fun r => .pure (match r with
-        | .inl s => some s
-        | .inr _ => none)
+    (loopTree samples (sampleRoundT d G member P sigma2 weight c.2) (c.1, start)).bind
+      fun r => .pure (r.elim some fun _ => none)
 
 theorem agree_collectSamples (P : PhaseConstants) (sigma2 : Num ℝ)
     (weight : NumPoint d → Prog (Num ℝ)) (samples : Num ℕ) (start : NumPoint d) :
@@ -287,20 +275,18 @@ theorem agree_collectSamples (P : PhaseConstants) (sigma2 : Num ℝ)
   refine Agree.bindT (agree_run _) fun c => ?_
   obtain ⟨zero, walkCap⟩ := c
   exact Agree.bindT (agree_loop _ (fun s => agree_sampleRound d G member P sigma2 weight
-    walkCap s) _) fun r => agree_pure _
+    walkCap s) _) fun r => agree_pure_of_eq (by rcases r with _ | _ <;> rfl)
 
 def coolingPhaseT (sigma2 tau2 : Num ℝ) (x : NumPoint d) : Tree d (Option (Num ℝ × NumPoint d)) :=
   (compute (phaseConstantsProg G sigma2)).bind fun P =>
   (compute (A.smul G.scale x)).bind fun start =>
   (collectSamplesT d G member P sigma2 (gaussianRatioWeightProg sigma2 tau2) P.samples
       start).bind fun r =>
-  match r with
-  | some (total, y) =>
+  r.elim (.pure none) fun ty =>
     (compute (do
       let k ← A.cast P.samples
-      A.div total k)).bind fun W =>
-    (compute (A.smul G.scaleInv y)).bind fun z => .pure (some (W, z))
-  | _ => .pure none
+      A.div ty.1 k)).bind fun W =>
+    (compute (A.smul G.scaleInv ty.2)).bind fun z => .pure (some (W, z))
 
 theorem agree_coolingPhase (sigma2 tau2 : Num ℝ) (x : NumPoint d) :
     Agree (coolingPhase d G member sigma2 tau2 x) (interp (coolingPhaseT d G member sigma2 tau2 x)) := by
@@ -315,12 +301,10 @@ def uniformPhaseT (sigma2 : Num ℝ) (x : NumPoint d) : Tree d (Option (Num ℝ)
   (compute (A.smul G.scale x)).bind fun start =>
   (collectSamplesT d G member P sigma2 (uniformRatioWeightProg sigma2) G.sampleCount
       start).bind fun r =>
-  match r with
-  | some (total, _) =>
+  r.elim (.pure none) fun ty =>
     (compute (do
       let k ← A.cast G.sampleCount
-      A.div total k)).bind fun U => .pure (some U)
-  | _ => .pure none
+      A.div ty.1 k)).bind fun U => .pure (some U)
 
 theorem agree_uniformPhase (sigma2 : Num ℝ) (x : NumPoint d) :
     Agree (uniformPhase d G member sigma2 x) (interp (uniformPhaseT d G member sigma2 x)) := by
@@ -350,14 +334,10 @@ def coolingPhasesT : List (Num ℝ) → NumPoint d → Tree d (Option (Num ℝ �
       (compute (A.cell sigma2)).bind fun s =>
       (compute (A.cell tau2)).bind fun t =>
       (coolingPhaseT d G member s t x).bind fun r =>
-      match r with
-      | some (W, y) =>
-        (coolingPhasesT (tau2 :: rest) y).bind fun r' =>
-        match r' with
-        | some (product, z) =>
-          (compute (A.mul W product)).bind fun P => .pure (some (P, z))
-        | _ => .pure none
-      | _ => .pure none
+      r.elim (.pure none) fun Wy =>
+        (coolingPhasesT (tau2 :: rest) Wy.2).bind fun r' =>
+        r'.elim (.pure none) fun pz =>
+          (compute (A.mul Wy.1 pz.1)).bind fun P => .pure (some (P, pz.2))
   | [], x => (compute (A.lit (1 : ℝ))).bind fun one => .pure (some (one, x))
   | [_], x => (compute (A.lit (1 : ℝ))).bind fun one => .pure (some (one, x))
 
@@ -378,20 +358,14 @@ theorem agree_coolingPhases :
 
 def figureOneRunT : Tree d (Num ℝ) :=
   (initialSampleT d G member).bind fun r₀ =>
-  match r₀ with
-  | some x₀ =>
+  r₀.elim (compute (A.lit 0)) fun x₀ =>
     (coolingPhasesT d G member G.schedule x₀).bind fun r₁ =>
-    match r₁ with
-    | some (product, x) =>
-      (uniformPhaseT d G member G.terminal x).bind fun r₂ =>
-      match r₂ with
-      | some U =>
+    r₁.elim (compute (A.lit 0)) fun px =>
+      (uniformPhaseT d G member G.terminal px.2).bind fun r₂ =>
+      r₂.elim (compute (A.lit 0)) fun U =>
         compute (do
-          let a ← A.mul G.gaussianIntegral product
+          let a ← A.mul G.gaussianIntegral px.1
           A.mul a U)
-      | _ => compute (A.lit 0)
-    | _ => compute (A.lit 0)
-  | _ => compute (A.lit 0)
 
 theorem agree_figureOneRun :
     Agree (figureOneRun d G member) (interp (figureOneRunT d G member)) := by
@@ -421,15 +395,14 @@ def repeatIndependentlyT {d : ℕ} (count : Num ℕ) (body : Tree d (Num ℝ)) :
   (loopTree (γ := Empty) count (fun estimates =>
       body.bind fun x =>
       (compute (A.push estimates x)).bind fun estimates' => .pure (.inl estimates')) []).bind
-    fun r => .pure (match r with
-      | .inl estimates => estimates
-      | .inr e => e.elim)
+    fun r => .pure (r.elim id Empty.elim)
 
 theorem agree_repeatIndependently {d : ℕ} (count : Num ℕ) {bodyM : M d (Num ℝ)}
     {body : Tree d (Num ℝ)} (h : Agree bodyM (interp body)) :
     Agree (repeatIndependently count bodyM) (interp (repeatIndependentlyT count body)) :=
   Agree.bindT (agree_loop count (fun estimates => Agree.bindT h fun x =>
-    Agree.bindT (agree_run _) fun _ => agree_pure _) _) fun r => agree_pure _
+    Agree.bindT (agree_run _) fun _ => agree_pure _) _) fun r =>
+    agree_pure_of_eq (by rcases r with _ | e <;> first | rfl | exact e.elim)
 
 /-- **CV18, as a tree.** -/
 def cv18T (d : ℕ) : CV18Tree d := fun member eps roundness p =>

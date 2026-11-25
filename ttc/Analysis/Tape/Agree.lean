@@ -111,9 +111,8 @@ end FoldlWhile
 `inl` is the state when the rounds run out. -/
 def loopRounds (body : β → Tree n (β ⊕ γ)) : ℕ → β → Tree n (β ⊕ γ)
   | 0, b => .pure (.inl b)
-  | k + 1, b => (body b).bind fun
-      | .inl b' => loopRounds body k b'
-      | .inr c => .pure (.inr c)
+  | k + 1, b => (body b).bind fun r =>
+      r.elim (fun b' => loopRounds body k b') (fun c => .pure (.inr c))
 
 /-- **A loop of `count` rounds as a tree**: one `NumOp.loop`, then the rounds. -/
 def loopTree (count : Num ℕ) (body : β → Tree n (β ⊕ γ)) (init : β) : Tree n (β ⊕ γ) :=
@@ -172,9 +171,8 @@ theorem foldlWhile_loopRounds (bodyM : β → M n (β ⊕ γ)) (body : β → Tr
       have hs : loopStep bodyM (some (.inl b), o) a =
           (do let r ← runFrom (bodyM b) o; pure (some r)) := rfl
       have hR : Tree.interp (loopRounds body (l.length + 1) b) =
-          Tree.interp (body b) >>= fun r => Tree.interp (match r with
-            | .inl b' => loopRounds body l.length b'
-            | .inr c => .pure (.inr c)) := by
+          Tree.interp (body b) >>= fun r => Tree.interp
+            (r.elim (fun b' => loopRounds body l.length b') (fun c => .pure (.inr c))) := by
         rw [loopRounds, interp_bind]
       rw [List.length_cons, hR]
       obtain ⟨hv, hc⟩ := h b o
@@ -195,10 +193,12 @@ theorem foldlWhile_loopRounds (bodyM : β → M n (β ⊕ γ)) (body : β → Tr
         · rw [val_foldlWhile_cons, hs]
           simp only [Charged.val_bind, Charged.val_pure, hr]
           rw [iv, val_runFrom_bind, ← hv, hr]
+          rfl
         · rw [cost_foldlWhile_cons, hs]
           simp only [Charged.val_bind, Charged.val_pure, Charged.cost_bind, Charged.cost_pure,
             hr, add_zero]
           rw [ic, cost_runFrom_bind, ← hv, hr, ← hc]
+          rfl
       · -- the round ended the loop
         have hdead := foldlWhile_dead bodyM (some (.inr c), o') (by simp) l
         refine ⟨?_, ?_⟩
