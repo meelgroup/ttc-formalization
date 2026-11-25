@@ -190,30 +190,40 @@ def sum : (m : ℕ) → (Fin m → Num ℕ) → Prog (Num ℕ)
       let rest ← sum (m + 1) (Fin.tail a)
       add (a 0) rest
 
+/-- The sum `a₀ + ⋯ + aₘ₋₁` of a non-empty list of held natural numbers: one addition
+fewer than its length. -/
+def sumList : List (Num ℕ) → Prog (Num ℕ)
+  | [] => lit 0
+  | [a] => A.pure a
+  | a :: b :: rest => do
+      let r ← sumList (b :: rest)
+      add a r
+
+/-- The first entry whose flag is set, or `0` if there is none. -/
+def firstPassing : List (Num ℝ × Bool) → Prog (Num ℝ)
+  | [] => lit 0
+  | e :: rest => if e.2 then A.pure e.1 else firstPassing rest
+
 /-- The median of the held numbers `v`, of which there are `m`: the entry of rank
-`⌊m/2⌋`, by comparison counting.  For each entry `vᵢ`, count the entries below `vᵢ` and
-those at most `vᵢ` (`2|v|` comparisons and `2(|v| − 1)` additions), then test whether
-rank `⌊m/2⌋` falls between the two counts (two comparisons), and return the first entry
-that passes.  Each entry is read from the list once (`|v|` cells). -/
+`⌊m/2⌋`, by comparison counting.  Each entry is read from the list once (`|v|` cells);
+then for each entry `vᵢ`, count the entries below `vᵢ` and those at most `vᵢ` (`2|v|`
+comparisons and `2(|v| − 1)` additions), and test whether rank `⌊m/2⌋` falls between the
+two counts (two comparisons).  Return the first entry that passes. -/
 noncomputable def median (m : Num ℕ) (v : List (Num ℝ)) : Prog (Num ℝ) := do
-  let w ← forEach fun i : Fin v.length => cell (v.get i)
+  let w ← v.mapM cell
   let zero ← lit (0 : ℕ)
   let one ← lit (1 : ℕ)
-  let below ← forEach fun i => do
-    let flags ← forEach fun j => lt (w j) (w i)
-    sum v.length fun j => if flags j then one else zero
-  let atMost ← forEach fun i => do
-    let flags ← forEach fun j => le (w j) (w i)
-    sum v.length fun j => if flags j then one else zero
   let two ← lit (2 : ℕ)
   let rank ← div m two
-  let passes ← forEach fun i => do
-    let a ← le (below i) rank
-    let b ← lt rank (atMost i)
-    A.pure (a && b)
-  match (List.finRange v.length).find? passes with
-  | some i => A.pure (w i)
-  | none => lit 0
+  let passes ← w.mapM fun wi => do
+    let fb ← w.mapM fun wj => lt wj wi
+    let below ← sumList (fb.map fun f => if f then one else zero)
+    let fa ← w.mapM fun wj => le wj wi
+    let atMost ← sumList (fa.map fun f => if f then one else zero)
+    let a ← le below rank
+    let b ← lt rank atMost
+    A.pure (wi, a && b)
+  firstPassing passes
 
 /-- `protectedLog x = max 1 (log x)`: three operations. -/
 noncomputable def protectedLog (x : Num ℝ) : Prog (Num ℝ) := do
