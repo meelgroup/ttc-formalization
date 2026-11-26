@@ -12,7 +12,7 @@ import ttc.Model.SealedRun
 import ttc.Analysis.Tape.Bridge
 import ttc.Analysis.Tape.ThinLaw
 import ttc.Analysis.Tape.CV18Sim
-import ttc.Analysis.Tape.OldHalving
+import ttc.Analysis.Tape.Constants
 import ttc.Analysis.ChargedCV18.Theorem
 import ttc.Analysis.L2LatticeUnion
 import ttc.Analysis.TTCProbabilityMeasure
