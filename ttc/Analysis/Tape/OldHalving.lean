@@ -402,4 +402,151 @@ theorem oldLaw_succ (f : ℕ) (s : TTCState n) (N : ℕ) (hX : StoredBelow s.X s
 
 end Law
 
+
+/-! ## What round `0` leaves -/
+
+section Round0
+
+theorem mem_selectBy {α : Type} : ∀ (l : List α) (c : Fin l.length → Bool) (x : α),
+    x ∈ selectBy l c ↔ ∃ i, l.get i = x ∧ c i = true
+  | [], c, x => by simp [selectBy]
+  | y :: l, c, x => by
+      have ih := mem_selectBy l (Fin.tail c) x
+      change x ∈ selectBy (y :: l) c ↔ ∃ i : Fin (l.length + 1), (y :: l).get i = x ∧ c i = true
+      rw [Fin.exists_fin_succ]
+      unfold selectBy
+      split_ifs with h
+      · simp only [List.mem_cons, ih, Fin.tail, List.get_eq_getElem, Fin.val_zero,
+          List.getElem_cons_zero, Fin.val_succ, List.getElem_cons_succ, h, and_true]
+        constructor
+        · rintro (rfl | h'); exacts [Or.inl rfl, Or.inr h']
+        · rintro (h' | h'); exacts [Or.inl h'.symm, Or.inr h']
+      · simp only [ih, Fin.tail, List.get_eq_getElem, Fin.val_zero, List.getElem_cons_zero,
+          Fin.val_succ, List.getElem_cons_succ, h]
+        simp
+
+variable (Ls : List (ttc.SampleCopy n))
+
+/-- The copies of `Ls` that the flags `κ` keep. -/
+def keepSet (κ : Fin Ls.length → Bool) : Finset (ttc.SampleCopy n) := (selectBy Ls κ).toFinset
+
+theorem samplesAfter_one_eq_keepSet (X : Finset (ttc.SampleCopy n)) (hX : Ls.toFinset = X)
+    (A : ℕ × ℕ → Bool) :
+    samplesAfter A 1 X = keepSet Ls (fun i => A (0, (Ls.get i).1)) := by
+  classical
+  ext copy
+  simp only [samplesAfter, Finset.mem_filter, keepSet, List.mem_toFinset, mem_selectBy, survives_one,
+    ← hX]
+  constructor
+  · rintro ⟨hc, h0⟩
+    obtain ⟨i, hi⟩ := List.mem_iff_get.mp hc
+    exact ⟨i, hi, by rw [hi]; exact h0⟩
+  · rintro ⟨i, hi, h0⟩
+    exact ⟨List.mem_iff_get.mpr ⟨i, hi⟩, by rw [← hi]; exact h0⟩
+
+theorem survN_eq_count (A : ℕ × ℕ → Bool) (nl N : ℕ) :
+    survN A nl N = (Finset.univ.filter fun j : Fin N => A (0, nl + j) = true).card := by
+  classical
+  simp only [survN, survS, pendingSurvivorIndices, survives_one]
+  rw [← Finset.card_map Fin.valEmbedding]
+  congr 1
+  ext i
+  simp only [Finset.mem_filter, Finset.mem_range, Finset.mem_map, Finset.mem_univ, true_and,
+    Fin.valEmbedding_apply]
+  constructor
+  · rintro ⟨hi, h⟩; exact ⟨⟨i, hi⟩, h, rfl⟩
+  · rintro ⟨j, h, rfl⟩; exact ⟨j.isLt, h⟩
+
+/-- **The round-0 coins of the stored copies and of the pending copies are independent fair
+coins**, when the stored labels are distinct and below the pending ones. -/
+theorem round0_coins_law (nl N : ℕ) (hlab : (Ls.map (·.1)).Nodup) (hbelow : ∀ c ∈ Ls, c.1 < nl) :
+    fairCoinStreamLaw.map (fun A => ((fun i : Fin Ls.length => A (0, (Ls.get i).1)),
+      (fun j : Fin N => A (0, nl + j)))) =
+      (Measure.pi fun _ : Fin Ls.length => fairCoinLaw).prod (Measure.pi fun _ : Fin N => fairCoinLaw) := by
+  have hP : ∀ _ : ℕ × ℕ, IsProbabilityMeasure fairCoinLaw := fun _ => ttc.fairCoinLaw_isProbabilityMeasure
+  let ι : Fin Ls.length ⊕ Fin N → ℕ × ℕ := Sum.elim (fun i => (0, (Ls.get i).1)) (fun j => (0, nl + j))
+  have hι : Function.Injective ι := by
+    rintro (i | j) (i' | j') h
+    · simp only [ι, Sum.elim_inl, Prod.mk.injEq, true_and] at h
+      have hinj := List.nodup_iff_injective_get.mp hlab
+      have := hinj (a₁ := ⟨i, by simp⟩) (a₂ := ⟨i', by simp⟩) (by simpa using h)
+      congr 1
+      exact Fin.ext (by simpa using congrArg Fin.val this)
+    · simp only [ι, Sum.elim_inl, Sum.elim_inr, Prod.mk.injEq, true_and] at h
+      have := hbelow (Ls.get i) (List.get_mem Ls i)
+      omega
+    · simp only [ι, Sum.elim_inl, Sum.elim_inr, Prod.mk.injEq, true_and] at h
+      have := hbelow (Ls.get i') (List.get_mem Ls i')
+      omega
+    · simp only [ι, Sum.elim_inr, Prod.mk.injEq, true_and] at h
+      congr 1
+      exact Fin.ext (by omega)
+  have h1 : fairCoinStreamLaw.map (fun A t => A (ι t)) =
+      Measure.pi fun _ : Fin Ls.length ⊕ Fin N => fairCoinLaw := by
+    rw [ttc.fairCoinStreamLaw, Measure.map_infinitePi_infinitePi_of_inj hι]
+    exact Measure.infinitePi_eq_pi _
+  have hm : Measurable fun A : ℕ × ℕ → Bool => fun t => A (ι t) :=
+    measurable_pi_iff.mpr fun t => measurable_pi_apply _
+  have hfun : (fun A : ℕ × ℕ → Bool => ((fun i : Fin Ls.length => A (0, (Ls.get i).1)),
+      (fun j : Fin N => A (0, nl + j)))) =
+      (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin Ls.length ⊕ Fin N => Bool)) ∘
+        fun A t => A (ι t) := by
+    funext A
+    rfl
+  rw [hfun, ← Measure.map_map (MeasurableEquiv.measurable _) hm, h1]
+  exact (measurePreserving_sumPiEquivProdPi (fun _ : Fin Ls.length ⊕ Fin N => fairCoinLaw)).map_eq
+
+end Round0
+
+
+section Round0Law
+
+variable (Th : ℝ) (Ls : List (ttc.SampleCopy n))
+
+/-- **What round `0` leaves**: the stored copies, each kept by a fair coin, and a
+`Binomial(N, 1/2)` number of pending copies, independent. -/
+theorem round0_law (s : TTCState n) (N : ℕ) (hX : Ls.toFinset = s.X) (hlab : (Ls.map (·.1)).Nodup)
+    (hbelow : ∀ c ∈ Ls, c.1 < s.nextLabel) :
+    fairCoinStreamLaw.map (fun A => (samplesAfter A 1 s.X, survN A s.nextLabel N)) =
+      ((Measure.pi fun _ : Fin Ls.length => fairCoinLaw).prod (binomial N ttc.fairProbability)).map
+        fun q => (keepSet Ls q.1, q.2) := by
+  classical
+  let cnt : (Fin N → Bool) → ℕ := fun bits => (Finset.univ.filter fun j => bits j = true).card
+  have hfun : (fun A : ℕ × ℕ → Bool => (samplesAfter A 1 s.X, survN A s.nextLabel N)) =
+      (fun q : (Fin Ls.length → Bool) × (Fin N → Bool) => (keepSet Ls q.1, cnt q.2)) ∘
+        fun A => ((fun i : Fin Ls.length => A (0, (Ls.get i).1)),
+          (fun j : Fin N => A (0, s.nextLabel + j))) := by
+    funext A
+    simp only [Function.comp_apply, samplesAfter_one_eq_keepSet Ls s.X hX A, survN_eq_count, cnt]
+  have hm : Measurable fun A : ℕ × ℕ → Bool => ((fun i : Fin Ls.length => A (0, (Ls.get i).1)),
+      (fun j : Fin N => A (0, s.nextLabel + j))) :=
+    (measurable_pi_iff.mpr fun i => measurable_pi_apply _).prodMk
+      (measurable_pi_iff.mpr fun j => measurable_pi_apply _)
+  have hcnt : (Measure.pi fun _ : Fin N => fairCoinLaw).map cnt = binomial N ttc.fairProbability := by
+    have := ttc.finite_bernoulli_count_law (Fin N) ttc.fairProbability
+    rw [Fintype.card_fin] at this
+    exact this
+  rw [hfun, ← Measure.map_map (measurable_of_countable _) hm, round0_coins_law Ls s.nextLabel N hlab hbelow,
+    show (fun q : (Fin Ls.length → Bool) × (Fin N → Bool) => (keepSet Ls q.1, cnt q.2)) =
+      (fun q => (keepSet Ls q.1, q.2)) ∘ Prod.map id cnt from rfl,
+    ← Measure.map_map (measurable_of_countable _) (measurable_of_countable _),
+    ← Measure.map_prod_map _ _ measurable_id (measurable_of_countable _), Measure.map_id, hcnt]
+
+/-- **One round of the old loop**: stop, or keep each stored copy by a fair coin, draw the
+pending count from `Binomial(N, 1/2)`, halve `p`, and go on with fresh coins. -/
+theorem oldLaw_succ' (f : ℕ) (s : TTCState n) (N : ℕ) (hX : Ls.toFinset = s.X)
+    (hlab : (Ls.map (·.1)).Nodup) (hbelow : ∀ c ∈ Ls, c.1 < s.nextLabel) :
+    oldLaw Th (f + 1) s N =
+      if ((s.X.card + N : ℕ) : ℝ) ≤ Th then Measure.dirac (some (s, N))
+      else ((Measure.pi fun _ : Fin Ls.length => fairCoinLaw).prod
+        (binomial N ttc.fairProbability)).bind fun q => oldCont Th f s (keepSet Ls q.1, q.2) := by
+  have hX' : StoredBelow s.X s.nextLabel := by
+    intro c hc
+    rw [← hX, List.mem_toFinset] at hc
+    exact hbelow c hc
+  rw [oldLaw_succ Th f s N hX', round0_law Ls s N hX hlab hbelow,
+    Measure.bind_map (measurable_of_countable _).aemeasurable (measurable_of_countable _).aemeasurable]
+
+end Round0Law
+
 end ttc.Tape
