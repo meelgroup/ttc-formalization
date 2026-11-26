@@ -7,6 +7,7 @@ import ttc.Analysis.CoinSpliceLaw
 import ttc.Analysis.IIDIndexedSelection
 import ttc.Analysis.LabelFreshness
 import ttc.Analysis.BernoulliCount
+import ttc.Analysis.CoinRelabelLaw
 
 /-!
 # The old halving loop, one round at a time
@@ -287,5 +288,118 @@ theorem oldTrunc_splice_succ (Th : ℝ) (f : ℕ) (s : TTCState n) (N : ℕ) (A 
       rw [samplesAfter_splice_succ A B s.nextLabel N s.X hX, pendingAfter_splice_succ]
       simp only [afterRound, pow_succ, div_div, mul_comm]
     · rw [if_neg (fun h => hq (hex.1 h)), if_neg hq]
+
+
+/-! ## The law of one round -/
+
+section Law
+
+variable (Th : ℝ)
+
+theorem measurable_oldTrunc (f : ℕ) (s : TTCState n) (N : ℕ) :
+    Measurable (oldTrunc Th f s N) := by
+  classical
+  have hset : MeasurableSet {c : ℕ × ℕ → Bool | ∃ r < f, ttcPseudocode.secondLoopExit s N Th c r} := by
+    have : {c : ℕ × ℕ → Bool | ∃ r < f, ttcPseudocode.secondLoopExit s N Th c r} =
+        ⋃ r ∈ Finset.range f, {c | ttcPseudocode.secondLoopExit s N Th c r} := by
+      ext c; simp
+    rw [this]
+    exact Finset.measurableSet_biUnion _ fun r _ => ttc.measurableSet_thinningExit s N Th r
+  exact Measurable.ite hset (ArlibCommunity.Algorithms.CV18.measurable_some.comp
+    (ttc.measurable_thinningResult s N Th)) measurable_const
+
+/-- **The old loop given at most `f` rounds**, as a law. -/
+def oldLaw (f : ℕ) (s : TTCState n) (N : ℕ) : Measure (Option (TTCState n × ℕ)) :=
+  fairCoinStreamLaw.map (oldTrunc Th f s N)
+
+theorem oldLaw_zero (s : TTCState n) (N : ℕ) : oldLaw Th 0 s N = Measure.dirac none := by
+  letI := ttc.fairCoinStreamLaw_isProbabilityMeasure
+  have : oldTrunc Th 0 s N = fun _ => none := by
+    funext c; simp [oldTrunc]
+  rw [oldLaw, this, Measure.map_const, measure_univ, one_smul]
+
+theorem relabCoins_law (A : ℕ × ℕ → Bool) (nl N : ℕ) :
+    fairCoinStreamLaw.map (relabCoins A nl N) = fairCoinStreamLaw :=
+  ttc.fairCoinStreamLaw_reindex_labels (relab A nl N) (relab_injective A nl N)
+
+theorem measurable_relabCoins (A : ℕ × ℕ → Bool) (nl N : ℕ) :
+    Measurable (relabCoins A nl N) :=
+  measurable_pi_iff.mpr fun p => measurable_pi_apply (p.1, relab A nl N p.2)
+
+theorem measurable_samplesAfter_one (X : Finset (ttc.SampleCopy n)) :
+    Measurable fun A : ℕ × ℕ → Bool => samplesAfter A 1 X := by
+  classical
+  rw [measurable_finset_iff]
+  intro copy
+  apply measurable_to_prop
+  by_cases hc : copy ∈ X
+  · have : (fun A : ℕ × ℕ → Bool => copy ∈ samplesAfter A 1 X) ⁻¹' {True} =
+        {A | survives A 1 copy.1} := by
+      ext A; simp [samplesAfter, hc]
+    rw [this]
+    exact ttc.measurableSet_survives 1 copy.1
+  · have : (fun A : ℕ × ℕ → Bool => copy ∈ samplesAfter A 1 X) ⁻¹' {True} = ∅ := by
+      ext A; simp [samplesAfter, hc]
+    rw [this]
+    exact MeasurableSet.empty
+
+theorem measurable_survN (nl N : ℕ) : Measurable fun A : ℕ × ℕ → Bool => survN A nl N := by
+  have := ttc.measurable_pendingSurvivorIndices_fixed 1 nl N
+  exact (measurable_of_countable (fun T : Finset ℕ => T.card)).comp this
+
+/-- What follows round `0`, as a function of the copies it left. -/
+def oldCont (f : ℕ) (s : TTCState n) (q : Finset (ttc.SampleCopy n) × ℕ) :
+    Measure (Option (TTCState n × ℕ)) :=
+  oldLaw Th f ⟨s.p / 2, q.1, s.nextLabel⟩ q.2
+
+/-- **One round of the old loop, as a law**: either it exits before any round, or it is
+the loop on what round `0` left, with fresh coins. -/
+theorem oldLaw_succ (f : ℕ) (s : TTCState n) (N : ℕ) (hX : StoredBelow s.X s.nextLabel) :
+    oldLaw Th (f + 1) s N =
+      if ((s.X.card + N : ℕ) : ℝ) ≤ Th then Measure.dirac (some (s, N))
+      else (fairCoinStreamLaw.map fun A => (samplesAfter A 1 s.X, survN A s.nextLabel N)).bind
+        (oldCont Th f s) := by
+  classical
+  have := ttc.fairCoinStreamLaw_isProbabilityMeasure
+  have hsplice := ttc.fairCoinStreamLaw_splice 1
+  have hF : Measurable fun AB : (ℕ × ℕ → Bool) × (ℕ × ℕ → Bool) =>
+      oldTrunc Th (f + 1) s N (spliceCoins AB.1 AB.2 1) :=
+    (measurable_oldTrunc Th (f + 1) s N).comp (ttc.measurable_spliceCoins_pair 1)
+  have hL : oldLaw Th (f + 1) s N = (fairCoinStreamLaw.prod fairCoinStreamLaw).map
+      (fun AB => oldTrunc Th (f + 1) s N (spliceCoins AB.1 AB.2 1)) := by
+    conv_lhs => rw [oldLaw, ← hsplice]
+    rw [Measure.map_map (measurable_oldTrunc Th (f + 1) s N) (ttc.measurable_spliceCoins_pair 1)]
+    rfl
+  rw [hL]
+  simp_rw [oldTrunc_splice_succ Th f s N _ _ hX]
+  split_ifs with h0
+  · rw [Measure.map_const, measure_univ, one_smul]
+  · have hφ : Measurable fun A : ℕ × ℕ → Bool => (samplesAfter A 1 s.X, survN A s.nextLabel N) :=
+      (measurable_samplesAfter_one s.X).prodMk (measurable_survN s.nextLabel N)
+    have hK : Measurable (oldCont Th f s) := measurable_of_countable _
+    ext S hS
+    rw [Measure.bind_apply hS hK.aemeasurable,
+      lintegral_map (f := fun q => oldCont Th f s q S) (Measure.measurable_coe hS |>.comp hK) hφ]
+    have hG : Measurable fun AB : (ℕ × ℕ → Bool) × (ℕ × ℕ → Bool) =>
+        oldTrunc Th f (afterRound AB.1 s) (survN AB.1 s.nextLabel N)
+          (relabCoins AB.1 s.nextLabel N AB.2) := by
+      have : (fun AB : (ℕ × ℕ → Bool) × (ℕ × ℕ → Bool) =>
+          oldTrunc Th f (afterRound AB.1 s) (survN AB.1 s.nextLabel N)
+            (relabCoins AB.1 s.nextLabel N AB.2)) =
+          fun AB => oldTrunc Th (f + 1) s N (spliceCoins AB.1 AB.2 1) := by
+        funext AB
+        rw [oldTrunc_splice_succ Th f s N _ _ hX, if_neg h0]
+      rw [this]
+      exact hF
+    rw [Measure.map_apply hG hS, Measure.prod_apply (hG hS)]
+    refine lintegral_congr fun A => ?_
+    show fairCoinStreamLaw {B | oldTrunc Th f (afterRound A s) (survN A s.nextLabel N)
+      (relabCoins A s.nextLabel N B) ∈ S} = _
+    rw [oldCont, oldLaw, Measure.map_apply (measurable_oldTrunc Th f _ _) hS]
+    conv_rhs => rw [← relabCoins_law A s.nextLabel N]
+    rw [Measure.map_apply (measurable_relabCoins A _ _) (measurable_oldTrunc Th f _ _ hS)]
+    rfl
+
+end Law
 
 end ttc.Tape
