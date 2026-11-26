@@ -206,4 +206,61 @@ def stCorr (b : ℕ) : Corr (State d) (TTCState d) (ℝ × ℕ) where
 
 end State
 
+
+/-! ## Listing the old copies in the sealed order -/
+
+section Listing
+
+open ttc.Program
+open ttc (TTCState)
+
+theorem exists_perm_map {α β : Type} [DecidableEq α] [DecidableEq β] (g : α → β) :
+    ∀ (l₁ : List β) (l₂ : List α), (l₁ : Multiset β) = ((l₂.map g : List β) : Multiset β) →
+      ∃ l₂' : List α, l₂'.Perm l₂ ∧ l₂'.map g = l₁
+  | [], l₂, h => by
+      have : l₂ = [] := by
+        have := congrArg Multiset.card h
+        simp at this
+        exact List.eq_nil_of_length_eq_zero this.symm
+      exact ⟨[], by simp [this], rfl⟩
+  | y :: l₁, l₂, h => by
+      have hy : y ∈ (l₂.map g) := by
+        have : y ∈ ((l₂.map g : List β) : Multiset β) := h ▸ Multiset.mem_coe.mpr (List.mem_cons_self ..)
+        exact Multiset.mem_coe.mp this
+      obtain ⟨a, ha, rfl⟩ := List.mem_map.mp hy
+      have hrest : (l₁ : Multiset β) = (((l₂.erase a).map g : List β) : Multiset β) := by
+        have h2 : ((l₂.map g : List β) : Multiset β) =
+            (((a :: l₂.erase a).map g : List β) : Multiset β) :=
+          Multiset.coe_eq_coe.mpr ((List.perm_cons_erase ha).map g)
+        rw [h2, List.map_cons, ← Multiset.cons_coe, ← Multiset.cons_coe] at h
+        exact (Multiset.cons_inj_right _).mp h
+      obtain ⟨l', hperm, hmap⟩ := exists_perm_map g l₁ (l₂.erase a) hrest
+      exact ⟨a :: l', (hperm.cons a).trans (List.perm_cons_erase ha).symm, by simp [hmap]⟩
+
+variable {d : ℕ}
+
+/-- **Related states list the same copies**: the old copies, in the sealed list's order,
+with distinct labels below the next label, at precision `b`. -/
+theorem stCorr_rel_list {b : ℕ} {x : State d} {y : TTCState d} (h : (stCorr b).Rel x y) :
+    ∃ Ls : List (ttc.SampleCopy d), x.X.map getZ = Ls.map (fun c => c.2.2) ∧ Ls.toFinset = y.X ∧
+      (Ls.map (·.1)).Nodup ∧ (∀ c ∈ Ls, c.1 < y.nextLabel ∧ c.2.1 = b) ∧
+      x.p.get = y.p ∧ x.size.get = Ls.length := by
+  classical
+  obtain ⟨⟨_, hs⟩, ⟨⟨hlt, hdist⟩, hcode⟩, hv⟩ := h
+  simp only [stCorr, stVN, stVO, Prod.mk.injEq] at hv hs hlt hdist hcode
+  obtain ⟨hp, he⟩ := hv
+  have hms : ((x.X.map getZ : List _) : Multiset (Fin d → ℤ)) =
+      ((y.X.toList.map fun c => c.2.2 : List _) : Multiset (Fin d → ℤ)) := by
+    rw [encMS_injective he, ← Multiset.map_coe, Finset.coe_toList]
+  obtain ⟨Ls, hperm, hmap⟩ := exists_perm_map (fun c : ttc.SampleCopy d => c.2.2) _ _ hms
+  have hmem : ∀ c, c ∈ Ls ↔ c ∈ y.X := fun c => by rw [hperm.mem_iff, Finset.mem_toList]
+  refine ⟨Ls, hmap.symm, ?_, ?_, fun c hc => ⟨hlt c ((hmem c).1 hc), hcode c ((hmem c).1 hc)⟩,
+    hp, ?_⟩
+  · rw [List.toFinset_eq_of_perm _ _ hperm, Finset.toList_toFinset]
+  · refine List.Nodup.map_on (fun c hc c' hc' hcc => hdist c ((hmem c).1 hc) c' ((hmem c').1 hc') hcc) ?_
+    exact hperm.nodup_iff.mpr (Finset.nodup_toList _)
+  · rw [hs, ← List.length_map (f := getZ), ← hmap, List.length_map]
+
+end Listing
+
 end ttc.Tape
