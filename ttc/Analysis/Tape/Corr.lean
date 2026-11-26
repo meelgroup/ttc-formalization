@@ -154,7 +154,7 @@ theorem mkOld_nodup (b : ℕ) (l : List (Fin d → ℤ)) :
 def stCorr (b : ℕ) : Corr (State d) (TTCState d) (ℝ × ℕ) where
   vN := stVN
   vO := stVO
-  invN := fun x => 0 ≤ x.p.get ∧ x.size.get = x.X.length
+  invN := fun x => 0 ≤ x.p.get
   invO := fun y => y.LabelsFresh ∧ ∀ c ∈ y.X, c.2.1 = b
   secN := stSec
   measurable_vN := by
@@ -178,7 +178,7 @@ def stCorr (b : ℕ) : Corr (State d) (TTCState d) (ℝ × ℕ) where
       measurable_snd)
   partner := by
     classical
-    rintro x ⟨hp, hs⟩
+    rintro x hp
     refine ⟨mkOld b (Real.toNNReal x.p.get) (x.X.map getZ), ⟨⟨?_, ?_⟩, ?_⟩, ?_⟩
     · intro c hc
       simp only [mkOld, List.mem_toFinset, List.mem_map] at hc
@@ -197,9 +197,8 @@ def stCorr (b : ℕ) : Corr (State d) (TTCState d) (ℝ × ℕ) where
         mkOld_points]
   sec_spec := by
     rintro y ⟨_, _⟩
-    refine ⟨⟨?_, ?_⟩, ?_⟩
+    refine ⟨?_, ?_⟩
     · simp [stSec, stVO]
-    · simp [stSec]
     · simp only [stVN, stSec, stVO, get_sealDraw, List.map_map, Prod.mk.injEq, true_and]
       have : (getZ ∘ sealZ (k := d)) = id := funext fun w => getZ_sealZ w
       rw [this, List.map_id, Multiset.coe_toList, decMS_encMS]
@@ -244,10 +243,10 @@ with distinct labels below the next label, at precision `b`. -/
 theorem stCorr_rel_list {b : ℕ} {x : State d} {y : TTCState d} (h : (stCorr b).Rel x y) :
     ∃ Ls : List (ttc.SampleCopy d), x.X.map getZ = Ls.map (fun c => c.2.2) ∧ Ls.toFinset = y.X ∧
       (Ls.map (·.1)).Nodup ∧ (∀ c ∈ Ls, c.1 < y.nextLabel ∧ c.2.1 = b) ∧
-      x.p.get = y.p ∧ x.size.get = Ls.length := by
+      x.p.get = y.p := by
   classical
-  obtain ⟨⟨_, hs⟩, ⟨⟨hlt, hdist⟩, hcode⟩, hv⟩ := h
-  simp only [stCorr, stVN, stVO, Prod.mk.injEq] at hv hs hlt hdist hcode
+  obtain ⟨_, ⟨⟨hlt, hdist⟩, hcode⟩, hv⟩ := h
+  simp only [stCorr, stVN, stVO, Prod.mk.injEq] at hv hlt hdist hcode
   obtain ⟨hp, he⟩ := hv
   have hms : ((x.X.map getZ : List _) : Multiset (Fin d → ℤ)) =
       ((y.X.toList.map fun c => c.2.2 : List _) : Multiset (Fin d → ℤ)) := by
@@ -255,11 +254,10 @@ theorem stCorr_rel_list {b : ℕ} {x : State d} {y : TTCState d} (h : (stCorr b)
   obtain ⟨Ls, hperm, hmap⟩ := exists_perm_map (fun c : ttc.SampleCopy d => c.2.2) _ _ hms
   have hmem : ∀ c, c ∈ Ls ↔ c ∈ y.X := fun c => by rw [hperm.mem_iff, Finset.mem_toList]
   refine ⟨Ls, hmap.symm, ?_, ?_, fun c hc => ⟨hlt c ((hmem c).1 hc), hcode c ((hmem c).1 hc)⟩,
-    hp, ?_⟩
+    hp⟩
   · rw [List.toFinset_eq_of_perm _ _ hperm, Finset.toList_toFinset]
   · refine List.Nodup.map_on (fun c hc c' hc' hcc => hdist c ((hmem c).1 hc) c' ((hmem c').1 hc') hcc) ?_
     exact hperm.nodup_iff.mpr (Finset.nodup_toList _)
-  · rw [hs, ← List.length_map (f := getZ), ← hmap, List.length_map]
 
 end Listing
 

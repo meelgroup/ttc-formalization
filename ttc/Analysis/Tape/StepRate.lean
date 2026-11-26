@@ -377,7 +377,7 @@ theorem rate_piece (hs : scale.get = ttc.decimalScale b) (hth : thresh.get = Th)
         (Option.map triView) =
       ((ttcPseudocode.rateCheck (y.removeComponent P) tO Th).map stVO).map some := by
   classical
-  obtain ⟨Ls, hXL, hLs, hlab, hbel, hp, hsize⟩ := stCorr_rel_list hrel
+  obtain ⟨Ls, hXL, hLs, hlab, hbel, hp⟩ := stCorr_rel_list hrel
   have hnd : Ls.Nodup := List.Nodup.of_map _ hlab
   set scaled := (scaledOffsets (loaded P) scale).val
   set κ : (Fin d → Num ℤ) → Bool := fun z => !(latticeMember (loaded P) scaled z).val
