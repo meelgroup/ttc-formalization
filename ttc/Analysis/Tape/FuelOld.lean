@@ -132,7 +132,7 @@ theorem approx_seqLaw {ν : ℕ → Measure (Option (Fin d → ℤ))} {μ : Meas
         (fun f => (measurable_of_countable _).aemeasurable) (measurable_of_countable _).aemeasurable
         (ae_of_all _ fun z f => (ih.map (g := (z :: ·)) (measurable_of_countable _)).sub f)
         (ae_of_all _ fun z => (ih.map (g := (z :: ·)) (measurable_of_countable _)).stop)
-        (fun f z => ?_)
+        (fun f => ae_of_all _ fun z => ?_)
       have := hprob f
       have := isProbabilityMeasure_seqLaw (ν f) k
       have := Measure.isProbabilityMeasure_map (μ := seqLaw (ν f) k)

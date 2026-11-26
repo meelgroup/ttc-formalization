@@ -64,7 +64,7 @@ theorem Approx.bind {μf : ℕ → Measure (Option α)} {μ : Measure α} [IsFin
     (hstopm : ∀ f, AEMeasurable (fun a => Kf f a {none}) μ) (hK : AEMeasurable K μ)
     (hsub : ∀ᵐ a ∂μ, ∀ f, (Kf f a).comap some ≤ K a)
     (hstop : ∀ᵐ a ∂μ, Tendsto (fun f => Kf f a {none}) atTop (𝓝 0))
-    (hle1 : ∀ f a, Kf f a {none} ≤ 1) :
+    (hle1 : ∀ f, ∀ᵐ a ∂μ, Kf f a {none} ≤ 1) :
     Approx (fun f => (μf f).bind fun o => o.elim (Measure.dirac none) (Kf f)) (μ.bind K) where
   sub f := by
     rw [Measure.le_iff]
@@ -91,7 +91,7 @@ theorem Approx.bind {μf : ℕ → Measure (Option α)} {μ : Measure α} [IsFin
       exact add_le_add (lintegral_mono' (h.sub f) le_rfl) le_rfl
     have hdct : Tendsto (fun f => ∫⁻ a, Kf f a {none} ∂μ) atTop (𝓝 0) := by
       have := tendsto_lintegral_of_dominated_convergence' (fun _ => (1 : ENNReal)) hstopm
-        (fun f => ae_of_all _ fun a => hle1 f a) (by simp [measure_ne_top]) hstop
+        hle1 (by simp [measure_ne_top]) hstop
       simpa using this
     have hsum := hdct.add h.stop
     rw [add_zero] at hsum

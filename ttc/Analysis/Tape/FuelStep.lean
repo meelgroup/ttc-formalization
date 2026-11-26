@@ -34,7 +34,7 @@ theorem Approx.bind_const {μ : Measure α} [IsFiniteMeasure μ] {Kf : ℕ → �
     (hstopm : ∀ f, AEMeasurable (fun a => Kf f a {none}) μ) (hK : AEMeasurable K μ)
     (hsub : ∀ᵐ a ∂μ, ∀ f, (Kf f a).comap some ≤ K a)
     (hstop : ∀ᵐ a ∂μ, Tendsto (fun f => Kf f a {none}) atTop (𝓝 0))
-    (hle1 : ∀ f a, Kf f a {none} ≤ 1) :
+    (hle1 : ∀ f, ∀ᵐ a ∂μ, Kf f a {none} ≤ 1) :
     Approx (fun f => μ.bind (Kf f)) (μ.bind K) := by
   have hKf' : ∀ f, AEMeasurable (fun o : Option α => o.elim (Measure.dirac none) (Kf f))
       (μ.map some) := fun f =>
@@ -176,7 +176,8 @@ theorem approx_inner (y1 : TTCState d) (N : ℕ) :
   exact (approx_oldLaw Th hTh y1 N).bind (fun f => aemeasurable_oldLaw Th f y1 N _)
     (fun f => aemeasurable_secondLoop Th y1 N _) (aemeasurable_secondLoop Th y1 N _)
     (ae_of_all _ fun sec f => (hsk sec).sub f) (ae_of_all _ fun sec => (hsk sec).stop)
-    (fun f sec => by have := isProbabilityMeasure_sampleKernel b ν hprob f sec; exact prob_le_one)
+    (fun f => ae_of_all _ fun sec => by
+      have := isProbabilityMeasure_sampleKernel b ν hprob f sec; exact prob_le_one)
 
 include hTh hν hprob in
 theorem approx_tail (t : NNReal) (y1 : TTCState d) :
@@ -186,7 +187,8 @@ theorem approx_tail (t : NNReal) (y1 : TTCState d) :
     (fun f => (measurable_of_countable _).aemeasurable) (measurable_of_countable _).aemeasurable
     (ae_of_all _ fun N f => (approx_inner Th hTh b C ν hν hprob y1 N).sub f)
     (ae_of_all _ fun N => (approx_inner Th hTh b C ν hν hprob y1 N).stop)
-    (fun f N => by have := isProbabilityMeasure_fuelInner Th b ν hprob f y1 N; exact prob_le_one)
+    (fun f => ae_of_all _ fun N => by
+      have := isProbabilityMeasure_fuelInner Th b ν hprob f y1 N; exact prob_le_one)
 
 include hTh hν hprob in
 theorem approx_gv (y : TTCState d) (t : NNReal) :
@@ -198,7 +200,8 @@ theorem approx_gv (y : TTCState d) (t : NNReal) :
     (fun f => aemeasurable_rateCheck Th _ t _) (aemeasurable_rateCheck Th _ t _)
     (ae_of_all _ fun y1 f => (approx_tail Th hTh b C ν hν hprob t y1).sub f)
     (ae_of_all _ fun y1 => (approx_tail Th hTh b C ν hν hprob t y1).stop)
-    (fun f y1 => by have := isProbabilityMeasure_oldTail Th b ν hprob f t y1; exact prob_le_one)
+    (fun f => ae_of_all _ fun y1 => by
+      have := isProbabilityMeasure_oldTail Th b ν hprob f t y1; exact prob_le_one)
 
 include hTh hν hprob in
 /-- **The old step with fuel approximates the old step.** -/
@@ -215,8 +218,9 @@ theorem approx_step (hn : 3 ≤ d) (eta delta : ℝ)
     ((measurable_gvGen P Th _ y).comp ht).aemeasurable
     (ae_of_all _ fun vol f => (approx_gv P Th hTh b C ν hν hprob y _).sub f)
     (ae_of_all _ fun vol => (approx_gv P Th hTh b C ν hν hprob y _).stop)
-    (fun f vol => by have := isProbabilityMeasure_gvF P Th b ν hprob f y
-                       (ttcPseudocode.t b d vol.2); exact prob_le_one)
+    (fun f => ae_of_all _ fun vol => by
+      have := isProbabilityMeasure_gvF P Th b ν hprob f y (ttcPseudocode.t b d vol.2)
+      exact prob_le_one)
 
 end Compose
 
