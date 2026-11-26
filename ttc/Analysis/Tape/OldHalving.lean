@@ -33,6 +33,8 @@ open scoped ENNReal NNReal
 
 namespace ttc.Tape
 
+open Arlib.Computation (Num Charged)
+open ttc.Model.Operations
 open ttc (TTCState samplesAfter pendingAfter survives fairCoinStreamLaw fairCoinLaw
   spliceCoins pendingSurvivorIndices ttcPseudocode)
 
@@ -548,5 +550,160 @@ theorem oldLaw_succ' (f : ℕ) (s : TTCState n) (N : ℕ) (hX : Ls.toFinset = s.
     Measure.bind_map (measurable_of_countable _).aemeasurable (measurable_of_countable _).aemeasurable]
 
 end Round0Law
+
+
+/-! ## The sealed halving loop is the old one -/
+
+section Match
+
+open ttc.Program
+open ttc.Tape.Tree
+
+theorem selectBy_sublist {α : Type} : ∀ (l : List α) (c : Fin l.length → Bool), (selectBy l c).Sublist l
+  | [], _ => List.Sublist.slnil
+  | x :: l, c => by
+      unfold selectBy
+      split_ifs
+      · exact (selectBy_sublist l (Fin.tail c)).cons₂ x
+      · exact (selectBy_sublist l (Fin.tail c)).cons x
+
+theorem selectBy_map_rel {α β γ : Type} (f : α → γ) (g : β → γ) :
+    ∀ (l₁ : List α) (l₂ : List β) (hlen : l₁.length = l₂.length) (_ : l₁.map f = l₂.map g)
+      (c : Fin l₁.length → Bool),
+      (selectBy l₁ c).map f = (selectBy l₂ (c ∘ Fin.cast hlen.symm)).map g
+  | [], [], _, _, c => rfl
+  | [], _ :: _, hlen, _, _ => by simp at hlen
+  | _ :: _, [], hlen, _, _ => by simp at hlen
+  | x :: l₁, y :: l₂, hlen, h, c => by
+      simp only [List.map_cons, List.cons.injEq] at h
+      have hlen' : l₁.length = l₂.length := by simpa using hlen
+      have ih := selectBy_map_rel f g l₁ l₂ hlen' h.2 (Fin.tail c)
+      have htail : Fin.tail (c ∘ Fin.cast hlen.symm) = Fin.tail c ∘ Fin.cast hlen'.symm := by
+        funext i
+        exact congrArg c (Fin.ext rfl)
+      have h0 : (c ∘ Fin.cast hlen.symm) 0 = c 0 := congrArg c (Fin.ext rfl)
+      unfold selectBy
+      rw [h0, htail]
+      by_cases hc : c 0 = true
+      · simp only [hc, ite_true, List.map_cons, h.1, ih]
+      · simp only [hc, Bool.false_eq_true, ite_false]
+        exact ih
+
+theorem pi_bind_cast {γ : Type} [MeasurableSpace γ] {a b : ℕ} (h : a = b) (μ : Measure Bool)
+    (F : (Fin b → Bool) → Measure γ) :
+    (Measure.pi fun _ : Fin b => μ).bind F =
+      (Measure.pi fun _ : Fin a => μ).bind fun c => F (c ∘ Fin.cast h.symm) := by
+  subst h
+  rfl
+
+theorem prod_bind_countable {α β γ : Type} [MeasurableSpace α] [MeasurableSpace β]
+    [MeasurableSpace γ] [Countable α] [Countable β] [MeasurableSingletonClass α]
+    [MeasurableSingletonClass β] (μ : Measure α) (ν : Measure β) [SFinite ν]
+    (F : α × β → Measure γ) :
+    (μ.prod ν).bind F = μ.bind fun a => ν.bind fun b => F (a, b) := by
+  ext S hS
+  rw [Measure.bind_apply hS (measurable_of_countable _).aemeasurable,
+    Measure.bind_apply hS (measurable_of_countable _).aemeasurable,
+    lintegral_prod _ (measurable_of_countable _).aemeasurable]
+  refine lintegral_congr fun a => ?_
+  rw [Measure.bind_apply hS (measurable_of_countable _).aemeasurable]
+
+theorem half_eq_fairProbability : half = ttc.fairProbability := by
+  apply Subtype.ext
+  simp [ttc.fairProbability, half, Set.projIcc]
+  norm_num
+
+instance : Countable (Num ℤ) := Function.Injective.countable Num.get_injective
+
+instance : MeasurableSingletonClass (Num ℤ) := ⟨fun x => by
+  have h := (Num.measurable_get (α := ℤ)) (measurableSet_singleton x.get)
+  convert h using 1
+  ext y
+  simp [Num.get_injective.eq_iff]⟩
+
+/-- A multiset of lattice points, by a fixed injective numbering. -/
+def encMS : Multiset (Fin n → ℤ) → ℕ := (Countable.exists_injective_nat _).choose
+
+/-- The old loop's result, as `p`, the multiset of its copies' points, and the pending count. -/
+def viewOld : Option (TTCState n × ℕ) → Option (ℝ × ℕ × ℕ) :=
+  Option.map fun r => ((r.1.p : ℝ), encMS (r.1.X.val.map fun c => c.2.2), r.2)
+
+/-- The sealed loop's result, read the same way. -/
+def viewNew : Option (Num ℝ × List (Fin n → Num ℤ) × Num ℕ × Num ℕ) → Option (ℝ × ℕ × ℕ) :=
+  Option.map fun r => (r.1.get, encMS ((r.2.1.map getZ : List _) : Multiset (Fin n → ℤ)), r.2.2.2.get)
+
+theorem measurable_viewOld : Measurable (viewOld (n := n)) := by
+  have hst : Measurable fun s : TTCState n => (s.p, s.X, s.nextLabel) :=
+    Measurable.of_comap_le le_rfl
+  refine measurable_optionMap ?_
+  refine ((measurable_coe_nnreal_real.comp (measurable_fst.comp hst)).comp measurable_fst).prodMk
+    (((measurable_of_countable (fun X : Finset (ttc.SampleCopy n) =>
+      encMS (X.val.map fun c => c.2.2))).comp ((measurable_fst.comp measurable_snd).comp hst)).comp
+        measurable_fst |>.prodMk measurable_snd)
+
+theorem measurable_viewNew : Measurable (viewNew (n := n)) := by
+  refine measurable_optionMap ?_
+  refine (Num.measurable_get.comp measurable_fst).prodMk ?_
+  refine Measurable.prodMk ?_ (Num.measurable_get.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+  have hL : Measurable fun l : List (Fin n → Num ℤ) =>
+      encMS ((l.map getZ : List _) : Multiset (Fin n → ℤ)) := by
+    have := measurable_of_ofFn (X := Unit) (α := Fin n → Num ℤ)
+      (F := fun p => encMS ((p.2.map getZ : List _) : Multiset (Fin n → ℤ)))
+      (fun k => measurable_of_countable _)
+    exact this.comp ((measurable_const (a := ())).prodMk measurable_id)
+  exact hL.comp (measurable_fst.comp measurable_snd)
+
+theorem multiset_points (Ls : List (ttc.SampleCopy n)) (X : List (Fin n → Num ℤ))
+    (s : TTCState n) (hXL : X.map getZ = Ls.map fun c => c.2.2) (hX : Ls.toFinset = s.X)
+    (hnd : Ls.Nodup) :
+    ((X.map getZ : List _) : Multiset (Fin n → ℤ)) = s.X.val.map fun c => c.2.2 := by
+  classical
+  rw [hXL, ← hX, List.toFinset_val, List.dedup_eq_self.mpr hnd, Multiset.map_coe]
+
+/-- **The sealed halving loop is the old second loop**, with at most `f` rounds, read as
+`p`, the multiset of the copies' points and the pending count: when the sealed state lists
+the old state's copies in some order with distinct labels below its next label. -/
+theorem halveT_eq_oldLaw (K : Params) (b : ℕ) :
+    ∀ (f : ℕ) (p : Num ℝ) (X : List (Fin n → Num ℤ)) (size N : Num ℕ) (s : TTCState n)
+      (Ls : List (ttc.SampleCopy n)),
+      p.get = s.p → X.map getZ = Ls.map (fun c => c.2.2) → size.get = Ls.length →
+      Ls.toFinset = s.X → (Ls.map (·.1)).Nodup → (∀ c ∈ Ls, c.1 < s.nextLabel) →
+      (vlaw (halveT K f p X size N) b).map viewNew =
+        (oldLaw K.thresh.get f s N.get).map viewOld
+  | 0, p, X, size, N, s, Ls, _, _, _, _, _, _ => by
+      show (vlaw Tree.fail b).map _ = _
+      rw [vlaw_fail, oldLaw_zero, Measure.map_dirac' measurable_viewNew,
+        Measure.map_dirac' measurable_viewOld]
+      rfl
+  | f + 1, p, X, size, N, s, Ls, hp, hXL, hsize, hX, hlab, hbelow => by
+      classical
+      have hnd : Ls.Nodup := List.Nodup.of_map _ hlab
+      have hcard : s.X.card = Ls.length := by rw [← hX, List.toFinset_card_of_nodup hnd]
+      have hlen : X.length = Ls.length := by
+        simpa using congrArg List.length hXL
+      rw [vlaw_halveT_succ, oldLaw_succ' K.thresh.get Ls f s N.get hX hlab hbelow, hsize, hcard]
+      split_ifs with hc
+      · rw [Measure.map_dirac' measurable_viewNew, Measure.map_dirac' measurable_viewOld]
+        simp only [viewNew, viewOld, Option.map_some, hp, multiset_points Ls X s hXL hX hnd]
+      · rw [prod_bind_countable, pi_bind_cast hlen, ← half_eq_fairProbability,
+          Measure.map_bind (measurable_of_countable _).aemeasurable measurable_viewNew.aemeasurable,
+          Measure.map_bind (measurable_of_countable _).aemeasurable measurable_viewOld.aemeasurable]
+        congr 1
+        funext c
+        rw [Measure.map_bind (measurable_of_countable _).aemeasurable measurable_viewNew.aemeasurable,
+          Measure.map_bind (measurable_of_countable _).aemeasurable measurable_viewOld.aemeasurable]
+        congr 1
+        funext N'
+        have hsel := selectBy_map_rel getZ (fun c : ttc.SampleCopy n => c.2.2) X Ls hlen hXL c
+        have hsub := (selectBy_sublist Ls (c ∘ Fin.cast hlen.symm)).map (·.1)
+        have hlen' : (selectBy X c).length = (selectBy Ls (c ∘ Fin.cast hlen.symm)).length := by
+          simpa using congrArg List.length hsel
+        exact halveT_eq_oldLaw K b f _ _ _ _ ⟨s.p / 2, keepSet Ls (c ∘ Fin.cast hlen.symm),
+            s.nextLabel⟩ (selectBy Ls (c ∘ Fin.cast hlen.symm))
+          (by simp [A.divLit, A.div, A.lit, Num.get_div, Num.get_lit, hp])
+          hsel (by simp [hlen']) rfl (hsub.nodup hlab)
+          (fun c' hc' => hbelow c' ((selectBy_sublist Ls _).subset hc'))
+
+end Match
 
 end ttc.Tape
