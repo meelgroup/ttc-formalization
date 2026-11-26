@@ -30,6 +30,7 @@ open ttc.Model.Operations
 open ttc.Program
 open ttc.Tape.Tree
 open ttc (TTCState)
+open ArlibCommunity.Algorithms.CV18 (measurable_some)
 
 variable {d : ℕ}
 
@@ -311,5 +312,275 @@ theorem vlaw_bind_freeCont {f : α → Tree d β} (hf : MeasFam f) (hfree : ∀ 
     exact vlaw_eq_of_free (hfree a) (fun c' => hf.outcome a c') b' c
 
 end FreeCont
+
+/-! ## Rate-check outputs correspond -/
+
+section TriCorr
+
+/-- **The correspondence of the rate check's results** with old states: `p` and the multiset
+of points, with the count equal to the list's length. -/
+def triCorr (b : ℕ) : Corr (Num ℝ × List (Fin d → Num ℤ) × Num ℕ) (TTCState d) (ℝ × ℕ) where
+  vN := triView
+  vO := stVO
+  invN q := 0 ≤ q.1.get ∧ q.2.2.get = q.2.1.length
+  invO := StInv b
+  secN w := ((stSec (d := d) w).p, (stSec (d := d) w).X, (stSec (d := d) w).size)
+  measurable_vN := measurable_triView
+  measurable_vO := (stCorr (d := d) 0).measurable_vO
+  measurable_secN := by
+    have hsec := (stCorr (d := d) 0).measurable_secN
+    exact (State.measurable_p.comp hsec).prodMk ((State.measurable_X.comp hsec).prodMk
+      (State.measurable_size.comp hsec))
+  partner := by
+    rintro q ⟨hq, _⟩
+    obtain ⟨y, hy, hv⟩ := (stCorr (d := d) b).partner ⟨q.1, q.2.1, q.2.2⟩ hq
+    exact ⟨y, hy, hv⟩
+  sec_spec := by
+    rintro y hy
+    obtain ⟨h1, h2⟩ := (stCorr (d := d) b).sec_spec y hy
+    refine ⟨⟨h1, ?_⟩, h2⟩
+    simp [stSec]
+
+end TriCorr
+
+/-! ## The step, decomposed -/
+
+section StepEq
+
+/-- CV18's parameters, as the step computes them. -/
+noncomputable def cv18ParamsProg (K : Params) (L : Loaded d) : Prog (Num ℝ × Num ℝ × Num ℝ) := do
+  let epsC ← A.divLit K.epsPrime 2
+  let pC ← A.divLit K.deltaPrime 2
+  let rg ← A.div L.boundingRadius L.inradius
+  let m ← A.litMax 1 rg
+  let m2 ← A.pow m 2
+  let roundness ← A.div m2 K.dim
+  A.pure (epsC, pC, roundness)
+
+/-- The scaled volume `t = 10^{bn} · γⁿ · max 0 v`, as the step computes it. -/
+noncomputable def tProg (K : Params) (L : Loaded d) (v : Num ℝ) : Prog (Num ℝ) := do
+  let zero ← A.lit (0 : ℝ)
+  let v' ← A.max zero v
+  let γn ← powHeld L.inradius K.dimN
+  let vol ← A.mul γn v'
+  A.mul K.scaleN vol
+
+theorem stepT_eq (fuel : ℕ) (K : Params) (L : Loaded d) (s : State d) :
+    stepT (cv18T d) fuel K L s =
+      (compute (cv18Offsets L)).bind fun off' =>
+      (compute (cv18ParamsProg K L)).bind fun x =>
+      (cv18T d (allFacets L.facets L.normal off') x.1 x.2.2 x.2.1).bind fun v =>
+      (compute (tProg K L v)).bind fun t =>
+      (compute (scaledOffsets L K.scale)).bind fun scaled =>
+      (rateT K.thresh L scaled t s).bind (tailT fuel K L t scaled) := by
+  simp only [rateT, Tree.bind_assoc]
+  rfl
+
+end StepEq
+
+/-! ## The step's arithmetic -/
+
+section StepVals
+
+variable (P : ttc.PolytopeData d) (K : Params)
+
+theorem cv18Params_val :
+    (cv18ParamsProg K (loaded P)).val.1.get = K.epsPrime.get / 2 ∧
+      (cv18ParamsProg K (loaded P)).val.2.1.get = K.deltaPrime.get / 2 ∧
+      (cv18ParamsProg K (loaded P)).val.2.2.get =
+        (max 1 (P.BoundingRadius / P.inradius)) ^ 2 / K.dim.get := by
+  simp [cv18ParamsProg, Charged.val_bind, val_Apure, A.divLit, A.div, A.litMax, A.pow, A.lit,
+    A.mul, A.max, Num.get_div, Num.get_lit, Num.get_mul, Num.get_max, sq]
+
+theorem tProg_val (hdimN : K.dimN.get = d) (r : ℝ) :
+    (tProg K (loaded P) (sealDraw r).val).val.get =
+      K.scaleN.get * (P.inradius ^ d * max 0 r) := by
+  have hγ := P.inradius_pos
+  simp only [tProg, powHeld, Charged.val_bind, A.lit, A.max, A.mul, A.cast, A.log, A.exp,
+    Num.get_mul, Num.get_lit, Num.get_max, Num.get_exp, Num.get_log, Num.get_cast, get_sealDraw,
+    hdimN]
+  rw [← Real.log_pow, Real.exp_log (pow_pos hγ d)]
+
+end StepVals
+
+/-! ## The step -/
+
+section Step
+
+theorem aemeasurable_rateCheck_some (Th : ℝ) (s : TTCState d) (t : NNReal) {β : Type}
+    [MeasurableSpace β] (g : Option (TTCState d) → β) :
+    AEMeasurable g ((ttcPseudocode.rateCheck s t Th).map some) := by
+  rw [ttcPseudocode.rateCheck, Measure.map_map measurable_some (measurable_rateCheckResult s t Th)]
+  refine aemeasurable_map_of_countable_range (measurable_some.comp
+    (measurable_rateCheckResult s t Th)) ?_ g
+  rw [Set.range_comp]
+  exact (countable_range_rateCheckResult Th s t).image _
+
+theorem rateCheck_inv (P : ttc.PolytopeData d) (Th : ℝ) (b : ℕ) (y : TTCState d) (t : NNReal)
+    (hy : StInv b y) :
+    ∀ᵐ o ∂(ttcPseudocode.rateCheck (y.removeComponent P) t Th).map some, ∀ a ∈ o, StInv b a := by
+  classical
+  rw [ttcPseudocode.rateCheck, Measure.map_map measurable_some (measurable_rateCheckResult _ t Th),
+    ae_map_iff (measurable_some.comp (measurable_rateCheckResult _ t Th)).aemeasurable
+      (measurableSet_forall_mem (measurableSet_stInv b))]
+  refine ae_of_all _ fun c a ha => ?_
+  cases ha
+  have hfresh := (y.removeComponent P).labelsFresh_samplesAfter c
+    (ttcPseudocode.rateHalvings (y.removeComponent P) t Th)
+    ((y.labelsFresh_removeComponent P) hy.1)
+  refine ⟨hfresh, fun c' hc' => hy.2 c' ?_⟩
+  have h1 := (Finset.mem_filter.mp hc').1
+  exact (Finset.mem_filter.mp h1).1
+
+theorem old_t_eq (P : ttc.PolytopeData d) (b : ℕ) (eta r : ℝ) :
+    ((ttcPseudocode.t b d (P.rescaleCV18Outcome
+      (ttc.CommunityCV18.successTag P eta r, Real.toNNReal r)).2 : NNReal) : ℝ) =
+      10 ^ (b * d) * (P.inradius ^ d * max 0 r) := by
+  have hγ := P.inradius_pos
+  simp only [ttcPseudocode.t, ttc.PolytopeData.rescaleCV18Outcome,
+    ttc.PolytopeData.cv18VolumeScale, NNReal.coe_mul, NNReal.coe_pow, Real.coe_toNNReal',
+    max_eq_left (pow_pos hγ d).le]
+  push_cast
+  rw [max_comm]
+
+variable (hn : 3 ≤ d) (P : ttc.PolytopeData d) (K : Params) (fuel b b' : ℕ)
+  (eta delta Th : ℝ) (hadm : ttc.CommunityCV18.AdmissibleCV18Request eta delta)
+  (he : K.epsPrime.get = eta) (hdl : K.deltaPrime.get = delta) (hth : K.thresh.get = Th)
+  (hTh : 0 < Th) (hdim : K.dim.get = d) (hdimN : K.dimN.get = d)
+  (hs : K.scale.get = ttc.decimalScale b) (hsN : K.scaleN.get = 10 ^ (b * d))
+  (ν : Measure (Option (Fin d → ℤ))) [IsProbabilityMeasure ν]
+  (hν : (vlaw (sampleUntilAcceptedT (loaded P) (walkConstantsProg (loaded P) K.scale K.epsPrime
+      K.dim).val (scaledOffsets (loaded P) K.scale).val K.dimN fuel) b').map (Option.map getZ) = ν)
+
+include hadm he hdl hth hTh hdim hdimN hs hsN hν in
+/-- **One step of the sealed program has the old step's law with the same fuel**, read
+through the state views. -/
+theorem step_piece (x : State d) (y : TTCState d) (hrel : (stCorr b).Rel x y) :
+    (vlaw (stepT (cv18T d) fuel K (loaded P) x) b').map (Option.map stVN) =
+      (oldStepF P Th fuel ν b hn eta delta y).map (Option.map stVO) := by
+  classical
+  have hvN : Measurable (stVN (d := d)) := (stCorr (d := d) 0).measurable_vN
+  have hvO : Measurable (stVO (d := d)) := (stCorr (d := d) 0).measurable_vO
+  set scaled := (scaledOffsets (loaded P) K.scale).val
+  -- the continuation after CV18
+  let REST : Num ℝ → Tree d (State d) := fun v =>
+    (compute (tProg K (loaded P) v)).bind fun t =>
+    (compute (scaledOffsets (loaded P) K.scale)).bind fun scaled =>
+    (rateT K.thresh (loaded P) scaled t x).bind (tailT fuel K (loaded P) t scaled)
+  have hREST : MeasFam REST := by
+    refine MeasFam.compute ?_ ?_
+    · unfold tProg
+      exact MP.bind' (MP.const _) (MP.bind' (mp_max measurable_snd (by fun_prop))
+        (MP.bind' (MP.const _) (MP.bind' (mp_mul measurable_snd measurable_fst.snd)
+          (mp_mul measurable_const measurable_snd))))
+    refine MeasFam.computeConst _ ?_
+    exact MeasFam.bind' (mf_rateT _ _ _ measurable_snd x)
+      (mf_tailT fuel K _ _ (measurable_snd.comp measurable_fst) measurable_snd)
+  have hfreeREST : ∀ v, Free (REST v) := fun v =>
+    Free.bind (free_compute _) fun t => Free.bind (free_compute _) fun sc =>
+      Free.bind (free_rateT _ _ _ _ _) fun q => free_tailT _ _ _ _ _ _
+  obtain ⟨hx1, hx2, hx3⟩ := cv18Params_val P K
+  set x3 := (cv18ParamsProg K (loaded P)).val
+  have hcvm : Measurable fun τ => outcome (exec (cv18T d (allFacets P.presentation.facetCount
+      (loaded P).normal (cv18Off P)) x3.1 x3.2.2 x3.2.1) b' τ) :=
+    (mf_cv18T (Q := Unit) (memberMP_allFacets _ _ _) _ _ _).outcome () b'
+  rw [stepT_eq, vlaw_compute_bind, vlaw_compute_bind]
+  change (vlaw ((cv18T d (allFacets P.presentation.facetCount (loaded P).normal (cv18Off P))
+    x3.1 x3.2.2 x3.2.1).bind REST) b').map _ = _
+  rw [vlaw_bind_freeCont hREST hfreeREST _ b' hcvm b']
+  -- the continuation reads only the estimate's value
+  let H : Option ℝ → Measure (Option (State d)) := fun o =>
+    o.elim (Measure.dirac none) fun r => vlaw (REST (sealDraw r).val) b'
+  have hH : Measurable H :=
+    measurable_optionKernel ((hREST.measurable_vlaw b').comp Tree.measurable_sealDraw)
+  have hK : (fun o : Option (Num ℝ) => o.elim (Measure.dirac none) fun v => vlaw (REST v) b') =
+      H ∘ Option.map Num.get := by
+    funext o
+    rcases o with _ | v
+    · rfl
+    · show vlaw (REST v) b' = vlaw (REST (sealDraw v.get).val) b'
+      rw [show (sealDraw v.get).val = v from Num.get_injective (get_sealDraw _)]
+  rw [hK, Function.comp_def,
+    ← Measure.bind_map (measurable_optionMap Num.measurable_get).aemeasurable hH.aemeasurable,
+    vlaw_cv18_component hn P eta delta hadm x3.1 x3.2.2 x3.2.1 (by rw [hx1, he])
+      (by rw [hx3, hdim]; rfl) (by rw [hx2, hdl]) b',
+    Measure.bind_map measurable_some.aemeasurable hH.aemeasurable,
+    Measure.map_bind (f := fun r => H (some r)) (hH.comp measurable_some).aemeasurable
+      (measurable_optionMap hvN).aemeasurable]
+  -- the old side, as CV18's estimate
+  have htag0 : Measurable fun r : ℝ =>
+      (ttc.CommunityCV18.successTag P eta r, Real.toNNReal r) := by
+    refine Measurable.prodMk ?_ measurable_real_toNNReal
+    unfold ttc.CommunityCV18.successTag
+    exact Measurable.ite (by unfold ttc.CommunityCV18.successSet; exact measurableSet_Icc)
+      measurable_const measurable_const
+  have htag := P.measurable_rescaleCV18Outcome.comp htag0
+  have hG := measurable_gvF_vol P Th fuel ν b y
+  rw [oldStepF, ttc.communityCV18VolumeLaw, dif_pos hadm, ttc.PolytopeData.rescaleCV18Law,
+    ttc.CommunityCV18.taggedLaw, Measure.map_map P.measurable_rescaleCV18Outcome htag0,
+    Measure.bind_map htag.aemeasurable hG.aemeasurable,
+    Measure.map_bind (f := fun a => gvF P Th fuel ν b y (ttcPseudocode.t b d
+      ((P.rescaleCV18Outcome ∘ fun r => (ttc.CommunityCV18.successTag P eta r,
+        Real.toNNReal r)) a).2)) (hG.comp htag).aemeasurable (measurable_optionMap hvO).aemeasurable]
+  congr 1
+  funext r
+  -- one estimate
+  have ht : (tProg K (loaded P) (sealDraw r).val).val.get = ttcPseudocode.t b d
+      (P.rescaleCV18Outcome (ttc.CommunityCV18.successTag P eta r, Real.toNNReal r)).2 := by
+    rw [tProg_val P K hdimN, hsN, old_t_eq]
+  show (vlaw ((compute (tProg K (loaded P) (sealDraw r).val)).bind fun t =>
+      (compute (scaledOffsets (loaded P) K.scale)).bind fun scaled =>
+      (rateT K.thresh (loaded P) scaled t x).bind (tailT fuel K (loaded P) t scaled)) b').map _ =
+    (gvF P Th fuel ν b y (ttcPseudocode.t b d
+      (P.rescaleCV18Outcome (ttc.CommunityCV18.successTag P eta r, Real.toNNReal r)).2)).map _
+  rw [vlaw_compute_bind, vlaw_compute_bind]
+  generalize (tProg K (loaded P) (sealDraw r).val).val = tN at ht ⊢
+  generalize ttcPseudocode.t b d
+    (P.rescaleCV18Outcome (ttc.CommunityCV18.successTag P eta r, Real.toNNReal r)).2 = tO at ht ⊢
+  have hmR : Measurable fun τ => outcome (exec (rateT K.thresh (loaded P) scaled tN x) b' τ) :=
+    (mf_rateT (Q := Unit) _ _ _ measurable_const x).outcome () b'
+  have hmT : MeasFam (tailT fuel K (loaded P) tN scaled) :=
+    mf_tailT fuel K _ _ (t := fun _ => tN) measurable_const measurable_id
+  rw [vlaw_bind hmT (free_rateT _ _ _ _ _) b' hmR,
+    Measure.map_bind (measurable_optionKernel (hmT.measurable_vlaw b')).aemeasurable
+      (measurable_optionMap hvN).aemeasurable, gvF]
+  have hag := aemeasurable_rateCheck Th (y.removeComponent P) tO (oldTail Th fuel ν b tO)
+  rw [Measure.map_bind hag (measurable_optionMap hvO).aemeasurable]
+  let KO : Option (TTCState d) → Measure (Option (ℝ × ℕ)) := fun o =>
+    (o.elim (Measure.dirac none) (oldTail Th fuel ν b tO)).map (Option.map stVO)
+  have hag' := aemeasurable_rateCheck_some Th (y.removeComponent P) tO KO
+  have hbm := Measure.bind_map (f := some) (g := KO) measurable_some.aemeasurable hag'
+  rw [show ((ttcPseudocode.rateCheck (y.removeComponent P) tO Th).bind fun y1 =>
+      (oldTail Th fuel ν b tO y1).map (Option.map stVO)) =
+      ((ttcPseudocode.rateCheck (y.removeComponent P) tO Th).map some).bind KO from hbm.symm]
+  have hinvm : MeasurableSet {q : Num ℝ × List (Fin d → Num ℤ) × Num ℕ |
+      0 ≤ q.1.get ∧ q.2.2.get = q.2.1.length} :=
+    (measurableSet_Ici.preimage (Num.measurable_get.comp measurable_fst)).inter
+      (measurableSet_eq_fun (Num.measurable_get.comp (measurable_snd.comp measurable_snd))
+        (List.measurable_length.comp (measurable_fst.comp measurable_snd)))
+  refine (triCorr (d := d) b).option.bind_eq ?_ ?_ (rateCheck_inv P Th b y tO hrel.2.1) ?_ ?_
+  · show (vlaw (rateT K.thresh (loaded P) scaled tN x) b').map (Option.map triView) =
+      ((ttcPseudocode.rateCheck (y.removeComponent P) tO Th).map some).map (Option.map stVO)
+    rw [rate_piece P b K.scale K.thresh tN Th tO hs hth ht hTh x y hrel b',
+      Measure.map_map (measurable_optionMap hvO) measurable_some,
+      Measure.map_map measurable_some hvO]
+    rfl
+  · exact ae_vlaw_post (post_rateT _ _ _ _ x hrel.1) hinvm b' hmR
+  · exact (Measure.measurable_map _ (measurable_optionMap hvN)).comp
+      (measurable_optionKernel (hmT.measurable_vlaw b'))
+  · rintro (_ | q) (_ | y1) ⟨hq, hy1, hview⟩
+    · show (Measure.dirac (none : Option (State d))).map (Option.map stVN) =
+        (Measure.dirac (none : Option (TTCState d))).map (Option.map stVO)
+      rw [Measure.map_dirac' (measurable_optionMap hvN), Measure.map_dirac' (measurable_optionMap hvO)]
+      rfl
+    · cases hview
+    · cases hview
+    · show (vlaw (tailT fuel K (loaded P) tN scaled q) b').map (Option.map stVN) =
+        (oldTail Th fuel ν b tO y1).map (Option.map stVO)
+      have := tail_piece fuel K (loaded P) scaled b' ν hν b tN tO ht q y1 (hq q rfl).1 (hq q rfl).2
+        (Option.some.inj hview) (hy1 y1 rfl)
+      rwa [hth] at this
+
+end Step
 
 end ttc.Tape
