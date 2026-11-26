@@ -186,4 +186,89 @@ theorem approx_retry (R : Measure (Fin d → ℤ)) [IsProbabilityMeasure R] (A :
 
 end Retry
 
+/-! ## The second loop with fuel -/
+
+section Loop
+
+/-- **The second loop truncated at the fuel approximates the second loop.** -/
+theorem approx_oldLaw (Th : ℝ) (hTh : 0 ≤ Th) (s : TTCState d) (N : ℕ) :
+    Approx (fun f => oldLaw Th f s N) (ttcPseudocode.secondLoop s N Th) := by
+  classical
+  have hres := ttc.measurable_thinningResult s N Th
+  constructor
+  · intro f
+    rw [Measure.le_iff]
+    intro S hS
+    rw [comap_some_apply, oldLaw, Measure.map_apply (measurable_oldTrunc Th f s N)
+      (measurableSet_image_some hS), ttcPseudocode.secondLoop, Measure.map_apply hres hS]
+    refine measure_mono fun c hc => ?_
+    simp only [Set.mem_preimage, oldTrunc] at hc ⊢
+    split_ifs at hc
+    · obtain ⟨x, hx, hxe⟩ := hc
+      cases hxe
+      exact hx
+    · obtain ⟨x, _, hxe⟩ := hc
+      cases hxe
+  · have : ∀ f, oldLaw Th f s N {none} = fairCoinStreamLaw (exitBy Th s N f)ᶜ := by
+      intro f
+      rw [oldLaw, Measure.map_apply (measurable_oldTrunc Th f s N) measurableSet_none]
+      congr 1
+      ext c
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, oldTrunc, Set.mem_compl_iff, exitBy,
+        Set.mem_ofPred_eq]
+      split_ifs with h <;> simp [h]
+    simp only [this]
+    exact tendsto_noExit Th s N hTh
+
+end Loop
+
+/-! ## The samples appended -/
+
+section Samples
+
+theorem addBatch_congr (s : TTCState d) {c1 c2 : ℕ} (h : c1 = c2)
+    (p1 : Fin c1 → ttc.LatticePoint d) (p2 : Fin c2 → ttc.LatticePoint d)
+    (hp : ∀ i, p1 i = p2 (Fin.cast h i)) : s.addBatch p1 = s.addBatch p2 := by
+  subst h
+  congr
+  funext i
+  exact hp i
+
+theorem addList_ofFn (b : ℕ) (s : TTCState d) {k : ℕ} (v : Fin k → Fin d → ℤ) :
+    addList b s (List.ofFn v) = s.addBatch fun i => ((b, v i) : ttc.LatticePoint d) :=
+  addBatch_congr s List.length_ofFn _ _ fun i => by simp; rfl
+
+theorem isProbabilityMeasure_condOn (R : Measure (Fin d → ℤ)) [IsFiniteMeasure R]
+    (A : Set (Fin d → ℤ)) (hpos : R A ≠ 0) :
+    IsProbabilityMeasure (ArlibCommunity.Foundations.Convex.condOn R A) := by
+  constructor
+  rw [ArlibCommunity.Foundations.Convex.condOn, Measure.smul_apply, Measure.restrict_apply_univ,
+    smul_eq_mul, ENNReal.inv_mul_cancel hpos (measure_ne_top R A)]
+
+/-- **The samples appended with fuel approximate `GenerateSamples` appended.** -/
+theorem approx_sampleKernel (R : Measure (Fin d → ℤ)) [IsProbabilityMeasure R]
+    (A : Set (Fin d → ℤ)) (hpos : R A ≠ 0) (ν : ℕ → Measure (Option (Fin d → ℤ)))
+    (hν : Approx ν (ArlibCommunity.Foundations.Convex.condOn R A))
+    (hprob : ∀ f, IsProbabilityMeasure (ν f)) (b : ℕ) (sec : TTCState d × ℕ) :
+    Approx (fun f => sampleKernel (ν f) b sec)
+      ((Measure.pi fun _ : Fin sec.2 =>
+        (ArlibCommunity.Foundations.Convex.condOn R A).map (ttc.encodeInteger b)).map
+          sec.1.addBatch) := by
+  have := isProbabilityMeasure_condOn R A hpos
+  rw [← Measure.pi_map_pi (fun _ => (measurable_of_countable _).aemeasurable),
+    Measure.map_map (measurable_of_countable _) (measurable_of_countable _)]
+  have heq : ((Measure.pi fun _ : Fin sec.2 =>
+      ArlibCommunity.Foundations.Convex.condOn R A).map
+        (sec.1.addBatch ∘ fun v i => ttc.encodeInteger b (v i))) =
+      (listLaw (ArlibCommunity.Foundations.Convex.condOn R A) sec.2).map (addList b sec.1) := by
+    rw [listLaw_eq_pi, Measure.map_map (measurable_of_countable _) (measurable_of_countable _)]
+    congr 1
+    funext v
+    simp only [Function.comp_apply, addList_ofFn]
+    rfl
+  rw [heq]
+  exact (approx_seqLaw hν hprob sec.2).map (measurable_of_countable _)
+
+end Samples
+
 end ttc.Tape
