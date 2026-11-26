@@ -706,4 +706,83 @@ theorem halveT_eq_oldLaw (K : Params) (b : ℕ) :
 
 end Match
 
+
+/-! ## Enough rounds -/
+
+section Fuel
+
+open Filter Topology
+
+variable (Th : ℝ) (s : TTCState n) (N : ℕ)
+
+/-- The coin streams on which the old loop exits within `f` rounds. -/
+def exitBy (f : ℕ) : Set (ℕ × ℕ → Bool) :=
+  {c | ∃ r < f, ttcPseudocode.secondLoopExit s N Th c r}
+
+theorem measurableSet_exitBy (f : ℕ) : MeasurableSet (exitBy Th s N f) := by
+  have : exitBy Th s N f = ⋃ r ∈ Finset.range f, {c | ttcPseudocode.secondLoopExit s N Th c r} := by
+    ext c; simp [exitBy]
+  rw [this]
+  exact Finset.measurableSet_biUnion _ fun r _ => ttc.measurableSet_thinningExit s N Th r
+
+/-- **The loop given `f` rounds is the unbounded loop, except where it has not exited.** -/
+theorem oldLaw_apply_le (f : ℕ) (S : Set (Option (TTCState n × ℕ))) (hS : MeasurableSet S) :
+    oldLaw Th f s N S ≤ (ttcPseudocode.secondLoop s N Th).map some S +
+      fairCoinStreamLaw (exitBy Th s N f)ᶜ := by
+  classical
+  have hres := ttc.measurable_thinningResult s N Th
+  have hsome := ArlibCommunity.Algorithms.CV18.measurable_some (α := TTCState n × ℕ)
+  rw [oldLaw, Measure.map_apply (measurable_oldTrunc Th f s N) hS, ttcPseudocode.secondLoop,
+    Measure.map_map hsome hres, Measure.map_apply (hsome.comp hres) hS]
+  calc fairCoinStreamLaw (oldTrunc Th f s N ⁻¹' S)
+      ≤ fairCoinStreamLaw ((some ∘ ttcPseudocode.secondLoopResult s N Th) ⁻¹' S ∪
+          (exitBy Th s N f)ᶜ) := by
+        refine measure_mono fun c hc => ?_
+        by_cases he : c ∈ exitBy Th s N f
+        · left
+          simp only [Set.mem_preimage, oldTrunc] at hc
+          rw [if_pos (show ∃ r < f, ttcPseudocode.secondLoopExit s N Th c r from he)] at hc
+          exact hc
+        · exact Or.inr he
+    _ ≤ _ := measure_union_le _ _
+
+theorem secondLoop_apply_le (f : ℕ) (S : Set (Option (TTCState n × ℕ))) (hS : MeasurableSet S) :
+    (ttcPseudocode.secondLoop s N Th).map some S ≤ oldLaw Th f s N S +
+      fairCoinStreamLaw (exitBy Th s N f)ᶜ := by
+  classical
+  have hres := ttc.measurable_thinningResult s N Th
+  have hsome := ArlibCommunity.Algorithms.CV18.measurable_some (α := TTCState n × ℕ)
+  rw [oldLaw, Measure.map_apply (measurable_oldTrunc Th f s N) hS, ttcPseudocode.secondLoop,
+    Measure.map_map hsome hres, Measure.map_apply (hsome.comp hres) hS]
+  calc fairCoinStreamLaw ((some ∘ ttcPseudocode.secondLoopResult s N Th) ⁻¹' S)
+      ≤ fairCoinStreamLaw (oldTrunc Th f s N ⁻¹' S ∪ (exitBy Th s N f)ᶜ) := by
+        refine measure_mono fun c hc => ?_
+        by_cases he : c ∈ exitBy Th s N f
+        · left
+          simp only [Set.mem_preimage, oldTrunc]
+          rw [if_pos (show ∃ r < f, ttcPseudocode.secondLoopExit s N Th c r from he)]
+          exact hc
+        · exact Or.inr he
+    _ ≤ _ := measure_union_le _ _
+
+/-- **With enough rounds the loop has exited**, almost surely (for `Thresh ≥ 0`). -/
+theorem tendsto_noExit (hTh : 0 ≤ Th) :
+    Tendsto (fun f => fairCoinStreamLaw (exitBy Th s N f)ᶜ) atTop (𝓝 0) := by
+  have := ttc.fairCoinStreamLaw_isProbabilityMeasure
+  have hanti : Antitone fun f => (exitBy Th s N f)ᶜ := by
+    intro f g hfg
+    exact Set.compl_subset_compl.mpr fun c ⟨r, hr, h⟩ => ⟨r, by omega, h⟩
+  have h := tendsto_measure_iInter_atTop (μ := fairCoinStreamLaw)
+    (fun f => ((measurableSet_exitBy Th s N f).compl).nullMeasurableSet) hanti
+    ⟨0, measure_ne_top _ _⟩
+  have hI : (⋂ f, (exitBy Th s N f)ᶜ) =
+      {c | ∀ r, ¬ ttcPseudocode.secondLoopExit s N Th c r} := by
+    ext c
+    simp only [Set.mem_iInter, Set.mem_compl_iff, exitBy, Set.mem_ofPred_eq, not_exists, not_and]
+    exact ⟨fun h r => h (r + 1) r (by omega), fun h f r _ => h r⟩
+  rw [hI, ttc.never_thinningExit_null s N Th hTh] at h
+  exact h
+
+end Fuel
+
 end ttc.Tape
