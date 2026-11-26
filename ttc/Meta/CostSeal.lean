@@ -286,7 +286,7 @@ private partial def reaches (targets : List Name) (memo : Std.HashMap Name Bool)
             hit := h
   return (hit, m.insert c hit)
 
-/-! ### TTC deviation: free real arithmetic
+/-! ### TTC deviation: free arithmetic
 
 barbarik4's program is computable, so it cannot compute with a real number at all; TTC's
 is not (its arithmetic is on `ℝ`), so a program could compute with the reals it is given
@@ -296,13 +296,20 @@ real functions and branching on a real comparison, on anything but closed consta
 project definition the program reaches outside the sanctioned frontier.  It is the scan of
 TTC's former `#sealedProgram`. -/
 
-/-- Operators that are free arithmetic when their first (type) argument is `ℝ`. -/
-private def realOps : List Name :=
+/-- Overloaded arithmetic operators whose first argument is an operand type. -/
+private def arithmeticOps : List Name :=
   [`HAdd.hAdd, `HSub.hSub, `HMul.hMul, `HDiv.hDiv, `HPow.hPow, `HSMul.hSMul,
-   `Neg.neg, `Inv.inv, `Max.max, `Min.min]
+   `HMod.hMod, `Neg.neg, `Inv.inv, `Max.max, `Min.min]
 
-/-- Real functions that are free computation when applied. -/
-private def realFns : List Name := [`Real.sqrt, `Real.log, `Real.exp, `Real.rpow, `Real.logb]
+/-- The scalar types used by TTC's real-RAM currency. -/
+private def arithmeticTypes : List Name := [`Real, `Nat, `Int]
+
+/-- Non-overloaded spellings of arithmetic, including direct calls on naturals and integers.
+Structural successors, used to index loops and recurse on dimensions, are not in this list. -/
+private def arithmeticFns : List Name :=
+  [`Real.sqrt, `Real.log, `Real.exp, `Real.rpow, `Real.logb,
+   `Nat.add, `Nat.sub, `Nat.mul, `Nat.div, `Nat.mod, `Nat.pow, `Nat.max, `Nat.min,
+   `Int.add, `Int.sub, `Int.mul, `Int.ediv, `Int.emod, `Int.pow, `Int.neg, `Int.max, `Int.min]
 
 /-- Decisions of real comparisons: driving an `if` or a `decide` they are a free
 comparison. -/
@@ -317,8 +324,23 @@ private def classical : List Name :=
 /-- Branching constructs and the position of their `Decidable` argument. -/
 private def branchers : List (Name × Nat) := [(`ite, 2), (`dite, 2), (`Decidable.decide, 1)]
 
+/-- Lean spells successor patterns as additions in the generated dependent
+matchers. They index a structural traversal, not arithmetic on a held count.
+The exception is limited to those matchers and the successor offsets in the
+patterns. -/
+private def structuralSuccessor (decl op : Name) (args : Array Expr) : Bool :=
+  let helpers := [`ttc.Program.A.dot, `ttc.Program.A.forEach,
+    `ttc.Program.allFacets, `ttc.Program.chord, `ttc.Program.roundCoords]
+  op == `HAdd.hAdd && args.size == 6 && args[0]!.isConstOf `Nat &&
+    helpers.contains decl.getPrefix &&
+    (decl.getString! == "_f" || "match_".isPrefixOf decl.getString!) &&
+    let rhs := args[5]!
+    rhs.isRawNatLit && (rhs.rawNatLit? == some 1 || rhs.rawNatLit? == some 2) ||
+      rhs.isAppOf `OfNat.ofNat &&
+        (rhs.getAppArgs[1]?.bind Expr.rawNatLit?).any (fun n => n == 1 || n == 2)
+
 /-- The free computations in `e`, as readable strings. -/
-private partial def scanArith (e : Expr) : StateM (Array String) Unit := do
+private partial def scanArith (decl : Name) (e : Expr) : StateM (Array String) Unit := do
   match e with
   | .app .. =>
       let fn := e.getAppFn
@@ -326,20 +348,23 @@ private partial def scanArith (e : Expr) : StateM (Array String) Unit := do
       let live := e.hasLooseBVars
       if let .const c _ := fn then
         if classical.contains c then modify (·.push s!"{c}")
-        if live && realOps.contains c && args.size > 0 && args[0]!.isConstOf `Real then
-          modify (·.push s!"{c} at ℝ")
-        if live && realFns.contains c then modify (·.push s!"{c}")
+        if live && arithmeticOps.contains c && args.size > 0 then
+          if let some ty := args[0]!.constName? then
+            if arithmeticTypes.contains ty && !structuralSuccessor decl c args then
+              modify (·.push s!"{c} at {ty}")
+        if live && arithmeticFns.contains c then modify (·.push s!"{c}")
         if let some (_, i) := branchers.find? (·.1 == c) then
           if h : i < args.size then
             if let .const d _ := args[i].getAppFn then
               if realDecisions.contains d then modify (·.push s!"{c} on {d}")
-      else scanArith fn
-      for a in args do scanArith a
-  | .const c _ => if classical.contains c then modify (·.push s!"{c}")
-  | .lam _ t b _ | .forallE _ t b _ => scanArith t; scanArith b
-  | .letE _ t v b _ => scanArith t; scanArith v; scanArith b
-  | .mdata _ b => scanArith b
-  | .proj _ _ b => scanArith b
+      else scanArith decl fn
+      for a in args do scanArith decl a
+  | .const c _ => if classical.contains c || arithmeticFns.contains c then modify (·.push s!"{c}")
+  | .lam _ _ b _ => scanArith decl b
+  | .forallE .. => pure ()
+  | .letE _ _ v b _ => scanArith decl v; scanArith decl b
+  | .mdata _ b => scanArith decl b
+  | .proj _ _ b => scanArith decl b
   | _ => pure ()
 
 /-- Is `c` specification only: a proof, a proposition, a measure or a law? -/
@@ -351,7 +376,7 @@ private def isSpecOnly (ci : ConstantInfo) : MetaM Bool := do
     let fn := body.getAppFn
     return fn.isConstOf `MeasureTheory.Measure || fn.isConstOf `PMF
 
-/-- The free real arithmetic reachable from the definitions under `ns`: walk the project
+/-- The free scalar arithmetic reachable from the definitions under `ns`: walk the project
 definitions (TTC's and arlib-community's) they use, stopping at the sanctioned frontier. -/
 private def freeArithmetic (ns : Name) : CommandElabM (Array (Name × String)) := do
   let env ← getEnv
@@ -377,7 +402,7 @@ private def freeArithmetic (ns : Name) : CommandElabM (Array (Name × String)) :
       let some ci := env.find? c | continue
       if ← liftTermElabM (isSpecOnly ci) then continue
       let some v := ci.value? | continue
-      let ((), found) := (scanArith v).run #[]
+      let ((), found) := (scanArith c v).run #[]
       bad := bad ++ found.map (c, ·)
       todo := v.getUsedConstants.toList ++ todo
   return bad
@@ -407,12 +432,12 @@ private def runProgramSeal (ns : Name) : CommandElabM Unit := do
             memo := memo'
             if hit then bad := bad.push (c, u)
     | none => pure ()
-  -- TTC deviation: free real arithmetic (see `freeArithmetic`)
+  -- TTC deviation: free scalar arithmetic (see `freeArithmetic`)
   let arith ← freeArithmetic ns
   unless arith.isEmpty do
     let lines := arith.toList.map fun (c, what) => m!"\n  {c}: {what}"
-    throwError m!"Free real arithmetic in {ns}:{MessageData.joinSep lines ""}\n  A program \
-      computes with a real number only through a charged operation."
+    throwError m!"Free scalar arithmetic in {ns}:{MessageData.joinSep lines ""}\n  A program \
+      computes with numeric data only through a charged operation."
   if count == 0 then
     throwError m!"Program seal checked zero declarations under {ns}.  Put the executable       declarations from Model/Program.lean in this exact namespace; a vacuous seal is not a seal."
   unless bad.isEmpty do

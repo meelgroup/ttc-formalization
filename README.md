@@ -1,221 +1,66 @@
 # A machine-checked volume estimator for SMT(LRA) formulas
 
-A Lean 4 + Mathlib formalization of **TTC**, the algorithm in
-**_Efficient Volume Computation for SMT Formulas_** (preliminary version at KR 2025).
+This is a Lean 4 and Mathlib formalization of TTC from *Efficient Volume
+Computation for SMT Formulas* (preliminary version at KR 2025). TTC estimates
+the volume of the solution set of a linear real arithmetic formula. It combines
+Cousins–Vempala Gaussian cooling (CV18), lattice sampling by Hit-and-Run, and a
+Poisson-thinning counter.
 
-Given a formula `F` in linear real arithmetic and parameters `ε, δ ∈ (0, 1]`, TTC
-estimates the volume of `F`'s solution set. It splits that set into polytopes, estimates
-each polytope's volume with the Cousins–Vempala Gaussian-cooling algorithm (CV18), and
-samples lattice points with Hit-and-Run, combining everything with a Poisson-thinning
-counter.
+## What is proved
 
-This development proves the paper's two main theorems about the algorithm as printed:
+Both public theorems in [Model/Theorem.lean](ttc/Model/Theorem.lean) concern the
+same sealed program.
 
-* **Theorem 1 (accuracy):** the output is within a factor `1 ± ε` of the true volume with
-  probability at least `1 − δ`;
-* **Theorem 3 (running time):** the expected number of arithmetic operations is
-  `Õ(m n⁵ ρ² r_max)`.
+- **Theorem 1** (`ttc_theorem1_volume_accuracy`) bounds the relative error by
+  `ε` with probability at least `1 − δ`.
+- **Theorem 3** (`ttc_theorem3_expected_runtime`) bounds the expected operation
+  tally of that execution by `RuntimeBudget.estimatorOpsBudget`. The tally
+  covers setup, all CV18 arithmetic including facet membership and median
+  selection, component scans and thinning, Hit-and-Run including rounding and
+  rejected attempts, and the final estimate. It does not count hypothetical
+  re-executions with progressively larger fuel.
 
-The proofs contain no `sorry` and use only Lean's three standard axioms:
+The budget is an explicit function of the preprocessed inputs and parameters.
+Its random-work terms use the CV18 caps, the population cap, the walk length
+and a bound on retries in expectation. The new theorem does not claim that
+this budget has been reduced to the paper's `Õ(m n⁵ ρ² r_max)` expression.
+The older measure-level runtime argument is retained under `Analysis/` for
+reference and is not the public runtime claim.
 
-```
-#print axioms ttc.ttc_theorem1_volume_accuracy   ⇒  [propext, Classical.choice, Quot.sound]
-#print axioms ttc.ttc_theorem3_expected_runtime  ⇒  [propext, Classical.choice, Quot.sound]
-```
+## Assumptions and cost model
 
-CV18 and Hit-and-Run are proved too, not assumed. Their guarantees come from the Lean
-library [arlib-community](https://github.com/uddaloksarkar/arlib-community).
+- The solution set is bounded, and `0 < ε, δ ≤ 1`. The dimension must be at least
+  21, as required by the formalized Hit-and-Run mixing theorem.
+- Preprocessing supplies a certified polytope decomposition. Boolean
+  abstraction, DNF conversion, normalization, and solving the linear programs
+  for the inscribed ball and bounding radius are outside the charged run.
+  Loading their results and computing the lattice precision are charged.
+- The tally is for an exact real RAM, not bit complexity or floating-point
+  time. The currency includes arithmetic, comparisons, casts, transcendental
+  primitives, random draws, and charged storage accesses. Poisson and binomial
+  quantiles are unit-cost draws in this model. A standard Gaussian vector is
+  charged per coordinate. Polytope membership is **not** an oracle primitive.
 
+## Audit surface
 
-## The main theorems
+| File | Role |
+|---|---|
+| [Prelude.lean](ttc/Model/Prelude.lean) | Inputs, formulas, decompositions, and preprocessing interface |
+| [Operations.lean](ttc/Model/Operations.lean) | Real-RAM currency, sealed numbers, and the random oracle |
+| [Program.lean](ttc/Model/Program.lean) | Charged TTC, CV18, and Hit-and-Run programs |
+| [Run.lean](ttc/Model/Run.lean) | Tape law, execution, output law, and expected tally |
+| [RuntimeBudget.lean](ttc/Model/RuntimeBudget.lean) | Explicit input-only bounds |
+| [Theorem.lean](ttc/Model/Theorem.lean) | Public accuracy and runtime claims |
 
-Both theorems are in `ttc/Model/Theorem.lean`. Both are about `ttc`, the line-by-line
-transcription of the paper's Algorithm 1 (`ttc/Model/Program.lean` and `ttc/Model/Run.lean`).
+The build runs the program seal, model-closure checks, and surplus checks for
+both the program and the full model. The program seal checks for uncharged
+scalar arithmetic and free access to the tape or the operation counter.
+Model closure checks the public statements and execution definitions for
+dependencies outside the model. The surplus checks look for author-written
+definitions that are not reached from the estimator or the public theorems.
 
-### Theorem 1: accuracy
+## Verification
 
-```lean
-theorem ttc_theorem1_volume_accuracy {n k : Nat}
-    (hn : 21 ≤ n)
-    (F : LRAFormula n k)
-    (hbounded : Bornology.IsBounded (solutionSet F))
-    (params : ApproxParams)
-    (prep : TTCPreprocessor n k) :
-    Pr[estimate ← ttc hn F hbounded params prep;
-      (estimate : Real) ∈ Arlib.relErr params.epsilon (volume (solutionSet F)).toReal]
-      ≥ 1 - params.delta
-```
-
-How to read it:
-
-* `F` is an LRA formula with `n` real variables (and `k` Boolean ones);
-* `params` packages `ε` and `δ` together with the proofs that `0 < ε ≤ 1` and `0 < δ ≤ 1`;
-* `prep` is the preprocessing step (Boolean abstraction, DNF, normalization). It must
-  return polytopes whose union is the solution set (see the limitations below);
-* `relErr ε v` is the interval `[(1 − ε)·v, (1 + ε)·v]`.
-
-So the theorem says: **with probability at least `1 − δ`, TTC's output lies in
-`[(1 − ε)·vol(F), (1 + ε)·vol(F)]`.**
-
-### Theorem 3: running time
-
-```lean
-theorem ttc_theorem3_expected_runtime ... :
-    -- (1) counting operations does not change the algorithm
-    (∀ S, MeasurableSet S →
-      Pr[result ← ttcWithCost ...; result.1 ∈ S] = Pr[estimate ← ttc ...; estimate ∈ S]) ∧
-    -- (2) the expected operation count is bounded
-    Exp[result ← ttcWithCost ...; result.2] ≤
-      preprocessingOperations + m * (50 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²)
-```
-
-`ttcWithCost` is the same algorithm with an operation counter attached. Part (1) says its
-output has exactly the same distribution as `ttc`'s, so the bound in part (2) is about the
-algorithm of Theorem 1. In part (2):
-
-* `m` is the number of polytopes, `n` the dimension, and `r_max` the largest number of facets;
-* `ρ = maxᵢ Rᵢ/γᵢ`, where `γᵢ` is the inradius of polytope `i` and `Rᵢ` the radius of a
-  ball enclosing it;
-* `polylogFactors` collects logarithmic factors in `n`, `m`, `ρ`, `R_max`, `1/γ_min`, `1/ε`
-  and `1/δ`. Every constant is written out in `ttc/Model/Prelude.lean`.
-
-So the expected cost is `Õ(m n⁵ ρ² r_max)`, as in the paper.
-
-
-## What the theorems assume
-
-A reader only needs to check these hypotheses:
-
-* **`n ≥ 21`.** This comes from the formalized Hit-and-Run mixing theorem. The paper
-  cites Lovász–Vempala without a dimension restriction.
-* **The solution set is bounded.** Without this the volume can be infinite.
-* **`0 < ε ≤ 1` and `0 < δ ≤ 1`.** These are fields of `ApproxParams`.
-
-The conditions that CV18 and the sampler need (for example, a large enough inscribed
-ball at precision `b`) are checked by the algorithm and proved to hold on every call.
-
-
-## Limitations
-
-Read these before citing the result.
-
-* **Preprocessing is not formalized.** Boolean abstraction, DNF conversion and
-  normalization (Theorem 2 of the paper) are an input `prep`. Its output type requires
-  bounded, full-dimensional polytopes whose union equals the solution set almost
-  everywhere, but Lean does not check how they are computed.
-* **The machine model is a real RAM.** Running time is the number of operations on exact
-  real numbers. Each of `+`, `−`, `·`, `/`, `√`, `log`, `k`-th root, `⌊·⌋` and a
-  comparison costs 1, and so does reading one random number (a uniform number, a
-  Gaussian, a fair coin). A Poisson draw, a binomial draw, deleting or appending a stored
-  copy, and updating a scalar also cost 1 each. Floating-point rounding is not modelled.
-* **Three parts of the work are not counted.**
-  * The linear programs (`GetPrecision`, `BoundingRadius`, the Chebyshev centre).
-  * Preprocessing; it enters the bound only as the number `preprocessingOperations`.
-  * CV18's arithmetic other than its membership tests. Its membership tests are counted;
-    the rest is charged as at most the same amount again (the factor `1` in
-    `ttcWithCost … 1`), which is assumed, not proved.
-* **The `ε` dependence is looser than the paper's.** Lean's bound multiplies the
-  volume and sampling costs, giving `1/ε⁴`. The `n⁵ ρ² r_max m` shape matches.
-
-
-## Paper → Lean
-
-| Paper | Lean | Where |
-|---|---|---|
-| Algorithm 1 (`ttc`) | `ttcPseudocode`, `ttc` | `Model/Program.lean`, `Model/Run.lean` |
-| `GetPrecision`, `MaxInscribedBall` | `GetPrecision`, `HalfspacePresentation.MaxInscribedBall` | `Model/Run.lean`, `Model/Prelude.lean` |
-| `BoundingRadius` | `PolytopeData.BoundingRadius` | `Model/Run.lean` |
-| `VolED` (Corollary `cor:vol`) | `communityCV18VolumeLaw` | `Model/Run.lean` |
-| `GenerateSamples` (Corollary `cor:linf`) | `normalizedHitAndRunPointLaw` | `Model/Run.lean` |
-| Proposition `prop:bounding-radius`, `R₀ ≤ 2√n R` | `PolytopeData.boundingRadius_le` | `Analysis/BoundingRadius.lean` |
-| Lemma `lem:nonconv` (lattice points vs. volume) | `L2LatticeUnion.lean` | `Analysis/` |
-| Theorem 1 (`thm:volumettc`) | `ttc_theorem1_volume_accuracy` | `Model/Theorem.lean` |
-| Theorem 3 (`thm:runtime`) | `ttc_theorem3_expected_runtime` | `Model/Theorem.lean` |
-
-Small differences from the paper:
-
-* The Hit-and-Run walk constant is `C = 2⁶⁸`. This is what the formalized mixing bound
-  (`2⁶⁴ n² D² log(8M/ν²)`) needs.
-* In Lemma `lem:nonconv`, the bound `κ/γ ≤ η/(32mn)` should read `η/(26mn)`. The lemma
-  still holds.
-* The proofs use an equivalent version of the algorithm that starts from `p = 1` instead
-  of `p = Thresh`. `Analysis/TTCSimulation.lean` proves the two have the same output.
-
-
-## The audit surface: `Model/`
-
-To trust the theorems you need to read only `ttc/Model/`. It contains definitions and
-statements, and no proofs.
-
-1. **`Prelude.lean`**: the vocabulary. LRA formulas, polytopes (`PolytopeData`), the
-   Chebyshev-centre LP, the parameters `ε' = ε/12`, `δ' = δ/(4m)` and `Thresh`, and the
-   cost model.
-2. **`Program.lean`**: Algorithm 1's control flow, with its subroutines left as slots.
-   Starting from `p ← Thresh`, `X ← ∅`, it processes each polytope in turn: remove the
-   points of `X` inside it, the rate check `k ← ⌈log₂(tp/Thresh)⌉`, the Poisson draw,
-   the halving loop, sampling, and append. It ends by returning `|X| / (p·10^{bn})`.
-   It also contains the same algorithm with operation counts.
-3. **`Run.lean`**: the concrete subroutines (`GetPrecision`, `BoundingRadius`, CV18 and
-   the Hit-and-Run sampler), and `ttc` itself.
-4. **`Theorem.lean`**: the two theorems.
-
-`ttc/Meta/ModelClosure.lean` checks on every build that everything the theorems mention
-is defined in `Model/`, so nothing hidden in `Analysis/` can change what they say.
-
-
-## How the proof goes
-
-**Theorem 1.**
-
-1. With the volume estimates fixed, the points kept at each rate level form a Poisson
-   process whose mean is the number of lattice points times that rate.
-2. A Chernoff bound shows the final count is accurate except with probability `δ/6`, and
-   the chance of ending at a bad level is at most another `δ/6`.
-3. CV18 fails with probability at most `δ/4` in total over all `m` calls.
-4. Lemma `lem:nonconv` turns a lattice-point estimate into a volume estimate.
-
-**Theorem 3.** Per polytope, the cost is: CV18's query count times `2nr`, plus
-`⌈Thresh⌉` samples times the walk length `T` times the step cost `O(nr)`, plus thinning
-and deletion.
-`T` is bounded by `n⁴ρ²` up to logarithms, using `R₀ ≤ 2√n R`. The CV18 query bound
-comes from arlib-community.
-
-
-## How to verify
-
-1. Build:
-
-   ```sh
-   cd lean
-   lake exe cache get    # download Mathlib's compiled files; skipping this takes hours
-   lake build
-   ```
-
-   The toolchain is `leanprover/lean4:v4.35.0`, with Mathlib `v4.35.0`.
-   arlib and arlib-community are pinned in `lakefile.toml`.
-
-2. Check that there are no `sorry`s:
-
-   ```sh
-   lake build 2>&1 | grep -i "declaration uses 'sorry'"    # should print nothing
-   ```
-
-3. Check the axioms. The two `#print axioms` lines at the end of
-   `ttc/Model/Theorem.lean` print them during the build. Both should show
-   `[propext, Classical.choice, Quot.sound]`.
-
-4. Read `ttc/Model/` in the order above, side by side with the paper.
-
-
-## Layout
-
-```
-lean/
-├── ttc.lean            root module
-├── ttc/
-│   ├── Model/          what is claimed: definitions, the algorithm, the theorems
-│   ├── Analysis/       the proofs
-│   └── Meta/           the check that the theorems are stated in Model/ terms
-├── lakefile.toml       dependencies (Mathlib, arlib, arlib-community)
-└── scripts/            list of the headline theorems
-```
+Run `lake exe cache get` on a fresh checkout, then `lake build`. The toolchain
+is Lean 4.35.0 and the dependency revisions are pinned in `lakefile.toml`.
+The build prints the axioms of both headline theorems and the audit results.

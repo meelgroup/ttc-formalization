@@ -1,4 +1,4 @@
-import ttc.Model.Run
+import ttc.Analysis.LegacyRun
 
 /-! The decimal-scaled component and the integer lattice in arlib's Euclidean space, used by
 the analysis of the rejection test. -/

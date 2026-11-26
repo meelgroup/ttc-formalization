@@ -73,6 +73,21 @@ theorem Post.mono {p : Tree d α} {Q R : α → Prop} (hp : Post p Q) (h : ∀ a
   | setBudget c k ih => exact ih hp
   | spend k ih => exact fun x => ih x (hp x)
 
+/-- Two pointwise postconditions hold simultaneously. -/
+theorem Post.and {p : Tree d α} {P Q : α → Prop} (hp : Post p P) (hq : Post p Q) :
+    Post p (fun a => P a ∧ Q a) := by
+  induction p with
+  | pure a => exact ⟨hp, hq⟩
+  | fail => trivial
+  | step c k ih => exact ih c.val hp hq
+  | coin k ih => exact fun x => ih x (hp x) (hq x)
+  | unit k ih => exact fun x => ih x (hp x) (hq x)
+  | gaussian k ih => exact fun x => ih x (hp x) (hq x)
+  | poisson r k ih => exact fun x => ih x (hp x) (hq x)
+  | binom N k ih => exact fun x => ih x (hp x) (hq x)
+  | setBudget c k ih => exact ih hp hq
+  | spend k ih => exact fun x => ih x (hp x) (hq x)
+
 theorem post_of_forall {Q : α → Prop} (h : ∀ a, Q a) : ∀ p : Tree d α, Post p Q := by
   intro p
   induction p with

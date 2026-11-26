@@ -1,4 +1,4 @@
-import ttc.Model.Run
+import ttc.Analysis.LegacyRun
 
 /-!
 # `MaxInscribedBall` attains its optimum

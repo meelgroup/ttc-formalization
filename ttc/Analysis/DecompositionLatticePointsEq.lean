@@ -1,4 +1,4 @@
-import ttc.Model.Prelude
+import ttc.Analysis.LegacyPrelude
 
 /-!
 # Final decomposition lattice points

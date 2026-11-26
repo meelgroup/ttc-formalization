@@ -118,6 +118,15 @@ theorem maxOps_compute (c : Prog α) : maxOps (compute (n := d) c) = opsTotal c.
   show (opsTotal c.cost : ℕ∞) + 0 = _
   rw [add_zero]
 
+theorem maxOps_compute_bind (c : Prog α) (f : α → Tree d β) :
+    maxOps ((compute c).bind f) = (opsTotal c.cost : ℕ∞) + maxOps (f c.val) := rfl
+
+theorem maxOps_bind_uniform {p : Tree d α} {f : α → Tree d β} {C B : ℕ∞}
+    (hp : maxOps p ≤ C) (hf : ∀ a, maxOps (f a) ≤ B) :
+    maxOps (p.bind f) ≤ C + B :=
+  (maxOps_bind_le (post_of_forall (Q := fun _ => True) (fun _ => trivial) _) B
+    (fun a _ => hf a)).trans (add_le_add hp le_rfl)
+
 theorem maxOps_pure (a : α) : maxOps (Tree.pure (n := d) a) = 0 := rfl
 
 /-- `k` rounds of a loop spend at most `k` times a body's most. -/
@@ -132,5 +141,45 @@ theorem maxOps_loopRounds {body : β → Tree d (β ⊕ γ)} {B : ℕ∞} (hb : 
         · exact bot_le
       · calc maxOps (body y) + k * B ≤ B + k * B := add_le_add (hb y) le_rfl
           _ = ((k + 1 : ℕ) : ℕ∞) * B := by push_cast; ring
+
+/-- A pointwise operation bound composes along a bind, charging only a
+continuation that actually runs. -/
+theorem exec_ops_bind_le {p : Tree d α} {f : α → Tree d β} {P : α → Prop}
+    (hp : Post p P) (C D b : ℕ) (t : Tape d)
+    (hC : (exec p b t).2.1 ≤ C)
+    (hD : ∀ a, P a → ∀ b' t', (exec (f a) b' t').2.1 ≤ D) :
+    (exec (p.bind f) b t).2.1 ≤ C + D := by
+  rw [exec_bind]
+  rcases he : exec p b t with ⟨r, j, b', t'⟩
+  rw [he] at hC
+  rcases r with _ | a
+  · exact hC.trans (Nat.le_add_right _ _)
+  · have ha := exec_post hp b t (a := a) (by rw [he])
+    exact Nat.add_le_add hC (hD a ha b' t')
+
+/-- Pointwise rather than syntactic worst-case costs also compose through a loop.
+This retains the savings from caps inside one execution of its body. -/
+theorem exec_ops_loopRounds_le {body : β → Tree d (β ⊕ γ)} {B : ℕ}
+    (hB : ∀ y b t, (exec (body y) b t).2.1 ≤ B) :
+    ∀ (k : ℕ) (y : β) (b : ℕ) (t : Tape d), (exec (loopRounds body k y) b t).2.1 ≤ k * B
+  | 0, _, _, _ => Nat.zero_le _
+  | k + 1, y, b, t => by
+      refine (exec_ops_bind_le (post_of_forall (Q := fun _ => True) (fun _ => trivial) _)
+        B (k * B) b t (hB y b t) fun r _ b' t' => ?_).trans ?_
+      · rcases r with y' | c
+        · exact exec_ops_loopRounds_le hB k y' b' t'
+        · exact Nat.zero_le _
+      · rw [Nat.succ_mul, Nat.add_comm]
+
+theorem maxOps_foldlM_le {ι : Type} (g : β → ι → Tree d β) (B : ℕ∞)
+    (hB : ∀ a x, maxOps (g a x) ≤ B) :
+    ∀ (l : List ι) (a : β), maxOps (l.foldlM g a) ≤ l.length * B
+  | [], _ => by simp [maxOps]
+  | x :: xs, a => by
+      rw [List.foldlM_cons, List.length_cons]
+      refine (maxOps_bind_le (post_of_forall (Q := fun _ => True) (fun _ => trivial) _)
+        (xs.length * B) (fun a' _ => maxOps_foldlM_le g B hB xs a')).trans ?_
+      calc maxOps (g a x) + xs.length * B ≤ B + xs.length * B := add_le_add (hB a x) le_rfl
+        _ = ((xs.length + 1 : ℕ) : ℕ∞) * B := by push_cast; ring
 
 end ttc.Tape

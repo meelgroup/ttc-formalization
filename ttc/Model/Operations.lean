@@ -117,11 +117,6 @@ structure Oracle (n : ℕ) where
 cannot build the oracle it wants; `Model/Run.lean` draws the tape. -/
 def Oracle.ofTape {n : ℕ} (tape : Tape n) : Oracle n := ⟨tape, 0⟩
 
-/-- The oracle with random tape `tape` and `budget` membership calls left.  Not for
-programs (it is forbidden by the seal); the analysis uses it to name the oracle in the
-middle of a run. -/
-def Oracle.withBudget {n : ℕ} (tape : Tape n) (budget : ℕ) : Oracle n := ⟨tape, budget⟩
-
 /-! ### CV18's query cap
 
 CV18 stops a run that would make more than its budget of membership calls (Deviation 3 of
@@ -219,52 +214,5 @@ def floor (x : Num ℝ) : Prog (Num ℤ) :=
 natural number). -/
 def intCast (z : Num ℤ) : Prog (Num ℝ) :=
   Charged.exchange (relabelLit (.real .cast)) (Num.lit (z.get : ℝ))
-
-/-! The operations on an oracle named by `Oracle.withBudget`.  These are the only facts
-about the private fields that the analysis uses. -/
-
-theorem ofTape_eq {n : ℕ} (t : Tape n) : Oracle.ofTape t = Oracle.withBudget t 0 := rfl
-
-theorem setBudget_withBudget {n : ℕ} (b : Num ℕ) (t : Tape n) (k : ℕ) :
-    setBudget b (Oracle.withBudget t k) =
-      Charged.op (Op.num .loop) ((), Oracle.withBudget t b.get) :=
-  rfl
-
-theorem spendQuery_withBudget_zero {n : ℕ} (t : Tape n) :
-    spendQuery (Oracle.withBudget t 0) = pure (false, Oracle.withBudget t 0) :=
-  rfl
-
-theorem spendQuery_withBudget_succ {n : ℕ} (t : Tape n) (k : ℕ) :
-    spendQuery (Oracle.withBudget t (k + 1)) = pure (true, Oracle.withBudget t k) :=
-  rfl
-
-theorem drawCoin_withBudget {n : ℕ} (t : Tape n) (k : ℕ) :
-    drawCoin (Oracle.withBudget t k) =
-      Charged.op Op.draw ((t 0).1, Oracle.withBudget t.tail k) :=
-  rfl
-
-theorem drawUnit_withBudget {n : ℕ} (t : Tape n) (k : ℕ) :
-    drawUnit (Oracle.withBudget t k) = (do
-      let u ← sealDraw (t 0).2.2
-      pure (u, Oracle.withBudget t.tail k)) :=
-  rfl
-
-theorem drawGaussian_withBudget {n : ℕ} (t : Tape n) (k : ℕ) :
-    drawGaussian (Oracle.withBudget t k) = (do
-      let g ← sealVector n (WithLp.ofLp (t 0).2.1)
-      pure (g, Oracle.withBudget t.tail k)) :=
-  rfl
-
-theorem drawPoisson_withBudget {n : ℕ} (rate : Num ℝ) (t : Tape n) (k : ℕ) :
-    drawPoisson rate (Oracle.withBudget t k) = (do
-      let r ← sealDraw (poissonQuantile (Real.toNNReal rate.get) (t 0).2.2)
-      pure (r, Oracle.withBudget t.tail k)) :=
-  rfl
-
-theorem drawBinomialHalf_withBudget {n : ℕ} (N : Num ℕ) (t : Tape n) (k : ℕ) :
-    drawBinomialHalf N (Oracle.withBudget t k) = (do
-      let r ← sealDraw (binomialHalfQuantile N.get (t 0).2.2)
-      pure (r, Oracle.withBudget t.tail k)) :=
-  rfl
 
 end ttc.Model.Operations

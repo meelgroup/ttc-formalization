@@ -7,7 +7,7 @@ import ttc.Analysis.Tape.MeasProg
 /-!
 # Measurability of the program's arithmetic
 
-`MP` for each arithmetic procedure of the program (`Model/SealedProgram.lean`) that runs on
+`MP` for each arithmetic procedure of the program (`Model/Program.lean`) that runs on
 random numbers: its value and operation count are measurable in its inputs.
 -/
 

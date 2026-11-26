@@ -1,4 +1,4 @@
-import ttc.Model.Prelude
+import ttc.Analysis.LegacyPrelude
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 
 /-!

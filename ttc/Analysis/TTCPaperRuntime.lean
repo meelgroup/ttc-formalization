@@ -1,7 +1,7 @@
 import ttc.Analysis.CommunityCV18VolumeProvider
 import ttc.Analysis.HitAndRunSamplingOracle
 import ttc.Analysis.ThinningCosts
-import ttc.Model.Prelude
+import ttc.Analysis.LegacyPrelude
 
 /-!
 # Runtime helper lemmas

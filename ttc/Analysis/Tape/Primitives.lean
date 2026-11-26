@@ -7,7 +7,7 @@ import ttc.Analysis.Tape.Agree
 /-!
 # The program's primitives as trees
 
-Each primitive of the program monad (`Model/SealedProgram.lean`) as a tree, and the
+Each primitive of the program monad (`Model/Program.lean`) as a tree, and the
 statement that the tree stands for it (`interp_*`).  A procedure's tree is written from
 these with `Tree.bind`, following the procedure's text.
 -/

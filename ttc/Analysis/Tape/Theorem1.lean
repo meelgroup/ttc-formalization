@@ -3,7 +3,7 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import ttc.Analysis.Tape.Final
-import ttc.Model.Theorem
+import ttc.Analysis.LegacyTheorems
 
 /-!
 # Theorem 1 for the sealed program
@@ -24,6 +24,6 @@ theorem sealed_theorem1_volume_accuracy {n k : Nat} (hn : 21 ≤ n) (F : ttc.LRA
         Arlib.relErr params.epsilon (MeasureTheory.volume (ttc.solutionSet F)).toReal] ≥
       1 - params.delta := by
   rw [estimate_eq_ttc hn]
-  exact ttc.ttc_theorem1_volume_accuracy hn F hbounded params prep
+  exact ttc.legacy_ttc_theorem1_volume_accuracy hn F hbounded params prep
 
 end ttc.Tape

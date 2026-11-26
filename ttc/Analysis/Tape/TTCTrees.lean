@@ -7,7 +7,7 @@ import ttc.Analysis.Tape.Primitives
 /-!
 # Algorithm `ttc` as trees
 
-Each procedure of Algorithm `ttc` (`Model/SealedProgram.lean`) written as a tree, following
+Each procedure of Algorithm `ttc` (`Model/Program.lean`) written as a tree, following
 its text, and the statement that the two agree (`agree_*`).  CV18 is a parameter here: the
 procedures that call it take its tree `cv18T` and the statement that it agrees with the
 program's `cv18` (`Analysis/Tape/CV18Trees.lean`).
@@ -359,47 +359,6 @@ theorem agree_step {cv18T : CV18Tree d} (hcv : CV18Agrees cv18T) (fuel : ℕ) (K
   rcases res with r | e
   · exact agree_pure _
   · exact e.elim
-
-/-- The parameters of the run, computed (as in `estimator`). -/
-def paramsProg {d : ℕ} (cs : List (ComponentInput d)) (Ls : List (Loaded d)) (eps delta : ℝ) :
-    Prog Params := do
-  let dimN ← A.lit d
-  let dim ← A.cast dimN
-  let zero ← A.lit (0 : ℕ)
-  let one ← A.lit (1 : ℕ)
-  let (mN, rTot) ← cs.foldlM (fun (acc : Num ℕ × Num ℕ) c => do
-      let m' ← A.add acc.1 one
-      let r ← A.lit c.facetCount
-      let t' ← A.add acc.2 r
-      A.pure (m', t')) (zero, zero)
-  let m ← A.cast mN
-  let rTotR ← A.cast rTot
-  let eps ← A.lit eps
-  let delta ← A.lit delta
-  let epsPrime ← A.divLit eps 12
-  let m4 ← A.mulLit 4 m
-  let deltaPrime ← A.div delta m4
-  let a1 ← A.litDiv 24 delta
-  let a2 ← A.log a1
-  let a3 ← A.mulLit 24 a2
-  let one ← A.lit (1 : ℝ)
-  let b1 ← A.sub one epsPrime
-  let b2 ← A.pow epsPrime 2
-  let b3 ← A.mul b1 b2
-  let first ← A.div a3 b3
-  let c1 ← A.litDiv 6 delta
-  let c2 ← A.log c1
-  let c3 ← A.log m
-  let c4 ← A.add c2 c3
-  let second ← A.mulLit 15 c4
-  let thresh ← A.max first second
-  let eta ← A.divLit eps 96
-  let required ← latticeRadiusProg m dim rTotR eta
-  let b ← getPrecision required Ls
-  let scale ← pow10 b
-  let bn ← A.mul b dimN
-  let scaleN ← pow10 bn
-  A.pure (⟨epsPrime, deltaPrime, thresh, dim, dimN, scale, scaleN⟩ : Params)
 
 /-- **Algorithm `ttc`**, as a tree. -/
 def estimatorT (cv18T : CV18Tree d) (fuel : ℕ) (cs : List (ComponentInput d)) (eps delta : ℝ) :

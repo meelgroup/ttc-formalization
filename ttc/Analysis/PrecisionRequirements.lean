@@ -1,4 +1,4 @@
-import ttc.Model.Prelude
+import ttc.Analysis.LegacyPrelude
 
 /-! Quantities used inside the proofs of the headline theorems but not in their
 statements: the two geometric precision requirements derived from `getprec`,

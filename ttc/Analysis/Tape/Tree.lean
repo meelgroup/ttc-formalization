@@ -2,12 +2,13 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
-import ttc.Model.SealedProgram
+import ttc.Model.Program
+import ttc.Analysis.Tape.OracleEquations
 
 /-!
 # Tape programs: the sealed program as a tree
 
-A computation of the program monad `Program.M` (`Model/SealedProgram.lean`) is a function
+A computation of the program monad `Program.M` (`Model/Program.lean`) is a function
 of the sealed oracle, and a function cannot be inducted on.  A `Tree` is the same kind of
 computation written as a tree: a step of charged arithmetic (`step`), a read of the tape
 (`coin`, `unit`, `gaussian`, `poisson`, `binom`), a change to CV18's query cap

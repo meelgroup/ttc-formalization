@@ -347,24 +347,6 @@ end TriCorr
 
 section StepEq
 
-/-- CV18's parameters, as the step computes them. -/
-noncomputable def cv18ParamsProg (K : Params) (L : Loaded d) : Prog (Num ℝ × Num ℝ × Num ℝ) := do
-  let epsC ← A.divLit K.epsPrime 2
-  let pC ← A.divLit K.deltaPrime 2
-  let rg ← A.div L.boundingRadius L.inradius
-  let m ← A.litMax 1 rg
-  let m2 ← A.pow m 2
-  let roundness ← A.div m2 K.dim
-  A.pure (epsC, pC, roundness)
-
-/-- The scaled volume `t = 10^{bn} · γⁿ · max 0 v`, as the step computes it. -/
-noncomputable def tProg (K : Params) (L : Loaded d) (v : Num ℝ) : Prog (Num ℝ) := do
-  let zero ← A.lit (0 : ℝ)
-  let v' ← A.max zero v
-  let γn ← powHeld L.inradius K.dimN
-  let vol ← A.mul γn v'
-  A.mul K.scaleN vol
-
 theorem stepT_eq (fuel : ℕ) (K : Params) (L : Loaded d) (s : State d) :
     stepT (cv18T d) fuel K L s =
       (compute (cv18Offsets L)).bind fun off' =>

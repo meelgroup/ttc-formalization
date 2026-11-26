@@ -1,5 +1,5 @@
 import ttc.Analysis.PrecisionRequirements
-import ttc.Model.Prelude
+import ttc.Analysis.LegacyPrelude
 
 /-! The single `GetPrecision` radius at `η = ε / 96` covers both geometric uses
 of the precision: the finite-union lattice comparison at `ε / 8` and the

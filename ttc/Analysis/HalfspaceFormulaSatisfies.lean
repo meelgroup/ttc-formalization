@@ -1,4 +1,4 @@
-import ttc.Model.Prelude
+import ttc.Analysis.LegacyPrelude
 
 /-!
 # A QF-LRA formula for a halfspace presentation

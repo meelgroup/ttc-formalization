@@ -1,5 +1,5 @@
 import ttc.Analysis.MembershipCost
-import ttc.Model.Run
+import ttc.Analysis.LegacyRun
 import ttc.Analysis.ChebyshevCenter
 
 /-!

@@ -1,4 +1,4 @@
 # The headlines of this development, one per line.
 # The axiom profile of each is read from Lean whenever the checks run.
-ttc.ttc_volume_accuracy
-ttc.ttc_theorem3_corrected_expected_runtime
+ttc.ttc_theorem1_volume_accuracy
+ttc.ttc_theorem3_expected_runtime

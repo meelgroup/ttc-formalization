@@ -3,12 +3,13 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import ttc.Analysis.Tape.Tree
-import ttc.Model.SealedRun
+import ttc.Model.Run
+import ttc.Analysis.LegacyRun
 
 /-!
 # The law of a tree on the random tape
 
-The tape of `Model/SealedRun.lean` is a sequence of independent rounds.  This file proves
+The tape of `Model/Run.lean` is a sequence of independent rounds.  This file proves
 that a tree run on it has the law of the same tree with each random number drawn from its
 law when it is read (`Tree.tapeLaw_map_exec`): "every random number is fresh".  The law
 records the result, the operations spent and the membership calls left (`Tree.law`).

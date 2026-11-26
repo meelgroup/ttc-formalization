@@ -7,7 +7,7 @@ import ttc.Analysis.Tape.TTCTrees
 /-!
 # CV18 as trees
 
-Each procedure of the program's CV18 (`Model/SealedProgram.lean`) written as a tree,
+Each procedure of the program's CV18 (`Model/Program.lean`) written as a tree,
 following its text, and the statement that the two agree (`agree_*`).  A membership call
 spends one call of the query cap and stops the run when it is exhausted; `cappedRun`
 recovers from that stop (`<|>`), which as a tree is `Tree.orElse`.
