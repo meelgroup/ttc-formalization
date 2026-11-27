@@ -14,6 +14,7 @@ import ttc.Analysis.Tape.ThinLaw
 import ttc.Analysis.Tape.CV18Sim
 import ttc.Analysis.Tape.CV18Component
 import ttc.Analysis.Tape.Theorem1
+import ttc.Analysis.Tape.EpsilonCost
 import ttc.Meta.Audit
 import ttc.Analysis.ChargedCV18.Theorem
 import ttc.Analysis.L2LatticeUnion

@@ -78,20 +78,6 @@ centre `z` of `MaxInscribedBall`. As for `MaxInscribedBall`, each LP is its opti
 
 /-! ## Line `line:getprec`: `GetPrecision` (Algorithm `getprec`) -/
 
-/-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
-`γ = (64 m n / η) √(log (4 r / η))` to a component's maximal inscribed radius `γ̂`,
-starting from `1`. `γ̂` is computed by the Chebyshev-centre LP (line 7 of `getprec`). -/
-def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Real :=
-  max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (latticeRadiusRequirement D η / (D.component i).presentation.MaxInscribedBall) :
-      NNReal) : Real)
-
-/-- Algorithm `getprec(F_d, M, η)`: return `⌈log₁₀ maxratio⌉`. -/
-def GetPrecision {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Nat :=
-  Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
-
 /-- Rewrite the offsets for CV18's normalized body: `(bⱼ − aⱼ · z)/γ` for each facet. -/
 def PolytopeData.cv18OffsetsProg {n : Nat} (P : PolytopeData n) :
     Counted (Fin P.presentation.facetCount → Real) :=

@@ -14,18 +14,19 @@ same sealed program.
 - **Theorem 1** (`ttc_theorem1_volume_accuracy`) bounds the relative error by
   `ε` with probability at least `1 − δ`.
 - **Theorem 3** (`ttc_theorem3_expected_runtime`) bounds the expected operation
-  tally of that execution by `RuntimeBudget.estimatorOpsBudget`. The tally
+  tally of that execution by `ttcArithmeticBound` in `Model/Prelude.lean`. The tally
   covers setup, all CV18 arithmetic including facet membership and median
   selection, component scans and thinning, Hit-and-Run including rounding and
   rejected attempts, and the final estimate. It does not count hypothetical
   re-executions with progressively larger fuel.
 
-The budget is an explicit function of the preprocessed inputs and parameters.
-Its random-work terms use the CV18 caps, the population cap, the walk length
-and a bound on retries in expectation. The new theorem does not claim that
-this budget has been reduced to the paper's `Õ(m n⁵ ρ² r_max)` expression.
-The older measure-level runtime argument is retained under `Analysis/` for
-reference and is not the public runtime claim.
+The public bound is an explicit formula in the preprocessed inputs and
+parameters. It does not run the estimator or read a tally. The population and
+CV18 query terms share a single `1/ε²` factor. `Analysis/Tape/PublicRuntime.lean`
+proves that the implementation budget is at most this formula. A separate
+soft-O theorem simplifying the walk length and all remaining terms is not yet
+formalized. The older measure-level runtime argument is retained under
+`Analysis/` for reference and is not the public runtime claim.
 
 ## Assumptions and cost model
 
@@ -45,11 +46,10 @@ reference and is not the public runtime claim.
 
 | File | Role |
 |---|---|
-| [Prelude.lean](ttc/Model/Prelude.lean) | Inputs, formulas, decompositions, and preprocessing interface |
+| [Prelude.lean](ttc/Model/Prelude.lean) | Inputs, decompositions, preprocessing interface, and public arithmetic bound |
 | [Operations.lean](ttc/Model/Operations.lean) | Real-RAM currency, sealed numbers, and the random oracle |
 | [Program.lean](ttc/Model/Program.lean) | Charged TTC, CV18, and Hit-and-Run programs |
 | [Run.lean](ttc/Model/Run.lean) | Tape law, execution, output law, and expected tally |
-| [RuntimeBudget.lean](ttc/Model/RuntimeBudget.lean) | Explicit input-only bounds |
 | [Theorem.lean](ttc/Model/Theorem.lean) | Public accuracy and runtime claims |
 
 The build runs the program seal, model-closure checks, and surplus checks for

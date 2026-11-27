@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import ttc.Model.Program
 
-/-! # Input-only operation budgets for TTC
+/-! # Intermediate operation budgets for the sealed TTC proof
 
 The random part is bounded by the number of components, the population cap,
 CV18's charged cooling budget and the charged length of a walk and its

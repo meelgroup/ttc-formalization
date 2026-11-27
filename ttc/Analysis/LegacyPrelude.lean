@@ -41,11 +41,6 @@ def Decomposition.latticePoints {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (b : Nat) : Set (Point n) :=
   D.union ∩ decimalLattice b n
 
-/-- Total number of halfspaces in the chosen presentations. -/
-def Decomposition.totalFacets {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Nat :=
-  ∑ i, (D.component i).presentation.facetCount
-
 /-- The paper's internal relative-error parameter `ε' = ε / 12`. -/
 def ApproxParams.ε' (p : ApproxParams) : Real := p.epsilon / 12
 
@@ -63,12 +58,6 @@ component's scaled inradius `γ / h` before `GenerateSamples` is run on it at ac
 def samplerRadiusRequirement {n : Nat} (P : PolytopeData n) (η : Real) : Real :=
   (512 * n / η) *
     Real.sqrt (Real.log (32 * P.presentation.facetCount / η))
-
-/-- The inball size required by the finite-union lattice comparison. -/
-def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Real :=
-  (64 * D.componentCount * n / η) *
-    Real.sqrt (Real.log (4 * D.totalFacets / η))
 
 /-- The accuracy `ε / 96` passed to `GetPrecision` in line 3 of Algorithm `ttc`. -/
 def ApproxParams.precisionEta (p : ApproxParams) : Real := p.epsilon / 96
