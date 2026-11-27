@@ -14,19 +14,22 @@ same sealed program.
 - **Theorem 1** (`ttc_theorem1_volume_accuracy`) bounds the relative error by
   `ε` with probability at least `1 − δ`.
 - **Theorem 3** (`ttc_theorem3_expected_runtime`) bounds the expected operation
-  tally of that execution by `ttcArithmeticBound` in `Model/Prelude.lean`. The tally
+  tally of that execution by an absolute constant times `ttcRuntimeRate` in
+  `Model/Prelude.lean`. The tally
   covers setup, all CV18 arithmetic including facet membership and median
   selection, component scans and thinning, Hit-and-Run including rounding and
   rejected attempts, and the final estimate. It does not count hypothetical
   re-executions with progressively larger fuel.
 
-The public bound is an explicit formula in the preprocessed inputs and
-parameters. It does not run the estimator or read a tally. The population and
-CV18 query terms share a single `1/ε²` factor. `Analysis/Tape/PublicRuntime.lean`
-proves that the implementation budget is at most this formula. A separate
-soft-O theorem simplifying the walk length and all remaining terms is not yet
-formalized. The older measure-level runtime argument is retained under
-`Analysis/` for reference and is not the public runtime claim.
+For a nonempty decomposition, the public rate is `m n⁵ ρ² r_max · Λ¹⁰ / ε²`,
+where `m` is the number of polytopes, `n` is the dimension, `ρ` is the maximum
+outer-to-inner radius ratio (at least one), and `r_max` is the maximum facet
+count. `Λ` is the explicit input logarithm in `ttcRuntimeLog`, including the
+confidence and radius-scale terms. Thus the expected cost is
+`Õ(m n⁵ ρ² r_max / ε²)`. The proof in `Analysis/Tape/AsymptoticRuntime.lean`
+reduces the detailed accounting budget to this rate. The older measure-level
+runtime argument remains under `Analysis/` for reference and is not the public
+runtime claim.
 
 ## Assumptions and cost model
 

@@ -41,6 +41,17 @@ def Decomposition.latticePoints {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (b : Nat) : Set (Point n) :=
   D.union ∩ decimalLattice b n
 
+/-- Total number of halfspaces in the chosen presentations. -/
+def Decomposition.totalFacets {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) : Nat :=
+  ∑ i, (D.component i).presentation.facetCount
+
+/-- The inball size required by the finite-union lattice comparison. -/
+def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) (η : Real) : Real :=
+  (64 * D.componentCount * n / η) *
+    Real.sqrt (Real.log (4 * D.totalFacets / η))
+
 /-- The paper's internal relative-error parameter `ε' = ε / 12`. -/
 def ApproxParams.ε' (p : ApproxParams) : Real := p.epsilon / 12
 
@@ -323,25 +334,6 @@ def countThinningRoundOperations (stored : Nat) : Nat :=
 def ThresholdCap (p : ApproxParams) (componentCount : Nat) : Nat :=
   Nat.ceil (p.Thresh componentCount)
 
-/-- The largest facet count among TTC's normalized components. -/
-def RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
-  Finset.univ.sup fun i : Fin D.componentCount =>
-    (D.component i).presentation.facetCount
-
-/-- The largest outer-radius certificate used by the corrected TTC runtime
-statement. The empty family has radius zero. -/
-noncomputable def theorem3OuterRadiusMax {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Real :=
-  ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (D.component i).outerRadius : NNReal) : Real)
-
-/-- The reciprocal `1 / minᵢ γᵢ` of the smallest certified inradius; zero for the
-empty family. -/
-noncomputable def theorem3InverseInradiusMax {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Real :=
-  ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (1 / (D.component i).inradius) : NNReal) : Real)
-
 /-- An input-only bound on the precision `b` chosen by `getprec` at `ε / 96`:
 `1 + log₁₀⁺ γ + log₁₀⁺ (1 / minᵢ γᵢ)`, with `γ` the required radius. -/
 noncomputable def theorem3PrecisionBound {n k : Nat} {F : LRAFormula n k}
@@ -354,14 +346,6 @@ bound. -/
 noncomputable def theorem3InputScale {n k : Nat} {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) : Real :=
   1 + theorem3PrecisionBound D p + max 0 (Real.log (theorem3OuterRadiusMax D))
-
-/-- The paper's common radius ratio `ρ = maxᵢ Rᵢ / γᵢ`, protected below by one.
-The `NNReal` finite supremum gives the empty decomposition the canonical value zero before
-the outer maximum is applied. -/
-noncomputable def Rho {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Real :=
-  max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal ((D.component i).outerRadius / (D.component i).inradius) : NNReal) : Real)
 
 /-- The explicit bound on CV18's scheduled logarithmic factors at TTC's calls, in terms of
 `n`, `ρ`, `ε'` and `δ'`: `14113440000 · (max 1 (log (20 n ρ² / (ε' δ'))))¹⁰`. -/

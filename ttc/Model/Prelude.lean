@@ -291,97 +291,62 @@ def fairProbability : unitInterval :=
 def fairCoinLaw : Measure Bool :=
   ProbabilityTheory.bernoulliMeasure true false fairProbability
 
-/-! ## Input-only arithmetic bound
+/-! ## Expected arithmetic complexity
 
-The budget is a mathematical function of the certified components and
-accuracy parameters. The analysis proves that it bounds the tally of the
-charged run. Evaluating this formula is not part of the estimator.
+The nonempty rate is `m n⁵ ρ² r_max · Λ¹⁰ / ε²`.
+It is an input formula, not an instruction for the estimator.
 -/
 
-/-- Total number of halfspaces in the chosen presentations. -/
-def Decomposition.totalFacets {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) : Nat :=
-  ∑ i, (D.component i).presentation.facetCount
+namespace TTCRuntime
 
-/-- The inball size required by the finite-union lattice comparison. -/
-def latticeRadiusRequirement {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Real :=
-  (64 * D.componentCount * n / η) *
-    Real.sqrt (Real.log (4 * D.totalFacets / η))
+/-- The largest facet count among TTC's normalized components. -/
+def RMax {n k : Nat} {F : LRAFormula n k} (D : Decomposition F) : Nat :=
+  Finset.univ.sup fun i : Fin D.componentCount =>
+    (D.component i).presentation.facetCount
 
-/-- `maxratio` of Algorithm `getprec`: the largest ratio of the required radius
-`γ = (64 m n / η) √(log (4 r / η))` to a component's maximal inscribed radius `γ̂`,
-starting from `1`. `γ̂` is computed by the Chebyshev-centre LP (line 7 of `getprec`). -/
-def getPrecisionRatio {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Real :=
+/-- The largest outer-radius certificate used by the corrected TTC runtime
+statement. The empty family has radius zero. -/
+noncomputable def theorem3OuterRadiusMax {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) : Real :=
+  ((Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal (D.component i).outerRadius : NNReal) : Real)
+
+/-- The reciprocal `1 / minᵢ γᵢ` of the smallest certified inradius; zero for the
+empty family. -/
+noncomputable def theorem3InverseInradiusMax {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) : Real :=
+  ((Finset.univ.sup fun i : Fin D.componentCount =>
+    Real.toNNReal (1 / (D.component i).inradius) : NNReal) : Real)
+
+/-- The paper's common radius ratio `ρ = maxᵢ Rᵢ / γᵢ`, protected below by one.
+The `NNReal` finite supremum gives the empty decomposition the canonical value zero before
+the outer maximum is applied. -/
+noncomputable def Rho {n k : Nat} {F : LRAFormula n k}
+    (D : Decomposition F) : Real :=
   max 1 ((Finset.univ.sup fun i : Fin D.componentCount =>
-    Real.toNNReal (latticeRadiusRequirement D η / (D.component i).presentation.MaxInscribedBall) :
-      NNReal) : Real)
+    Real.toNNReal ((D.component i).outerRadius / (D.component i).inradius) : NNReal) : Real)
 
-/-- Algorithm `getprec(F_d, M, η)`: return `⌈log₁₀ maxratio⌉`. -/
-def GetPrecision {n k : Nat} {F : LRAFormula n k}
-    (D : Decomposition F) (η : Real) : Nat :=
-  Nat.ceil (Real.logb 10 (getPrecisionRatio D η))
+end TTCRuntime
 
-/-- A formula for the walk deadline, using only the geometry of the input. -/
-def arithmeticWalkLength {d : ℕ} (P : PolytopeData d) (b : ℕ) (eps : ℝ) : ℕ :=
-  let h := (10 : ℝ) ^ b
-  let g := h * P.inradius
-  let η := eps / 12
-  let κ := Real.sqrt (2 * Real.log (4 / (η / 4))) +
-    Real.sqrt (2 * Real.log P.presentation.facetCount)
-  let R := (1 + κ / g) * (h * P.BoundingRadius)
-  Nat.ceil (2 ^ 68 * (d : ℝ) ^ 3 * (R / g) ^ 2 * Real.log (2 * R))
-
-/-- The population-cap numerator, before division by `ε²`. -/
-def arithmeticPopulationNumerator (p : ApproxParams) (m : ℕ) : ℝ :=
-  3888 * Real.log (24 / p.delta) + 15 * (Real.log (6 / p.delta) + Real.log m)
-
-/-- Roundness of the normalized input to the volume estimator. -/
-def arithmeticRoundness {d : ℕ} (P : PolytopeData d) : ℝ :=
-  (max 1 (P.BoundingRadius / P.inradius)) ^ 2 / d
-
-/-- A ceiling bound on the number of variances in the cooling schedule. -/
-def arithmeticScheduleCap (d : ℕ) (p : ApproxParams) (roundness : ℝ) : ℕ :=
-  let θ := p.epsilon / 24
-  let T := max 1 (max (d : ℝ) (1024 * roundness * d * (max 1 (Real.log (8 / θ))) ^ 2))
-  Nat.ceil (2 * (d : ℝ) * (6 + max 1 (Real.log (d / θ)))) + Nat.ceil (3 * T) + 1
-
-/-- Number of independent cooling runs for one component. -/
-def arithmeticCV18Repetitions (m : ℕ) (p : ApproxParams) : ℕ :=
-  Nat.ceil (8 * max 1 (Real.log (1 / (p.delta / (8 * m)))))
-
-/-- The amplified CV18 query-cap numerator, with its logarithmic losses explicit. -/
-def arithmeticQueryNumerator (d m : ℕ) (p : ApproxParams) (roundness : ℝ) : ℝ :=
-  let Λ := max 1 (Real.log ((d : ℝ) * max 1 roundness /
-    ((p.epsilon / 24) * (p.delta / (8 * m)))))
-  576 * (585 * (10 : ℝ) ^ 30) * (max 1 roundness * (d : ℝ) ^ 3) * (14113440000 * Λ ^ 10)
-
-/-- Input-only cost bound for one normalized component. The capped population and
-amplified query terms add, sharing a single inverse-square accuracy factor. -/
-def arithmeticComponentBound {d : ℕ} (m b : ℕ) (p : ApproxParams) (P : PolytopeData d) : ℝ :=
-  let r := P.presentation.facetCount
-  let roundness := arithmeticRoundness P
-  let S := arithmeticScheduleCap d p roundness
-  let R := arithmeticCV18Repetitions m p
-  let T := arithmeticWalkLength P b p.epsilon
-  let perTry := 13 * d + 5 + 2 * d * r + T * (6 * d + 8 + r * (4 * d + 5))
-  let base : ℕ := r * (2 * d + 2) + 20 + (200 + 12 * S) + r +
-    (100 + d + r * (4 * d + 10)) + 76 +
-    R * (S * (2 * d + 83) + (7 * d + 87) + (4 * R + 5))
-  (base : ℝ) +
-    (((d + 2 * d * r + 31 + 2 * perTry : ℕ) : ℝ) * arithmeticPopulationNumerator p m +
-      ((12 * d + 31 + 2 * d * r : ℕ) : ℝ) * arithmeticQueryNumerator d m p roundness) /
-      p.epsilon ^ 2
-
-/-- Public expected arithmetic bound from the certified decomposition and
-approximation parameters. No charged computation occurs on this side of the claim. -/
-def ttcArithmeticBound {d k : ℕ} {F : LRAFormula d k} (D : Decomposition F)
+/-- One logarithmic factor in the input size, accuracy, confidence, and radius data. -/
+def ttcRuntimeLog {n k : ℕ} {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) : ℝ :=
-  if D.componentCount = 0 then 1 else
-    let b := GetPrecision D (p.epsilon / 96)
-    100 + 10 * D.componentCount + ∑ i : Fin D.componentCount,
-      (((D.component i).presentation.facetCount * (d + 1) + d + 4 : ℕ) +
-        arithmeticComponentBound D.componentCount b p (D.component i))
+  let size := 10000 * (D.componentCount : ℝ) * n * TTCRuntime.RMax D *
+    TTCRuntime.Rho D ^ 2 / (p.epsilon * p.delta)
+  max 1 (Real.log size) +
+    max 0 (Real.log (TTCRuntime.theorem3OuterRadiusMax D)) +
+    max 0 (Real.log (TTCRuntime.theorem3InverseInradiusMax D))
+
+/-- The expected real-RAM scale, up to an absolute constant.
+Here `m` is the number of polytopes, `n` the dimension, `ρ` the maximum
+outer-to-inner radius ratio, and `rMax` the largest facet count. -/
+def ttcRuntimeRate {n k : ℕ} {F : LRAFormula n k} (D : Decomposition F)
+    (p : ApproxParams) : ℝ :=
+  let m := D.componentCount
+  let ρ := TTCRuntime.Rho D
+  let rMax := TTCRuntime.RMax D
+  let Λ := ttcRuntimeLog D p
+  if m = 0 then 1 else
+    (m : ℝ) * (n : ℝ) ^ 5 * ρ ^ 2 * rMax * Λ ^ 10 / p.epsilon ^ 2
 
 end ttc

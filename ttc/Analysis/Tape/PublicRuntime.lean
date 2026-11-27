@@ -5,11 +5,78 @@ Released under Apache 2.0 license as described in the file LICENSE.
 import ttc.Analysis.Tape.EpsilonCost
 import ttc.Analysis.Tape.Runtime
 
-/-! # Relating the implementation budget to the public input formula -/
+/-! # Relating the implementation budget to an explicit input formula -/
 
 set_option autoImplicit false
 
 noncomputable section
+
+namespace ttc
+
+open scoped BigOperators
+
+/-- A formula for the walk deadline, using only the geometry of the input. -/
+def arithmeticWalkLength {d : ℕ} (P : PolytopeData d) (b : ℕ) (eps : ℝ) : ℕ :=
+  let h := (10 : ℝ) ^ b
+  let g := h * P.inradius
+  let η := eps / 12
+  let κ := Real.sqrt (2 * Real.log (4 / (η / 4))) +
+    Real.sqrt (2 * Real.log P.presentation.facetCount)
+  let R := (1 + κ / g) * (h * P.BoundingRadius)
+  Nat.ceil (2 ^ 68 * (d : ℝ) ^ 3 * (R / g) ^ 2 * Real.log (2 * R))
+
+/-- The population-cap numerator, before division by `ε²`. -/
+def arithmeticPopulationNumerator (p : ApproxParams) (m : ℕ) : ℝ :=
+  3888 * Real.log (24 / p.delta) + 15 * (Real.log (6 / p.delta) + Real.log m)
+
+/-- Roundness of the normalized input to the volume estimator. -/
+def arithmeticRoundness {d : ℕ} (P : PolytopeData d) : ℝ :=
+  (max 1 (P.BoundingRadius / P.inradius)) ^ 2 / d
+
+/-- A ceiling bound on the number of variances in the cooling schedule. -/
+def arithmeticScheduleCap (d : ℕ) (p : ApproxParams) (roundness : ℝ) : ℕ :=
+  let θ := p.epsilon / 24
+  let T := max 1 (max (d : ℝ) (1024 * roundness * d * (max 1 (Real.log (8 / θ))) ^ 2))
+  Nat.ceil (2 * (d : ℝ) * (6 + max 1 (Real.log (d / θ)))) + Nat.ceil (3 * T) + 1
+
+/-- Number of independent cooling runs for one component. -/
+def arithmeticCV18Repetitions (m : ℕ) (p : ApproxParams) : ℕ :=
+  Nat.ceil (8 * max 1 (Real.log (1 / (p.delta / (8 * m)))))
+
+/-- The amplified CV18 query-cap numerator, with its logarithmic losses explicit. -/
+def arithmeticQueryNumerator (d m : ℕ) (p : ApproxParams) (roundness : ℝ) : ℝ :=
+  let Λ := max 1 (Real.log ((d : ℝ) * max 1 roundness /
+    ((p.epsilon / 24) * (p.delta / (8 * m)))))
+  576 * (585 * (10 : ℝ) ^ 30) * (max 1 roundness * (d : ℝ) ^ 3) * (14113440000 * Λ ^ 10)
+
+/-- Input-only cost bound for one normalized component. The capped population and
+amplified query terms add, sharing a single inverse-square accuracy factor. -/
+def arithmeticComponentBound {d : ℕ} (m b : ℕ) (p : ApproxParams) (P : PolytopeData d) : ℝ :=
+  let r := P.presentation.facetCount
+  let roundness := arithmeticRoundness P
+  let S := arithmeticScheduleCap d p roundness
+  let R := arithmeticCV18Repetitions m p
+  let T := arithmeticWalkLength P b p.epsilon
+  let perTry := 13 * d + 5 + 2 * d * r + T * (6 * d + 8 + r * (4 * d + 5))
+  let base : ℕ := r * (2 * d + 2) + 20 + (200 + 12 * S) + r +
+    (100 + d + r * (4 * d + 10)) + 76 +
+    R * (S * (2 * d + 83) + (7 * d + 87) + (4 * R + 5))
+  (base : ℝ) +
+    (((d + 2 * d * r + 31 + 2 * perTry : ℕ) : ℝ) * arithmeticPopulationNumerator p m +
+      ((12 * d + 31 + 2 * d * r : ℕ) : ℝ) * arithmeticQueryNumerator d m p roundness) /
+      p.epsilon ^ 2
+
+/-- Public expected arithmetic bound from the certified decomposition and
+approximation parameters. No charged computation occurs on this side of the claim. -/
+def ttcArithmeticBound {d k : ℕ} {F : LRAFormula d k} (D : Decomposition F)
+    (p : ApproxParams) : ℝ :=
+  if D.componentCount = 0 then 1 else
+    let b := GetPrecision D (p.epsilon / 96)
+    100 + 10 * D.componentCount + ∑ i : Fin D.componentCount,
+      (((D.component i).presentation.facetCount * (d + 1) + d + 4 : ℕ) +
+        arithmeticComponentBound D.componentCount b p (D.component i))
+
+end ttc
 
 namespace ttc.Tape
 
