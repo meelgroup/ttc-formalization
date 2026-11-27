@@ -41,7 +41,11 @@ private def primitives : List Name :=
   [cv18 "isMember", cv18 "drawPoint", cv18 "drawReal", cv18 "compute", cv18 "loopUntil",
    cv18 "report", cv18 "ChargedProgram.loopRounds",
    cv18 "ChargedProgram.withHeldQueryCap", cv18 "ChargedProgram.withQueryCap",
-   cv18 "ChargedProgram.bind", cv18 "Counted.isMember", cv18 "Counted.pick"]
+   cv18 "ChargedProgram.bind", cv18 "Counted.isMember", cv18 "Counted.pick",
+   -- The former arlib fork's five real-RAM primitives now live in TTC's
+   -- trusted Operations module. Each opens and reseals a register for one charge.
+   `Arlib.Computation.Num.cast, `Arlib.Computation.Num.sqrt, `Arlib.Computation.Num.exp,
+   `Arlib.Computation.Num.log, `Arlib.Computation.Num.root]
 
 /-- Constants a program may not reach outside the primitives. -/
 private def forbidden : List Name :=

@@ -3,6 +3,8 @@ Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import Arlib.Computation.Num
+import Batteries.Tactic.OpenPrivate
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Probability.Distributions.Poisson.Basic
 
@@ -15,9 +17,9 @@ written or read costs one.
 
 * `Op` — one charged operation: standard arithmetic of arlib's `NumOp` (`num`: a literal,
   `+ − · /`, `max`, `min`, a comparison, `⌈·⌉`, a loop entry), a real-RAM operation of
-  arlib's `RealOp` (`real`: `ℕ → ℝ`, `√`, `exp`, `log`, `u^{1/k}`), one random number
+  TTC's `RealOp` (`real`: `ℕ → ℝ`, `√`, `exp`, `log`, `u^{1/k}`), one random number
   read (`draw`), or one list cell written or read (`cell`).  `NumOps Op` and `RealOps Op`
-  make arlib's names the ones `Op` uses, so arlib's sealed numbers (`Num`) charge in
+  map the primitive labels into `Op`, so arlib's sealed numbers (`Num`) charge in
   this currency.
 * `opsTotal` — the number of operations in a tally, each priced at `1`.
 * `Round n`, `Tape n` — one round of random numbers, and the tape: a round for every
@@ -42,6 +44,77 @@ Operations are vocabulary, not evidence: nothing here asserts a bound.
 set_option autoImplicit false
 
 noncomputable section
+
+/-! ### TTC's real-number primitives on upstream arlib's sealed registers
+
+These five primitives are the real-RAM extension from the former arlib fork
+(`66d8465`, Kuldeep S. Meel, Apache-2.0). Keep its names so both TTC currencies
+can use the same operations. Only these definitions open the private register
+fields. Each returns another sealed register and charges exactly one label.
+-/
+
+namespace Arlib.Computation
+
+/-- **The operations of a real-RAM that `NumOp` does not have.**
+
+A development over the reals (a geometric random walk, a numerical integrator) uses
+these as primitives, one operation each; a development over words never names them. -/
+inductive RealOp
+  /-- Read a natural number as a real. -/
+  | cast
+  /-- The square root `√a`. -/
+  | sqrt
+  /-- The exponential `exp a`. -/
+  | exp
+  /-- The natural logarithm `log a`. -/
+  | log
+  /-- The `k`-th root `u^{1/k}`. -/
+  | root
+  deriving DecidableEq, Repr, Inhabited
+
+instance : Fintype RealOp where
+  elems := {.cast, .sqrt, .exp, .log, .root}
+  complete := fun x => by cases x <;> decide
+
+/-- **What a development's currency calls each real-RAM operation.**  A name, never an
+amount, as for `NumOps`. -/
+class RealOps (κ : Type) where
+  /-- The development's opcode for a real-RAM operation. -/
+  charge : RealOp → κ
+  /-- Distinct operations keep distinct names. -/
+  charge_injective : Function.Injective charge
+
+/-- The opcode a real-RAM operation charges in the currency `κ`. -/
+abbrev realOpcode (κ : Type) [RealOps κ] (o : RealOp) : κ := RealOps.charge o
+
+namespace Num
+
+open private Num.mk Num.value from Arlib.Computation.Num
+
+variable {κ κₛ : Type} [DecidableEq κ] [RealOps κ]
+
+/-- A natural number read as a real, at the price of one `RealOp.cast`. -/
+def cast (k : Num ℕ) : Charged κ κₛ (Num ℝ) :=
+  Charged.op (realOpcode κ .cast) (Num.mk (↑(Num.value k : ℕ) : ℝ))
+
+/-- The square root, at the price of one `RealOp.sqrt`. -/
+noncomputable def sqrt (x : Num ℝ) : Charged κ κₛ (Num ℝ) :=
+  Charged.op (realOpcode κ .sqrt) (Num.mk (Real.sqrt (Num.value x)))
+
+/-- The exponential, at the price of one `RealOp.exp`. -/
+noncomputable def exp (x : Num ℝ) : Charged κ κₛ (Num ℝ) :=
+  Charged.op (realOpcode κ .exp) (Num.mk (Real.exp (Num.value x)))
+
+/-- The natural logarithm, at the price of one `RealOp.log`. -/
+noncomputable def log (x : Num ℝ) : Charged κ κₛ (Num ℝ) :=
+  Charged.op (realOpcode κ .log) (Num.mk (Real.log (Num.value x)))
+
+/-- The `k`-th root `u^{1/k}`, at the price of one `RealOp.root`. -/
+noncomputable def root (u : Num ℝ) (k : Num ℕ) : Charged κ κₛ (Num ℝ) :=
+  Charged.op (realOpcode κ .root) (Num.mk (Num.value u ^ (↑(Num.value k : ℕ) : ℝ)⁻¹))
+
+end Num
+end Arlib.Computation
 
 namespace ttc.Model.Operations
 
@@ -76,7 +149,7 @@ instance : NumOps Op where
   charge := Op.num
   charge_injective := fun _ _ h => Op.num.inj h
 
-/-- `Op` uses arlib's names for the real-RAM operations. -/
+/-- `Op` labels TTC's additional real-RAM operations. -/
 instance : RealOps Op where
   charge := Op.real
   charge_injective := fun _ _ h => Op.real.inj h
@@ -210,7 +283,7 @@ def relabelLit (o : Op) (o' : Op) : CostVec Op :=
 def floor (x : Num ℝ) : Prog (Num ℤ) :=
   Charged.exchange (relabelLit (.num .ceil)) (Num.lit ⌊x.get⌋)
 
-/-- **An integer read as a real**: one `RealOp.cast` (arlib's own `Num.cast` reads a
+/-- **An integer read as a real**: one `RealOp.cast` (`Num.cast` reads a
 natural number). -/
 def intCast (z : Num ℤ) : Prog (Num ℝ) :=
   Charged.exchange (relabelLit (.real .cast)) (Num.lit (z.get : ℝ))

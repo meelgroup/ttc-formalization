@@ -197,9 +197,8 @@ primitives while still rejecting hand-priced `Charged.op` directly in
 `Program.lean`. -/
 def sanctionedPrefixes : List Name :=
   [`ttc.Model.Operations,
-   -- **TTC deviation: arlib's real-RAM arithmetic.**  `Num.add`, `Num.le`,
-   -- `Num.sqrt`, `Num.iterate`, … are arlib's operations on sealed numbers, each
-   -- charging one operation; what they are made of is arlib's audit's business.
+   -- `Num.add`, `Num.le` and `Num.iterate` are upstream. TTC's five real
+   -- primitives use the same namespace and live in Model/Operations.lean.
    -- `Num.get` and `Num`'s private fields stay forbidden: `isForbidden` is tested
    -- before this frontier.
    ``Arlib.Computation.Num]

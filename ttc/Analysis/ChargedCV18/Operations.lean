@@ -2,18 +2,18 @@
 Copyright (c) 2026. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
-import Arlib.Computation.Num
+import ttc.Analysis.RealRAMLemmas
 
 /-!
 # Operations: the arithmetic currency of CV18
 
 `cv18Program` (arlib-community `CV18/Analysis/OracleProgram.lean`) holds every number it computes as a sealed
-`Arlib.Computation.Num`, and does its arithmetic with arlib's charged operations on
-them.  This file names what one charged operation can be:
+`Arlib.Computation.Num`, and does its arithmetic with charged operations on them.
+This file names what one charged operation can be:
 
 * `Op` — the currency: an arithmetic operation of arlib's `NumOp` (`num`), or a real-RAM
-  operation of arlib's `RealOp` (`real`: `ℕ → ℝ`, `√`, `exp`, `log`, `u^{1/k}`).
-  `NumOps Op` and `RealOps Op` make arlib's names the ones `Op` uses.  Two more are
+  operation of TTC's `RealOp` (`real`: `ℕ → ℝ`, `√`, `exp`, `log`, `u^{1/k}`).
+  `NumOps Op` and `RealOps Op` map these labels into `Op`.  Two more are
   CV18's own, as in barbarik4: `query` (one membership-oracle call, `Counted.isMember`) and
   `draw` (one random number read into the sealed world, `Counted.pick`); and one more for
   lists, `cell` (one list cell written, `Counted.push`, or read, `Counted.cell`).
