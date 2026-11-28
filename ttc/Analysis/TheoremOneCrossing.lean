@@ -18,7 +18,7 @@ theorem fixedLevelLaw_append {ι : Type*} [Fintype ι] [DecidableEq ι]
 /-- Every property satisfied by all refreshed advance outputs holds almost
 surely under the refreshed component law. -/
 theorem originRefreshedComponentLaw_ae_of_forall
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -69,7 +69,7 @@ theorem measurable_originTotalCount {n : Nat}
 
 /-- One refreshed component step. -/
 theorem origin_refreshed_step_crossing
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -156,7 +156,7 @@ set_option maxHeartbeats 2000000 in
 /-- Across the whole ghost fold, the probability of ending above `level0`
 is at most the initial probability plus one cutoff budget per component. -/
 theorem originGivenVolumesLaw_crossing
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (S : Finset (LatticePoint n)) (level0 : Nat)
     (full : List (FixedLevelStep S)) (B : ENNReal)

@@ -84,7 +84,7 @@ theorem theorem3PrecisionScale_le_inputScale {n k : Nat}
   change 1 + (GetPrecision D p.precisionEta : Real) + _ ≤ _
   linarith
 
-theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
+theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 3 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams) :
     0 ≤ TTCRuntime.theorem3ParameterFactorCV18 hn D p + 1 := by
   have hLog : 0 ≤ TTCRuntime.theorem3CV18LogMax hn D p := by
@@ -106,7 +106,7 @@ theorem theorem3ParameterFactor_add_one_nonneg {n k : Nat} (hn : 21 ≤ n)
   linarith
 
 /-- Theorem 3 with the precision `b` replaced by its input-only bound. -/
-theorem ttc_expected_runtime_theorem3_input_scale {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_theorem3_input_scale {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :

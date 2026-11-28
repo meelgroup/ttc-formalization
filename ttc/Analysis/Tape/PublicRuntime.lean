@@ -420,7 +420,7 @@ theorem estimatorOpsBudget_le_arithmeticBound (hd : 3 ≤ d) (D : Decomposition 
   have hP : (opsTotal M.cost : ℝ) ≤ 10 * D.componentCount + 96 := by exact_mod_cast hparams
   linarith only [hsum, hP]
 
-theorem sealed_expectedOperations_le_arithmeticBound (hn : 21 ≤ d) (F : LRAFormula d k)
+theorem sealed_expectedOperations_le_arithmeticBound (hn : 3 ≤ d) (F : LRAFormula d k)
     (hb : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
     (prep : TTCPreprocessor d k) :
     SealedRun.expectedOperations F hb p prep ≤ ENNReal.ofReal (ttcArithmeticBound (prep.run F hb) p) := by

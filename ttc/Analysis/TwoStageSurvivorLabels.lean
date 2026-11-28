@@ -508,7 +508,7 @@ theorem twoStageComponent_pointCounts_eq_absoluteTape
 /-- With the two-stage survivor history fixed, the executable sampler may
 draw its IID marks from the original Poisson-copy labels. -/
 theorem community_twoStage_sampler_tape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

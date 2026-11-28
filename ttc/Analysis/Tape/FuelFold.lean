@@ -139,7 +139,7 @@ theorem aemeasurable_of_dyadic_state {β : Type} [MeasurableSpace β] {μ : Meas
   show (⟨c / 2 ^ j, s.X, s.nextLabel⟩ : TTCState d) = s
   rw [← hj]
 
-variable {k : ℕ} {F : ttc.LRAFormula d k} (hn : 21 ≤ d) (prep : ttc.TTCPreprocessor d k)
+variable {k : ℕ} {F : ttc.LRAFormula d k} (hn : 3 ≤ d) (prep : ttc.TTCPreprocessor d k)
   (D : ttc.Decomposition F) (p : ttc.ApproxParams) (b' : ℕ)
 
 theorem isProbabilityMeasure_oldFoldF (eta delta Th : ℝ) (fuel b : ℕ)

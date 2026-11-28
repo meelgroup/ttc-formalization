@@ -167,13 +167,13 @@ def ttcReferenceWithCost {n k : Nat} (F : LRAFormula n k)
           preprocessingOperations + result.2)
 
 /-- The reference run with the concrete subroutines. -/
-def ttcRef {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
+def ttcRef {n k : Nat} (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
     (prep : TTCPreprocessor n k) : Measure NNReal :=
   ttcReference F hbounded params (ttcSubroutines hn prep)
 
 /-- The charged reference run with the concrete subroutines. -/
-def ttcRefWithCost {n k : Nat} (hn : 21 ≤ n)
+def ttcRefWithCost {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations cv18NonQueryFactor : Nat) : Measure (NNReal × Nat) :=

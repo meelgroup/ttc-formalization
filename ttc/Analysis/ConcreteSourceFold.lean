@@ -19,7 +19,7 @@ theorem certifiedFixedLevelSteps_length
   simp [certifiedFixedLevelSteps, fixedLevelComponentSteps]
 
 theorem community_source_fixedLevel_fold
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
@@ -174,7 +174,7 @@ theorem community_source_fixedLevel_fold
 /-- At any fixed level, the total stored count derived from the shared
 component source has exactly the concrete certified prefix count law. -/
 theorem community_source_fixedLevel_total_law
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)
@@ -231,7 +231,7 @@ theorem community_source_fixedLevel_total_law
 /-- The paper's dyadic Chernoff estimate now holds for the same source
 space at every level, ready for a finite stopped-level union bound. -/
 theorem community_source_fixedLevel_error_bound
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)

@@ -374,7 +374,7 @@ one executable component step have the same law as a fresh fair block.  The
 statement keeps the new-copy decisions fixed, so it can be used inside the
 later independent new-coin and point-tape draws. -/
 theorem OriginConfiguration.refreshFuture_oldKernelLaw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -448,7 +448,7 @@ theorem OriginConfiguration.refreshFuture_oldKernelLaw
 /-- Refreshing the old source and drawing the fresh source independently
 reproduces both finite coin blocks consumed by one component transition. -/
 theorem OriginConfiguration.refreshFuture_jointCoinKernelLaw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -568,7 +568,7 @@ theorem OriginConfiguration.refreshFuture_jointCoinKernelLaw
 finite old/new coin source kernel, conditional on the Poisson draw and the
 first-loop coin stream. -/
 theorem OriginConfiguration.refreshFuture_advance_state_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -625,7 +625,7 @@ theorem OriginConfiguration.refreshFuture_advance_state_law
 /-- The state marginal of the complete refreshed ghost step agrees with the
 actual paper component program after its CV18 volume outcome is fixed. -/
 theorem OriginConfiguration.refreshFuture_component_state_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -664,7 +664,7 @@ theorem OriginConfiguration.refreshFuture_component_state_law
 /-- Including the CV18 draw, the refreshed source transition has precisely
 the state law of `ttcReference.step`. -/
 theorem OriginConfiguration.refreshFuture_programComponent_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

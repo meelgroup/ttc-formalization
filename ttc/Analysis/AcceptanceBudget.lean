@@ -122,7 +122,7 @@ theorem kv97_raw_point_lower_of_tvLe {n : Nat} (P : PolytopeData n)
   convert hraw using 1 <;> ring
 
 theorem normalizedHitAndRun_acceptance_ge_half_of_count_volume {n : Nat}
-    (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
+    (hn : 3 ≤ n) (P : PolytopeData n) (b : Nat)
     {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)
     (hfinite : (codedLatticePoints P b).Finite)
@@ -260,7 +260,7 @@ theorem inflation_budget_of_small_radius {n : Nat} (hn : 0 < n)
   nlinarith
 
 theorem normalizedHitAndRun_acceptance_ge_half_of_base_comparison {n : Nat}
-    (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
+    (hn : 3 ≤ n) (P : PolytopeData n) (b : Nat)
     {eta : Real} (heta0 : 0 < eta) (heta8 : eta ≤ 1 / 8)
     (latticeEta : Real) (hlattice0 : 0 ≤ latticeEta)
     (hlattice8 : latticeEta ≤ 1 / 8)

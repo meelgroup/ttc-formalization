@@ -8,7 +8,7 @@ namespace ttc
 open MeasureTheory
 
 theorem originRefreshedComponentLaw_swap_count
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -37,7 +37,7 @@ theorem originRefreshedComponentLaw_swap_count
         intensity z.2 z.1) hK
 
 noncomputable def originFutureTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -51,7 +51,7 @@ noncomputable def originFutureTapeLaw
       intensity basePending (z.1, (z.2, future))
 
 theorem measurable_originFutureTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -80,7 +80,7 @@ theorem measurable_originFutureTapeLaw
         intensity basePending (z.1.1, (z.1.2, z.2))) hnext
 
 theorem originFairCoinTapeLaw_eq_nested
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -107,7 +107,7 @@ theorem originFairCoinTapeLaw_eq_nested
       hroute intensity basePending (c, coins)) hK
 
 theorem originRefreshedComponentLaw_swap_preCoins
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -148,7 +148,7 @@ theorem originRefreshedComponentLaw_swap_preCoins
         eta threshold hroute intensity basePending z) hK
 
 theorem originRefreshFutureTape_eq_product
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -201,7 +201,7 @@ theorem originRefreshFutureTape_eq_product
   exact (measure_prod_bind_eq_nested sourceLaw fairCoinStreamLaw _ hK).symm
 
 noncomputable def originOrderedComponentLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -219,7 +219,7 @@ noncomputable def originOrderedComponentLaw
             (c.refreshFuture pair.1, (preCoins, pair.2))
 
 theorem originRefreshedComponentLaw_eq_ordered
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

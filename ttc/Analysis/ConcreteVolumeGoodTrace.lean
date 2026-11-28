@@ -11,7 +11,7 @@ namespace ttc
 open MeasureTheory
 
 theorem communityComponentsVolumeTrace_good_accurate
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold budget : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -89,7 +89,7 @@ theorem communityComponentsVolumeTrace_good_accurate
 /-- The concrete TTC component trace spends at most `δ/4` on inaccurate or
 failed CV18 outcomes, with no extra oracle premise. -/
 theorem community_components_volume_trace_good_accurate
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (factor : Nat)

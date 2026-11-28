@@ -83,7 +83,7 @@ theorem measurable_outOf : Measurable outOf :=
   measurable_optionMap (measurable_real_toNNReal.comp Num.measurable_get)
 
 /-- **With fuel, the sealed program's output law approximates the old `ttc`.** -/
-theorem approx_output (hn : 21 ≤ d) (F : ttc.LRAFormula d k)
+theorem approx_output (hn : 3 ≤ d) (F : ttc.LRAFormula d k)
     (hb : Bornology.IsBounded (ttc.solutionSet F)) (params : ttc.ApproxParams)
     (prep : ttc.TTCPreprocessor d k) :
     Approx (fun f => (vlaw (estimatorT (cv18T d) f
@@ -191,7 +191,7 @@ section Law
 open ttc.SealedRun
 
 /-- **The sealed program's output law is the old model's `ttc`.** -/
-theorem estimate_eq_ttc (hn : 21 ≤ d) (F : ttc.LRAFormula d k)
+theorem estimate_eq_ttc (hn : 3 ≤ d) (F : ttc.LRAFormula d k)
     (hb : Bornology.IsBounded (ttc.solutionSet F)) (params : ttc.ApproxParams)
     (prep : ttc.TTCPreprocessor d k) :
     estimate F hb params prep = ttc.ttc hn F hb params prep := by

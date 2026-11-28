@@ -70,7 +70,7 @@ theorem concrete_component_step_envelope
 /-- Instantiate the component envelope with the normalized finite-step
 Hit-and-Run/KV97 point law used by `ttcRef`. -/
 theorem normalized_component_step_envelope
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount)
@@ -114,7 +114,7 @@ theorem normalized_component_step_envelope
 /-- The concrete paper sampler's certified branch is exactly an IID
 batch from the normalized Hit-and-Run/KV97 point law. -/
 theorem community_generateSamples_eq_iid
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

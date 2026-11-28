@@ -88,7 +88,7 @@ theorem iSup_finishedOps_eq_operations {t : Tape d} (ht : ∃ f, Finishes f cs e
     exact le_iSup (fun g => finishedOps cs eps delta g t) f
 
 /-- On certified formula inputs, some fuel suffices on almost every random tape. -/
-theorem ae_exists_finishes (hn : 21 ≤ d) (F : LRAFormula d k)
+theorem ae_exists_finishes (hn : 3 ≤ d) (F : LRAFormula d k)
     (hb : Bornology.IsBounded (solutionSet F)) (p : ApproxParams) (prep : TTCPreprocessor d k) :
     ∀ᵐ t ∂tapeLaw d, ∃ f, Finishes f (componentsOf (prep.run F hb)) p.epsilon p.delta t := by
   let cs := componentsOf (prep.run F hb)
@@ -110,7 +110,7 @@ theorem ae_exists_finishes (hn : 21 ≤ d) (F : LRAFormula d k)
 
 /-- Any bound uniform in fuel bounds the expected tally of the sealed run, including
 all of its charged arithmetic and draws. -/
-theorem expectedOperations_le_of_uniform (hn : 21 ≤ d) (F : LRAFormula d k)
+theorem expectedOperations_le_of_uniform (hn : 3 ≤ d) (F : LRAFormula d k)
     (hb : Bornology.IsBounded (solutionSet F)) (p : ApproxParams) (prep : TTCPreprocessor d k)
     (B : ENNReal)
     (hB : ∀ f, Eops (estimatorT (cv18T d) f (componentsOf (prep.run F hb))

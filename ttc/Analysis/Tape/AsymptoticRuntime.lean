@@ -233,7 +233,7 @@ private theorem walkLog_le (D : Decomposition F) (p : ApproxParams) (hm : 0 < D.
   change Real.log (n : ℝ) ≤ L at hlogs
   linarith
 
-private theorem walkLength_le (hn : 21 ≤ n) (D : Decomposition F) (p : ApproxParams)
+private theorem walkLength_le (hn : 3 ≤ n) (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
     (arithmeticWalkLength (D.component i) (GetPrecision D p.precisionEta) p.epsilon : ℝ) ≤
       (2 : ℝ) ^ 80 * (n : ℝ) ^ 4 * Rho D ^ 2 * ttcRuntimeLog D p := by
@@ -512,7 +512,7 @@ private theorem scalar_component_bound (n r ρ L ε T S J P Q : ℝ)
     _ ≤ (10 : ℝ) ^ 54 * X / ε ^ 2 :=
       div_le_div_of_nonneg_right (mul_le_mul_of_nonneg_right (by norm_num) hX0) he2.le
 
-private theorem component_le_rate (hn : 21 ≤ n) (D : Decomposition F) (p : ApproxParams)
+private theorem component_le_rate (hn : 3 ≤ n) (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
     let r := (D.component i).presentation.facetCount
     (((r * (n + 1) + n + 4 : ℕ) : ℝ) +
@@ -560,7 +560,7 @@ private theorem component_le_rate (hn : 21 ≤ n) (D : Decomposition F) (p : App
 
 /-- The explicit arithmetic envelope is at most an absolute constant times the
 public rate. This only bounds the allowance and does not change the program. -/
-theorem ttcArithmeticBound_le_runtimeRate (hn : 21 ≤ n) (D : Decomposition F) (p : ApproxParams) :
+theorem ttcArithmeticBound_le_runtimeRate (hn : 3 ≤ n) (D : Decomposition F) (p : ApproxParams) :
     ttcArithmeticBound D p ≤ (10 : ℝ) ^ 54 * ttcRuntimeRate D p := by
   by_cases h : D.componentCount = 0
   · simp only [ttcArithmeticBound, ttcRuntimeRate, h, ite_true, mul_one]
@@ -584,7 +584,7 @@ theorem ttcArithmeticBound_le_runtimeRate (hn : 21 ≤ n) (D : Decomposition F) 
     _ ≤ ∑ _ : Fin m, B := Finset.sum_le_sum (fun i _ => component_le_rate hn D p i)
     _ = _ := by simp [Finset.sum_const, Fintype.card_fin, B, m, nsmul_eq_mul]; ring
 
-theorem sealed_expectedOperations_le_runtimeRate (hn : 21 ≤ n) (F : LRAFormula n k)
+theorem sealed_expectedOperations_le_runtimeRate (hn : 3 ≤ n) (F : LRAFormula n k)
     (hb : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
     (prep : TTCPreprocessor n k) :
     SealedRun.expectedOperations F hb p prep ≤

@@ -91,7 +91,7 @@ theorem estimate_of_not_badWindow
   · nlinarith [hwin.2]
 
 theorem originGivenVolumesLaw_refreshLaw_bind_of_ne_nil
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))
@@ -115,7 +115,7 @@ theorem list_get_ofFn_map_eq {α β : Type*} {m : Nat} (f : Fin m → α)
   rw [List.get_ofFn, hfg]
 
 theorem communityCertifiedComponents_get_polytope
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (i : Fin (communityCertifiedComponents hn D p prep).length) :
     ((communityCertifiedComponents hn D p prep).get i).polytope =
@@ -125,7 +125,7 @@ theorem communityCertifiedComponents_get_polytope
     (fun _ => rfl) i
 
 theorem communityCertifiedComponents_support
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     let b := (prep.choosePrecision D p).value
     let S := (D.codedUnion_finite (by omega) p b
@@ -145,7 +145,7 @@ set_option maxHeartbeats 4000000 in
 ghost run's final estimate misses the `ε/2` scaled-lattice guarantee with
 probability at most `δ/6 + δ/6`. -/
 theorem community_ghost_estimate_bad_le
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (hm : 0 < D.componentCount)
     (outcomes : Fin (communityCertifiedComponents hn D p prep).length →

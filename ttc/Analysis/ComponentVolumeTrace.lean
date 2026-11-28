@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def communityComponentVolumeTrace
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n) :
     Measure ((VolumeOutcome × Nat) × (TTCState n × Nat)) :=
@@ -19,7 +19,7 @@ noncomputable def communityComponentVolumeTrace
     (communityCostedComponentTail hn prep factor P b eta delta threshold state)
 
 theorem communityComponentVolumeTrace_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -37,7 +37,7 @@ theorem communityComponentVolumeTrace_fst
       (ttcReference.t b n threshold outcome.2)⟩
 
 theorem communityComponentVolumeTrace_snd
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -63,7 +63,7 @@ theorem communityComponentVolumeTrace_snd
 /-- Forgetting the oracle's operation charge recovers the exact CV18
 outcome law used by the uncharged paper program. -/
 theorem communityComponentVolumeTrace_volumeOutcome
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -87,7 +87,7 @@ set_option maxHeartbeats 1200000 in
 /-- The instrumented component is a measurable kernel in its incoming TTC
 state. This allows volume traces to be folded over the component list. -/
 theorem communityComponentVolumeTrace_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (hvolume : IsProbabilityMeasure
@@ -144,7 +144,7 @@ theorem communityComponentVolumeTrace_measurable
   exact hmeas
 
 theorem communityComponentVolumeTrace_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n)

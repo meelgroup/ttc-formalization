@@ -51,7 +51,7 @@ theorem uniformBudgetNat_le_coarse_product
   omega
 
 theorem theorem3UniformComponentBudget_eq_uniformBudgetNat
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat) :
     theorem3UniformComponentBudget hn D p b 1 =
       (uniformBudgetNat n (RMax D) (ThresholdCap p D.componentCount)
@@ -65,7 +65,7 @@ theorem theorem3UniformComponentBudget_eq_uniformBudgetNat
   simp [Nat.cast_add, Nat.cast_mul]
 
 theorem theorem3UniformComponentBudget_le_coarse_product
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hm : 0 < D.componentCount) :
     theorem3UniformComponentBudget hn D p b 1 ≤
@@ -81,7 +81,7 @@ theorem theorem3UniformComponentBudget_le_coarse_product
     (by omega : 1 ≤ n) (D.theorem3RMax_pos hm)
 
 theorem theorem3UniformIndexSum_le_parameterFactor
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat) :
     let rho := Rho D
     let R := theorem3OuterRadiusMax D
@@ -221,7 +221,7 @@ theorem theorem3UniformIndexSum_le_parameterFactor
   exact_mod_cast hfinal
 
 theorem theorem3UniformComponentBudget_le_headline_scale
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hm : 0 < D.componentCount) :
     theorem3UniformComponentBudget hn D p b 1 ≤

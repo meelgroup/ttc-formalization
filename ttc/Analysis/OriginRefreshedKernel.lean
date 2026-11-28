@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def originRefreshedComponentLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -21,7 +21,7 @@ noncomputable def originRefreshedComponentLaw
     (originPoissonCoinTapeLaw hn P b eta threshold hroute intensity)
 
 theorem measurable_originRefreshedComponentLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -47,7 +47,7 @@ theorem measurable_originRefreshedComponentLaw
         intensity z.2) hnext
 
 theorem originRefreshedComponentLaw_isProbabilityMeasure
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -68,7 +68,7 @@ theorem originRefreshedComponentLaw_isProbabilityMeasure
         threshold hthreshold hroute intensity refreshed))
 
 noncomputable def originRefreshedComponentKernel
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -83,7 +83,7 @@ noncomputable def originRefreshedComponentKernel
       hthreshold hroute intensity⟩
 
 instance originRefreshedComponentKernel_isMarkov
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

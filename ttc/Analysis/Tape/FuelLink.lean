@@ -38,7 +38,7 @@ def condLaw (P : ttc.PolytopeData d) (b : ℕ) (eta : ℝ) : Measure (Fin d → 
 
 section Certified
 
-variable (hn : 21 ≤ d) (D : ttc.Decomposition F) (p : ttc.ApproxParams) (i : Fin D.componentCount)
+variable (hn : 3 ≤ d) (D : ttc.Decomposition F) (p : ttc.ApproxParams) (i : Fin D.componentCount)
 
 include hn in
 theorem route_certified :
@@ -78,7 +78,7 @@ theorem acceptance_pos :
 end Certified
 
 /-- **The old step, on a certified component, in the `gvGen` form.** -/
-theorem step_eq_gvGen (hn : 21 ≤ d) (prep : ttc.TTCPreprocessor d k) (P : ttc.PolytopeData d)
+theorem step_eq_gvGen (hn : 3 ≤ d) (prep : ttc.TTCPreprocessor d k) (P : ttc.PolytopeData d)
     (b : ℕ) (eta delta Th : ℝ)
     (hroute : ttc.samplerRadiusRequirement P eta ≤ ttc.decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧ (ttc.codedLatticePoints P b).Finite ∧
@@ -97,7 +97,7 @@ theorem body_eq (P : ttc.PolytopeData d) (b : ℕ) (eta : ℝ) :
   rfl
 
 /-- **The sealed sampler with fuel approximates the conditioned point law.** -/
-theorem approx_samplerLaw (hn : 21 ≤ d) (D : ttc.Decomposition F) (p : ttc.ApproxParams)
+theorem approx_samplerLaw (hn : 3 ≤ d) (D : ttc.Decomposition F) (p : ttc.ApproxParams)
     (i : Fin D.componentCount) (b' : ℕ) :
     Approx (fun f => samplerLaw (paramsOf D p) f b' (D.component i))
       (condLaw (D.component i) (ttc.GetPrecision D p.precisionEta) p.ε') := by

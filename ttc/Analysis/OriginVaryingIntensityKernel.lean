@@ -9,7 +9,7 @@ open MeasureTheory
 
 set_option maxHeartbeats 1000000 in
 theorem measurable_originCoinPairTapeLaw_intensity
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -57,7 +57,7 @@ theorem measurable_originCoinPairTapeLaw_intensity
 
 set_option maxHeartbeats 1000000 in
 theorem measurable_originFairCoinTapeLaw_intensity
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -86,7 +86,7 @@ theorem measurable_originFairCoinTapeLaw_intensity
 
 set_option maxHeartbeats 1000000 in
 theorem measurable_originPoissonCoinTapeLaw_intensity
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

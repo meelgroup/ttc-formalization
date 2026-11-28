@@ -12,7 +12,7 @@ set_option maxHeartbeats 1000000 in
 /-- For fixed Poisson count and pre-thinning coins, averaging the old/new
 fair sources and the independent point tape keeps the step tail-fair. -/
 theorem originOrderedInnerLaw_tailFair
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -99,7 +99,7 @@ theorem originOrderedInnerLaw_tailFair
 set_option maxHeartbeats 1000000 in
 /-- The refreshed one-component ghost law is tail-fair. -/
 theorem originRefreshedComponentLaw_tailFair
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -126,7 +126,7 @@ theorem originRefreshedComponentLaw_tailFair
 For any incoming ghost law, the output law of one refreshed component is
 fixed by the source-tail refresh kernel. -/
 theorem originRefreshedComponentLaw_bind_stationary
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

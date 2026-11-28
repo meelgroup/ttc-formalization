@@ -8,7 +8,7 @@ namespace ttc
 open MeasureTheory
 
 theorem measurable_community_sampleAppend_kernel
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta : Real) :
     Measurable (fun second : TTCState n × Nat =>
       ((ttcSubroutines hn prep).GenerateSamples P second.2
@@ -32,7 +32,7 @@ theorem measurable_community_sampleAppend_kernel
   exact (Measure.measurable_map _ measurable_fst).comp hcost
 
 theorem community_sampleAppend_from_iidTape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -86,7 +86,7 @@ theorem community_sampleAppend_from_iidTape
 be drawn from any injectively indexed locations of one independent point
 tape. The labels may be the surviving original Poisson-copy labels. -/
 theorem community_sampleAppend_from_iidTape_at_labels
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -136,7 +136,7 @@ theorem community_sampleAppend_from_iidTape_at_labels
 /-- A concrete paper component at a dyadic incoming rate has an exact
 level-zero Poisson, absolute-thinning, and IID point-tape representation. -/
 theorem communityComponentGivenVolume_absolute_tape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

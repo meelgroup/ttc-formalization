@@ -24,7 +24,7 @@ theorem measurable_estimate {n : Nat} (b : Nat)
 
 /-- Forgetting arithmetic-operation charges recovers exactly the paper
 TTC output distribution. -/
-theorem community_costed_output_fst {n k : Nat} (hn : 21 ≤ n)
+theorem community_costed_output_fst {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations factor : Nat) :

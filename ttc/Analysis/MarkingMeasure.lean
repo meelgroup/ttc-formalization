@@ -325,7 +325,7 @@ theorem iid_batch_poisson_count_law
 /-- The certified normalized Hit-and-Run batch, at any valid TTC call, gives
 independent Poisson point counts after the program's Poisson draw. -/
 theorem normalized_batch_poisson_count_law
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n) (b : Nat)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n) (b : Nat)
     (eta : Real)
     (hunit : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)
     (heta0 : 0 < eta) (heta1 : eta ≤ 1)

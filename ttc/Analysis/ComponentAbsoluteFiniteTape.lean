@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory ProbabilityTheory
 
 theorem communityComponentGivenVolume_absolute_finite_tape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

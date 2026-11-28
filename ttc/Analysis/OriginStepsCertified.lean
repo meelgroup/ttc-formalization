@@ -12,7 +12,7 @@ open Classical MeasureTheory
 
 /-- One ghost-fold step for a certified component and its volume outcome. -/
 noncomputable def originGivenVolumesStep
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real)
     (S : Finset (LatticePoint n)) (level : Nat)
     (d : OriginCertifiedComponent n k hn prep b eta delta)
@@ -26,7 +26,7 @@ noncomputable def originGivenVolumesStep
           ttcReference.t b n threshold o.2 : NNReal) : Real)) }
 
 theorem originGivenVolumesSteps_eq_ofFn_get
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real)
     (S : Finset (LatticePoint n)) (level : Nat) :
     ∀ (l : List (OriginCertifiedComponent n k hn prep b eta delta))
@@ -43,7 +43,7 @@ theorem originGivenVolumesSteps_eq_ofFn_get
       rfl
 
 theorem communityCertifiedComponents_length
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     (communityCertifiedComponents hn D p prep).length =
       D.componentCount := by
@@ -51,7 +51,7 @@ theorem communityCertifiedComponents_length
   simp
 
 theorem community_givenVolumesSteps_eq_certified
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (S : Finset (LatticePoint n)) (level : Nat)
     (outcomes : Fin (communityCertifiedComponents hn D p prep).length →

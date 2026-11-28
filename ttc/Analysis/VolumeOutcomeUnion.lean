@@ -103,7 +103,7 @@ theorem independent_volume_outcomes_good_accurate
 /-- All concrete CV18 component estimates are simultaneously tagged good
 with probability at least `1 - δ/4` in their independent product law. -/
 theorem community_volume_outcomes_good
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams)
@@ -140,7 +140,7 @@ theorem community_volume_outcomes_good
 /-- On the same product law, every good tag has its promised relative
 volume accuracy, simultaneously across the finite component family. -/
 theorem community_volume_outcomes_accurate
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) :
@@ -175,7 +175,7 @@ theorem community_volume_outcomes_accurate
 /-- The concrete independent CV18 outcomes meet every component's volume
 premise simultaneously within the allocated `δ/4` failure budget. -/
 theorem community_volume_outcomes_good_accurate
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams)

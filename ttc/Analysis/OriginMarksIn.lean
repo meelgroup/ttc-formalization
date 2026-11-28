@@ -122,7 +122,7 @@ theorem ae_tape_mem_marksIn {n : Nat} (μ : Measure (LatticePoint n))
 
 set_option linter.unusedVariables false in
 theorem originRefreshedComponentLaw_ae_marksIn
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -169,7 +169,7 @@ theorem originRefreshedComponentLaw_ae_marksIn
     threshold basePending _ _ tape ht
 
 theorem originGivenVolumesLaw_ae_marksIn
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (S : Finset (LatticePoint n))
     (components : List

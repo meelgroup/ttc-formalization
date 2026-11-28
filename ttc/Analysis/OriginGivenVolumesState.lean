@@ -20,7 +20,7 @@ theorem OriginConfiguration.refreshLaw_refreshFuture
   exact c.refreshFuture_twice future second
 
 theorem originRefreshedComponentLaw_refreshFuture
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -38,7 +38,7 @@ theorem originRefreshedComponentLaw_refreshFuture
 /-- A nonempty ghost fold already begins by refreshing, so a leading
 refresh is absorbed. -/
 theorem originGivenVolumesLaw_refreshLaw_bind
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (d : OriginCertifiedComponent n k hn prep b eta delta)
     (rest : List (OriginCertifiedComponent n k hn prep b eta delta))
@@ -138,7 +138,7 @@ set_option maxHeartbeats 1000000 in
 /-- The ghost fold at fixed outcomes projects to the executable fold at the
 same outcomes. -/
 theorem originGivenVolumesLaw_map_state
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))

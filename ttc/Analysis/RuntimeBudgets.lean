@@ -34,7 +34,7 @@ open Classical in
 /-- Largest of the explicit scheduled CV18 logarithmic products across TTC's
 normalized components. The empty family's value is zero. -/
 noncomputable def TTCRuntime.theorem3CV18LogMax
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) : Real :=
   ((Finset.univ.sup fun i : Fin D.componentCount =>
     Real.toNNReal (if h : CommunityCV18.AdmissibleCV18Request p.ε' (p.δ' D.componentCount)
@@ -45,7 +45,7 @@ noncomputable def TTCRuntime.theorem3CV18LogMax
 /-- The parameter factor with CV18's scheduled logarithmic product as defined; the
 statement of Theorem 3 uses its explicit upper bound `TTCRuntime.theorem3ParameterFactor`. -/
 noncomputable def TTCRuntime.theorem3ParameterFactorCV18
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) : Real :=
   45 * (64 *
       ArlibCommunity.Algorithms.CV18.runCostConstant + 1) *
@@ -58,7 +58,7 @@ noncomputable def TTCRuntime.theorem3ParameterFactorCV18
 /-- Explicit TTC CV18 query envelope obtained by inserting `ρ` into the
 imported scheduled complexity rate. -/
 noncomputable def TTCRuntime.theorem3CV18QueryEnvelope
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (i : Fin D.componentCount) : Nat :=
   let q := CommunityCV18.params (by omega) (D.component i) p.ε'
     (p.δ' D.componentCount) (CommunityCV18.admissibleTTCRequest D p i)
@@ -71,7 +71,7 @@ noncomputable def TTCRuntime.theorem3CV18QueryEnvelope
 /-- Uniform CV18 query cap after maximizing only its logarithmic product
 over components. -/
 noncomputable def TTCRuntime.theorem3CV18QueryMax
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) : Nat :=
   Nat.ceil (45 * (64 *
     ArlibCommunity.Algorithms.CV18.runCostConstant
@@ -91,7 +91,7 @@ noncomputable def TTCRuntime.theorem3SamplerLogEnvelope
 paper run. The finite sum of these allowances is proved to bound the
 whole run's expected cost in `Analysis/ComponentExpectation`. -/
 noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
-    (hn : 21 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
+    (hn : 3 ≤ n) (p : ApproxParams) (m b cv18NonQueryFactor : Nat)
     (P : PolytopeData n) : ENNReal :=
   let cap := TTCRuntime.ThresholdCap p m
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
@@ -113,7 +113,7 @@ noncomputable def TTCRuntime.expectedComponentBudget {n : Nat}
 /-- Component budget after replacing the concrete sampler walk length by the
 radius-ratio and precision envelope proved in `Analysis/NormalizedDiameterRuntime`. -/
 noncomputable def TTCRuntime.expectedComponentBudgetGeometric
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
@@ -142,7 +142,7 @@ noncomputable def TTCRuntime.expectedComponentBudgetGeometric
 /-- Fully substituted per-component allowance: CV18 queries and normalized
 Hit-and-Run steps use their proved polynomial-times-logarithmic envelopes. -/
 noncomputable def TTCRuntime.expectedComponentBudgetTheorem3
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) : ENNReal :=
   let P := D.component i
@@ -168,7 +168,7 @@ noncomputable def TTCRuntime.expectedComponentBudgetTheorem3
 /-- One allowance valid for every component after taking only the maximum
 facet count and maximum CV18 logarithmic product. -/
 noncomputable def TTCRuntime.theorem3UniformComponentBudget
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat) :
     ENNReal :=
   let r := TTCRuntime.RMax D

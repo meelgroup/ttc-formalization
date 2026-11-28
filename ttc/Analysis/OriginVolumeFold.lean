@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory
 
 structure OriginCertifiedComponent
-    (n k : Nat) (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    (n k : Nat) (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta : Real) where
   polytope : PolytopeData n
   route : samplerRadiusRequirement polytope eta ≤ decimalScale b * polytope.inradius ∧
@@ -20,7 +20,7 @@ structure OriginCertifiedComponent
     ((ttcSubroutines hn prep).ComputeVolume polytope eta delta)
 
 noncomputable def communityOriginComponentsLaw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) :
     List (OriginCertifiedComponent n k hn prep b eta delta) →
       OriginConfiguration n →
@@ -33,7 +33,7 @@ noncomputable def communityOriginComponentsLaw
           threshold rest)
 
 theorem measurable_communityOriginComponentsLaw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta)) :
@@ -51,7 +51,7 @@ theorem measurable_communityOriginComponentsLaw
       exact (Measure.measurable_bind' ih).comp hstep
 
 theorem communityOriginComponentsLaw_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))
@@ -83,7 +83,7 @@ theorem communityOriginComponentsLaw_isProbabilityMeasure
 
 set_option maxHeartbeats 1000000 in
 theorem communityOriginComponentsLaw_map_state
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List
       (OriginCertifiedComponent n k hn prep b eta delta))

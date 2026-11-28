@@ -52,7 +52,7 @@ theorem measurable_communityOriginTapeResult
   exact measurable_addBatch.comp (measurable_const.prodMk hpoints)
 
 theorem communityOriginTapeKernel_eq_tapeResult
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -89,7 +89,7 @@ theorem OriginConfiguration.advance_state_eq_tapeResult
 /-- Conditional on the Poisson count and both coin arrays, forgetting the
 ghost fields of `advance` gives exactly the source-labelled sampler kernel. -/
 theorem OriginConfiguration.advance_state_tapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

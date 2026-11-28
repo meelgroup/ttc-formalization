@@ -13,7 +13,7 @@ namespace ttc
 open Classical MeasureTheory
 
 theorem communityComponentsGivenVolumes_list_congr
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real)
     (L₁ L₂ : List (PolytopeData n)) (h : L₁ = L₂)
     (outcomes : Fin L₂.length → VolumeOutcome) (state : TTCState n) :
@@ -45,7 +45,7 @@ set_option maxHeartbeats 4000000 in
 /-- The paper TTC output achieves the intermediate `ε/2` estimate of the
 scaled union lattice count with probability at least `1 - δ`. -/
 theorem community_ttc_lattice_estimate
-    {n k : Nat} (hn : 21 ≤ n)
+    {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
@@ -208,7 +208,7 @@ oracles, the output is an `ε`-relative estimate of the volume of the
 existentially projected solution set with probability at least `1 - δ`.
 There is no `Prior` hypothesis and no regime premise. -/
 theorem community_ttc_volume_accuracy
-    {n k : Nat} (hn : 21 ≤ n)
+    {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k) :

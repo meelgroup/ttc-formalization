@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory
 
 theorem community_volume_contract
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams) :
     ComputeVolumeContract (ttcSubroutines hn prep)

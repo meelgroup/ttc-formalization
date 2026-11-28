@@ -19,7 +19,7 @@ open scoped ENNReal
 
 /-- Theorem 1. The sealed estimator achieves relative error `ε` with
 probability at least `1 - δ`. -/
-theorem ttc_theorem1_volume_accuracy {n k : ℕ} (hn : 21 ≤ n) (F : LRAFormula n k)
+theorem ttc_theorem1_volume_accuracy {n k : ℕ} (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
     (prep : TTCPreprocessor n k) :
     (SealedRun.estimate F hbounded p prep).real
@@ -33,7 +33,7 @@ absolute constant and `Λ` is the input logarithm in `ttcRuntimeLog`.
 The empty decomposition is covered by the same constant. -/
 theorem ttc_theorem3_expected_runtime :
     ∃ C : ℝ, 0 < C ∧
-      ∀ {n k : ℕ}, 21 ≤ n → ∀ (F : LRAFormula n k)
+      ∀ {n k : ℕ}, 3 ≤ n → ∀ (F : LRAFormula n k)
         (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
         (prep : TTCPreprocessor n k),
         SealedRun.expectedOperations F hbounded p prep ≤

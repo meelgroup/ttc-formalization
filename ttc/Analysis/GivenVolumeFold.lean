@@ -40,7 +40,7 @@ private theorem bind_independent_comm
   exact hleft.trans ((measure_prod_bind_swap μ ν K hK).trans hright.symm)
 
 theorem measurable_communityComponentGivenVolume
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × VolumeOutcome =>
@@ -66,7 +66,7 @@ theorem measurable_communityComponentGivenVolume
     (ttcReference.t b n threshold z.2.2)).symm
 
 theorem communityComponentGivenVolume_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold) (outcome : VolumeOutcome)
     (state : TTCState n) :
@@ -91,7 +91,7 @@ theorem communityComponentGivenVolume_isProbabilityMeasure
   exact hmap
 
 noncomputable def communityComponentsGivenVolumes
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) :
     (components : List (PolytopeData n)) →
     (outcomes : Fin components.length → VolumeOutcome) →
@@ -105,7 +105,7 @@ noncomputable def communityComponentsGivenVolumes
 
 set_option maxHeartbeats 2000000 in
 theorem measurable_communityComponentsGivenVolumes
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n)) :
     Measurable (fun z : (Fin components.length → VolumeOutcome) × TTCState n =>
@@ -149,7 +149,7 @@ theorem measurable_communityComponentsGivenVolumes
 
 set_option maxHeartbeats 2000000 in
 theorem communityComponentsGivenVolumes_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (outcomes : Fin components.length → VolumeOutcome)
@@ -181,7 +181,7 @@ theorem communityComponentsGivenVolumes_isProbabilityMeasure
         (Filter.Eventually.of_forall hprob)
 
 theorem measurable_communityProcessComponents
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
@@ -224,7 +224,7 @@ theorem measurable_communityProcessComponents
 
 set_option maxHeartbeats 1200000 in
 theorem communityProcessComponents_eq_volumeVector_bind
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure

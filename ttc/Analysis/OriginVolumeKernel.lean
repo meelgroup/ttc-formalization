@@ -8,7 +8,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def originComponentVolumeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -31,7 +31,7 @@ theorem measurable_intensity_outcome
 
 set_option maxHeartbeats 1000000 in
 theorem measurable_originComponentVolumeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -62,7 +62,7 @@ theorem measurable_originComponentVolumeLaw
         (ttcReference.t b n threshold z.2.2) z.1) hnext
 
 theorem measurable_originRefreshedComponentLaw_outcome
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -83,7 +83,7 @@ theorem measurable_originRefreshedComponentLaw_outcome
   simpa only [Function.comp_def] using hcomp
 
 theorem originComponentVolumeLaw_isProbabilityMeasure
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -106,7 +106,7 @@ theorem originComponentVolumeLaw_isProbabilityMeasure
 
 set_option maxHeartbeats 1000000 in
 theorem originComponentVolumeLaw_map_state
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
@@ -139,7 +139,7 @@ theorem originComponentVolumeLaw_map_state
     hn prep P b eta delta threshold hthreshold hroute c outcome
 
 noncomputable def communityOriginComponentLaw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -151,7 +151,7 @@ noncomputable def communityOriginComponentLaw
     ((ttcSubroutines hn prep).ComputeVolume P eta delta) c
 
 theorem communityOriginComponentLaw_map_state
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧

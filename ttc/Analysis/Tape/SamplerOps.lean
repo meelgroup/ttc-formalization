@@ -89,7 +89,7 @@ variable {k : ℕ} {F : ttc.LRAFormula d k}
 
 /-- The actual sealed sampler retries with probability at most one half on every
 certified component. -/
-theorem certified_sampleTry_rejection_le (hn : 21 ≤ d) (D : ttc.Decomposition F)
+theorem certified_sampleTry_rejection_le (hn : 3 ≤ d) (D : ttc.Decomposition F)
     (p : ttc.ApproxParams) (i : Fin D.componentCount) (b' : ℕ) :
     let K := paramsOf D p
     let P := D.component i

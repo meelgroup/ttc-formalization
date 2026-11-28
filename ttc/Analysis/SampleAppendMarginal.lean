@@ -14,7 +14,7 @@ namespace ttc
 open MeasureTheory
 
 theorem community_costed_samples_mass_le_one_all
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (count b : Nat)
     (eta delta : Real) :
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
@@ -27,7 +27,7 @@ theorem community_costed_samples_mass_le_one_all
   · simp [ttcCostedSubroutines, h, costedCharge,
       failedSampleBatchLaw]
 
-theorem community_sample_append_fst {n k : Nat} (hn : 21 ≤ n)
+theorem community_sample_append_fst {n k : Nat} (hn : 3 ≤ n)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
     (state : TTCState n) :
@@ -58,7 +58,7 @@ theorem community_sample_append_fst {n k : Nat} (hn : 21 ≤ n)
       rw [communityCosted_samples_fst hn prep factor P count b eta delta]
 
 theorem community_sample_append_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta : Real) :
     Measurable (fun z : TTCState n × Nat =>
@@ -114,7 +114,7 @@ theorem community_sample_append_kernel_measurable
       (measurable_const.prodMk measurable_id)) measurable_const
 
 theorem community_count_sample_append_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n) (pending : Nat) :
     (costedBind (ttcPseudocode.secondLoopWithCost state pending threshold)
@@ -136,7 +136,7 @@ theorem community_count_sample_append_fst
     eta delta second.1
 
 theorem community_count_sample_append_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) :
     Measurable (fun z : TTCState n × Nat =>
@@ -159,7 +159,7 @@ theorem community_count_sample_append_kernel_measurable
     (community_sample_append_kernel_measurable hn prep factor P b eta delta)
 
 theorem community_poisson_count_sample_append_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) :
@@ -214,7 +214,7 @@ theorem community_poisson_count_sample_append_fst
         eta delta threshold state pending
 
 private noncomputable def communityCostedCountSampleAppend
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (z : TTCState n × Nat) :
     Measure (TTCState n × Nat) :=
@@ -227,7 +227,7 @@ private noncomputable def communityCostedCountSampleAppend
         (second.2 * TTCRuntime.appendCopyOperations)))
 
 private noncomputable def communityCostedPoissonCountSampleAppend
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) : Measure (TTCState n × Nat) :=
@@ -238,7 +238,7 @@ private noncomputable def communityCostedPoissonCountSampleAppend
       threshold (state, pending))
 
 theorem community_costed_count_tail_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) :
     Measurable (communityCostedCountSampleAppend hn prep factor P b eta delta
@@ -247,7 +247,7 @@ theorem community_costed_count_tail_measurable
     eta delta threshold
 
 theorem community_poisson_count_sample_append_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -274,7 +274,7 @@ theorem community_poisson_count_sample_append_kernel_measurable
     TTCRuntime.poissonDrawOperations hlaw hnext
 
 private noncomputable def communityCostedRateTail
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) : Measure (TTCState n × Nat) :=
@@ -288,7 +288,7 @@ private noncomputable def communityRateDraw {n : Nat} (threshold : Real)
     ttcReference.firstLoopCost z.1.1 z.1.2 threshold)
 
 private noncomputable def communityRateNext
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real)
     (z : (TTCState n × NNReal) × TTCState n) :
@@ -305,7 +305,7 @@ private theorem communityRateDraw_measurable {n : Nat}
 
 set_option maxHeartbeats 800000 in
 private theorem communityRateNext_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) :
     Measurable (communityRateNext hn prep factor P b eta delta threshold) := by
@@ -321,7 +321,7 @@ private theorem communityRateNext_measurable
 
 set_option maxHeartbeats 800000 in
 theorem community_rate_tail_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -338,7 +338,7 @@ theorem community_rate_tail_kernel_measurable
     (communityRateNext_measurable hn prep factor P b eta delta threshold)
 
 theorem community_costed_rate_tail_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -360,7 +360,7 @@ theorem community_costed_rate_tail_measurable
 
 set_option maxHeartbeats 800000 in
 theorem community_rate_poisson_tail_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) :
@@ -394,7 +394,7 @@ theorem community_rate_poisson_tail_fst
     eta delta threshold first intensity
 
 private noncomputable def communityCostedDeletionTail
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
     (intensity : NNReal) : Measure (TTCState n × Nat) :=
@@ -434,7 +434,7 @@ theorem community_deletion_pair_measurable {n : Nat}
   exact hdeleted.prodMk hcost
 
 theorem community_deletion_tail_joint_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -494,7 +494,7 @@ theorem community_deletion_tail_joint_measurable
   exact hbase
 
 theorem community_deletion_tail_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) (intensity : NNReal) :
@@ -535,7 +535,7 @@ theorem community_deletion_tail_fst
     delta threshold deleted intensity
 
 theorem community_deletion_tail_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -590,7 +590,7 @@ theorem community_deletion_tail_kernel_measurable
   exact hmap
 
 noncomputable def communityCostedComponentTail
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n)
     (outcome : VolumeOutcome) : Measure (TTCState n × Nat) :=
@@ -598,7 +598,7 @@ noncomputable def communityCostedComponentTail
     (ttcReference.t b n threshold outcome.2)
 
 theorem community_component_tail_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -612,7 +612,7 @@ theorem community_component_tail_measurable
     eta delta threshold hthreshold state).comp hintensity
 
 theorem community_component_tail_joint_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × VolumeOutcome =>
@@ -636,7 +636,7 @@ theorem community_component_tail_joint_measurable
   exact hcomp
 
 theorem community_component_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -661,7 +661,7 @@ theorem community_component_fst
     threshold hthreshold state (ttcReference.t b n threshold outcome.2)
 
 theorem community_component_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (hvolume : ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
@@ -694,7 +694,7 @@ theorem community_component_kernel_measurable
   exact hbase
 
 theorem community_components_fst_of_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hkernel : ∀ components : List (PolytopeData n),
@@ -728,7 +728,7 @@ theorem community_components_fst_of_measurable
       exact ih nextState
 
 theorem community_components_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -764,7 +764,7 @@ theorem community_components_kernel_measurable
       exact costedBind_kernel_measurable _ _ hfirst hnext
 
 theorem community_components_fst
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -805,7 +805,7 @@ theorem community_components_fst
 
 /-- The concrete sampler and deterministic append preserve total mass. -/
 theorem community_sample_append_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (count b : Nat)
     (eta delta : Real) (state : TTCState n) :
     IsProbabilityMeasure
@@ -831,7 +831,7 @@ theorem community_sample_append_isProbabilityMeasure
 
 /-- Count thinning followed by sampling and append is normalized. -/
 theorem community_count_sample_append_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n) (pending : Nat) :
     IsProbabilityMeasure
@@ -849,7 +849,7 @@ theorem community_count_sample_append_isProbabilityMeasure
       P second.2 b eta delta second.1
 
 theorem community_poisson_count_sample_append_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n) (intensity : NNReal) :
     IsProbabilityMeasure
@@ -869,7 +869,7 @@ theorem community_poisson_count_sample_append_isProbabilityMeasure
 
 set_option maxHeartbeats 800000 in
 theorem community_rate_tail_mass_one
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (state : TTCState n) (intensity : NNReal) :
     (communityCostedRateTail hn prep factor P b eta delta threshold
@@ -902,7 +902,7 @@ theorem community_rate_tail_mass_one
 
 set_option maxHeartbeats 800000 in
 theorem community_deletion_tail_mass_one
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) (intensity : NNReal) :
@@ -939,7 +939,7 @@ theorem community_deletion_tail_mass_one
 
 set_option maxHeartbeats 800000 in
 theorem community_component_mass_one
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n)
@@ -967,7 +967,7 @@ theorem community_component_mass_one
 
 set_option maxHeartbeats 800000 in
 theorem community_components_mass_one
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))

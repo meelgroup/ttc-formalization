@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory ProbabilityTheory
 
 noncomputable def communityComponentGivenVolume
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (outcome : VolumeOutcome) (state : TTCState n) : Measure (TTCState n) :=
   let intensity := ttcReference.t b n threshold outcome.2
@@ -20,7 +20,7 @@ noncomputable def communityComponentGivenVolume
         ((ttcSubroutines hn prep).GenerateSamples P second.2 b eta).map fun batch => second.1.addBatch batch
 
 noncomputable def communityComponentPredrawTape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -84,7 +84,7 @@ theorem rateThinUntil_predraw_mean
   simp [div_eq_mul_inv, mul_assoc]
 
 theorem communityComponentPredrawTape_eq_givenVolume
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -118,7 +118,7 @@ theorem communityComponentPredrawTape_eq_givenVolume
 /-- The full uncharged concrete component, including its CV18 call, has the
 pre-drawn Poisson and IID-tape representation. -/
 theorem communityProcessComponent_eq_predrawTape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

@@ -95,7 +95,7 @@ theorem scaledBody_volume_le_lattice_count {n k : Nat} (hn : 0 < n)
 /-- The paper precision choice supplies the rejection probability
 needed to bound independent retry costs, with no extra acceptance hypothesis. -/
 theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
@@ -133,7 +133,7 @@ theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
     hfinite hsampler hbase
 
 theorem certified_community_sampler_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor count : Nat)
@@ -160,7 +160,7 @@ theorem certified_community_sampler_expected_cost {n k : Nat}
     (certified_normalizedHitAndRun_acceptance_ge_half hn D p b hprecision i)
 
 theorem certified_community_sampler_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor count : Nat)

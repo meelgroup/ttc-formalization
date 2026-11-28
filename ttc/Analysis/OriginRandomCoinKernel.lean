@@ -12,7 +12,7 @@ private abbrev GhostCoinInput'' (n : Nat) :=
     ((Nat × Nat → Bool) × (Nat × Nat → Bool))
 
 noncomputable def originCoinPairTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -28,7 +28,7 @@ noncomputable def originCoinPairTapeLaw
       z.2.1 z.2.2 tape)
 
 theorem measurable_originCoinPairTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -68,7 +68,7 @@ theorem measurable_originCoinPairTapeLaw
       z.2.1 z.2.2)).symm
 
 noncomputable def originFairCoinTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -82,7 +82,7 @@ noncomputable def originFairCoinTapeLaw
       basePending (c, coins)
 
 theorem measurable_originFairCoinTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -107,7 +107,7 @@ theorem measurable_originFairCoinTapeLaw
   exact hbind
 
 theorem originCoinPairTapeLaw_isProbabilityMeasure
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -121,7 +121,7 @@ theorem originCoinPairTapeLaw_isProbabilityMeasure
     hroute intensity basePending z.2.1 z.2.2
 
 theorem originFairCoinTapeLaw_isProbabilityMeasure
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -147,7 +147,7 @@ theorem originFairCoinTapeLaw_isProbabilityMeasure
         threshold hroute intensity basePending (c, coins)))
 
 noncomputable def originPoissonCoinTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -160,7 +160,7 @@ noncomputable def originPoissonCoinTapeLaw
       intensity basePending c
 
 theorem measurable_originPoissonCoinTapeLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -186,7 +186,7 @@ theorem measurable_originPoissonCoinTapeLaw
   exact hbind
 
 theorem originPoissonCoinTapeLaw_isProbabilityMeasure
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -206,7 +206,7 @@ theorem originPoissonCoinTapeLaw_isProbabilityMeasure
         threshold hthreshold hroute intensity count c))
 
 noncomputable def originPoissonCoinTapeKernel
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -220,7 +220,7 @@ noncomputable def originPoissonCoinTapeKernel
       hthreshold hroute intensity⟩
 
 instance originPoissonCoinTapeKernel_isMarkov
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

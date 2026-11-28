@@ -15,7 +15,7 @@ namespace ttc
 
 open MeasureTheory
 
-theorem communityCosted_volume_fst {n k : Nat} (hn : 21 ≤ n)
+theorem communityCosted_volume_fst {n k : Nat} (hn : 3 ≤ n)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (eta delta : Real) :
     ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost P eta delta).map
@@ -25,7 +25,7 @@ theorem communityCosted_volume_fst {n k : Nat} (hn : 21 ≤ n)
   exact costedCharge_fst _ _
 
 theorem communityCosted_volume_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
+    (hn : 3 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (eta delta : Real)
     [IsProbabilityMeasure
       ((ttcSubroutines hn prep).ComputeVolume P eta delta)] :
@@ -45,7 +45,7 @@ theorem communityCosted_volume_expected_cost {n k : Nat}
       factor * TTCRuntime.membershipQueryOperations n P.presentation.facetCount
         (CommunityCV18.queryBudgetFor (by omega) P eta delta + 1)))
 
-theorem communityCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
+theorem communityCosted_samples_fst {n k : Nat} (hn : 3 ≤ n)
     (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
@@ -66,7 +66,7 @@ theorem communityCosted_samples_fst {n k : Nat} (hn : 21 ≤ n)
       dif_neg h] using (costedCharge_fst (failedSampleBatchLaw (n := n) (count := count)) 0)
 
 theorem communityCosted_samples_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
+    (hn : 3 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
     (h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty)
@@ -93,7 +93,7 @@ theorem communityCosted_samples_expected_cost {n k : Nat}
     _ ≤ _ := by gcongr
 
 theorem communityCosted_samples_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
+    (hn : 3 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real)
     (h : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧ 0 < eta ∧ eta ≤ 1 ∧
       (codedLatticePoints P b).Finite ∧ (codedLatticePoints P b).Nonempty) :

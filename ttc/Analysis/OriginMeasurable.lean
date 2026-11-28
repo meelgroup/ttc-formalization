@@ -779,7 +779,7 @@ theorem OriginConfiguration.measurable_advance_tape
 /-- A ghost transition after the Poisson and coin choices, retaining its
 source history and attaching the independent normalized sampler tape. -/
 noncomputable def OriginConfiguration.tapeAdvanceLaw
-    {n : Nat} (hn : 21 ≤ n) (c : OriginConfiguration n)
+    {n : Nat} (hn : 3 ≤ n) (c : OriginConfiguration n)
     (P : PolytopeData n) (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -795,7 +795,7 @@ noncomputable def OriginConfiguration.tapeAdvanceLaw
       preCoins future tape)
 
 theorem OriginConfiguration.tapeAdvanceLaw_isProbabilityMeasure
-    {n : Nat} (hn : 21 ≤ n) (c : OriginConfiguration n)
+    {n : Nat} (hn : 3 ≤ n) (c : OriginConfiguration n)
     (P : PolytopeData n) (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -819,7 +819,7 @@ theorem OriginConfiguration.tapeAdvanceLaw_isProbabilityMeasure
       preCoins future).aemeasurable
 
 theorem OriginConfiguration.tapeAdvanceLaw_map_state
-    {n : Nat} (hn : 21 ≤ n) (c : OriginConfiguration n)
+    {n : Nat} (hn : 3 ≤ n) (c : OriginConfiguration n)
     (P : PolytopeData n) (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

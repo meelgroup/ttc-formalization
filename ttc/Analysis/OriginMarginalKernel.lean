@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def communityGhostStateStep
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -33,7 +33,7 @@ noncomputable def communityGhostStateStep
                       basePending preCoins pair.2 tape).state)))))
 
 theorem communityGhostStateStep_eq_program
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -48,7 +48,7 @@ theorem communityGhostStateStep_eq_program
     hroute
 
 theorem measurable_community_programComponent
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hvolume : IsProbabilityMeasure
@@ -74,7 +74,7 @@ theorem measurable_community_programComponent
 /-- State projection commutes with an arbitrary incoming ghost law for a
 single concrete paper component. -/
 theorem communityGhostStateStep_bind_eq_program
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

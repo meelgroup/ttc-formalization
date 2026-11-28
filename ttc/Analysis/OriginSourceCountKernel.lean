@@ -49,7 +49,7 @@ theorem measurable_originSourceState_stepPoissonTape
 
 set_option maxHeartbeats 1000000 in
 theorem originPoissonCoinTapeLaw_map_source
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -113,7 +113,7 @@ theorem originPoissonCoinTapeLaw_map_source
 
 set_option maxHeartbeats 1000000 in
 theorem originPoissonCoinTapeLaw_source_eq_spliced
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -185,7 +185,7 @@ theorem originPoissonCoinTapeLaw_source_eq_spliced
   rfl
 
 theorem originPoissonCoinTapeLaw_source_eq_poissonTape
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -210,7 +210,7 @@ theorem originPoissonCoinTapeLaw_source_eq_poissonTape
 
 set_option maxHeartbeats 1000000 in
 theorem originPoissonCoinTapeLaw_fixedLevel_sourceCounts
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

@@ -227,14 +227,14 @@ lemma PolytopeData.exists_cv18_subset_closedBall {n : Nat} (P : PolytopeData n) 
     P.cv18Body_subset_outerBall⟩
 
 lemma PolytopeData.exp_one_le_dim_mul_cv18OuterRadius_sq {n : Nat}
-    (P : PolytopeData n) (hn : 21 <= n) :
+    (P : PolytopeData n) (hn : 3 <= n) :
     Real.exp 1 <= (n : Real) * P.cv18OuterRadius ^ 2 := by
-  have hnR : (21 : Real) <= (n : Real) := by exact_mod_cast hn
+  have hnR : (3 : Real) <= (n : Real) := by exact_mod_cast hn
   have hR2 : (1 : Real) <= P.cv18OuterRadius ^ 2 := by
     nlinarith [P.one_le_cv18OuterRadius (by omega : 1 <= n)]
   calc
-    Real.exp 1 <= 21 := by linarith [Real.exp_one_lt_d9]
-    _ = 21 * 1 := by ring
+    Real.exp 1 <= 3 := by linarith [Real.exp_one_lt_d9]
+    _ = 3 * 1 := by ring
     _ <= (n : Real) * P.cv18OuterRadius ^ 2 :=
       mul_le_mul hnR hR2 (by norm_num) (by positivity)
 

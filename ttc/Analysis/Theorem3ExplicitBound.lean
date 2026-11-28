@@ -41,7 +41,7 @@ theorem TTCRuntime.theorem3CV18LogBound_nonneg (n : Nat) (rho ε' δ' : Real) :
   positivity
 
 /-- At one component, CV18's scheduled logarithmic product is at most the explicit bound. -/
-theorem TTCRuntime.theorem3CV18LogEnvelope_params_le {n k : Nat} (hn : 21 ≤ n)
+theorem TTCRuntime.theorem3CV18LogEnvelope_params_le {n k : Nat} (hn : 3 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount)
     (h : CommunityCV18.AdmissibleCV18Request p.ε' (p.δ' D.componentCount)) :
@@ -87,7 +87,7 @@ theorem TTCRuntime.theorem3CV18LogEnvelope_params_le {n k : Nat} (hn : 21 ≤ n)
 
 /-- The maximum over components of CV18's logarithmic product is at most the explicit
 bound. -/
-theorem TTCRuntime.theorem3CV18LogMax_le {n k : Nat} (hn : 21 ≤ n)
+theorem TTCRuntime.theorem3CV18LogMax_le {n k : Nat} (hn : 3 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams) :
     TTCRuntime.theorem3CV18LogMax hn D p ≤
       TTCRuntime.theorem3CV18LogBound n (TTCRuntime.Rho D) p.ε'
@@ -105,7 +105,7 @@ theorem TTCRuntime.theorem3CV18LogMax_le {n k : Nat} (hn : 21 ≤ n)
   · exact absurd (CommunityCV18.admissibleTTCRequest D p i) ‹_›
 
 /-- The parameter factor computed from CV18's definitions is at most the explicit one. -/
-theorem TTCRuntime.theorem3ParameterFactorCV18_le {n k : Nat} (hn : 21 ≤ n)
+theorem TTCRuntime.theorem3ParameterFactorCV18_le {n k : Nat} (hn : 3 ≤ n)
     {F : LRAFormula n k} (D : Decomposition F) (p : ApproxParams) :
     TTCRuntime.theorem3ParameterFactorCV18 hn D p ≤ TTCRuntime.theorem3ParameterFactor D p := by
   have hmax := TTCRuntime.theorem3CV18LogMax_le hn D p
@@ -169,7 +169,7 @@ theorem TTCRuntime.inputScale_mul_factor_le {n k : Nat} {F : LRAFormula n k}
         ring
 
 /-- Theorem 3 with every constant explicit in Prelude terms. -/
-theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_theorem3_explicit {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :

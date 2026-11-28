@@ -7,7 +7,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def originOrderedInnerLaw
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -25,7 +25,7 @@ noncomputable def originOrderedInnerLaw
         (c.refreshFuture pair.1, (preCoins, pair.2))
 
 theorem measurable_originOrderedInnerLaw_preCoins
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -69,7 +69,7 @@ theorem measurable_originOrderedInnerLaw_preCoins
         (c.refreshFuture z.2.1, (z.1, z.2.2))) hnext
 
 theorem originCoinPairTapeLaw_map_state
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -94,7 +94,7 @@ theorem originCoinPairTapeLaw_map_state
   rfl
 
 theorem originOrderedInnerLaw_map_state
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -141,7 +141,7 @@ theorem originOrderedInnerLaw_map_state
     (c.refreshFuture pair.1, (preCoins, pair.2))
 
 theorem originOrderedComponentLaw_map_state
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -191,7 +191,7 @@ theorem originOrderedComponentLaw_map_state
     hthreshold hroute intensity basePending c preCoins
 
 theorem originOrderedComponentLaw_map_state_eq_givenVolume
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
@@ -210,7 +210,7 @@ theorem originOrderedComponentLaw_map_state_eq_givenVolume
     threshold hroute outcome
 
 theorem originRefreshedComponentLaw_map_state_eq_givenVolume
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧

@@ -11,7 +11,7 @@ namespace ttc
 open MeasureTheory
 
 theorem community_ttc_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n)
+    {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k) :

@@ -47,7 +47,7 @@ PAPER: sections/analysis.tex:314-326
 -/
 theorem legacy_ttc_theorem1_volume_accuracy
     {n k : Nat}
-    (hn : 21 ≤ n)
+    (hn : 3 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams)
@@ -68,7 +68,7 @@ theorem legacy_ttc_theorem1_volume_accuracy
 * **Expected cost.** The expected operation count is at most the preprocessing cost plus
   `m · 50 n⁵ · r_max · ρ² · (⌈Thresh⌉ + 1) · polylogFactors / ε²`, which depends on the input
   only. -/
-theorem legacy_ttc_theorem3_expected_runtime {n k : Nat} (hn : 21 ≤ n)
+theorem legacy_ttc_theorem3_expected_runtime {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :

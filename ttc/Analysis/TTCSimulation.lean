@@ -179,7 +179,7 @@ theorem Est_scaleRate {n : Nat} (b : Nat) (Thresh : Real) (s : TTCState n) :
 
 section Uncharged
 
-variable {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+variable {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
   (P : PolytopeData n) (b : Nat) (eta Thresh : Real)
 
 /-- Sampling and appending (line `line:sample`), common to both parametrisations. -/
@@ -325,7 +325,7 @@ theorem step_scaleRate (delta : Real) (hThresh : 0 < Thresh) (s : TTCState n) :
 
 end Uncharged
 
-theorem loop_scaleRate {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+theorem loop_scaleRate {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (b : Nat) (eta delta Thresh : Real) (hThresh : 0 < Thresh)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components, IsProbabilityMeasure
@@ -382,7 +382,7 @@ theorem measurable_Est {n : Nat} (b : Nat) : Measurable (Est (n := n) b) := by
   exact hcount.div (hrate.mul_const _)
 
 /-- **Algorithm `ttc` has the reference output law.** -/
-theorem ttc_eq_ttcRef {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
+theorem ttc_eq_ttcRef {n k : Nat} (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
     (prep : TTCPreprocessor n k) :
     ttc hn F hbounded p prep = ttcRef hn F hbounded p prep := by
@@ -467,7 +467,7 @@ theorem costedCharge_dirac_scaleRate {n : Nat} (c : NNReal) (x : TTCState n) (k 
 
 section Charged
 
-variable {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
+variable {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
   (P : PolytopeData n) (b : Nat) (eta Thresh : Real)
 
 /-- Charged sampling and appending, common to both parametrisations. -/
@@ -711,7 +711,7 @@ theorem stepWithCost_scaleRate (delta : Real) (hThresh : 0 < Thresh) (s : TTCSta
 
 end Charged
 
-theorem loopWithCost_scaleRate {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+theorem loopWithCost_scaleRate {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta Thresh : Real) (hThresh : 0 < Thresh)
     (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components,
@@ -767,7 +767,7 @@ theorem loopWithCost_scaleRate {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocess
       exact costedBind_map_state_scaleRate _ _ href c
 
 /-- **The charged algorithm `ttcWithCost` has the reference charged law.** -/
-theorem ttcWithCost_eq_ttcRefWithCost {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
+theorem ttcWithCost_eq_ttcRefWithCost {n k : Nat} (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (p : ApproxParams)
     (prep : TTCPreprocessor n k) (preprocessingOperations factor : Nat) :
     ttcWithCost hn F hbounded p prep preprocessingOperations factor =

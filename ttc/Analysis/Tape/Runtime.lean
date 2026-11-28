@@ -55,7 +55,7 @@ private theorem Eops_components_le (hd : 3 ≤ d) (f b : ℕ) (K : Params) (hTh 
           s' hs')).trans ?_
       exact add_le_add (Eops_stepT_le hd f b K L s hTh hs (hacc L List.mem_cons_self)) le_rfl
 
-private theorem Eops_estimatorT_le (hn : 21 ≤ d) (D : ttc.Decomposition F)
+private theorem Eops_estimatorT_le (hn : 3 ≤ d) (D : ttc.Decomposition F)
     (p : ttc.ApproxParams) (f : ℕ) :
     Eops (estimatorT (cv18T d) f (componentsOf D) p.epsilon p.delta) 0 ≤
       estimatorOpsBudget (componentsOf D) p.epsilon p.delta := by
@@ -144,7 +144,7 @@ private theorem Eops_estimatorT_le (hn : 21 ≤ d) (D : ttc.Decomposition F)
 
 /-- Expected arithmetic and draws of the same sealed run used by accuracy.
 The input-only bound holds despite the two unbounded first-exit loops. -/
-theorem sealed_expectedOperations_le (hn : 21 ≤ d) (F : ttc.LRAFormula d k)
+theorem sealed_expectedOperations_le (hn : 3 ≤ d) (F : ttc.LRAFormula d k)
     (hb : Bornology.IsBounded (ttc.solutionSet F)) (p : ttc.ApproxParams)
     (prep : ttc.TTCPreprocessor d k) :
     expectedOperations F hb p prep ≤ estimatorOpsBudget (componentsOf (prep.run F hb)) p.epsilon p.delta :=

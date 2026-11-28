@@ -15,7 +15,7 @@ open MeasureTheory
 
 /-- Expected arithmetic-operation cost of the concrete charged paper TTC
 program, with preprocessing and every component's explicit budget included. -/
-theorem ttc_expected_runtime_explicit {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_explicit {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations cv18NonQueryFactor : Nat) :
@@ -33,7 +33,7 @@ theorem ttc_expected_runtime_explicit {n k : Nat} (hn : 21 ≤ n)
 
 /-- Whole-run expected arithmetic cost with the normalized sampler deadline
 expressed through `ρ`, `b`, and `R_max`, using the imported mixing theorem. -/
-theorem ttc_expected_runtime_geometric {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_geometric {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations cv18NonQueryFactor : Nat) :
@@ -64,7 +64,7 @@ theorem ttc_expected_runtime_geometric {n k : Nat} (hn : 21 ≤ n)
 
 /-- Expected arithmetic cost of the paper TTC run with both imported
 oracle schedules substituted into the per-component budget. -/
-theorem ttc_expected_runtime_theorem3_expanded {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_theorem3_expanded {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations cv18NonQueryFactor : Nat) :
@@ -95,7 +95,7 @@ theorem ttc_expected_runtime_theorem3_expanded {n k : Nat} (hn : 21 ≤ n)
 
 /-- The fixed CV18 non-query charge requested for Theorem 3: one
 membership-equivalent allowance per query and for setup. -/
-theorem ttc_expected_runtime_theorem3_fixed_charge {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_theorem3_fixed_charge {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
@@ -112,7 +112,7 @@ theorem ttc_expected_runtime_theorem3_fixed_charge {n k : Nat} (hn : 21 ≤ n)
 
 /-- Uniform finite-component form, exposing the paper's leading `m`.
 The CV18 logarithmic maximum is over actual normalized components. -/
-theorem ttc_expected_runtime_uniform_budget {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_uniform_budget {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
@@ -144,7 +144,7 @@ theorem ttc_expected_runtime_uniform_budget {n k : Nat} (hn : 21 ≤ n)
 /-- Corrected expected arithmetic-operation bound for the costed paper
 TTC execution. The explicit parameter factor contains the CV18 scheduled
 logarithmic product and the Hit-and-Run mixing logarithm. -/
-theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :
@@ -176,7 +176,7 @@ theorem ttc_expected_runtime_theorem3_headline_scale {n k : Nat} (hn : 21 ≤ n)
     dsimp [D] at hzero
     simpa only [hzero, Nat.cast_zero, zero_mul, add_zero] using hbase
 
-theorem ttc_theorem3_headline_budget_finite {n k : Nat} (hn : 21 ≤ n)
+theorem ttc_theorem3_headline_budget_finite {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations : Nat) :

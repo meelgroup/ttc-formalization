@@ -34,7 +34,7 @@ runtime claim.
 ## Assumptions and cost model
 
 - The solution set is bounded, and `0 < ε, δ ≤ 1`. The dimension must be at least
-  21, as required by the formalized Hit-and-Run mixing theorem.
+  3, as required by the formalized CV18 volume estimator.
 - Preprocessing supplies a certified polytope decomposition. Boolean
   abstraction, DNF conversion, normalization, and solving the linear programs
   for the inscribed ball and bounding radius are outside the charged run.

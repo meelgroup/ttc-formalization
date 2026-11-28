@@ -12,7 +12,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def communityCertifiedComponents
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     List (OriginCertifiedComponent n k hn prep
       (prep.choosePrecision D p).value p.ε'
@@ -38,7 +38,7 @@ noncomputable def communityCertifiedComponents
         community_volume_isProbabilityMeasure hn D p prep i })
 
 theorem communityCertifiedComponents_polytope
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     (communityCertifiedComponents hn D p prep).map
       (fun d => d.polytope) = List.ofFn D.component := by
@@ -48,7 +48,7 @@ theorem communityCertifiedComponents_polytope
 
 set_option maxHeartbeats 1000000 in
 theorem communityCertifiedRun_map_state
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k) :
     let b := (prep.choosePrecision D p).value
     let threshold := p.Thresh D.componentCount

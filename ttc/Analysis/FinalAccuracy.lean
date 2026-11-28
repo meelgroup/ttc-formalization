@@ -13,7 +13,7 @@ namespace ttc
 open MeasureTheory
 
 theorem community_ttc_volume_accuracy_empty
-    {n k : Nat} (hn : 21 ≤ n)
+    {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
@@ -56,7 +56,7 @@ theorem community_ttc_volume_accuracy_empty
 /-- The union lattice comparison upgrades the paper's intermediate
 `ε/2` lattice-count estimate to the headline `ε` volume estimate. -/
 theorem community_ttc_volume_accuracy_of_lattice_estimate
-    {n k : Nat} (hn : 21 ≤ n)
+    {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)

@@ -23,7 +23,7 @@ measurable continuations. These private lemmas supply them for the concrete
 community oracles; they mirror the output-marginal proofs downstream. -/
 
 private theorem ce_samples_mass_le_one_all
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (count b : Nat)
     (eta delta : Real) :
     ((ttcCostedSubroutines hn prep factor).generateSamplesWithCost
@@ -47,7 +47,7 @@ private theorem ce_append_charge_measurable {n count : Nat}
     (Measure.measurable_dirac.comp hf)
 
 private theorem ce_sample_append_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta : Real) :
     Measurable (fun z : TTCState n × Nat =>
@@ -102,7 +102,7 @@ private theorem ce_sample_append_kernel_measurable
       (measurable_const.prodMk measurable_id)) measurable_const
 
 private theorem ce_count_sample_append_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) :
     Measurable (fun z : TTCState n × Nat =>
@@ -140,7 +140,7 @@ private theorem ce_poisson_count_kernel_measurable {n : Nat}
   exact h
 
 private theorem ce_poisson_count_sample_joint_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -177,7 +177,7 @@ private theorem ce_poisson_count_sample_joint_measurable
   exact h
 
 private theorem ce_rate_tail_joint_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -216,7 +216,7 @@ private theorem ce_rate_tail_joint_measurable
   exact h
 
 private theorem ce_poisson_count_sample_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (intensity : NNReal) :
     Measurable (fun firstThinned : TTCState n =>
@@ -237,7 +237,7 @@ private theorem ce_poisson_count_sample_measurable
   exact h
 
 private theorem ce_rate_tail_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) (intensity : NNReal) :
     Measurable (fun deleted : TTCState n =>
@@ -287,7 +287,7 @@ private theorem ce_deletion_pair_measurable {n : Nat}
   exact hdeleted.prodMk hcost
 
 private theorem ce_deletion_tail_joint_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × NNReal =>
@@ -364,7 +364,7 @@ private theorem ce_intensity_measurable (b n : Nat) (threshold : Real) :
   exact measurable_const.mul measurable_snd
 
 private theorem ce_component_tail_joint_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold) :
     Measurable (fun z : TTCState n × VolumeOutcome =>
@@ -395,7 +395,7 @@ private theorem ce_component_tail_joint_measurable
   exact h
 
 private theorem ce_component_step_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (state : TTCState n) :
@@ -427,7 +427,7 @@ private theorem ce_component_step_measurable
   exact h
 
 private theorem ce_component_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (b : Nat)
     (eta delta threshold : Real) (hthreshold : 0 < threshold)
     (hvolume : ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
@@ -447,7 +447,7 @@ private theorem ce_component_kernel_measurable
   exact h
 
 private theorem ce_components_kernel_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -514,7 +514,7 @@ theorem rateThinningCost_le_round {n : Nat}
   split_ifs <;> omega
 
 theorem certified_community_volume_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (i : Fin D.componentCount) :
     (communityCV18VolumeLaw (by omega) (D.component i) p.ε'
       (p.δ' D.componentCount)) Set.univ ≤ 1 := by
@@ -527,7 +527,7 @@ theorem certified_community_volume_mass_le_one {n k : Nat}
   simp
 
 theorem certified_community_volume_continuation_bound {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (f : VolumeOutcome → ENNReal)
     {budget : ENNReal}
@@ -586,7 +586,7 @@ private noncomputable def componentUniformBudget {n : Nat} (p : ApproxParams)
       (normalizedHitAndRunSteps P b p.ε') +
       TTCRuntime.appendCopyOperations)
 
-private noncomputable def uniformComponentCost {n : Nat} (hn : 21 ≤ n)
+private noncomputable def uniformComponentCost {n : Nat} (hn : 3 ≤ n)
     (p : ApproxParams) (m b factor : Nat) (P : PolytopeData n) : ENNReal :=
   (TTCRuntime.membershipQueryOperations n P.presentation.facetCount
       (CommunityCV18.queryBudgetFor (by omega) P p.ε' (p.δ' m)) +
@@ -595,7 +595,7 @@ private noncomputable def uniformComponentCost {n : Nat} (hn : 21 ≤ n)
       ENNReal) +
     componentUniformBudget p m b P
 
-private theorem uniformComponentCost_eq_model {n : Nat} (hn : 21 ≤ n)
+private theorem uniformComponentCost_eq_model {n : Nat} (hn : 3 ≤ n)
     (p : ApproxParams) (m b factor : Nat) (P : PolytopeData n) :
     uniformComponentCost hn p m b factor P =
       TTCRuntime.expectedComponentBudget hn p m b factor P := by
@@ -699,7 +699,7 @@ theorem sampleAppend_expected_cost_le {n : Nat} {count : Nat}
         (count * TTCRuntime.appendCopyOperations)).le
 
 theorem certified_community_sample_append_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor count : Nat)
@@ -723,7 +723,7 @@ theorem certified_community_sample_append_expected_cost {n k : Nat}
 /-- One charged second loop, followed by the actual sampler and append,
 costs at most its thinning charge plus the threshold-sized sampling budget. -/
 theorem certified_count_sample_append_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor pending : Nat)
@@ -810,7 +810,7 @@ theorem certified_count_sample_append_expected_cost {n k : Nat}
         (countThinWithCost_mass_le_one state pending threshold)
 
 theorem certified_count_sample_append_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor pending : Nat)
@@ -839,7 +839,7 @@ theorem certified_count_sample_append_mass_le_one {n k : Nat}
 /-- Poisson draw, count thinning, sampling and append have a per-component
 budget once the first rate guard has been reached. -/
 theorem certified_poisson_count_sample_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -919,7 +919,7 @@ theorem certified_poisson_count_sample_expected_cost {n k : Nat}
           (TTCRuntime.poissonDrawOperations : ENNReal)
 
 theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1029,7 +1029,7 @@ theorem certified_rate_poisson_count_sample_expected_cost {n k : Nat}
       simp only [lintegral_const, measure_univ, mul_one, sampleBudget, add_assoc]
 
 theorem certified_rate_rest_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1069,7 +1069,7 @@ theorem certified_rate_rest_mass_le_one {n k : Nat}
 /-- The deletion pass and all later stages, conditional on one volume
 estimate, have an explicit expected-operation bound. -/
 theorem certified_deleted_component_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1165,7 +1165,7 @@ theorem certified_deleted_component_expected_cost {n k : Nat}
     _ = _ := by simp only [deletionCost, deleted, intensity, add_assoc]
 
 theorem certified_deleted_component_expected_cost_le_budget {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1267,7 +1267,7 @@ private theorem componentNonVolumeBudget_le_uniform {n : Nat}
   gcongr
 
 theorem certified_component_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1350,7 +1350,7 @@ theorem certified_component_expected_cost {n k : Nat}
     hstepCost
 
 theorem certified_component_expected_cost_uniform {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1378,7 +1378,7 @@ theorem certified_component_expected_cost_uniform {n k : Nat}
       state hcard hrate) _
 
 theorem certified_component_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1507,7 +1507,7 @@ private theorem sample_append_card_le_ae {n : Nat} {count : Nat}
     exact (Nat.cast_le.mpr hcard).trans hguard
 
 private theorem count_sample_append_card_le_ae {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (pending : Nat) :
     ∀ᵐ result ∂
@@ -1536,7 +1536,7 @@ private theorem count_sample_append_card_le_ae {n k : Nat}
       (p.Thresh D.componentCount) hguard _
 
 theorem certified_component_card_le_ae {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) :
     ∀ᵐ result ∂
@@ -1588,7 +1588,7 @@ private theorem sample_append_rate_le_one_ae {n : Nat} {count : Nat}
   simpa only [TTCState.addBatch] using hrate
 
 private theorem count_sample_append_rate_le_one_ae {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (pending : Nat)
     (hrate : state.p ≤ 1) :
@@ -1613,7 +1613,7 @@ private theorem count_sample_append_rate_le_one_ae {n k : Nat}
     exact sample_append_rate_le_one_ae secondThinned.1 _ hsecond
 
 private theorem poisson_count_sample_rate_le_one_ae {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (intensity : NNReal)
     (hrate : state.p ≤ 1) :
@@ -1637,7 +1637,7 @@ private theorem poisson_count_sample_rate_le_one_ae {n k : Nat}
   exact count_sample_append_rate_le_one_ae hn D p b prep factor i state pending hrate
 
 private theorem rate_poisson_count_sample_rate_le_one_ae {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n) (intensity : NNReal)
     (hrate : state.p ≤ 1) :
@@ -1671,7 +1671,7 @@ private theorem rate_poisson_count_sample_rate_le_one_ae {n k : Nat}
       intensity hfirst
 
 theorem certified_component_rate_le_one_ae {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) (state : TTCState n)
     (hrate : state.p ≤ 1) :
@@ -1702,7 +1702,7 @@ theorem certified_component_rate_le_one_ae {n k : Nat}
       deleted _ hdeleted
 
 private theorem ce_certified_volume_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (prep : TTCPreprocessor n k) (factor : Nat)
     (i : Fin D.componentCount) :
     ((ttcCostedSubroutines hn prep factor).computeVolumeWithCost
@@ -1713,7 +1713,7 @@ private theorem ce_certified_volume_mass_le_one {n k : Nat}
   exact certified_community_volume_mass_le_one hn D p i
 
 private theorem ce_certified_components_kernel_measurable {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat) (prep : TTCPreprocessor n k) (factor : Nat)
     (components : List (PolytopeData n))
     (hcomponents : ∀ P ∈ components, ∃ i : Fin D.componentCount,
@@ -1730,7 +1730,7 @@ private theorem ce_certified_components_kernel_measurable {n k : Nat}
       exact ce_certified_volume_mass_le_one hn D p prep factor i)
 
 private theorem certified_component_list_mass_le_one {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1769,7 +1769,7 @@ private theorem certified_component_list_mass_le_one {n k : Nat}
         exact ih hrest nextState
 
 theorem certified_component_list_expected_cost {n k : Nat}
-    (hn : 21 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
+    (hn : 3 ≤ n) {F : LRAFormula n k} (D : Decomposition F)
     (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (prep : TTCPreprocessor n k) (factor : Nat)
@@ -1831,13 +1831,13 @@ theorem certified_component_list_expected_cost {n k : Nat}
 
 /-- Exact finite expected-operation bound for the charged paper TTC run,
 including the caller-supplied preprocessing charge. -/
-private theorem communityCosted_preprocessing_eq {n k : Nat} (hn : 21 ≤ n)
+private theorem communityCosted_preprocessing_eq {n k : Nat} (hn : 3 ≤ n)
     (prep : TTCPreprocessor n k) (factor : Nat) :
     (ttcCostedSubroutines hn prep factor).base.preprocessing = prep := by
   rfl
 
 theorem community_expected_cost_finite_sum {n k : Nat}
-    (hn : 21 ≤ n) (F : LRAFormula n k)
+    (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations factor : Nat) :
@@ -1898,7 +1898,7 @@ theorem community_expected_cost_finite_sum {n k : Nat}
       (mul_le_of_le_one_right (by positivity) hcoreMass) hcoreCost
 
 theorem community_expected_cost_explicit {n k : Nat}
-    (hn : 21 ≤ n) (F : LRAFormula n k)
+    (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F))
     (p : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations factor : Nat) :

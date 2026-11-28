@@ -12,7 +12,7 @@ namespace ttc
 open MeasureTheory
 
 noncomputable def communityPointLaw
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) : Measure (LatticePoint n) := by
@@ -30,7 +30,7 @@ noncomputable def communityPointLaw
     hunit heta0 heta1 hset.1 hset.2
 
 theorem communityPointLaw_almostUniform
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
@@ -43,7 +43,7 @@ theorem communityPointLaw_almostUniform
 /-- For every successful concrete CV18 outcome vector, each admissible
 fixed dyadic level has the paper's explicit concentration bound. -/
 theorem communityFixedLevel_error_bound
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)
@@ -84,7 +84,7 @@ theorem communityFixedLevel_error_bound
 /-- The fixed-level process using the actual normalized sampler also has
 the paper's per-prefix cutoff tail budget. -/
 theorem communityFixedLevel_cutoff_prefix_budget
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (hcomponents : 0 < D.componentCount)

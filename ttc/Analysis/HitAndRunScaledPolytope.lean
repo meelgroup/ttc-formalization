@@ -64,7 +64,7 @@ theorem dist_le_of_mem_inflated {n : Nat} {ι : Type*}
 /-- Compatibility wrapper for the former `HitAndRunFromInball` API.  It proves that
 the uniform law on an included unit ball is a warm start, then invokes the public
 arlib-community Hit-and-Run headline theorem `HitAndRun.hitAndRun_mixes`. -/
-theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
+theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 3 ≤ n)
     {K : Set (EuclideanSpace Real (Fin n))}
     (hKc : Convex Real K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K) {z : EuclideanSpace Real (Fin n)}
@@ -140,7 +140,7 @@ theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
       (ArlibCommunity.Foundations.Convex.uniformOn volume B) M eps ∅ :=
     ⟨MeasurableSet.empty, by simp, hdom⟩
   -- arlib-community's mixing theorem for the exact Hit-and-Run kernel.
-  have hmix := ArlibCommunity.Algorithms.HitAndRun.hitAndRun_mixes hn problem
+  have hmix := ArlibCommunity.Algorithms.HitAndRun.hitAndRun_mixes (by omega) problem
     hM heps0 heps1 hwarm
     (by simpa [ArlibCommunity.Algorithms.HitAndRun.deadline,
       ArlibCommunity.Foundations.MarkovChainTheory.hrDeadlineUncond, problem, M, B] using hm)
@@ -155,7 +155,7 @@ theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 21 ≤ n)
 whose decimal-scaled inradius is at least one admits an explicit finite-step walk law.
 The existential `D` is a genuine pairwise-distance bound extracted from certified
 boundedness; `m` is chosen past Arlib's displayed deadline. -/
-theorem PolytopeData.exists_hitAndRun_scaled_tvLe {n : Nat} (hn : 21 ≤ n)
+theorem PolytopeData.exists_hitAndRun_scaled_tvLe {n : Nat} (hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat)
     (hunit : 1 ≤ decimalScale b * P.inradius)
     {eps : Real} (heps0 : 0 < eps) (heps1 : eps ≤ 1) :
@@ -188,7 +188,7 @@ theorem PolytopeData.exists_hitAndRun_scaled_tvLe {n : Nat} (hn : 21 ≤ n)
 /-- The same finite-step construction on the Kannan--Vempala inflated body used by
 randomized rounding.  In particular, the walk target here is the actual `P'` occurring in
 KV97, not the uninflated TTC component. -/
-theorem PolytopeData.exists_hitAndRun_inflated_tvLe {n : Nat} (hn : 21 ≤ n)
+theorem PolytopeData.exists_hitAndRun_inflated_tvLe {n : Nat} (hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat)
     (hunit : 1 ≤ decimalScale b * P.inradius)
     {cp r eps : Real} (hcp : 0 ≤ cp) (heps0 : 0 < eps) (heps1 : eps ≤ 1) :
@@ -252,7 +252,7 @@ theorem PolytopeData.exists_hitAndRun_inflated_tvLe {n : Nat} (hn : 21 ≤ n)
 /-- Hit-and-Run can be run at the inverse-volume tolerance required by the KV97
 TV-to-pointwise transfer.  If that requested tolerance exceeds one, the walk is run to
 tolerance one and monotonicity supplies the displayed (weaker) bound. -/
-theorem PolytopeData.exists_hitAndRun_inflated_tvLe_inv_volume {n : Nat} (hn : 21 ≤ n)
+theorem PolytopeData.exists_hitAndRun_inflated_tvLe_inv_volume {n : Nat} (hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat)
     (hunit : 1 ≤ decimalScale b * P.inradius)
     {cp r theta : Real} (hcp : 0 ≤ cp) (htheta : 0 < theta) :

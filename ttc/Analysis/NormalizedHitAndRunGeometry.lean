@@ -401,7 +401,7 @@ theorem PolytopeData.normalizedHitAndRun_diameter_le_samplerRadius {n : Nat}
 
 /-- The arithmetic of `log (M/ν) ≤ 3n log (2R'₀/h)` (proof of Corollary `cor:linf`),
 with arlib-community's `2^64 n² D² log (8M/ν²)` deadline in place of `[LV04]`'s. -/
-private theorem deadline_le_walkLength {n : Nat} (hn : 21 ≤ n)
+private theorem deadline_le_walkLength {n : Nat} (hn : 3 ≤ n)
     {a S M ν eta D : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (ha1 : 1 ≤ a) (haS : a ≤ S) (hS : 32 / eta ≤ 2 * S)
     (hM1 : 1 ≤ M) (hM : M ≤ (2 * a + 1) ^ n)
@@ -409,28 +409,32 @@ private theorem deadline_le_walkLength {n : Nat} (hn : 21 ≤ n)
     (hD0 : 0 ≤ D) (hD : D ≤ 2 * a) :
     2 ^ 64 * (n : Real) ^ 2 * D ^ 2 * Real.log (8 * M / ν ^ 2) ≤
       2 ^ 68 * (n : Real) ^ 3 * a ^ 2 * Real.log (2 * S) := by
-  have hnR : (21 : Real) ≤ n := by exact_mod_cast hn
+  have hnR : (3 : Real) ≤ n := by exact_mod_cast hn
   have h32 : (32 : Real) ≤ 2 * S := by
     have : (32 : Real) ≤ 32 / eta := (le_div_iff₀ heta0).2 (by linarith)
     linarith
   have hS0 : 0 < 2 * S := by linarith
   let L := Real.log (2 * S)
-  have hL1 : 1 ≤ L := by
-    have he : Real.exp 1 ≤ 2 * S := by
-      have := Real.exp_one_lt_d9
-      linarith
-    calc (1 : Real) = Real.log (Real.exp 1) := (Real.log_exp 1).symm
-      _ ≤ L := Real.log_le_log (Real.exp_pos 1) he
-  have h8 : Real.log 8 ≤ L := Real.log_le_log (by norm_num) (by linarith)
-  have h16 : Real.log 16 ≤ L := Real.log_le_log (by norm_num) (by linarith)
-  have heta : -Real.log eta ≤ L := by
-    have h1 : Real.log (32 / eta) ≤ L := Real.log_le_log (by positivity) hS
-    rw [Real.log_div (by norm_num) heta0.ne'] at h1
-    have : 0 ≤ Real.log 32 := Real.log_nonneg (by norm_num)
+  have hL3 : 3 ≤ L := by
+    have he : Real.exp 3 ≤ 2 * S := by
+      calc Real.exp 3 = Real.exp 1 ^ 3 := by
+             simpa only [Nat.cast_ofNat, mul_one] using Real.exp_nat_mul 1 3
+           _ ≤ (3 : ℝ) ^ 3 := pow_le_pow_left₀ (Real.exp_pos _).le (by linarith [Real.exp_one_lt_d9]) _
+           _ ≤ 2 * S := by linarith
+    calc (3 : ℝ) = Real.log (Real.exp 3) := (Real.log_exp 3).symm
+         _ ≤ L := Real.log_le_log (Real.exp_pos 3) he
+  have hsmall : Real.log 32 - Real.log eta ≤ L := by
+    simpa only [Real.log_div (by norm_num : (32 : ℝ) ≠ 0) heta0.ne'] using
+      (Real.log_le_log (by positivity : (0 : ℝ) < 32 / eta) hS)
+  have h2 : Real.log 2 ≤ 1 := by
+    have := Real.log_le_sub_one_of_pos (show (0 : ℝ) < 2 by norm_num)
     linarith
-  have hetaneg : 0 ≤ -Real.log eta := by
-    have := Real.log_nonpos heta0.le heta1
-    linarith
+  have hcombine : Real.log 8 + 2 * Real.log 16 = 2 * Real.log 32 + Real.log 2 := by
+    rw [show (8 : ℝ) = 2 ^ (3 : ℕ) by norm_num,
+      show (16 : ℝ) = 2 ^ (4 : ℕ) by norm_num,
+      show (32 : ℝ) = 2 ^ (5 : ℕ) by norm_num, Real.log_pow, Real.log_pow, Real.log_pow]
+    push_cast
+    ring
   have hM0 : 0 < M := by linarith
   have hlogM0 : 0 ≤ Real.log M := Real.log_nonneg hM1
   have hlogM : Real.log M ≤ (n : Real) * (L + 1 / 2) := by
@@ -455,6 +459,7 @@ private theorem deadline_le_walkLength {n : Nat} (hn : 21 ≤ n)
     simp only [L]
     push_cast
     ring
+  have hetaLog : Real.log eta ≤ 0 := Real.log_nonpos heta0.le heta1
   have hX0 : 0 ≤ Real.log (8 * M / ν ^ 2) := by
     rw [hX]
     have : 0 ≤ Real.log 8 := Real.log_nonneg (by norm_num)
@@ -463,7 +468,7 @@ private theorem deadline_le_walkLength {n : Nat} (hn : 21 ≤ n)
     linarith
   have hXle : Real.log (8 * M / ν ^ 2) ≤ 4 * (n : Real) * L := by
     rw [hX]
-    nlinarith
+    nlinarith [mul_nonneg (show 0 ≤ (n : ℝ) - 2 by linarith) (show 0 ≤ L - 3 by linarith)]
   have hD2 : D ^ 2 ≤ 4 * a ^ 2 := by nlinarith
   have hn2 : (0 : Real) ≤ (n : Real) ^ 2 := by positivity
   calc 2 ^ 64 * (n : Real) ^ 2 * D ^ 2 * Real.log (8 * M / ν ^ 2) ≤
@@ -472,7 +477,7 @@ private theorem deadline_le_walkLength {n : Nat} (hn : 21 ≤ n)
     _ = 2 ^ 68 * (n : Real) ^ 3 * a ^ 2 * L := by ring
 
 /-- The paper's walk length is at least arlib-community's mixing deadline. -/
-theorem PolytopeData.hitAndRun_deadline_le_steps {n : Nat} (hn : 21 ≤ n)
+theorem PolytopeData.hitAndRun_deadline_le_steps {n : Nat} (hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat) {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius) :
     ArlibCommunity.Algorithms.HitAndRun.deadline n
@@ -508,7 +513,7 @@ theorem PolytopeData.hitAndRun_deadline_le_steps {n : Nat} (hn : 21 ≤ n)
 
 /-- The paper's walk from the uniform inball start is `ν`-close to uniform on `P'`, and
 `ν` is within the inverse-volume accuracy required by KV97 rounding. -/
-theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 21 ≤ n)
+theorem PolytopeData.normalizedHitAndRun_tvLe {n : Nat} (hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat) {eta : Real} (heta0 : 0 < eta) (heta1 : eta ≤ 1)
     (hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius) :
     ArlibCommunity.Foundations.Convex.TVLe (normalizedHitAndRunContinuousLaw P b eta)
@@ -607,7 +612,7 @@ theorem normalizedHitAndRunContinuousLaw_isProbabilityMeasure {n : Nat}
     fun_prop)
 
 /-- The normalized sampler discharges the same KV97 pointwise contract. -/
-theorem PolytopeData.normalizedHitAndRun_latticePointLaw {n : Nat} (hn : 21 ≤ n)
+theorem PolytopeData.normalizedHitAndRun_latticePointLaw {n : Nat} (hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat)
     {eta : Real}
     (hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)

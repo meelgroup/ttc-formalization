@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory ProbabilityTheory
 
 theorem communityComponentGivenVolume_absolute_predraw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (outcome : VolumeOutcome) (state : TTCState n)
     (level : Nat) (hrate : state.p = 1 / (2 : NNReal) ^ level) :

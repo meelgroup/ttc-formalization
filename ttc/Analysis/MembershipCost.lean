@@ -236,7 +236,7 @@ def samplingAttemptOperations (dimension facets steps : Nat) : Nat :=
 end TTCRuntime
 
 /-- Preparing a polytope costs `rewriteOperations n r`, whatever `b` and `ε'` are. -/
-theorem setupCost_eq {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
+theorem setupCost_eq {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k) (factor : Nat)
     (P : PolytopeData n) (b : Nat) (eta : Real) :
     (ttcCostedSubroutines hn prep factor).setupCost P b eta =
       TTCRuntime.rewriteOperations n P.presentation.facetCount := by
@@ -247,7 +247,7 @@ theorem setupCost_eq {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k) (f
   rfl
 
 /-- Preparing a polytope plus the deletion pass, in closed form. -/
-theorem TTCState.deletionCost_eq {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+theorem TTCState.deletionCost_eq {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (s : TTCState n) (P : PolytopeData n) (b : Nat) (eta : Real) :
     (ttcCostedSubroutines hn prep factor).setupCost P b eta + s.deletionCost P =
       TTCRuntime.deletionPassOperations n P.presentation.facetCount

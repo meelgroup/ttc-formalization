@@ -232,7 +232,7 @@ theorem Decomposition.communityCV18_roundness_le_rho {n k : Nat}
   linarith
 
 theorem Decomposition.communityCV18_queryBudget_le_rho_polylog
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (i : Fin D.componentCount)
     (eta delta : Real) (h : CommunityCV18.AdmissibleCV18Request eta delta) :
     (CommunityCV18.queryBudgetFor (by omega) (D.component i) eta delta : Real) ≤
@@ -254,7 +254,7 @@ theorem Decomposition.communityCV18_queryBudget_le_rho_polylog
     CommunityCV18.params] using hbound
 
 theorem Decomposition.communityCV18_queryBudget_le_envelope
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
     CommunityCV18.queryBudgetFor (by omega) (D.component i) p.ε'
@@ -268,7 +268,7 @@ theorem Decomposition.communityCV18_queryBudget_le_envelope
   simpa only [TTCRuntime.theorem3CV18QueryEnvelope] using hc
 
 theorem Decomposition.communityCV18_queryEnvelope_le_max
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams)
     (i : Fin D.componentCount) :
     TTCRuntime.theorem3CV18QueryEnvelope hn D p i ≤
@@ -307,7 +307,7 @@ theorem Decomposition.communityCV18_queryEnvelope_le_max
   exact mul_le_mul_of_nonneg_left hlog hcoeff
 
 theorem TTCRuntime.expectedComponentBudgetGeometric_le_theorem3
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) :
     TTCRuntime.expectedComponentBudgetGeometric hn D p b
@@ -322,7 +322,7 @@ theorem TTCRuntime.expectedComponentBudgetGeometric_le_theorem3
   gcongr
 
 theorem TTCRuntime.expectedComponentBudgetTheorem3_le_uniform
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (i : Fin D.componentCount) :
     TTCRuntime.expectedComponentBudgetTheorem3 hn D p b

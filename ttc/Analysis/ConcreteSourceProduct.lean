@@ -13,7 +13,7 @@ namespace ttc
 open Classical MeasureTheory
 
 theorem communityPointLaw_support_codedUnion
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
@@ -39,7 +39,7 @@ theorem communityPointLaw_support_codedUnion
     (by simpa using halmost.2.2.2.1))
 
 theorem community_source_product_fixedLevel_incoming
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (b : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (volumeEstimate : Fin D.componentCount → NNReal)

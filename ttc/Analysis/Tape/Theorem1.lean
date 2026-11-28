@@ -16,7 +16,7 @@ namespace ttc.Tape
 
 /-- **Theorem 1 for the sealed program**: its output is within relative error `ε` of the
 volume of the projected solution set with probability at least `1 - δ`. -/
-theorem sealed_theorem1_volume_accuracy {n k : Nat} (hn : 21 ≤ n) (F : ttc.LRAFormula n k)
+theorem sealed_theorem1_volume_accuracy {n k : Nat} (hn : 3 ≤ n) (F : ttc.LRAFormula n k)
     (hbounded : Bornology.IsBounded (ttc.solutionSet F)) (params : ttc.ApproxParams)
     (prep : ttc.TTCPreprocessor n k) :
     Pr[estimate ← ttc.SealedRun.estimate F hbounded params prep;

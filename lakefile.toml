@@ -27,7 +27,7 @@ rev = "8d08f89a6d05c5e8368e91659bd6e117fbb74c4e"
 [[require]]
 name = "arlib-community"
 git = "https://github.com/uddaloksarkar/arlib-community.git"
-rev = "cee936420fd362e5df9da4f9105ab22a146fa3c6"
+rev = "7af9e7480591c9eeab2476a85baf0654ad9abc20"
 
 [[lean_lib]]
 name = "ttc"

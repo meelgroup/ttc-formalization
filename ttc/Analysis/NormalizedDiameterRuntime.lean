@@ -160,7 +160,7 @@ theorem log_six_max_one (R : Real) (hR : 0 ≤ R) :
 sampler allowance. `R₀ = BoundingRadius ≤ 2√n R` gives `(R'₀/γ)² ≤ 5n ρ²`, and
 `log (2R'₀/h) ≤ b log 10 + log 6 + log n + log⁺ R_max`. -/
 theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
@@ -292,7 +292,7 @@ theorem Decomposition.normalizedHitAndRunSteps_le_explicitEnvelope
     _ = _ := by ring
 
 theorem TTCRuntime.expectedComponentBudget_le_geometric
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (p : ApproxParams) (b cv18NonQueryFactor : Nat)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :
@@ -354,7 +354,7 @@ theorem theorem3_samplerLogEnvelope_le_dimension_precision_polylog
   linarith
 
 theorem Decomposition.normalizedHitAndRunSteps_le_theorem3_polylog
-    {n k : Nat} {F : LRAFormula n k} (hn : 21 ≤ n)
+    {n k : Nat} {F : LRAFormula n k} (hn : 3 ≤ n)
     (D : Decomposition F) (b : Nat) (p : ApproxParams)
     (hprecision : PrecisionAdequate D b p.precisionEta)
     (i : Fin D.componentCount) :

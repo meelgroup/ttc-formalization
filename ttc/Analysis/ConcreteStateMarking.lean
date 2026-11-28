@@ -11,7 +11,7 @@ namespace ttc
 open Classical MeasureTheory ProbabilityTheory
 
 theorem community_poisson_append_pointCounts_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
@@ -48,7 +48,7 @@ theorem community_poisson_append_pointCounts_law
 /-- Actual overlap deletion followed by the concrete sampler has the
 delete-and-add Poisson point-count law used by the fixed-level analysis. -/
 theorem community_poisson_delete_append_pointCounts_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
@@ -78,7 +78,7 @@ theorem community_poisson_delete_append_pointCounts_law
 /-- A fixed number of actual second-loop thinning rounds followed by the
 concrete sampler has the expected Poisson vector law on the labelled state. -/
 theorem community_fixed_round_append_pointCounts_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
@@ -126,7 +126,7 @@ theorem community_fixed_round_append_pointCounts_law
 
 /-- The fixed-round law also includes the paper's overlap deletion. -/
 theorem community_fixed_round_delete_append_pointCounts_law
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (s : TTCState n) (hs : s.LabelsFresh)
     (P : PolytopeData n) (b : Nat) (eta delta : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧

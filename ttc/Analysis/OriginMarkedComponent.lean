@@ -8,7 +8,7 @@ namespace ttc
 open MeasureTheory
 
 theorem community_active_finite_origin_tape
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -67,7 +67,7 @@ theorem community_active_finite_origin_tape
     threshold hroute s intensity preCoins preRounds basePending pair.1 pair.2
 
 noncomputable def communityOriginTapeKernel
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -94,7 +94,7 @@ noncomputable def communityOriginTapeKernel
         basePending pair.2 activeRounds i))
 
 theorem measurable_communityOriginTapeKernel
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -132,7 +132,7 @@ theorem measurable_communityOriginTapeKernel
 the pre-surviving original Poisson labels, with the permanent mark tape
 attached to those same original labels. -/
 theorem community_originTape_futureCoins
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -178,7 +178,7 @@ theorem community_originTape_futureCoins
 at their original labels, while stored copies use an independent old-copy
 coin stream. -/
 noncomputable def communityOriginSourceKernel
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -213,7 +213,7 @@ noncomputable def communityOriginSourceKernel
 /-- The executable component has exactly the source-driven law with marks
 at original Poisson labels. -/
 theorem communityComponentGivenVolume_eq_originSourceKernel
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -284,7 +284,7 @@ theorem communityComponentGivenVolume_eq_originSourceKernel
 /-- The same source law with a full future fair-coin stream in place of the
 finite survivor-indexed coin block. -/
 noncomputable def communityFutureSourceKernel
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -304,7 +304,7 @@ noncomputable def communityFutureSourceKernel
             (level + rounds) deleted.nextLabel basePending pair.2)
 
 theorem communityComponentGivenVolume_eq_futureSourceKernel
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

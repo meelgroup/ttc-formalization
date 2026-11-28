@@ -390,7 +390,7 @@ def normalizedHitAndRunContinuousLaw {n : Nat} (P : PolytopeData n)
 
 /-- One accepted sample of `GenerateSamples`: walk, round, and retry until the rounded
 point lies in the component. The hypotheses are the regime of Corollary `cor:linf`. -/
-def normalizedHitAndRunPointLaw {n : Nat} (_hn : 21 ≤ n)
+def normalizedHitAndRunPointLaw {n : Nat} (_hn : 3 ≤ n)
     (P : PolytopeData n) (b : Nat)
     (eta : Real)
     (_hprec : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius)
@@ -435,7 +435,7 @@ def failedSampleBatchLaw {n count : Nat} : Measure (SampleBatch n count) :=
 
 /-- The concrete oracle bundle: community CV18, and the normalized community Hit-and-Run walk
 followed by KV97 rounding and rejection. -/
-def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
+def ttcSubroutines {n k : Nat} (hn : 3 ≤ n)
     (prep : TTCPreprocessor n k) : TTCOracles n k := by
   classical
   exact {
@@ -451,7 +451,7 @@ def ttcSubroutines {n k : Nat} (hn : 21 ≤ n)
 
 set_option linter.dupNamespace false in
 /-- **Algorithm `ttc`** with `GetPrecision`, `ComputeVolume` and `GenerateSamples` as above. -/
-def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
+def ttc {n k : Nat} (hn : 3 ≤ n) (F : LRAFormula n k)
     (hbounded : Bornology.IsBounded (solutionSet F)) (params : ApproxParams)
     (prep : TTCPreprocessor n k) : Measure NNReal :=
   ttcPseudocode F hbounded params (ttcSubroutines hn prep)
@@ -462,7 +462,7 @@ def ttc {n k : Nat} (hn : 21 ≤ n) (F : LRAFormula n k)
 rewrites its offsets for CV18, for `10^b · P` and for the walk (`setupCost`). The
 CV18 charge includes its certified membership-query budget and the public
 non-query allowance factor; the sampler retains its random retry count. -/
-def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
+def ttcCostedSubroutines {n k : Nat} (hn : 3 ≤ n)
     (prep : TTCPreprocessor n k) (cv18NonQueryFactor : Nat) :
     CostedTTCOracles n k := by
   classical
@@ -483,7 +483,7 @@ def ttcCostedSubroutines {n k : Nat} (hn : 21 ≤ n)
           normalizedHitAndRunBatchWithCostLaw P count b eta
         else costedCharge failedSampleBatchLaw 0 }
 
-def ttcWithCost {n k : Nat} (hn : 21 ≤ n)
+def ttcWithCost {n k : Nat} (hn : 3 ≤ n)
     (F : LRAFormula n k) (hbounded : Bornology.IsBounded (solutionSet F))
     (params : ApproxParams) (prep : TTCPreprocessor n k)
     (preprocessingOperations cv18NonQueryFactor : Nat) : Measure (NNReal × Nat) :=

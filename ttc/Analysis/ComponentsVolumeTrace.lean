@@ -99,7 +99,7 @@ theorem volumeOutcome_pi_fin_cons (m : Nat)
   rw [Fin.prod_univ_succ]
 
 noncomputable def communityComponentsVolumeTrace
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real) :
     (components : List (PolytopeData n)) → TTCState n →
       Measure ((Fin components.length → VolumeOutcome) × (TTCState n × Nat))
@@ -113,7 +113,7 @@ noncomputable def communityComponentsVolumeTrace
 
 /-- The independent CV18 outcomes in component order. -/
 noncomputable def communityVolumeVectorLaw
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (eta delta : Real) :
     (components : List (PolytopeData n)) →
       Measure (Fin components.length → VolumeOutcome)
@@ -126,7 +126,7 @@ noncomputable def communityVolumeVectorLaw
 
 set_option maxHeartbeats 500000 in
 theorem communityVolumeVectorLaw_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (eta delta : Real) (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components,
       IsProbabilityMeasure
@@ -173,7 +173,7 @@ theorem communityVolumeVectorLaw_isProbabilityMeasure
       simpa only [communityVolumeVectorLaw, K] using hbind
 
 theorem communityVolumeVectorLaw_eq_pi
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (eta delta : Real) (components : List (PolytopeData n))
     (hvolume : ∀ P ∈ components,
       IsProbabilityMeasure
@@ -204,7 +204,7 @@ theorem communityVolumeVectorLaw_eq_pi
 
 set_option maxHeartbeats 1200000 in
 theorem communityComponentsVolumeTrace_measurable_probability
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -290,7 +290,7 @@ theorem communityComponentsVolumeTrace_measurable_probability
           ((hjoin.comp (measurable_const.prodMk measurable_id)).aemeasurable)
 
 theorem community_trace_tail_measurable
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (rest : List (PolytopeData n))
     (hrestMeas : Measurable
@@ -316,7 +316,7 @@ theorem community_trace_tail_measurable
 
 set_option maxHeartbeats 1200000 in
 theorem communityComponentsVolumeTrace_volume_marginal
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -416,7 +416,7 @@ theorem communityComponentsVolumeTrace_volume_marginal
 /-- The complete charged paper trace has the independent product of
 its concrete CV18 outcome laws as its volume marginal. -/
 theorem communityComponentsVolumeTrace_volume_pi
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))
@@ -441,7 +441,7 @@ theorem communityComponentsVolumeTrace_volume_pi
 
 set_option maxHeartbeats 1200000 in
 theorem communityComponentsVolumeTrace_run_marginal
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor b : Nat) (eta delta threshold : Real)
     (hthreshold : 0 < threshold)
     (components : List (PolytopeData n))

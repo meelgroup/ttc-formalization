@@ -11,7 +11,7 @@ open Classical MeasureTheory
 
 set_option maxHeartbeats 1000000 in
 theorem originRefreshedComponentLaw_fixedLevel_sourceCounts
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -83,7 +83,7 @@ theorem originRefreshedComponentLaw_fixedLevel_sourceCounts
 Thus the actual component transition has a Poisson delete-and-add kernel at
 every level at or below the incoming configuration's current level. -/
 theorem originRefreshedComponentLaw_pastLevel_sourceCounts
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -129,7 +129,7 @@ theorem originRefreshedComponentLaw_pastLevel_sourceCounts
 old source-tag population by independent fair tails, then deletes overlap and
 adds the independent Poisson point-count vector of the new component. -/
 theorem originRefreshedComponentLaw_futureLevel_sourceCounts
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real) (hthreshold : 0 < threshold)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧

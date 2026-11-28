@@ -9,7 +9,7 @@ namespace ttc
 open MeasureTheory
 
 theorem community_volume_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (i : Fin D.componentCount) :
     IsProbabilityMeasure
@@ -27,7 +27,7 @@ theorem community_volume_isProbabilityMeasure
   infer_instance
 
 theorem community_samples_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (count b : Nat) (eta delta : Real) :
     IsProbabilityMeasure
       ((ttcSubroutines hn prep).GenerateSamples
@@ -49,7 +49,7 @@ theorem community_samples_isProbabilityMeasure
     infer_instance
 
 theorem community_costed_volume_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) {F : LRAFormula n k}
+    {n k : Nat} (hn : 3 ≤ n) {F : LRAFormula n k}
     (D : Decomposition F) (p : ApproxParams) (prep : TTCPreprocessor n k)
     (factor : Nat) (i : Fin D.componentCount) :
     IsProbabilityMeasure
@@ -60,7 +60,7 @@ theorem community_costed_volume_isProbabilityMeasure
   exact community_volume_isProbabilityMeasure hn D p prep i
 
 theorem community_costed_samples_isProbabilityMeasure
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (factor : Nat) (P : PolytopeData n) (count b : Nat)
     (eta delta : Real) :
     IsProbabilityMeasure

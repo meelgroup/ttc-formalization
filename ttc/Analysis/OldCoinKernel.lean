@@ -45,7 +45,7 @@ private theorem tapeAppend_congr {n : Nat}
   rfl
 
 theorem communityOriginTapeKernel_congr_allocated
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -117,7 +117,7 @@ theorem communityOriginTapeKernel_congr_allocated
     _ _ _ _ (by rfl) (by rfl) hsecond hactive tape
 
 theorem communityOriginTapeKernel_eq_allocated_extension
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -141,7 +141,7 @@ theorem communityOriginTapeKernel_eq_allocated_extension
   exact (allocatedCoinExtension_restriction_at s.nextLabel old round label hlabel).symm
 
 theorem communityFutureSourceKernel_eq_allocated_extension
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -180,7 +180,7 @@ theorem communityFutureSourceKernel_eq_allocated_extension
 /-- Both coin families in a source-labelled component step can be drawn on
 their finite allocated label blocks. -/
 theorem community_originTape_finiteOldCoins
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -244,7 +244,7 @@ theorem community_originTape_finiteOldCoins
   exact Measure.bind_congr_right (Filter.Eventually.of_forall hpoint)
 
 theorem community_originTape_finiteCoinBlocks
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -272,7 +272,7 @@ theorem community_originTape_finiteCoinBlocks
 /-- The same one-component source program, with only the finite old and new
 coin blocks used by its state transition. -/
 noncomputable def communityFiniteCoinSourceKernel
-    {n : Nat} (hn : 21 ≤ n) (P : PolytopeData n)
+    {n : Nat} (hn : 3 ≤ n) (P : PolytopeData n)
     (b : Nat) (eta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -296,7 +296,7 @@ noncomputable def communityFiniteCoinSourceKernel
           (allocatedCoinExtension deleted.nextLabel pair.1, pair.2)
 
 theorem communityFutureSourceKernel_eq_finiteCoinSourceKernel
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
@@ -324,7 +324,7 @@ theorem communityFutureSourceKernel_eq_finiteCoinSourceKernel
       (ttcReference.t b n threshold outcome.2) threshold) basePending
 
 theorem communityComponentGivenVolume_eq_finiteCoinSourceKernel
-    {n k : Nat} (hn : 21 ≤ n) (prep : TTCPreprocessor n k)
+    {n k : Nat} (hn : 3 ≤ n) (prep : TTCPreprocessor n k)
     (P : PolytopeData n) (b : Nat) (eta delta threshold : Real)
     (hroute : samplerRadiusRequirement P eta ≤ decimalScale b * P.inradius ∧
       0 < eta ∧ eta ≤ 1 ∧
