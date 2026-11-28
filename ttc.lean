@@ -13,6 +13,8 @@ import ttc.Analysis.Tape.Bridge
 import ttc.Analysis.Tape.ThinLaw
 import ttc.Analysis.Tape.CV18Sim
 import ttc.Analysis.Tape.CV18Component
+import ttc.Analysis.Tape.PlanarArea
+import ttc.Analysis.PlanarVolumeProvider
 import ttc.Analysis.Tape.Theorem1
 import ttc.Analysis.Tape.EpsilonCost
 import ttc.Meta.Audit

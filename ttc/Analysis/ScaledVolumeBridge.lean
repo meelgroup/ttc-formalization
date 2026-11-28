@@ -128,7 +128,7 @@ theorem certified_normalizedHitAndRun_acceptance_ge_half {n k : Nat}
   have hsampler : samplerRadiusRequirement (D.component i) p.ε' ≤
       decimalScale b * (D.component i).inradius := by
     simpa only [decimalScale] using (le_max_right _ _).trans (hprecision.split i)
-  exact normalizedHitAndRun_acceptance_ge_half_of_base_comparison hn
+  exact normalizedHitAndRun_acceptance_ge_half_of_base_comparison (by omega)
     (D.component i) b hsample0 hsample8 p.latticeEta hlattice0 hlattice8
     hfinite hsampler hbase
 

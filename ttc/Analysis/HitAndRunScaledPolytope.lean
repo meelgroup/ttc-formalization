@@ -64,7 +64,7 @@ theorem dist_le_of_mem_inflated {n : Nat} {ι : Type*}
 /-- Compatibility wrapper for the former `HitAndRunFromInball` API.  It proves that
 the uniform law on an included unit ball is a warm start, then invokes the public
 arlib-community Hit-and-Run headline theorem `HitAndRun.hitAndRun_mixes`. -/
-theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 3 ≤ n)
+theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 2 ≤ n)
     {K : Set (EuclideanSpace Real (Fin n))}
     (hKc : Convex Real K) (hKcl : IsClosed K) (hKm : MeasurableSet K)
     (hKb : Bornology.IsBounded K) {z : EuclideanSpace Real (Fin n)}
@@ -140,7 +140,7 @@ theorem tvLe_iterate_lazy_hitAndRun_from_unit_inball {n : Nat} (hn : 3 ≤ n)
       (ArlibCommunity.Foundations.Convex.uniformOn volume B) M eps ∅ :=
     ⟨MeasurableSet.empty, by simp, hdom⟩
   -- arlib-community's mixing theorem for the exact Hit-and-Run kernel.
-  have hmix := ArlibCommunity.Algorithms.HitAndRun.hitAndRun_mixes (by omega) problem
+  have hmix := ArlibCommunity.Algorithms.HitAndRun.hitAndRun_mixes hn problem
     hM heps0 heps1 hwarm
     (by simpa [ArlibCommunity.Algorithms.HitAndRun.deadline,
       ArlibCommunity.Foundations.MarkovChainTheory.hrDeadlineUncond, problem, M, B] using hm)
@@ -179,7 +179,7 @@ theorem PolytopeData.exists_hitAndRun_scaled_tvLe {n : Nat} (hn : 3 ≤ n)
     apply P.scaledBody_inball b
     exact Metric.mem_closedBall.2 ((Metric.mem_closedBall.1 hx).trans hunit)
   apply tvLe_iterate_lazy_hitAndRun_from_unit_inball
-    hn (ArlibCommunity.Foundations.Convex.Polytope.convex_body P.arlibNormal (P.scaledOffset b))
+    (by omega) (ArlibCommunity.Foundations.Convex.Polytope.convex_body P.arlibNormal (P.scaledOffset b))
     (ArlibCommunity.Foundations.Convex.Polytope.isClosed_body P.arlibNormal (P.scaledOffset b))
     (ArlibCommunity.Foundations.Convex.Polytope.measurableSet_body P.arlibNormal (P.scaledOffset b))
     (P.scaledBody_bounded b) hball hD heps0 heps1
@@ -243,7 +243,7 @@ theorem PolytopeData.exists_hitAndRun_inflated_tvLe {n : Nat} (hn : 3 ≤ n)
   · simpa only [M] using hm
   · simp [m, deadline, M]
   · apply tvLe_iterate_lazy_hitAndRun_from_unit_inball
-      hn (ArlibCommunity.Algorithms.KV97.convex_inflated P.arlibNormal (P.scaledOffset b) cp r)
+      (by omega) (ArlibCommunity.Algorithms.KV97.convex_inflated P.arlibNormal (P.scaledOffset b) cp r)
       (ArlibCommunity.Algorithms.KV97.isClosed_inflated P.arlibNormal (P.scaledOffset b) cp r)
       (ArlibCommunity.Algorithms.KV97.measurableSet_inflated P.arlibNormal (P.scaledOffset b) cp r)
       hbounded hball hD heps0 heps1
